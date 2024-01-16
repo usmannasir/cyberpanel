@@ -31,7 +31,6 @@ Ubuntu22 = 8
 
 
 class Upgrade:
-
     logPath = "/usr/local/lscp/logs/upgradeLog"
     cdn = 'cdn.cyberpanel.sh'
     installedOutput = ''
@@ -1116,7 +1115,6 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
             except:
                 pass
 
-
             query = "ALTER TABLE `websiteFunctions_backupsv2` ADD CONSTRAINT `websiteFunctions_bac_website_id_3a777e68_fk_websiteFu` FOREIGN KEY (`website_id`) REFERENCES `websiteFunctions_websites` (`id`);"
 
             try:
@@ -1145,7 +1143,6 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
             except:
                 pass
 
-
             try:
                 cursor.execute("ALTER TABLE websiteFunctions_websites ADD COLUMN BackupLock INT DEFAULT 0;")
             except:
@@ -1160,7 +1157,6 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
                 pass
 
             if Upgrade.FindOperatingSytem() == Ubuntu22:
-
                 ### If ftp not installed then upgrade will fail so this command should not do exit
 
                 command = "sed -i 's/MYSQLCrypt md5/MYSQLCrypt crypt/g' /etc/pure-ftpd/db/mysql.conf"
@@ -1676,6 +1672,30 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
             except:
                 pass
 
+            query = """CREATE TABLE `websiteFunctions_dockerpackages` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `Name` varchar(100) NOT NULL, `CPUs` integer NOT NULL, `Ram` integer NOT NULL, `Bandwidth` longtext NOT NULL, `DiskSpace` longtext NOT NULL, `config` longtext NOT NULL);"""
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = """CREATE TABLE `websiteFunctions_dockersites` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `ComposePath` longtext NOT NULL, `SitePath` longtext NOT NULL, `MySQLPath` longtext NOT NULL, `state` integer NOT NULL, `SiteType` integer NOT NULL, `MySQLDBName` varchar(100) NOT NULL, `MySQLDBNUser` varchar(100) NOT NULL, `CPUsMySQL` varchar(100) NOT NULL, `MemoryMySQL` varchar(100) NOT NULL, `port` varchar(100) NOT NULL, `CPUsSite` varchar(100) NOT NULL, `MemorySite` varchar(100) NOT NULL, `SiteName` varchar(255) NOT NULL UNIQUE, `finalURL` longtext NOT NULL, `blogTitle` longtext NOT NULL, `adminUser` varchar(100) NOT NULL, `adminEmail` varchar(100) NOT NULL, `admin_id` integer NOT NULL);"""
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = """ALTER TABLE `websiteFunctions_packageassignment` ADD CONSTRAINT `websiteFunctions_pac_package_id_420b6aff_fk_websiteFu` FOREIGN KEY (`package_id`) REFERENCES `websiteFunctions_dockerpackages` (`id`);"""
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = """ALTER TABLE `websiteFunctions_dockersites` ADD CONSTRAINT `websiteFunctions_doc_admin_id_88f5cb6d_fk_websiteFu` FOREIGN KEY (`admin_id`) REFERENCES `websiteFunctions_websites` (`id`);"""
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
             try:
                 connection.close()
             except:
@@ -2184,7 +2204,6 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
                 if os.path.exists(lscpdPath):
                     os.remove(lscpdPath)
 
-
                 try:
                     result = subprocess.run('uname -a', capture_output=True, text=True, shell=True)
 
@@ -2264,7 +2283,6 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
             WriteToFile.write('enabled = false;\n')
             WriteToFile.close()
 
-
             if os.path.exists(postfixConf):
                 appendpath = "/etc/postfix/main.cf"
 
@@ -2282,7 +2300,6 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
                         continue
                     else:
                         WriteToFile.write(line)
-
 
                 RSPAMDConfContent = '''
 ### Please do not edit this line, editing this line could break configurations
@@ -3221,9 +3238,6 @@ pm.max_spare_servers = 3
             WriteToFile.write(content)
             WriteToFile.close()
 
-
-
-
     @staticmethod
     def upgrade(branch):
 
@@ -3241,8 +3255,8 @@ pm.max_spare_servers = 3
             command = 'apt list'
             Upgrade.installedOutput = subprocess.check_output(shlex.split(command)).decode()
 
-        #command = 'systemctl stop cpssh'
-        #Upgrade.executioner(command, 'fix csf if there', 0)
+        # command = 'systemctl stop cpssh'
+        # Upgrade.executioner(command, 'fix csf if there', 0)
 
         ## Add LSPHP7.4 TO LSWS Ent configs
 
@@ -3256,7 +3270,6 @@ pm.max_spare_servers = 3
             # os.remove('/usr/local/lsws/conf/httpd_config.xml')
             # shutil.copy('httpd_config.xml', '/usr/local/lsws/conf/httpd_config.xml')
 
-
         Upgrade.updateRepoURL()
 
         os.chdir("/usr/local")
@@ -3267,7 +3280,6 @@ pm.max_spare_servers = 3
 
         ## Current Version
 
-
         ### if this is a soft upgrade from front end do not stop lscpd, as lscpd is controlling the front end
 
         if Upgrade.SoftUpgrade == 0:
@@ -3275,7 +3287,7 @@ pm.max_spare_servers = 3
             Upgrade.executioner(command, 'stop lscpd', 0)
 
         Upgrade.fixSudoers()
-        #Upgrade.mountTemp()
+        # Upgrade.mountTemp()
         Upgrade.dockerUsers()
         Upgrade.setupComposer()
 
@@ -3396,7 +3408,6 @@ pm.max_spare_servers = 3
             Upgrade.executioner(command, command, 1)
 
         Upgrade.stdOut("Upgrade Completed.")
-
 
         ### remove log file path incase its there
 
