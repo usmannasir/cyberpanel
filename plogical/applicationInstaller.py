@@ -125,9 +125,9 @@ class ApplicationInstaller(multi.Thread):
 
             if not os.path.exists(phpPath):
                 statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines('PHP 8.0 missing installing now..,20')
+                statusFile.writelines('PHP 8.1 missing installing now..,20')
                 statusFile.close()
-                phpUtilities.InstallSaidPHP('80')
+                phpUtilities.InstallSaidPHP('81')
 
 
             FNULL = open(os.devnull, 'w')
@@ -213,7 +213,7 @@ class ApplicationInstaller(multi.Thread):
             statusFile.close()
 
             ### replace command with composer install
-            command = f'{phpPath} /usr/bin/composer create-project mautic/recommended-project:^4 {finalPath}'
+            command = f'{phpPath} /usr/bin/composer create-project mautic/recommended-project:^5 {finalPath}'
             ProcessUtilities.outputExecutioner(command, externalApp, None)
 
             statusFile = open(tempStatusPath, 'w')

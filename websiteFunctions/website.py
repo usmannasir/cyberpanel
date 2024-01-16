@@ -4347,12 +4347,12 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson('installStatus', 0)
 
-            #### Before installing mautic change php to 8.0
+            #### Before installing mautic change php to 8.1
 
             completePathToConfigFile = f'/usr/local/lsws/conf/vhosts/{self.domain}/vhost.conf'
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-            execPath = execPath + " changePHP --phpVersion 'PHP 8.0' --path " + completePathToConfigFile
+            execPath = execPath + " changePHP --phpVersion 'PHP 8.1' --path " + completePathToConfigFile
             ProcessUtilities.executioner(execPath)
 
             mailUtilities.checkHome()
