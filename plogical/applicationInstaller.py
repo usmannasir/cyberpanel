@@ -102,7 +102,8 @@ class ApplicationInstaller(multi.Thread):
             return 1
 
         if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-            pass
+            command = 'dnf module enable nodejs -y dnf install nodejs -y'
+            ProcessUtilities.executioner(command, 'root', True)
         else:
             #command = 'curl -fsSL <https://deb.nodesource.com/setup_20.x> | sudo -E bash -'
             #ProcessUtilities.executioner(command, 'root', True)
