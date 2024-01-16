@@ -219,6 +219,20 @@ class phpUtilities:
 
     @staticmethod
     def GetPHPVersionFromFile(vhFile, domainName=None):
+
+        if domainName == None:
+            # Your file path
+            file_path = "/usr/local/lsws/conf/vhosts/mautic.wpmautic.net/vhost.conf"
+
+            # Split the path by '/'
+            path_parts = file_path.split('/')
+
+            # Find the index of 'vhosts' in the path
+            vhosts_index = path_parts.index('vhosts')
+
+            # Extract the domain
+            domainName = path_parts[vhosts_index + 1]
+
         finalConfPath = ApacheVhost.configBasePath + domainName + '.conf'
         if os.path.exists(finalConfPath):
             command = f'grep -Eo -m 1 "php[0-9]+" {finalConfPath} | sed -n "1p"'

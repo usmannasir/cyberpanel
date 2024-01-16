@@ -234,7 +234,7 @@ class ApplicationInstaller(multi.Thread):
                 finalURL = domainName
 
 
-            command = f"{phpPath} bin/console mautic:install --db_host='localhost' --db_name='{dbName}' --db_user='{dbUser}' --db_password='{dbPassword}' --admin_username='{username}' --admin_email='{email}' --admin_password='{password}' --db_port='3306' http://{finalURL} -f"
+            command = f"{phpPath} -d memory_limit=256M bin/console mautic:install --db_host='localhost' --db_name='{dbName}' --db_user='{dbUser}' --db_password='{dbPassword}' --admin_username='{username}' --admin_email='{email}' --admin_password='{password}' --db_port='3306' http://{finalURL} -f"
 
             result = ProcessUtilities.outputExecutioner(command, externalApp, None, finalPath)
 
