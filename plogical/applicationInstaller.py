@@ -94,6 +94,24 @@ class ApplicationInstaller(multi.Thread):
         command = f'/usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/upgrade.py "SoftUpgrade,{self.data["branchSelect"]}"'
         ProcessUtilities.executioner(command)
 
+    def InstallNodeJS(self):
+
+        command = 'npm'
+        result = ProcessUtilities.outputExecutioner(command)
+        if result.find('npm <command>') > -1:
+            return 1
+
+        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            pass
+        else:
+            #command = 'curl -fsSL <https://deb.nodesource.com/setup_20.x> | sudo -E bash -'
+            #ProcessUtilities.executioner(command, 'root', True)
+
+            command = 'DEBIAN_FRONTEND=noninteractive nodejs npm -y'
+            ProcessUtilities.executioner(command, 'root', True)
+
+        return 1
+
     def installMautic(self):
         try:
 
@@ -111,6 +129,8 @@ class ApplicationInstaller(multi.Thread):
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines('Setting up paths,0')
             statusFile.close()
+
+            self.InstallNodeJS()
 
 
             ### lets first find php path
