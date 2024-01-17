@@ -6,12 +6,14 @@
     {% load static %}
 
     <div ng-controller="deleteDNSZoneV2" class="p-8">
+        <div>
+            <p class="text-4xl font-bold">Delete DNS Zone</p>
+        </div>
+        <p class="text-xs text-gray-600 py-2 font-semibold">This page can be used to delete DNS Zone. Deleting
+            the DNS zone will remove all its related records as well.</p>
         {% if not status %}
             <div>
                 <div class="flex justify-between">
-                    <div>
-                        <p class="text-4xl font-bold">Delete DNS Zone</p>
-                    </div>
                     <div>
                         <h3>{% trans "PowerDNS is disabled." %}
                             <a href="{% url 'managePowerDNS' %}">
@@ -22,14 +24,11 @@
                             </a></h3>
                     </div>
                 </div>
-                <p class="text-xs text-gray-600 py-2 font-semibold">This page can be used to delete DNS Zone. Deleting
-                    the DNS zone will remove all its related records as well.</p>
             </div>
         {% else %}
             <div>
                 <div class="py-4">
                     <p class="text-xl font-bold">Details</p>
-                    <img ng-hide="createDNSZoneLoading" src="{% static 'images/loading.gif' %}">
                 </div>
                 <hr>
                 <div id="createPackages">

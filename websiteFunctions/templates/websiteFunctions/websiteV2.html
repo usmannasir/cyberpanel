@@ -98,7 +98,7 @@
                 </div>
                 <div>
                     <ul class="flex w-full grid lg:grid-cols-4">
-                        <li class="px-3 py-3">
+                        <li ng-click="fetchLogs(1)" class="px-3 py-3 cursor-pointer">
                             <div class="flex items-center">
                                 <div>
                                     <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
@@ -113,10 +113,11 @@
                                 </div>
                                 <div>
                                     <p class="px-2 font-bold" style="font-size: 70%;">Access Logs</p>
+                                    <img ng-hide="logFileLoading" src="/static/images/loading.gif">
                                 </div>
                             </div>
                         </li>
-                        <li class="px-3 py-3">
+                        <li ng-click="fetchErrorLogs(1)" class="px-3 py-3 cursor-pointer">
                             <div class="flex items-center">
                                 <div>
                                     <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
@@ -135,6 +136,112 @@
                             </div>
                         </li>
                     </ul>
+                    <div class="col-md-12">
+                        <form ng-hide="hideLogs" class="form-horizontal bordered-row">
+                            <div ng-hide="logsFeteched"
+                                 class="flex justify-center bg-green-500 px-2 py-1 font-semibold">
+                                <p>{% trans "Logs Fetched" %}</p>
+                            </div>
+                            <div ng-hide="couldNotFetchLogs"
+                                 class="flex justify-center bg-red-500 text-white px-2 py-1 font-semibold">
+                                <p>{% trans "Could not fetch logs, see the logs file through command line. Error message:" %}
+                                    {$ errorMessage $}</p>
+                            </div>
+                            <div ng-hide="couldNotConnect"
+                                 class="flex justify-center bg-red-500 text-white px-2 py-1 font-semibold">
+                                <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                            </div>
+                            <div ng-hide="fetchedData" class="mx-10">
+                                <div class="flex gap-4 mt-3 justify-center">
+                                    <div class="col-sm-3">
+                                        <input placeholder="Search..." ng-model="logSearch" name="dom" type="text"
+                                               class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="domainNameCreate"
+                                               required>
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <input placeholder="Page Number" type="number"
+                                               class="w-80 bg-gray-100 rounded px-2 py-1"
+                                               ng-model="pageNumber" required>
+                                    </div>
+                                    <button ng-click="fetchLogs(3)" type="button"
+                                            class="bg-orange-500 text-white font-bold px-2 py-1">{% trans "Next" %}</button>
+                                    <button ng-click="fetchLogs(4)" type="button"
+                                            class="bg-orange-500 text-white font-bold px-2 py-1">{% trans "Previous" %}</button>
+                                </div>
+
+                                <div style="margin-bottom: 1%;" class=" col-sm-1">
+                                    <a ng-click="hidelogsbtn()" href="">
+                                        <!--img src="/static/images/close-32.png"-->
+                                        <h3 class="glyph-icon icon-close text-danger mt-5"></h3>
+                                    </a>
+                                </div>
+                                <div ng-hide="currentRecords" class="relative py-5 overflow-x-auto">
+                                    <table class="w-full text-sm text-left rtl:text-right">
+                                        <thead>
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3">
+                                                Type
+                                            </th>
+                                            <th scope="col" class="px-6 py-3">
+                                                IP Address
+                                            </th>
+                                            <th scope="col" class="px-6 py-3">
+                                                Time
+                                            </th>
+                                            <th scope="col" class="px-6 py-3">
+                                                Resource
+                                            </th>
+                                            <th scope="col" class="px-6 py-3">
+                                                Size
+                                            </th>
+                                        </tr>
+                                        </thead>
+                                        <hr>
+                                        <tbody ng-repeat="record in records | filter:logSearch"
+                                               class="border shadow-lg py-3 px-6 rounded-b-lg">
+                                        <tr>
+                                            <td ng-bind="record.domain" class="px-8 py-4 font-bold">
+                                            </td>
+                                            <td ng-bind="record.ipAddress" class="px-6 py-4">
+                                            </td>
+                                            <td ng-bind="record.time" class="px-6 py-4">
+                                            </td>
+                                            <td ng-bind="record.resource" class="px-6 py-4">
+                                            </td>
+                                            <td ng-bind="record.size" class="px-6 py-4">
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+
+                            <div ng-hide="hideErrorLogs" class="">
+                                <div class="flex gap-4 mt-3 justify-center items-center">
+                                    <div>
+                                        <input placeholder="Page Number" type="number"
+                                               class="w-80 bg-gray-100 rounded px-2 py-1"
+                                               ng-model="errorPageNumber" required>
+                                    </div>
+                                    <button ng-click="fetchErrorLogs(3)" type="button"
+                                            class="bg-orange-500 text-white font-bold px-2 py-1">{% trans "Next" %}</button>
+                                    <button ng-click="fetchErrorLogs(4)" type="button"
+                                            class="bg-orange-500 text-white font-bold px-2 py-1">{% trans "Previous" %}</button>
+                                    <div>
+                                        <a ng-click="hideErrorLogsbtn()" href="">
+                                            <h3 class="bg-red-500 px-2 py-1 rounded-lg text-white">
+                                                X</h3>
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <textarea ng-model="errorLogsData" rows="25"
+                                              class="w-full bg-gray-100 rounded px-2 py-1"></textarea>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
             <div class="mt-4 border shadow-lg">
@@ -151,7 +258,7 @@
                 </div>
                 <div>
                     <ul class="flex w-full grid lg:grid-cols-4">
-                        <li class="px-3 py-3">
+                        <a href="{% url 'CreateNewDomainV2' %}" class="px-3 py-3">
                             <div class="flex items-center">
                                 <div>
                                     <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
@@ -168,8 +275,8 @@
                                     <p class="px-2 font-bold" style="font-size: 70%;">Add Domains</p>
                                 </div>
                             </div>
-                        </li>
-                        <li class="px-3 py-3">
+                        </a>
+                        <li ng-click="showListDomains()" class="px-3 py-3 cursor-pointer">
                             <div class="flex items-center">
                                 <div>
                                     <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
@@ -231,6 +338,123 @@
                             </div>
                         </li>
                     </ul>
+                    {#                List Domains HTML#}
+                    <div id="listDomains" class="col-md-12 mx-10">
+                        <form ng-hide="" class="form-horizontal bordered-row">
+                            <div ng-hide="phpChanged" class="flex justify-center bg-green-500 px-2 py-1 font-semibold">
+                                <p>{% trans "PHP Version Changed to:" %} {$ changedPHPVersion $} </p>
+                            </div>
+                            <div ng-hide="domainDeleted"
+                                 class="flex justify-center bg-green-500 px-2 py-1 font-semibold">
+                                <p>{% trans "Deleted:" %} {$ deletedDomain $} </p>
+                            </div>
+                            <div ng-hide="sslIssued" class="flex justify-center bg-green-500 px-2 py-1 font-semibold">
+                                <p>{% trans "SSL Issued:" %} {$ sslDomainIssued $} </p>
+                            </div>
+                            <div ng-hide="childBaseDirChanged"
+                                 class="flex justify-center bg-green-500 px-2 py-1 font-semibold">
+                                <p>{% trans "Changes applied successfully." %} </p>
+                            </div>
+                            <div ng-hide="domainError"
+                                 class="flex justify-center bg-red-500 text-white px-2 py-1 font-semibold">
+                                <p>{$ errorMessage $}</p>
+                            </div>
+                            <div ng-hide="couldNotConnect"
+                                 class="flex justify-center bg-red-500 text-white px-2 py-1 font-semibold">
+                                <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                            </div>
+
+
+                            <div>
+                                <div class="flex gap-4">
+                                    <div class="w-full">
+                                        <input placeholder="Search Domain..." ng-model="logSearch" name="dom"
+                                               type="text" class="w-full bg-gray-100 rounded px-2 py-1"
+                                               ng-model="domainNameCreate"
+                                               required>
+                                    </div>
+                                    <div>
+                                        <a title="{% trans 'Close' %}" ng-click="hideListDomains()" href="">
+                                            <h3 class="bg-red-500 px-2 py-1 rounded-lg text-white">
+                                                X</h3>
+                                        </a>
+                                    </div>
+                                </div>
+                                <div ng-hide="currentRecords" class="relative py-5 overflow-x-auto">
+                                    <table class="w-full text-sm text-left rtl:text-right">
+                                        <thead>
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3">
+                                                Domain
+                                            </th>
+                                            <th scope="col" class="px-6 py-3">
+                                                Launch
+                                            </th>
+                                            <th scope="col" class="px-6 py-3">
+                                                Path
+                                            </th>
+                                            <th scope="col" class="px-6 py-3">
+                                                open_basedir
+                                            </th>
+                                            <th scope="col" class="px-6 py-3">
+                                                PHP
+                                            </th>
+                                            <th scope="col" class="px-6 py-3">
+                                                SSL
+                                            </th>
+                                            <th scope="col" class="px-6 py-3">
+                                                Delete
+                                            </th>
+                                        </tr>
+                                        </thead>
+                                        <hr>
+                                        <tbody ng-repeat="record in childDomains | filter:logSearch"
+                                               class="border shadow-lg py-3 px-6 rounded-b-lg">
+                                        <tr>
+                                            <td ng-bind="record.childDomain" class="px-8 py-4 font-bold">
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <a href="{$ record.childLunch $}"><img width="30px" height="30"
+                                                                                       class="center-block"
+                                                                                       src="{% static 'baseTemplate/assets/image-resources/webPanel.png' %}"></a>
+                                            </td>
+                                            <td ng-bind="record.path" class="px-6 py-4">
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <select ng-change="changeChildBaseDir(record.childDomain,childBaseDir)"
+                                                        ng-model="childBaseDir"
+                                                        class="w-20 bg-gray-100 rounded px-2 py-1">
+                                                    <option>Enable</option>
+                                                    <option>Disable</option>
+                                                </select>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <select ng-change="changePHP(record.childDomain,phpSelection)"
+                                                        ng-model="phpSelection"
+                                                        class="w-20 bg-gray-100 rounded px-2 py-1">
+                                                    {% for php in phps %}
+                                                        <option>{{ php }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <button type="button"
+                                                        ng-click="issueSSL(record.childDomain,record.path)"
+                                                        class="btn ra-50 btn-primary">{% trans "Issue" %}</button>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <button type="button"
+                                                        ng-click="deleteChildDomain(record.childDomain)"
+                                                        class="bg-red-500 px-2 py-1 rounded-lg text-white">{% trans "Delete" %}</button>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    {#                List Domains HTML End#}
                 </div>
             </div>
             <div class="mt-4 border shadow-lg">
@@ -265,7 +489,7 @@
                                 </div>
                             </div>
                         </li>
-                        <li class="px-3 py-3">
+                        <li ng-click="fetchConfigurations()" class="px-3 py-3 cursor-pointer">
                             <div class="flex items-center">
                                 <div>
                                     <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
@@ -283,7 +507,7 @@
                                 </div>
                             </div>
                         </li>
-                        <li class="px-3 py-3">
+                        <li ng-click="fetchRewriteFules()" class="px-3 py-3 cursor-pointer">
                             <div class="flex items-center">
                                 <div>
                                     <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
@@ -305,7 +529,7 @@
                                 </div>
                             </div>
                         </li>
-                        <li class="px-3 py-3">
+                        <li ng-click="addSSL()" class="px-3 py-3 cursor-pointer">
                             <div class="flex items-center">
                                 <div>
 
@@ -326,7 +550,7 @@
                                 </div>
                             </div>
                         </li>
-                        <li class="px-3 py-3">
+                        <li ng-click="changePHPMaster()" class="px-3 py-3 cursor-pointer">
                             <div class="flex items-center">
                                 <div>
                                     <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
@@ -349,6 +573,217 @@
                             </div>
                         </li>
                     </ul>
+                    {#                    Vhost Conf HTML#}
+                    <div class="col-md-12">
+                        <form ng-hide="configurationsBox" class="form-horizontal bordered-row">
+                            <div ng-hide="configsFetched"
+                                 class="flex justify-center bg-green-500 px-2 py-1 font-semibold">
+                                <p>{% trans "Current configuration in the file fetched." %}</p>
+                            </div>
+
+                            <div ng-hide="couldNotFetchConfigs"
+                                 class="flex justify-center bg-red-500 text-white px-2 py-1 font-semibold">
+                                <p>{% trans "Could not fetch current configuration. Error message:" %} {$
+                                    errorMessage $}</p>
+                            </div>
+
+                            <div ng-hide="couldNotConnect"
+                                 class="flex justify-center bg-red-500 text-white px-2 py-1 font-semibold">
+                                <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                            </div>
+
+                            <div ng-hide="configSaved" class="flex justify-center bg-green-500 px-2 py-1 font-semibold">
+                                <p>{% trans "Configurations saved." %}</p>
+                            </div>
+
+                            <div ng-hide="couldNotSaveConfigurations"
+                                 class="flex justify-center bg-red-500 text-white px-2 py-1 font-semibold">
+                                <p>{% trans "Could not fetch current configuration. Error message:" %} {$
+                                    errorMessage $}</p>
+                            </div>
+
+                            <div ng-hide="fetchedConfigsData">
+                                <div style="margin-bottom: 1%;" class="flex justify-end py-2 px-2">
+                                    <a ng-click="hideconfigbtn()" href=""><img
+                                            src="/static/images/close-32.png"></a>
+                                </div>
+                                <div class="col-sm-12">
+                                    <textarea ng-model="configData" rows="20"
+                                              class="w-full bg-gray-100 rounded px-2 py-1"></textarea>
+                                </div>
+                            </div>
+
+                            <div ng-hide="saveConfigBtn" class="flex justify-center py-2">
+                                <div class="col-sm-4">
+                                    <button type="button" ng-click="saveCongiruations()"
+                                            class="bg-orange-500 px-3 py-2 rounded-lg font-semibold text-white">{% trans "Save" %}</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    {#                    Vhost Conf HTML End#}
+                    {#                    Rewrite Rules HTML#}
+                    <div class="col-md-12">
+                        <form ng-hide="configurationsBoxRewrite" class="form-horizontal bordered-row">
+                            <div ng-hide="rewriteRulesFetched"
+                                 class="flex justify-center bg-green-500 px-2 py-1 font-semibold">
+                                <p>{% trans "It is not required to modify rules if you are using OpenLiteSpeed." %}
+                                    <a target="_blank"
+                                       href="http://go.cyberpanel.net/cyber9bed2">Click</a>
+                                    to read more about whats changed in <a target="_blank"
+                                                                           href="http://go.cyberpanel.net/rewrite">rewrite
+                                        rules</a> from v1.8 onwards.</p>
+                            </div>
+
+                            <form name="websiteCreationForm" action="/" id="createPackages">
+
+                                <div ng-hide="fetchedRewriteRules" class="flex justify-center items-center mt-4">
+                                    <p class="font-semibold mr-5">Select Template</p>
+                                    <div class="col-sm-6">
+                                        <select ng-change="applyRewriteTemplate()" ng-model="rewriteTemplate"
+                                                class="w-full bg-gray-100 rounded px-2 py-1">
+                                            <option>Force HTTP -> HTTPS</option>
+                                            <option>Force WWW -> NON-WWW</option>
+                                            <option>Force NON-WWW -> WWW</option>
+                                            <option>Disable Wordpress XMLRPC & Trackback</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                            </form>
+
+                            <div ng-hide="couldNotFetchRewriteRules"
+                                 class="flex justify-center bg-red-500 text-white px-2 py-1 font-semibold">
+                                <p>{% trans "Could not fetch current rewrite rules. Error message:" %} {$
+                                    errorMessage $}</p>
+                            </div>
+
+                            <div ng-hide="couldNotConnect"
+                                 class="flex justify-center bg-red-500 text-white px-2 py-1 font-semibold">
+                                <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                            </div>
+
+                            <div ng-hide="rewriteRulesSaved"
+                                 class="flex justify-center bg-green-500 px-2 py-1 font-semibold">
+                                <p>{% trans "Configurations saved." %}</p>
+                            </div>
+
+                            <div ng-hide="couldNotSaveRewriteRules"
+                                 class="flex justify-center bg-red-500 text-white px-2 py-1 font-semibold">
+                                <p>{% trans "Could not save rewrite rules. Error message:" %} {$ errorMessage
+                                    $}</p>
+                            </div>
+
+                            <div ng-hide="fetchedRewriteRules">
+                                <div style="margin-bottom: 1%;" class="flex justify-end py-2 px-2">
+                                    <a ng-click="hideRewriteRulesbtn()" href=""><img
+                                            src="/static/images/close-32.png"></a>
+                                </div>
+                                <div class="col-sm-12">
+                                    <textarea ng-model="rewriteRules" rows="10"
+                                              class="w-full bg-gray-100 rounded px-2 py-1"></textarea>
+                                </div>
+                            </div>
+                            <div ng-hide="saveRewriteRulesBTN" class="flex justify-center py-2">
+                                <label class="col-sm-3 control-label"></label>
+                                <div class="col-sm-4">
+                                    <button style="margin-top: 5%" type="button" ng-click="saveRewriteRules()"
+                                            class="bg-orange-500 px-3 py-2 rounded-lg font-semibold text-white">{% trans "Save Rewrite Rules" %}</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    {#                    Rewrite Rules HTML End#}
+                    {#                    Add SSL HTML#}
+                    <div class="col-md-12">
+                        <form ng-hide="hidsslconfigs" class="form-horizontal bordered-row">
+                            <div ng-hide="sslSaved" class="flex justify-center bg-green-500 px-2 py-1 font-semibold">
+                                <p>{% trans "SSL Saved" %}</p>
+                            </div>
+                            <div ng-hide="couldNotSaveSSL"
+                                 class="flex justify-center bg-red-500 text-white px-2 py-1 font-semibold">
+                                <p>{% trans "Could not save SSL. Error message:" %} {$ errorMessage $}</p>
+                            </div>
+                            <div ng-hide="couldNotConnect"
+                                 class="flex justify-center bg-red-500 text-white px-2 py-1 font-semibold">
+                                <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                            </div>
+                            <div ng-hide="">
+                                <div style="margin-bottom: 1%;" class="flex justify-end py-2 px-2">
+                                    <a ng-click="hidesslbtn()" href=""><img
+                                            src="/static/images/close-32.png"></a>
+                                </div>
+                                <div class="flex gap-2 justify-center">
+                                    <div>
+                                            <textarea placeholder="Paste Your Cert" ng-model="cert" rows="10"
+                                                      class="md:w-96 sm:w-full bg-gray-100 rounded px-2 py-1"></textarea>
+                                    </div>
+                                    <div>
+                                            <textarea placeholder="Paste Your Key" ng-model="key" rows="10"
+                                                      class="md:w-96 sm:w-full bg-gray-100 rounded px-2 py-1"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div ng-hide="" class="flex justify-center py-2">
+                                <label class="col-sm-3 control-label"></label>
+                                <div class="col-sm-4">
+                                    <button type="button" ng-click="saveSSL()"
+                                            class="bg-orange-500 px-3 py-2 rounded-lg font-semibold text-white">{% trans "Save" %}</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    {#                    Add SSL HTML End#}
+                    {#                    Change PHP HTML#}
+                    <div class="col-md-12">
+                        <form ng-hide="changePHPView" name="" action="/" class="form-horizontal bordered-row">
+                            <div class="form-group">
+                                <div style="margin-bottom: 1%;" class="flex justify-end py-2 px-2">
+                                    <a title="{% trans 'Cancel' %}" ng-click="hideChangePHPMaster()"
+                                       href=""><h3 class="bg-red-500 px-2 py-1 rounded-lg text-white">
+                                        X</h3></a>
+                                </div>
+                                <div class="flex justify-center items-center mt-4">
+                                    <p class="font-semibold mr-5">Select PHP</p>
+                                    <div>
+                                        <select ng-model="phpSelectionMaster"
+                                                class="w-80 bg-gray-100 rounded px-2 py-1">
+                                            {% for php in phps %}
+                                                <option>{{ php }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex justify-center py-2">
+                                <label class="col-sm-3 control-label"></label>
+                                <div class="col-sm-4">
+                                    <button type="button" ng-click="changePHPVersionMaster()"
+                                            class="bg-orange-500 px-3 py-2 rounded-lg font-semibold text-white">{% trans "Change PHP" %}</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label"></label>
+                                <div class="col-sm-4">
+                                    <div ng-hide="failedToChangePHPMaster"
+                                         class="flex justify-center bg-red-500 text-white px-2 py-1 font-semibold">
+                                        <p>{% trans "Failed to change PHP version. Error message:" %} {$
+                                            errorMessage $}</p>
+                                    </div>
+                                    <div ng-hide="phpChangedMaster"
+                                         class="flex justify-center bg-green-500 px-2 py-1 font-semibold">
+                                        <p>{% trans "PHP successfully changed for: " %} <strong>{$ websiteDomain
+                                            $}</strong></p>
+                                    </div>
+                                    <div ng-hide="couldNotConnect"
+                                         class="flex justify-center bg-red-500 text-white px-2 py-1 font-semibold">
+                                        <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    {#                Change PHP HTML End#}
                 </div>
             </div>
             <div class="mt-4 border shadow-lg">
@@ -383,7 +818,7 @@
                                 </div>
                             </div>
                         </li>
-                        <li class="px-3 py-3">
+                        <li ng-click="openBaseDirView()" class="px-3 py-3 cursor-pointer">
                             <div class="flex items-center">
                                 <div>
                                     <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
@@ -445,6 +880,54 @@
                             </div>
                         </li>
                     </ul>
+                    {#                    open_basedir HTML#}
+                    <div ng-hide="openBaseDirBox" class="col-md-12">
+                        <form action="/" class="form-horizontal bordered-row">
+                            <div class="form-group">
+                                <div class="flex justify-end px-2">
+                                    <a title="{% trans 'Cancel' %}" ng-click="hideOpenBasedir()" href=""><img
+                                            src="/static/images/close-32.png"></a>
+                                </div>
+                                <div class="flex justify-center items-center mt-4">
+                                    <P class="font-semibold mr-5">open_basedir Protection</P>
+                                    <div ng-hide="baseDirLoading" style="margin-bottom: 1%;" class=" col-sm-1">
+                                        <img src="{% static 'images/loading.gif' %}">
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <select ng-model="openBasedirValue" class="w-80 bg-gray-100 rounded px-2 py-1">
+                                            <option>Enable</option>
+                                            <option>Disable</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex justify-center py-2">
+                                <label class="col-sm-3 control-label"></label>
+                                <div class="col-sm-4">
+                                    <button type="button" ng-click="applyOpenBasedirChanges()"
+                                            class="bg-orange-500 px-3 py-2 rounded-lg font-semibold text-white">{% trans "Apply Changes" %}</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label"></label>
+                                <div class="col-sm-4">
+                                    <div ng-hide="operationFailed"
+                                         class="flex justify-center bg-red-500 text-white px-2 py-1 font-semibold">
+                                        <p>{% trans "Error message:" %} {$ errorMessage $} </p>
+                                    </div>
+                                    <div ng-hide="operationSuccessfull"
+                                         class="flex justify-center bg-green-500 px-2 py-1 font-semibold">
+                                        <p>{% trans "Changes successfully saved." %}</p>
+                                    </div>
+                                    <div ng-hide="couldNotConnect"
+                                         class="flex justify-center bg-red-500 text-white px-2 py-1 font-semibold">
+                                        <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    {#                    open_basedir HTML End#}
                 </div>
             </div>
             <div class="mt-4 border shadow-lg">

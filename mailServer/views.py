@@ -22,6 +22,12 @@ def createEmailAccount(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def createEmailAccountV2(request):
+    try:
+        msM = MailServerManager(request)
+        return msM.createEmailAccountV2()
+    except KeyError:
+        return redirect(loadLoginPage)
 def listEmails(request):
     try:
         msM = MailServerManager(request)

@@ -194,6 +194,19 @@ class DNSManager:
         proc = httpProc(request, template, finalData, 'addDeleteRecords')
         return proc.render()
 
+    def addDeleteDNSRecordsV2(self, request=None, userID=None):
+        currentACL = ACLManager.loadedACL(userID)
+
+        if not os.path.exists('/home/cyberpanel/powerdns'):
+            finalData = {"status": 0}
+        else:
+            finalData = {"status": 1}
+
+        finalData['domainsList'] = ACLManager.findAllDomains(currentACL, userID)
+        template = 'dns/addDeleteDNSRecordsV2.html'
+        proc = httpProc(request, template, finalData, 'addDeleteRecords')
+        return proc.render()
+
     def getCurrentRecordsForDomain(self, userID=None, data=None):
         try:
 
@@ -600,6 +613,38 @@ class DNSManager:
         proc = httpProc(request, template, data, 'admin')
         return proc.render()
 
+    def configureDefaultNameServersV2(self, request=None, userID=None):
+        currentACL = ACLManager.loadedACL(userID)
+
+        if not os.path.exists('/home/cyberpanel/powerdns'):
+            data = {"status": 0}
+        else:
+            data = {"status": 1}
+
+        data['domainsList'] = ACLManager.findAllDomains(currentACL, userID)
+        if os.path.exists(DNSManager.defaultNameServersPath):
+            nsData = open(DNSManager.defaultNameServersPath, 'r').readlines()
+            try:
+                data['firstNS'] = nsData[0].rstrip('\n')
+            except:
+                pass
+            try:
+                data['secondNS'] = nsData[1].rstrip('\n')
+            except:
+                pass
+            try:
+                data['thirdNS'] = nsData[2].rstrip('\n')
+            except:
+                pass
+            try:
+                data['forthNS'] = nsData[3].rstrip('\n')
+            except:
+                pass
+
+        template = 'dns/configureDefaultNameServersV2.html'
+        proc = httpProc(request, template, data, 'admin')
+        return proc.render()
+
     def saveNSConfigurations(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
@@ -664,6 +709,32 @@ class DNSManager:
             data = {"status": status, 'CloudFlare': CloudFlare}
 
         template = 'dns/addDeleteDNSRecordsCloudFlare.html'
+        proc = httpProc(request, template, data, 'addDeleteRecords')
+        return proc.render()
+
+    def addDeleteDNSRecordsCloudFlareV2(self, request=None, userID=None):
+        currentACL = ACLManager.loadedACL(userID)
+        if not os.path.exists('/home/cyberpanel/powerdns'):
+            status = 0
+        else:
+            status = 1
+        admin = Administrator.objects.get(pk=userID)
+
+        CloudFlare = 0
+
+        cfPath = '%s%s' % (DNS.CFPath, admin.userName)
+
+        if os.path.exists(cfPath):
+            CloudFlare = 1
+            domainsList = ACLManager.findAllDomains(currentACL, userID)
+            self.admin = admin
+            self.loadCFKeys()
+            data = {"domainsList": domainsList, "status": status, 'CloudFlare': CloudFlare, 'cfEmail': self.email,
+                    'cfToken': self.key}
+        else:
+            data = {"status": status, 'CloudFlare': CloudFlare}
+
+        template = 'dns/addDeleteDNSRecordsCloudFlareV2.html'
         proc = httpProc(request, template, data, 'addDeleteRecords')
         return proc.render()
 

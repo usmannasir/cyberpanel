@@ -6,12 +6,15 @@
     {% load static %}
 
     <div ng-controller="createNameserverV2" class="p-8">
+        <div>
+            <p class="text-4xl font-bold">Create NameServer</p>
+            <p class="text-xs text-gray-600 py-2 font-semibold">You can use this page to setup nameservers using
+                which
+                people on the internet can resolve websites hosted on this server.</p>
+        </div>
         {% if not status %}
             <div>
                 <div class="flex justify-between">
-                    <div>
-                        <p class="text-4xl font-bold">Create NameServer</p>
-                    </div>
                     <div>
                         <h3>{% trans "PowerDNS is disabled." %}
                             <a href="{% url 'managePowerDNS' %}">
@@ -22,9 +25,6 @@
                             </a></h3>
                     </div>
                 </div>
-                <p class="text-xs text-gray-600 py-2 font-semibold">You can use this page to setup nameservers using
-                    which
-                    people on the internet can resolve websites hosted on this server.</p>
             </div>
         {% else %}
             <div>

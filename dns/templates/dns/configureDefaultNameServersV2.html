@@ -1,0 +1,86 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="configureDefaultNameserversV2" class="p-8">
+        <div>
+            <p class="text-4xl font-bold">Configure Default Nameserver</p>
+            <p class="text-xs text-gray-600 py-2 font-semibold">You can use this page to setup nameservers using which
+                people on the internet can resolve websites hosted on this server.</p>
+        </div>
+        {% if not status %}
+            <div>
+                <div class="flex justify-between">
+                    <div>
+                        <h3>{% trans "PowerDNS is disabled." %}
+                            <a href="{% url 'managePowerDNS' %}">
+                                <button class="btn btn-alt btn-hover btn-blue-alt">
+                                    <span>{% trans "Enable Now" %}</span>
+                                    <i class="glyph-icon icon-arrow-right"></i>
+                                </button>
+                            </a></h3>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div>
+                <div class="py-4">
+                    <p class="text-xl font-bold">Details</p>
+                    <img ng-hide="cyberPanelLoading" src="{% static 'images/loading.gif' %}">
+                </div>
+                <hr>
+                <div id="createPackages">
+                    <div class="flex mt-4 py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">First Nameserver</p>
+                        </div>
+                        <div ng-init="firstNS='{{ firstNS }}'">
+                            <input name="firstNS" type="text" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                   ng-model="firstNS" required>
+                        </div>
+                        <div class="text-orange-500 font-semibold ml-3">
+                            <div class="current-pack">ns1.example.com</div>
+                        </div>
+                    </div>
+                    <div class="flex py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">Second Nameserver</p>
+                        </div>
+                        <div ng-init="secondNS='{{ secondNS }}'" class="col-sm-6">
+                            <input name="secondNS" type="text" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                   ng-model="secondNS" required>
+                        </div>
+                    </div>
+                    <div class="flex py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">Third Nameserver</p>
+                        </div>
+                        <div ng-init="thirdNS='{{ thirdNS }}'" class="col-sm-6">
+                            <input name="thirdNS" type="text" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                   ng-model="thirdNS" required>
+                        </div>
+                    </div>
+                    <div class="flex py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">Forth Nameserver</p>
+                        </div>
+                        <div ng-init="forthNS='{{ forthNS }}'" class="col-sm-6">
+                            <input name="forthNS" type="text" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                   ng-model="forthNS" required>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-center mt-6">
+                        <button ng-click="saveNSConfigurations()"
+                                class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                            Save
+                        </button>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

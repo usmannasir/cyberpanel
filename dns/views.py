@@ -103,6 +103,15 @@ def addDeleteDNSRecords(request):
         return redirect(loadLoginPage)
 
 
+def addDeleteDNSRecordsV2(request):
+    try:
+        userID = request.session['userID']
+        dm = DNSManager()
+        return dm.addDeleteDNSRecordsV2(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 def updateRecord(request):
     try:
         userID = request.session['userID']
@@ -208,6 +217,15 @@ def configureDefaultNameServers(request):
         return redirect(loadLoginPage)
 
 
+def configureDefaultNameServersV2(request):
+    try:
+        userID = request.session['userID']
+        dm = DNSManager()
+        return dm.configureDefaultNameServersV2(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 def saveNSConfigurations(request):
     try:
         userID = request.session['userID']
@@ -222,6 +240,15 @@ def addDeleteDNSRecordsCloudFlare(request):
         userID = request.session['userID']
         dm = DNSManager()
         return dm.addDeleteDNSRecordsCloudFlare(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def addDeleteDNSRecordsCloudFlareV2(request):
+    try:
+        userID = request.session['userID']
+        dm = DNSManager()
+        return dm.addDeleteDNSRecordsCloudFlareV2(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
 

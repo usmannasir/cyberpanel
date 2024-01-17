@@ -1,0 +1,79 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="addModifyDNSRecordsCloudFlareV2" class="p-8">
+        <div>
+            <p class="text-4xl font-bold">Add/Modify DNS Zone</p>
+            <p class="text-xs text-gray-600 py-2 font-semibold">On this page you can add/modify dns records for domains
+                whose dns zone is already created.</p>
+        </div>
+        {% if not status %}
+            <div>
+                <div class="flex justify-between">
+                    <div>
+                        <h3>{% trans "PowerDNS is disabled." %}
+                            <a href="{% url 'managePowerDNS' %}">
+                                <button class="btn btn-alt btn-hover btn-blue-alt">
+                                    <span>{% trans "Enable Now" %}</span>
+                                    <i class="glyph-icon icon-arrow-right"></i>
+                                </button>
+                            </a></h3>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div>
+                <div class="py-4">
+                    <p class="text-xl font-bold">Add Records</p>
+                    <img ng-hide="recordsLoading" src="{% static 'images/loading.gif' %}">
+                </div>
+                <hr>
+                <div>
+                    <div class="flex mt-4 py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">CloudFlare Email</p>
+                        </div>
+                        <div>
+                            <input name="cfEmail" type="text" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                   ng-model="cfEmail"
+                                   required>
+                        </div>
+
+                    </div>
+                    <div class="flex py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">API Token</p>
+                        </div>
+                        <div>
+                            <input name="cfToken" type="text" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                   ng-model="cfToken"
+                                   required>
+                        </div>
+                    </div>
+                    <div class="flex py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">Sync local Records to CloudFlare</p>
+                        </div>
+                        <div>
+                            <select ng-model="cfSync" class="w-80 bg-gray-100 rounded px-2 py-1">
+                                <option>Enable</option>
+                                <option>Disable</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-center mt-6">
+                        <button ng-click="saveCFConfigs()"
+                                class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                            Save
+                        </button>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

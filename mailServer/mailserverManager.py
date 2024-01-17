@@ -4,12 +4,14 @@ import os.path
 import sys
 import django
 from plogical.httpProc import httpProc
+
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 from django.http import HttpResponse
+
 try:
-    from .models import Domains,EUsers
+    from .models import Domains, EUsers
     from loginSystem.views import loadLoginPage
 except:
     pass
@@ -17,12 +19,14 @@ import plogical.CyberCPLogFileWriter as logging
 import json
 import shlex
 import subprocess
+
 try:
     from plogical.virtualHostUtilities import virtualHostUtilities
     from plogical.mailUtilities import mailUtilities
 except:
     pass
 import _thread
+
 try:
     from dns.models import Domains as dnsDomains
     from dns.models import Records as dnsRecords
@@ -39,9 +43,10 @@ import bcrypt
 import threading as multi
 import argparse
 
+
 class MailServerManager(multi.Thread):
 
-    def __init__(self, request = None, function = None, extraArgs = None):
+    def __init__(self, request=None, function=None, extraArgs=None):
         multi.Thread.__init__(self)
         self.request = request
         self.function = function
@@ -75,6 +80,22 @@ class MailServerManager(multi.Thread):
                         {'websiteList': websitesName, "status": 1}, 'createEmail')
         return proc.render()
 
+    def createEmailAccountV2(self):
+        userID = self.request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if not os.path.exists('/home/cyberpanel/postfix'):
+            proc = httpProc(self.request, 'mailServer/createEmailAccountV2.html',
+                            {"status": 0}, 'createEmail')
+            return proc.render()
+
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        websitesName = websitesName + ACLManager.findChildDomains(websitesName)
+
+        proc = httpProc(self.request, 'mailServer/createEmailAccountV2.html',
+                        {'websiteList': websitesName, "status": 1}, 'createEmail')
+        return proc.render()
+
     def listEmails(self):
         userID = self.request.session['userID']
         currentACL = ACLManager.loadedACL(userID)
@@ -105,13 +126,11 @@ class MailServerManager(multi.Thread):
             userName = data['username'].lower()
             password = data['passwordByPass']
 
-
             admin = Administrator.objects.get(pk=userID)
             if ACLManager.checkOwnership(domainName, admin, currentACL) == 1:
                 pass
             else:
                 return ACLManager.loadErrorJson()
-
 
             ## Create email entry
 
@@ -239,7 +258,7 @@ class MailServerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    def fixMailSSL(self, data = None):
+    def fixMailSSL(self, data=None):
         try:
 
             userID = self.request.session['userID']
@@ -251,7 +270,6 @@ class MailServerManager(multi.Thread):
             else:
                 selectedDomain = data['websiteName']
 
-
             admin = Administrator.objects.get(pk=userID)
 
             if ACLManager.checkOwnership(selectedDomain, admin, currentACL) == 1:
@@ -262,11 +280,12 @@ class MailServerManager(multi.Thread):
             website = Websites.objects.get(domain=selectedDomain)
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-            execPath = '%s setupAutoDiscover --virtualHostName %s --websiteOwner %s' % (execPath, selectedDomain, website.admin.userName)
+            execPath = '%s setupAutoDiscover --virtualHostName %s --websiteOwner %s' % (
+            execPath, selectedDomain, website.admin.userName)
 
             ProcessUtilities.executioner(execPath)
 
-            data_ret = {'status': 1,  'error_message': "None"}
+            data_ret = {'status': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -414,7 +433,6 @@ class MailServerManager(multi.Thread):
                     ProcessUtilities.executioner(command)
                     ##
 
-
             data_ret = {'status': 1, 'deleteForwardingStatus': 1, 'error_message': "None",
                         'successMessage': 'Successfully deleted!'}
             json_data = json.dumps(data_ret)
@@ -476,7 +494,8 @@ class MailServerManager(multi.Thread):
                 externalApp = website.externalApp
                 pipeowner = externalApp
                 ## Add Filter pipe to postfix /etc/postfix/master.cf
-                filterpipe = '%spipe unix - n n - - pipe flags=Rq user=%s  argv=%s -f  $(sender) -- $(recipient)' % (sourceusername, pipeowner, destination)
+                filterpipe = '%spipe unix - n n - - pipe flags=Rq user=%s  argv=%s -f  $(sender) -- $(recipient)' % (
+                sourceusername, pipeowner, destination)
                 command = "echo '" + filterpipe + "' >> /etc/postfix/master.cf"
                 ProcessUtilities.executioner(command)
                 ## Add Check Recipient Hash to postfix /etc/postfix/main.cf
@@ -490,9 +509,8 @@ class MailServerManager(multi.Thread):
                 ProcessUtilities.executioner(command)
                 ##
 
-
-
-            data_ret = {'status': 1, 'createStatus': 1, 'error_message': "None", 'successMessage': 'Successfully Created!'}
+            data_ret = {'status': 1, 'createStatus': 1, 'error_message': "None",
+                        'successMessage': 'Successfully Created!'}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -552,7 +570,8 @@ class MailServerManager(multi.Thread):
                     json_data = json_data + ',' + json.dumps(dic)
 
             json_data = json_data + ']'
-            final_json = json.dumps({'status': 1, 'fetchStatus': 1,'serverHostname': 'mail.%s' % (selectedDomain), 'mailConfigured': mailConfigured, 'error_message': "None", "data": json_data})
+            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'serverHostname': 'mail.%s' % (selectedDomain),
+                                     'mailConfigured': mailConfigured, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
 
         except BaseException as msg:
@@ -614,7 +633,6 @@ class MailServerManager(multi.Thread):
                 emailDB.password = password
 
             emailDB.save()
-
 
             data_ret = {'status': 1, 'passChangeStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)
@@ -685,7 +703,8 @@ class MailServerManager(multi.Thread):
 
                 DNS.createDKIMRecords(domainName)
 
-                data_ret = {'status': 1, 'fetchStatus': 1, 'keysAvailable': 1, 'publicKey': output[leftIndex:rightIndex],
+                data_ret = {'status': 1, 'fetchStatus': 1, 'keysAvailable': 1,
+                            'publicKey': output[leftIndex:rightIndex],
                             'privateKey': privateKey, 'dkimSuccessMessage': 'Keys successfully fetched!',
                             'error_message': "None"}
                 json_data = json.dumps(data_ret)
@@ -879,7 +898,8 @@ class MailServerManager(multi.Thread):
 
     def RunServerLevelEmailChecks(self):
         try:
-            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Checking if MailServer SSL issued..,10')
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                      'Checking if MailServer SSL issued..,10')
 
             reportFile = self.extraArgs['reportFile']
 
@@ -932,7 +952,7 @@ class MailServerManager(multi.Thread):
                 # os.remove(file_name)
 
             ProcessUtilities.executioner(command)
-            
+
             import socket
             # We are going to leverage postconfig -e to edit the settings for hostname
             command = '"postconf -e "myhostname = %s"' % (str(socket.getfqdn()))
@@ -945,7 +965,7 @@ class MailServerManager(multi.Thread):
             postfix_main = '/etc/postfix/main.cf'
             command = "sed -i 's|server.example.com|%s|g' %s" % (str(socket.getfqdn()), postfix_main)
             ProcessUtilities.executioner(command)
-            
+
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Re-installing Dovecot..,15')
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
@@ -1000,17 +1020,18 @@ class MailServerManager(multi.Thread):
                 except:
                     pass
 
-            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Postfix/dovecot reinstalled.,40')
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                      'Postfix/dovecot reinstalled.,40')
 
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], '%s [install_postfix_dovecot][404]' % (str(msg)), 10)
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                      '%s [install_postfix_dovecot][404]' % (str(msg)), 10)
             return 0
 
         return 1
 
     def setup_email_Passwords(self, mysqlPassword):
         try:
-
 
             mysql_virtual_domains = "/usr/local/CyberCP/install/email-configs-one/mysql-virtual_domains.cf"
             mysql_virtual_forwardings = "/usr/local/CyberCP/install/email-configs-one/mysql-virtual_forwardings.cf"
@@ -1209,25 +1230,27 @@ class MailServerManager(multi.Thread):
 
             # Cleanup config files for ubuntu
             if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
-                self.centos_lib_dir_to_ubuntu("/usr/local/CyberCP/install/email-configs-one/master.cf", "/usr/libexec/", "/usr/lib/")
-                self.centos_lib_dir_to_ubuntu("/usr/local/CyberCP/install/email-configs-one/main.cf", "/usr/libexec/postfix",
+                self.centos_lib_dir_to_ubuntu("/usr/local/CyberCP/install/email-configs-one/master.cf", "/usr/libexec/",
+                                              "/usr/lib/")
+                self.centos_lib_dir_to_ubuntu("/usr/local/CyberCP/install/email-configs-one/main.cf",
+                                              "/usr/libexec/postfix",
                                               "/usr/lib/postfix/sbin")
-
 
             ########### Copy config files
             import shutil
 
-            shutil.copy("/usr/local/CyberCP/install/email-configs-one/mysql-virtual_domains.cf", "/etc/postfix/mysql-virtual_domains.cf")
+            shutil.copy("/usr/local/CyberCP/install/email-configs-one/mysql-virtual_domains.cf",
+                        "/etc/postfix/mysql-virtual_domains.cf")
             shutil.copy("/usr/local/CyberCP/install/email-configs-one/mysql-virtual_forwardings.cf",
                         "/etc/postfix/mysql-virtual_forwardings.cf")
-            shutil.copy("/usr/local/CyberCP/install/email-configs-one/mysql-virtual_mailboxes.cf", "/etc/postfix/mysql-virtual_mailboxes.cf")
+            shutil.copy("/usr/local/CyberCP/install/email-configs-one/mysql-virtual_mailboxes.cf",
+                        "/etc/postfix/mysql-virtual_mailboxes.cf")
             shutil.copy("/usr/local/CyberCP/install/email-configs-one/mysql-virtual_email2email.cf",
                         "/etc/postfix/mysql-virtual_email2email.cf")
             shutil.copy("/usr/local/CyberCP/install/email-configs-one/main.cf", main)
             shutil.copy("/usr/local/CyberCP/install/email-configs-one/master.cf", master)
             shutil.copy("/usr/local/CyberCP/install/email-configs-one/dovecot.conf", dovecot)
             shutil.copy("/usr/local/CyberCP/install/email-configs-one/dovecot-sql.conf.ext", dovecotmysql)
-
 
             ######################################## Permissions
 
@@ -1629,7 +1652,8 @@ milter_default_action = accept
 
             self.checkIfMailServerSSLIssued()
 
-            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Removing and re-installing postfix/dovecot..,5')
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                      'Removing and re-installing postfix/dovecot..,5')
 
             if self.install_postfix_dovecot() == 0:
                 return 0
@@ -1647,20 +1671,24 @@ milter_default_action = accept
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Configurations reset..,70')
 
             if self.setup_postfix_dovecot_config() == 0:
-                logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'setup_postfix_dovecot_config failed. [404].')
+                logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                          'setup_postfix_dovecot_config failed. [404].')
                 return 0
 
-            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Restoreing OpenDKIM configurations..,70')
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                      'Restoreing OpenDKIM configurations..,70')
 
             if self.configureOpenDKIM() == 0:
-                logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'configureOpenDKIM failed. [404].')
+                logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                          'configureOpenDKIM failed. [404].')
                 return 0
 
-
             if self.MailSSL:
-                logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Setting up Mail Server SSL if any..,75')
+                logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                          'Setting up Mail Server SSL if any..,75')
                 from plogical.virtualHostUtilities import virtualHostUtilities
-                virtualHostUtilities.issueSSLForMailServer(self.mailHostName, '/home/%s/public_html' % (self.mailHostName))
+                virtualHostUtilities.issueSSLForMailServer(self.mailHostName,
+                                                           '/home/%s/public_html' % (self.mailHostName))
 
             from websiteFunctions.models import ChildDomains
             from plogical.virtualHostUtilities import virtualHostUtilities
@@ -1708,8 +1736,8 @@ milter_default_action = accept
         else:
             return 1, 'All checks are OK.'
 
-def main():
 
+def main():
     parser = argparse.ArgumentParser(description='CyberPanel')
     parser.add_argument('function', help='Specifiy a function to call!')
     parser.add_argument('--tempStatusPath', help='Path of temporary status file.')
@@ -1720,6 +1748,7 @@ def main():
         extraArgs = {'tempStatusPath': args.tempStatusPath}
         background = MailServerManager(None, 'ResetEmailConfigurations', extraArgs)
         background.ResetEmailConfigurations()
+
 
 if __name__ == "__main__":
     main()

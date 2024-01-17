@@ -1,0 +1,120 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="createEmailAccountV2" class="p-8">
+        <div>
+            <p class="text-4xl font-bold">Create Email Account</p>
+            <p class="text-xs text-gray-600 py-2 font-semibold">Select a website from the list, to create an email
+                account.</p>
+        </div>
+        <div>
+            <div class="py-4">
+                <p class="text-xl font-bold">Create Email Account</p>
+                <img ng-hide="emailLoading"
+                     src="{% static 'images/loading.gif' %}">
+            </div>
+            <hr>
+            {% if not status %}
+
+                <div class="col-md-12 text-center" style="margin-bottom: 2%;">
+                    <h3>{% trans "Postfix is disabled." %}
+                        <a href="{% url 'managePostfix' %}">
+                            <button class="btn btn-alt btn-hover btn-blue-alt">
+                                <span>{% trans "Enable Now" %}</span>
+                                <i class="glyph-icon icon-arrow-right"></i>
+                            </button>
+                        </a></h3>
+                </div>
+            {% else %}
+                <div>
+                    <div class="flex mt-4 py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">Select Website</p>
+                        </div>
+                        <div>
+                            <select ng-change="showEmailDetails()" ng-model="emailDomain"
+                                    class="w-80 bg-gray-100 rounded px-2 py-1">
+                                {% for items in websiteList %}
+                                    <option>{{ items }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div ng-hide="emailDetails" class="flex py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">User Name</p>
+                        </div>
+                        <div>
+                            <input ng-change="hideFewDetails" type="text" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                   ng-model="emailUsername" required>
+                        </div>
+                        <div class="text-orange-500 font-semibold ml-3">
+                            <p>@{$ selectedDomain $}</p>
+                        </div>
+                    </div>
+                    <div ng-hide="emailDetails" class="flex py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">Password</p>
+                        </div>
+                        <div>
+                            <input type="password" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="emailPassword"
+                                   required>
+                        </div>
+                        <div class="w-80 ml-4">
+                            <button ng-click="generatePassword()"
+                                    class="bg-orange-500 text-white font-semibold px-2 py-1">
+                                Generate
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <div ng-hide="generatedPasswordView" class="flex py-2 px-6">
+                            <div>
+                                <p class="font-semibold w-60">Generated Password</p>
+                            </div>
+                            <div>
+                                <input type="text" name="email" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                       ng-model="emailPassword"
+                                       required>
+                            </div>
+                            <div class="w-80 ml-4">
+                                <button ng-click="usePassword()"
+                                        class="bg-orange-500 text-white font-semibold px-2 py-1">
+                                    Use
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div ng-hide="emailDetails" class="flex justify-center mt-6">
+                        <button ng-click="createEmailAccount()"
+                                class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                            Create Email
+                        </button>
+                    </div>
+                </div>
+                </div>
+                <div class="mt-3">
+                    <div ng-hide="canNotCreate"
+                         class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                        <p>{% trans "Cannot create email account. Error message:" %} {$ errorMessage
+                            $}</p>
+                    </div>
+
+                    <div ng-hide="successfullyCreated"
+                         class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                        <p>{% trans "Mailbox with username:" %} {$ createdID
+                            $}{% trans " has been successfully created." %}</p>
+                    </div>
+                    <div ng-hide="couldNotConnect"
+                         class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                        <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                    </div>
+                </div>
+            {% endif %}
+    </div>
+{% endblock %}

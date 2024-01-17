@@ -1,0 +1,478 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="addModifyDNSRecordsV2" class="p-8">
+        <div>
+            <p class="text-4xl font-bold">Add/Modify DNS Zone</p>
+            <p class="text-xs text-gray-600 py-2 font-semibold">On this page you can add/modify dns records for domains
+                whose dns zone is already created.</p>
+        </div>
+        <div>
+            {% if not status %}
+                <div>
+                    <div class="flex justify-between">
+                        <div>
+                            <h3>{% trans "PowerDNS is disabled." %}
+                                <a href="{% url 'managePowerDNS' %}">
+                                    <button class="btn btn-alt btn-hover btn-blue-alt">
+                                        <span>{% trans "Enable Now" %}</span>
+                                        <i class="glyph-icon icon-arrow-right"></i>
+                                    </button>
+                                </a></h3>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div>
+                    <div class="py-4">
+                        <p class="text-xl font-bold">Add Records</p>
+                        <img ng-hide="recordsLoading" src="{% static 'images/loading.gif' %}">
+                    </div>
+                    <hr>
+                    <div id="createPackages">
+                        <div class="flex mt-4 py-2 px-6">
+                            <div>
+                                <p class="font-semibold w-60">Select Domain</p>
+                            </div>
+                            <div>
+                                <select ng-change="fetchRecords()" ng-model="selectedZone"
+                                        class="w-80 bg-gray-100 rounded px-2 py-1">
+                                    {% for items in domainsList %}
+                                        <option>{{ items }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <hr>
+                </div>
+                <div ng-hide="addRecordsBox">
+                    <div class="py-6">
+                        <ul class="flex mt-4 text-xl font-semibold text-gray-700 px-2 gap-10">
+                            <li class="hover:text-orange-600 active"><a href="#" ng-click="fetchRecordsTabs('aRecord')"
+                                                                        id="aRecord"
+                                                                        onclick="showTab('tab1')"
+                                                                        aria-selected="true">A</a>
+                            </li>
+                            <li class="hover:text-orange-600"><a href="#" ng-click="fetchRecordsTabs('aaaaRecord')"
+                                                                 id="aaaaRecord"
+                                                                 onclick="showTab('tab2')">AAAA</a></li>
+                            <li class="hover:text-orange-600"><a href="#" ng-click="fetchRecordsTabs('cNameRecord')"
+                                                                 id="cNameRecord"
+                                                                 onclick="showTab('tab3')">CNAME</a></li>
+                            <li class="hover:text-orange-600"><a href="#" ng-click="fetchRecordsTabs('mxRecord')"
+                                                                 id="mxRecord" onclick="showTab('tab4')">MX</a>
+                            </li>
+                            <li class="hover:text-orange-600"><a href="#" ng-click="fetchRecordsTabs('txtRecord')"
+                                                                 id="txtRecord" onclick="showTab('tab5')">TXT</a></li>
+                            <li class="hover:text-orange-600"><a href="#" ng-click="fetchRecordsTabs('spfRecord')"
+                                                                 id="spfRecord" onclick="showTab('tab6')">SPF</a>
+                            </li>
+                            <li class="hover:text-orange-600"><a href="#" ng-click="fetchRecordsTabs('nsRecord')"
+                                                                 id="nsRecord" onclick="showTab('tab7')">NS</a>
+                            </li>
+                            <li class="hover:text-orange-600"><a href="#" ng-click="fetchRecordsTabs('soaRecord')"
+                                                                 id="soaRecord" onclick="showTab('tab8')">SOA</a>
+                            </li>
+                            <li class="hover:text-orange-600"><a href="#" ng-click="fetchRecordsTabs('srvRecord')"
+                                                                 id="srvRecord" onclick="showTab('tab9')">SRV</a>
+                            </li>
+                            <li class="hover:text-orange-600"><a href="#" ng-click="fetchRecordsTabs('caaRecord')"
+                                                                 id="caaRecord" onclick="showTab('tab10')">CAA</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <hr>
+                    <div id="tab1" class="tab-content">
+                        <div class="flex justify-between px-4 py-3 gap-5">
+                            <div class="aRecord">
+                                <p class="font-semibold mb-2">Name</p>
+                                <input name="dom" type="text"
+                                       class="w-80 bg-gray-100 rounded px-2 py-1"
+                                       ng-model="recordName" required>
+                            </div>
+                            <div class="aRecord">
+                                <p class="font-semibold mb-2">TTL</p>
+                                <input type="number" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                       ng-model="ttl" required>
+                            </div>
+                            <div class="aRecord">
+                                <p class="font-semibold mb-2">IP Address</p>
+                                <input name="dom" type="text"
+                                       class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="recordContentA" required>
+                            </div>
+                        </div>
+                        <div class="flex justify-center mt-3 aRecord">
+                            <button ng-click="addDNSRecord('A')"
+                                    class="bg-orange-500 px-2 py-2 text-white font-semibold">
+                                Add Record
+                            </button>
+                        </div>
+                    </div>
+                    <div id="tab2" class="tab-content" style="display: none;">
+                        <div class="flex justify-between px-4 py-3 gap-5">
+                            <div class="aaaaRecord">
+                                <p class="font-semibold mb-2">Name</p>
+                                <input name="dom" type="text"
+                                       class="w-80 bg-gray-100 rounded px-2 py-1"
+                                       ng-model="recordName" required>
+                            </div>
+                            <div class="aaaaRecord">
+                                <p class="font-semibold mb-2">TTL</p>
+                                <input type="number" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                       ng-model="ttl" required>
+                            </div>
+                            <div class="aaaaRecord">
+                                <p class="font-semibold mb-2">IPV6 Address</p>
+                                <input name="dom" type="text"
+                                       class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="recordContentAAAA" required>
+                            </div>
+                        </div>
+                        <div class="flex justify-center mt-3 aaaaRecord">
+                            <button ng-click="addDNSRecord('AAAA')"
+                                    class="bg-orange-500 px-2 py-2 text-white font-semibold">
+                                Add Record
+                            </button>
+                        </div>
+                    </div>
+                    <div id="tab3" class="tab-content" style="display: none;">
+                        <div class="flex justify-between px-4 py-3 gap-5">
+                            <div class="cNameRecord">
+                                <p class="font-semibold mb-2">Name</p>
+                                <input name="dom" type="text"
+                                       class="w-80 bg-gray-100 rounded px-2 py-1"
+                                       ng-model="recordName" required>
+                            </div>
+                            <div class="cNameRecord">
+                                <p class="font-semibold mb-2">TTL</p>
+                                <input type="number" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                       ng-model="ttl" required>
+                            </div>
+                            <div class="cNameRecord">
+                                <p class="font-semibold mb-2">Domain Name</p>
+                                <input name="dom" type="text"
+                                       class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="recordContentCNAME"
+                                       required>
+                            </div>
+                        </div>
+                        <div class="flex justify-center mt-3 cNameRecord">
+                            <button ng-click="addDNSRecord('CNAME')"
+                                    class="bg-orange-500 px-2 py-2 text-white font-semibold">
+                                Add Record
+                            </button>
+                        </div>
+                    </div>
+                    <div id="tab4" class="tab-content" style="display: none;">
+                        <div class="flex justify-between px-4 py-3 gap-5">
+                            <div class="mxRecord">
+                                <p class="font-semibold mb-2">Name</p>
+                                <input name="dom" type="text"
+                                       class="w-60 bg-gray-100 rounded px-2 py-1"
+                                       ng-model="recordName" required>
+                            </div>
+                            <div class="mxRecord">
+                                <p class="font-semibold mb-2">TTL</p>
+                                <input type="number" class="w-60 bg-gray-100 rounded px-2 py-1"
+                                       ng-model="ttl" required>
+                            </div>
+                            <div class="mxRecord">
+                                <p class="font-semibold mb-2">Priority</p>
+                                <input type="number" class="w-60 bg-gray-100 rounded px-2 py-1"
+                                       ng-model="priority" required>
+                            </div>
+                            <div class="mxRecord">
+                                <p class="font-semibold mb-2">Domain Name</p>
+                                <input name="dom" type="text"
+                                       class="w-60 bg-gray-100 rounded px-2 py-1" ng-model="recordContentMX" required>
+                            </div>
+                        </div>
+                        <div class="flex justify-center mt-3 mxRecord">
+                            <button ng-click="addDNSRecord('MX')"
+                                    class="bg-orange-500 px-2 py-2 text-white font-semibold">
+                                Add Record
+                            </button>
+                        </div>
+                    </div>
+                    <div id="tab5" class="tab-content" style="display: none;">
+                        <div class="flex justify-between px-4 py-3 gap-5">
+                            <div class="txtRecord">
+                                <p class="font-semibold mb-2">Name</p>
+                                <input name="dom" type="text"
+                                       class="w-80 bg-gray-100 rounded px-2 py-1"
+                                       ng-model="recordName" required>
+                            </div>
+                            <div class="txtRecord">
+                                <p class="font-semibold mb-2">TTL</p>
+                                <input type="number" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                       ng-model="ttl" required>
+                            </div>
+                            <div class="txtRecord">
+                                <p class="font-semibold mb-2">Text</p>
+                                <input name="dom" type="text"
+                                       class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="recordContentTXT" required>
+                            </div>
+                        </div>
+                        <div class="flex justify-center mt-3 txtRecord">
+                            <button ng-click="addDNSRecord('TXT')"
+                                    class="bg-orange-500 px-2 py-2 text-white font-semibold">
+                                Add Record
+                            </button>
+                        </div>
+                    </div>
+                    <div id="tab6" class="tab-content" style="display: none;">
+                        <div class="flex justify-between px-4 py-3 gap-5">
+                            <div class="spfRecord">
+                                <p class="font-semibold mb-2">Name</p>
+                                <input name="dom" type="text"
+                                       class="w-80 bg-gray-100 rounded px-2 py-1"
+                                       ng-model="recordName" required>
+                            </div>
+                            <div class="spfRecord">
+                                <p class="font-semibold mb-2">TTL</p>
+                                <input type="number" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                       ng-model="ttl" required>
+                            </div>
+                            <div class="spfRecord">
+                                <p class="font-semibold mb-2">Policy</p>
+                                <input name="dom" type="text"
+                                       class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="recordContentSPF" required>
+                            </div>
+                        </div>
+                        <div class="flex justify-center mt-3 spfRecord">
+                            <button ng-click="addDNSRecord('SPF')"
+                                    class="bg-orange-500 px-2 py-2 text-white font-semibold">
+                                Add Record
+                            </button>
+                        </div>
+                    </div>
+                    <div id="tab7" class="tab-content" style="display: none;">
+                        <div class="flex justify-between px-4 py-3 gap-5">
+                            <div class="nsRecord">
+                                <p class="font-semibold mb-2">Name</p>
+                                <input placeholder="{% trans 'Name' %}" type="text"
+                                       class="w-80 bg-gray-100 rounded px-2 py-1"
+                                       ng-model="selectedZone" disabled>
+                            </div>
+                            <div class="nsRecord">
+                                <p class="font-semibold mb-2">TTL</p>
+                                <input type="number" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                       ng-model="ttl" required>
+                            </div>
+                            <div class="nsRecord">
+                                <p class="font-semibold mb-2">Name Server</p>
+                                <input name="dom" type="text"
+                                       class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="recordContentNS" required>
+                            </div>
+                        </div>
+                        <div class="flex justify-center mt-3 nsRecord">
+                            <button ng-click="addDNSRecord('NS')"
+                                    class="bg-orange-500 px-2 py-2 text-white font-semibold">
+                                Add Record
+                            </button>
+                        </div>
+                    </div>
+                    <div id="tab8" class="tab-content" style="display: none;">
+                        <div class="flex justify-between px-4 py-3 gap-5">
+                            <div class="soaRecord">
+                                <p class="font-semibold mb-2">Name</p>
+                                <input placeholder="{% trans 'Name' %}" type="text"
+                                       class="w-80 bg-gray-100 rounded px-2 py-1"
+                                       ng-model="selectedZone" disabled>
+                            </div>
+                            <div class="soaRecord">
+                                <p class="font-semibold mb-2">TTL</p>
+                                <input type="number" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                       ng-model="ttl" required>
+                            </div>
+                            <div class="soaRecord">
+                                <p class="font-semibold mb-2">SOA Value</p>
+                                <input placeholder="{% trans 'SOA Value' %}" type="text"
+                                       class="w-80 bg-gray-100 rounded px-2 py-1"
+                                       ng-model="recordContentSOA" required>
+                            </div>
+                        </div>
+                        <div class="flex justify-center mt-3 soaRecord">
+                            <button ng-click="addDNSRecord('SOA')"
+                                    class="bg-orange-500 px-2 py-2 text-white font-semibold">
+                                Add Record
+                            </button>
+                        </div>
+                    </div>
+                    <div id="tab9" class="tab-content" style="display: none;">
+                        <div class="flex justify-between px-4 py-3 gap-5">
+                            <div class="srvRecord">
+                                <p class="font-semibold mb-2">Name</p>
+                                <input placeholder="{% trans 'Name' %}" type="text"
+                                       class="w-60 bg-gray-100 rounded px-2 py-1"
+                                       ng-model="selectedZone" disabled>
+                            </div>
+                            <div class="srvRecord">
+                                <p class="font-semibold mb-2">TTL</p>
+                                <input type="number" class="w-60 bg-gray-100 rounded px-2 py-1"
+                                       ng-model="ttl" required>
+                            </div>
+                            <div class="srvRecord">
+                                <p class="font-semibold mb-2">Prioirty</p>
+                                <input placeholder="{% trans 'Prioirty' %}" type="number"
+                                       class="w-60 bg-gray-100 rounded px-2 py-1"
+                                       ng-model="priority" required>
+                            </div>
+                            <div class="srvRecord">
+                                <p class="font-semibold mb-2">Content</p>
+                                <input placeholder="{% trans 'Content' %}" type="text"
+                                       class="w-60 bg-gray-100 rounded px-2 py-1"
+                                       ng-model="recordContentSRV" required>
+                            </div>
+                        </div>
+                        <div class="flex justify-center mt-3 srvRecord">
+                            <button ng-click="addDNSRecord('SRV')"
+                                    class="bg-orange-500 px-2 py-2 text-white font-semibold">
+                                Add Record
+                            </button>
+                        </div>
+                    </div>
+                    <div id="tab10" class="tab-content" style="display: none;">
+                        <div class="flex justify-between px-4 py-3 gap-5">
+                            <div class="caaRecord">
+                                <p class="font-semibold mb-2">Name</p>
+                                <input placeholder="{% trans 'Name' %}" type="text"
+                                       class="w-80 bg-gray-100 rounded px-2 py-1"
+                                       ng-model="selectedZone" disabled>
+                            </div>
+                            <div class="caaRecord">
+                                <p class="font-semibold mb-2">TTL</p>
+                                <input type="number" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                       ng-model="ttl" required>
+                            </div>
+                            <div class="caaRecord">
+                                <p class="font-semibold mb-2 text-white">.</p>
+                                <input placeholder='Value e.g: 0 issue "letsencrypt.org"' type="text"
+                                       class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="recordContentCAA" required>
+                            </div>
+                        </div>
+                        <div class="flex justify-center mt-3 caaRecord">
+                            <button ng-click="addDNSRecord('CAA')"
+                                    class="bg-orange-500 px-2 py-2 text-white font-semibold">
+                                Add Record
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div ng-hide="currentRecords" class="relative py-5 overflow-x-auto">
+                    <table class="w-full text-sm text-left rtl:text-right">
+                        <thead>
+                        <tr>
+                            <th scope="col" class="px-6 py-3">
+                                Type
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Name
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                TTL
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Value
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Priority
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Actions
+                            </th>
+                        </tr>
+                        </thead>
+                        <hr>
+                        <tbody ng-repeat="record in records track by $index"
+                               class="border shadow-lg py-3 px-6 rounded-b-lg">
+                        <tr>
+                            <td ng-bind="record.type" class="px-8 py-4 font-bold">
+                            </td>
+                            <td class="px-6 py-4">
+                                <input ng-change="setupContent(record.id, 'name', nameNow)"
+                                       ng-model="nameNow" type="text" class="bg-gray-200 px-2 py-2 rounded-lg"
+                                       ng-value="record.name">
+                            </td>
+                            <td class="px-6 py-4">
+                                <input ng-change="setupContent(record.id, 'ttl', ttlNow)"
+                                       ng-model="ttlNow" type="number" class="bg-gray-200 w-16 px-2 py-2 rounded-lg"
+                                       ng-value="record.ttl">
+                            </td>
+                            <td class="px-6 py-4">
+                                <input ng-change="setupContent(record.id, 'content', contentNow)"
+                                       ng-model="contentNow" type="text" class="bg-gray-200 px-2 py-2 rounded-lg"
+                                       ng-value="record.content">
+                            </td>
+                            <td class="px-6 py-4">
+                                <input ng-change="setupContent(record.id, 'priority', priorityNow)"
+                                       type="number" class="bg-gray-200 w-16 px-2 py-2 rounded-lg"
+                                       ng-model="priorityNow"
+                                       ng-value="record.priority">
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex gap-2">
+                                    <div>
+                                        <button ng-click="saveNow(record.id)">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                 stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                      d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <div ng-click="deleteRecord(record.id)" class="cursor-pointer">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                             stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                  d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div>
+                    <div ng-hide="canNotFetchRecords"
+                         class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                        <p>{% trans "Cannot fetch records. Error message:" %}{$ errorMessage $}</p>
+                    </div>
+                    <div ng-hide="couldNotAddRecord"
+                         class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                        <p>{% trans "Cannot add record. Error message: " %}{$ errorMessage $}</p>
+                    </div>
+                    <div ng-hide="recordsFetched"
+                         class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                        <p>{% trans "Records successfully fetched for" %} <strong>{$ domainFeteched
+                            $}</strong></p>
+                    </div>
+                    <div ng-hide="recordDeleted"
+                         class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                        <p>{% trans "Record Successfully Deleted" %}</p>
+                    </div>
+                    <div ng-hide="couldNotDeleteRecords"
+                         class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                        <p>{% trans "Cannot delete record. Error message:" %} {$ errorMessage $}</p>
+                    </div>
+                    <div ng-hide="recordAdded"
+                         class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                        <p>{% trans "Record Successfully Added." %}</p>
+                    </div>
+                    <div ng-hide="couldNotConnect"
+                         class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                        <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
