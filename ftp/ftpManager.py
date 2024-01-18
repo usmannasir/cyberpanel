@@ -2,14 +2,11 @@
 import os.path
 import sys
 import django
-
-from plogical.httpProc import httpProc
-
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 import json
-from django.shortcuts import redirect
+from plogical.httpProc import httpProc
 from django.http import HttpResponse
 try:
     from .models import Users
@@ -287,62 +284,50 @@ class FTPManager:
             return HttpResponse(json_data)
 
     def installPureFTPD(self):
-        if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
-
-            command = 'DEBIAN_FRONTEND=noninteractive apt remove pure-ftp* -y'
-            os.system(command)
-
-            command = 'DEBIAN_FRONTEND=noninteractive apt install pure-ftpd-mysql -y'
-            os.system(command)
-
-            command = 'DEBIAN_FRONTEND=noninteractive apt install pure-ftpd-mysql -y'
-            os.system(command)
-
-            if ProcessUtilities.decideDistro() != ProcessUtilities.ubuntu20:
-                command = 'wget https://rep.cyberpanel.net/pure-ftpd-common_1.0.47-3_all.deb'
-                ProcessUtilities.executioner(command)
-
-                command = 'wget https://rep.cyberpanel.net/pure-ftpd-mysql_1.0.47-3_amd64.deb'
-                ProcessUtilities.executioner(command)
-
-                command = 'dpkg --install --force-confold pure-ftpd-common_1.0.47-3_all.deb'
-                ProcessUtilities.executioner(command)
-
-                command = 'dpkg --install --force-confold pure-ftpd-mysql_1.0.47-3_amd64.deb'
-                ProcessUtilities.executioner(command)
-
-        elif ProcessUtilities.decideDistro() == ProcessUtilities.centos:
-
-            command = 'yum remove pure-ftp* -y'
-            os.system(command)
-
-            command = "yum install -y pure-ftpd"
-            ProcessUtilities.executioner(command)
-        elif ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-
-            command = 'yum remove pure-ftp* -y'
-            os.system(command)
-
-            command = 'dnf install pure-ftpd -y'
-            ProcessUtilities.executioner(command)
-
-        ####### Install pureftpd to system startup
 
         def pureFTPDServiceName():
             if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
                 return 'pure-ftpd-mysql'
             return 'pure-ftpd'
 
+        #### new install
+
+        if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
+
+            command = 'DEBIAN_FRONTEND=noninteractive apt purge pure-ftp* -y'
+            ProcessUtilities.executioner(command, 'root', True)
+
+
+            command = 'DEBIAN_FRONTEND=noninteractive apt install pure-ftpd-mysql -y'
+            ProcessUtilities.executioner(command, 'root', True)
+
+        elif ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+
+            command = 'yum erase pure-ftp* -y'
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = "yum install -y pure-ftpd"
+            ProcessUtilities.executioner(command, 'root', True)
+        elif ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+
+            command = 'yum erase pure-ftp* -y'
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = 'dnf install pure-ftpd -y'
+            ProcessUtilities.executioner(command, 'root', True)
+
+        ####### Install pureftpd to system startup
+
         command = "systemctl enable " + pureFTPDServiceName()
-        ProcessUtilities.executioner(command)
+        ProcessUtilities.executioner(command, 'root', True)
 
         ###### FTP Groups and user settings settings
 
         command = 'groupadd -g 2001 ftpgroup'
-        ProcessUtilities.executioner(command)
+        ProcessUtilities.executioner(command, 'root', True)
 
         command = 'useradd -u 2001 -s /bin/false -d /bin/null -c "pureftpd user" -g ftpgroup ftpuser'
-        ProcessUtilities.executioner(command)
+        ProcessUtilities.executioner(command, 'root', True)
 
         return 1
 
@@ -357,41 +342,143 @@ class FTPManager:
         return 1
 
     def installPureFTPDConfigurations(self, mysqlPassword):
+        # try:
+        #     ## setup ssl for ftp
+        #
+        #     try:
+        #         os.mkdir("/etc/ssl/private")
+        #     except:
+        #         pass
+        #
+        #     if (ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8) or (
+        #             ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20 and ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu):
+        #         command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/ssl/private/pure-ftpd.pem -out /etc/ssl/private/pure-ftpd.pem'
+        #     else:
+        #         command = 'openssl req -x509 -nodes -days 7300 -newkey rsa:2048 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/ssl/private/pure-ftpd.pem -out /etc/ssl/private/pure-ftpd.pem'
+        #
+        #     ProcessUtilities.executioner(command)
+        #
+        #     import shutil
+        #
+        #     ftpdPath = "/etc/pure-ftpd"
+        #
+        #     if os.path.exists(ftpdPath):
+        #         shutil.rmtree(ftpdPath)
+        #         shutil.copytree("/usr/local/CyberCP/install/pure-ftpd-one", ftpdPath)
+        #
+        #     else:
+        #         shutil.copytree("/usr/local/CyberCP/install/pure-ftpd-one", ftpdPath)
+        #
+        #
+        #     if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+        #         try:
+        #             os.mkdir('/etc/pure-ftpd/conf')
+        #             os.mkdir('/etc/pure-ftpd/auth')
+        #             os.mkdir('/etc/pure-ftpd/db')
+        #         except OSError as err:
+        #             pass
+        #
+        #     data = open(ftpdPath + "/pureftpd-mysql.conf", "r").readlines()
+        #
+        #     writeDataToFile = open(ftpdPath + "/pureftpd-mysql.conf", "w")
+        #
+        #     dataWritten = "MYSQLPassword " + mysqlPassword + '\n'
+        #     for items in data:
+        #         if items.find("MYSQLPassword") > -1:
+        #             writeDataToFile.writelines(dataWritten)
+        #         else:
+        #             writeDataToFile.writelines(items)
+        #
+        #     writeDataToFile.close()
+        #
+        #     ftpConfPath = '/etc/pure-ftpd/pureftpd-mysql.conf'
+        #
+        #     if self.remotemysql == 'ON':
+        #         command = "sed -i 's|localhost|%s|g' %s" % (self.mysqlhost, ftpConfPath)
+        #         ProcessUtilities.executioner(command)
+        #
+        #         command = "sed -i 's|3306|%s|g' %s" % (self.mysqlport, ftpConfPath)
+        #         ProcessUtilities.executioner(command)
+        #
+        #         command = "sed -i 's|MYSQLSocket /var/lib/mysql/mysql.sock||g' %s" % (ftpConfPath)
+        #         ProcessUtilities.executioner(command)
+        #
+        #     if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+        #
+        #         if os.path.exists('/etc/pure-ftpd/db/mysql.conf'):
+        #             os.remove('/etc/pure-ftpd/db/mysql.conf')
+        #             shutil.copy(ftpdPath + "/pureftpd-mysql.conf", '/etc/pure-ftpd/db/mysql.conf')
+        #         else:
+        #             shutil.copy(ftpdPath + "/pureftpd-mysql.conf", '/etc/pure-ftpd/db/mysql.conf')
+        #
+        #         import subprocess
+        #         command = 'echo 1 > /etc/pure-ftpd/conf/TLS'
+        #         subprocess.call(command, shell=True)
+        #
+        #         command = 'echo %s > /etc/pure-ftpd/conf/ForcePassiveIP' % (self.publicip)
+        #         subprocess.call(command, shell=True)
+        #
+        #         command = 'echo "40110 40210" > /etc/pure-ftpd/conf/PassivePortRange'
+        #         subprocess.call(command, shell=True)
+        #
+        #         command = 'echo "no" > /etc/pure-ftpd/conf/UnixAuthentication'
+        #         subprocess.call(command, shell=True)
+        #
+        #         command = 'echo "/etc/pure-ftpd/db/mysql.conf" > /etc/pure-ftpd/conf/MySQLConfigFile'
+        #         subprocess.call(command, shell=True)
+        #
+        #         command = 'ln -s /etc/pure-ftpd/conf/MySQLConfigFile /etc/pure-ftpd/auth/30mysql'
+        #         ProcessUtilities.executioner(command)
+        #
+        #         command = 'ln -s /etc/pure-ftpd/conf/UnixAuthentication /etc/pure-ftpd/auth/65unix'
+        #         ProcessUtilities.executioner(command)
+        #
+        #         command = 'systemctl restart pure-ftpd-mysql.service'
+        #         ProcessUtilities.executioner(command)
+        #
+        #     return 1
+        #
+        # except IOError as msg:
+        #     return 0
+
         try:
             ## setup ssl for ftp
 
             try:
                 os.mkdir("/etc/ssl/private")
             except:
-                pass
+                logging.CyberCPLogFileWriter.writeToFile("[ERROR] Could not create directory for FTP SSL")
 
-            if (ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8) or (
-                    ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20 and ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu):
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/ssl/private/pure-ftpd.pem -out /etc/ssl/private/pure-ftpd.pem'
             else:
                 command = 'openssl req -x509 -nodes -days 7300 -newkey rsa:2048 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/ssl/private/pure-ftpd.pem -out /etc/ssl/private/pure-ftpd.pem'
 
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, 'root', True)
 
-            import shutil
-
+            ### let see if this is needed the chdir
+            cwd = os.getcwd()
+            os.chdir('/usr/local/CyberCP/install')
             ftpdPath = "/etc/pure-ftpd"
+            import shutil
 
             if os.path.exists(ftpdPath):
                 shutil.rmtree(ftpdPath)
-                shutil.copytree("/usr/local/CyberCP/install/pure-ftpd-one", ftpdPath)
 
+                shutil.copytree("pure-ftpd-one", ftpdPath)
             else:
-                shutil.copytree("/usr/local/CyberCP/install/pure-ftpd-one", ftpdPath)
 
+                shutil.copytree("pure-ftpd-one", ftpdPath)
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
                 try:
                     os.mkdir('/etc/pure-ftpd/conf')
                     os.mkdir('/etc/pure-ftpd/auth')
                     os.mkdir('/etc/pure-ftpd/db')
-                except OSError as err:
-                    pass
+                except BaseException as msg:
+                    logging.CyberCPLogFileWriter.writeToFile("[ERROR] Error creating extra pure-ftpd directories: " + str(msg), ".  Should be ok", 1)
+                    logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], "[ERROR] Error creating extra pure-ftpd directories: " + str(msg), "" + " [installPureFTPDConfigurations][404]")
+                    return 0
 
             data = open(ftpdPath + "/pureftpd-mysql.conf", "r").readlines()
 
@@ -410,15 +497,15 @@ class FTPManager:
 
             if self.remotemysql == 'ON':
                 command = "sed -i 's|localhost|%s|g' %s" % (self.mysqlhost, ftpConfPath)
-                ProcessUtilities.executioner(command)
+                ProcessUtilities.executioner(command, 'root', True)
 
                 command = "sed -i 's|3306|%s|g' %s" % (self.mysqlport, ftpConfPath)
-                ProcessUtilities.executioner(command)
+                ProcessUtilities.executioner(command, 'root', True)
 
                 command = "sed -i 's|MYSQLSocket /var/lib/mysql/mysql.sock||g' %s" % (ftpConfPath)
-                ProcessUtilities.executioner(command)
+                ProcessUtilities.executioner(command, 'root', True)
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
 
                 if os.path.exists('/etc/pure-ftpd/db/mysql.conf'):
                     os.remove('/etc/pure-ftpd/db/mysql.conf')
@@ -426,34 +513,60 @@ class FTPManager:
                 else:
                     shutil.copy(ftpdPath + "/pureftpd-mysql.conf", '/etc/pure-ftpd/db/mysql.conf')
 
-                import subprocess
                 command = 'echo 1 > /etc/pure-ftpd/conf/TLS'
-                subprocess.call(command, shell=True)
+                ProcessUtilities.executioner(command, 'root', True)
 
-                command = 'echo %s > /etc/pure-ftpd/conf/ForcePassiveIP' % (self.publicip)
-                subprocess.call(command, shell=True)
+                command = 'echo %s > /etc/pure-ftpd/conf/ForcePassiveIP' % (ACLManager.fetchIP())
+                ProcessUtilities.executioner(command, 'root', True)
 
                 command = 'echo "40110 40210" > /etc/pure-ftpd/conf/PassivePortRange'
-                subprocess.call(command, shell=True)
+                ProcessUtilities.executioner(command, 'root', True)
 
                 command = 'echo "no" > /etc/pure-ftpd/conf/UnixAuthentication'
-                subprocess.call(command, shell=True)
+                ProcessUtilities.executioner(command, 'root', True)
 
                 command = 'echo "/etc/pure-ftpd/db/mysql.conf" > /etc/pure-ftpd/conf/MySQLConfigFile'
-                subprocess.call(command, shell=True)
+                ProcessUtilities.executioner(command, 'root', True)
 
                 command = 'ln -s /etc/pure-ftpd/conf/MySQLConfigFile /etc/pure-ftpd/auth/30mysql'
-                ProcessUtilities.executioner(command)
+                ProcessUtilities.executioner(command, 'root', True)
 
                 command = 'ln -s /etc/pure-ftpd/conf/UnixAuthentication /etc/pure-ftpd/auth/65unix'
-                ProcessUtilities.executioner(command)
+                ProcessUtilities.executioner(command, 'root', True)
 
                 command = 'systemctl restart pure-ftpd-mysql.service'
-                ProcessUtilities.executioner(command)
+                ProcessUtilities.executioner(command, 'root', True)
 
-            return 1
+                ProcessUtilities.decideDistro()
+
+                if ProcessUtilities.ubuntu22Check:
+                    ### change mysql md5 to crypt
+
+                    command = "sed -i 's/MYSQLCrypt md5/MYSQLCrypt crypt/g' /etc/pure-ftpd/db/mysql.conf"
+                    ProcessUtilities.executioner(command, 'root', True)
+
+                    command = "systemctl restart pure-ftpd-mysql.service"
+                    ProcessUtilities.executioner(command, 'root', True)
+
+            # from plogical.mailUtilities import mailUtilities
+            # PostFixHostname = mailUtilities.FetchPostfixHostname()
+            # pathToStoreSSLFullChain = '/etc/letsencrypt/live/' + PostFixHostname + '/fullchain.pem'
+            # pathToStoreSSLPrivKey = '/etc/letsencrypt/live/' + PostFixHostname + '/privkey.pem'
+            # if ProcessUtilities != 'localhost':
+            #
+            #     if os.path.exists('/etc/ssl/private/pure-ftpd.pem'):
+            #     ## create symlink for hostname SSL for lsws webadmin SSL
+            #         os.remove('/etc/ssl/private/pure-ftpd.pem')
+            #         command = 'ln -s %s /etc/ssl/private/pure-ftpd.pem' % (pathToStoreSSLFullChain)
+            #         ProcessUtilities.normalExecutioner(command)
+
+
+            os.chdir(cwd)
+
 
         except IOError as msg:
+            logging.CyberCPLogFileWriter.writeToFile('[ERROR] ' + str(msg) + " [installPureFTPDConfigurations]")
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], '[ERROR] ' + str(msg) + " [installPureFTPDConfigurations][404]")
             return 0
 
     def ResetFTPConfigurations(self):
