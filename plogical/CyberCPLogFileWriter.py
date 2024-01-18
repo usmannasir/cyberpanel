@@ -54,6 +54,7 @@ class CyberCPLogFileWriter:
     @staticmethod
     def writeToFile(message, email=None):
         try:
+            print("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] "+ message)
             file = open(CyberCPLogFileWriter.fileName,'a')
             file.writelines("[" + time.strftime(
                     "%m.%d.%Y_%H-%M-%S") + "] "+ message + "\n")

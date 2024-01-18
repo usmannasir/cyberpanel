@@ -1131,6 +1131,7 @@ LogFile /var/log/clamav/clamav.log
             str((msg) + " [changeclamavConfig]")
             print(0, str(msg))
             return [0, str(msg) + " [changeclamavConfig]"]
+
     @staticmethod
     def installMailScanner(install, SpamAssassin):
         try:
@@ -1392,6 +1393,29 @@ LogFile /var/log/clamav/clamav.log
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [checkIfMailScannerInstalled]")
             return 0
+
+    @staticmethod
+    def FetchPostfixHostname():
+        PostfixPath = '/etc/postfix/main.cf'
+        if os.path.exists(PostfixPath):
+            PostFixConf = open(PostfixPath, 'r').readlines()
+
+            for line in PostFixConf:
+                if line.find('myhostname') > -1:
+                    hostname = line.split('=')[1].strip(' ').rstrip('\n')
+                    return hostname
+        else:
+            return 'localhost'
+
+    @staticmethod
+    def reverse_dns_lookup(ip_address):
+        try:
+            import socket
+            host_name, _, _ = socket.gethostbyaddr(ip_address)
+            return host_name
+        except socket.herror as e:
+            # Handle errors, e.g., if reverse DNS lookup fails
+            return None
 
     ####### Imported below functions from mailserver/mailservermanager, need to refactor later
 

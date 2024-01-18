@@ -403,6 +403,16 @@ class sslUtilities:
         Namecheck_Check = 0
         CyberPanel_Check = 0
 
+        #### if website already have an SSL, better not issue again - need to check for wild-card
+        filePath = '/etc/letsencrypt/live/%s/fullchain.pem' % (virtualHostName)
+        if os.path.exists(filePath):
+            import OpenSSL
+            x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, open(filePath, 'r').read())
+            SSLProvider = x509.get_issuer().get_components()[1][1].decode('utf-8')
+
+            if SSLProvider != 'Denial':
+                return 1, 'This domain already have a valid SSL.'
+
 
         CF_Check, message = sslUtilities.FindIfDomainInCloudflare(virtualHostName)
 
