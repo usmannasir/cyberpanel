@@ -3412,7 +3412,7 @@ pm.max_spare_servers = 3
         ### remove log file path incase its there
 
         if Upgrade.SoftUpgrade:
-            time.sleep(10)
+            time.sleep(30)
             if os.path.exists(Upgrade.LogPathNew):
                 os.remove(Upgrade.LogPathNew)
 
