@@ -722,7 +722,7 @@ clamav {
 
             for line in lines:
                 if line.find('inet:127.0.0.1:8891') > -1:
-                    cLine = line
+                    cLine = line.rstrip('\n')
                     content = f'{cLine}, inet:127.0.0.1:11332\n'
                     WriteToFile.write('### Please do not edit this line, editing this line could break configurations\n')
                     WriteToFile.write(content)
