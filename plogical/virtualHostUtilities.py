@@ -342,6 +342,10 @@ class virtualHostUtilities:
 
                 website.save()
 
+                if admin.defaultSite == 0:
+                    admin.defaultSite = website.id
+                    admin.save()
+
             if ssl == 1:
                 sslPath = "/home/" + virtualHostName + "/public_html"
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Setting up SSL..,70')

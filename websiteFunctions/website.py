@@ -696,6 +696,17 @@ class WebsiteManager:
         currentACL = ACLManager.loadedACL(userID)
         websitesName = ACLManager.findAllSites(currentACL, userID)
 
+        try:
+            admin = Administrator.objects.get(pk=userID)
+            if admin.defaultSite == 0:
+                websites = ACLManager.findWebsiteObjects(currentACL, userID)
+                admin.defaultSite = websites[0].id
+                admin.save()
+        except:
+            pass
+
+        admin = Administrator.objects.get(pk=userID)
+
         url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
         data = {
             "name": "all",
@@ -714,7 +725,7 @@ class WebsiteManager:
         rnpss = randomPassword.generate_pass(10)
         proc = httpProc(request, 'websiteFunctions/createDomain.html',
                         {'websiteList': websitesName, 'phps': PHPManager.findPHPVersions(), 'Randam_String': rnpss,
-                         'test_domain_data': test_domain_status})
+                         'test_domain_data': test_domain_status, 'defaultSite': admin.defaultSite})
         return proc.render()
 
     def siteState(self, request=None, userID=None, data=None):
