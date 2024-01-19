@@ -128,7 +128,6 @@ class virtualHostUtilities:
             command = 'systemctl restart postfix && systemctl restart dovecot && postmap -F hash:/etc/postfix/vmail_ssl.map'
             ProcessUtilities.executioner(command, 'root', True)
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Completed. [200]')
-
         else:
 
             ### Case 2 where postfix hostname either does not exist or does not match with server hostname or
@@ -138,6 +137,7 @@ class virtualHostUtilities:
 
             if Domain != rDNS:
                 message = 'Domain that you have provided is not configured as rDNS for your server IP. [404]'
+                print(message)
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, message)
                 logging.CyberCPLogFileWriter.writeToFile(message)
                 return 0
@@ -172,6 +172,9 @@ class virtualHostUtilities:
 
             if SSLProvider == 'Denial':
                 virtualHostUtilities.issueSSLForMailServer(Domain, path)
+
+            x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, open(filePath, 'r').read())
+            SSLProvider = x509.get_issuer().get_components()[1][1].decode('utf-8')
 
             if SSLProvider == 'Denial':
                 message = 'Failed to issue Mail server SSL, either its DNS record is not propagated or the domain ie behind Cloudflare. [404]'
