@@ -266,7 +266,7 @@ type=rpm-md
             ServerStatusUtil.executioner(command, statusFile)
         else:
 
-            command = 'apt-get install redis-server -y'
+            command = 'DEBIAN_FRONTEND=noninteractive apt-get install redis-server -y'
             ServerStatusUtil.executioner(command, statusFile)
 
 
