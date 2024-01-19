@@ -636,13 +636,11 @@ milter_default_action = accept
 
                 command = 'sudo yum install rspamd clamav clamd clamav-update -y'
             else:
-                command = 'sudo apt-get install rspamd clamav clamav-daemon -y'
+                command = 'DEBIAN_FRONTEND=noninteractive apt-get install rspamd clamav clamav-daemon -y'
 
-
-            cmd = shlex.split(command)
 
             with open(mailUtilities.RspamdInstallLogPath, 'w') as f:
-                res = subprocess.call(cmd, stdout=f)
+                res = subprocess.call(command, stdout=f, shell=True)
 
 
             ###### makefile
