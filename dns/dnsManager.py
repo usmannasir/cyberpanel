@@ -1350,8 +1350,8 @@ class DNSManager:
 
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Fixing permissions..,90')
 
-            from mailServer.mailserverManager import MailServerManager
-            MailServerManager(None, None, None).fixCyberPanelPermissions()
+            from plogical.upgrade import Upgrade
+            Upgrade.fixPermissions()
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Completed [200].')
 
         except BaseException as msg:
