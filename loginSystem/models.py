@@ -92,3 +92,6 @@ class Administrator(models.Model):
     twoFA = models.IntegerField(default=0)
     secretKey = models.CharField(max_length=50, default='None')
     config = models.TextField(default='{}')
+
+    ####
+    defaultSite = models.IntegerField(default=0)

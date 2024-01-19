@@ -811,6 +811,11 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 pass
 
             try:
+                cursor.execute('ALTER TABLE loginSystem_administrator ADD defaultSite integer DEFAULT 0')
+            except:
+                pass
+
+            try:
                 cursor.execute('ALTER TABLE loginSystem_administrator ADD twoFA integer DEFAULT 0')
             except:
                 pass
