@@ -2314,6 +2314,7 @@ milter_default_action = accept
                 command = 'systemctl restart postfix && systemctl restart rspamd'
                 Upgrade.executioner(command, 'postfix and rspamd restart', 0, True)
 
+    #### if you update this function needs to update this function on plogical.acl.py as well
     @staticmethod
     def fixPermissions():
         try:

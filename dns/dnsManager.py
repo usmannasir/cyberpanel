@@ -1350,8 +1350,7 @@ class DNSManager:
 
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Fixing permissions..,90')
 
-            from plogical.upgrade import Upgrade
-            Upgrade.fixPermissions()
+            ACLManager.fixPermissions()
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Completed [200].')
 
         except BaseException as msg:

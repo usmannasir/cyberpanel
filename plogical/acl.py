@@ -1,5 +1,7 @@
 #!/usr/local/CyberCP/bin/python
 import os,sys
+import random
+import string
 
 from ApachController.ApacheVhosts import ApacheVhost
 from manageServices.models import PDNSStatus
@@ -1096,6 +1098,250 @@ class ACLManager:
         else:
             return False
 
+    #### if you update this function needs to update this function on plogical.acl.py as well
+    @staticmethod
+    def fixPermissions():
+        try:
+
+            try:
+                def generate_pass(length=14):
+                    chars = string.ascii_uppercase + string.ascii_lowercase + string.digits
+                    size = length
+                    return ''.join(random.choice(chars) for x in range(size))
+
+                content = """<?php
+$_ENV['snappymail_INCLUDE_AS_API'] = true;
+include '/usr/local/CyberCP/public/snappymail/index.php';
+
+$oConfig = \snappymail\Api::Config();
+$oConfig->SetPassword('%s');
+echo $oConfig->Save() ? 'Done' : 'Error';
+
+?>""" % (generate_pass())
+
+                writeToFile = open('/usr/local/CyberCP/public/snappymail.php', 'w')
+                writeToFile.write(content)
+                writeToFile.close()
+
+                command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
+                ProcessUtilities.executioner(command, 'root', True)
+
+            except:
+                pass
+
+
+            command = "usermod -G lscpd,lsadm,nobody lscpd"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = "usermod -G lscpd,lsadm,nogroup lscpd"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            ###### fix Core CyberPanel permissions
+
+            command = "find /usr/local/CyberCP -type d -exec chmod 0755 {} \;"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = "find /usr/local/CyberCP -type f -exec chmod 0644 {} \;"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = "chmod -R 755 /usr/local/CyberCP/bin"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            ## change owner
+
+            command = "chown -R root:root /usr/local/CyberCP"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            ########### Fix LSCPD
+
+            command = "find /usr/local/lscp -type d -exec chmod 0755 {} \;"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = "find /usr/local/lscp -type f -exec chmod 0644 {} \;"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = "chmod -R 755 /usr/local/lscp/bin"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = "chmod -R 755 /usr/local/lscp/fcgi-bin"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin/tmp"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            ## change owner
+
+            command = "chown -R root:root /usr/local/lscp"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = "chmod 700 /usr/local/CyberCP/cli/cyberPanel.py"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = "chmod 700 /usr/local/CyberCP/plogical/upgradeCritical.py"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = "chmod 755 /usr/local/CyberCP/postfixSenderPolicy/client.py"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = "chmod 640 /usr/local/CyberCP/CyberCP/settings.py"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = "chown root:cyberpanel /usr/local/CyberCP/CyberCP/settings.py"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = 'chmod +x /usr/local/CyberCP/CLManager/CLPackages.py'
+            ProcessUtilities.executioner(command, 'root', True)
+
+            files = ['/etc/yum.repos.d/MariaDB.repo', '/etc/pdns/pdns.conf', '/etc/systemd/system/lscpd.service',
+                     '/etc/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pureftpd-pgsql.conf',
+                     '/etc/pure-ftpd/pureftpd-mysql.conf', '/etc/pure-ftpd/pureftpd-ldap.conf',
+                     '/etc/dovecot/dovecot.conf', '/usr/local/lsws/conf/httpd_config.xml',
+                     '/usr/local/lsws/conf/modsec.conf', '/usr/local/lsws/conf/httpd.conf']
+
+            for items in files:
+                command = 'chmod 644 %s' % (items)
+                ProcessUtilities.executioner(command, 'root', True)
+
+            impFile = ['/etc/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pureftpd-pgsql.conf',
+                       '/etc/pure-ftpd/pureftpd-mysql.conf', '/etc/pure-ftpd/pureftpd-ldap.conf',
+                       '/etc/dovecot/dovecot.conf', '/etc/pdns/pdns.conf', '/etc/pure-ftpd/db/mysql.conf',
+                       '/etc/powerdns/pdns.conf']
+
+            for items in impFile:
+                command = 'chmod 600 %s' % (items)
+                ProcessUtilities.executioner(command, 'root', True)
+
+            command = 'chmod 640 /etc/postfix/*.cf'
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = 'chmod 640 /etc/dovecot/*.conf'
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = 'chmod 640 /etc/dovecot/dovecot-sql.conf.ext'
+            ProcessUtilities.executioner(command, 'root', True)
+
+            fileM = ['/usr/local/lsws/FileManager/', '/usr/local/CyberCP/install/FileManager',
+                     '/usr/local/CyberCP/serverStatus/litespeed/FileManager',
+                     '/usr/local/lsws/Example/html/FileManager']
+
+            import shutil
+            for items in fileM:
+                try:
+                    shutil.rmtree(items)
+                except:
+                    pass
+
+            command = 'chmod 755 /etc/pure-ftpd/'
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = 'chmod 644 /etc/dovecot/dovecot.conf'
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = 'chmod 644 /etc/postfix/main.cf'
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = 'chmod 644 /etc/postfix/dynamicmaps.cf'
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = 'chmod +x /usr/local/CyberCP/plogical/renew.py'
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = 'chmod +x /usr/local/CyberCP/CLManager/CLPackages.py'
+            ProcessUtilities.executioner(command, 'root', True)
+
+            clScripts = ['/usr/local/CyberCP/CLScript/panel_info.py',
+                         '/usr/local/CyberCP/CLScript/CloudLinuxPackages.py',
+                         '/usr/local/CyberCP/CLScript/CloudLinuxUsers.py',
+                         '/usr/local/CyberCP/CLScript/CloudLinuxDomains.py'
+                , '/usr/local/CyberCP/CLScript/CloudLinuxResellers.py',
+                         '/usr/local/CyberCP/CLScript/CloudLinuxAdmins.py',
+                         '/usr/local/CyberCP/CLScript/CloudLinuxDB.py', '/usr/local/CyberCP/CLScript/UserInfo.py']
+
+            for items in clScripts:
+                command = 'chmod +x %s' % (items)
+                ProcessUtilities.executioner(command, 'root', True)
+
+            command = 'chmod 600 /usr/local/CyberCP/plogical/adminPass.py'
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = 'chmod 600 /etc/cagefs/exclude/cyberpanelexclude'
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = "find /usr/local/CyberCP/ -name '*.pyc' -delete"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                command = 'chown root:pdns /etc/pdns/pdns.conf'
+                ProcessUtilities.executioner(command, 'root', True)
+
+                command = 'chmod 640 /etc/pdns/pdns.conf'
+                ProcessUtilities.executioner(command, 'root', True)
+            else:
+                command = 'chown root:pdns /etc/powerdns/pdns.conf'
+                ProcessUtilities.executioner(command, 'root', True)
+
+                command = 'chmod 640 /etc/powerdns/pdns.conf'
+                ProcessUtilities.executioner(command, 'root', True)
+
+            command = 'chmod 640 /usr/local/lscp/cyberpanel/logs/access.log'
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/snappymail.php'
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = 'chmod 600 /usr/local/CyberCP/public/snappymail.php'
+            ProcessUtilities.executioner(command, 'root', True)
+
+            ###
+
+            WriteToFile = open('/etc/fstab', 'a')
+            WriteToFile.write('proc    /proc        proc        defaults,hidepid=2    0 0\n')
+            WriteToFile.close()
+
+            command = 'mount -o remount,rw,hidepid=2 /proc'
+            ProcessUtilities.executioner(command, 'root', True)
+
+            ###
+
+            CentOSPath = '/etc/redhat-release'
+            openEulerPath = '/etc/openEuler-release'
+
+            if not os.path.exists(CentOSPath) or not os.path.exists(openEulerPath):
+                group = 'nobody'
+            else:
+                group = 'nogroup'
+
+            command = 'chown root:%s /usr/local/lsws/logs' % (group)
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = 'chmod 750 /usr/local/lsws/logs'
+            ProcessUtilities.executioner(command, 'root', True)
+
+            ## symlink protection
+
+            writeToFile = open('/usr/lib/sysctl.d/50-default.conf', 'a')
+            writeToFile.writelines('fs.protected_hardlinks = 1\n')
+            writeToFile.writelines('fs.protected_symlinks = 1\n')
+            writeToFile.close()
+
+            command = 'sysctl --system'
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = 'chmod 700 %s' % ('/home/cyberpanel')
+            ProcessUtilities.executioner(command, 'root', True)
+
+            destPrivKey = "/usr/local/lscp/conf/key.pem"
+
+            command = 'chmod 600 %s' % (destPrivKey)
+            ProcessUtilities.executioner(command, 'root', True)
+
+
+
+        except BaseException as msg:
+            logging.writeToFile(str(msg) + " [fixPermissions]")
 
 
 
