@@ -153,11 +153,10 @@ class virtualHostUtilities:
 
             filePath = '/etc/letsencrypt/live/%s/fullchain.pem' % (Domain)
 
+            virtualHostUtilities.issueSSLForHostName(Domain, path)
+
             x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, open(filePath, 'r').read())
             SSLProvider = x509.get_issuer().get_components()[1][1].decode('utf-8')
-
-            if SSLProvider == 'Denial':
-                virtualHostUtilities.issueSSLForHostName(Domain, path)
 
             if SSLProvider == 'Denial':
                 message = 'Failed to issue Hostname SSL, either its DNS record is not propagated or the domain ie behind Cloudflare. [404]'
@@ -167,11 +166,8 @@ class virtualHostUtilities:
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Hostname SSL issued,50')
 
-            x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, open(filePath, 'r').read())
-            SSLProvider = x509.get_issuer().get_components()[1][1].decode('utf-8')
 
-            if SSLProvider == 'Denial':
-                virtualHostUtilities.issueSSLForMailServer(Domain, path)
+            virtualHostUtilities.issueSSLForMailServer(Domain, path)
 
             x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, open(filePath, 'r').read())
             SSLProvider = x509.get_issuer().get_components()[1][1].decode('utf-8')
