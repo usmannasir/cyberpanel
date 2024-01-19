@@ -1140,48 +1140,112 @@ class DNSManager:
             if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
 
                 command = 'systemctl stop systemd-resolved'
-                ProcessUtilities.executioner(command)
+                ProcessUtilities.executioner(command, 'root', True)
                 command = 'systemctl disable systemd-resolved.service'
-                ProcessUtilities.executioner(command)
+                ProcessUtilities.executioner(command, 'root', True)
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.ubuntu20:
+
+                command = 'DEBIAN_FRONTEND=noninteractive apt-get -y purge pdns-server pdns-backend-mysql -y'
+                ProcessUtilities.executioner(command, 'root', True)
+            else:
+                command = 'yum -y erase pdns pdns-backend-mysql'
+                ProcessUtilities.executioner(command, 'root', True)
 
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            #### new install
 
-                command = 'DEBIAN_FRONTEND=noninteractive apt-get -y remove pdns-server pdns-backend-mysql -y'
-                os.system(command)
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                try:
+                    os.rename('/etc/resolv.conf', 'etc/resolved.conf')
+                except OSError as e:
+                    if e.errno != errno.EEXIST and e.errno != errno.ENOENT:
+                        logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], "[ERROR] Unable to rename /etc/resolv.conf to install PowerDNS: " +
+                                                 str(e) + "[404]")
+                        return 0
+                    try:
+                        os.remove('/etc/resolv.conf')
+                    except OSError as e1:
+                        logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                                  "[ERROR] Unable to remove existing /etc/resolv.conf to install PowerDNS: " +
+                            str(e1) + "[404]")
+                        return 0
 
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
                 command = "DEBIAN_FRONTEND=noninteractive apt-get -y install pdns-server pdns-backend-mysql"
                 os.system(command)
                 return 1
             else:
-
-                command = 'yum -y remove pdns pdns-backend-mysql'
-                os.system(command)
-
                 command = 'yum -y install pdns pdns-backend-mysql'
 
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, 'root', True)
 
             return 1
 
         except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile('[ERROR] ' + str(msg) + " [installPowerDNS]")
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                      '[ERROR] ' + str(msg) + " [installPowerDNS][404]")
             return 0
 
     def installPowerDNSConfigurations(self, mysqlPassword):
+        # try:
+        #
+        #     if ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+        #         dnsPath = "/etc/pdns/pdns.conf"
+        #     else:
+        #         dnsPath = "/etc/powerdns/pdns.conf"
+        #
+        #     import shutil
+        #
+        #     if os.path.exists(dnsPath):
+        #         os.remove(dnsPath)
+        #         shutil.copy("/usr/local/CyberCP/install/dns-one/pdns.conf", dnsPath)
+        #     else:
+        #         shutil.copy("/usr/local/CyberCP/install/dns-one/pdns.conf", dnsPath)
+        #
+        #     data = open(dnsPath, "r").readlines()
+        #
+        #     writeDataToFile = open(dnsPath, "w")
+        #
+        #     dataWritten = "gmysql-password=" + mysqlPassword + "\n"
+        #
+        #     for items in data:
+        #         if items.find("gmysql-password") > -1:
+        #             writeDataToFile.writelines(dataWritten)
+        #         else:
+        #             writeDataToFile.writelines(items)
+        #
+        #     writeDataToFile.close()
+        #
+        #
+        #     if self.remotemysql == 'ON':
+        #         command = "sed -i 's|gmysql-host=localhost|gmysql-host=%s|g' %s" % (self.mysqlhost, dnsPath)
+        #         ProcessUtilities.executioner(command)
+        #
+        #         command = "sed -i 's|gmysql-port=3306|gmysql-port=%s|g' %s" % (self.mysqlport, dnsPath)
+        #         ProcessUtilities.executioner(command)
+        #
+        #     return 1
+        # except IOError as msg:
+        #     return 0
         try:
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            ### let see if this is needed the chdir
+            cwd = os.getcwd()
+            os.chdir('/usr/local/CyberCP/install')
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 dnsPath = "/etc/pdns/pdns.conf"
             else:
                 dnsPath = "/etc/powerdns/pdns.conf"
 
             import shutil
-
             if os.path.exists(dnsPath):
                 os.remove(dnsPath)
-                shutil.copy("/usr/local/CyberCP/install/dns-one/pdns.conf", dnsPath)
+                shutil.copy("dns-one/pdns.conf", dnsPath)
             else:
-                shutil.copy("/usr/local/CyberCP/install/dns-one/pdns.conf", dnsPath)
+                shutil.copy("dns-one/pdns.conf", dnsPath)
 
             data = open(dnsPath, "r").readlines()
 
@@ -1195,18 +1259,23 @@ class DNSManager:
                 else:
                     writeDataToFile.writelines(items)
 
-            writeDataToFile.close()
+            # if self.distro == ubuntu:
+            #    os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
+            writeDataToFile.close()
 
             if self.remotemysql == 'ON':
                 command = "sed -i 's|gmysql-host=localhost|gmysql-host=%s|g' %s" % (self.mysqlhost, dnsPath)
-                ProcessUtilities.executioner(command)
+                ProcessUtilities.executioner(command, 'root', True)
 
                 command = "sed -i 's|gmysql-port=3306|gmysql-port=%s|g' %s" % (self.mysqlport, dnsPath)
-                ProcessUtilities.executioner(command)
+                ProcessUtilities.executioner(command, 'root', True)
 
             return 1
         except IOError as msg:
+            logging.CyberCPLogFileWriter.writeToFile('[ERROR] ' + str(msg) + " [installPowerDNSConfigurations]")
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                      '[ERROR] ' + str(msg) + " [installPowerDNSConfigurations][404]")
             return 0
 
     def startPowerDNS(self):

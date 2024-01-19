@@ -602,13 +602,6 @@ gpgcheck=1
                 #                              ".  This may need to be fixed manually as 'echo \"nameserver 8.8.8.8\"> "
                 #                              "/etc/resolv.conf'", 1, 1, os.EX_OSERR)
 
-            # if self.distro == cent8:
-            #     command = 'dnf config-manager --set-enabled PowerTools'
-            #     install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-            #
-            #     command = 'curl -o /etc/yum.repos.d/powerdns-auth-master.repo https://repo.powerdns.com/repo-files/centos-auth-master.repo'
-            #     install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
             if self.distro == ubuntu:
                 command = "DEBIAN_FRONTEND=noninteractive apt-get -y install pdns-server pdns-backend-mysql"
                 os.system(command)
