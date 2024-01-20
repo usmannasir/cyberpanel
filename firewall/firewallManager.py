@@ -892,7 +892,7 @@ class FirewallManager:
 
                 if modSecInstalled:
                     command = "sudo cat " + rulesPath
-                    currentModSecRules = ProcessUtilities.outputExecutioner(command).split('\n')
+                    currentModSecRules = ProcessUtilities.outputExecutioner(command)
 
                     final_dic = {'modSecInstalled': 1,
                                  'currentModSecRules': currentModSecRules}
@@ -908,7 +908,7 @@ class FirewallManager:
                 rulesPath = os.path.join(virtualHostUtilities.Server_root + "/conf/rules.conf")
 
                 command = "sudo cat " + rulesPath
-                currentModSecRules = ProcessUtilities.outputExecutioner(command).split('\n')
+                currentModSecRules = ProcessUtilities.outputExecutioner(command)
 
                 final_dic = {'modSecInstalled': 1,
                              'currentModSecRules': currentModSecRules}

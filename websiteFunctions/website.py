@@ -705,7 +705,12 @@ class WebsiteManager:
         except:
             pass
 
-        admin = Administrator.objects.get(pk=userID)
+
+        try:
+            admin = Administrator.objects.get(pk=userID)
+            defaultDomain = Websites.objects.get(pk=admin.defaultSite).domain
+        except:
+            defaultDomain = 'NONE'
 
         url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
         data = {
@@ -725,7 +730,7 @@ class WebsiteManager:
         rnpss = randomPassword.generate_pass(10)
         proc = httpProc(request, 'websiteFunctions/createDomain.html',
                         {'websiteList': websitesName, 'phps': PHPManager.findPHPVersions(), 'Randam_String': rnpss,
-                         'test_domain_data': test_domain_status, 'defaultSite': admin.defaultSite})
+                         'test_domain_data': test_domain_status, 'defaultSite': defaultDomain})
         return proc.render()
 
     def siteState(self, request=None, userID=None, data=None):
