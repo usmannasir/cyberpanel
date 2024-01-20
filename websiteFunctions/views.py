@@ -49,6 +49,7 @@ def WPCreate(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def WPCreateV2(request):
     try:
         userID = request.session['userID']
@@ -56,6 +57,7 @@ def WPCreateV2(request):
         return wm.WPCreateV2(request, userID, )
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def ListWPSites(request):
     try:
@@ -65,6 +67,8 @@ def ListWPSites(request):
         return wm.ListWPSites(request, userID, DeleteID)
     except KeyError:
         return redirect(loadLoginPage)
+
+
 def ListWPSitesV2(request):
     try:
         userID = request.session['userID']
@@ -73,6 +77,7 @@ def ListWPSitesV2(request):
         return wm.ListWPSitesV2(request, userID, DeleteID)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def WPHome(request):
     try:
@@ -84,6 +89,7 @@ def WPHome(request):
         return wm.WPHome(request, userID, WPid, DeleteID)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def WPHomeV2(request):
     try:
@@ -162,6 +168,7 @@ def RestoreBackups(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def RestoreBackupsV2(request):
     try:
         userID = request.session['userID']
@@ -201,6 +208,7 @@ def ConfigurePlugins(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def ConfigurePluginsV2(request):
     try:
         userID = request.session['userID']
@@ -228,6 +236,7 @@ def Addnewplugin(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def AddnewpluginV2(request):
     try:
         userID = request.session['userID']
@@ -235,7 +244,6 @@ def AddnewpluginV2(request):
         return wm.AddnewpluginV2(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
-
 
 
 def SearchOnkeyupPlugin(request):
@@ -291,6 +299,7 @@ def EidtPlugin(request):
         return wm.EidtPlugin(request, userID, pluginbID)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def EidtPluginV2(request):
     try:
@@ -904,6 +913,7 @@ def modifyWebsite(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def modifyWebsiteV2(request):
     try:
         userID = request.session['userID']
@@ -924,6 +934,7 @@ def deleteWebsite(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def deleteWebsiteV2(request):
     try:
         userID = request.session['userID']
@@ -931,6 +942,8 @@ def deleteWebsiteV2(request):
         return wm.deleteWebsiteV2(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
+
 def CreateNewDomain(request):
     try:
         userID = request.session['userID']
@@ -938,6 +951,7 @@ def CreateNewDomain(request):
         return wm.CreateNewDomain(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def CreateNewDomainV2(request):
     try:
@@ -947,6 +961,7 @@ def CreateNewDomainV2(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def siteState(request):
     try:
         userID = request.session['userID']
@@ -954,6 +969,7 @@ def siteState(request):
         return wm.siteState(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def siteStateV2(request):
     try:
@@ -989,6 +1005,7 @@ def listChildDomains(request):
         return wm.listChildDomains(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def listChildDomainsV2(request):
     try:
@@ -1226,6 +1243,7 @@ def domain(request, domain):
 
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def domainV2(request, domain):
     try:
@@ -1550,11 +1568,29 @@ def wordpressInstall(request, domain):
         return redirect(loadLoginPage)
 
 
+def wordpressInstallV2(request, domain):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager(domain)
+        return wm.wordpressInstallV2(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 def installWordpress(request):
     try:
         userID = request.session['userID']
         wm = WebsiteManager()
         return wm.installWordpress(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def installWordpressV2(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.installWordpressV2(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -1640,6 +1676,15 @@ def installPrestaShop(request, domain):
         return redirect(loadLoginPage)
 
 
+def installPrestaShopV2(request, domain):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager(domain)
+        return wm.installPrestaShopV2(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 def installMagento(request, domain):
     try:
         userID = request.session['userID']
@@ -1663,6 +1708,15 @@ def installMautic(request, domain):
         userID = request.session['userID']
         wm = WebsiteManager(domain)
         return wm.installMautic(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def installMauticV2(request, domain):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager(domain)
+        return wm.installMauticV2(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -1752,6 +1806,22 @@ def manageGIT(request, domain):
         userID = request.session['userID']
         wm = WebsiteManager(domain)
         return wm.manageGIT(request, userID)
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def manageGITV2(request, domain):
+    try:
+
+        if not request.GET._mutable:
+            request.GET._mutable = True
+
+        request.GET['domain'] = domain
+
+        userID = request.session['userID']
+        wm = WebsiteManager(domain)
+        return wm.manageGITV2(request, userID)
 
     except KeyError:
         return redirect(loadLoginPage)

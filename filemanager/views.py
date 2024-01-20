@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from django.shortcuts import render,redirect
+from django.shortcuts import render, redirect
 from loginSystem.models import Administrator
 from loginSystem.views import loadLoginPage
 import plogical.CyberCPLogFileWriter as logging
@@ -8,9 +8,11 @@ import json
 from websiteFunctions.models import Websites
 from plogical.acl import ACLManager
 from .filemanager import FileManager as FM
+
+
 # Create your views here.
 
-def loadFileManagerHome(request,domain):
+def loadFileManagerHome(request, domain):
     try:
         userID = request.session['userID']
         if Websites.objects.filter(domain=domain).exists():
@@ -26,6 +28,7 @@ def loadFileManagerHome(request,domain):
 
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def changePermissions(request):
     try:
@@ -57,6 +60,7 @@ def changePermissions(request):
 
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def controller(request):
     try:
@@ -128,6 +132,7 @@ def controller(request):
         fm = FM(request, None)
         return fm.ajaxPre(0, str(msg))
 
+
 def upload(request):
     try:
 
@@ -151,6 +156,7 @@ def upload(request):
 
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def editFile(request):
     try:
@@ -184,12 +190,14 @@ def editFile(request):
         if ACLManager.checkOwnership(domainName, admin, currentACL) == 1:
             return render(request, 'filemanager/editFile.html', {'domainName': domainName, 'fileName': fileName,
                                                                  'mode': mode, 'modeFiles': modeFiles, 'theme': theme,
-                                                                 'themeFile': themeFile, 'additionalOptions': additionalOptions})
+                                                                 'themeFile': themeFile,
+                                                                 'additionalOptions': additionalOptions})
         else:
             return ACLManager.loadError()
 
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def FileManagerRoot(request):
     ### Load Custom CSS
@@ -216,17 +224,17 @@ def FileManagerRoot(request):
             url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
             data = {
                 "name": "Filemanager",
-                 "IP": ipAddressLocal
+                "IP": ipAddressLocal
             }
 
             import requests
             response = requests.post(url, data=json.dumps(data))
             Status = response.json()['status']
 
-            if(Status == 1):
+            if (Status == 1):
                 template = 'baseTemplate/FileManager.html'
             else:
-              return  redirect("https://cyberpanel.net/cyberpanel-addons")
+                return redirect("https://cyberpanel.net/cyberpanel-addons")
         else:
             template = 'baseTemplate/FileManager.html'
     except BaseException as msg:
@@ -240,6 +248,58 @@ def FileManagerRoot(request):
     from plogical.httpProc import httpProc
     proc = httpProc(request, template)
     return proc.render()
+
+
+def FileManagerRootV2(request):
+    ### Load Custom CSS
+    try:
+        from baseTemplate.models import CyberPanelCosmetic
+        cosmetic = CyberPanelCosmetic.objects.get(pk=1)
+    except:
+        from baseTemplate.models import CyberPanelCosmetic
+        cosmetic = CyberPanelCosmetic()
+        cosmetic.save()
+
+    userID = request.session['userID']
+    currentACL = ACLManager.loadedACL(userID)
+    ipFile = "/etc/cyberpanel/machineIP"
+    f = open(ipFile)
+    ipData = f.read()
+    ipAddressLocal = ipData.split('\n', 1)[0]
+
+    try:
+
+        from plogical.processUtilities import ProcessUtilities
+        if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+
+            url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
+            data = {
+                "name": "Filemanager",
+                "IP": ipAddressLocal
+            }
+
+            import requests
+            response = requests.post(url, data=json.dumps(data))
+            Status = response.json()['status']
+
+            if (Status == 1):
+                template = 'baseTemplate/FileManagerV2.html'
+            else:
+                return redirect("https://cyberpanel.net/cyberpanel-addons")
+        else:
+            template = 'baseTemplate/FileManagerV2.html'
+    except BaseException as msg:
+        template = 'baseTemplate/FileManagerV2.html'
+
+    if currentACL['admin'] == 1:
+        pass
+    else:
+        return ACLManager.loadErrorJson('FilemanagerAdmin', 0)
+
+    from plogical.httpProc import httpProc
+    proc = httpProc(request, template)
+    return proc.render()
+
 
 def downloadFile(request):
     try:
@@ -274,6 +334,7 @@ def downloadFile(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def RootDownloadFile(request):
     try:
         userID = request.session['userID']
@@ -295,6 +356,6 @@ def RootDownloadFile(request):
         response['X-LiteSpeed-Location'] = '%s' % (fileToDownload)
 
         return response
-        #return HttpResponse(response['X-LiteSpeed-Location'])
+        # return HttpResponse(response['X-LiteSpeed-Location'])
     except KeyError:
         return redirect(loadLoginPage)

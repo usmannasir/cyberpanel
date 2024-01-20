@@ -37,8 +37,7 @@
                             </div>
                         </div>
                     </form>
-                    <p style="margin: 2%"
-                       ng-hide="gitTracking">{% trans "This folder does not have Git tracking, click below to initiate a repository and start tracking files." %}</p>
+                    <p ng-hide="gitTracking">{% trans "This folder does not have Git tracking, click below to initiate a repository and start tracking files." %}</p>
                     <button ng-hide="gitTracking" style="margin-left: 2%" type="button" class="btn btn-primary"
                             ng-click="initRepo()">
                         Init Repo

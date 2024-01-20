@@ -9,6 +9,7 @@ urlpatterns = [
     url(r'^RootDownloadFile$',views.RootDownloadFile, name='RootDownloadFile'),
     url(r'^editFile$', views.editFile, name='editFile'),
     url('^Filemanager', views.FileManagerRoot, name='Filemanager'),
+    url('^V2/FilemanagerV2', views.FileManagerRootV2, name='FilemanagerV2'),
     url(r'^(?P<domain>(.*))$', views.loadFileManagerHome, name='loadFileManagerHome'),
 
 ]

@@ -1,0 +1,108 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="installPrestaShopCTRLV2" class="p-8">
+        <div>
+            <p class="text-4xl font-bold">Install PrestaShop</p>
+            <p class="text-xs text-gray-600 py-2 font-semibold">One-click PrestaShop Install!</p>
+        </div>
+        <div>a
+            <div class="py-4">
+                <h3 class="title-hero">
+                    <span id="domainNamePage">{{ domainName }}</span> - {% trans "Installation Details" %} <img
+                        ng-hide="wpInstallLoading" src="{% static 'images/loading.gif' %}">
+                </h3>
+            </div>
+            <hr>
+            <div id="createPackages" ng-hide="installationDetailsForm">
+                <div class="flex mt-4 py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-48">Shop Name</p>
+                    </div>
+                    <div>
+                        <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="shopName" required>
+                    </div>
+                </div>
+                <div class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-48">First Name</p>
+                    </div>
+                    <div>
+                        <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="firstName" required>
+                    </div>
+                </div>
+                <div class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-48">Last Name</p>
+                    </div>
+                    <div>
+                        <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="lastName" required>
+                    </div>
+                </div>
+                <div class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-48">Email</p>
+                    </div>
+                    <div>
+                        <input type="email" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="email" required>
+                    </div>
+                </div>
+                <div class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-48">Password</p>
+                    </div>
+                    <div>
+                        <input type="password" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="password" required>
+                    </div>
+                </div>
+                <div class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-48">Database Prefix</p>
+                    </div>
+                    <div>
+                        <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="databasePrefix"
+                               required>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div ng-hide="installationDetailsForm" class="flex justify-center">
+            <button ng-click="installPrestShop()"
+                    class="bg-orange-500 px-3 py-4 rounded-lg text-xl font-semibold text-white">
+                Install Now
+            </button>
+        </div>
+        <div ng-hide="installationProgress">
+            <div class="col-sm-7">
+                <div class="flex justify-center font-bold text-xl">
+                    <h2>{$ currentStatus $}</h2>
+                </div>
+                <div class="w-full bg-gray-100 rounded-full mt-3">
+                    <div id="installProgress"
+                         class="bg-green-600 text-xs font-medium text-white text-center p-2 leading-none rounded-full"
+                         style="width:0%">
+                    </div>
+                </div>
+                <div ng-hide="installationFailed" class="flex justify-center font-bold text-xl mt-3">
+                    <p>{% trans "Installation failed. Error message:" %} {$ errorMessage $}</p>
+                </div>
+                <div ng-hide="installationSuccessfull" class="flex justify-center font-bold text-xl mt-3">
+                    <p>{% trans "Installation successful. Visit:" %} {$ installationURL $}</p>
+                </div>
+                <div ng-hide="couldNotConnect" class="flex justify-center font-bold text-xl mt-3">
+                    <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                </div>
+            </div>
+        </div>
+        <div ng-hide="installationProgress" class="flex justify-center mt-3">
+            <div class="col-sm-4">
+                <button type="button" ng-disabled="goBackDisable" ng-click="goBack()"
+                        class="bg-blue-500 px-3 py-2 rounded-lg text-xl font-semibold text-white">{% trans "Go Back" %}</button>
+            </div>
+        </div>
+    </div>
+{% endblock %}

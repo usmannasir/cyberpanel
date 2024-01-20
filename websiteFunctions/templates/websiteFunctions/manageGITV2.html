@@ -1,0 +1,57 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="manageGITV2" class="p-8">
+        <div>
+            <p class="text-4xl font-bold">Manage GIT - <a target="_blank"
+                                                          href="https://go.cyberpanel.net/manageGit"
+                                                          style="height: 23px;line-height: 21px;"
+                                                          class="btn btn-border btn-alt border-red btn-link font-red"
+                                                          title=""><span>{% trans "Git Docs" %}</span></a></p>
+            <p class="text-xs text-gray-600 py-2 font-semibold">Manage and track folders via Git
+                for {{ domainName }}.</p>
+        </div>
+        <div>a
+            <div class="py-4">
+                <h3 class="title-hero">
+                    {% trans "Manage and track folders via Git for " %} <span id="domain">{{ domainName }}</span>. <img
+                        ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                </h3>
+            </div>
+            <hr>
+            <div>
+                <div class="flex mt-4 py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-48">Select Folder to Track</p>
+                    </div>
+                    <div>
+                        <select ng-change="fetchFolderDetails()" ng-model="folder"
+                                class="w-80 bg-gray-100 rounded px-2 py-1">
+                            {% for item in folders %}
+                                <option>{{ item }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <p ng-hide="gitTracking">{% trans "This folder does not have Git tracking, click below to initiate a repository and start tracking files." %}</p>
+                <button ng-hide="gitTracking" style="margin-left: 2%" type="button"
+                        class="bg-orange-500 px-3 py-4 rounded-lg text-xl font-semibold text-white"
+                        ng-click="initRepo()">
+                    Init Repo
+                </button>
+
+                <button data-toggle="modal" data-target="#attachExistingRepo" ng-disabled="home==0"
+                        ng-hide="gitTracking" style="margin-left: 2%" type="button"
+                        class="bg-orange-500 px-3 py-4 rounded-lg text-xl font-semibold text-white">
+                    Attach Existing Repo <img
+                        ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                </button>
+            </div>
+        </div>
+
+    </div>
+{% endblock %}

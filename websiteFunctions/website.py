@@ -82,7 +82,6 @@ class WebsiteManager:
                         Data, 'createWebsite')
         return proc.render()
 
-
     def createWebsiteV2(self, request=None, userID=None, data=None):
 
         url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
@@ -290,7 +289,6 @@ class WebsiteManager:
             response = requests.post(url, data=json.dumps(data))
             Status = response.json()['status']
 
-
             rnpss = randomPassword.generate_pass(10)
 
             Data['Randam_String'] = rnpss.lower()
@@ -342,7 +340,6 @@ class WebsiteManager:
             import requests
             response = requests.post(url, data=json.dumps(data))
             Status = response.json()['status']
-
 
             rnpss = randomPassword.generate_pass(10)
 
@@ -698,11 +695,11 @@ class WebsiteManager:
             password = randomPassword.generate_pass(10)
 
             command = f'sudo -u %s {FinalPHPPath} /usr/bin/wp user create autologin %s --role=administrator --user_pass="%s" --path=%s --skip-plugins --skip-themes' % (
-            WPobj.owner.externalApp, 'autologin@cloudpages.cloud', password, WPobj.path)
+                WPobj.owner.externalApp, 'autologin@cloudpages.cloud', password, WPobj.path)
             ProcessUtilities.executioner(command)
 
             command = f'sudo -u %s {FinalPHPPath} /usr/bin/wp user update autologin --user_pass="%s" --path=%s --skip-plugins --skip-themes' % (
-            WPobj.owner.externalApp, password, WPobj.path)
+                WPobj.owner.externalApp, password, WPobj.path)
             ProcessUtilities.executioner(command)
 
             data = {}
@@ -1011,7 +1008,8 @@ class WebsiteManager:
 
         rnpss = randomPassword.generate_pass(10)
         proc = httpProc(request, 'websiteFunctions/createDomain.html',
-                        {'websiteList': websitesName, 'phps': PHPManager.findPHPVersions(), 'Randam_String': rnpss, 'test_domain_data':test_domain_status})
+                        {'websiteList': websitesName, 'phps': PHPManager.findPHPVersions(), 'Randam_String': rnpss,
+                         'test_domain_data': test_domain_status})
         return proc.render()
 
     def CreateNewDomainV2(self, request=None, userID=None, data=None):
@@ -1035,7 +1033,8 @@ class WebsiteManager:
 
         rnpss = randomPassword.generate_pass(10)
         proc = httpProc(request, 'websiteFunctions/createDomainV2.html',
-                        {'websiteList': websitesName, 'phps': PHPManager.findPHPVersions(), 'Randam_String': rnpss, 'test_domain_data':test_domain_status})
+                        {'websiteList': websitesName, 'phps': PHPManager.findPHPVersions(), 'Randam_String': rnpss,
+                         'test_domain_data': test_domain_status})
         return proc.render()
 
     def siteState(self, request=None, userID=None, data=None):
@@ -1151,12 +1150,12 @@ class WebsiteManager:
             FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
 
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp core version --skip-plugins --skip-themes --path=%s 2>/dev/null' % (
-            Vhuser, FinalPHPPath, path)
+                Vhuser, FinalPHPPath, path)
             version = ProcessUtilities.outputExecutioner(command, None, True)
             version = html.escape(version)
 
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin status litespeed-cache --skip-plugins --skip-themes --path=%s' % (
-            Vhuser, FinalPHPPath, path)
+                Vhuser, FinalPHPPath, path)
             lscachee = ProcessUtilities.outputExecutioner(command)
 
             if lscachee.find('Status: Active') > -1:
@@ -1165,7 +1164,7 @@ class WebsiteManager:
                 lscache = 0
 
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config list --skip-plugins --skip-themes --path=%s' % (
-            Vhuser, FinalPHPPath, path)
+                Vhuser, FinalPHPPath, path)
             stdout = ProcessUtilities.outputExecutioner(command)
             debugging = 0
             for items in stdout.split('\n'):
@@ -1174,12 +1173,12 @@ class WebsiteManager:
                     break
 
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp option get blog_public --skip-plugins --skip-themes --path=%s' % (
-            Vhuser, FinalPHPPath, path)
+                Vhuser, FinalPHPPath, path)
             stdoutput = ProcessUtilities.outputExecutioner(command)
             searchindex = int(stdoutput.splitlines()[-1])
 
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp maintenance-mode status --skip-plugins --skip-themes --path=%s' % (
-            Vhuser, FinalPHPPath, path)
+                Vhuser, FinalPHPPath, path)
             maintenanceMod = ProcessUtilities.outputExecutioner(command)
 
             result = maintenanceMod.splitlines()[-1]
@@ -1250,7 +1249,7 @@ class WebsiteManager:
             FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
 
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin list --skip-plugins --skip-themes --format=json --path=%s' % (
-            Vhuser, FinalPHPPath, path)
+                Vhuser, FinalPHPPath, path)
             stdoutput = ProcessUtilities.outputExecutioner(command)
             json_data = stdoutput.splitlines()[-1]
 
@@ -1288,7 +1287,7 @@ class WebsiteManager:
             FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
 
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp theme list --skip-plugins --skip-themes --format=json --path=%s' % (
-            Vhuser, FinalPHPPath, path)
+                Vhuser, FinalPHPPath, path)
             stdoutput = ProcessUtilities.outputExecutioner(command)
             json_data = stdoutput.splitlines()[-1]
 
@@ -1631,7 +1630,7 @@ class WebsiteManager:
             Rconfig = json.loads(RemoteBackupConfigobj.config)
 
             try:
-                #This code is only supposed to run if backups are s3, not for SFTP
+                # This code is only supposed to run if backups are s3, not for SFTP
                 provider = Rconfig['Provider']
                 if provider == "Backblaze":
                     EndURl = Rconfig['EndUrl']
@@ -1761,7 +1760,6 @@ class WebsiteManager:
             currentACL = ACLManager.loadedACL(userID)
             admin = Administrator.objects.get(pk=userID)
 
-
             allweb = Websites.objects.all()
 
             childdomain = ChildDomains.objects.all()
@@ -1773,7 +1771,6 @@ class WebsiteManager:
 
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.CyberCPLogFileWriter.writeToFile(result)
-
 
                 if result.find('No such file or directory') == -1:
                     try:
@@ -2110,19 +2107,19 @@ class WebsiteManager:
             FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
 
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin status %s --skip-plugins --skip-themes --path=%s' % (
-            Vhuser, FinalPHPPath, plugin, path)
+                Vhuser, FinalPHPPath, plugin, path)
             stdoutput = ProcessUtilities.outputExecutioner(command)
 
             if stdoutput.find('Status: Active') > -1:
                 command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin deactivate %s --skip-plugins --skip-themes --path=%s' % (
-                Vhuser, FinalPHPPath, plugin, path)
+                    Vhuser, FinalPHPPath, plugin, path)
                 stdoutput = ProcessUtilities.outputExecutioner(command)
                 time.sleep(3)
 
             else:
 
                 command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin activate %s --skip-plugins --skip-themes --path=%s' % (
-                Vhuser, FinalPHPPath, plugin, path)
+                    Vhuser, FinalPHPPath, plugin, path)
                 stdoutput = ProcessUtilities.outputExecutioner(command)
                 time.sleep(3)
 
@@ -2199,11 +2196,6 @@ class WebsiteManager:
             else:
                 return ACLManager.loadError()
 
-
-
-
-
-
             background = ApplicationInstaller('CreateStagingNow', extraArgs)
             background.start()
 
@@ -2255,27 +2247,27 @@ class WebsiteManager:
                 if settingValue:
 
                     command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin install litespeed-cache --path=%s --skip-plugins --skip-themes" % (
-                    Vhuser, FinalPHPPath, path)
+                        Vhuser, FinalPHPPath, path)
                     stdoutput = ProcessUtilities.outputExecutioner(command)
 
                     command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin activate litespeed-cache --path=%s --skip-plugins --skip-themes" % (
-                    Vhuser, FinalPHPPath, path)
+                        Vhuser, FinalPHPPath, path)
                     stdoutput = ProcessUtilities.outputExecutioner(command)
 
 
                 else:
                     command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin deactivate litespeed-cache --path=%s --skip-plugins --skip-themes' % (
-                    Vhuser, FinalPHPPath, path)
+                        Vhuser, FinalPHPPath, path)
                     stdoutput = ProcessUtilities.outputExecutioner(command)
             elif setting == 'debugging':
 
                 command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp litespeed-purge all --path=%s --skip-plugins --skip-themes" % (
-                Vhuser, FinalPHPPath, path)
+                    Vhuser, FinalPHPPath, path)
                 stdoutput = ProcessUtilities.outputExecutioner(command)
 
                 if settingValue:
                     command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp config set WP_DEBUG true --path=%s --skip-plugins --skip-themes" % (
-                    Vhuser, FinalPHPPath, path)
+                        Vhuser, FinalPHPPath, path)
                     stdoutput = ProcessUtilities.outputExecutioner(command)
                     logging.CyberCPLogFileWriter.writeToFile("Debugging mk true 1  output:" + str(stdoutput))
 
@@ -2287,7 +2279,7 @@ class WebsiteManager:
 
                 else:
                     command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp config set WP_DEBUG false --path=%s --skip-plugins --skip-themes" % (
-                    Vhuser, FinalPHPPath, path)
+                        Vhuser, FinalPHPPath, path)
                     stdoutput = ProcessUtilities.outputExecutioner(command)
                     logging.CyberCPLogFileWriter.writeToFile("Debugging mk false 0  output:" + str(stdoutput))
 
@@ -2298,35 +2290,35 @@ class WebsiteManager:
             elif setting == 'searchIndex':
 
                 command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp litespeed-purge all --path=%s --skip-plugins --skip-themes" % (
-                Vhuser, FinalPHPPath, path)
+                    Vhuser, FinalPHPPath, path)
                 stdoutput = ProcessUtilities.outputExecutioner(command)
 
                 if settingValue:
                     command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp option update blog_public 1 --path=%s --skip-plugins --skip-themes" % (
-                    Vhuser, FinalPHPPath, path)
+                        Vhuser, FinalPHPPath, path)
                     stdoutput = ProcessUtilities.outputExecutioner(command)
 
 
                 else:
                     command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp option update blog_public 0 --path=%s --skip-plugins --skip-themes" % (
-                    Vhuser, FinalPHPPath, path)
+                        Vhuser, FinalPHPPath, path)
                     stdoutput = ProcessUtilities.outputExecutioner(command)
             elif setting == 'maintenanceMode':
 
                 command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp litespeed-purge all --path=%s --skip-plugins --skip-themes" % (
-                Vhuser, FinalPHPPath, path)
+                    Vhuser, FinalPHPPath, path)
                 stdoutput = ProcessUtilities.outputExecutioner(command)
 
                 if settingValue:
 
                     command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp maintenance-mode activate --path=%s --skip-plugins --skip-themes" % (
-                    Vhuser, FinalPHPPath, path)
+                        Vhuser, FinalPHPPath, path)
                     stdoutput = ProcessUtilities.outputExecutioner(command)
 
 
                 else:
                     command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp maintenance-mode deactivate --path=%s --skip-plugins --skip-themes" % (
-                    Vhuser, FinalPHPPath, path)
+                        Vhuser, FinalPHPPath, path)
                     stdoutput = ProcessUtilities.outputExecutioner(command)
             elif setting == 'PasswordProtection':
                 execPath = f"/usr/local/CyberCP/bin/python {virtualHostUtilities.cyberPanel}/plogical/virtualHostUtilities.py"
@@ -2391,8 +2383,6 @@ class WebsiteManager:
         try:
             currentACL = ACLManager.loadedACL(userID)
             admin = Administrator.objects.get(pk=userID)
-
-
 
             extraArgs = {}
             extraArgs['currentACL'] = currentACL
@@ -3159,9 +3149,9 @@ class WebsiteManager:
 
             ## Fix https://github.com/usmannasir/cyberpanel/issues/998
 
-            #from plogical.IncScheduler import IncScheduler
-            #isPU = IncScheduler('CalculateAndUpdateDiskUsage', {})
-            #isPU.start()
+            # from plogical.IncScheduler import IncScheduler
+            # isPU = IncScheduler('CalculateAndUpdateDiskUsage', {})
+            # isPU.start()
 
             command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForce'
             ProcessUtilities.outputExecutioner(command)
@@ -4269,7 +4259,62 @@ class WebsiteManager:
         proc = httpProc(request, 'websiteFunctions/installWordPress.html', {'domainName': self.domain})
         return proc.render()
 
+    def wordpressInstallV2(self, request=None, userID=None, data=None):
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+        if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        proc = httpProc(request, 'websiteFunctions/installWordPressV2.html', {'domainName': self.domain})
+        return proc.render()
+
     def installWordpress(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            self.domain = data['domain']
+
+            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('installStatus', 0)
+
+            mailUtilities.checkHome()
+
+            extraArgs = {}
+            extraArgs['admin'] = admin
+            extraArgs['domainName'] = data['domain']
+            extraArgs['home'] = data['home']
+            extraArgs['blogTitle'] = data['blogTitle']
+            extraArgs['adminUser'] = data['adminUser']
+            extraArgs['adminPassword'] = data['passwordByPass']
+            extraArgs['adminEmail'] = data['adminEmail']
+            extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+            if data['home'] == '0':
+                extraArgs['path'] = data['path']
+
+            background = ApplicationInstaller('wordpress', extraArgs)
+            background.start()
+
+            time.sleep(2)
+
+            data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None',
+                        'tempStatusPath': extraArgs['tempStatusPath']}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def installWordpressV2(self, userID=None, data=None):
         try:
 
             currentACL = ACLManager.loadedACL(userID)
@@ -4604,6 +4649,18 @@ StrictHostKeyChecking no
         proc = httpProc(request, 'websiteFunctions/installPrestaShop.html', {'domainName': self.domain})
         return proc.render()
 
+    def installPrestaShopV2(self, request=None, userID=None, data=None):
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+        if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        proc = httpProc(request, 'websiteFunctions/installPrestaShopV2.html', {'domainName': self.domain})
+        return proc.render()
+
     def installMagento(self, request=None, userID=None, data=None):
         currentACL = ACLManager.loadedACL(userID)
         admin = Administrator.objects.get(pk=userID)
@@ -4675,6 +4732,18 @@ StrictHostKeyChecking no
         proc = httpProc(request, 'websiteFunctions/installMautic.html', {'domainName': self.domain})
         return proc.render()
 
+    def installMauticV2(self, request=None, userID=None, data=None):
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+        if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        proc = httpProc(request, 'websiteFunctions/installMauticV2.html', {'domainName': self.domain})
+        return proc.render()
+
     def mauticInstall(self, userID=None, data=None):
         try:
 
@@ -4687,7 +4756,6 @@ StrictHostKeyChecking no
                 pass
             else:
                 return ACLManager.loadErrorJson('installStatus', 0)
-
 
             #### Before installing mautic change php to 8.0
 
@@ -5101,7 +5169,7 @@ StrictHostKeyChecking no
             else:
                 phpVersion = f'PHP {phpPath[2]}'
 
-            #php = PHPManager.getPHPString(phpVersion)
+            # php = PHPManager.getPHPString(phpVersion)
 
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.CyberCPLogFileWriter.writeToFile(f'PHP Version in tune settings {phpVersion}')
@@ -5121,7 +5189,7 @@ StrictHostKeyChecking no
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
         except BaseException as msg:
-            data_ret = {'status': 0,  'error_message': str(msg)}
+            data_ret = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -5363,6 +5431,40 @@ StrictHostKeyChecking no
             #     folders.append('%s%s' % (basePath, database.dbName))
 
         proc = httpProc(request, 'websiteFunctions/manageGIT.html',
+                        {'domainName': self.domain, 'folders': folders})
+        return proc.render()
+
+    def manageGITV2(self, request=None, userID=None, data=None):
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+        if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        try:
+            website = Websites.objects.get(domain=self.domain)
+            folders = ['/home/%s/public_html' % (self.domain)]
+
+            databases = website.databases_set.all()
+
+            # for database in databases:
+            #     basePath = '/var/lib/mysql/'
+            #     folders.append('%s%s' % (basePath, database.dbName))
+        except:
+
+            self.childWebsite = ChildDomains.objects.get(domain=self.domain)
+
+            folders = [self.childWebsite.path]
+
+            databases = self.childWebsite.master.databases_set.all()
+
+            # for database in databases:
+            #     basePath = '/var/lib/mysql/'
+            #     folders.append('%s%s' % (basePath, database.dbName))
+
+        proc = httpProc(request, 'websiteFunctions/manageGITV2.html',
                         {'domainName': self.domain, 'folders': folders})
         return proc.render()
 
@@ -6881,7 +6983,6 @@ StrictHostKeyChecking no
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-
     def ApacheManager(self, request=None, userID=None, data=None):
         currentACL = ACLManager.loadedACL(userID)
         admin = Administrator.objects.get(pk=userID)
@@ -6898,7 +6999,8 @@ StrictHostKeyChecking no
         else:
             apachemanager = 0
 
-        proc = httpProc(request, 'websiteFunctions/ApacheManager.html', {'domainName': self.domain, 'phps': phps, 'apachemanager':apachemanager})
+        proc = httpProc(request, 'websiteFunctions/ApacheManager.html',
+                        {'domainName': self.domain, 'phps': phps, 'apachemanager': apachemanager})
         return proc.render()
 
     def saveApacheConfigsToFile(self, userID=None, data=None):

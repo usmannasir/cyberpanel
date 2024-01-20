@@ -1,0 +1,167 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    <head>
+        <title>{% trans "File Manager - CyberPanel" %}</title>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        {% load static %}
+        <link rel="icon" type="image/png" href="{% static 'baseTemplate/assets/finalBase/favicon.png' %}">
+
+        <!-- Angular JS -->
+
+        <script src="https://code.angularjs.org/1.6.5/angular.min.js"></script>
+        <script src="{% static 'filemanager/js/fileManager.js' %}"></script>
+
+        <!-- Fix for old browsers -->
+        <script src="{% static 'filemanager/js/es5-shim.min.js' %}"></script>
+        <script src="{% static 'filemanager/js/es5-sham.min.js' %}"></script>
+        <script src="{% static 'filemanager/js/jquery-1.8.3.min.js' %}"></script>
+        <script src="{% static 'filemanager/js/console-sham.js' %}"></script>
+
+        <!--<script src="../bower_components/angular/angular.js"></script>-->
+        <script src="{% static 'filemanager/js/angular-file-upload.min.js' %}"></script>
+
+
+        <!-- HTML Editor Include -->
+
+    </head>
+
+    <div ng-app="fileManager" ng-controller="fileManagerCtrl" class="p-8">
+        <div class="flex py-2 px-6 items-center gap-4">
+            <div>
+                <p class="font-bold w-32">Current Path</p>
+            </div>
+            <div>
+                <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" id="currentRPath" ng-model="currentRPath"
+                       readonly>
+            </div>
+            <div>
+                <ul class="list-group list-group-flush">
+                    <li class="flex text-orange-500">
+                        <a href="#" onclick="return false;" ng-click="fetchChilds($event,currentRPath,'primary')">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                 stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                            </svg>
+                        </a>
+                        <a onclick="return false;"
+                           ng-click="fetchForTableSecondary($event,'fromTree',completeStartingPath)" href="#">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                 stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"/>
+                            </svg>
+                        </a>
+                        <a href="" class="ml-2">{$ startingPath $}</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="py-4">
+            <div>
+                <ul class="flex justify-between bg-blue-200 py-5 px-5 rounded-lg shadow-lg font-semibold">
+                    <li>
+                        <a onclick="return false;" ng-click="showUploadBox()" class="nav-link point-events" href="#"><i
+                                class="fa fa-upload" aria-hidden="true"></i> {% trans "Upload" %}</a>
+                    </li>
+                    <li>
+                        <a onclick="return false;" ng-click="showCreateFileModal()" class="nav-link point-events"
+                           href="#"><i class="fa fa-plus-square" aria-hidden="true"></i> {% trans "New File" %}</a>
+                    </li>
+                    <li>
+                        <a onclick="return false;" ng-click="showCreateFolderModal()" class="nav-link point-events"
+                           href="#"><i class="fa fa-folder" aria-hidden="true"></i> {% trans "New Folder" %}</a>
+                    </li>
+                    <li id="deleteFile">
+                        <a onclick="return false;" ng-click="showDeleteModal()" class="nav-link point-events"
+                           href="#"><i
+                                class="fa fa-trash-o" aria-hidden="true"></i> {% trans "Delete" %}</a>
+                    </li>
+                    <li id="copyFile">
+                        <a onclick="return false;" ng-click="showCopyModal()" class="nav-link point-events" href="#"><i
+                                class="fa fa-files-o" aria-hidden="true"></i> {% trans "Copy" %}</a>
+                    </li>
+                    <li id="moveFile">
+                        <a onclick="return false;" ng-click="showMoveModal()" class="nav-link point-events" href="#"><i
+                                class="fa fa-arrows-alt" aria-hidden="true"></i> {% trans "Move" %}</a>
+                    </li>
+                    <li id="renameFile">
+                        <a onclick="return false;" ng-click="showRenameModal()" class="nav-link point-events"
+                           href="#"><i
+                                class="fa fa-file-text-o" aria-hidden="true"></i> {% trans "Rename" %}</a>
+                    </li>
+                    <li id="editFile">
+                        <a onclick="return false;" ng-click="showHTMLEditorModal()" class="nav-link point-events"
+                           href="#"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> {% trans "Edit" %}</a>
+                    </li>
+                    <li id="compressFile">
+                        <a onclick="return false;" ng-click="showCompressionModal()" class="nav-link point-events"
+                           href="#"><i
+                                class="fa fa-compress" aria-hidden="true"></i> {% trans "Compress" %}</a>
+                    </li>
+                    <li id="extractFile">
+                        <a onclick="return false;" ng-click="showExtractionModal()" class="nav-link point-events"
+                           href="#"><i class="fa fa-expand" aria-hidden="true"></i> {% trans "Extract" %}</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="mt-2">
+                <ul class="flex py-5 px-5 gap-10 font-semibold">
+                    <li>
+                        <a onclick="return false;" ng-click="fetchForTableSecondary($event,'homeFetch')"
+                           href="#"><i class="fa fa-home fa-lg" aria-hidden="true"></i> {% trans "Home" %}</a>
+                    </li>
+                    <li>
+                        <a onclick="return false;" ng-click="fetchForTableSecondary($event,'goBackOnPath')"
+                           href="#"><i class="fa fa-arrow-left fa-lg"
+                                       aria-hidden="true"></i> {% trans "Back" %}</a>
+                    </li>
+
+                    <li>
+                        <a onclick="return false;" ng-click="fetchForTableSecondary($event,'refresh')"
+                           href="#"><i class="fa fa-refresh fa-lg" aria-hidden="true"></i> {% trans "Refresh" %}</a>
+                    </li>
+
+                    <li>
+                        <a onclick="return false;" ng-click="selectAll()" href="#"><i
+                                class="fa fa-check-square-o fa-lg" aria-hidden="true"></i> {% trans "Select All" %}</a>
+                    </li>
+
+                    <li>
+                        <a onclick="return false;" ng-click="unSelectAll()" href="#"><i
+                                class="fa fa-square-o fa-lg" aria-hidden="true"></i> {% trans "UnSelect All" %}</a>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <div class="relative py-5 overflow-x-auto">
+                    <table class="w-full text-sm text-left rtl:text-right">
+                        <thead id="tableHead">
+                        <tr>
+                            <th scope="col" class="px-6 py-3">
+                                File Name
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Size (KB)
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Last Modified
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Permissions
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody id="tableBodyFiles">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

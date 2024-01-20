@@ -8,7 +8,7 @@
     <div ng-controller="websitePagesV2" class="p-8">
         <div class="flex lg:flex-row justify-between items-center sm:flex-col">
             <div>
-                <p id="domainNamePage" class="text-4xl font-bold">{{ domain }}</p>
+                <p id="domainNamePageV2" class="text-4xl font-bold">{{ domain }}</p>
                 <p class="text-xs text-gray-600 py-2 font-semibold">All functions related to a particular site.
                 </p>
             </div>
@@ -167,14 +167,13 @@
                                             class="bg-orange-500 text-white font-bold px-2 py-1">{% trans "Next" %}</button>
                                     <button ng-click="fetchLogs(4)" type="button"
                                             class="bg-orange-500 text-white font-bold px-2 py-1">{% trans "Previous" %}</button>
-                                </div>
-
-                                <div style="margin-bottom: 1%;" class=" col-sm-1">
                                     <a ng-click="hidelogsbtn()" href="">
-                                        <!--img src="/static/images/close-32.png"-->
-                                        <h3 class="glyph-icon icon-close text-danger mt-5"></h3>
+                                        <h3 class="bg-red-500 px-2 py-1 rounded-lg text-white">
+                                            X</h3>
                                     </a>
                                 </div>
+
+
                                 <div ng-hide="currentRecords" class="relative py-5 overflow-x-auto">
                                     <table class="w-full text-sm text-left rtl:text-right">
                                         <thead>
@@ -800,7 +799,7 @@
                 </div>
                 <div>
                     <ul class="flex w-full grid lg:grid-cols-4">
-                        <li class="px-3 py-3">
+                        <a href="{% url 'FilemanagerV2' %}" class="px-3 py-3">
                             <div class="flex items-center">
                                 <div>
                                     <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
@@ -817,7 +816,7 @@
                                     <p class="px-2 font-bold" style="font-size: 70%;">File Manager</p>
                                 </div>
                             </div>
-                        </li>
+                        </a>
                         <li ng-click="openBaseDirView()" class="px-3 py-3 cursor-pointer">
                             <div class="flex items-center">
                                 <div>
@@ -1062,7 +1061,7 @@
                 </div>
                 <div>
                     <ul class="flex w-full grid lg:grid-cols-4">
-                        <li class="px-3 py-3">
+                        <a href="{$ wordPressInstallURLV2 $}" class="px-3 py-3">
                             <div class="flex items-center">
                                 <div>
                                     <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
@@ -1079,8 +1078,8 @@
                                     <p class="px-2 font-bold" style="font-size: 70%;">WP + LSCache</p>
                                 </div>
                             </div>
-                        </li>
-                        <li class="px-3 py-3">
+                        </a>
+                        <a href="/websites/{{ domain }}/manageGITV2" class="px-3 py-3">
                             <div class="flex items-center">
                                 <div>
                                     <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
@@ -1097,8 +1096,8 @@
                                     <p class="px-2 font-bold" style="font-size: 70%;">Git</p>
                                 </div>
                             </div>
-                        </li>
-                        <li class="px-3 py-3">
+                        </a>
+                        <a href="{$ installPrestaURL $}" class="px-3 py-3">
                             <div class="flex items-center">
                                 <div>
                                     <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
@@ -1119,8 +1118,8 @@
                                     <p class="px-2 font-bold" style="font-size: 70%;">Prestashop</p>
                                 </div>
                             </div>
-                        </li>
-                        <li class="px-3 py-3">
+                        </a>
+                        <a href="{$ installMauticURL $}" class="px-3 py-3">
                             <div class="flex items-center">
                                 <div>
 
@@ -1140,7 +1139,7 @@
                                     <p class="px-2 font-bold" style="font-size: 70%;">Mautic</p>
                                 </div>
                             </div>
-                        </li>
+                        </a>
                     </ul>
                 </div>
             </div>
