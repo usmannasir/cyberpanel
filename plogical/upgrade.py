@@ -38,7 +38,7 @@ class Upgrade:
     UbuntuPath = '/etc/lsb-release'
     openEulerPath = '/etc/openEuler-release'
     FromCloud = 0
-    SnappyVersion = '2.28.1'
+    SnappyVersion = '2.32.0'
     LogPathNew = '/home/cyberpanel/upgrade_logs'
     SoftUpgrade = 0
 
