@@ -424,8 +424,8 @@ context /.well-known/acme-challenge {
             command = f'mkdir -p /usr/local/lsws/Example/html/.well-known/acme-challenge'
             ProcessUtilities.normalExecutioner(command)
 
-            command = f'chmod -R 755 /usr/local/lsws/Example/html'
-            ProcessUtilities.executioner(command)
+        command = f'chmod -R 755 /usr/local/lsws/Example/html'
+        ProcessUtilities.executioner(command)
 
         CustomVerificationFile = f'/usr/local/lsws/Example/html/.well-known/acme-challenge/{virtualHostName}'
         command = f'touch {CustomVerificationFile}'
