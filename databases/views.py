@@ -2,6 +2,7 @@
 
 
 from django.shortcuts import redirect, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 
 from cloudAPI.cloudManager import CloudManager
 from loginSystem.views import loadLoginPage
@@ -251,7 +252,7 @@ def generateAccess(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-
+@csrf_exempt
 def fetchDetailsPHPMYAdmin(request):
     try:
 
@@ -259,8 +260,15 @@ def fetchDetailsPHPMYAdmin(request):
         admin = Administrator.objects.get(id=userID)
         currentACL = ACLManager.loadedACL(userID)
 
-        token = request.GET.get('token')
-        username = request.GET.get('username')
+
+
+        token = request.POST.get('token')
+        username = request.POST.get('username')
+
+        from plogical.httpProc import httpProc
+        proc = httpProc(request, None,
+                        )
+        #return proc.ajax(0, str(request.POST.get('token')))
 
         if username != admin.userName:
             return redirect(loadLoginPage)
@@ -280,20 +288,37 @@ def fetchDetailsPHPMYAdmin(request):
                     mysqluser = jsonData['mysqluser']
                     password = jsonData['mysqlpassword']
 
-                    returnURL = '/phpmyadmin/phpmyadminsignin.php?username=%s&password=%s' % (
-                        mysqluser, password)
-                    return redirect(returnURL)
+                    # returnURL = '/phpmyadmin/phpmyadminsignin.php?username=%s&password=%s' % (
+                    #     mysqluser, password)
+                    # return redirect(returnURL)
+                    data = {}
+                    data['userName'] = mysqluser
+                    data['password'] = password
 
-                except BaseException:
+
+                    proc = httpProc(request, 'databases/AutoLogin.html',
+                                    data, 'admin')
+                    return proc.render()
+
+                except BaseException as msg:
 
                     f = open(passFile)
                     data = f.read()
                     password = data.split('\n', 1)[0]
                     password = password.strip('\n').strip('\r')
 
-                    returnURL = '/phpmyadmin/phpmyadminsignin.php?username=%s&password=%s' % (
-                        'root', password)
-                    return redirect(returnURL)
+                    data = {}
+                    data['userName'] = 'root'
+                    data['password'] = password
+                    # return redirect(returnURL)
+
+                    proc = httpProc(request, 'databases/AutoLogin.html',
+                                    data, 'admin')
+                    return proc.render()
+
+                    # returnURL = '/phpmyadmin/phpmyadminsignin.php?username=%s&password=%s' % (
+                    #     'root', password)
+                    # return redirect(returnURL)
 
             keySavePath = '/home/cyberpanel/phpmyadmin_%s' % (admin.userName)
             key = ProcessUtilities.outputExecutioner('cat %s' % (keySavePath)).strip('\n').encode()
@@ -306,8 +331,17 @@ def fetchDetailsPHPMYAdmin(request):
                 for db in site.databases_set.all():
                     mysqlUtilities.addUserToDB(db.dbName, admin.userName, password.decode(), 0)
 
-            returnURL = '/phpmyadmin/phpmyadminsignin.php?username=%s&password=%s' % (admin.userName, password.decode())
-            return redirect(returnURL)
+            data = {}
+            data['userName'] = admin.userName
+            data['password'] = password.decode()
+            # return redirect(returnURL)
+
+            proc = httpProc(request, 'databases/AutoLogin.html',
+                            data, 'admin')
+            return proc.render()
+
+            # returnURL = '/phpmyadmin/phpmyadminsignin.php?username=%s&password=%s' % (admin.userName, password.decode())
+            # return redirect(returnURL)
         else:
             return redirect(loadLoginPage)
 

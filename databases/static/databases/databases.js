@@ -589,8 +589,34 @@ app.controller('phpMyAdmin', function ($scope, $http, $window) {
         function ListInitialDatas(response) {
             $scope.cyberPanelLoading = true;
             if (response.data.status === 1) {
-                var rUrl = '/phpmyadmin/phpmyadminsignin.php?username=' + response.data.username + '&token=' + response.data.token;
-                $window.location.href = rUrl;
+                //var rUrl = '/phpmyadmin/phpmyadminsignin.php?username=' + response.data.username + '&token=' + response.data.token;
+                //$window.location.href = rUrl;
+
+                var form = document.createElement('form');
+                form.method = 'post';
+                form.action = '/phpmyadmin/phpmyadminsignin.php';
+
+// Create input elements for username and token
+                var usernameInput = document.createElement('input');
+                usernameInput.type = 'hidden';
+                usernameInput.name = 'username';
+                usernameInput.value = response.data.username;
+
+                var tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = 'token';
+                tokenInput.value = response.data.token;
+
+// Append input elements to the form
+                form.appendChild(usernameInput);
+                form.appendChild(tokenInput);
+
+// Append the form to the body
+                document.body.appendChild(form);
+
+// Submit the form
+                form.submit();
+
             } else {
             }
 
