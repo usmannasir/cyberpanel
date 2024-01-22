@@ -350,6 +350,17 @@ class CloudManager:
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
+            TemFilePath = statusFile.split('panel/')[1]
+
+            try:
+                value = int(TemFilePath)
+                print(value)
+            except:
+                data_ret = {'status': 0, 'abort': 0, 'installationProgress': "0", }
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
             statusData = open(statusFile, 'r').readlines()
             try:
                 lastLine = statusData[-1]
