@@ -45,4 +45,5 @@ urlpatterns = [
     url(r'^CloudLinux/', include('CLManager.urls')),
     url(r'^IncrementalBackups/', include('IncBackups.urls')),
     url(r'^Terminal/', include('WebTerminal.urls')),
+    url(r'^v2Websites/',include('websitesv2.urls')),
 ]
