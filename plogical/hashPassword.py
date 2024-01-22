@@ -30,6 +30,6 @@ def hash_password(password):
 def check_password(hashed_password, user_password):
     return bcrypt.checkpw(user_password.encode(), hashed_password.encode())
 
-def generate_token():
+def generateToken():
     token = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode()
     return token
