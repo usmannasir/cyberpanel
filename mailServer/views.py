@@ -8,12 +8,14 @@ import json
 from .mailserverManager import MailServerManager
 from .pluginManager import pluginManager
 
+
 def loadEmailHome(request):
     try:
         msM = MailServerManager(request)
         return msM.loadEmailHome()
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def createEmailAccount(request):
     try:
@@ -22,16 +24,27 @@ def createEmailAccount(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def createEmailAccountV2(request):
     try:
         msM = MailServerManager(request)
         return msM.createEmailAccountV2()
     except KeyError:
         return redirect(loadLoginPage)
+
+
 def listEmails(request):
     try:
         msM = MailServerManager(request)
         return msM.listEmails()
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def listEmailsV2(request):
+    try:
+        msM = MailServerManager(request)
+        return msM.listEmailsV2()
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -42,6 +55,7 @@ def fetchEmails(request):
         return msM.fetchEmails()
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def submitEmailCreation(request):
     try:
@@ -61,12 +75,14 @@ def submitEmailCreation(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def deleteEmailAccount(request):
     try:
         msM = MailServerManager(request)
         return msM.deleteEmailAccount()
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def getEmailsForDomain(request):
     try:
@@ -76,6 +92,7 @@ def getEmailsForDomain(request):
         data_ret = {'fetchStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
 
 def submitEmailDeletion(request):
     try:
@@ -97,6 +114,7 @@ def submitEmailDeletion(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+
 def fixMailSSL(request):
     try:
 
@@ -109,12 +127,14 @@ def fixMailSSL(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+
 def emailForwarding(request):
     try:
         msM = MailServerManager(request)
         return msM.emailForwarding()
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def fetchCurrentForwardings(request):
     try:
@@ -124,6 +144,7 @@ def fetchCurrentForwardings(request):
         data_ret = {'fetchStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
 
 def submitForwardDeletion(request):
     try:
@@ -145,6 +166,7 @@ def submitForwardDeletion(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+
 def submitEmailForwardingCreation(request):
     try:
 
@@ -165,6 +187,7 @@ def submitEmailForwardingCreation(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+
 #######
 
 def changeEmailAccountPassword(request):
@@ -173,6 +196,7 @@ def changeEmailAccountPassword(request):
         return msM.changeEmailAccountPassword()
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def submitPasswordChange(request):
     try:
@@ -194,6 +218,7 @@ def submitPasswordChange(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+
 #######
 
 def dkimManager(request):
@@ -203,6 +228,7 @@ def dkimManager(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def fetchDKIMKeys(request):
     try:
         msM = MailServerManager(request)
@@ -211,6 +237,7 @@ def fetchDKIMKeys(request):
         data_ret = {'fetchStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
 
 def generateDKIMKeys(request):
     try:
@@ -232,6 +259,7 @@ def generateDKIMKeys(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+
 def installOpenDKIM(request):
     try:
         msM = MailServerManager(request)
@@ -241,13 +269,13 @@ def installOpenDKIM(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
+
 def installStatusOpenDKIM(request):
     try:
         msM = MailServerManager()
         return msM.installStatusOpenDKIM()
     except KeyError:
-        final_dic = {'abort':1,'installed':0, 'error_message': "Not Logged In, please refresh the page or login again."}
+        final_dic = {'abort': 1, 'installed': 0,
+                     'error_message': "Not Logged In, please refresh the page or login again."}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
-
-

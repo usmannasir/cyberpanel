@@ -6,6 +6,7 @@ urlpatterns = [
     url(r'^createEmailAccount', views.createEmailAccount, name='createEmailAccount'),
     url(r'^V2/createEmailAccountV2', views.createEmailAccountV2, name='createEmailAccountV2'),
     url(r'^listEmails$', views.listEmails, name='listEmails'),
+    url(r'^V2/listEmailsV2$', views.listEmailsV2, name='listEmailsV2'),
     url(r'^submitEmailCreation', views.submitEmailCreation, name='submitEmailCreation'),
     url(r'^fetchEmails$', views.fetchEmails, name='fetchEmails'),
 

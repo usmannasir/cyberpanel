@@ -112,6 +112,22 @@ class MailServerManager(multi.Thread):
                         {'websiteList': websitesName, "status": 1}, 'listEmails')
         return proc.render()
 
+    def listEmailsV2(self):
+        userID = self.request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if not os.path.exists('/home/cyberpanel/postfix'):
+            proc = httpProc(self.request, 'mailServer/listEmails.html',
+                            {"status": 0}, 'listEmails')
+            return proc.render()
+
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        websitesName = websitesName + ACLManager.findChildDomains(websitesName)
+
+        proc = httpProc(self.request, 'mailServer/listEmailsV2.html',
+                        {'websiteList': websitesName, "status": 1}, 'listEmails')
+        return proc.render()
+
     def submitEmailCreation(self):
         try:
 
