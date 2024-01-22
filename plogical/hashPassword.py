@@ -19,8 +19,6 @@
 
 
 import bcrypt
-import base64
-import secrets
 import hashlib
 
 def hash_password(password):
