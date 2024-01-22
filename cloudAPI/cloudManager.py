@@ -345,18 +345,11 @@ class CloudManager:
         try:
             statusFile = self.data['statusFile']
 
-            if not statusFile.startswith('/home/cyberpanel'):
-                data_ret = {'status': 0, 'abort': 0, 'installationProgress': "0", }
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-            TemFilePath = statusFile.split('panel/')[1]
-
-            try:
-                value = int(TemFilePath)
-                print(value)
-            except:
-                data_ret = {'status': 0, 'abort': 0, 'installationProgress': "0", }
+            if ACLManager.CheckStatusFilleLoc(statusFile):
+                pass
+            else:
+                data_ret = {'abort': 1, 'installStatus': 0, 'installationProgress': "100",
+                            'currentStatus': 'Invalid status file.'}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 

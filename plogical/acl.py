@@ -882,6 +882,14 @@ class ACLManager:
 
     @staticmethod
     def CheckStatusFilleLoc(statusFile):
+        TemFilePath = statusFile.split('panel/')[1]
+
+        try:
+            value = int(TemFilePath)
+            print(value)
+        except:
+            return 0
+
         if (statusFile[:18] != "/home/cyberpanel/." or statusFile[:16] == "/home/cyberpanel" or statusFile[
                                                                                                 :4] == '/tmp' or statusFile[
                                                                                                                  :18] == '/usr/local/CyberCP') \
