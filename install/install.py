@@ -2060,11 +2060,11 @@ milter_default_action = accept
             writeToFile.write(configData)
             writeToFile.close()
 
-            if self.distro == ubuntu:
+            if self.distro == ubuntu or self.distro == cent8:
                 data = open(openDKIMConfigurePath, 'r').readlines()
                 writeToFile = open(openDKIMConfigurePath, 'w')
                 for items in data:
-                    if items.find('Socket') > -1 and items.find('local:') and items[0] != '#':
+                    if items.find('Socket') > -1 and items.find('local:'):
                         writeToFile.writelines('Socket  inet:8891@localhost\n')
                     else:
                         writeToFile.writelines(items)
