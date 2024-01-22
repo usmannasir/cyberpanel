@@ -356,27 +356,39 @@ class mailUtilities:
             keyTable = "/etc/opendkim/KeyTable"
             configToWrite = "default._domainkey." + actualDomain + " " + actualDomain + ":default:/etc/opendkim/keys/" + virtualHostName + "/default.private\n"
 
-            writeToFile = open(keyTable, 'a')
-            writeToFile.write(configToWrite)
-            writeToFile.close()
+            data = open(keyTable, 'r').read()
+
+            if data.find("default._domainkey." + actualDomain) == -1:
+
+                writeToFile = open(keyTable, 'a')
+                writeToFile.write(configToWrite)
+                writeToFile.close()
 
             ## Edit signing table
 
             signingTable = "/etc/opendkim/SigningTable"
             configToWrite = "*@" + actualDomain + " default._domainkey." + actualDomain + "\n"
 
-            writeToFile = open(signingTable, 'a')
-            writeToFile.write(configToWrite)
-            writeToFile.close()
+            data = open(signingTable, 'r').read()
+
+            if data.find("default._domainkey." + actualDomain) == -1:
+
+                writeToFile = open(signingTable, 'a')
+                writeToFile.write(configToWrite)
+                writeToFile.close()
 
             ## Trusted hosts
 
             trustedHosts = "/etc/opendkim/TrustedHosts"
             configToWrite = actualDomain + "\n"
 
-            writeToFile = open(trustedHosts, 'a')
-            writeToFile.write(configToWrite)
-            writeToFile.close()
+            data = open(trustedHosts, 'r').read()
+
+            if data.find(actualDomain) == -1:
+
+                writeToFile = open(trustedHosts, 'a')
+                writeToFile.write(configToWrite)
+                writeToFile.close()
 
             ## Restart Postfix and OpenDKIM
 
@@ -2149,6 +2161,14 @@ class MailServerManagerUtils(multi.Thread):
 
         return 1
 
+    def SetupDKIMFromResetMail(self):
+
+        for website in Websites.objects.all():
+            mailUtilities.setupDKIM(website.domain)
+
+        for website in ChildDomains.objects.all():
+            mailUtilities.setupDKIM(website.domain)
+
     def ResetEmailConfigurations(self):
         try:
             ### Check if remote or local mysql
@@ -2220,6 +2240,8 @@ class MailServerManagerUtils(multi.Thread):
                 logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                           'configureOpenDKIM failed. [404].')
                 return 0
+
+            self.SetupDKIMFromResetMail()
 
             if self.MailSSL:
                 logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
