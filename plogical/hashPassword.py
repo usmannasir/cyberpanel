@@ -1,5 +1,5 @@
 # import uuid
-# import hashlib
+
 # import base64
 #
 # def hash_password(password):
@@ -21,6 +21,7 @@
 import bcrypt
 import base64
 import secrets
+import hashlib
 
 def hash_password(password):
     salt = bcrypt.gensalt()
@@ -30,6 +31,12 @@ def hash_password(password):
 def check_password(hashed_password, user_password):
     return bcrypt.checkpw(user_password.encode(), hashed_password.encode())
 
-def generateToken():
-    token = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode()
-    return token
+
+def generateToken(username, password):
+    # Concatenate username and password
+    credentials = f'{username}:{password}'.encode()
+
+    # Use SHA-256 hashing
+    hashed_credentials = hashlib.sha256(credentials).hexdigest()
+
+    return 'Basic {0}'.format(hashed_credentials)

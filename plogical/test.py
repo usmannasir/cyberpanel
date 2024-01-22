@@ -38,13 +38,3 @@
 #
 # # Logout
 # mail.logout()
-
-statusFile = '/home/cyberpanel/aASA'
-
-TemFilePath = statusFile.split('panel/')[1]
-
-try:
-    print(TemFilePath)
-    value = int(TemFilePath)
-except BaseException as msg:
-    print(str(msg))
