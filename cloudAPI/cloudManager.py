@@ -344,6 +344,12 @@ class CloudManager:
     def statusFunc(self):
         try:
             statusFile = self.data['statusFile']
+
+            if not statusFile.startswith('/home/cyberpanel'):
+                data_ret = {'status': 0, 'abort': 0, 'installationProgress': "0", }
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
             statusData = open(statusFile, 'r').readlines()
             try:
                 lastLine = statusData[-1]

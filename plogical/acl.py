@@ -147,7 +147,7 @@ class ACLManager:
                     or value.find("`") > -1 or value.find("$") > -1 or value.find("(") > -1 or value.find(")") > -1 \
                     or value.find("'") > -1 or value.find("[") > -1 or value.find("]") > -1 or value.find(
                 "{") > -1 or value.find("}") > -1 \
-                    or value.find(":") > -1 or value.find("<") > -1 or value.find(">") > -1:
+                    or value.find(":") > -1 or value.find("<") > -1 or value.find(">") > -1 or value.find("&") > -1:
                 return 1
             else:
                 return 0

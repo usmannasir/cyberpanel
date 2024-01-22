@@ -24,13 +24,11 @@ def router(request):
         if admin.api == 0:
             return cm.ajaxPre(0, 'API Access Disabled.')
 
-        if controller == 'statusFunc':
+        if cm.verifyLogin(request)[0] == 1:
             pass
         else:
-            if cm.verifyLogin(request)[0] == 1:
-                pass
-            else:
-                return cm.verifyLogin(request)[1]
+            return cm.verifyLogin(request)[1]
+
 
         ## Debug Log
 

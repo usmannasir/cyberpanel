@@ -144,7 +144,7 @@ def upload(request):
             else:
                 return ACLManager.loadErrorJson()
         except:
-            pass
+            return ACLManager.loadErrorJson()
 
         fm = FM(request, data)
         return fm.upload()

@@ -535,11 +535,10 @@ def FetchRemoteTransferStatus(request):
             dir = "/home/backup/transfer-"+str(data['dir'])+"/backup_log"
 
             try:
-                command = f"cat {dir}"
-                status = ProcessUtilities.outputExecutioner(command)
-
 
                 if hashPassword.check_password(admin.password, password):
+                    command = f"cat {dir}"
+                    status = ProcessUtilities.outputExecutioner(command)
 
                     final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "status": status})
                     return HttpResponse(final_json)

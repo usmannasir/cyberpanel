@@ -1,4 +1,6 @@
 # coding=utf-8
+import os.path
+
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from django.shortcuts import HttpResponse, render
 import json
@@ -51,8 +53,19 @@ class secMiddleware:
         except:
             pass
 
+        from plogical.processUtilities import ProcessUtilities
+
+        if os.path.exists(ProcessUtilities.debugPath):
+            logging.writeToFile(request.build_absolute_uri())
+
+        FinalURL = request.build_absolute_uri().split('?')[0]
+
+        if os.path.exists(ProcessUtilities.debugPath):
+            logging.writeToFile(f'Final actual URL without QS {FinalURL}')
+
         if request.method == 'POST':
             try:
+
                 # logging.writeToFile(request.body)
                 data = json.loads(request.body)
                 for key, value in data.items():
@@ -68,7 +81,7 @@ class secMiddleware:
                                 "(") > -1 or items.find(")") > -1 \
                                     or items.find("'") > -1 or items.find("[") > -1 or items.find(
                                 "]") > -1 or items.find("{") > -1 or items.find("}") > -1 \
-                                    or items.find(":") > -1 or items.find("<") > -1 or items.find(">") > -1:
+                                    or items.find(":") > -1 or items.find("<") > -1 or items.find(">") > -1 or items.find("&") > -1:
                                 logging.writeToFile(request.body)
                                 final_dic = {
                                     'error_message': "Data supplied is not accepted, following characters are not allowed in the input ` $ & ( ) [ ] { } ; : ‘ < >.",
@@ -87,14 +100,14 @@ class secMiddleware:
                             final_json = json.dumps(final_dic)
                             return HttpResponse(final_json)
 
-                    if request.build_absolute_uri().find(
-                            'api/remoteTransfer') > -1 or request.build_absolute_uri().find(
-                        'api/verifyConn') > -1 or request.build_absolute_uri().find(
-                        'webhook') > -1 or request.build_absolute_uri().find(
-                        'saveSpamAssassinConfigurations') > -1 or request.build_absolute_uri().find(
-                        'docker') > -1 or request.build_absolute_uri().find(
-                        'cloudAPI') > -1 or request.build_absolute_uri().find(
-                        'verifyLogin') > -1 or request.build_absolute_uri().find('submitUserCreation') > -1:
+                    if FinalURL.find(
+                            'api/remoteTransfer') > -1 or FinalURL.find(
+                        'api/verifyConn') > -1 or FinalURL.find(
+                        'webhook') > -1 or FinalURL.find(
+                        'saveSpamAssassinConfigurations') > -1 or FinalURL.find(
+                        'docker') > -1 or FinalURL.find(
+                        'cloudAPI') > -1 or FinalURL.find(
+                        'verifyLogin') > -1 or FinalURL.find('submitUserCreation') > -1:
                         continue
                     if key == 'scriptUrl' or key == 'CLAMAV_VIRUS' or key == "Rspamdserver" or key == 'smtpd_milters' or key == 'non_smtpd_milters' or key == 'key' or key == 'cert' or key == 'recordContentAAAA' or key == 'backupDestinations' or key == 'ports' \
                             or key == 'imageByPass' or key == 'passwordByPass' or key == 'PasswordByPass' or key == 'cronCommand' \
@@ -108,7 +121,7 @@ class secMiddleware:
                         ")") > -1 \
                             or value.find("'") > -1 or value.find("[") > -1 or value.find("]") > -1 or value.find(
                         "{") > -1 or value.find("}") > -1 \
-                            or value.find(":") > -1 or value.find("<") > -1 or value.find(">") > -1:
+                            or value.find(":") > -1 or value.find("<") > -1 or value.find(">") > -1 or value.find("&") > -1:
                         logging.writeToFile(request.body)
                         final_dic = {
                             'error_message': "Data supplied is not accepted, following characters are not allowed in the input ` $ & ( ) [ ] { } ; : ‘ < >.",
@@ -119,7 +132,7 @@ class secMiddleware:
                             or key.find("`") > -1 or key.find("$") > -1 or key.find("(") > -1 or key.find(")") > -1 \
                             or key.find("'") > -1 or key.find("[") > -1 or key.find("]") > -1 or key.find(
                         "{") > -1 or key.find("}") > -1 \
-                            or key.find(":") > -1 or key.find("<") > -1 or key.find(">") > -1:
+                            or key.find(":") > -1 or key.find("<") > -1 or key.find(">") > -1 or key.find("&") > -1:
                         logging.writeToFile(request.body)
                         final_dic = {'error_message': "Data supplied is not accepted.",
                                      "errorMessage": "Data supplied is not accepted following characters are not allowed in the input ` $ & ( ) [ ] { } ; : ‘ < >."}
