@@ -2178,12 +2178,15 @@ class MailServerManagerUtils(multi.Thread):
         return 1
 
     def SetupDKIMFromResetMail(self):
+        from plogical.dnsUtilities import DNS
 
         for website in Websites.objects.all():
             mailUtilities.setupDKIM(website.domain)
+            DNS.createDKIMRecords(website.domain)
 
         for website in ChildDomains.objects.all():
             mailUtilities.setupDKIM(website.domain)
+            DNS.createDKIMRecords(website.domain)
 
     def ResetEmailConfigurations(self):
         try:
