@@ -317,7 +317,7 @@ class DNS:
                     #                  auth=1)
                     # record.save()
 
-                    DNS.createDNSRecord(zone, "_dmarc." + topLevelDomain, "TXT", "v=DMARC1; p=none", 0, 3600)
+                    DNS.createDNSRecord(zone, "_dmarc." + topLevelDomain, "TXT", "v=DMARC1; p=none;", 0, 3600)
 
                     # record = Records(domainOwner=zone,
                     #                  domain_id=zone.id,
@@ -462,7 +462,7 @@ class DNS:
                     #                  auth=1)
                     # record.save()
 
-                    DNS.createDNSRecord(zone, "_dmarc." + topLevelDomain, "TXT", "v=DMARC1; p=none", 0, 3600)
+                    DNS.createDNSRecord(zone, "_dmarc." + topLevelDomain, "TXT", "v=DMARC1; p=none;", 0, 3600)
 
                     # record = Records(domainOwner=zone,
                     #                  domain_id=zone.id,
@@ -541,7 +541,7 @@ class DNS:
                 #                  auth=1)
                 # record.save()
 
-                DNS.createDNSRecord(zone, "_dmarc." + actualSubDomain, "TXT", "v=DMARC1; p=none", 0, 3600)
+                DNS.createDNSRecord(zone, "_dmarc." + actualSubDomain, "TXT", "v=DMARC1; p=none;", 0, 3600)
 
                 # record = Records(domainOwner=zone,
                 #                  domain_id=zone.id,
