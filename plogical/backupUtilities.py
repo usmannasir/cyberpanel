@@ -689,8 +689,11 @@ class backupUtilities:
 
             ## Create Configurations
 
-            result = virtualHostUtilities.createVirtualHost(domain, siteUser.email, phpSelection, externalApp, 0, 1, 0,
-                                                            siteUser.userName, 'Default', 0)
+            # result = virtualHostUtilities.createVirtualHost(domain, siteUser.email, phpSelection, externalApp, 0, 1, 0,
+            #                                                 siteUser.userName, 'Default', 0)
+            result = virtualHostUtilities.createVirtualHost(domain, siteUser.email, phpSelection, externalApp, 1, 1, 0,
+                                                   siteUser.userName, 'Default', 0, None,
+                                                   1)
 
             if result[0] == 0:
                 raise BaseException(result[1])
