@@ -166,7 +166,18 @@ class DNSManager:
         else:
             finalData = {"status": 1}
 
-        finalData['domainsList'] = ACLManager.findAllDomains(currentACL, userID)
+        tempList = ACLManager.findAllDomains(currentACL, userID)
+
+        finalData['domainsList'] = []
+        import tldextract
+
+        for items in tempList:
+            extractDomain = tldextract.extract(items)
+            subDomain = extractDomain.subdomain
+            if len(subDomain) == 0:
+                finalData['domainsList'].append(items)
+
+
         template = 'dns/addDeleteDNSRecords.html'
         proc = httpProc(request, template, finalData, 'addDeleteRecords')
         return proc.render()
