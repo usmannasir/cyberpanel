@@ -356,9 +356,10 @@ class mailUtilities:
             keyTable = "/etc/opendkim/KeyTable"
             configToWrite = "default._domainkey." + actualDomain + " " + actualDomain + ":default:/etc/opendkim/keys/" + virtualHostName + "/default.private\n"
 
-            writeToFile = open(keyTable, 'a')
-            writeToFile.write("##### CyberPanel Generated File - Do not edit if you don't know what you are doing.")
-            writeToFile.close()
+            if not os.path.exists(keyTable):
+                writeToFile = open(keyTable, 'a')
+                writeToFile.write("##### CyberPanel Generated File - Do not edit if you don't know what you are doing.\n")
+                writeToFile.close()
 
             data = open(keyTable, 'r').read()
 
@@ -373,9 +374,10 @@ class mailUtilities:
             signingTable = "/etc/opendkim/SigningTable"
             configToWrite = "*@" + actualDomain + " default._domainkey." + actualDomain + "\n"
 
-            writeToFile = open(signingTable, 'a')
-            writeToFile.write("##### CyberPanel Generated File - Do not edit if you don't know what you are doing.")
-            writeToFile.close()
+            if not os.path.exists(signingTable):
+                writeToFile = open(signingTable, 'a')
+                writeToFile.write("##### CyberPanel Generated File - Do not edit if you don't know what you are doing.\n")
+                writeToFile.close()
 
             data = open(signingTable, 'r').read()
 
@@ -390,9 +392,11 @@ class mailUtilities:
             trustedHosts = "/etc/opendkim/TrustedHosts"
             configToWrite = actualDomain + "\n"
 
-            writeToFile = open(trustedHosts, 'a')
-            writeToFile.write("##### CyberPanel Generated File - Do not edit if you don't know what you are doing.")
-            writeToFile.close()
+            if not os.path.exists(trustedHosts):
+
+                writeToFile = open(trustedHosts, 'a')
+                writeToFile.write("##### CyberPanel Generated File - Do not edit if you don't know what you are doing.\n")
+                writeToFile.close()
 
             data = open(trustedHosts, 'r').read()
 

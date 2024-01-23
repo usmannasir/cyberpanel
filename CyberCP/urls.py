@@ -44,5 +44,5 @@ urlpatterns = [
     url(r'^container/', include('containerization.urls')),
     url(r'^CloudLinux/', include('CLManager.urls')),
     url(r'^IncrementalBackups/', include('IncBackups.urls')),
-    url(r'^Terminal/', include('WebTerminal.urls')),
+#    url(r'^Terminal/', include('WebTerminal.urls')),
 ]
