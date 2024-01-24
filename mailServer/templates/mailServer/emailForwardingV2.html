@@ -1,0 +1,141 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="emailForwardingV2" class="p-8">
+        <div class="flex items-center">
+            <p class="text-4xl font-bold">Setup Email Forwarding - </p>
+            <a target="_blank" href="http://go.cyberpanel.net/email-forwarding"
+               class="bg-blue-400 px-2 py-1 text-white font-semibold ml-3"
+               title=""><span>{% trans "Forwarding Docs" %}</span></a>
+        </div>
+        <div>
+            <div class="py-4">
+                <p class="text-xl font-bold">Setup Email Forwarding</p>
+                <img ng-hide="forwardLoading" src="{% static 'images/loading.gif' %}">
+            </div>
+            <hr>
+            {% if not status %}
+
+                <div class="col-md-12 text-center" style="margin-bottom: 2%;">
+                    <h3>{% trans "Postfix is disabled." %}
+                        <a href="{% url 'managePostfix' %}">
+                            <button class="btn btn-alt btn-hover btn-blue-alt">
+                                <span>{% trans "Enable Now" %}</span>
+                                <i class="glyph-icon icon-arrow-right"></i>
+                            </button>
+                        </a></h3>
+                </div>
+            {% else %}
+                <div>
+                    <div class="flex mt-4 py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">Select Website</p>
+                        </div>
+                        <div>
+                            <select ng-change="showEmailDetails()" ng-model="emailDomain"
+                                    class="w-80 bg-gray-100 rounded px-2 py-1">
+                                {% for items in websiteList %}
+                                    <option>{{ items }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div ng-hide="emailDetails" class="flex py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">Select Email</p>
+                        </div>
+                        <div>
+                            <select ng-change="selectForwardingEmail()" ng-model="selectedEmail"
+                                    class="w-80 bg-gray-100 rounded px-2 py-1">
+                                <option ng-repeat="email in emails track by $index">{$ email.email $}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div ng-hide="emailDetails" class="flex py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">Forwarding Options</p>
+                        </div>
+                        <div>
+                            <select ng-change="selectForwardingEmail()" ng-model="forwardingOption"
+                                    class="w-80 bg-gray-100 rounded px-2 py-1">
+                                <option>Forward to email</option>
+                                <option>Pipe to program</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                </div>
+                <div class="mt-3">
+                    <div ng-hide="forwardError"
+                         class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                        <p>{$ errorMessage $}</p>
+                    </div>
+
+                    <div ng-hide="forwardSuccess"
+                         class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                        <p>{$ successMessage $}</p>
+                    </div>
+                    <div ng-hide="couldNotConnect"
+                         class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                        <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                    </div>
+                </div>
+                <div ng-hide="creationBox" class="flex gap-4 justify-center mt-4">
+                    <div>
+                        <input placeholder="{% trans 'Source' %}" type="email"
+                               class="w-80 bg-gray-100 rounded px-2 py-1"
+                               ng-model="selectedEmail" readonly>
+                    </div>
+                    <div>
+                        <input placeholder="{% trans 'Destination' %} {% trans 'or path to the program' %}" type="text"
+                               class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="destinationEmail" required>
+                    </div>
+                    <div>
+                        <button type="button" ng-click="forwardEmail()"
+                                class="bg-orange-500 text-white font-semibold px-2 py-1">{% trans "Forward Email" %}</button>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <hr>
+                </div>
+                <div ng-hide="creationBox" class="relative py-5 overflow-x-auto">
+                    <table class="w-full text-sm text-left rtl:text-right">
+                        <thead>
+                        <tr>
+                            <th scope="col" class="px-6 py-3">
+                                ID
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Source
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Destination
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Actions
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody ng-repeat="record in records track by $index"
+                               class="border shadow-lg py-3 px-6 rounded-b-lg">
+                        <tr>
+                            <td ng-bind="record.id" class="px-6 py-4">
+                            </td>
+                            <td ng-bind="record.source" class="px-6 py-4">
+                            </td>
+                            <td ng-bind="record.destination" class="px-6 py-4">
+                            </td>
+                            <td ng-click="deleteForwarding(record.source, record.destination)" class="px-6 py-4">
+                                <img src="{% static 'images/delete.png' %}">
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+    </div>
+{% endblock %}

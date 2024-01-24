@@ -183,6 +183,22 @@ class MailServerManager(multi.Thread):
                         {'websiteList': websitesName, "status": 1}, 'deleteEmail')
         return proc.render()
 
+    def deleteEmailAccountV2(self):
+        userID = self.request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if not os.path.exists('/home/cyberpanel/postfix'):
+            proc = httpProc(self.request, 'mailServer/deleteEmailAccount.html',
+                            {"status": 0}, 'deleteEmail')
+            return proc.render()
+
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        websitesName = websitesName + ACLManager.findChildDomains(websitesName)
+
+        proc = httpProc(self.request, 'mailServer/deleteEmailAccountV2.html',
+                        {'websiteList': websitesName, "status": 1}, 'deleteEmail')
+        return proc.render()
+
     def getEmailsForDomain(self):
         try:
             userID = self.request.session['userID']
@@ -297,7 +313,7 @@ class MailServerManager(multi.Thread):
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
             execPath = '%s setupAutoDiscover --virtualHostName %s --websiteOwner %s' % (
-            execPath, selectedDomain, website.admin.userName)
+                execPath, selectedDomain, website.admin.userName)
 
             ProcessUtilities.executioner(execPath)
 
@@ -323,6 +339,22 @@ class MailServerManager(multi.Thread):
         websitesName = websitesName + ACLManager.findChildDomains(websitesName)
 
         proc = httpProc(self.request, 'mailServer/emailForwarding.html',
+                        {'websiteList': websitesName, "status": 1}, 'emailForwarding')
+        return proc.render()
+
+    def emailForwardingV2(self):
+        userID = self.request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if not os.path.exists('/home/cyberpanel/postfix'):
+            proc = httpProc(self.request, 'mailServer/emailForwardingV2.html',
+                            {"status": 0}, 'emailForwarding')
+            return proc.render()
+
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        websitesName = websitesName + ACLManager.findChildDomains(websitesName)
+
+        proc = httpProc(self.request, 'mailServer/emailForwardingV2.html',
                         {'websiteList': websitesName, "status": 1}, 'emailForwarding')
         return proc.render()
 
@@ -511,7 +543,7 @@ class MailServerManager(multi.Thread):
                 pipeowner = externalApp
                 ## Add Filter pipe to postfix /etc/postfix/master.cf
                 filterpipe = '%spipe unix - n n - - pipe flags=Rq user=%s  argv=%s -f  $(sender) -- $(recipient)' % (
-                sourceusername, pipeowner, destination)
+                    sourceusername, pipeowner, destination)
                 command = "echo '" + filterpipe + "' >> /etc/postfix/master.cf"
                 ProcessUtilities.executioner(command)
                 ## Add Check Recipient Hash to postfix /etc/postfix/main.cf
@@ -613,6 +645,22 @@ class MailServerManager(multi.Thread):
                         {'websiteList': websitesName, "status": 1}, 'changeEmailPassword')
         return proc.render()
 
+    def changeEmailAccountPasswordV2(self):
+        userID = self.request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if not os.path.exists('/home/cyberpanel/postfix'):
+            proc = httpProc(self.request, 'mailServer/changeEmailPasswordV2.html',
+                            {"status": 0}, 'changeEmailPassword')
+            return proc.render()
+
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        websitesName = websitesName + ACLManager.findChildDomains(websitesName)
+
+        proc = httpProc(self.request, 'mailServer/changeEmailPasswordV2.html',
+                        {'websiteList': websitesName, "status": 1}, 'changeEmailPassword')
+        return proc.render()
+
     def submitPasswordChange(self):
         try:
             userID = self.request.session['userID']
@@ -671,6 +719,19 @@ class MailServerManager(multi.Thread):
         websitesName = websitesName + ACLManager.findChildDomains(websitesName)
 
         proc = httpProc(self.request, 'mailServer/dkimManager.html',
+                        {'websiteList': websitesName, 'openDKIMInstalled': openDKIMInstalled}, 'dkimManager')
+        return proc.render()
+
+    def dkimManagerV2(self):
+        userID = self.request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        openDKIMInstalled = 1
+
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        websitesName = websitesName + ACLManager.findChildDomains(websitesName)
+
+        proc = httpProc(self.request, 'mailServer/dkimManagerV2.html',
                         {'websiteList': websitesName, 'openDKIMInstalled': openDKIMInstalled}, 'dkimManager')
         return proc.render()
 

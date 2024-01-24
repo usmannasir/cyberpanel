@@ -84,6 +84,14 @@ def deleteEmailAccount(request):
         return redirect(loadLoginPage)
 
 
+def deleteEmailAccountV2(request):
+    try:
+        msM = MailServerManager(request)
+        return msM.deleteEmailAccountV2()
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 def getEmailsForDomain(request):
     try:
         msM = MailServerManager(request)
@@ -132,6 +140,14 @@ def emailForwarding(request):
     try:
         msM = MailServerManager(request)
         return msM.emailForwarding()
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def emailForwardingV2(request):
+    try:
+        msM = MailServerManager(request)
+        return msM.emailForwardingV2()
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -198,6 +214,14 @@ def changeEmailAccountPassword(request):
         return redirect(loadLoginPage)
 
 
+def changeEmailAccountPasswordV2(request):
+    try:
+        msM = MailServerManager(request)
+        return msM.changeEmailAccountPasswordV2()
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 def submitPasswordChange(request):
     try:
 
@@ -225,6 +249,14 @@ def dkimManager(request):
     try:
         msM = MailServerManager(request)
         return msM.dkimManager()
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def dkimManagerV2(request):
+    try:
+        msM = MailServerManager(request)
+        return msM.dkimManagerV2()
     except KeyError:
         return redirect(loadLoginPage)
 

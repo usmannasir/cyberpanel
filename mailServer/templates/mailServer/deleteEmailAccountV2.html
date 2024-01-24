@@ -1,0 +1,94 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="deleteEmailAccountV2" class="p-8">
+        <div>
+            <p class="text-4xl font-bold">Delete Email Account</p>
+            <p class="text-xs text-gray-600 py-2 font-semibold">Select a website from the list, to delete an email
+                account.</p>
+        </div>
+        <div>
+            <div class="py-4">
+                <p class="text-xl font-bold">Delete Email Account</p>
+                <img ng-hide="emailLoading"
+                     src="{% static 'images/loading.gif' %}">
+            </div>
+            <hr>
+            {% if not status %}
+
+                <div class="col-md-12 text-center" style="margin-bottom: 2%;">
+                    <h3>{% trans "Postfix is disabled." %}
+                        <a href="{% url 'managePostfix' %}">
+                            <button class="btn btn-alt btn-hover btn-blue-alt">
+                                <span>{% trans "Enable Now" %}</span>
+                                <i class="glyph-icon icon-arrow-right"></i>
+                            </button>
+                        </a></h3>
+                </div>
+            {% else %}
+                <div>
+                    <div class="flex mt-4 py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">Select Website</p>
+                        </div>
+                        <div>
+                            <select ng-change="showEmailDetails()" ng-model="emailDomain"
+                                    class="w-80 bg-gray-100 rounded px-2 py-1">
+                                {% for items in websiteList %}
+                                    <option>{{ items }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div ng-hide="emailDetails" class="flex mt-4 py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">Select Email</p>
+                        </div>
+                        <div>
+                            <select ng-model="selectedEmail" class="w-80 bg-gray-100 rounded px-2 py-1">
+                                <option ng-repeat="email in emails track by $index">{$ email.email $}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div ng-hide="emailDetails" class="flex justify-center mt-6">
+                        <button ng-click="deleteEmailAccount()"
+                                class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                            Delete Email
+                        </button>
+                    </div>
+                    <div ng-hide="emailDetailsFinal" class="flex justify-center mt-6">
+                        <button type="button" ng-click="deleteEmailAccountFinal()"
+                                class="bg-gray-500 text-white font-bold px-4 py-2 text-xl">{% trans "Are you sure?" %}</button>
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="col-sm-3 control-label"></label>
+                        <div>
+                            <div ng-hide="canNotDelete"
+                                 class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                                <p>{% trans "Cannot delete email account. Error message:" %} {$ errorMessage
+                                    $}</p>
+                            </div>
+                            <div ng-hide="successfullyDeleted"
+                                 class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                                <p>{% trans "Mailbox with username: {$ deletedID $} has been successfully deleted." %}</p>
+                            </div>
+                            <div ng-hide="couldNotConnect"
+                                 class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                                <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                            </div>
+                            <div ng-hide="noEmails"
+                                 class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                                <p>{% trans "Currently no email accounts exist for this domain." %}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

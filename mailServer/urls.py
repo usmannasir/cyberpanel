@@ -10,33 +10,33 @@ urlpatterns = [
     url(r'^submitEmailCreation', views.submitEmailCreation, name='submitEmailCreation'),
     url(r'^fetchEmails$', views.fetchEmails, name='fetchEmails'),
 
-
     ## Mail Forwardings
     url(r'^emailForwarding$', views.emailForwarding, name='emailForwarding'),
+    url(r'^V2/emailForwardingV2$', views.emailForwardingV2, name='emailForwardingV2'),
     url(r'^submitEmailForwardingCreation$', views.submitEmailForwardingCreation, name='submitEmailForwardingCreation'),
     url(r'^fetchCurrentForwardings$', views.fetchCurrentForwardings, name='fetchCurrentForwardings'),
     url(r'^submitForwardDeletion$', views.submitForwardDeletion, name='submitForwardDeletion'),
 
-
     ## Delete email
     url(r'^deleteEmailAccount', views.deleteEmailAccount, name='deleteEmailAccount'),
+    url(r'^V2/deleteEmailAccountV2', views.deleteEmailAccountV2, name='deleteEmailAccountV2'),
     url(r'^getEmailsForDomain$', views.getEmailsForDomain, name='getEmailsForDomain'),
     url(r'^submitEmailDeletion', views.submitEmailDeletion, name='submitEmailDeletion'),
     url(r'^fixMailSSL', views.fixMailSSL, name='fixMailSSL'),
 
-
     ## Change email password
     url(r'^changeEmailAccountPassword', views.changeEmailAccountPassword, name='changeEmailAccountPassword'),
+    url(r'^V2/changeEmailAccountPasswordV2', views.changeEmailAccountPasswordV2, name='changeEmailAccountPasswordV2'),
     url(r'^submitPasswordChange', views.submitPasswordChange, name='submitPasswordChange'),
 
     ## DKIM Manager
 
     url(r'^dkimManager', views.dkimManager, name='dkimManager'),
+    url(r'^V2/dkimManagerV2', views.dkimManagerV2, name='dkimManagerV2'),
     url(r'^fetchDKIMKeys', views.fetchDKIMKeys, name='fetchDKIMKeys'),
     url(r'^generateDKIMKeys$', views.generateDKIMKeys, name='generateDKIMKeys'),
 
     url(r'^installOpenDKIM', views.installOpenDKIM, name='installOpenDKIM'),
     url(r'^installStatusOpenDKIM', views.installStatusOpenDKIM, name='installStatusOpenDKIM'),
-
 
 ]

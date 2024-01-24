@@ -1,0 +1,152 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="dkimManagerV2" class="p-8">
+        <div>
+            <div class="flex items-center">
+                <p class="text-4xl font-bold">DKIM Manager - </p>
+                <a target="_blank" href="http://go.cyberpanel.net/dkim"
+                   class="bg-blue-400 px-2 py-1 text-white font-semibold ml-3"
+                   title=""><span>{% trans "DKIM Docs" %}</span></a>
+            </div>
+        </div>
+        {% if openDKIMInstalled == 0 %}
+            <div>
+            <div class="py-4">
+                <p class="text-xl font-bold">DKIM Manager</p>
+                <img ng-hide="manageDKIMLoading" src="{% static 'images/loading.gif' %}">
+            </div>
+            <hr>
+            <div>
+                <h3>{% trans "OpenDKIM is not installed. " %}
+                    <a href="" ng-click="installOpenDKIM()"><strong>{% trans "Install Now" %}</strong></a>
+                </h3>
+            </div>
+            <div class="mt-3">
+                <div ng-hide="openDKIMNotifyBox" class="form-group">
+                    <div class="col-sm-6">
+                        <div ng-hide="openDKIMError"
+                             class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                            <p>{% trans "Error message: " %} {$ errorMessage $}</p>
+                        </div>
+
+                        <div ng-hide="couldNotConnect"
+                             class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                            <p>{% trans "Could not connect. Please refresh this page." %} </p>
+                        </div>
+
+                        <div ng-hide="openDKIMSuccessfullyInstalled"
+                             class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                            <p>{% trans "OpenDKIM successfully installed, refreshing page in 3 seconds.." %}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-3">
+                <div ng-hide="openDKIMInstallBox" class="col-md-12">
+                    <form action="/" id="" class="form-horizontal bordered-row panel-body">
+                        <div class="form-group">
+                            <div style="margin-top: 2%;" class="col-sm-12">
+                                    <textarea ng-model="requestData" rows="15"
+                                              class="form-control">{{ requestData }}</textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+
+
+        {% else %}
+            <div class="panel-body">
+                <h3 class="content-box-header">
+                    {% trans "DKIM Manager" %} <img ng-hide="manageDKIMLoading" src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
+
+                    <form action="/" class="form-horizontal bordered-row panel-body">
+
+                        <div class="flex mt-4 py-2 px-6">
+                            <div>
+                                <p class="font-semibold w-60">Select Website</p>
+                            </div>
+                            <div>
+                                <select ng-change="fetchKeys()" ng-model="domainName"
+                                        class="w-80 bg-gray-100 rounded px-2 py-1">
+                                    {% for items in websiteList %}
+                                        <option>{{ items }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div ng-hide="noKeysAvailable" class="mt-4">
+                            <hr>
+                        </div>
+                        <!------ List Domain Keys --------------->
+                        <div ng-hide="noKeysAvailable" class="flex justify-center text-xl py-6">
+                            <h3>{% trans "Keys not available for this domain." %}
+                                <a href="" ng-click="createDomainDKIMKeys()"><strong
+                                        class="text-orange-500 font-semibold">{% trans "Generate Now" %}</strong></a>
+                            </h3>
+                        </div>
+                        <div ng-hide="noKeysAvailable">
+                            <hr>
+                        </div>
+                        <div ng-hide="domainRecords" class="relative py-5 overflow-x-auto">
+                            <table class="w-full text-sm text-left rtl:text-right">
+                                <thead>
+                                <tr>
+                                    <th scope="col" class="px-6 py-3">
+                                        Domain
+                                    </th>
+                                    <th scope="col" class="px-6 py-3">
+                                        Private Key
+                                    </th>
+                                    <th scope="col" class="px-6 py-3">
+                                        Public Key
+                                    </th>
+                                </tr>
+                                </thead>
+                                <tbody class="border shadow-lg py-3 px-6 rounded-b-lg">
+                                <tr>
+                                    <td ng-bind="domainName" class="px-6 py-4">
+                                    </td>
+                                    <td class="px-6 py-4">
+                                         <textarea ng-bind="privateKey" rows="10"
+                                                   class="form-control"></textarea>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                          <textarea ng-bind="publicKey" rows="5"
+                                                    class="form-control"></textarea>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!------ List of records --------------->
+                        <div>
+                            <div ng-hide="dkimSuccess"
+                                 class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                                <p>{$ dkimSuccessMessage $}</p>
+                            </div>
+                            <div ng-hide="dkimError"
+                                 class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                                <p>{$ errorMessage $}</p>
+                            </div>
+                            <div ng-hide="couldNotConnect"
+                                 class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                                <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        {% endif %}
+        </div>
+    </div>
+{% endblock %}
