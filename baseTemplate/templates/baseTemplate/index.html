@@ -376,6 +376,7 @@
                             <a href="#" title="{% trans 'Dockersite' %}">
                                 <div class="glyph-icon icon-globe" title="{% trans 'Docker Apps' %}"></div>
                                 <span>{% trans "Docker Apps" %}</span>
+                                <span class="bs-label badge-yellow">{% trans "Beta" %}</span>
                             </a>
                             <div class="sidebar-submenu">
 
@@ -848,28 +849,27 @@
                                 </div><!-- .sidebar-submenu -->
                             </li>
 
-                            <li id="sidebar-menu-item-containerization">
-                                <a href="#" title="{% trans 'Containerization' %}">
-                                    <i class="glyph-icon icon-linecons-fire"></i>
-                                    <span>{% trans "Containerization" %}</span>
-                                    <span class="bs-label badge-yellow">{% trans "NEW" %}</span>
-                                </a>
-                                <div class="sidebar-submenu">
-
-                                    <ul>
-                                        <li><a href="{% url 'cHome' %}"
-                                               title="{% trans 'Create Website Limits' %}"><span>{% trans "Create Limits" %}</span></a>
-                                        </li>
-                                    </ul>
-
-                                </div><!-- .sidebar-submenu -->
-                            </li>
+{#                            <li id="sidebar-menu-item-containerization">#}
+{#                                <a href="#" title="{% trans 'Containerization' %}">#}
+{#                                    <i class="glyph-icon icon-linecons-fire"></i>#}
+{#                                    <span>{% trans "Containerization" %}</span>#}
+{#                                    <span class="bs-label badge-yellow">{% trans "NEW" %}</span>#}
+{#                                </a>#}
+{#                                <div class="sidebar-submenu">#}
+{##}
+{#                                    <ul>#}
+{#                                        <li><a href="{% url 'cHome' %}"#}
+{#                                               title="{% trans 'Create Website Limits' %}"><span>{% trans "Create Limits" %}</span></a>#}
+{#                                        </li>#}
+{#                                    </ul>#}
+{##}
+{#                                </div><!-- .sidebar-submenu -->#}
+{#                            </li>#}
 
                             <li id="sidebar-menu-item-docker">
                                 <a href="#" title="{% trans 'Docker' %}">
                                     <i class="glyph-icon icon-cogs"></i>
                                     <span>{% trans "Docker Manager" %}</span>
-                                    <span class="bs-label badge-yellow">{% trans "NEW" %}</span>
                                 </a>
                                 <div class="sidebar-submenu">
 

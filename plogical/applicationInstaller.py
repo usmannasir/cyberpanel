@@ -1811,7 +1811,8 @@ class ApplicationInstaller(multi.Thread):
                 reutrntempath = coreResult1['tempStatusPath']
                 while (1):
                     lastLine = open(reutrntempath, 'r').read()
-                    logging.writeToFile("Error web creating lastline ....... %s" % lastLine)
+                    if os.path.exists(ProcessUtilities.debugPath):
+                        logging.writeToFile("Info web creating lastline ....... %s" % lastLine)
                     if lastLine.find('[200]') > -1:
                         break
                     elif lastLine.find('[404]') > -1:
