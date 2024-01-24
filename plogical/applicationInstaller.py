@@ -1784,9 +1784,9 @@ class ApplicationInstaller(multi.Thread):
             DataToPass['websiteOwner'] = self.data['websiteOwner']
             DataToPass['package'] = self.data['package']
             DataToPass['ssl'] = 1
-            DataToPass['dkimCheck'] = 0
+            DataToPass['dkimCheck'] = 1
             DataToPass['openBasedir'] = 0
-            DataToPass['mailDomain'] = 0
+            DataToPass['mailDomain'] = 1
             DataToPass['apacheBackend'] = self.extraArgs['apacheBackend']
             UserID = self.data['adminID']
 

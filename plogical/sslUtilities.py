@@ -18,6 +18,54 @@ class sslUtilities:
     Server_root = "/usr/local/lsws"
     redisConf = '/usr/local/lsws/conf/dvhost_redis.conf'
 
+    DONT_ISSUE = 0
+    ISSUE_SELFSIGNED = 1
+    ISSUE_SSL = 2
+
+    @staticmethod
+    def getDomainsCovered(cert_path):
+        try:
+            from cryptography import x509
+            from cryptography.hazmat.backends import default_backend
+            with open(cert_path, 'rb') as cert_file:
+                cert_data = cert_file.read()
+                cert = x509.load_pem_x509_certificate(cert_data, default_backend())
+
+                # Check for the Subject Alternative Name (SAN) extension
+                san_extension = cert.extensions.get_extension_for_class(x509.SubjectAlternativeName)
+
+                if san_extension:
+                    # Extract and print the domains from SAN
+                    san_domains = san_extension.value.get_values_for_type(x509.DNSName)
+                    return 1, san_domains
+                else:
+                    # If SAN is not present, return the Common Name as a fallback
+                    return 0, None
+        except BaseException as msg:
+            return 0, str(msg)
+
+
+    @staticmethod
+    def CheckIfSSLNeedsToBeIssued(virtualHostName):
+        #### if website already have an SSL, better not issue again - need to check for wild-card
+        filePath = '/etc/letsencrypt/live/%s/fullchain.pem' % (virtualHostName)
+        if os.path.exists(filePath):
+            import OpenSSL
+            x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, open(filePath, 'r').read())
+            SSLProvider = x509.get_issuer().get_components()[1][1].decode('utf-8')
+
+            if SSLProvider != 'Denial':
+                return sslUtilities.ISSUE_SSL
+            else:
+                status, domains = sslUtilities.getDomainsCovered(filePath)
+
+                if status:
+                    if len(domains) > 1:
+                        return sslUtilities.DONT_ISSUE
+                    else:
+                        return sslUtilities.ISSUE_SSL
+
+
     @staticmethod
     def checkIfSSLMap(virtualHostName):
         try:
@@ -406,15 +454,10 @@ context /.well-known/acme-challenge {
             if retStatus == 1:
                 return retStatus
 
-        #### if website already have an SSL, better not issue again - need to check for wild-card
-        filePath = '/etc/letsencrypt/live/%s/fullchain.pem' % (virtualHostName)
-        if os.path.exists(filePath):
-            import OpenSSL
-            x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, open(filePath, 'r').read())
-            SSLProvider = x509.get_issuer().get_components()[1][1].decode('utf-8')
-
-            if SSLProvider != 'Denial':
-                return 1
+        if sslUtilities.CheckIfSSLNeedsToBeIssued(virtualHostName) == sslUtilities.ISSUE_SSL:
+            pass
+        else:
+            return 1
 
         sender_email = 'root@%s' % (socket.gethostname())
 
@@ -583,6 +626,19 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None):
 
             pathToStoreSSLPrivKey = "/etc/letsencrypt/live/%s/privkey.pem" % (domain)
             pathToStoreSSLFullChain = "/etc/letsencrypt/live/%s/fullchain.pem" % (domain)
+
+            #### if in any case ssl failed to obtain and CyberPanel try to issue self-signed ssl, first check if ssl already present.
+            ### if so, dont issue self-signed ssl, as it may override some existing ssl
+
+            if os.path.exists(pathToStoreSSLFullChain):
+                import OpenSSL
+                x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, open(pathToStoreSSLFullChain, 'r').read())
+                SSLProvider = x509.get_issuer().get_components()[1][1].decode('utf-8')
+
+                if SSLProvider != 'Denial':
+                    if sslUtilities.installSSLForDomain(domain) == 1:
+                        logging.CyberCPLogFileWriter.writeToFile("We are not able to get new SSL for " + domain + ". But there is an existing SSL, it might only be for the main domain (excluding www).")
+                        return [1, "We are not able to get new SSL for " + domain + ". But there is an existing SSL, it might only be for the main domain (excluding www)." + " [issueSSLForDomain]"]
 
             command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=' + domain + '" -keyout ' + pathToStoreSSLPrivKey + ' -out ' + pathToStoreSSLFullChain
             cmd = shlex.split(command)

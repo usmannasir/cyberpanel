@@ -38,3 +38,30 @@
 #
 # # Logout
 # mail.logout()
+
+from cryptography import x509
+from cryptography.hazmat.backends import default_backend
+
+def get_domains_covered(cert_path):
+    with open(cert_path, 'rb') as cert_file:
+        cert_data = cert_file.read()
+        cert = x509.load_pem_x509_certificate(cert_data, default_backend())
+
+        # Check for the Subject Alternative Name (SAN) extension
+        san_extension = cert.extensions.get_extension_for_class(x509.SubjectAlternativeName)
+
+        if san_extension:
+            # Extract and print the domains from SAN
+            san_domains = san_extension.value.get_values_for_type(x509.DNSName)
+            return san_domains
+        else:
+            # If SAN is not present, return the Common Name as a fallback
+            return [cert.subject.get_attributes_for_oid(x509.NameOID.COMMON_NAME)[0].value]
+
+# Example usage
+cert_path = '/etc/letsencrypt/live/cyberplanner.io/fullchain.pem'
+domains_covered = get_domains_covered(cert_path)
+
+print("Domains covered by the certificate:")
+for domain in domains_covered:
+    print(domain)
