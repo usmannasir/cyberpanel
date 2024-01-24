@@ -199,7 +199,7 @@ class DNS:
                                              auth=1)
                             record.save()
 
-                    content = "ns1." + topLevelDomain + " hostmaster." + topLevelDomain + " 1 10800 3600 604800 3600"
+                    content = "ns1." + topLevelDomain + " hostmaster." + topLevelDomain + " 1 10800 3600 1209600 3600"
 
                     # soaRecord = Records(domainOwner=zone,
                     #                     domain_id=zone.id,
@@ -344,7 +344,7 @@ class DNS:
 
                     zone.save()
 
-                    content = "ns1." + topLevelDomain + " hostmaster." + topLevelDomain + " 1 10800 3600 604800 3600"
+                    content = "ns1." + topLevelDomain + " hostmaster." + topLevelDomain + " 1 10800 3600 1209600 3600"
 
                     # soaRecord = Records(domainOwner=zone,
                     #                     domain_id=zone.id,

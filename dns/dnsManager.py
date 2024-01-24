@@ -136,7 +136,7 @@ class DNSManager:
             newZone = Domains(admin=admin, name=zoneDomain, type="MASTER")
             newZone.save()
 
-            content = "ns1." + zoneDomain + " hostmaster." + zoneDomain + " 1 10800 3600 604800 3600"
+            content = "ns1." + zoneDomain + " hostmaster." + zoneDomain + " 1 10800 3600 1209600 3600"
 
             soaRecord = Records(domainOwner=newZone,
                                 domain_id=newZone.id,

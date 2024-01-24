@@ -362,11 +362,15 @@ class virtualHostUtilities:
                     if not os.path.exists(virtualHostUtilities.redisConf):
                         installUtilities.installUtilities.reStartLiteSpeed()
 
+            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'SSL set up done..,70')
+
             if ssl == 0:
                 if not os.path.exists(virtualHostUtilities.redisConf):
                     installUtilities.installUtilities.reStartLiteSpeed()
 
             vhost.finalizeVhostCreation(virtualHostName, virtualHostUser)
+
+            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'vHost finalized..,70')
 
             ## Check If Apache is requested
 
