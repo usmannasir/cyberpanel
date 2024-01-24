@@ -186,7 +186,7 @@ pattern_to_watch = ^/home/.+?/(public_html|public_ftp|private_html)(/.*)?$
 
             ### address issue to create imunify dir - https://app.clickup.com/t/86engx249
 
-            command = 'mkdri /usr/local/CyberCP/public/imunify'
+            command = 'mkdir /usr/local/CyberCP/public/imunify'
             ProcessUtilities.executioner(command)
 
             command = 'pkill -f "bash i360deploy.sh"'
@@ -245,7 +245,7 @@ ui_path_owner = lscpd:lscpd
 
             ### address issue to create imunify dir - https://app.clickup.com/t/86engx249
 
-            command = 'mkdri /usr/local/CyberCP/public/imunifyav'
+            command = 'mkdir /usr/local/CyberCP/public/imunifyav'
             ProcessUtilities.executioner(command)
 
             command = 'pkill -f "bash imav-deploy.sh"'
