@@ -1,41 +1,30 @@
 from django.conf.urls import url
-from . import views
+from websiteFunctions import views
 
 urlpatterns = [
-    url(r'^$', views.loadWebsitesHome, name='loadWebsitesHome'),
-    url(r'^createWebsite$', views.createWebsite, name='createWebsite'),
-    url(r'^listWebsites$', views.listWebsites, name='listWebsites'),
-    url(r'^listChildDomains$', views.listChildDomains, name='listChildDomains'),
-    url(r'^listChildDomainsV2$', views.listChildDomainsV2, name='listChildDomainsV2'),
-    url(r'^modifyWebsite$', views.modifyWebsite, name='modifyWebsite'),
     url(r'^modifyWebsiteV2$', views.modifyWebsiteV2, name='modifyWebsiteV2'),
-    url(r'^deleteWebsite$', views.deleteWebsite, name='deleteWebsite'),
     url(r'^deleteWebsiteV2$', views.deleteWebsiteV2, name='deleteWebsiteV2'),
-    url(r'^siteState$', views.siteState, name='siteState'),
     url(r'^siteStateV2$', views.siteStateV2, name='siteStateV2'),
     url(r'^createWebsiteV2$', views.createWebsiteV2, name='createWebsiteV2'),
     url(r'^listWebsitesV2$', views.listWebsitesV2, name='listWebsitesV2'),
-    url(r'^V2/(?P<domain>(.*))$', views.domainV2, name='domainv2'),
-    url(r'^V2/(?P<domain>(.*))/wordpressInstallV2$', views.wordpressInstallV2, name='wordpressInstallV2'),
 
-    url(r'^CreateNewDomain$', views.CreateNewDomain, name='CreateNewDomain'),
+
     url(r'^CreateNewDomainV2$', views.CreateNewDomainV2, name='CreateNewDomainV2'),
 
     ### WordPress
-    url(r'^createWordpress$', views.WPCreate, name='createWordpress'),
-    url(r'^createWordpressV2$', views.WPCreateV2, name='createWordpressV2'),
-    url(r'^ListWPSites$', views.ListWPSites, name='ListWPSites'),
-    url(r'^ListWPSitesV2$', views.ListWPSitesV2, name='ListWPSitesV2'),
-    url(r'^WPHome$', views.WPHome, name='WPHome'),
-    url(r'^WPHomeV2$', views.WPHomeV2, name='WPHomeV2'),
-    url(r'^RestoreBackups$', views.RestoreBackups, name='RestoreBackups'),
-    url(r'^RestoreBackupsV2$', views.RestoreBackupsV2, name='RestoreBackupsV2'),
-    url(r'^RestoreHome$', views.RestoreHome, name='RestoreHome'),
-    url(r'^AutoLogin$', views.AutoLogin, name='AutoLogin'),
-    url(r'^RemoteBackupConfig$', views.RemoteBackupConfig, name='RemoteBackupConfig'),
-    url(r'^BackupfileConfig$', views.BackupfileConfig, name='BackupfileConfig'),
-    url(r'^AddRemoteBackupsite$', views.AddRemoteBackupsite, name='AddRemoteBackupsite'),
-    url(r'^pricing$', views.WordpressPricing, name='pricing'),
+
+    # url(r'^ListWPSites$', views.ListWPSites, name='ListWPSites'),
+    # url(r'^ListWPSitesV2$', views.ListWPSitesV2, name='ListWPSitesV2'),
+    # url(r'^WPHome$', views.WPHome, name='WPHome'),
+    # url(r'^WPHomeV2$', views.WPHomeV2, name='WPHomeV2'),
+    # url(r'^RestoreBackups$', views.RestoreBackups, name='RestoreBackups'),
+    # url(r'^RestoreBackupsV2$', views.RestoreBackupsV2, name='RestoreBackupsV2'),
+    # url(r'^RestoreHome$', views.RestoreHome, name='RestoreHome'),
+    # url(r'^AutoLogin$', views.AutoLogin, name='AutoLogin'),
+    # url(r'^RemoteBackupConfig$', views.RemoteBackupConfig, name='RemoteBackupConfig'),
+    # url(r'^BackupfileConfig$', views.BackupfileConfig, name='BackupfileConfig'),
+    # url(r'^AddRemoteBackupsite$', views.AddRemoteBackupsite, name='AddRemoteBackupsite'),
+    # url(r'^pricing$', views.WordpressPricing, name='pricing'),
 
     ###WordPress Ajax
     url(r'^submitWorpressCreation', views.submitWorpressCreation, name='submitWorpressCreation'),
@@ -137,10 +126,11 @@ urlpatterns = [
 
     ## WP Install
 
-    url(r'^(?P<domain>(.*))/wordpressInstall$', views.wordpressInstall, name='wordpressInstall'),
+    url(r'^(?P<domain>(.*))/wordpressInstall$', views.wordpressInstallV2, name='wordpressInstall'),
+    url(r'^(?P<domain>(.*))/wordpressInstallV2$', views.wordpressInstallV2, name='wordpressInstallV2'),
     url(r'^installWordpressStatus$', views.installWordpressStatus, name="installWordpressStatus"),
     url(r'^installWordpress$', views.installWordpress, name='installWordpress'),
-    url(r'^V2/installWordpressV2$', views.installWordpressV2, name='installWordpressV2'),
+    url(r'^installWordpressV2$', views.installWordpressV2, name='installWordpressV2'),
 
     ## Joomla Install
 
@@ -151,7 +141,7 @@ urlpatterns = [
 
     url(r'^prestaShopInstall$', views.prestaShopInstall, name='prestaShopInstall'),
     url(r'^(?P<domain>(.*))/installPrestaShop$', views.installPrestaShop, name='installPrestaShop'),
-    url(r'^V2/(?P<domain>(.*))/installPrestaShopV2$', views.installPrestaShopV2, name='installPrestaShopV2'),
+    url(r'^(?P<domain>(.*))/installPrestaShopV2$', views.installPrestaShopV2, name='installPrestaShopV2'),
 
     ## magento
 
@@ -160,8 +150,8 @@ urlpatterns = [
 
     ## mautic
 
-    url(r'^(?P<domain>(.*))/installMautic$', views.installMautic, name='installMautic'),
-    url(r'^V2/(?P<domain>(.*))/installMauticV2$', views.installMauticV2, name='installMauticV2'),
+    url(r'^(?P<domain>(.*))/installMautic$', views.installMauticV2, name='installMautic'),
+    url(r'^(?P<domain>(.*))/installMauticV2$', views.installMauticV2, name='installMauticV2'),
     url(r'^mauticInstall$', views.mauticInstall, name='mauticInstall'),
 
     ## Git
@@ -185,8 +175,7 @@ urlpatterns = [
 
     ### Manage GIT
 
-    url(r'^(?P<domain>(.*))/manageGIT$', views.manageGIT, name='manageGIT'),
-    url(r'^V2/(?P<domain>(.*))/manageGITV2$', views.manageGITV2, name='manageGITV2'),
+    url(r'^(?P<domain>(.*))/manageGIT$', views.manageGITV2, name='manageGIT'),
     url(r'^(?P<domain>(.*))/webhook$', views.webhook, name='webhook'),
     url(r'^fetchFolderDetails$', views.fetchFolderDetails, name='fetchFolderDetails'),
     url(r'^initRepo$', views.initRepo, name='initRepo'),
@@ -223,6 +212,6 @@ urlpatterns = [
 
     ## Catch all for domains
     url(r'^(?P<domain>(.*))/(?P<childDomain>(.*))$', views.launchChild, name='launchChild'),
-    url(r'^(?P<domain>(.*))$', views.domain, name='domain'),
+    url(r'^(?P<domain>(.*))$', views.domainV2, name='domainv2'),
 
 ]

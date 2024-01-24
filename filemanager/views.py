@@ -29,6 +29,23 @@ def loadFileManagerHome(request, domain):
     except KeyError:
         return redirect(loadLoginPage)
 
+def loadFileManagerHomeV2(request, domain):
+    try:
+        userID = request.session['userID']
+        if Websites.objects.filter(domain=domain).exists():
+            admin = Administrator.objects.get(pk=userID)
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.checkOwnership(domain, admin, currentACL) == 1:
+                return render(request, 'filemanager/indexv2.html', {'domainName': domain})
+            else:
+                return ACLManager.loadError()
+        else:
+            return HttpResponse("Domain does not exists.")
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
 
 def changePermissions(request):
     try:
@@ -250,55 +267,7 @@ def FileManagerRoot(request):
     return proc.render()
 
 
-def FileManagerRootV2(request):
-    ### Load Custom CSS
-    try:
-        from baseTemplate.models import CyberPanelCosmetic
-        cosmetic = CyberPanelCosmetic.objects.get(pk=1)
-    except:
-        from baseTemplate.models import CyberPanelCosmetic
-        cosmetic = CyberPanelCosmetic()
-        cosmetic.save()
 
-    userID = request.session['userID']
-    currentACL = ACLManager.loadedACL(userID)
-    ipFile = "/etc/cyberpanel/machineIP"
-    f = open(ipFile)
-    ipData = f.read()
-    ipAddressLocal = ipData.split('\n', 1)[0]
-
-    try:
-
-        from plogical.processUtilities import ProcessUtilities
-        if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-
-            url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
-            data = {
-                "name": "Filemanager",
-                "IP": ipAddressLocal
-            }
-
-            import requests
-            response = requests.post(url, data=json.dumps(data))
-            Status = response.json()['status']
-
-            if (Status == 1):
-                template = 'baseTemplate/FileManagerV2.html'
-            else:
-                return redirect("https://cyberpanel.net/cyberpanel-addons")
-        else:
-            template = 'baseTemplate/FileManagerV2.html'
-    except BaseException as msg:
-        template = 'baseTemplate/FileManagerV2.html'
-
-    if currentACL['admin'] == 1:
-        pass
-    else:
-        return ACLManager.loadErrorJson('FilemanagerAdmin', 0)
-
-    from plogical.httpProc import httpProc
-    proc = httpProc(request, template)
-    return proc.render()
 
 
 def downloadFile(request):

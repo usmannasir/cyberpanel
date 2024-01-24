@@ -15,8 +15,11 @@ urlpatterns = [
     url(r'^siteStateV2$', views.siteStateV2, name='siteStateV2'),
     url(r'^createWebsiteV2$', views.createWebsiteV2, name='createWebsiteV2'),
     url(r'^listWebsitesV2$', views.listWebsitesV2, name='listWebsitesV2'),
-    url(r'^V2/(?P<domain>(.*))$', views.domainV2, name='domainv2'),
-    url(r'^V2/(?P<domain>(.*))/wordpressInstallV2$', views.wordpressInstallV2, name='wordpressInstallV2'),
+    # url(r'^V2/(?P<domain>(.*))$', views.domainV2, name='domainv2'),
+    # url(r'^V3/(?P<domain>(.*))/wordpressInstallV2$', views.wordpressInstallV2, name='wordpressInstallV2'),
+    # url(r'^V3/(?P<domain>(.*))/installMauticV2$', views.installMauticV2, name='installMauticV2'),
+    # url(r'^V3/(?P<domain>(.*))/installPrestaShopV2$', views.installPrestaShopV2, name='installPrestaShopV2'),
+    # url(r'^V3/(?P<domain>(.*))/manageGITV2$', views.manageGITV2, name='manageGITV2'),
 
     url(r'^CreateNewDomain$', views.CreateNewDomain, name='CreateNewDomain'),
     url(r'^CreateNewDomainV2$', views.CreateNewDomainV2, name='CreateNewDomainV2'),
@@ -151,7 +154,7 @@ urlpatterns = [
 
     url(r'^prestaShopInstall$', views.prestaShopInstall, name='prestaShopInstall'),
     url(r'^(?P<domain>(.*))/installPrestaShop$', views.installPrestaShop, name='installPrestaShop'),
-    url(r'^V2/(?P<domain>(.*))/installPrestaShopV2$', views.installPrestaShopV2, name='installPrestaShopV2'),
+
 
     ## magento
 
@@ -161,7 +164,7 @@ urlpatterns = [
     ## mautic
 
     url(r'^(?P<domain>(.*))/installMautic$', views.installMautic, name='installMautic'),
-    url(r'^V2/(?P<domain>(.*))/installMauticV2$', views.installMauticV2, name='installMauticV2'),
+
     url(r'^mauticInstall$', views.mauticInstall, name='mauticInstall'),
 
     ## Git
@@ -186,7 +189,6 @@ urlpatterns = [
     ### Manage GIT
 
     url(r'^(?P<domain>(.*))/manageGIT$', views.manageGIT, name='manageGIT'),
-    url(r'^V2/(?P<domain>(.*))/manageGITV2$', views.manageGITV2, name='manageGITV2'),
     url(r'^(?P<domain>(.*))/webhook$', views.webhook, name='webhook'),
     url(r'^fetchFolderDetails$', views.fetchFolderDetails, name='fetchFolderDetails'),
     url(r'^initRepo$', views.initRepo, name='initRepo'),
