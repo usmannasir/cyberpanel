@@ -64,6 +64,8 @@ class sslUtilities:
                         return sslUtilities.DONT_ISSUE
                     else:
                         return sslUtilities.ISSUE_SSL
+        else:
+            return sslUtilities.ISSUE_SSL
 
 
     @staticmethod
