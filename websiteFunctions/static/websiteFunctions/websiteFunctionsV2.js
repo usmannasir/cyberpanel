@@ -463,9 +463,9 @@ newapp.controller('websitePagesV2', function ($scope, $http, $timeout, $window) 
         $scope.hideLogs = true;
     };
 
-    $scope.fileManagerURLV2 = "/filemanager/" + $("#domainNamePageV2").text();
-    $scope.wordPressInstallURLV2 = $("#domainNamePageV2").text() + "/wordpressInstallV2";
-    $scope.joomlaInstallURLV2 = $("#domainNamePageV2").text() + "/joomlaInstallV2";
+    $scope.fileManagerURLV2 = "/filemanagerv2/" + $("#domainNamePageV2").text() ;
+    $scope.wordPressInstallURLV2 = $("#domainNamePageV2").text() + "/wordpressInstall";
+    $scope.joomlaInstallURLV2 = $("#domainNamePageV2").text() + "/joomlaInstall";
     $scope.setupGitV2 = $("#domainNamePageV2").text() + "/setupGitV2";
     $scope.installPrestaURLV2 = $("#domainNamePageV2").text() + "/installPrestaShopV2";
     $scope.installMagentoURLV2 = $("#domainNamePageV2").text() + "/installMagentoV2";
