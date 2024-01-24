@@ -55,13 +55,13 @@ class secMiddleware:
 
         from plogical.processUtilities import ProcessUtilities
 
-        if os.path.exists(ProcessUtilities.debugPath):
-            logging.writeToFile(request.build_absolute_uri())
+        # if os.path.exists(ProcessUtilities.debugPath):
+        #     logging.writeToFile(request.build_absolute_uri())
 
         FinalURL = request.build_absolute_uri().split('?')[0]
 
-        if os.path.exists(ProcessUtilities.debugPath):
-            logging.writeToFile(f'Final actual URL without QS {FinalURL}')
+        # if os.path.exists(ProcessUtilities.debugPath):
+        #     logging.writeToFile(f'Final actual URL without QS {FinalURL}')
 
         if request.method == 'POST':
             try:
