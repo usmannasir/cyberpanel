@@ -66,7 +66,8 @@ INSTALLED_APPS = [
     'containerization',
     'CLManager',
     'IncBackups',
-    'WebTerminal'
+    'WebTerminal',
+    'websitesv2'
 ]
 
 MIDDLEWARE = [
