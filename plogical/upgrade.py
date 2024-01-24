@@ -1,3 +1,4 @@
+import json
 import os
 import os.path
 import sys
@@ -17,7 +18,7 @@ import random
 import string
 
 VERSION = '2.3'
-BUILD = 4
+BUILD = 5
 
 CENTOS7 = 0
 CENTOS8 = 1
@@ -667,10 +668,10 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             version_build = str(BUILD)
 
             try:
+                Content = {"version":version_number,"build":version_build}
                 path = "/usr/local/CyberCP/version.txt"
                 writeToFile = open(path, 'w')
-                writeToFile.writelines(version_number + '\n')
-                writeToFile.writelines(version_build)
+                writeToFile.write(json.dumps(Content))
                 writeToFile.close()
             except:
                 pass
@@ -3307,6 +3308,7 @@ pm.max_spare_servers = 3
         ##
 
         Upgrade.downloadAndUpgrade(versionNumbring, branch)
+        versionNumbring = Upgrade.downloadLink()
         Upgrade.download_install_phpmyadmin()
         Upgrade.downoad_and_install_raindloop()
 

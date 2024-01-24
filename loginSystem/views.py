@@ -19,7 +19,7 @@ from django.utils import translation
 # Create your views here.
 
 VERSION = '2.3'
-BUILD = 4
+BUILD = 5
 
 
 def verifyLogin(request):

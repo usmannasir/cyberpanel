@@ -26,7 +26,7 @@ EXPIRE = 3
 ### Version
 
 VERSION = '2.3'
-BUILD = 4
+BUILD = 5
 
 def serverStatusHome(request):
     proc = httpProc(request, 'serverStatus/index.html',
