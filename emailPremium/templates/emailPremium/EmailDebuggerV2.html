@@ -1,0 +1,252 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="EmailDebuugerV2" class="p-8">
+        <div>
+            <p class="text-4xl font-bold">Email Debugger</p>
+            <p class="text-xs text-gray-600 py-2 font-semibold">Email debugger to fix server-wide or website level email
+                settings.</p>
+        </div>
+        <div>
+            <div class="flex items-center py-4">
+                <p class="text-xl font-bold">DEBUG EMAIL SERVER</p>
+                <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+            </div>
+            <hr>
+
+            <div class="flex gap-5 mt-4">
+                <button class="flex items-center text-orange-500 font-bold px-2 py-2 shadow-lg rounded-lg border-2 border-orange-500"
+                        ng-click="RunServerLevelEmailChecks()">
+                    <span>Run Sever Level Check</span>
+                    <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}"></button>
+                <button class="flex items-center text-orange-500 font-bold px-2 py-2 shadow-lg rounded-lg border-2 border-orange-500"
+                        ng-click="ResetEmailConfigurations()">
+                    <span>Reset Server wide Email Configurations</span>
+                    <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}"></button>
+            </div>
+            <div ng-controller="emailDebuggerDomainLevelV2">
+                <div class="flex items-center py-4">
+                    <p class="text-xl font-bold">WEBSITE LEVEL EMAIL ISSUES</p>
+                    <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                </div>
+                <hr>
+                <div class="flex mt-4 py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Websites</p>
+                    </div>
+                    <div>
+                        <select ng-model="websiteName" class="form-control w-80 bg-gray-100 rounded px-2 py-1"
+                                ng-change="debugEmailForSite()"
+                                id="example-select">
+                            {% for items in websiteList %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div ng-hide="ReportStatus" class="relative py-5 overflow-x-auto">
+                    <table class="w-full text-sm text-left rtl:text-right">
+                        <thead>
+                        <tr>
+                            <th scope="col" class="px-6 py-3">
+                                Status
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Actions
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody class="border shadow-lg py-3 px-6 rounded-b-lg">
+                        <tr>
+                            <td class="px-6 py-4">
+                                {$ message $}
+                            </td>
+                            <td class="px-6 py-4">
+                                <button ng-click="fixMailSSL()" ng-disabled='status==1' data-toggle="modal"
+                                        title="Manage CyberPanel" type="button"
+                                        class="bg-orange-500 text-white font-bold px-2 py-1">
+                                    Fix Now
+                                </button>
+                                <button ng-click="fixMailSSL()" data-toggle="modal"
+                                        title="Manage CyberPanel" type="button"
+                                        class="bg-orange-500 text-white font-bold px-2 py-1">
+                                    Force Fix
+                                </button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="flex justify-center items-center font-bold text-xl">
+                <h2>{$ functionStatus $}</h2>
+                <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+            </div>
+            <div class="w-full bg-gray-100 rounded-full mt-3">
+                <div id="installProgress"
+                     class="bg-green-600 text-xs font-medium text-white text-center p-2 leading-none rounded-full"
+                     style="width:0%" ng-style="functionProgress">
+                </div>
+            </div>
+            <div ng-hide="ReportStatus" class="relative py-5 overflow-x-auto">
+                <table class="w-full text-sm text-left rtl:text-right">
+                    <thead>
+                    <tr>
+                        <th scope="col" class="px-6 py-3">
+                            Issue
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            Status
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            Actions
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody class="border shadow-lg py-3 px-6 rounded-b-lg">
+                    <tr>
+                        <td class="px-6 py-3">
+                            Mail Server SSL
+                        </td>
+                        <td class="px-6 py-3">
+                            {$ MailSSL $}
+                        </td>
+                        <td class="px-6 py-3">
+                            <a id="MailSSLURL" target="_blank" href="#">
+                                <button data-toggle="modal" title="Manage CyberPanel" type="button"
+                                        class="bg-orange-500 text-white font-bold px-2 py-1">
+                                    Issue Now
+                                </button>
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-3">
+                            Port 25
+                        </td>
+                        <td class="px-6 py-3">
+                            {$ Port25 $}
+                        </td>
+                        <td class="px-6 py-3">
+                            <a id="MailSSLURL" target="_blank"
+                               href="https://cyberpanel.net/blog/test-smtp-connection/?utm_source=cyberpanel&utm_medium=cyberpanel&utm_campaign=from-cyberpanel&utm_id=from-cyberpanel">
+                                <button data-toggle="modal" title="Manage CyberPanel" type="button"
+                                        class="bg-orange-500 text-white font-bold px-2 py-1">
+                                    Learn More
+                                </button>
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-3">
+                            Port 587
+                        </td>
+                        <td class="px-6 py-3">
+                            {$ Port587 $}
+                        </td>
+                        <td class="px-6 py-3">
+                            <a id="MailSSLURL" target="_blank"
+                               href="https://cyberpanel.net/blog/test-smtp-connection/?utm_source=cyberpanel&utm_medium=cyberpanel&utm_campaign=from-cyberpanel&utm_id=from-cyberpanel">
+                                <button data-toggle="modal" title="Manage CyberPanel" type="button"
+                                        class="bg-orange-500 text-white font-bold px-2 py-1">
+                                    Learn More
+                                </button>
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-3">
+                            Port 465
+                        </td>
+                        <td class="px-6 py-3">
+                            {$ Port465 $}
+                        </td>
+                        <td class="px-6 py-3">
+                            <a id="MailSSLURL" target="_blank"
+                               href="https://cyberpanel.net/blog/test-smtp-connection/?utm_source=cyberpanel&utm_medium=cyberpanel&utm_campaign=from-cyberpanel&utm_id=from-cyberpanel">
+                                <button data-toggle="modal" title="Manage CyberPanel" type="button"
+                                        class="bg-orange-500 text-white font-bold px-2 py-1">
+                                    Learn More
+                                </button>
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-3">
+                            Port 110
+                        </td>
+                        <td class="px-6 py-3">
+                            {$ Port110 $}
+                        </td>
+                        <td class="px-6 py-3">
+                            <a id="MailSSLURL" target="_blank"
+                               href="https://cyberpanel.net/blog/test-smtp-connection/?utm_source=cyberpanel&utm_medium=cyberpanel&utm_campaign=from-cyberpanel&utm_id=from-cyberpanel">
+                                <button data-toggle="modal" title="Manage CyberPanel" type="button"
+                                        class="bg-orange-500 text-white font-bold px-2 py-1">
+                                    Learn More
+                                </button>
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-3">
+                            Port 143
+                        </td>
+                        <td class="px-6 py-3">
+                            {$ Port143 $}
+                        </td>
+                        <td class="px-6 py-3">
+                            <a id="MailSSLURL" target="_blank"
+                               href="https://cyberpanel.net/blog/test-smtp-connection/?utm_source=cyberpanel&utm_medium=cyberpanel&utm_campaign=from-cyberpanel&utm_id=from-cyberpanel">
+                                <button data-toggle="modal" title="Manage CyberPanel" type="button"
+                                        class="bg-orange-500 text-white font-bold px-2 py-1">
+                                    Learn More
+                                </button>
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-3">
+                            Port 995
+                        </td>
+                        <td class="px-6 py-3">
+                            {$ Port995 $}
+                        </td>
+                        <td class="px-6 py-3">
+                            <a id="MailSSLURL" target="_blank"
+                               href="https://cyberpanel.net/blog/test-smtp-connection/?utm_source=cyberpanel&utm_medium=cyberpanel&utm_campaign=from-cyberpanel&utm_id=from-cyberpanel">
+                                <button data-toggle="modal" title="Manage CyberPanel" type="button"
+                                        class="bg-orange-500 text-white font-bold px-2 py-1">
+                                    Learn More
+                                </button>
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-3">
+                            Port 993
+                        </td>
+                        <td class="px-6 py-3">
+                            {$ Port993 $}
+                        </td>
+                        <td class="px-6 py-3">
+                            <a id="MailSSLURL" target="_blank"
+                               href="https://cyberpanel.net/blog/test-smtp-connection/?utm_source=cyberpanel&utm_medium=cyberpanel&utm_campaign=from-cyberpanel&utm_id=from-cyberpanel">
+                                <button data-toggle="modal" title="Manage CyberPanel" type="button"
+                                        class="bg-orange-500 text-white font-bold px-2 py-1">
+                                    Learn More
+                                </button>
+                            </a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}

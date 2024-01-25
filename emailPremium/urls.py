@@ -59,6 +59,7 @@ urlpatterns = [
     url(r'^RestartRspamd$', views.RestartRspamd, name='RestartRspamd'),
 
     url(r'^EmailDebugger$', views.EmailDebugger, name='EmailDebugger'),
+    url(r'^V2/EmailDebuggerV2$', views.EmailDebuggerV2, name='EmailDebuggerV2'),
 
     url(r'^RunServerLevelEmailChecks$', views.RunServerLevelEmailChecks, name='RunServerLevelEmailChecks'),
     url(r'^ResetEmailConfigurations$', views.ResetEmailConfigurations, name='ResetEmailConfigurations'),

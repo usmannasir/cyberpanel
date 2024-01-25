@@ -1,1 +1,426 @@
-<h1>habbi test</h1>
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+{#    <head>#}
+{#        <title>{% trans "File Manager - CyberPanel" %}</title>#}
+{#        <!-- Required meta tags -->#}
+{#        <meta charset="utf-8">#}
+{#        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">#}
+{##}
+{#        {% load static %}#}
+{#        <link rel="icon" type="image/png" href="{% static 'baseTemplate/assets/finalBase/favicon.png' %}">#}
+{##}
+{#        <!-- Angular JS -->#}
+{##}
+{##}
+{#        <!-- Fix for old browsers -->#}
+{#        <script src="{% static 'filemanager/js/es5-shim.min.js' %}"></script>#}
+{#        <script src="{% static 'filemanager/js/es5-sham.min.js' %}"></script>#}
+{#        <script src="{% static 'filemanager/js/jquery-1.8.3.min.js' %}"></script>#}
+{#        <script src="{% static 'filemanager/js/console-sham.js' %}"></script>#}
+{##}
+{#        <!--<script src="../bower_components/angular/angular.js"></script>-->#}
+{#        <script src="{% static 'filemanager/js/angular-file-upload.min.js' %}"></script>#}
+{##}
+{##}
+{#        <!-- HTML Editor Include -->#}
+{##}
+{#    </head>#}
+
+    <div ng-controller="fileManagerCtrlV2" class="p-8">
+        <div class="flex py-2 px-6 items-center gap-4">
+            <div>
+                <p class="font-bold w-32">Current Path</p>
+            </div>
+            <div>
+                <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" id="currentRPath" ng-model="currentRPath"
+                       readonly>
+            </div>
+            <div>
+                <ul class="list-group list-group-flush">
+                    <li class="flex text-orange-500">
+                        <a href="#" onclick="return false;" ng-click="fetchChilds($event,currentRPath,'primary')">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                 stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                            </svg>
+                        </a>
+                        <a onclick="return false;"
+                           ng-click="fetchForTableSecondary($event,'fromTree',completeStartingPath)" href="#">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                 stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"/>
+                            </svg>
+                        </a>
+                        <a href="" class="ml-2">{$ startingPath $}</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="py-4">
+            <div>
+                <ul class="flex justify-between bg-blue-200 py-5 px-5 rounded-lg shadow-lg font-semibold">
+                    <li>
+                        <a class="cursor-pointer" onclick="return false;" ng-click="showUploadBox()"
+                           data-modal-target="upload"
+                           data-modal-toggle="upload"><i
+                                class="fa fa-upload" aria-hidden="true"></i> {% trans "Upload" %}</a>
+                        <div id="upload" tabindex="-1"
+                             class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+                            <div class="relative p-4 w-full max-w-2xl max-h-full">
+                                <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
+                                    <div class="flex items-center bg-blue-400 px-2 py-4">
+                                        <button type="button" data-modal-toggle="upload"
+                                                class="absolute top-2 end-1 text-black bg-transparent hover:text-black rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
+                                                data-modal-hide="upload">
+                                            <svg class="w-3 h-3" aria-hidden="true"
+                                                 xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                 viewBox="0 0 14 14">
+                                                <path stroke="currentColor" stroke-linecap="round"
+                                                      stroke-linejoin="round" stroke-width="2"
+                                                      d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                                            </svg>
+                                            <span class="sr-only">Close modal</span>
+                                        </button>
+                                        <h5 class="text-2xl font-bold">{% trans "Upload File " %}-</h5>
+                                        &nbsp;
+                                        <a class="text-white text-sm"
+                                           target="_blank"
+                                           href="https://go.cyberpanel.net/upload-limits"
+                                           title="">{% trans " Upload Limits" %}</a>
+                                    </div>
+                                    <div class="p-4 md:p-5">
+                                        <div class="mt-4">
+                                            <h3 class="text-xl">{% trans "Upload queue" %}</h3>
+                                            <p>{% trans "Queue length:" %} {$ uploader.queue.length $}</p>
+                                            <div>
+                                                <div nv-file-over="" uploader="uploader">
+                                                    <div>
+                                                        <h4 class="font-bold mt-4">{% trans "Drop" %}</h4>
+                                                        <p class="card-text">{% trans "Drop Files here to upload them." %}</p>
+                                                    </div>
+                                                </div>
+                                                <div class="mt-4">
+                                                    <div>
+                                                        <label class="text-xl"
+                                                               for="uploadControlMultiple">{% trans "Upload" %}</label>
+                                                    </div>
+                                                    <div>
+                                                        <input type="file" nv-file-select="" uploader="uploader"
+                                                               class="form-control-file" id="uploadControlMultiple"
+                                                               multiple>
+                                                    </div>
+                                                </div>
+                                                <div class="relative py-5 overflow-x-auto">
+                                                    <table class="w-full text-sm text-left rtl:text-right">
+                                                        <thead>
+                                                        <tr>
+                                                            <th scope="col" class="px-6 py-3">
+                                                                Name
+                                                            </th>
+                                                            <th scope="col" class="px-6 py-3">
+                                                                Size
+                                                            </th>
+                                                            <th scope="col" class="px-6 py-3">
+                                                                Progress
+                                                            </th>
+                                                            <th scope="col" class="px-6 py-3">
+                                                                Status
+                                                            </th>
+                                                            <th scope="col" class="px-6 py-3">
+                                                                Actions
+                                                            </th>
+                                                        </tr>
+                                                        </thead>
+                                                        <tbody ng-repeat="item in uploader.queue"
+                                                               class="border shadow-lg py-3 px-6 rounded-b-lg">
+                                                        <tr>
+                                                            <td class="px-6 py-4">
+                                                                <strong>{$ item.file.name $}</strong>
+                                                            </td>
+                                                            <td ng-show="uploader.isHTML5" nowrap class="px-6 py-4">
+                                                                {$ item.file.size / 1024 / 1024 | number:2 $} MB
+                                                            </td>
+                                                            <td ng-show="uploader.isHTML5" class="px-6 py-4">
+                                                                <div class="progress" style="margin-bottom: 0;">
+                                                                    <div class="progress-bar" role="progressbar"
+                                                                         ng-style="{ 'width': item.progress + '%' }"></div>
+                                                                </div>
+                                                            </td>
+                                                            <td class="px-6 py-4">
+                                                                  <span ng-show="item.isSuccess"><i class="fa fa-check"
+                                                                                                    aria-hidden="true"></i></span>
+                                                                <span ng-show="item.isCancel"><i class="fa fa-ban"
+                                                                                                 aria-hidden="true"></i></span>
+                                                                <span ng-show="item.isError"><i class="fa fa-trash"
+                                                                                                aria-hidden="true"></i></span>
+                                                            </td>
+                                                            <td nowrap class="px-6 py-4">
+                                                                <button type="button" class="btn btn-success btn-sm"
+                                                                        ng-click="item.upload()"
+                                                                        ng-disabled="item.isReady || item.isUploading || item.isSuccess">
+                                                                    <i class="fa fa-upload"
+                                                                       aria-hidden="true"></i> {% trans "Upload" %}
+                                                                </button>
+                                                                <button type="button" class="btn btn-warning btn-sm"
+                                                                        ng-click="item.cancel()"
+                                                                        ng-disabled="!item.isUploading">
+                                                                    <i class="fa fa-ban"
+                                                                       aria-hidden="true"></i> {% trans "Cancel" %}
+                                                                </button>
+                                                                <button type="button" class="btn btn-danger btn-sm"
+                                                                        ng-click="item.remove()">
+                                                                    <i class="fa fa-trash"
+                                                                       aria-hidden="true"></i> {% trans "Remove" %}
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                <div>
+                                                    <div id="queueProg">
+                                                        {% trans "Queue progress:" %}
+                                                        <div class="progress" style="">
+                                                            <div class="progress-bar" role="progressbar"
+                                                                 ng-style="{ 'width': uploader.progress + '%' }"></div>
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+
+                                                <div ng-hide="errorMessage" class="alert alert-danger" role="alert">
+                                                    {$ fileName $} {% trans "can not be uploaded, Error message:" %}
+                                                    {$ error_message $}
+                                                </div>
+
+                                                <div class="flex gap-2 justify-center mt-4">
+                                                    <button type="button"
+                                                            class="text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center me-2"
+                                                            ng-click="uploader.uploadAll()"
+                                                            ng-disabled="!uploader.getNotUploadedItems().length">
+                                                        <i class="fa fa-upload"
+                                                           aria-hidden="true"></i> {% trans "Upload all" %}
+                                                    </button>
+                                                    <button type="button"
+                                                            class="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600"
+                                                            ng-click="uploader.cancelAll()"
+                                                            ng-disabled="!uploader.isUploading">
+                                                        <i class="fa fa-ban"
+                                                           aria-hidden="true"></i> {% trans "Cancel all" %}
+                                                    </button>
+                                                    <button type="button"
+                                                            class="text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center me-2"
+                                                            ng-click="uploader.clearQueue()"
+                                                            ng-disabled="!uploader.queue.length">
+                                                        <i class="fa fa-trash"
+                                                           aria-hidden="true"></i> {% trans "Remove all" %}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    <li>
+                        <a onclick="return false;" ng-click="showCreateFileModal()" class="nav-link point-events"
+                           href="#" data-modal-target="newfile" data-modal-toggle="newfile"><i class="fa fa-plus-square"
+                                                                                               aria-hidden="true"></i> {% trans "New File" %}
+                        </a>
+                        <div id="newfile" tabindex="-1"
+                             class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+                            <div class="relative p-4 w-full max-w-2xl max-h-full">
+                                <div class="relative bg-white shadow dark:bg-gray-700">
+                                    <div class="flex items-center bg-blue-400 px-4 py-4">
+                                        <p class="font-bold">Create New File</p>
+                                        <button type="button" data-modal-toggle="newfile"
+                                                class="absolute top-2 end-1 text-black bg-transparent hover:text-black rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
+                                                data-modal-hide="newfile">
+                                            <svg class="w-3 h-3" aria-hidden="true"
+                                                 xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                 viewBox="0 0 14 14">
+                                                <path stroke="currentColor" stroke-linecap="round"
+                                                      stroke-linejoin="round" stroke-width="2"
+                                                      d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                                            </svg>
+                                            <span class="sr-only">Close modal</span>
+                                        </button>
+                                    </div>
+                                    <div class="p-4 md:p-5">
+                                        <div>
+                                            <div class="flex">
+                                                <label class="w-80">{% trans "New File Name" %}</label>
+                                                <input ng-keypress="createFileEnter($event)" ng-model="newFileName"
+                                                       type="text" class="form-control">
+                                            </div>
+                                            <small class="form-text text-muted">{% trans "File will be created in your current directory, if it already exists it will not overwirte." %}</small>
+                                            <div class="flex justify-center mt-3">
+                                                <button type="button" ng-click="createNewFile()"
+                                                        class="bg-orange-500 text-white font-bold px-4 py-1 text-xl">{% trans "Create File" %}</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <div class="row">
+                                            <div class="col-sm-12">
+                                                <div ng-hide="errorMessageFile" class="alert alert-danger" role="alert">
+                                                    {$error_message$}
+                                                </div>
+                                                <div ng-hide="createSuccess" class="alert alert-success" role="alert">
+                                                    {% trans "File Successfully created." %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    <li>
+                        <a onclick="return false;" ng-click="showCreateFolderModal()" class="nav-link point-events"
+                           href="#" data-modal-target="newfolder" data-modal-toggle="newfolder"><i class="fa fa-folder"
+                                                                                                   aria-hidden="true"></i> {% trans "New Folder" %}
+                        </a>
+                        <div id="newfolder" tabindex="-1"
+                             class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+                            <div class="relative p-4 w-full max-w-2xl max-h-full">
+                                <div class="relative bg-white shadow dark:bg-gray-700">
+                                    <div class="flex items-center bg-blue-400 px-4 py-4">
+                                        <p class="font-bold">Create New Folder</p>
+                                        <button type="button" data-modal-toggle="newfolder"
+                                                class="absolute top-2 end-1 text-black bg-transparent hover:text-black rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
+                                                data-modal-hide="newfolder">
+                                            <svg class="w-3 h-3" aria-hidden="true"
+                                                 xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                 viewBox="0 0 14 14">
+                                                <path stroke="currentColor" stroke-linecap="round"
+                                                      stroke-linejoin="round" stroke-width="2"
+                                                      d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                                            </svg>
+                                            <span class="sr-only">Close modal</span>
+                                        </button>
+                                    </div>
+                                    <div class="p-4 md:p-5">
+                                        <div>
+                                            <div class="flex">
+                                                <label class="w-80">{% trans "New File Name" %}</label>
+                                                <input ng-keypress="createFolderEnter($event)" ng-model="newFolderName"
+                                                       type="text" class="form-control">
+                                            </div>
+                                            <small class="form-text text-muted">{% trans "Folder will be created in your current directory" %}</small>
+                                            <div class="flex justify-center mt-3">
+                                                <button type="button" ng-click="createNewFolder()"
+                                                        class="bg-orange-500 text-white font-bold px-4 py-1 text-xl">{% trans "Create Folder" %}</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <div class="row">
+                                            <div class="col-sm-12">
+                                                <div ng-hide="errorMessageFolder" class="alert alert-danger"
+                                                     role="alert">
+                                                    {$error_message$}
+                                                </div>
+                                                <div ng-hide="createSuccess" class="alert alert-success" role="alert">
+                                                    {% trans "Folder Successfully created." %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    <li id="deleteFile">
+                        <a onclick="return false;" ng-click="showDeleteModal()" class="nav-link point-events"
+                           href="#"><i
+                                class="fa fa-trash-o" aria-hidden="true"></i> {% trans "Delete" %}</a>
+                    </li>
+                    <li id="copyFile">
+                        <a onclick="return false;" ng-click="showCopyModal()" class="nav-link point-events" href="#"><i
+                                class="fa fa-files-o" aria-hidden="true"></i> {% trans "Copy" %}</a>
+                    </li>
+                    <li id="moveFile">
+                        <a onclick="return false;" ng-click="showMoveModal()" class="nav-link point-events" href="#"><i
+                                class="fa fa-arrows-alt" aria-hidden="true"></i> {% trans "Move" %}</a>
+                    </li>
+                    <li id="renameFile">
+                        <a onclick="return false;" ng-click="showRenameModal()" class="nav-link point-events"
+                           href="#"><i
+                                class="fa fa-file-text-o" aria-hidden="true"></i> {% trans "Rename" %}</a>
+                    </li>
+                    <li id="editFile">
+                        <a onclick="return false;" ng-click="showHTMLEditorModal()" class="nav-link point-events"
+                           href="#"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> {% trans "Edit" %}</a>
+                    </li>
+                    <li id="compressFile">
+                        <a onclick="return false;" ng-click="showCompressionModal()" class="nav-link point-events"
+                           href="#"><i
+                                class="fa fa-compress" aria-hidden="true"></i> {% trans "Compress" %}</a>
+                    </li>
+                    <li id="extractFile">
+                        <a onclick="return false;" ng-click="showExtractionModal()" class="nav-link point-events"
+                           href="#"><i class="fa fa-expand" aria-hidden="true"></i> {% trans "Extract" %}</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="mt-2">
+                <ul class="flex py-5 px-5 gap-10 font-semibold">
+                    <li>
+                        <a onclick="return false;" ng-click="fetchForTableSecondary($event,'homeFetch')"
+                           href="#"><i class="fa fa-home fa-lg" aria-hidden="true"></i> {% trans "Home" %}</a>
+                    </li>
+                    <li>
+                        <a onclick="return false;" ng-click="fetchForTableSecondary($event,'goBackOnPath')"
+                           href="#"><i class="fa fa-arrow-left fa-lg"
+                                       aria-hidden="true"></i> {% trans "Back" %}</a>
+                    </li>
+
+                    <li>
+                        <a onclick="return false;" ng-click="fetchForTableSecondary($event,'refresh')"
+                           href="#"><i class="fa fa-refresh fa-lg" aria-hidden="true"></i> {% trans "Refresh" %}</a>
+                    </li>
+
+                    <li>
+                        <a onclick="return false;" ng-click="selectAll()" href="#"><i
+                                class="fa fa-check-square-o fa-lg" aria-hidden="true"></i> {% trans "Select All" %}</a>
+                    </li>
+
+                    <li>
+                        <a onclick="return false;" ng-click="unSelectAll()" href="#"><i
+                                class="fa fa-square-o fa-lg" aria-hidden="true"></i> {% trans "UnSelect All" %}</a>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <div class="relative py-5 overflow-x-auto">
+                    <table class="w-full text-sm text-left rtl:text-right">
+                        <thead id="tableHead">
+                        <tr>
+                            <th scope="col" class="px-6 py-3">
+                                File Name
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Size (KB)
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Last Modified
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Permissions
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody id="tableBodyFiles">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

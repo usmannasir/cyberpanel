@@ -1260,6 +1260,7 @@ def Rspamd(request):
     else:
         return redirect("https://cyberpanel.net/cyberpanel-addons")
 
+
 def installRspamd(request):
     try:
         userID = request.session['userID']
@@ -1298,6 +1299,7 @@ def installRspamd(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
+
 def installStatusRspamd(request):
     try:
         userID = request.session['userID']
@@ -1321,7 +1323,7 @@ def installStatusRspamd(request):
                         'abort': 1,
                         'installed': 1,
                     })
-                    cmd = 'rm -f %s'%mailUtilities.RspamdInstallLogPath
+                    cmd = 'rm -f %s' % mailUtilities.RspamdInstallLogPath
                     ProcessUtilities.executioner(cmd)
                     return HttpResponse(final_json)
 
@@ -1354,6 +1356,7 @@ def installStatusRspamd(request):
                      'error_message': "Not Logged In, please refresh the page or login again."}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
+
 
 def fetchRspamdSettings(request):
     try:
@@ -1487,14 +1490,14 @@ def fetchRspamdSettings(request):
                                 read_servers = j[1]
                                 # logging.CyberCPLogFileWriter.writeToFile(str(read_servers) + "read_servers")
 
-                        #ClamAV configs
+                        # ClamAV configs
 
                         clamav_Debug = True
                         LogFile = ''
                         TCPAddr = ''
                         TCPSocket = ''
 
-                        if  ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                             clamavconfpath = '/etc/clamd.d/scan.conf'
                         elif ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
                             clamavconfpath = "/etc/clamav/clamd.conf"
@@ -1517,7 +1520,6 @@ def fetchRspamdSettings(request):
                                     continue
                                 else:
                                     clamav_Debug = True
-
 
                         final_dic = {'fetchStatus': 1,
                                      'installed': 1,
@@ -1552,6 +1554,7 @@ def fetchRspamdSettings(request):
                 return HttpResponse(final_json)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def saveRspamdConfigurations(request):
     try:
@@ -1589,6 +1592,7 @@ def saveRspamdConfigurations(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def savepostfixConfigurations(request):
     try:
         userID = request.session['userID']
@@ -1624,6 +1628,7 @@ def savepostfixConfigurations(request):
 
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def saveRedisConfigurations(request):
     try:
@@ -1661,6 +1666,7 @@ def saveRedisConfigurations(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def saveclamavConfigurations(request):
     try:
         userID = request.session['userID']
@@ -1697,6 +1703,7 @@ def saveclamavConfigurations(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def unistallRspamd(request):
     try:
         logging.CyberCPLogFileWriter.writeToFile("unistallRspamd...1")
@@ -1708,13 +1715,11 @@ def unistallRspamd(request):
         else:
             return ACLManager.loadErrorJson()
 
-
         try:
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
             execPath = execPath + " uninstallRspamd"
             ProcessUtilities.popenExecutioner(execPath)
-
 
             final_json = json.dumps({'status': 1, 'error_message': "None"})
             return HttpResponse(final_json)
@@ -1731,6 +1736,7 @@ def unistallRspamd(request):
         final_json = json.dumps(final_dic)
 
         return HttpResponse(final_json)
+
 
 def uninstallStatusRspamd(request):
     try:
@@ -1789,6 +1795,7 @@ def uninstallStatusRspamd(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
+
 def FetchRspamdLog(request):
     try:
         userID = request.session['userID']
@@ -1837,7 +1844,7 @@ def RestartRspamd(request):
 
             ProcessUtilities.executioner(command)
 
-            dic = {'status': 1, 'error_message': 'None',}
+            dic = {'status': 1, 'error_message': 'None', }
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
         except BaseException as msg:
@@ -1879,6 +1886,36 @@ def EmailDebugger(request):
         return proc.render()
     else:
         return redirect("https://cyberpanel.net/cyberpanel-addons")
+
+
+def EmailDebuggerV2(request):
+    url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
+    data = {
+        "name": "email-debugger",
+        "IP": ACLManager.GetServerIP()
+    }
+
+    import requests
+    response = requests.post(url, data=json.dumps(data))
+    Status = response.json()['status']
+
+    if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+        currentACL = ACLManager.loadedACL(userID)
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+
+        proc = httpProc(request, 'emailPremium/EmailDebuggerV2.html',
+                        {'websiteList': websitesName}, 'admin')
+        return proc.render()
+    else:
+        return redirect("https://cyberpanel.net/cyberpanel-addons")
+
 
 def RunServerLevelEmailChecks(request):
     try:
@@ -1926,6 +1963,7 @@ def ResetEmailConfigurations(request):
         json_data = json.dumps(dic)
         return HttpResponse(json_data)
 
+
 def statusFunc(request):
     try:
         userID = request.session['userID']
@@ -1949,6 +1987,7 @@ def statusFunc(request):
         json_data = json.dumps(dic)
         return HttpResponse(json_data)
 
+
 def ReadReport(request):
     try:
         userID = request.session['userID']
@@ -1964,7 +2003,7 @@ def ReadReport(request):
                 res = ob.ReadReport()
                 Result = json.loads(res.content)
                 status = Result['status']
-                #fetch Ip
+                # fetch Ip
                 IP = ACLManager.GetServerIP()
                 if status == 1:
                     def CheckPort(port):
@@ -2024,7 +2063,7 @@ def ReadReport(request):
                     final_json = json.dumps(finalResult)
                     return HttpResponse(final_json)
                 else:
-                    return 0 , Result
+                    return 0, Result
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile("Result....3:" + str(msg))
         else:
@@ -2033,6 +2072,7 @@ def ReadReport(request):
             return HttpResponse(json_data)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def debugEmailForSite(request):
     try:
@@ -2053,6 +2093,7 @@ def debugEmailForSite(request):
             return HttpResponse(json_data)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def fixMailSSL(request):
     try:

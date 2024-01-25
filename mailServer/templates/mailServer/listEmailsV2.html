@@ -74,154 +74,7 @@
         <div class="py-4">
             <p class="text-xl font-bold">Details To Configure Mail Clients</p>
         </div>
-        <div class="flex gap-6">
-            <div>
-                <div ng-hide="creationBox" class="relative py-5 overflow-x-auto">
-                    <table class="w-full text-sm text-left rtl:text-right">
-                        <thead>
-                        <tr>
-                            <th scope="col" class="px-6 py-3">
-                                POP3
-                            </th>
-                            <th scope="col" class="px-6 py-3">
-                                Details
-                            </th>
-                        </tr>
-                        </thead>
-                        <tbody class="border shadow-lg py-3 px-6 rounded-b-lg">
-                        <tr>
-                            <td class="px-6 py-4">
-                                Server Hostname
-                            </td>
-                            <td class="px-6 py-4">
-                                {$ serverHostname $}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4">
-                                Port
-                            </td>
-                            <td class="px-6 py-4">
-                                110
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4">
-                                Port
-                            </td>
-                            <td class="px-6 py-4">
-                                995 (SSL)
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4">
-                                SSL
-                            </td>
-                            <td class="px-6 py-4">
-                                STARTTLS
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div ng-hide="creationBox" class="relative py-5 overflow-x-auto">
-                    <table class="w-full text-sm text-left rtl:text-right">
-                        <thead>
-                        <tr>
-                            <th scope="col" class="px-6 py-3">
-                                IMAP
-                            </th>
-                            <th scope="col" class="px-6 py-3">
-                                Details
-                            </th>
-                        </tr>
-                        </thead>
-                        <tbody class="border shadow-lg py-3 px-6 rounded-b-lg">
-                        <tr>
-                            <td class="px-6 py-4">
-                                Server Hostname
-                            </td>
-                            <td class="px-6 py-4">
-                                {$ serverHostname $}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4">
-                                Port
-                            </td>
-                            <td class="px-6 py-4">
-                                143
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4">
-                                Port
-                            </td>
-                            <td class="px-6 py-4">
-                                993 (SSL)
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4">
-                                SSL
-                            </td>
-                            <td class="px-6 py-4">
-                                STARTTLS
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div ng-hide="creationBox" class="relative py-5 overflow-x-auto">
-                    <table class="w-full text-sm text-left rtl:text-right">
-                        <thead>
-                        <tr>
-                            <th scope="col" class="px-6 py-3">
-                                SMTP
-                            </th>
-                            <th scope="col" class="px-6 py-3">
-                                Details
-                            </th>
-                        </tr>
-                        </thead>
-                        <tbody class="border shadow-lg py-3 px-6 rounded-b-lg">
-                        <tr>
-                            <td class="px-6 py-4">
-                                Server Hostname
-                            </td>
-                            <td class="px-6 py-4">
-                                {$ serverHostname $}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4">
-                                Port
-                            </td>
-                            <td class="px-6 py-4">
-                                25
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4">
-                                Port
-                            </td>
-                            <td class="px-6 py-4">
-                                587 (SSL)
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4">
-                                465 (SSL)
-                            </td>
-                            <td class="px-6 py-4">
-                                STARTTLS
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-            </div>
+        <div>
             <div>
                 <div ng-hide="creationBox" class="relative py-5 overflow-x-auto">
                     <table class="w-full text-sm text-left rtl:text-right">
@@ -252,6 +105,125 @@
                                 <button ng-click="deleteEmailAccountFinal(record.email)"
                                         class="bg-red-500 text-white font-semibold px-2 py-1">Delete
                                 </button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div>
+                <div ng-hide="creationBox" class="relative py-5 overflow-x-auto">
+                    <table class="w-full text-sm text-left rtl:text-right">
+                        <div class="bg-gray-200 mt-6 w-full rounded-t-lg border-b-2 border-gray-400">
+                            <p class="font-bold px-4 py-1">POP3</p>
+                        </div>
+                        <thead>
+                        <tr>
+                            <th scope="col" class="px-6 py-3">
+                                Server Hostname
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Port
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Port
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                SSL
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody class="border shadow-lg py-3 px-6 rounded-b-lg">
+                        <tr>
+                            <td class="px-6 py-4">
+                                {$ serverHostname $}
+                            </td>
+                            <td class="px-6 py-4">
+                                110
+                            </td>
+                            <td class="px-6 py-4">
+                                995 (SSL)
+                            </td>
+                            <td class="px-6 py-4">
+                                STARTTLS
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div ng-hide="creationBox" class="relative py-5 overflow-x-auto">
+                    <table class="w-full text-sm text-left rtl:text-right">
+                        <div class="bg-gray-200 mt-6 w-full rounded-t-lg border-b-2 border-gray-400">
+                            <p class="font-bold px-4 py-1">IMAP</p>
+                        </div>
+                        <thead>
+                        <tr>
+                            <th scope="col" class="px-6 py-3">
+                                Server Hostname
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Port
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Port
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                SSL
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody class="border shadow-lg py-3 px-6 rounded-b-lg">
+                        <tr>
+                            <td class="px-6 py-4">
+                                {$ serverHostname $}
+                            </td>
+                            <td class="px-6 py-4">
+                                143
+                            </td>
+                            <td class="px-6 py-4">
+                                993 (SSL)
+                            </td>
+                            <td class="px-6 py-4">
+                                STARTTLS
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div ng-hide="creationBox" class="relative py-5 overflow-x-auto">
+                    <table class="w-full text-sm text-left rtl:text-right">
+                        <div class="bg-gray-200 mt-6 w-full rounded-t-lg border-b-2 border-gray-400">
+                            <p class="font-bold px-4 py-1">SMTP</p>
+                        </div>
+                        <thead>
+                        <tr>
+                            <th scope="col" class="px-6 py-3">
+                                Server Hostname
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Port
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Port
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                465 SSL
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody class="border shadow-lg py-3 px-6 rounded-b-lg">
+                        <tr>
+                            <td class="px-6 py-4">
+                                {$ serverHostname $}
+                            </td>
+                            <td class="px-6 py-4">
+                                25
+                            </td>
+                            <td class="px-6 py-4">
+                                587 (SSL)
+                            </td>
+                            <td class="px-6 py-4">
+                                STARTTLS
                             </td>
                         </tr>
                         </tbody>
