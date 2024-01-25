@@ -155,6 +155,50 @@ class virtualHostUtilities:
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Completed. [200]')
         else:
 
+            ### create site if not there
+
+            try:
+                website = Websites.objects.get(domain=Domain)
+            except:
+                DataToPass = {}
+
+                currentTemp = tempStatusPath
+
+                DataToPass['domainName'] = Domain
+                DataToPass['adminEmail'] = admin.email
+                DataToPass['phpSelection'] = "PHP 8.0"
+                DataToPass['websiteOwner'] = "admin"
+                DataToPass['package'] = "Default"
+                DataToPass['ssl'] = 1
+                DataToPass['dkimCheck'] = 1
+                DataToPass['openBasedir'] = 0
+                DataToPass['mailDomain'] = 1
+                DataToPass['apacheBackend'] = 0
+                UserID = admin.pk
+
+                from websiteFunctions.website import WebsiteManager
+                ab = WebsiteManager()
+                coreResult = ab.submitWebsiteCreation(admin.id, DataToPass)
+                coreResult1 = json.loads((coreResult).content)
+                logging.CyberCPLogFileWriter.writeToFile("Creating website result....%s" % coreResult1)
+                reutrntempath = coreResult1['tempStatusPath']
+                while (1):
+                    lastLine = open(reutrntempath, 'r').read()
+                    if os.path.exists(ProcessUtilities.debugPath):
+                        logging.CyberCPLogFileWriter.writeToFile("Info web creating lastline ....... %s" % lastLine)
+                    if lastLine.find('[200]') > -1:
+                        break
+                    elif lastLine.find('[404]') > -1:
+                        statusFile = open(currentTemp, 'w')
+                        statusFile.writelines('Failed to Create Website: error: %s. [404]' % lastLine)
+                        statusFile.close()
+                        return 0
+                    else:
+                        statusFile = open(currentTemp, 'w')
+                        statusFile.writelines('Creating Website....,20')
+                        statusFile.close()
+                        time.sleep(2)
+
             ### Case 2 where postfix hostname either does not exist or does not match with server hostname or
             ### hostname does not exists at all
 

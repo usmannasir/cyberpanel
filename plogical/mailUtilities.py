@@ -59,9 +59,102 @@ class mailUtilities:
             os.makedirs("/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/")
 
         finalPath = "/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/" + domain + ".ini"
+        finalPathJson = "/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/" + domain + ".json"
 
         if not os.path.exists(finalPath):
             shutil.copy(path, finalPath)
+
+        contentJSON = """
+{
+    "name": "%s",
+    "IMAP": {
+        "host": "localhost",
+        "port": 993,
+        "type": 1,
+        "timeout": 300,
+        "shortLogin": false,
+        "sasl": [
+            "SCRAM-SHA3-512",
+            "SCRAM-SHA-512",
+            "SCRAM-SHA-256",
+            "SCRAM-SHA-1",
+            "PLAIN",
+            "LOGIN"
+        ],
+        "ssl": {
+            "verify_peer": false,
+            "verify_peer_name": false,
+            "allow_self_signed": false,
+            "SNI_enabled": true,
+            "disable_compression": true,
+            "security_level": 1
+        },
+        "use_expunge_all_on_delete": false,
+        "fast_simple_search": true,
+        "force_select": false,
+        "message_all_headers": false,
+        "message_list_limit": 10000,
+        "search_filter": "",
+        "disabled_capabilities": []
+    },
+    "SMTP": {
+        "host": "localhost",
+        "port": 587,
+        "type": 2,
+        "timeout": 60,
+        "shortLogin": false,
+        "sasl": [
+            "SCRAM-SHA3-512",
+            "SCRAM-SHA-512",
+            "SCRAM-SHA-256",
+            "SCRAM-SHA-1",
+            "PLAIN",
+            "LOGIN"
+        ],
+        "ssl": {
+            "verify_peer": false,
+            "verify_peer_name": false,
+            "allow_self_signed": false,
+            "SNI_enabled": true,
+            "disable_compression": true,
+            "security_level": 1
+        },
+        "useAuth": true,
+        "setSender": false,
+        "usePhpMail": false,
+        "authPlainLine": false
+    },
+    "Sieve": {
+        "host": "",
+        "port": 4190,
+        "type": 0,
+        "timeout": 10,
+        "shortLogin": false,
+        "sasl": [
+            "SCRAM-SHA3-512",
+            "SCRAM-SHA-512",
+            "SCRAM-SHA-256",
+            "SCRAM-SHA-1",
+            "PLAIN",
+            "LOGIN"
+        ],
+        "ssl": {
+            "verify_peer": false,
+            "verify_peer_name": false,
+            "allow_self_signed": false,
+            "SNI_enabled": true,
+            "disable_compression": true,
+            "security_level": 1
+        },
+        "enabled": false
+    },
+    "whiteList": ""
+}
+""" % (domain)
+
+        WriteToFile = open(finalPathJson, 'w')
+        WriteToFile.write(contentJSON)
+        WriteToFile.close()
 
         command = 'chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/'
         ProcessUtilities.normalExecutioner(command)
