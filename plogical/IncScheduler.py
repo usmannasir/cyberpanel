@@ -1479,6 +1479,25 @@ Automatic Backupv2 failed for %s on %s.
             print("Error: [v2Backups]: %s" % str(msg))
             logging.writeToFile('%s. [v2Backups]' % (str(msg)))
 
+    @staticmethod
+    def CheckHostName():
+        try:
+            from loginSystem.models import Administrator
+            admin = Administrator.objects.get(pk=1)
+            config = json.loads(admin.config)
+
+            ### probably need to add temporary dns resolver nameserver here - pending
+
+            try:
+                CurrentHostName = config['hostname']
+                skipRDNSCheck = config['skipRDNSCheck']
+            except:
+                CurrentHostName = ''
+                skipRDNSCheck = 1
+
+            virtualHostUtilities.OnBoardingHostName(CurrentHostName, '/home/cyberpanel/onboarding_temp_path', skipRDNSCheck)
+        except BaseException as msg:
+            logging.writeToFile(f'{str(msg)}. [Cron.CheckHostName]')
 
 def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
@@ -1524,6 +1543,7 @@ def main():
     IncScheduler.checkDiskUsage()
     IncScheduler.startNormalBackups(args.function)
     IncScheduler.runAWSBackups(args.function)
+    IncScheduler.CheckHostName()
 
     ib.join()
 

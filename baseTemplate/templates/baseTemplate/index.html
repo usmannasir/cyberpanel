@@ -849,22 +849,22 @@
                                 </div><!-- .sidebar-submenu -->
                             </li>
 
-{#                            <li id="sidebar-menu-item-containerization">#}
-{#                                <a href="#" title="{% trans 'Containerization' %}">#}
-{#                                    <i class="glyph-icon icon-linecons-fire"></i>#}
-{#                                    <span>{% trans "Containerization" %}</span>#}
-{#                                    <span class="bs-label badge-yellow">{% trans "NEW" %}</span>#}
-{#                                </a>#}
-{#                                <div class="sidebar-submenu">#}
-{##}
-{#                                    <ul>#}
-{#                                        <li><a href="{% url 'cHome' %}"#}
-{#                                               title="{% trans 'Create Website Limits' %}"><span>{% trans "Create Limits" %}</span></a>#}
-{#                                        </li>#}
-{#                                    </ul>#}
-{##}
-{#                                </div><!-- .sidebar-submenu -->#}
-{#                            </li>#}
+                            {#                            <li id="sidebar-menu-item-containerization">#}
+                            {#                                <a href="#" title="{% trans 'Containerization' %}">#}
+                            {#                                    <i class="glyph-icon icon-linecons-fire"></i>#}
+                            {#                                    <span>{% trans "Containerization" %}</span>#}
+                            {#                                    <span class="bs-label badge-yellow">{% trans "NEW" %}</span>#}
+                            {#                                </a>#}
+                            {#                                <div class="sidebar-submenu">#}
+                            {##}
+                            {#                                    <ul>#}
+                            {#                                        <li><a href="{% url 'cHome' %}"#}
+                            {#                                               title="{% trans 'Create Website Limits' %}"><span>{% trans "Create Limits" %}</span></a>#}
+                            {#                                        </li>#}
+                            {#                                    </ul>#}
+                            {##}
+                            {#                                </div><!-- .sidebar-submenu -->#}
+                            {#                            </li>#}
 
                             <li id="sidebar-menu-item-docker">
                                 <a href="#" title="{% trans 'Docker' %}">
@@ -1120,7 +1120,13 @@
             <div id="page-content-wrapper">
                 <div id="page-content">
 
-
+                    {% if onboarding == 0 %}
+                        <div ng-hide="success" class="alert alert-info">
+                            <p>{{ onboardingError | safe }}</p>
+                        </div>
+                    {% elif onboarding == 3 %}
+                        <p>Looks like something is wrong with your initial setup, please double check on <a href="/base/onboarding">Setup Wizard.</a> </p>
+                    {% endif %}
                     {% block content %}
                     {% endblock %}
 
@@ -1156,9 +1162,9 @@
         <script src="{% static 'containerization/containerization.js' %}?ver={{ version }}"></script>
         <script src="{% static 'CLManager/CLManager.js' %}?ver={{ version }}"></script>
         <script src="{% static 'IncBackups/IncBackups.js' %}?ver={{ version }}"></script>
-        <script src="{% static 'WebTerminal/term.js' %}?ver={{ version }}"></script>
-        <script src="{% static 'WebTerminal/ws.js' %}?ver={{ version }}"></script>
-        <script src="{% static 'WebTerminal/main.js' %}?ver={{ version }}"></script>
+        {#        <script src="{% static 'WebTerminal/term.js' %}?ver={{ version }}"></script>#}
+        {#        <script src="{% static 'WebTerminal/ws.js' %}?ver={{ version }}"></script>#}
+        {#        <script src="{% static 'WebTerminal/main.js' %}?ver={{ version }}"></script>#}
 
     {% endwith %}
 

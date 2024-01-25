@@ -5,7 +5,6 @@
 /* Utilities */
 
 
-
 function getCookie(name) {
     var cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -576,8 +575,6 @@ app.controller('versionManagment', function ($scope, $http, $timeout) {
         };
 
 
-
-
         url = "/base/upgrade";
         $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
 
@@ -717,3 +714,156 @@ app.controller('designtheme', function ($scope, $http, $timeout) {
 });
 
 
+app.controller('OnboardingCP', function ($scope, $http, $timeout, $window) {
+
+    $scope.cyberpanelLoading = true;
+    $scope.ExecutionStatus = true;
+    $scope.ReportStatus = true;
+    $scope.OnboardineDone = true;
+
+
+    function statusFunc() {
+        $scope.cyberpanelLoading = false;
+        $scope.ExecutionStatus = false;
+        var url = "/emailPremium/statusFunc";
+
+        var data = {
+            statusFile: statusFile
+        };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+
+
+        function ListInitialData(response) {
+            if (response.data.status === 1) {
+                if (response.data.abort === 1) {
+                    $scope.functionProgress = {"width": "100%"};
+                    $scope.functionStatus = response.data.currentStatus;
+                    $scope.cyberpanelLoading = true;
+                    $scope.OnboardineDone = false;
+                    $timeout.cancel();
+                } else {
+                    $scope.functionProgress = {"width": response.data.installationProgress + "%"};
+                    $scope.functionStatus = response.data.currentStatus;
+                    $timeout(statusFunc, 3000);
+                }
+
+            } else {
+                $scope.cyberpanelLoading = true;
+                $scope.functionStatus = response.data.error_message;
+                $scope.functionProgress = {"width": response.data.installationProgress + "%"};
+                $timeout.cancel();
+            }
+
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.functionProgress = {"width": response.data.installationProgress + "%"};
+            $scope.functionStatus = 'Could not connect to server, please refresh this page.';
+            $timeout.cancel();
+        }
+    }
+
+    $scope.RunOnboarding = function () {
+        $scope.cyberpanelLoading = false;
+        $scope.OnboardineDone = true;
+
+        var url = "/base/runonboarding";
+
+        var data = {
+            hostname: $scope.hostname,
+            rDNSCheck: $scope.rDNSCheck
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+
+        function ListInitialData(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+                statusFile = response.data.tempStatusPath;
+                statusFunc();
+
+
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.cyberpanelLoading = true;
+
+            new PNotify({
+                title: 'Error',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+        }
+    };
+
+    $scope.RestartCyberPanel = function () {
+        $scope.cyberpanelLoading = false;
+
+        var url = "/base/RestartCyberPanel";
+
+        var data = {
+
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+        $scope.cyberpanelLoading = true;
+        new PNotify({
+                    title: 'Success',
+                    text: 'Refresh your browser after 3 seconds to fetch new SSL.',
+                    type: 'success'
+                });
+
+        function ListInitialData(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.cyberpanelLoading = true;
+
+            new PNotify({
+                title: 'Error',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+        }
+    };
+
+});

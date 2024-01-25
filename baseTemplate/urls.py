@@ -11,6 +11,9 @@ urlpatterns = [
     url(r'^getthemedata', views.getthemedata, name='getthemedata'),
 
     url(r'^upgrade',views.upgrade, name='upgrade'),
+    url(r'^onboarding$', views.onboarding, name='onboarding'),
+    url(r'^RestartCyberPanel$', views.RestartCyberPanel, name='RestartCyberPanel'),
+    url(r'^runonboarding', views.runonboarding, name='runonboarding'),
 
     url(r'^UpgradeStatus',views.upgradeStatus, name='UpgradeStatus'),
     url(r'^upgradeVersion',views.upgradeVersion, name='upgradeVersion'),

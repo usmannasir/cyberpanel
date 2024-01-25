@@ -2,6 +2,8 @@
 import os
 import os.path
 import sys
+import time
+
 import django
 
 # PACKAGE_PARENT = '..'
@@ -56,7 +58,7 @@ class virtualHostUtilities:
 
 
     @staticmethod
-    def OnBoardingHostName(Domain, tempStatusPath):
+    def OnBoardingHostName(Domain, tempStatusPath, skipRDNSCheck):
         import json
         import OpenSSL
 
@@ -76,9 +78,18 @@ class virtualHostUtilities:
 
         PostFixHostname = mailUtilities.FetchPostfixHostname()
         serverIP = ACLManager.fetchIP()
-        rDNS = mailUtilities.reverse_dns_lookup(serverIP)
+        ### if skipRDNSCheck == 1, it means we need to skip checking for rDNS
+        if skipRDNSCheck:
+            ### so if skipRDNSCheck is 1 means we need to skip checking for rDNS so lets set current as rDNS because no checking is required
+            rDNS = CurrentHostName
+        else:
+            rDNS = mailUtilities.reverse_dns_lookup(serverIP)
 
-        print(f'Postfix Hostname: {PostFixHostname}. Server IP {serverIP}. rDNS: {rDNS}')
+        time.sleep(3)
+
+        if os.path.exists(ProcessUtilities.debugPath):
+            print(f'Postfix Hostname: {PostFixHostname}. Server IP {serverIP}. rDNS: {rDNS}')
+            logging.CyberCPLogFileWriter.writeToFile(f'Postfix Hostname: {PostFixHostname}. Server IP {serverIP}. rDNS: {rDNS}, rDNS check {skipRDNSCheck}')
 
         ### Case 1 if hostname already exists check if same hostname in postfix and rdns
         filePath = '/etc/letsencrypt/live/%s/fullchain.pem' % (PostFixHostname)
@@ -122,10 +133,20 @@ class virtualHostUtilities:
                     message = 'Hostname SSL was already issued, and same hostname was used in mail server SSL, rDNS was also configured but we found invalid SSL. However, we tried to issue SSL and it failed. [404]'
                     logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, message)
                     logging.CyberCPLogFileWriter.writeToFile(message)
+                    config['hostname'] = Domain
+                    config['onboarding'] = 3
+                    config['skipRDNSCheck'] = skipRDNSCheck
+                    admin.config = json.dumps(config)
+                    admin.save()
                     return 0
             else:
                 message = "It looks like your current hostname is already the mail server hostname and rDNS is also set and there is a valid SSL, nothing needed to do."
                 print(message)
+                config['hostname'] = Domain
+                config['onboarding'] = 1
+                config['skipRDNSCheck'] = skipRDNSCheck
+                admin.config = json.dumps(config)
+                admin.save()
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, message)
                 logging.CyberCPLogFileWriter.writeToFile(message)
 
@@ -137,13 +158,28 @@ class virtualHostUtilities:
             ### Case 2 where postfix hostname either does not exist or does not match with server hostname or
             ### hostname does not exists at all
 
+            ### if skipRDNSCheck == 1, it means we need to skip checking for rDNS
+            if skipRDNSCheck:
+                ### so if skipRDNSCheck is 1 means we need to skip checking for rDNS so lets set current domain as rDNS because no checking is required
+                rDNS = Domain
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(
+                    f'Second if: Postfix Hostname: {PostFixHostname}. Server IP {serverIP}. rDNS: {rDNS}, rDNS check {skipRDNSCheck}')
+
             #first check if hostname is already configured as rDNS, if not return error
+
 
             if Domain != rDNS:
                 message = 'Domain that you have provided is not configured as rDNS for your server IP. [404]'
                 print(message)
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, message)
                 logging.CyberCPLogFileWriter.writeToFile(message)
+                config['hostname'] = Domain
+                config['onboarding'] = 3
+                config['skipRDNSCheck'] = skipRDNSCheck
+                admin.config = json.dumps(config)
+                admin.save()
                 return 0
 
             ### now issue hostname ssl
@@ -157,7 +193,7 @@ class virtualHostUtilities:
 
             filePath = '/etc/letsencrypt/live/%s/fullchain.pem' % (Domain)
 
-            virtualHostUtilities.issueSSLForHostName(Domain, path)
+            virtualHostUtilities.issueSSLForHostName(Domain, path, 1)
 
             x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, open(filePath, 'r').read())
             SSLProvider = x509.get_issuer().get_components()[1][1].decode('utf-8')
@@ -166,6 +202,11 @@ class virtualHostUtilities:
                 message = 'Failed to issue Hostname SSL, either its DNS record is not propagated or the domain ie behind Cloudflare. [404]'
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, message)
                 logging.CyberCPLogFileWriter.writeToFile(message)
+                config['hostname'] = Domain
+                config['onboarding'] = 3
+                config['skipRDNSCheck'] = skipRDNSCheck
+                admin.config = json.dumps(config)
+                admin.save()
                 return 0
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Hostname SSL issued,50')
@@ -180,13 +221,18 @@ class virtualHostUtilities:
                 message = 'Failed to issue Mail server SSL, either its DNS record is not propagated or the domain ie behind Cloudflare. [404]'
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, message)
                 logging.CyberCPLogFileWriter.writeToFile(message)
-                return 0
-            else:
-
                 config['hostname'] = Domain
+                config['onboarding'] = 3
+                config['skipRDNSCheck'] = skipRDNSCheck
                 admin.config = json.dumps(config)
                 admin.save()
-
+                return 0
+            else:
+                config['hostname'] = Domain
+                config['onboarding'] = 1
+                config['skipRDNSCheck'] = skipRDNSCheck
+                admin.config = json.dumps(config)
+                admin.save()
                 command = 'systemctl restart postfix && systemctl restart dovecot && postmap -F hash:/etc/postfix/vmail_ssl.map'
                 ProcessUtilities.executioner(command, 'root', True)
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Completed. [200]')
@@ -641,7 +687,7 @@ class virtualHostUtilities:
             print("0," + str(msg))
 
     @staticmethod
-    def issueSSLForHostName(virtualHost, path):
+    def issueSSLForHostName(virtualHost, path, skipLSCPDRestart=0):
         try:
 
             destPrivKey = "/usr/local/lscp/conf/key.pem"
@@ -705,9 +751,13 @@ class virtualHostUtilities:
             command = 'ln -s %s %s' % (pathToStoreSSLPrivKey, destPrivKey)
             ProcessUtilities.executioner(command)
 
-            command = 'systemctl restart lscpd'
-            cmd = shlex.split(command)
-            subprocess.call(cmd)
+
+            if skipLSCPDRestart:
+                pass
+            else:
+                command = 'systemctl restart lscpd'
+                cmd = shlex.split(command)
+                subprocess.call(cmd)
 
             print("1,None")
             return 1, 'None'
@@ -1687,6 +1737,10 @@ def main():
 
     parser.add_argument('--DeleteDocRoot', help='Doc root deletion for child domain.')
 
+    ### for onboarding
+
+    parser.add_argument('--rdns', help='Doc root deletion for child domain.')
+
     args = parser.parse_args()
 
     if args.function == "createVirtualHost":
@@ -1793,7 +1847,7 @@ def main():
     elif args.function == 'OnBoardingHostName':
         # in virtualHostName pass domain for which hostname should be set up
         # in path pass temporary path where status of the function will be stored
-        virtualHostUtilities.OnBoardingHostName(args.virtualHostName, args.path)
+        virtualHostUtilities.OnBoardingHostName(args.virtualHostName, args.path, int(args.rdns))
 
 
 if __name__ == "__main__":

@@ -1,0 +1,115 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Configure Hostname and other default Settings - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Initial Configurations" %}- <a target="_blank" href="https://go.cyberpanel.net/setup-wizard"
+                                                          style="height: 23px;line-height: 21px;"
+                                                          class="btn btn-border btn-alt border-red btn-link font-red"
+                                                          title=""><span>{% trans "Learn More" %}</span></a></h2>
+            <p>{% trans "Configure Hostname and other default Settings for CyberPanel" %}</p>
+        </div>
+
+        <div ng-controller="OnboardingCP" class="panel">
+            <div class="panel-body">
+                <h3 class="content-box-header">
+                    {% trans "Initial Configurations" %} <img ng-hide="cyberpanelLoading"
+                                                                src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
+
+                    <form action="/" class="form-horizontal bordered-row panel-body">
+                        <div ng-hide="success" class="alert alert-info">
+                            <ul>
+                                <li><strong>Choose this wisely, if you are not going to use email service on this server, skip rDNS checks.</strong> Ensure that the hostname you provide below is set as rDNS (reverse DNS, also called PTR record) against your
+                                    IP address. (Only required if you want to use email services on the same server)
+                                </li>
+                                <li>Make sure that the provided hostname also has an A record pointing to your server's
+                                    IP address.
+                                </li>
+                                <li>If the above conditions fail, your server may not function as expected, especially
+                                    for email services.
+                                </li>
+                            </ul>
+
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Hostname" %}</label>
+                            <div class="col-sm-6">
+                                <input name="dom" type="text" class="form-control"
+                                       ng-model="hostname" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Additional Features" %}</label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="rDNSCheck" type="checkbox" value="">
+                                        Skip rDNS/PTR Check (If you don't want to use email service on this server)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                <button type="button" ng-click="RunOnboarding()"
+                                        class="btn btn-primary btn-lg btn-block">{% trans "Start Configurations" %}</button>
+
+                            </div>
+                        </div>
+
+
+                        <div ng-hide="OnboardineDone" class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                <button type="button" ng-click="RestartCyberPanel()"
+                                        class="btn btn-primary btn-lg btn-block">{% trans "Restart CyberPanel" %}</button>
+
+                            </div>
+                        </div>
+
+
+
+
+                    </form>
+
+
+                </div>
+
+                <div ng-hide="ExecutionStatus" class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <p>Note: once configurations are completed, click Restart CyberPanel above, after clicking Restart CyberPanel refresh page to fetch new SSL from the browser.</p>
+                            <h4 style="margin-top: 2%; margin-bottom: 2%"> {$ functionStatus $} <img
+                                    ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                            </h4>
+                            <div class="progress">
+                                <div ng-style="functionProgress"
+                                     class="progress-bar progress-bar-striped bg-info"
+                                     role="progressbar"
+                                     aria-valuenow="50" aria-valuemin="0"
+                                     aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div> <!-- end row -->
+            </div>
+        </div>
+
+
+    </div>
+
+
+{% endblock %}
