@@ -197,14 +197,16 @@ function getCookie(name) {
     return cookieValue;
 }
 
-var newapp = angular.module('cybercpV2', []);
+var newapp = angular.module('cybercpV2', ['angularFileUpload']);
 
 newapp.config(['$interpolateProvider', function ($interpolateProvider) {
     $interpolateProvider.startSymbol('{$');
     $interpolateProvider.endSymbol('$}');
 }]);
+
 newapp.controller('dashboardV2', function ($scope, $http, $timeout) {
     alert('dashboardV2');
+
 
     function getStuff() {
 
