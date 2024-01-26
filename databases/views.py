@@ -337,7 +337,7 @@ def fetchDetailsPHPMYAdmin(request):
             # return redirect(returnURL)
 
             proc = httpProc(request, 'databases/AutoLogin.html',
-                            data, 'admin')
+                            data, 'listDatabases')
             return proc.render()
 
             # returnURL = '/phpmyadmin/phpmyadminsignin.php?username=%s&password=%s' % (admin.userName, password.decode())
