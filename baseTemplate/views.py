@@ -151,6 +151,13 @@ def getLoadAverage(request):
 def versionManagment(request):
     ## Get latest version
 
+    val = request.session['userID']
+    currentACL = ACLManager.loadedACL(val)
+    if currentACL['admin'] == 1:
+        pass
+    else:
+        return ACLManager.loadErrorJson('FilemanagerAdmin', 0)
+
     getVersion = requests.get('https://cyberpanel.net/version.txt')
     latest = getVersion.json()
     latestVersion = latest['version']
@@ -224,6 +231,12 @@ def upgrade(request):
 def upgradeStatus(request):
     try:
         val = request.session['userID']
+        currentACL = ACLManager.loadedACL(val)
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('FilemanagerAdmin', 0)
+
         try:
             if request.method == 'POST':
                 from plogical.upgrade import Upgrade
@@ -252,8 +265,6 @@ def upgradeStatus(request):
                                              'error_message': "None",
                                              'upgradeLog': upgradeLog})
                     return HttpResponse(final_json)
-
-
         except BaseException as msg:
             final_dic = {'upgradeStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
@@ -266,6 +277,9 @@ def upgradeStatus(request):
 
 def upgradeVersion(request):
     try:
+
+
+
         vers = version.objects.get(pk=1)
         getVersion = requests.get('https://cyberpanel.net/version.txt')
         latest = getVersion.json()
