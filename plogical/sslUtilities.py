@@ -451,10 +451,10 @@ context /.well-known/acme-challenge {
 
         Status = 1
 
-        if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
-            retStatus, message = sslv2.obtainSSLForADomain(virtualHostName, adminEmail, sslpath, aliasDomain)
-            if retStatus == 1:
-                return retStatus
+        # if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
+        #     retStatus, message = sslv2.obtainSSLForADomain(virtualHostName, adminEmail, sslpath, aliasDomain)
+        #     if retStatus == 1:
+        #         return retStatus
 
         if sslUtilities.CheckIfSSLNeedsToBeIssued(virtualHostName) == sslUtilities.ISSUE_SSL:
             pass

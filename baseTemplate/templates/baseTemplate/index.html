@@ -1125,7 +1125,10 @@
                             <p>{{ onboardingError | safe }}</p>
                         </div>
                     {% elif onboarding == 3 %}
-                        <p>Looks like something is wrong with your initial setup, please double check on <a href="/base/onboarding">Setup Wizard.</a> </p>
+                        <div ng-hide="success" class="alert alert-info">
+                            <p>Looks like something is wrong with your initial setup, please double check on <a
+                                    href="/base/onboarding">Setup Wizard.</a></p>
+                        </div>
                     {% endif %}
                     {% block content %}
                     {% endblock %}
