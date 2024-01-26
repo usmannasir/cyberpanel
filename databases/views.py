@@ -375,6 +375,13 @@ def getMysqlstatus(request):
         userID = request.session['userID']
         finalData = mysqlUtilities.showStatus()
 
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('FilemanagerAdmin', 0)
+
         finalData = json.dumps(finalData)
         return HttpResponse(finalData)
 
@@ -386,6 +393,12 @@ def restartMySQL(request):
     try:
         userID = request.session['userID']
         finalData = mysqlUtilities.restartMySQL()
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('FilemanagerAdmin', 0)
 
         data = {}
 
@@ -401,6 +414,13 @@ def restartMySQL(request):
 def generateRecommendations(request):
     try:
         userID = request.session['userID']
+
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('FilemanagerAdmin', 0)
 
         data = json.loads(request.body)
         detectedRam = data['detectedRam']
@@ -418,9 +438,17 @@ def generateRecommendations(request):
 
 def applyMySQLChanges(request):
     try:
+
         userID = request.session['userID']
+
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('FilemanagerAdmin', 0)
+
         data = json.loads(request.body)
-        logging.writeToFile("=-------------------------------------------")
         finalData = mysqlUtilities.applyMySQLChanges(data)
 
         data = {}
