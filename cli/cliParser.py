@@ -3,10 +3,13 @@ import re
 
 class cliParser:
 
+    def __init__(self):
+        self.parser = argparse.ArgumentParser(description='CyberPanel Command Line Interface!')
+
     def prepareArguments(self):
         ## Website creation Arguments
 
-        parser = argparse.ArgumentParser(description='CyberPanel Command Line Interface!')
+        parser = self.parser
         parser.add_argument('function', help='Specific a operation to perform!')
 
         parser.add_argument('--package', help='Select a package for website.')
@@ -76,3 +79,23 @@ class cliParser:
 
 
         return parser.parse_args()
+
+    def print_help(self):
+        self.parser.print_help()
+
+    def getAllowedFunctions(self):
+        allowed_functions = {
+            "Website management": ["createWebsite", "deleteWebsite", "createChild", "deleteChild", "listWebsitesJson", "listWebsitesPretty", "changePHP", "changePackage"],
+            "DNS management": ["listDNSJson", "listDNSPretty", "listDNSZonesJson", "listDNSZonesPretty", "createDNSZone", "deleteDNSZone", "createDNSRecord", "deleteDNSRecord"],
+            "Backup management": ["createBackup", "restoreBackup"],
+            "Package management": ["createPackage", "deletePackage", "listPackagesJson", "listPackagesPretty"],
+            "Database management": ["createDatabase", "deleteDatabase", "listDatabasesJson", "listDatabasesPretty"],
+            "Email management": ["createEmail", "deleteEmail", "changeEmailPassword", "listEmailsJson", "listEmailsPretty"],
+            "FTP management": ["createFTPAccount", "deleteFTPAccount", "changeFTPPassword", "listFTPJson", "listFTPPretty"],
+            "SSL management": ["issueSSL", "hostNameSSL", "mailServerSSL", "issueSelfSignedSSL"],
+            "User management": ["createUser", "deleteUser", "listUsers", "suspendUser", "editUser" ],
+            "Application installers": ["installWordPress", "installJoomla"],
+            "Others": ["help", "version", "utility", "[upgrade|update]", "switchTOLSWS" ]
+        }
+
+        return allowed_functions
