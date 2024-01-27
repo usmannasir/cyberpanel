@@ -1940,14 +1940,9 @@ def statusFunc(request):
         else:
             return ACLManager.loadErrorJson()
 
-        if ACLManager.CheckForPremFeature('email-debugger'):
-            ob = CloudManager(json.loads(request.body))
-            res = ob.statusFunc()
-            return res
-        else:
-            dic = {'status': 0, 'error_message': 'Kindly purchase email debugger Add-on'}
-            json_data = json.dumps(dic)
-            return HttpResponse(json_data)
+        ob = CloudManager(json.loads(request.body))
+        res = ob.statusFunc()
+        return res
     except BaseException as msg:
         dic = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(dic)
