@@ -172,7 +172,7 @@ class virtualHostUtilities:
                 DataToPass['ssl'] = 1
                 DataToPass['dkimCheck'] = 1
                 DataToPass['openBasedir'] = 0
-                DataToPass['mailDomain'] = 1
+                DataToPass['mailDomain'] = 0
                 DataToPass['apacheBackend'] = 0
                 UserID = admin.pk
 
