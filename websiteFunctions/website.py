@@ -6819,8 +6819,11 @@ StrictHostKeyChecking no
 
             userobj = Administrator.objects.get(userName=user)
 
-            delasg = PackageAssignment.objects.get(user=userobj)
-            delasg.delete()
+            try:
+                delasg = PackageAssignment.objects.get(user=userobj)
+                delasg.delete()
+            except:
+                pass
 
             docker_package = DockerPackages.objects.get(pk=int(package))
 
