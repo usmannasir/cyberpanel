@@ -17,6 +17,7 @@ Web Hosting Control Panel that uses OpenLiteSpeed as the underlying Web Server.
 
 # Supported PHP Versions
 
+* PHP 8.2
 * PHP 8.1
 * PHP 8.0
 * PHP 7.4
