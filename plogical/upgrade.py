@@ -1690,7 +1690,26 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
             except:
                 pass
 
+            query = "ALTER TABLE `websiteFunctions_dockersites` ADD CONSTRAINT `websiteFunctions_doc_admin_id_88f5cb6d_fk_websiteFu` FOREIGN KEY (`admin_id`) REFERENCES `websiteFunctions_websites` (`id`);"
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = "CREATE TABLE `websiteFunctions_packageassignment` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `package_id` integer NOT NULL, `user_id` integer NOT NULL);"
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+
             query = """ALTER TABLE `websiteFunctions_packageassignment` ADD CONSTRAINT `websiteFunctions_pac_package_id_420b6aff_fk_websiteFu` FOREIGN KEY (`package_id`) REFERENCES `websiteFunctions_dockerpackages` (`id`);"""
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = "ALTER TABLE `websiteFunctions_packageassignment` ADD CONSTRAINT `websiteFunctions_pac_user_id_864958ce_fk_loginSyst` FOREIGN KEY (`user_id`) REFERENCES `loginSystem_administrator` (`id`);"
             try:
                 cursor.execute(query)
             except:
