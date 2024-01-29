@@ -1107,7 +1107,6 @@ class backupUtilities:
 
             logging.CyberCPLogFileWriter.statusWriter(status, "Done")
 
-            installUtilities.reStartLiteSpeed()
 
             ## Fix permissions
 
@@ -1115,6 +1114,8 @@ class backupUtilities:
 
             fm = FileManager(None, None)
             fm.fixPermissions(masterDomain)
+
+            installUtilities.reStartLiteSpeed()
 
         except BaseException as msg:
             status = os.path.join(completPath, 'status')
