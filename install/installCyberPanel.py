@@ -294,9 +294,11 @@ Suites: jammy
 Components: main main/debug
 Signed-By: /etc/apt/keyrings/mariadb-keyring.pgp
 """
-            WriteToFile = open(RepoPath, 'w')
-            WriteToFile.write(RepoContent)
-            WriteToFile.close()
+
+            if get_Ubuntu_release() > 21.00:
+                WriteToFile = open(RepoPath, 'w')
+                WriteToFile.write(RepoContent)
+                WriteToFile.close()
 
             command = 'DEBIAN_FRONTEND=noninteractive apt-get update -y'
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)

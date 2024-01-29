@@ -37,7 +37,3 @@
 #     print(f"Reverse DNS lookup for {ip_address_to_check}: {result}")
 # else:
 #     print(f"Reverse DNS lookup failed for {ip_address_to_check}")
-
-
-value = '/home//hey.txt'
-print(value[6:])
