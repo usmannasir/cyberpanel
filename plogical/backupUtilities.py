@@ -98,6 +98,11 @@ class backupUtilities:
             child = SubElement(metaFileXML, 'BUILD')
             child.text = str(BUILD)
 
+            ### try to take care of - https://github.com/usmannasir/cyberpanel/issues/1196
+
+            child = SubElement(metaFileXML, 'BackupWholeDir')
+            child.text = str(1)
+
             child = SubElement(metaFileXML, 'masterDomain')
             child.text = backupDomain
 
@@ -370,7 +375,9 @@ class backupUtilities:
             from shutil import copytree
 
             #copytree('/home/%s/public_html' % domainName, '%s/%s' % (tempStoragePath, 'public_html'))
-            command = f'cp -R /home/{domainName}/public_html {tempStoragePath}/public_html'
+            #command = f'cp -R /home/{domainName}/public_html {tempStoragePath}/public_html'
+            ### doing backup of whole dir and keeping it in public_html folder will restore from here - ref https://github.com/usmannasir/cyberpanel/issues/1196
+            command = f"rsync -av --exclude=.wp-cli --exclude=logs --exclude=backup --exclude=lscache /home/{domainName}/ {tempStoragePath}/public_html/"
 
             if ProcessUtilities.normalExecutioner(command) == 0:
                  raise BaseException(f'Failed to run cp command during backup generation.')
@@ -498,12 +505,12 @@ class backupUtilities:
                         #make_archive(os.path.join(tempStoragePath, "sslData-" + domainName), 'gztar', sslStoragePath)
                     except:
                         pass
+                ## no need to do this as on line 380 whole dir will be backuped up
 
-                if childPath.find(f'/home/{domainName}/public_html') == -1:
-                    # copy_tree(childPath, '%s/%s-docroot' % (tempStoragePath, actualChildDomain))
-                    command = f'cp -R {childPath} {tempStoragePath}/{actualChildDomain}-docroot'
-                    ProcessUtilities.executioner(command, externalApp)
-
+                # if childPath.find(f'/home/{domainName}/public_html') == -1:
+                #     # copy_tree(childPath, '%s/%s-docroot' % (tempStoragePath, actualChildDomain))
+                #     command = f'cp -R {childPath} {tempStoragePath}/{actualChildDomain}-docroot'
+                #     ProcessUtilities.executioner(command, externalApp)
         except BaseException as msg:
             pass
 
@@ -807,9 +814,11 @@ class backupUtilities:
             try:
                 version = backupMetaData.find('VERSION').text
                 build = backupMetaData.find('BUILD').text
+                BackupWholeDir = int(backupMetaData.find('BackupWholeDir').text)
                 twoPointO = 1
             except:
                 twoPointO = 0
+                BackupWholeDir = 0
 
             result = backupUtilities.createWebsiteFromBackup(backupName, dir)
 
@@ -917,17 +926,19 @@ class backupUtilities:
                         if float(version) > 2.0 or float(build) > 0:
                             if path.find('/home/%s/public_html' % masterDomain) == -1:
 
-                                #copy_tree('%s/%s-docroot' % (completPath, domain), path)
+                                if BackupWholeDir == 0:
 
-                                ## First remove if already exists
+                                    #copy_tree('%s/%s-docroot' % (completPath, domain), path)
 
-                                command = 'rm -rf %s' % (path)
-                                ProcessUtilities.executioner(command)
+                                    ## First remove if already exists
 
-                                ##
+                                    command = 'rm -rf %s' % (path)
+                                    ProcessUtilities.executioner(command)
 
-                                command = 'cp -R %s/%s-docroot %s' % (completPath, domain, path)
-                                ProcessUtilities.executioner(command)
+                                    ##
+
+                                    command = 'cp -R %s/%s-docroot %s' % (completPath, domain, path)
+                                    ProcessUtilities.executioner(command)
 
                         continue
                     else:
@@ -1053,8 +1064,11 @@ class backupUtilities:
                     ProcessUtilities.executioner(command)
 
                     ##
-
-                    command = 'cp -R %s/public_html %s' % (completPath, websiteHome)
+                    if BackupWholeDir:
+                        #command = 'cp -R %s/public_html/* %s/*' % (completPath, websiteHome)
+                        command = f'rsync -av {completPath}/public_html/ /home/{masterDomain}'
+                    else:
+                        command = 'cp -R %s/public_html %s' % (completPath, websiteHome)
                     ProcessUtilities.executioner(command)
 
             ## extracting email accounts
