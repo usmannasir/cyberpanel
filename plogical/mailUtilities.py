@@ -2384,9 +2384,14 @@ class MailServerManagerUtils(multi.Thread):
                     MailServerSSLCheck = 1
 
 
+
+
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Fixing permissions..,90')
 
             self.fixCyberPanelPermissions()
+
+            command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/dns/dnsManager.py ResetDNSConfigurations --tempStatusPath /home/cyberpanel/dnscheck'
+            ProcessUtilities.executioner(command)
 
             command = 'touch /home/cyberpanel/postfix'
             ProcessUtilities.executioner(command)
