@@ -43,6 +43,20 @@ class InstallCyberPanel:
     CloudLinux8 = 0
 
     @staticmethod
+    def ISARM():
+
+        try:
+            command = 'uname -a'
+            result = subprocess.run(command, capture_output=True, text=True, shell=True)
+
+            if 'aarch64' in result.stdout:
+                return True
+            else:
+                return False
+        except:
+            return False
+
+    @staticmethod
     def OSFlags():
         if os.path.exists("/etc/redhat-release"):
             data = open('/etc/redhat-release', 'r').read()
@@ -102,26 +116,34 @@ class InstallCyberPanel:
                 except:
                     pass
 
-                command = 'wget https://www.litespeedtech.com/packages/6.0/lsws-6.0-ent-x86_64-linux.tar.gz'
+                if InstallCyberPanel.ISARM():
+                    command = 'wget https://www.litespeedtech.com/packages/6.0/lsws-6.2-ent-aarch64-linux.tar.gz'
+                else:
+                    command = 'wget https://www.litespeedtech.com/packages/6.0/lsws-6.2-ent-x86_64-linux.tar.gz'
+
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-                command = 'tar zxf lsws-6.0-ent-x86_64-linux.tar.gz'
+                if InstallCyberPanel.ISARM():
+                    command = 'tar zxf lsws-6.2-ent-aarch64-linux.tar.gz'
+                else:
+                    command = 'tar zxf lsws-6.2-ent-x86_64-linux.tar.gz'
+
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
                 if str.lower(self.serial) == 'trial':
-                    command = 'wget -q --output-document=lsws-6.0/trial.key http://license.litespeedtech.com/reseller/trial.key'
+                    command = 'wget -q --output-document=lsws-6.2/trial.key http://license.litespeedtech.com/reseller/trial.key'
                 if self.serial == '1111-2222-3333-4444':
-                    command = 'wget -q --output-document=/root/cyberpanel/install/lsws-6.0/trial.key http://license.litespeedtech.com/reseller/trial.key'
+                    command = 'wget -q --output-document=/root/cyberpanel/install/lsws-6.2/trial.key http://license.litespeedtech.com/reseller/trial.key'
                     install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
                 else:
-                    writeSerial = open('lsws-6.0/serial.no', 'w')
+                    writeSerial = open('lsws-6.2/serial.no', 'w')
                     writeSerial.writelines(self.serial)
                     writeSerial.close()
 
-                shutil.copy('litespeed/install.sh', 'lsws-6.0/')
-                shutil.copy('litespeed/functions.sh', 'lsws-6.0/')
+                shutil.copy('litespeed/install.sh', 'lsws-6.2/')
+                shutil.copy('litespeed/functions.sh', 'lsws-6.2/')
 
-                os.chdir('lsws-6.0')
+                os.chdir('lsws-6.2')
 
                 command = 'chmod +x install.sh'
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
