@@ -28,8 +28,8 @@
 # imap_port = 993
 #
 # # User credentials
-#
-#
+# email_address = ''
+# password = ''
 #
 # # Connect to the IMAP server
 # mail = imaplib.IMAP4_SSL(imap_server, imap_port)

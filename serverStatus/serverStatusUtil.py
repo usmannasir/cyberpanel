@@ -67,34 +67,44 @@ class ServerStatusUtil(multi.Thread):
             except:
                 pass
 
-            command = 'wget https://www.litespeedtech.com/packages/6.0/lsws-6.0-ent-x86_64-linux.tar.gz'
+            from plogical.acl import ACLManager
+
+            if ACLManager.ISARM():
+                command = 'wget https://www.litespeedtech.com/packages/6.0/lsws-6.2-ent-aarch64-linux.tar.gz'
+            else:
+
+                command = 'wget https://www.litespeedtech.com/packages/6.0/lsws-6.2-ent-x86_64-linux.tar.gz'
+
             if ServerStatusUtil.executioner(command, statusFile) == 0:
                 return 0
 
             if os.path.exists('/usr/local/CyberCP/lsws-6.0/'):
                 shutil.rmtree('/usr/local/CyberCP/lsws-6.0')
 
-            if os.path.exists('/usr/local/CyberCP/lsws-6.0/'):
-                shutil.rmtree('/usr/local/CyberCP/lsws-6.0/')
+            if os.path.exists('/usr/local/CyberCP/lsws-6.2/'):
+                shutil.rmtree('/usr/local/CyberCP/lsws-6.2/')
 
+            if ACLManager.ISARM():
+                command = 'tar zxf lsws-6.2-ent-aarch64-linux.tar.gz -C /usr/local/CyberCP'
+            else:
+                command = 'tar zxf lsws-6.2-ent-x86_64-linux.tar.gz -C /usr/local/CyberCP'
 
-            command = 'tar zxf lsws-6.0-ent-x86_64-linux.tar.gz -C /usr/local/CyberCP'
             if ServerStatusUtil.executioner(command, statusFile) == 0:
                 return 0
 
             if licenseKey == 'trial':
-                command = 'wget -q --output-document=/usr/local/CyberCP/lsws-6.0/trial.key http://license.litespeedtech.com/reseller/trial.key'
+                command = 'wget -q --output-document=/usr/local/CyberCP/lsws-6.2/trial.key http://license.litespeedtech.com/reseller/trial.key'
                 if ServerStatusUtil.executioner(command, statusFile) == 0:
                     return 0
             else:
-                writeSerial = open('/usr/local/CyberCP/lsws-6.0/serial.no', 'w')
+                writeSerial = open('/usr/local/CyberCP/lsws-6.2/serial.no', 'w')
                 writeSerial.writelines(licenseKey)
                 writeSerial.close()
 
-            shutil.copy('/usr/local/CyberCP/serverStatus/litespeed/install.sh', '/usr/local/CyberCP/lsws-6.0/')
-            shutil.copy('/usr/local/CyberCP/serverStatus/litespeed/functions.sh', '/usr/local/CyberCP/lsws-6.0/')
+            shutil.copy('/usr/local/CyberCP/serverStatus/litespeed/install.sh', '/usr/local/CyberCP/lsws-6.2/')
+            shutil.copy('/usr/local/CyberCP/serverStatus/litespeed/functions.sh', '/usr/local/CyberCP/lsws-6.2/')
 
-            os.chdir('/usr/local/CyberCP/lsws-6.0/')
+            os.chdir('/usr/local/CyberCP/lsws-6.2/')
 
             command = 'chmod +x install.sh'
             if ServerStatusUtil.executioner(command, statusFile) == 0:
@@ -121,7 +131,7 @@ class ServerStatusUtil(multi.Thread):
                 pass
 
             try:
-                os.rmdir("/usr/local/CyberCP/lsws-6.0")
+                os.rmdir("/usr/local/CyberCP/lsws-6.2")
             except:
                 pass
 
