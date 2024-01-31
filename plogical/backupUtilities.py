@@ -2073,8 +2073,8 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
         from plogical.IncScheduler import IncScheduler
         import json
         from plogical.getSystemInformation import SystemInformation
-
-        IncScheduler.CalculateAndUpdateDiskUsage()
+        #
+        # IncScheduler.CalculateAndUpdateDiskUsage()
 
         website = Websites.objects.get(domain=backupDomain)
         DiskUsageOfSite = json.loads(website.config)['DiskUsage']
