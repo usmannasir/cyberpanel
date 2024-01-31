@@ -108,10 +108,11 @@ class ApplicationInstaller(multi.Thread):
             #command = 'curl -fsSL <https://deb.nodesource.com/setup_20.x> | sudo -E bash -'
             #ProcessUtilities.executioner(command, 'root', True)
 
-            command = 'DEBIAN_FRONTEND=noninteractive nodejs npm -y'
+            command = 'DEBIAN_FRONTEND=noninteractive apt-get install nodejs npm -y'
             ProcessUtilities.executioner(command, 'root', True)
 
         return 1
+
 
     def installMautic(self):
         try:
@@ -261,6 +262,10 @@ class ApplicationInstaller(multi.Thread):
 
             if result.find('Install complete') == -1:
                 raise BaseException(result)
+
+
+            command = f'{phpPath} -d memory_limit=256M bin/console  mautic:assets:generate'
+            ProcessUtilities.outputExecutioner(command, externalApp, None, finalPath)
 
 
             ExistingDocRoot = ACLManager.FindDocRootOfSite(None, domainName)
