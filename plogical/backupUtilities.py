@@ -814,10 +814,14 @@ class backupUtilities:
             try:
                 version = backupMetaData.find('VERSION').text
                 build = backupMetaData.find('BUILD').text
-                BackupWholeDir = int(backupMetaData.find('BackupWholeDir').text)
+
                 twoPointO = 1
             except:
                 twoPointO = 0
+
+            try:
+                BackupWholeDir = int(backupMetaData.find('BackupWholeDir').text)
+            except:
                 BackupWholeDir = 0
 
             result = backupUtilities.createWebsiteFromBackup(backupName, dir)
