@@ -814,7 +814,6 @@ class backupUtilities:
             try:
                 version = backupMetaData.find('VERSION').text
                 build = backupMetaData.find('BUILD').text
-
                 twoPointO = 1
             except:
                 twoPointO = 0

@@ -247,7 +247,7 @@ class virtualHostUtilities:
             SSLProvider = x509.get_issuer().get_components()[1][1].decode('utf-8')
 
             if SSLProvider == 'Denial':
-                message = 'Failed to issue Hostname SSL, either its DNS record is not propagated or the domain is behind Cloudflare. [404]'
+                message = 'Failed to issue Hostname SSL, either its DNS record is not propagated or the domain is behind Cloudflare. If DNS is already propagated you might have reached Lets Encrypt limit, please wait before trying again.. [404]'
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, message)
                 logging.CyberCPLogFileWriter.writeToFile(message)
                 config['hostname'] = Domain
