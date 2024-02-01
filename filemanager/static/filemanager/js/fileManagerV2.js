@@ -1,6 +1,6 @@
 newapp.controller('fileManagerCtrlV2', function ($scope, $http, FileUploader, $window) {
 
-    alert('Error');
+
     $('form').submit(function (e) {
         e.preventDefault();
     });
@@ -446,9 +446,141 @@ newapp.controller('fileManagerCtrlV2', function ($scope, $http, FileUploader, $w
     }
 
 
-    // Button Activator
+
+
+
+    $scope.fetchForTableSecondary = function (node, functionName) {
+
+
+        console.log("habbi.................run");
+
+        allFilesAndFolders = [];
+        $scope.buttonActivator();
+        url = "/filemanager/controller";
+        var completePathToFile = "";
+
+        if (domainName === "") {
+
+            if (functionName === "startPoint") {
+                completePathToFile = $scope.currentRPath;
+            } else if (functionName === "doubleClick") {
+                completePathToFile = $scope.currentRPath + "/" + node.innerHTML;
+            } else if (functionName === "homeFetch") {
+                completePathToFile = homeRPathBack;
+            } else if (functionName === "goBackOnPath") {
+                var pos = $scope.currentRPath.lastIndexOf("/");
+                completePathToFile = $scope.currentRPath.slice(0, pos);
+            } else if (functionName === "refresh") {
+                completePathToFile = $scope.currentRPath;
+                var rightClickNode = document.getElementById("rightClick");
+            } else if (functionName === "fromTree") {
+                completePathToFile = arguments[2];
+            }
+            $scope.currentRPath = completePathToFile;
+
+        } else {
+            if (functionName === "startPoint") {
+                completePathToFile = $scope.currentPath;
+                // check if there is any path in QS
+
+                const urlParams = new URLSearchParams(window.location.search);
+                QSPath = urlParams.get('path')
+
+                if (QSPath !== null) {
+                    completePathToFile = QSPath
+                }
+
+                //
+            } else if (functionName === "doubleClick") {
+                completePathToFile = $scope.currentPath + "/" + node.innerHTML;
+            } else if (functionName === "homeFetch") {
+                completePathToFile = homePathBack;
+            } else if (functionName === "goBackOnPath") {
+                var pos = $scope.currentPath.lastIndexOf("/");
+                completePathToFile = $scope.currentPath.slice(0, pos);
+            } else if (functionName === "refresh") {
+                completePathToFile = $scope.currentPath;
+                var rightClickNode = document.getElementById("rightClick");
+            } else if (functionName === "fromTree") {
+                completePathToFile = arguments[2];
+            }
+            $scope.currentPath = completePathToFile;
+        }
+
+
+        var data = {
+            completeStartingPath: completePathToFile,
+            method: "listForTable",
+            home: "/",
+            domainRandomSeed: domainRandomSeed,
+            domainName: domainName
+        };
+
+        var tableBody = document.getElementById("tableBodyFiles");
+        var loadingPath = "/static/filemanager/images/loading.gif";
+        tableBody.innerHTML = '<img src="' + loadingPath + '">';
+
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+
+            tableBody.innerHTML = '';
+
+
+            if (response.data.status === 1) {
+
+
+                /// node prepration
+
+                var filesData = response.data;
+
+                var keys = Object.keys(filesData);
+
+                for (var i = 0; i < keys.length; i++) {
+                    if (keys[i] === "error_message" | keys[i] === "status") {
+                        continue;
+                    } else {
+                        var fileName = filesData[keys[i]][0];
+                        var lastModified = filesData[keys[i]][2];
+                        var fileSize = filesData[keys[i]][3];
+                        var permissions = filesData[keys[i]][4];
+                        var dirCheck = filesData[keys[i]][5];
+                        // console.log(fileName);
+                        if (fileName === "..filemanagerkey") {
+
+                            continue;
+                        }
+                        tableBody.appendChild(createTR(fileName, fileSize, lastModified, permissions, dirCheck));
+
+                    }
+                }
+            } else {
+                var notification = alertify.notify(response.data.error_message, 'error', 10, function () {
+                });
+                $scope.fetchForTableSecondary(null, 'homeFetch');
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+        }
+
+    };
+
+
+        // Button Activator
 
     $scope.buttonActivator = function () {
+
+        console.log("----------cal button activater------------");
 
         // for restore button
         if ($scope.currentPath === trashPath) {
@@ -458,6 +590,10 @@ newapp.controller('fileManagerCtrlV2', function ($scope, $http, FileUploader, $w
             var restoreBTN = document.getElementById("restoreRight");
             restoreBTN.style.display = "none";
         }
+
+        console.log("----------cal button activater-----------1-");
+
+
         // for edit button
 
         if (allFilesAndFolders.length === 1) {
@@ -598,130 +734,6 @@ newapp.controller('fileManagerCtrlV2', function ($scope, $http, FileUploader, $w
     $scope.buttonActivator();
 
     // table functions
-
-
-    $scope.fetchForTableSecondary = function (node, functionName) {
-
-        allFilesAndFolders = [];
-        $scope.buttonActivator();
-        url = "/filemanager/controller";
-        var completePathToFile = "";
-
-        if (domainName === "") {
-
-            if (functionName === "startPoint") {
-                completePathToFile = $scope.currentRPath;
-            } else if (functionName === "doubleClick") {
-                completePathToFile = $scope.currentRPath + "/" + node.innerHTML;
-            } else if (functionName === "homeFetch") {
-                completePathToFile = homeRPathBack;
-            } else if (functionName === "goBackOnPath") {
-                var pos = $scope.currentRPath.lastIndexOf("/");
-                completePathToFile = $scope.currentRPath.slice(0, pos);
-            } else if (functionName === "refresh") {
-                completePathToFile = $scope.currentRPath;
-                var rightClickNode = document.getElementById("rightClick");
-            } else if (functionName === "fromTree") {
-                completePathToFile = arguments[2];
-            }
-            $scope.currentRPath = completePathToFile;
-
-        } else {
-            if (functionName === "startPoint") {
-                completePathToFile = $scope.currentPath;
-                // check if there is any path in QS
-
-                const urlParams = new URLSearchParams(window.location.search);
-                QSPath = urlParams.get('path')
-
-                if (QSPath !== null) {
-                    completePathToFile = QSPath
-                }
-
-                //
-            } else if (functionName === "doubleClick") {
-                completePathToFile = $scope.currentPath + "/" + node.innerHTML;
-            } else if (functionName === "homeFetch") {
-                completePathToFile = homePathBack;
-            } else if (functionName === "goBackOnPath") {
-                var pos = $scope.currentPath.lastIndexOf("/");
-                completePathToFile = $scope.currentPath.slice(0, pos);
-            } else if (functionName === "refresh") {
-                completePathToFile = $scope.currentPath;
-                var rightClickNode = document.getElementById("rightClick");
-            } else if (functionName === "fromTree") {
-                completePathToFile = arguments[2];
-            }
-            $scope.currentPath = completePathToFile;
-        }
-
-
-        var data = {
-            completeStartingPath: completePathToFile,
-            method: "listForTable",
-            home: "/",
-            domainRandomSeed: domainRandomSeed,
-            domainName: domainName
-        };
-
-        var tableBody = document.getElementById("tableBodyFiles");
-        var loadingPath = "/static/filemanager/images/loading.gif";
-        tableBody.innerHTML = '<img src="' + loadingPath + '">';
-
-
-        var config = {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        };
-
-
-        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
-
-        function ListInitialDatas(response) {
-
-            tableBody.innerHTML = '';
-
-
-            if (response.data.status === 1) {
-
-
-                /// node prepration
-
-                var filesData = response.data;
-
-                var keys = Object.keys(filesData);
-
-                for (var i = 0; i < keys.length; i++) {
-                    if (keys[i] === "error_message" | keys[i] === "status") {
-                        continue;
-                    } else {
-                        var fileName = filesData[keys[i]][0];
-                        var lastModified = filesData[keys[i]][2];
-                        var fileSize = filesData[keys[i]][3];
-                        var permissions = filesData[keys[i]][4];
-                        var dirCheck = filesData[keys[i]][5];
-                        // console.log(fileName);
-                        if (fileName === "..filemanagerkey") {
-
-                            continue;
-                        }
-                        tableBody.appendChild(createTR(fileName, fileSize, lastModified, permissions, dirCheck));
-
-                    }
-                }
-            } else {
-                var notification = alertify.notify(response.data.error_message, 'error', 10, function () {
-                });
-                $scope.fetchForTableSecondary(null, 'homeFetch');
-            }
-
-        }
-
-        function cantLoadInitialDatas(response) {
-        }
-
-    };
 
     function findFileExtension(fileName) {
         return (/[.]/.exec(fileName)) ? /[^.]+$/.exec(fileName) : undefined;
