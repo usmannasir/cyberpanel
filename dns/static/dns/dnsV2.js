@@ -1275,3 +1275,22 @@ newapp.controller('addModifyDNSRecordsV2', function ($scope, $http) {
 
     }
 );
+var dnsTabButton = document.getElementById("dns_tab_button");
+var apiTabButton = document.getElementById("api_tab_button");
+function changeBackgroundColor(button) {
+    var allButtons = document.querySelectorAll('.flex li');
+    allButtons.forEach(function (btn) {
+        btn.classList.remove('bg-orange-400','text-white', 'show');
+        btn.classList.add('bg-white');
+    });
+
+    button.classList.add('bg-orange-400','text-white', 'show');
+}
+
+dnsTabButton.addEventListener("click", function () {
+    changeBackgroundColor(dnsTabButton);
+});
+
+apiTabButton.addEventListener("click", function () {
+    changeBackgroundColor(apiTabButton);
+});
