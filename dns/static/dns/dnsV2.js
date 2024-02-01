@@ -271,6 +271,8 @@ newapp.controller('configureDefaultNameserversV2', function ($scope, $http) {
 
 newapp.controller('addModifyDNSRecordsCloudFlareV2', function ($scope, $http, $window) {
 
+    alert('Hello');
+
     $scope.saveCFConfigs = function () {
 
         $scope.recordsLoading = false;
