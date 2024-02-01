@@ -881,13 +881,19 @@ class ACLManager:
         return 1
 
     @staticmethod
-    def CheckStatusFilleLoc(statusFile):
+    def CheckStatusFilleLoc(statusFile, domain=None):
         TemFilePath = statusFile.split('panel/')[1]
 
         try:
             value = int(TemFilePath)
             print(value)
         except:
+            if domain != None:
+                value = statusFile.split('cyberpanel/')[1]
+                #logging.writeToFile(f'value of log file {value}')
+                if value == f'{domain}_rustic_backup_log':
+                    return 1
+
             return 0
 
         if (statusFile[:18] != "/home/cyberpanel/." or statusFile[:16] == "/home/cyberpanel" or statusFile[

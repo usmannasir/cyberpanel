@@ -1859,7 +1859,7 @@ class BackupManager:
 
             statusFile = f'/home/cyberpanel/{domain}_rustic_backup_log'
 
-            if ACLManager.CheckStatusFilleLoc(statusFile):
+            if ACLManager.CheckStatusFilleLoc(statusFile, domain):
                 pass
             else:
                 data_ret = {'abort': 1, 'installStatus': 0, 'installationProgress': "100",
