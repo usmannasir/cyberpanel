@@ -162,6 +162,88 @@
 
                             </div>
                         </div>
+                        <div id="DeleteSnapshotmodelv2" class="modal fade" role="dialog">
+                            <div class="modal-dialog modal-lg">
+
+                                <!-- Modal content-->
+                                <div class="modal-content" style="height: 80%">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal">&times;
+                                        </button>
+                                        <h4 id="restore_header_text" class="modal-title">{% trans "Delete" %} <img
+                                                ng-hide="backupLoading" src="{% static 'images/loading.gif' %}"> </h4>
+                                    </div>
+                                    <div class="modal-body" style="">
+
+                                        <span style="font-weight: bolder"><span style="font-weight: bolder">ID: <span style="font-weight: normal"
+                                                                                    id="Snapshot_id_delete"></span></span><br>
+                                        <span style="display: flex;justify-content: center;margin-top: 20px;font-weight: bolder">{% trans "Are you ready to delete this snapshot? This process can not be undone." %} </span>
+                                        <div style="display: flex;justify-content: center;margin-top: 10px;margin-bottom: 20px">
+                                            <button type="button" class="btn btn-primary "
+                                                    style="margin-right: 20px!important;"
+                                                    ng-click="DeleteSnapshotV2Final()">Yes <img
+                                                    ng-hide="backupLoading"
+                                                    src="">
+                                            </button>
+                                            <button type="button" ng-disabled="savingSettings"
+                                                    class="btn btn-default mx-3" data-dismiss="modal">
+                                                No
+                                            </button>
+                                        </div>
+
+                                        <div ng-hide="installationProgress" class="form-group">
+                                            <label class="col-sm-12 control-label"></label>
+                                            <div class="col-sm-12">
+
+                                                <div class="alert alert-success text-center">
+                                                    {#                                                <h2>{$ currentStatus $}</h2>#}
+                                                    <h2 class="ng-binding">Successfully Restored</h2>
+                                                </div>
+
+                                                <div class="progress">
+                                                    <div id="installProgress" class="progress-bar" role="progressbar"
+                                                         aria-valuenow="70"
+                                                         aria-valuemin="0" aria-valuemax="100" style="width:0%">
+                                                        <span class="sr-only">70% Complete</span>
+                                                    </div>
+                                                </div>
+
+                                                <div ng-hide="errorMessageBox" class="alert alert-danger">
+                                                    <p>{% trans "Error message:" %} {$ errorMessage $}</p>
+                                                </div>
+
+                                                <div ng-hide="success" class="alert alert-success">
+                                                    <p>{% trans "Restored succesfully." %}</p>
+                                                </div>
+
+
+                                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                                    <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                                </div>
+
+
+                                            </div>
+                                        </div>
+
+                                        <div ng-hide="installationProgress" class="form-group">
+                                            <label class="col-sm-12 control-label"></label>
+                                            <div class="col-sm-4">
+                                                <button type="button" ng-disabled="goBackDisable" ng-click="goBack()"
+                                                        class="btn btn-primary btn-lg">{% trans "Go Back" %}</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+
+                                        <button type="button" ng-disabled="savingSettings"
+                                                class="btn btn-default" data-dismiss="modal">
+                                            Close
+                                        </button>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
                     </div>
                 </div>
 

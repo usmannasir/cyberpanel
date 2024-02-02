@@ -895,6 +895,49 @@ def RestorePathV2(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+def DeleteSnapshotV2Final(request):
+    try:
+        userID = request.session['userID']
+        data = json.loads(request.body)
+        SnapShotId = data['snapshotid']
+        Selectedwebsite = data['selwebsite']
+        Selectedrepo = data['selectedrepo']
+
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+        if ACLManager.checkOwnership(str(Selectedwebsite), admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        extra_args = {}
+        extra_args['function'] = 'InitiateRestore'
+        extra_args['website'] = Selectedwebsite
+        extra_args['domain'] = Selectedwebsite
+        extra_args['BasePath'] = '/home/backup'
+        extra_args['BackendName'] = Selectedrepo
+        extra_args['snapshotid'] = SnapShotId
+        # extra_args['BackupData'] = data['websiteData'] if 'websiteData' in data else False
+        # extra_args['BackupEmails'] = data['websiteEmails'] if 'websiteEmails' in data else False
+        # extra_args['BackupDatabase'] = data['websiteDatabases'] if 'websiteDatabases' in data else False
+
+
+        background = CPBackupsV2(extra_args)
+        background.DeleteSnapshots(SnapShotId)
+
+        # vm = CPBackupsV2({'domain': Selectedwebsite, 'BackendName': Selectedrepo, "function": "", 'BasePath': '/home/backup'})
+        # status = vm.InitiateRestore(SnapShotId, Path)
+
+        data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None',}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+    except BaseException as msg:
+        data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
 def selectwebsiteRetorev2(request):
     import re
     try:

@@ -45,7 +45,6 @@ class CPBackupsV2(multi.Thread):
         multi.Thread.__init__(self)
         self.data = data
         try:
-
             self.function = data['function']
         except:
             pass
@@ -140,6 +139,12 @@ class CPBackupsV2(multi.Thread):
 
         if os.path.exists(self.StatusFile):
             os.remove(self.StatusFile)
+
+        # ### delete repo function
+        # try:
+        #     self.repo = data['BackendName']
+        # except:
+        #     pass
 
     def run(self):
         try:

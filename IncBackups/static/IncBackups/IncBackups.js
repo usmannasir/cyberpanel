@@ -1296,11 +1296,20 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout, $compil
     }
 
     $scope.RestorePathV2Model = function (SnapshotId, Path) {
+
         $('#RestoreSnapshotPath').modal('show');
 
         document.getElementById('Snapshot_id').innerText = SnapshotId
         document.getElementById('Snapshot_Path_id').innerText = Path
 
+
+    }
+
+    $scope.DeleteSnapshotBackupsv2 = function (SnapshotId, Path) {
+        $('#DeleteSnapshotmodelv2').modal('show');
+
+        document.getElementById('Snapshot_id_delete').innerText = SnapshotId;
+        //alert(document.getElementById('Snapshot_id_delete').innerText);
 
     }
 
@@ -1443,6 +1452,61 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout, $compil
 
     }
 
+    $scope.DeleteSnapshotV2Final = function (SnapshotId, Path) {
+
+        $scope.backupLoading = false;
+
+        SnapshotId = document.getElementById('Snapshot_id_delete').innerText
+        console.log("SnapshotId: " + SnapshotId)
+        var url = "/IncrementalBackups/DeleteSnapshotV2Final";
+        var data = {
+            snapshotid: SnapshotId,
+            selwebsite: $scope.selwebsite,
+            selectedrepo: $scope.testhabbi
+        }
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.backupLoading = true;
+            if (response.data.status === 1) {
+                new PNotify({
+                        title: 'Success!',
+                        text: 'Snapshot Deleted.',
+                        type: 'success'
+                    });
+
+            } else {
+                $scope.backupLoading = true;
+                $scope.installationDetailsForm = true;
+                $scope.installationProgress = false;
+                $scope.errorMessageBox = false;
+                $scope.success = true;
+                $scope.couldNotConnect = true;
+                $scope.goBackDisable = false;
+
+                new PNotify({
+                        title: 'Error!',
+                        text: response.data.error_message,
+                        type: 'error'
+                    });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+        }
+
+
+    }
 
     $scope.selectrepo = function () {
         $scope.backupLoading = false;
@@ -1479,7 +1543,7 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout, $compil
                         var tml = '<tr style="">\n' +
                             '  <td>' + snapshots[i][1][j].id + '</td>' +
                             '  <td>' + snapshots[i][1][j].time + '</td>' +
-                            '  <td><button  type="button" class="btn btn-danger">Delete</button></td>\n' +
+                            '  <td><button ng-click=\'DeleteSnapshotBackupsv2("' + snapshots[i][1][j].id + '","' + snapshots[i][1][j].paths[k] + '")\'  type="button" class="btn btn-danger">Delete</button></td>\n' +
                             '</tr>' +
                             '<tr style="border: none!important;"> <td colspan="2" style="display: inherit;max-height: 10px;background-color: transparent; border: none">\n' +
                             '  <button id="' + snapshots[i][1][j].id + 'button" class="my-4 mx-4 btn " style="margin-bottom: 15px;margin-top: -8px;background-color: #161a69; color: white;border-radius: 6px" onclick=listpaths("' + snapshots[i][1][j].id + '","' + snapshots[i][1][j].id + 'button")>+</button>\n' +
