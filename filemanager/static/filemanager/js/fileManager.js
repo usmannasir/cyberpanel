@@ -839,7 +839,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
             completePathForFile = $scope.currentRPath + "/" + allFilesAndFolders[0];
             $scope.errorMessageFile = true;
         } else {
-            completePathForFile = $scope.currentPath + "/" + $scope.newFileName;
+            completePathForFile = $scope.currentPath + "/" + allFilesAndFolders[0];
             $scope.errorMessageFile = true;
         }
 
