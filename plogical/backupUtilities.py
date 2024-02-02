@@ -2079,14 +2079,19 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
         #
         # IncScheduler.CalculateAndUpdateDiskUsage()
 
-        website = Websites.objects.get(domain=backupDomain)
-        DiskUsageOfSite = json.loads(website.config)['DiskUsage']
-        used_disk, free_disk, percent_used = SystemInformation.GetRemainingDiskUsageInMBs()
+        try:
 
-        if float(free_disk) <= float(DiskUsageOfSite):
-            command = f"echo 'Disk space exceeded the website size. [2065][5009]' > %s"
-            ProcessUtilities.executioner(command, website.externalApp)
-            return 0
+            website = Websites.objects.get(domain=backupDomain)
+            DiskUsageOfSite = json.loads(website.config)['DiskUsage']
+            used_disk, free_disk, percent_used = SystemInformation.GetRemainingDiskUsageInMBs()
+
+
+            if float(free_disk) <= float(DiskUsageOfSite):
+                command = f"echo 'Disk space exceeded the website size. [2065][5009]' > %s"
+                ProcessUtilities.executioner(command, website.externalApp)
+                return 0
+        except:
+            pass
 
         ###
 
