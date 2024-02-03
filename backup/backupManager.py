@@ -1204,6 +1204,13 @@ class BackupManager:
                 port = output.strip('\n')
 
 
+                ### if value of port return empty then int function fails which means port is not set so defaults to 22
+                try:
+                    portT = int(port)
+                except:
+                    port = '22'
+
+
                 ipFile = os.path.join("/etc", "cyberpanel", "machineIP")
                 f = open(ipFile)
                 ownIP = f.read()
