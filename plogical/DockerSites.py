@@ -3,18 +3,20 @@ import json
 import os
 import sys
 import time
-
-
-
 sys.path.append('/usr/local/CyberCP')
-import django
+
+try:
+    import django
+except:
+    pass
 
 try:
     from plogical import randomPassword
     from plogical.acl import ACLManager
+    from dockerManager.dockerInstall import DockerInstall
 except:
     pass
-from dockerManager.dockerInstall import DockerInstall
+
 from plogical.processUtilities import ProcessUtilities
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import argparse

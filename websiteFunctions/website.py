@@ -1076,6 +1076,29 @@ class WebsiteManager:
             else:
                 return ACLManager.loadError()
 
+
+            php = PHPManager.getPHPString(wpsite.owner.phpSelection)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+            if AutomaticUpdates == 'Disabled':
+                command = f"{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config set WP_AUTO_UPDATE_CORE false --raw --allow-root --path=" + wpsite.path
+                result = ProcessUtilities.outputExecutioner(command, wpsite.owner.externalApp)
+
+                if result.find('Success:') == -1:
+                    raise BaseException(result)
+            elif AutomaticUpdates == 'Minor and Security Updates':
+                command = f"{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config set WP_AUTO_UPDATE_CORE minor --allow-root --path=" + wpsite.path
+                result = ProcessUtilities.outputExecutioner(command, wpsite.owner.externalApp)
+
+                if result.find('Success:') == -1:
+                    raise BaseException(result)
+            else:
+                command = f"{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config set WP_AUTO_UPDATE_CORE true --raw --allow-root --path=" + wpsite.path
+                result = ProcessUtilities.outputExecutioner(command, wpsite.owner.externalApp)
+
+                if result.find('Success:') == -1:
+                    raise BaseException(result)
+
             wpsite.AutoUpdates = AutomaticUpdates
             wpsite.PluginUpdates = Plugins
             wpsite.ThemeUpdates = Themes
