@@ -27,7 +27,7 @@ class DockerInstall:
             elif ProcessUtilities.decideDistro() == ProcessUtilities.centos:
                 command = 'sudo yum install -y docker'
             else:
-                command = 'sudo DEBIAN_FRONTEND=noninteractive apt-get install -y docker.io'
+                command = 'sudo DEBIAN_FRONTEND=noninteractive apt-get install -y docker.io docker-compose'
 
             if not ServerStatusUtil.executioner(command, statusFile):
                 logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
