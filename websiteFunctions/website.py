@@ -718,6 +718,7 @@ class WebsiteManager:
             except:
                 defaultDomain='NONE'
 
+
         url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
         data = {
             "name": "all",
