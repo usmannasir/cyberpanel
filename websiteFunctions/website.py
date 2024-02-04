@@ -710,7 +710,14 @@ class WebsiteManager:
             admin = Administrator.objects.get(pk=userID)
             defaultDomain = Websites.objects.get(pk=admin.defaultSite).domain
         except:
-            defaultDomain = 'NONE'
+            try:
+                admin = Administrator.objects.get(pk=userID)
+                websites = ACLManager.findWebsiteObjects(currentACL, userID)
+                admin.defaultSite = websites[0].id
+                admin.save()
+                defaultDomain = websites[0].domain
+            except:
+                defaultDomain = 'NONE'
 
         url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
         data = {
