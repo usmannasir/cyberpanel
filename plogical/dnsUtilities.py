@@ -692,7 +692,7 @@ class DNS:
     def createDNSRecord(zone, name, type, value, priority, ttl):
         try:
 
-            if Records.objects.filter(name=name, type=type).count() > 0:
+            if Records.objects.filter(name=name, type=type, content=value).count() > 0:
                 return
 
             if zone.type == 'MASTER':

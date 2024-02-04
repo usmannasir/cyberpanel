@@ -279,6 +279,7 @@ class DNSManager:
             zoneDomain = data['selectedZone']
             recordType = data['recordType']
             recordName = data['recordName']
+
             ttl = int(data['ttl'])
             if ttl < 0:
                 raise ValueError("TTL: The item must be greater than 0")
