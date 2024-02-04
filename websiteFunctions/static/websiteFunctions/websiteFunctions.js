@@ -4521,6 +4521,21 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
 
     var statusFile;
 
+
+    $scope.webselection = true;
+    $scope.WebsiteType = function () {
+        var type = $scope.websitetype;
+        if (type == 'Sub Domain') {
+            $scope.webselection = false;
+            $scope.DomainCreateForm = true;
+
+        } else if (type == 'Addon Domain') {
+            $scope.DomainCreateForm = false;
+            $scope.webselection = true;
+            $scope.masterDomain = $('#defaultSite').html()
+        }
+    };
+
     $scope.WebsiteSelection = function () {
         $scope.DomainCreateForm = false;
     };
@@ -4584,7 +4599,10 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
         //
         //     var domainName = $scope.own_domainNameCreate;
         // }
+        var type = $scope.websitetype;
+
         var domainName = $scope.domainNameCreate;
+
 
         var data = {
             domainName: domainName,
@@ -4602,6 +4620,8 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
                 'X-CSRFToken': getCookie('csrftoken')
             }
         };
+
+        // console.log(data)
 
         $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
@@ -10759,7 +10779,7 @@ app.controller('ListDockersitecontainer', function ($scope, $http) {
 
 
     $scope.refreshStatus = function () {
-         $('#actionLoading').show();
+        $('#actionLoading').show();
         url = "/docker/getContainerStatus";
         var data = {name: $scope.cName};
         var config = {
@@ -10771,7 +10791,7 @@ app.controller('ListDockersitecontainer', function ($scope, $http) {
         $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
 
         function ListInitialData(response) {
-             $('#actionLoading').hide();
+            $('#actionLoading').hide();
             if (response.data.containerStatus === 1) {
                 console.log(response.data.status);
                 $scope.status = response.data.status;
@@ -10786,7 +10806,7 @@ app.controller('ListDockersitecontainer', function ($scope, $http) {
         }
 
         function cantLoadInitialData(response) {
-             $('#actionLoading').hide();
+            $('#actionLoading').hide();
             PNotify.error({
                 title: 'Unable to complete request',
                 text: "Problem in connecting to server"
@@ -10796,7 +10816,7 @@ app.controller('ListDockersitecontainer', function ($scope, $http) {
     };
 
     $scope.restarthStatus = function () {
-         $('#actionLoading').show();
+        $('#actionLoading').show();
         url = "/docker/RestartContainerAPP";
         var data = {
             name: $scope.cName,
@@ -10811,7 +10831,7 @@ app.controller('ListDockersitecontainer', function ($scope, $http) {
         $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
 
         function ListInitialData(response) {
-             $('#actionLoading').hide();
+            $('#actionLoading').hide();
             if (response.data.status === 1) {
                 if (response.data.data[0] === 1) {
                     new PNotify({
@@ -10838,7 +10858,7 @@ app.controller('ListDockersitecontainer', function ($scope, $http) {
         }
 
         function cantLoadInitialData(response) {
-             $('#actionLoading').hide();
+            $('#actionLoading').hide();
             PNotify.error({
                 title: 'Unable to complete request',
                 text: "Problem in connecting to server"
