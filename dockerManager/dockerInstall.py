@@ -47,5 +47,8 @@ class DockerInstall:
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, str(msg) + ' [404].', 1)
+def main():
+    DockerInstall.submitInstallDocker()
 
-DockerInstall.submitInstallDocker()
+if __name__ == "__main__":
+    main()

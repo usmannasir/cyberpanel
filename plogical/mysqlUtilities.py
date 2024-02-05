@@ -1196,6 +1196,7 @@ def main():
     parser = argparse.ArgumentParser(description='CyberPanel')
     parser.add_argument('function', help='Specific a function to call!')
     parser.add_argument('--version', help='MySQL version to upgrade to.')
+    parser.add_argument('--tempStatusPath', help='MySQL version to upgrade to.')
 
     args = parser.parse_args()
 
@@ -1203,7 +1204,7 @@ def main():
     if args.function == "enableRemoteMYSQL":
         mysqlUtilities.enableRemoteMYSQL()
     elif args.function == "UpgradeMariaDB":
-        mysqlUtilities.UpgradeMariaDB(args.version, '/home/cyberpanel/upgrade_mysql_logs')
+        mysqlUtilities.UpgradeMariaDB(args.version, args.tempStatusPath)
 
 
 if __name__ == "__main__":
