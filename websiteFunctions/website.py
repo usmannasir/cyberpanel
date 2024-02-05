@@ -705,7 +705,6 @@ class WebsiteManager:
         except:
             pass
 
-
         try:
             admin = Administrator.objects.get(pk=userID)
             defaultDomain = Websites.objects.get(pk=admin.defaultSite).domain
@@ -717,7 +716,8 @@ class WebsiteManager:
                 admin.save()
                 defaultDomain = websites[0].domain
             except:
-                defaultDomain = 'NONE'
+                defaultDomain='NONE'
+
 
         url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
         data = {
