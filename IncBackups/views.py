@@ -986,7 +986,7 @@ def ConfigureSftpV2Backup(request):
         hostName = data['hostName']
         UserName = data['UserName']
         Repo_Name = data['Repo_Name']
-        sshPort = data['sshPort']
+        #sshPort = data['sshPort']
         currentACL = ACLManager.loadedACL(userID)
         admin = Administrator.objects.get(pk=userID)
 
@@ -1003,7 +1003,7 @@ def ConfigureSftpV2Backup(request):
         req_data['Repo_Name'] = Repo_Name
 
         try:
-            req_data['sshPort'] = sshPort
+            req_data['sshPort'] = data['sshPort']
         except:
             req_data['sshPort'] = '22'
 
