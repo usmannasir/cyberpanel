@@ -205,8 +205,6 @@ newapp.config(['$interpolateProvider', function ($interpolateProvider) {
 }]);
 
 newapp.controller('dashboardV2', function ($scope, $http, $timeout) {
-    alert('dashboardV2');
-
 
     function getStuff() {
 

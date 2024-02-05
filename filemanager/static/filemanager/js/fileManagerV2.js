@@ -35,13 +35,13 @@ newapp.controller('fileManagerCtrlV2', function ($scope, $http, FileUploader, $w
     var allFilesAndFolders = [];
 
     $scope.showUploadBox = function () {
-        $('#uploadBox').modal('show');
+        // $('#uploadBox').modal('show');
     };
 
     $scope.showHTMLEditorModal = function (MainFM = 0) {
         $scope.htmlEditorLoading = false;
         $scope.errorMessageEditor = true;
-        $('#showHTMLEditor').modal('show');
+        // $('#showHTMLEditor').modal('show');
         $scope.fileInEditor = allFilesAndFolders[0];
         $scope.getFileContents(MainFM);
     };
@@ -446,13 +446,8 @@ newapp.controller('fileManagerCtrlV2', function ($scope, $http, FileUploader, $w
     }
 
 
-
-
-
     $scope.fetchForTableSecondary = function (node, functionName) {
 
-
-        console.log("habbi.................run");
 
         allFilesAndFolders = [];
         $scope.buttonActivator();
@@ -576,11 +571,9 @@ newapp.controller('fileManagerCtrlV2', function ($scope, $http, FileUploader, $w
     };
 
 
-        // Button Activator
+    // Button Activator
 
     $scope.buttonActivator = function () {
-
-        console.log("----------cal button activater------------");
 
         // for restore button
         if ($scope.currentPath === trashPath) {
@@ -591,143 +584,142 @@ newapp.controller('fileManagerCtrlV2', function ($scope, $http, FileUploader, $w
             restoreBTN.style.display = "none";
         }
 
-        console.log("----------cal button activater-----------1-");
-
 
         // for edit button
 
-        if (allFilesAndFolders.length === 1) {
-            var editNode = document.getElementById("editFile");
-            editNode.style.pointerEvents = "auto";
-
-            var editNotRight = document.getElementById("editOnRight");
-
-            var result = findFileExtension(allFilesAndFolders[0]);
-
-            if (result !== undefined) {
-                if (result[0] === "js") {
-                    aceEditorMode = "ace/mode/javascript";
-                    editNotRight.style.display = "Block";
-                } else if (result[0] === "html") {
-                    aceEditorMode = "ace/mode/html";
-                    editNotRight.style.display = "Block";
-                } else if (result[0] === "css") {
-                    aceEditorMode = "ace/mode/css";
-                    editNotRight.style.display = "Block";
-                } else if (result[0] === "php") {
-                    aceEditorMode = "ace/mode/php";
-                    editNotRight.style.display = "Block";
-                } else if (result[0] === "py") {
-                    aceEditorMode = "ace/mode/python";
-                    editNotRight.style.display = "Block";
-                } else if (result[0] === "txt") {
-                    aceEditorMode = "";
-                    editNotRight.style.display = "Block";
-                } else if (result[0] === "htaccess") {
-                    aceEditorMode = "";
-                    editNotRight.style.display = "Block";
-                } else {
-                    var editNode = document.getElementById("editFile");
-                    editNode.style.pointerEvents = "none";
-                    editNotRight.style.display = "None";
-                }
-            } else {
-                var editNode = document.getElementById("editFile");
-                editNode.style.pointerEvents = "none";
-                editNotRight.style.display = "None";
-            }
-        } else {
-            var editNode = document.getElementById("editFile");
-            editNode.style.pointerEvents = "none";
-        }
+        // if (allFilesAndFolders.length === 1) {
+        //     var editNode = document.getElementById("editFile");
+        //     editNode.style.pointerEvents = "auto";
+        //
+        //     var editNotRight = document.getElementById("editOnRight");
+        //
+        //     var result = findFileExtension(allFilesAndFolders[0]);
+        //
+        //     if (result !== undefined) {
+        //         if (result[0] === "js") {
+        //             aceEditorMode = "ace/mode/javascript";
+        //             editNotRight.style.display = "Block";
+        //         } else if (result[0] === "html") {
+        //             aceEditorMode = "ace/mode/html";
+        //             editNotRight.style.display = "Block";
+        //         } else if (result[0] === "css") {
+        //             aceEditorMode = "ace/mode/css";
+        //             editNotRight.style.display = "Block";
+        //         } else if (result[0] === "php") {
+        //             aceEditorMode = "ace/mode/php";
+        //             editNotRight.style.display = "Block";
+        //         } else if (result[0] === "py") {
+        //             aceEditorMode = "ace/mode/python";
+        //             editNotRight.style.display = "Block";
+        //         } else if (result[0] === "txt") {
+        //             aceEditorMode = "";
+        //             editNotRight.style.display = "Block";
+        //         } else if (result[0] === "htaccess") {
+        //             aceEditorMode = "";
+        //             editNotRight.style.display = "Block";
+        //         } else {
+        //             var editNode = document.getElementById("editFile");
+        //             editNode.style.pointerEvents = "none";
+        //             editNotRight.style.display = "None";
+        //         }
+        //     } else {
+        //         var editNode = document.getElementById("editFile");
+        //         editNode.style.pointerEvents = "none";
+        //         editNotRight.style.display = "None";
+        //     }
+        // } else {
+        //     var editNode = document.getElementById("editFile");
+        //     editNode.style.pointerEvents = "none";
+        // }
 
         // extraction button
 
-        if (allFilesAndFolders.length === 1) {
-            var extractFileNode = document.getElementById("extractFile");
-            extractFileNode.style.pointerEvents = "auto";
-
-            var extractNodeRight = document.getElementById("extractOnRight");
-
-            var result = findFileExtension(allFilesAndFolders[0]);
-
-            if (result !== undefined) {
-                if (result[0] === "gz") {
-                    extractFileNode.style.pointerEvents = "auto";
-                    extractNodeRight.style.display = "Block";
-                } else if (result[0] === "zip") {
-                    extractFileNode.style.pointerEvents = "auto";
-                    extractNodeRight.style.display = "Block";
-                } else {
-                    extractFileNode.style.pointerEvents = "none";
-                    extractNodeRight.style.display = "None";
-                }
-            } else {
-                extractFileNode.style.pointerEvents = "none";
-                extractNodeRight.style.display = "None";
-            }
-        } else {
-            var extractFileNode = document.getElementById("extractFile");
-            extractFileNode.style.pointerEvents = "none";
-        }
+        // if (allFilesAndFolders.length === 1) {
+        //     var extractFileNode = document.getElementById("extractFile");
+        //     extractFileNode.style.pointerEvents = "auto";
+        //
+        //     var extractNodeRight = document.getElementById("extractOnRight");
+        //
+        //     var result = findFileExtension(allFilesAndFolders[0]);
+        //
+        //     if (result !== undefined) {
+        //         if (result[0] === "gz") {
+        //             extractFileNode.style.pointerEvents = "auto";
+        //             extractNodeRight.style.display = "Block";
+        //         } else if (result[0] === "zip") {
+        //             extractFileNode.style.pointerEvents = "auto";
+        //             extractNodeRight.style.display = "Block";
+        //         } else {
+        //             extractFileNode.style.pointerEvents = "none";
+        //             extractNodeRight.style.display = "None";
+        //         }
+        //     } else {
+        //         extractFileNode.style.pointerEvents = "none";
+        //         extractNodeRight.style.display = "None";
+        //     }
+        // } else {
+        //     var extractFileNode = document.getElementById("extractFile");
+        //     extractFileNode.style.pointerEvents = "none";
+        // }
 
 
         // move button
 
-        if (allFilesAndFolders.length >= 1) {
-
-            var moveFileNode = document.getElementById("moveFile");
-            moveFileNode.style.pointerEvents = "auto";
-        } else {
-            var moveFileNode = document.getElementById("moveFile");
-            moveFileNode.style.pointerEvents = "none";
-        }
+        // if (allFilesAndFolders.length >= 1) {
+        //
+        //     var moveFileNode = document.getElementById("moveFile");
+        //     moveFileNode.style.pointerEvents = "auto";
+        // } else {
+        //     var moveFileNode = document.getElementById("moveFile");
+        //     moveFileNode.style.pointerEvents = "none";
+        // }
 
         //copy button
 
-        if (allFilesAndFolders.length >= 1) {
-
-            var copeFileNode = document.getElementById("copyFile");
-            copeFileNode.style.pointerEvents = "auto";
-        } else {
-            var copeFileNode = document.getElementById("copyFile");
-            copeFileNode.style.pointerEvents = "none";
-        }
+        // if (allFilesAndFolders.length >= 1) {
+        //
+        //     var copeFileNode = document.getElementById("copyFile");
+        //     copeFileNode.style.pointerEvents = "auto";
+        // } else {
+        //     var copeFileNode = document.getElementById("copyFile");
+        //     copeFileNode.style.pointerEvents = "none";
+        // }
+        // }
 
 
         // rename button
 
-        if (allFilesAndFolders.length === 1) {
-
-            var renameFileNode = document.getElementById("renameFile");
-            renameFileNode.style.pointerEvents = "auto";
-        } else {
-            var renameFileNode = document.getElementById("renameFile");
-            renameFileNode.style.pointerEvents = "none";
-        }
+        // if (allFilesAndFolders.length === 1) {
+        //
+        //     var renameFileNode = document.getElementById("renameFile");
+        //     renameFileNode.style.pointerEvents = "auto";
+        // } else {
+        //     var renameFileNode = document.getElementById("renameFile");
+        //     renameFileNode.style.pointerEvents = "none";
+        // }
 
 
         // compress button
 
-        if (allFilesAndFolders.length >= 1) {
-            var compressFile = document.getElementById("compressFile");
-            compressFile.style.pointerEvents = "auto";
-        } else {
-            var compressFile = document.getElementById("compressFile");
-            compressFile.style.pointerEvents = "none";
-        }
+        // if (allFilesAndFolders.length >= 1) {
+        //     var compressFile = document.getElementById("compressFile");
+        //     compressFile.style.pointerEvents = "auto";
+        // } else {
+        //     var compressFile = document.getElementById("compressFile");
+        //     compressFile.style.pointerEvents = "none";
+        // }
 
 
         // move button
 
-        if (allFilesAndFolders.length >= 1) {
-
-            var deleteFile = document.getElementById("deleteFile");
-            deleteFile.style.pointerEvents = "auto";
-        } else {
-            var deleteFile = document.getElementById("deleteFile");
-            deleteFile.style.pointerEvents = "none";
-        }
+        // if (allFilesAndFolders.length >= 1) {
+        //
+        //     var deleteFile = document.getElementById("deleteFile");
+        //     deleteFile.style.pointerEvents = "auto";
+        // } else {
+        //     var deleteFile = document.getElementById("deleteFile");
+        //     deleteFile.style.pointerEvents = "none";
+        // }
 
 
     };
@@ -915,7 +907,7 @@ newapp.controller('fileManagerCtrlV2', function ($scope, $http, FileUploader, $w
         $scope.createSuccess = true;
         $scope.errorMessageFolder = true;
         $scope.newFolderName = "";
-        $('#showCreateFolder').modal('show');
+        // $('#showCreateFolder').modal('show');
     };
 
     $scope.createFolderEnter = function ($event) {
@@ -966,7 +958,7 @@ newapp.controller('fileManagerCtrlV2', function ($scope, $http, FileUploader, $w
             if (response.data.status === 1) {
                 $scope.createSuccess = false;
                 $scope.fetchForTableSecondary(null, 'refresh');
-                $('#showCreateFolder').modal('hide');
+                // $('#showCreateFolder').modal('hide');
             } else {
                 $scope.errorMessageFolder = false;
                 $scope.error_message = response.data.error_message;
@@ -988,7 +980,7 @@ newapp.controller('fileManagerCtrlV2', function ($scope, $http, FileUploader, $w
         $scope.createSuccess = true;
         $scope.errorMessageFile = true;
         $scope.newFileName = "";
-        $('#showCreateFile').modal('show');
+        // $('#showCreateFile').modal('show');
     };
 
     $scope.createFileEnter = function ($event) {
@@ -996,6 +988,7 @@ newapp.controller('fileManagerCtrlV2', function ($scope, $http, FileUploader, $w
         if (keyCode === 13) {
             $scope.htmlEditorLoading = false;
             $scope.createNewFile();
+            $scope.fetchForTableSecondary(null, 'refresh');
         }
 
     };
@@ -1039,7 +1032,7 @@ newapp.controller('fileManagerCtrlV2', function ($scope, $http, FileUploader, $w
             if (response.data.status === 1) {
                 $scope.createSuccess = false;
                 $scope.fetchForTableSecondary(null, 'refresh');
-                $('#showCreateFile').modal('hide');
+                // $('#showCreateFile').modal('hide');
             } else {
                 $scope.errorMessageFile = false;
                 $scope.error_message = response.data.error_message;
@@ -1060,7 +1053,7 @@ newapp.controller('fileManagerCtrlV2', function ($scope, $http, FileUploader, $w
     $scope.deleteLoading = true;
 
     $scope.showDeleteModal = function () {
-        $('#showDelete').modal('show');
+        // $('#showDelete').modal('show');
     };
 
     $scope.deleteFolderOrFile = function () {
@@ -1099,7 +1092,7 @@ newapp.controller('fileManagerCtrlV2', function ($scope, $http, FileUploader, $w
         function ListInitialDatas(response) {
             $scope.deleteLoading = true;
             if (response.data.status === 1) {
-                $('#showDelete').modal('hide');
+                // $('#showDelete').modal('hide');
                 var notification = alertify.notify('Successfully Deleted!', 'success', 5, function () {
                 });
                 $scope.fetchForTableSecondary(null, 'refresh');
@@ -1122,7 +1115,7 @@ newapp.controller('fileManagerCtrlV2', function ($scope, $http, FileUploader, $w
     $scope.compressionLoading = true;
 
     $scope.showCompressionModal = function () {
-        $('#showCompression').modal('show');
+        // $('#showCompression').modal('show');
 
         $scope.listOfFiles = "";
         $scope.compressedFileName = "";
@@ -1167,7 +1160,7 @@ newapp.controller('fileManagerCtrlV2', function ($scope, $http, FileUploader, $w
         function ListInitialDatas(response) {
 
             $scope.compressionLoading = true;
-            $('#showCompression').modal('hide');
+            // $('#showCompression').modal('hide');
             if (response.data.status === 1) {
                 var notification = alertify.notify('Successfully Compressed!', 'success', 5, function () {
                 });
@@ -1190,7 +1183,7 @@ newapp.controller('fileManagerCtrlV2', function ($scope, $http, FileUploader, $w
 
     $scope.showExtractionModal = function () {
         $scope.extractionLocation = $scope.currentPath;
-        $('#showExtraction').modal('show');
+        // $('#showExtraction').modal('show');
         $scope.fileToBeExtracted = allFilesAndFolders[0];
     };
 
@@ -1239,7 +1232,7 @@ newapp.controller('fileManagerCtrlV2', function ($scope, $http, FileUploader, $w
         function ListInitialDatas(response) {
 
             $scope.extractionLoading = true;
-            $('#showExtraction').modal('hide');
+            // $('#showExtraction').modal('hide');
 
             if (response.data.status === 1) {
                 var notification = alertify.notify('Successfully Extracted!', 'success', 5, function () {
@@ -1264,7 +1257,7 @@ newapp.controller('fileManagerCtrlV2', function ($scope, $http, FileUploader, $w
     $scope.moveLoading = true;
 
     $scope.showMoveModal = function () {
-        $('#showMove').modal('show');
+        // $('#showMove').modal('show');
         $scope.pathToMoveTo = $scope.currentPath;
 
         $scope.listOfFiles = "";
@@ -1309,7 +1302,7 @@ newapp.controller('fileManagerCtrlV2', function ($scope, $http, FileUploader, $w
         function ListInitialDatas(response) {
 
             $scope.moveLoading = true;
-            $('#showMove').modal('hide');
+            // $('#showMove').modal('hide');
 
             if (response.data.status === 1) {
                 var notification = alertify.notify('Successfully Moved!', 'success', 5, function () {
@@ -1332,7 +1325,7 @@ newapp.controller('fileManagerCtrlV2', function ($scope, $http, FileUploader, $w
     $scope.copyLoading = true;
 
     $scope.showCopyModal = function () {
-        $('#showCopy').modal('show');
+        // $('#showCopy').modal('show');
         $scope.pathToCopyTo = $scope.currentPath;
 
         $scope.listOfFiles = "";
@@ -1378,7 +1371,7 @@ newapp.controller('fileManagerCtrlV2', function ($scope, $http, FileUploader, $w
         function ListInitialDatas(response) {
             $scope.copyLoading = true;
 
-            $('#showCopy').modal('hide');
+            // $('#showCopy').modal('hide');
 
             if (response.data.status === 1) {
                 var notification = alertify.notify('Successfully Copied!', 'success', 5, function () {
@@ -1472,7 +1465,7 @@ newapp.controller('fileManagerCtrlV2', function ($scope, $http, FileUploader, $w
     $scope.renameLoading = true;
 
     $scope.showRenameModal = function () {
-        $('#showRename').modal('show');
+        // $('#showRename').modal('show');
         $scope.fileToRename = allFilesAndFolders[0];
         $scope.newFileName = "";
     };
@@ -1518,7 +1511,7 @@ newapp.controller('fileManagerCtrlV2', function ($scope, $http, FileUploader, $w
         function ListInitialDatas(response) {
 
             $scope.moveLoading = true;
-            $('#showRename').modal('hide');
+            // $('#showRename').modal('hide');
             $scope.renameLoading = true;
 
             if (response.data.status === 1) {

@@ -271,8 +271,6 @@ newapp.controller('configureDefaultNameserversV2', function ($scope, $http) {
 
 newapp.controller('addModifyDNSRecordsCloudFlareV2', function ($scope, $http, $window) {
 
-    alert('Hello');
-
     $scope.saveCFConfigs = function () {
 
         $scope.recordsLoading = false;
@@ -1279,14 +1277,19 @@ newapp.controller('addModifyDNSRecordsV2', function ($scope, $http) {
 );
 var dnsTabButton = document.getElementById("dns_tab_button");
 var apiTabButton = document.getElementById("api_tab_button");
+
 function changeBackgroundColor(button) {
-    var allButtons = document.querySelectorAll('.flex li');
-    allButtons.forEach(function (btn) {
-        btn.classList.remove('bg-orange-400','text-white', 'show');
+    // Select only the dnsTabButton and apiTabButton
+    var specificButtons = [dnsTabButton, apiTabButton];
+
+    specificButtons.forEach(function (btn) {
+        if (btn === button) {
+            btn.classList.add('bg-orange-400', 'text-white', 'show');
+        } else {
+            btn.classList.remove('bg-orange-400', 'text-white', 'show');
+        }
         btn.classList.add('bg-white');
     });
-
-    button.classList.add('bg-orange-400','text-white', 'show');
 }
 
 dnsTabButton.addEventListener("click", function () {

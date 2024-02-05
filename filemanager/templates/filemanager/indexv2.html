@@ -29,11 +29,25 @@
     {##}
     {#    </head>#}
 
+    <script src="https://cdn.jsdelivr.net/npm/alertifyjs@1.11.0/build/alertify.min.js"></script>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.11.0/build/css/alertify.min.css"/>
+    <!-- Default theme -->
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.11.0/build/css/themes/default.min.css"/>
+    <!-- Semantic UI theme -->
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.11.0/build/css/themes/semantic.min.css"/>
+    <!-- Bootstrap theme -->
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.11.0/build/css/themes/bootstrap.min.css"/>
+
     <div ng-controller="fileManagerCtrlV2" class="p-8">
 
-        <span style="display: none" id="domainNameInitial">{{ domainName }}</span>
+        <div>
+            <a href="/websites/{{ domainName }}">
+                <span id="domainNameInitial">{{ domainName }}</span></a>
+        </div>
 
-        <div class="flex py-2 px-6 items-center gap-4">
+        <div id="treeView" class="flex py-2 px-6 items-center gap-4">
             <div>
                 <p class="font-bold w-32">Current Path</p>
             </div>
@@ -52,13 +66,16 @@
                         </a>
                         <a onclick="return false;"
                            ng-click="fetchForTableSecondary($event,'fromTree',completeStartingPath)" href="#">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                                 stroke="currentColor" class="w-6 h-6">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                      d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"/>
-                            </svg>
+                            <div class="flex">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                     stroke-width="1.5"
+                                     stroke="currentColor" class="w-6 h-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"/>
+                                </svg>
+                                <span class="ml-2">{$ startingPath $}</span>
+                            </div>
                         </a>
-                        <a href="" class="ml-2">{$ startingPath $}</a>
                     </li>
                 </ul>
             </div>
@@ -66,8 +83,9 @@
         <div class="py-4">
             <div>
                 <ul class="flex justify-between bg-blue-200 py-5 px-5 rounded-lg shadow-lg font-semibold">
-                    <li>
-                        <a class="cursor-pointer" onclick="return false;" ng-click="showUploadBox()"
+                    <li id="uploadBox" nv-file-drop="" uploader="uploader" filters="queueLimit, customFilter">
+                        <a class="cursor-pointer" onclick="return false;"
+                           ng-click="showUploadBox()"
                            data-modal-target="upload"
                            data-modal-toggle="upload"> {% trans "Upload" %}</a>
                         <div id="upload" tabindex="-1"
@@ -99,10 +117,11 @@
                                             <h3 class="text-xl">{% trans "Upload queue" %}</h3>
                                             <p>{% trans "Queue length:" %} {$ uploader.queue.length $}</p>
                                             <div>
-                                                <div nv-file-over="" uploader="uploader">
+                                                <div class="border border-4 border-dotted px-4 py-4" nv-file-over=""
+                                                     uploader="uploader">
                                                     <div>
-                                                        <h4 class="font-bold mt-4">{% trans "Drop" %}</h4>
-                                                        <p class="card-text">{% trans "Drop Files here to upload them." %}</p>
+                                                        <h4 class="font-bold">{% trans "Drop" %}</h4>
+                                                        <p class="text-sm">{% trans "Drop Files here to upload them." %}</p>
                                                     </div>
                                                 </div>
                                                 <div class="mt-4">
@@ -147,37 +166,63 @@
                                                                 {$ item.file.size / 1024 / 1024 | number:2 $} MB
                                                             </td>
                                                             <td ng-show="uploader.isHTML5" class="px-6 py-4">
-                                                                <div class="progress">
-                                                                    <div class="progress-bar" role="progressbar"
-                                                                         ng-style="{ 'width': item.progress + '%' }"></div>
+                                                                <div class="w-full bg-gray-100 rounded-full">
+                                                                    <div id="installProgress"
+                                                                         ng-style="{ 'width': item.progress + '%' }"
+                                                                         class="bg-green-600 text-xs font-medium text-white text-center p-2 leading-none rounded-full"
+                                                                         style="width:0%">
+                                                                    </div>
                                                                 </div>
                                                             </td>
-                                                            <td class="px-6 py-4">
-                                                                  <span ng-show="item.isSuccess"><i class="fa fa-check"
-                                                                                                    aria-hidden="true"></i></span>
-                                                                <span ng-show="item.isCancel"><i class="fa fa-ban"
-                                                                                                 aria-hidden="true"></i></span>
-                                                                <span ng-show="item.isError"><i class="fa fa-trash"
-                                                                                                aria-hidden="true"></i></span>
+                                                            <td class="flex justify-center px-6 py-4">
+                                                                  <span ng-show="item.isSuccess"><svg
+                                                                          xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                                          viewBox="0 0 24 24" stroke-width="1.5"
+                                                                          stroke="currentColor" class="w-6 h-6">
+  <path stroke-linecap="round" stroke-linejoin="round"
+        d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+</svg>
+</span>
+                                                                <span ng-show="item.isCancel"><svg
+                                                                        xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                                        viewBox="0 0 24 24" stroke-width="1.5"
+                                                                        stroke="currentColor" class="w-6 h-6">
+  <path stroke-linecap="round" stroke-linejoin="round"
+        d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636"/>
+</svg>
+</span>
+                                                                <span ng-show="item.isError"><svg
+                                                                        xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                                        viewBox="0 0 24 24" stroke-width="1.5"
+                                                                        stroke="currentColor" class="w-6 h-6">
+  <path stroke-linecap="round" stroke-linejoin="round"
+        d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/>
+</svg>
+</span>
                                                             </td>
-                                                            <td nowrap class="px-6 py-4">
-                                                                <button type="button" class="btn btn-success btn-sm"
-                                                                        ng-click="item.upload()"
-                                                                        ng-disabled="item.isReady || item.isUploading || item.isSuccess">
-                                                                    <i class="fa fa-upload"
-                                                                       aria-hidden="true"></i> {% trans "Upload" %}
-                                                                </button>
-                                                                <button type="button" class="btn btn-warning btn-sm"
-                                                                        ng-click="item.cancel()"
-                                                                        ng-disabled="!item.isUploading">
-                                                                    <i class="fa fa-ban"
-                                                                       aria-hidden="true"></i> {% trans "Cancel" %}
-                                                                </button>
-                                                                <button type="button" class="btn btn-danger btn-sm"
-                                                                        ng-click="item.remove()">
-                                                                    <i class="fa fa-trash"
-                                                                       aria-hidden="true"></i> {% trans "Remove" %}
-                                                                </button>
+                                                            <td class="px-6 py-4">
+                                                                <div class="flex items-center gap-1">
+                                                                    <button type="button"
+                                                                            class="text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm inline-flex items-center px-1 py-1 text-center"
+                                                                            ng-click="item.upload()"
+                                                                            ng-disabled="item.isReady || item.isUploading || item.isSuccess">
+                                                                        <i class="fa fa-upload"
+                                                                           aria-hidden="true"></i> {% trans "Upload" %}
+                                                                    </button>
+                                                                    <button type="button"
+                                                                            class="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-1 py-1 hover:text-gray-900 focus:z-10"
+                                                                            ng-click="item.cancel()"
+                                                                            ng-disabled="!item.isUploading">
+                                                                        <i class="fa fa-ban"
+                                                                           aria-hidden="true"></i> {% trans "Cancel" %}
+                                                                    </button>
+                                                                    <button type="button"
+                                                                            class="text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-1 py-1 text-center"
+                                                                            ng-click="item.remove()">
+                                                                        <i class="fa fa-trash"
+                                                                           aria-hidden="true"></i> {% trans "Remove" %}
+                                                                    </button>
+                                                                </div>
                                                             </td>
                                                         </tr>
                                                         </tbody>
@@ -186,15 +231,19 @@
                                                 <div>
                                                     <div id="queueProg">
                                                         {% trans "Queue progress:" %}
-                                                        <div class="progress" style="">
-                                                            <div class="progress-bar" role="progressbar"
-                                                                 ng-style="{ 'width': uploader.progress + '%' }"></div>
+                                                        <div class="w-full bg-gray-100 rounded-full">
+                                                            <div id="installProgress"
+                                                                 ng-style="{ 'width': uploader.progress + '%' }"
+                                                                 class="bg-green-600 text-xs font-medium text-white text-center p-2 leading-none rounded-full"
+                                                                 style="width:0%">
+                                                            </div>
                                                         </div>
                                                     </div>
-
                                                 </div>
 
-                                                <div ng-hide="errorMessage" class="alert alert-danger" role="alert">
+                                                <div ng-hide="errorMessage"
+                                                     class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold"
+                                                     role="alert">
                                                     {$ fileName $} {% trans "can not be uploaded, Error message:" %}
                                                     {$ error_message $}
                                                 </div>
@@ -229,8 +278,10 @@
                             </div>
                         </div>
                     </li>
-                    <li>
-                        <a onclick="return false;" ng-click="showCreateFileModal()" class="nav-link point-events"
+                    <li id="showCreateFile">
+                        <a onclick="return false;"
+                           ng-click="showCreateFileModal()"
+                           class="nav-link point-events"
                            href="#" data-modal-target="newfile" data-modal-toggle="newfile"><i class="fa fa-plus-square"
                                                                                                aria-hidden="true"></i> {% trans "New File" %}
                         </a>
@@ -263,6 +314,7 @@
                                             <small class="form-text text-muted">{% trans "File will be created in your current directory, if it already exists it will not overwirte." %}</small>
                                             <div class="flex justify-center mt-3">
                                                 <button type="button" ng-click="createNewFile()"
+                                                        data-modal-toggle="newfile" data-modal-hide="newfile"
                                                         class="bg-orange-500 text-white font-bold px-4 py-1 text-xl">{% trans "Create File" %}</button>
                                             </div>
                                         </div>
@@ -287,8 +339,10 @@
                             </div>
                         </div>
                     </li>
-                    <li>
-                        <a onclick="return false;" ng-click="showCreateFolderModal()" class="nav-link point-events"
+                    <li id="showCreateFolder">
+                        <a onclick="return false;"
+                           ng-click="showCreateFolderModal()"
+                           class="nav-link point-events"
                            href="#" data-modal-target="newfolder" data-modal-toggle="newfolder"><i class="fa fa-folder"
                                                                                                    aria-hidden="true"></i> {% trans "New Folder" %}
                         </a>
@@ -321,6 +375,7 @@
                                             <small class="form-text text-muted">{% trans "Folder will be created in your current directory" %}</small>
                                             <div class="flex justify-center mt-3">
                                                 <button type="button" ng-click="createNewFolder()"
+                                                        data-modal-toggle="newfolder" data-modal-hide="newfolder"
                                                         class="bg-orange-500 text-white font-bold px-4 py-1 text-xl">{% trans "Create Folder" %}</button>
                                             </div>
                                         </div>
@@ -346,7 +401,9 @@
                         </div>
                     </li>
                     <li id="deleteFile">
-                        <a onclick="return false;" ng-click="showDeleteModal()" class="nav-link point-events"
+                        <a onclick="return false;"
+                           ng-click="showDeleteModal()"
+                           class="nav-link point-events"
                            href="#" data-modal-target="delete" data-modal-toggle="delete"><i
                                 class="fa fa-trash-o" aria-hidden="true"></i> {% trans "Delete" %}</a>
                         <div id="delete" tabindex="-1"
@@ -378,9 +435,10 @@
                                         </div>
                                     </div>
                                     <div class="flex gap-1 justify-end py-2">
-                                        <button ng-click="deleteFolderOrFile()" type="button"
+                                        <button ng-click="deleteFolderOrFile()" type="button" data-modal-toggle="delete"
+                                                data-modal-hide="delete"
                                                 class="text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center me-2">{% trans "Confirm" %}</button>
-                                        <button type="button"
+                                        <button type="button" data-modal-toggle="delete" data-modal-hide="delete"
                                                 class="text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center me-2"
                                                 data-dismiss="modal">{% trans "Close" %}</button>
                                     </div>
@@ -388,8 +446,10 @@
                             </div>
                         </div>
                     </li>
-                    <li id="copyFile">
-                        <a onclick="return false;" ng-click="showCopyModal()" class="nav-link point-events" href="#"
+                    <li id="">
+                        <a onclick="return false;"
+                           ng-click="showCopyModal()"
+                           class="nav-link point-events" href="#"
                            data-modal-target="copy" data-modal-toggle="copy"><i
                                 class="fa fa-files-o" aria-hidden="true"></i> {% trans "Copy" %}</a>
                         <div id="copy" tabindex="-1"
@@ -420,9 +480,10 @@
                                         <small class="form-text text-muted">{% trans "Enter a path to copy your files to!" %}</small>
                                     </div>
                                     <div class="flex gap-1 justify-end py-2">
-                                        <button ng-click="startCopying()" type="button"
+                                        <button ng-click="startCopying()" type="button" data-modal-toggle="copy"
+                                                data-modal-hide="copy"
                                                 class="text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center me-2">{% trans "Copy" %}</button>
-                                        <button type="button"
+                                        <button type="button" data-modal-toggle="copy" data-modal-hide="copy"
                                                 class="text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center me-2"
                                                 data-dismiss="modal">{% trans "Close" %}</button>
                                     </div>
@@ -430,8 +491,10 @@
                             </div>
                         </div>
                     </li>
-                    <li id="moveFile">
-                        <a onclick="return false;" ng-click="showMoveModal()" class="nav-link point-events" href="#"
+                    <li id="">
+                        <a onclick="return false;"
+                           ng-click="showMoveModal()"
+                           class="nav-link point-events" href="#"
                            data-modal-target="move" data-modal-toggle="move"><i
                                 class="fa fa-arrows-alt" aria-hidden="true"></i> {% trans "Move" %}</a>
                         <div id="move" tabindex="-1"
@@ -462,9 +525,10 @@
                                         <small class="form-text text-muted">{% trans "Enter a path to move your files!" %}</small>
                                     </div>
                                     <div class="flex gap-1 justify-end py-2">
-                                        <button ng-click="startMoving()" type="button"
+                                        <button ng-click="startMoving()" type="button" data-modal-toggle="move"
+                                                data-modal-hide="move"
                                                 class="text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center me-2">{% trans "Move" %}</button>
-                                        <button type="button"
+                                        <button type="button" data-modal-toggle="move" data-modal-hide="move"
                                                 class="text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center me-2"
                                                 data-dismiss="modal">{% trans "Close" %}</button>
                                     </div>
@@ -472,8 +536,10 @@
                             </div>
                         </div>
                     </li>
-                    <li id="renameFile">
-                        <a onclick="return false;" ng-click="showRenameModal()" class="nav-link point-events"
+                    <li id="">
+                        <a onclick="return false;"
+                           ng-click="showRenameModal()"
+                           class="nav-link point-events"
                            href="#" data-modal-target="rename" data-modal-toggle="rename"><i
                                 class="fa fa-file-text-o" aria-hidden="true"></i> {% trans "Rename" %}</a>
                         <div id="rename" tabindex="-1"
@@ -504,18 +570,22 @@
                                         </div>
                                     </div>
                                     <div class="flex gap-1 justify-end py-2">
-                                        <button ng-click="renameFile()" type="button"
+                                        <button ng-click="renameFile()" type="button" data-modal-toggle="rename"
+                                                data-modal-hide="rename"
                                                 class="text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center me-2">{% trans "Rename" %}</button>
                                         <button type="button"
                                                 class="text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center me-2"
-                                                data-dismiss="modal">{% trans "Close" %}</button>
+                                                data-modal-toggle="rename"
+                                                data-modal-hide="rename">{% trans "Close" %}</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </li>
                     <li id="editFile">
-                        <a onclick="return false;" ng-click="showHTMLEditorModal()" class="nav-link point-events"
+                        <a onclick="return false;"
+                           ng-click="showHTMLEditorModal()"
+                           class="nav-link point-events"
                            href="#" data-modal-target="edit" data-modal-toggle="edit"><i
                                 class="fa fa-pencil-square-o" aria-hidden="true"></i> {% trans "Edit" %}</a>
                         <div id="edit" tabindex="-1"
@@ -559,7 +629,8 @@
                                             </div>
                                         </div>
                                         <div class="flex justify-end py-3 px-3">
-                                            <button ng-click="putFileContents()" type="button"
+                                            <button ng-click="putFileContents()" type="button" data-modal-toggle="edit"
+                                                    data-modal-hide="edit"
                                                     class="bg-orange-500 text-white font-bold px-4 py-1 text-xl">
                                                 <i class="fa" aria-hidden="true"></i> {% trans "Save Changes" %}
                                             </button>
@@ -570,7 +641,9 @@
                         </div>
                     </li>
                     <li id="compressFile">
-                        <a onclick="return false;" ng-click="showCompressionModal()" class="nav-link point-events"
+                        <a onclick="return false;"
+                           ng-click="showCompressionModal()"
+                           class="nav-link point-events"
                            href="#" data-modal-target="compress" data-modal-toggle="compress"><i
                                 class="fa fa-compress" aria-hidden="true"></i> {% trans "Compress" %}</a>
                         <div id="compress" tabindex="-1"
@@ -611,8 +684,10 @@
                                     <div class="flex gap-1 justify-end py-2">
                                         <div>
                                             <button ng-click="startCompression()" type="button"
+                                                    data-modal-toggle="compress" data-modal-hide="compress"
                                                     class="text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center me-2">{% trans "Compress" %}</button>
-                                            <button type="button"
+                                            <button type="button" data-modal-toggle="compress"
+                                                    data-modal-hide="compress"
                                                     class="text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center me-2"
                                                     data-dismiss="modal">{% trans "Close" %}</button>
                                         </div>
@@ -622,7 +697,9 @@
                         </div>
                     </li>
                     <li id="extractFile">
-                        <a onclick="return false;" ng-click="showExtractionModal()" class="nav-link point-events"
+                        <a onclick="return false;"
+                           ng-click="showExtractionModal()"
+                           class="nav-link point-events"
                            href="#" data-modal-target="extract" data-modal-toggle="extract"><i class="fa fa-expand"
                                                                                                aria-hidden="true"></i> {% trans "Extract" %}
                         </a>
@@ -652,13 +729,22 @@
                                         <small class="form-text text-muted">{% trans "You can enter . to extract in current directory!" %}</small>
                                     </div>
                                     <div class="flex justify-center py-2">
-                                        <button type="button" ng-click="startExtraction()"
+                                        <button type="button" ng-click="startExtraction()" data-modal-toggle="extract"
+                                                data-modal-hide="extract"
                                                 class="bg-orange-500 text-white font-bold px-4 py-1 text-xl">{% trans "Extract" %}</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </li>
+                    <li id="fixPermissions">
+                        <a onclick="return false;" ng-click="fixPermissions()" class="nav-link point-events" href="#"><i
+                                class="fa fa-wrench" aria-hidden="true"></i> {% trans "Fix Permissions" %}</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav mr-auto">
                 </ul>
             </div>
             <div class="mt-2">
@@ -690,23 +776,23 @@
                 </ul>
             </div>
             <div>
-                <div class="relative py-5 overflow-x-auto">
+                <div class="relative overflow-x-auto">
                     <table class="w-full text-sm text-left rtl:text-right">
                         <thead id="tableHead">
-                        <tr>
-                            <th scope="col" class="px-6 py-3">
+                        <tr class="bg-gray-200 w-full rounded-t-lg border-b-2 border-gray-400">
+                            <th scope="col" class="py-3">
 
                             </th>
-                            <th scope="col" class="px-6 py-3">
+                            <th scope="col" class="py-3">
                                 File Name
                             </th>
-                            <th scope="col" class="px-6 py-3">
+                            <th scope="col" class="py-3">
                                 Size (KB)
                             </th>
-                            <th scope="col" class="px-6 py-3">
+                            <th scope="col" class="py-3">
                                 Last Modified
                             </th>
-                            <th scope="col" class="px-6 py-3">
+                            <th scope="col" class="py-3">
                                 Permissions
                             </th>
                         </tr>
@@ -718,10 +804,10 @@
             </div>
         </div>
 
-        <div style="position: absolute;top: 0;left: 0;" id="rightClick" class="card" style="width: 20rem;">
-            <ul class="list-group list-group-flush">
-                <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showMoveModal()"
-                   href="#">
+        <div style="position: absolute;top: 0;left: 0;" id="rightClick" class="border bg-gray-50 px-4 py-2">
+            <ul>
+                <a style="border-bottom: 1px solid #000000;" onclick="return false;" ng-click="showMoveModal()"
+                   href="#" data-modal-target="move" data-modal-toggle="move">
                     <li class="list-group-item"><i class="fa fa-arrows-alt" aria-hidden="true"></i> {% trans "Move" %}
                     </li>
                 </a>
@@ -731,11 +817,11 @@
                     </li>
                 </a>
                 <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showCopyModal()"
-                   href="#">
+                   href="#" data-modal-target="copy" data-modal-toggle="copy">
                     <li class="list-group-item"><i class="fa fa-files-o" aria-hidden="true"></i> {% trans "Copy" %}</li>
                 </a>
-                <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showRenameModal()"
-                   href="#">
+                <a style="border-bottom: 1px solid #007bff;" onclick="return false;"
+                   href="#" ng-click="showRenameModal()" data-modal-target="rename" data-modal-toggle="rename">
                     <li class="list-group-item"><i class="fa fa-file-text-o"
                                                    aria-hidden="true"></i> {% trans "Rename" %}</li>
                 </a>
@@ -745,21 +831,23 @@
                                                    aria-hidden="true"></i> {% trans "Change Permissions" %}</li>
                 </a>
                 <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showDeleteModal()"
-                   href="#">
+                   href="#" data-modal-target="delete" data-modal-toggle="delete">
                     <li class="list-group-item"><i class="fa fa-trash" aria-hidden="true"></i> {% trans "Delete" %}</li>
                 </a>
                 <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showCompressionModal()"
-                   href="#">
+                   href="#" data-modal-target="compress" data-modal-toggle="compress">
                     <li class="list-group-item"><i class="fa fa-compress" aria-hidden="true"></i> {% trans "Compress" %}
                     </li>
                 </a>
                 <a style="border-bottom: 1px solid #007bff;" id="extractOnRight" onclick="return false;"
-                   ng-click="showExtractionModal()" href="#">
+                   ng-click="showExtractionModal()"
+                   data-modal-target="extract" data-modal-toggle="extract" href="#">
                     <li class="list-group-item"><i class="fa fa-expand" aria-hidden="true"></i> {% trans "Extract" %}
                     </li>
                 </a>
                 <a style="border-bottom: 1px solid #007bff;" id="editOnRight" onclick="return false;"
-                   ng-click="showHTMLEditorModal(1)" href="#">
+                   ng-click="showHTMLEditorModal(1)"
+                   data-modal-target="edit" data-modal-toggle="edit" href="#">
                     <li class="list-group-item"><i class="fa fa-pencil-square-o"
                                                    aria-hidden="true"></i> {% trans "Edit" %}</li>
                 </a>
