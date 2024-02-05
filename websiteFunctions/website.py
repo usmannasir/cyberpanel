@@ -6888,12 +6888,12 @@ StrictHostKeyChecking no
             WPpasswd = data['WPpasswd']
 
             if int(MYsqlRam) < 256:
-                final_dic = {'status': 0, 'error_message': 'Minimum MySQL ram should be 512MB.'}
+                final_dic = {'status': 0, 'error_message': 'Minimum MySQL ram should be 256MB.'}
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
 
             if int(SiteRam) < 256:
-                final_dic = {'status': 0, 'error_message': 'Minimum site ram should be 512MB.'}
+                final_dic = {'status': 0, 'error_message': 'Minimum site ram should be 256MB.'}
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
 
