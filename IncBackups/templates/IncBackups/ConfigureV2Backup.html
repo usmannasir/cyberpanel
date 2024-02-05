@@ -134,6 +134,14 @@
                                                 </div>
                                             </div>
 
+                                            <div ng-hide="installationDetailsForm" class="form-group">
+                                                <label class="col-sm-3 control-label">{% trans "SSH Port" %}</label>
+                                                <div class="col-sm-6">
+                                                    <input name="sshPort" type="text" class="form-control"
+                                                           ng-model="sshPort" value="Default SSH Port is 22">
+                                                </div>
+                                            </div>
+
                                         </form>
 
                                     </div>

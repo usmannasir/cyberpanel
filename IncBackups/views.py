@@ -986,6 +986,7 @@ def ConfigureSftpV2Backup(request):
         hostName = data['hostName']
         UserName = data['UserName']
         Repo_Name = data['Repo_Name']
+        sshPort = data['sshPort']
         currentACL = ACLManager.loadedACL(userID)
         admin = Administrator.objects.get(pk=userID)
 
@@ -1000,6 +1001,11 @@ def ConfigureSftpV2Backup(request):
         req_data['user'] = UserName
         req_data['password'] = sfptpasswd
         req_data['Repo_Name'] = Repo_Name
+
+        try:
+            req_data['sshPort'] = sshPort
+        except:
+            req_data['sshPort'] = '22'
 
 
         cpbuv2 = CPBackupsV2(

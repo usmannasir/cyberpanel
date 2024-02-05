@@ -186,6 +186,7 @@ type = sftp
 host = {config["host"]}
 user = {config["user"]}
 pass = {ObsecurePassword}
+port = {config["sshPort"]}
 '''
 
                 command = f"echo '{content}' >> {self.ConfigFilePath}"

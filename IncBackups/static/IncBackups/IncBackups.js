@@ -1877,6 +1877,7 @@ app.controller('ConfigureV2Backup', function ($scope, $http, $timeout) {
             hostName: $scope.hostName,
             UserName: $scope.UserName,
             Repo_Name: $scope.reponame,
+            sshPort: $scope.sshPort
         };
 
         var config = {
