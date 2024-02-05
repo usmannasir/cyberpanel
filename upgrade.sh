@@ -6,6 +6,7 @@
 ## Then run it like below.
 ## /usr/local/CyberCP/upgrade.sh
 
+
 cd /usr/local/CyberCP && /usr/local/CyberCP/bin/python manage.py collectstatic --no-input
 rm -rf /usr/local/CyberCP/public/static/*
 cp -R  /usr/local/CyberCP/static/* /usr/local/CyberCP/public/static/

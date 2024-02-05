@@ -42,7 +42,7 @@
 
     <div ng-controller="fileManagerCtrlV2" class="p-8">
 
-        <div>
+        <div style="display: none">
             <a href="/websites/{{ domainName }}">
                 <span id="domainNameInitial">{{ domainName }}</span></a>
         </div>
@@ -52,7 +52,7 @@
                 <p class="font-bold w-32">Current Path</p>
             </div>
             <div>
-                <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" id="currentRPath" ng-model="currentRPath"
+                <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1"  id="currentPath"  ng-model="currentPath"
                        readonly>
             </div>
             <div>
@@ -584,7 +584,7 @@
                     </li>
                     <li id="editFile">
                         <a onclick="return false;"
-                           ng-click="showHTMLEditorModal()"
+                           ng-click="showHTMLEditorModal(1)"
                            class="nav-link point-events"
                            href="#" data-modal-target="edit" data-modal-toggle="edit"><i
                                 class="fa fa-pencil-square-o" aria-hidden="true"></i> {% trans "Edit" %}</a>
