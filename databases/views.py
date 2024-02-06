@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-
+import time
+from random import randint
 
 from django.shortcuts import redirect, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -252,6 +253,7 @@ def generateAccess(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+
 @csrf_exempt
 def fetchDetailsPHPMYAdmin(request):
     try:
@@ -260,15 +262,13 @@ def fetchDetailsPHPMYAdmin(request):
         admin = Administrator.objects.get(id=userID)
         currentACL = ACLManager.loadedACL(userID)
 
-
-
         token = request.POST.get('token')
         username = request.POST.get('username')
 
         from plogical.httpProc import httpProc
         proc = httpProc(request, None,
                         )
-        #return proc.ajax(0, str(request.POST.get('token')))
+        # return proc.ajax(0, str(request.POST.get('token')))
 
         if username != admin.userName:
             return redirect(loadLoginPage)
@@ -294,7 +294,6 @@ def fetchDetailsPHPMYAdmin(request):
                     data = {}
                     data['userName'] = mysqluser
                     data['password'] = password
-
 
                     proc = httpProc(request, 'databases/AutoLogin.html',
                                     data, 'admin')
@@ -366,6 +365,15 @@ def OptimizeMySQL(request):
         userID = request.session['userID']
         dm = DatabaseManager()
         return dm.OptimizeMySQL(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def UpgradeMySQL(request):
+    try:
+        userID = request.session['userID']
+        dm = DatabaseManager()
+        return dm.Upgardemysql(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -459,5 +467,36 @@ def applyMySQLChanges(request):
         final_json = json.dumps(data)
         return HttpResponse(final_json)
 
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def upgrademysqlnow(request):
+    try:
+        from plogical.virtualHostUtilities import virtualHostUtilities
+        logging.writeToFile("----------------------habbi")
+        userID = request.session['userID']
+
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('FilemanagerAdmin', 0)
+
+        data = json.loads(request.body)
+        version =data['mysqlversion']
+        tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+
+
+        execPath = f"/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/mysqlUtilities.py UpgradeMariaDB --version {version} --tempStatusPath {tempStatusPath}"
+        ProcessUtilities.popenExecutioner(execPath)
+        time.sleep(2)
+
+        data_ret = {'status': 1, 'error_message': "None",
+                    'tempStatusPath': tempStatusPath}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
     except KeyError:
         return redirect(loadLoginPage)

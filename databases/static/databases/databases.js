@@ -837,3 +837,60 @@ app.controller('OptimizeMysql', function ($scope, $http) {
         }
     }
 })
+
+
+app.controller('mysqlupdate', function ($scope, $http, $timeout) {
+    $scope.cyberPanelLoading = true;
+    $scope.dbLoading = true;
+    $scope.installlogs = true;
+
+    $scope.Upgardemysql = function () {
+        $scope.dbLoading = false;
+        $scope.installform = true;
+
+
+        url = "/dataBases/upgrademysqlnow";
+
+        var data = {
+            mysqlversion: $scope.version
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+
+
+        function ListInitialData(response) {
+            $scope.cyberhosting = true;
+            if (response.data.status === 1) {
+                $scope.installlogs = false;
+
+                $timeout(getRequestStatus, 1000);
+
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.cyberhosting = true;
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+        }
+    }
+
+
+    $scope.getRequestStatus
+});

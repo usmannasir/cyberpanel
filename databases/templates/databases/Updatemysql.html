@@ -1,0 +1,63 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "List Databases  - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Upgrade Mysql" %}
+
+            </h2>
+            <p>{% trans "On this page you can update mysql." %}</p>
+        </div>
+        <div ng-controller="mysqlupdate" class="panel">
+            <div class="panel-body">
+                <h3 class="content-box-header">
+                    {% trans "Update Mysql" %} <img ng-hide="dbLoading"
+                                                       src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
+
+                    <form name="websiteCreationForm" action="/"
+                          class="form-horizontal bordered-row panel-body">
+
+                        <div ng-hide="installform" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Mysql version" %} </label>
+                            <div class="col-sm-6">
+                                <select ng-model="version" class="form-control" required>
+                                    {% for version in mysqlversions %}
+                                        <option>{{ version }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div ng-hide="installform" class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                <button type="button" ng-click="Upgardemysql()"
+                                        class="btn btn-primary btn-lg">{% trans "Update Mysql" %}</button>
+
+                            </div>
+                        </div>
+
+
+                        <div ng-hide="installlogs" class="form-group">
+                            <textarea rows="30" style="width: 100%"></textarea>
+
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    </div>
+
+
+{% endblock %}
