@@ -11,6 +11,10 @@
             <p class="text-xs text-gray-600 py-2 font-semibold">On this page you can add/modify dns records for domains
                 whose dns zone is already created.</p>
         </div>
+        <div class="py-4">
+            <p class="text-xl font-bold">Add Records</p>
+            <img ng-hide="recordsLoading" src="{% static 'images/loading.gif' %}">
+        </div>
         {% if not status %}
             <div>
                 <div class="flex justify-between">
@@ -65,13 +69,8 @@
                         Save
                     </button>
                 </div>
-                </div>
             {% else %}
                 <div>
-                    <div class="py-4">
-                        <p class="text-xl font-bold">Add Records</p>
-                        <img ng-hide="recordsLoading" src="{% static 'images/loading.gif' %}">
-                    </div>
                     <ul class="flex py-2">
                         <li id="dns_tab_button"
                             class="hover:bg-orange-200 border-2 border-black rounded-l-3xl px-2 py-2 w-60 cursor-pointer active"
@@ -448,6 +447,90 @@
                             </div>
                         </div>
                     </div>
+                    <div ng-hide="currentRecords" class="relative py-5 overflow-x-auto">
+                        <table class="w-full text-sm text-left rtl:text-right">
+                            <thead>
+                            <tr>
+                                <th scope="col" class="px-6 py-3">
+                                    Name
+                                </th>
+                                <th scope="col" class="px-6 py-3">
+                                    Type
+                                </th>
+                                <th scope="col" class="px-6 py-3">
+                                    TTL
+                                </th>
+                                <th scope="col" class="px-6 py-3">
+                                    Value
+                                </th>
+                                <th scope="col" class="px-6 py-3">
+                                    Priority
+                                </th>
+                                <th scope="col" class="px-6 py-3">
+                                    Proxy
+                                </th>
+                                <th scope="col" class="px-6 py-3">
+                                    Delete
+                                </th>
+                            </tr>
+                            </thead>
+                            <hr>
+                            <tbody ng-repeat="record in records track by $index"
+                                   class="border shadow-lg py-3 px-6 rounded-b-lg">
+                            <tr>
+                                <td ng-bind="record.name" class="px-8 py-4 font-bold">
+                                </td>
+                                <td ng-bind="record.type" class="px-6 py-4">
+                                </td>
+                                <td ng-bind="record.ttl" class="px-6 py-4">
+                                </td>
+                                <td ng-bind="record.content" class="px-6 py-4">
+                                </td>
+                                <td ng-bind="record.priority" class="px-6 py-4">
+                                </td>
+                                <td class="px-6 py-4">
+                                    <input ng-click="enableProxy(record.name, record.proxy)"
+                                           ng-disabled="!record.proxiable" ng-checked="record.proxy" type="checkbox"
+                                           ng-true-value="true" ng-false-value="false" data-toggle="toggle">
+                                </td>
+                                <td ng-click="deleteRecord(record.id)" class="px-6 py-4">
+                                    <img src="{% static 'images/delete.png' %}">
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-3">
+                        <div ng-hide="canNotFetchRecords"
+                             class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                            <p>{% trans "Cannot fetch records. Error message:" %}{$ errorMessage $}</p>
+                        </div>
+                        <div ng-hide="couldNotAddRecord"
+                             class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                            <p>{% trans "Cannot add record. Error message: " %}{$ errorMessage $}</p>
+                        </div>
+                        <div ng-hide="recordsFetched"
+                             class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                            <p>{% trans "Records successfully fetched for" %} <strong>{$ domainFeteched
+                                $}</strong></p>
+                        </div>
+                        <div ng-hide="recordDeleted"
+                             class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                            <p>{% trans "Record Successfully Deleted" %}</p>
+                        </div>
+                        <div ng-hide="couldNotDeleteRecords"
+                             class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                            <p>{% trans "Cannot delete record. Error message:" %} {$ errorMessage $}</p>
+                        </div>
+                        <div ng-hide="recordAdded"
+                             class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                            <p>{% trans "Record Successfully Added." %}</p>
+                        </div>
+                        <div ng-hide="couldNotConnect"
+                             class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                            <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                        </div>
+                    </div>
                     <div id="api_tab" class="tab-content">
                         <div class="flex mt-4 py-2 px-6">
                             <div>
@@ -487,37 +570,6 @@
                                 Save
                             </button>
                         </div>
-                    </div>
-                </div>
-                <div class="mt-3">
-                    <div ng-hide="canNotFetchRecords"
-                         class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
-                        <p>{% trans "Cannot fetch records. Error message:" %}{$ errorMessage $}</p>
-                    </div>
-                    <div ng-hide="couldNotAddRecord"
-                         class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
-                        <p>{% trans "Cannot add record. Error message: " %}{$ errorMessage $}</p>
-                    </div>
-                    <div ng-hide="recordsFetched"
-                         class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
-                        <p>{% trans "Records successfully fetched for" %} <strong>{$ domainFeteched
-                            $}</strong></p>
-                    </div>
-                    <div ng-hide="recordDeleted"
-                         class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
-                        <p>{% trans "Record Successfully Deleted" %}</p>
-                    </div>
-                    <div ng-hide="couldNotDeleteRecords"
-                         class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
-                        <p>{% trans "Cannot delete record. Error message:" %} {$ errorMessage $}</p>
-                    </div>
-                    <div ng-hide="recordAdded"
-                         class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
-                        <p>{% trans "Record Successfully Added." %}</p>
-                    </div>
-                    <div ng-hide="couldNotConnect"
-                         class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
-                        <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
                     </div>
                 </div>
             {% endif %}

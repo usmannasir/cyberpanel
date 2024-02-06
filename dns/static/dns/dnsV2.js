@@ -1292,6 +1292,7 @@ function changeBackgroundColor(button) {
     });
 }
 
+
 dnsTabButton.addEventListener("click", function () {
     changeBackgroundColor(dnsTabButton);
 });
