@@ -769,10 +769,26 @@ newapp.controller('fileManagerCtrlV2', function ($scope, $http, FileUploader, $w
 
             if (response.data.status === 1) {
 
+                // Define aceEditorMode with the appropriate mode for your content
+                var aceEditorMode = "ace/mode/html"; // Change this according to your content type
+
+// Then, proceed with your existing code
                 var editor = ace.edit("htmlEditorContent");
                 editor.setTheme("ace/theme/chrome");
-                editor.getSession().setMode(aceEditorMode);
-                editor.setValue(response.data.fileContents);
+
+                if (aceEditorMode) {
+                    editor.getSession().setMode(aceEditorMode);
+                } else {
+                    console.error("aceEditorMode is not defined or invalid.");
+                }
+
+                if (response.data && typeof response.data.fileContents === "string") {
+                    // console.log("Setting editor value:", response.data.fileContents);
+                    editor.setValue(response.data.fileContents);
+                } else {
+                    console.error("Unable to set editor value. Check response.data.fileContents.");
+                }
+
 
             } else {
                 $scope.errorMessageEditor = false;
