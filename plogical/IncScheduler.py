@@ -1484,7 +1484,10 @@ Automatic Backupv2 failed for %s on %s.
         try:
             from loginSystem.models import Administrator
             admin = Administrator.objects.get(pk=1)
-            config = json.loads(admin.config)
+            try:
+                config = json.loads(admin.config)
+            except:
+                config = {}
 
             ### probably need to add temporary dns resolver nameserver here - pending
 

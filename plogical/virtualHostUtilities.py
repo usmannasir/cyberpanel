@@ -64,7 +64,10 @@ class virtualHostUtilities:
 
         logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Setting up hostname,10')
         admin = Administrator.objects.get(pk=1)
-        config = json.loads(admin.config)
+        try:
+            config = json.loads(admin.config)
+        except:
+            config = {}
 
         ### probably need to add temporary dns resolver nameserver here - pending
 
