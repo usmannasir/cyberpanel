@@ -318,9 +318,13 @@ Signed-By: /etc/apt/keyrings/mariadb-keyring.pgp
 """
 
             if get_Ubuntu_release() > 21.00:
-                WriteToFile = open(RepoPath, 'w')
-                WriteToFile.write(RepoContent)
-                WriteToFile.close()
+                command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=10.11'
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+            #     WriteToFile = open(RepoPath, 'w')
+            #     WriteToFile.write(RepoContent)
+            #     WriteToFile.close()
+
+
 
             command = 'DEBIAN_FRONTEND=noninteractive apt-get update -y'
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
