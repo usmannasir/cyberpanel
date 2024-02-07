@@ -43,6 +43,7 @@ class ServerStatusUtil(multi.Thread):
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return 0
 
+
     @staticmethod
     def installLiteSpeed(licenseKey, statusFile):
         try:
