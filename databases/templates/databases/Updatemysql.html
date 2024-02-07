@@ -19,7 +19,7 @@
             <div class="panel-body">
                 <h3 class="content-box-header">
                     {% trans "Update Mysql" %} <img ng-hide="dbLoading"
-                                                       src="{% static 'images/loading.gif' %}">
+                                                    src="{% static 'images/loading.gif' %}">
                 </h3>
                 <div class="example-box-wrapper">
 
@@ -46,9 +46,45 @@
                         </div>
 
 
-                        <div ng-hide="installlogs" class="form-group">
-                            <textarea rows="30" style="width: 100%"></textarea>
+                        <div ng-hide="modSecNotifyBox" class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-6">
 
+                                <div ng-hide="failedToStartInallation" class="alert alert-danger">
+                                    <p>{% trans "Failed to start installation, Error message: " %} {$ errorMessage
+                                        $}</p>
+                                </div>
+
+                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                    <p>{% trans "Could not connect. Please refresh this page." %} </p>
+                                </div>
+
+                                <div ng-hide="installationFailed" class="alert alert-danger">
+                                    <p>{% trans "Installation failed." %} {$ errorMessage $}</p>
+                                </div>
+
+                                <div ng-hide="modSecSuccessfullyInstalled" class="alert alert-success">
+                                    <p>{% trans "CSF successfully installed, refreshing page in 3 seconds.." %}</p>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div ng-hide="modeSecInstallBox" class="col-md-12">
+
+                            <form action="/" id="" class="form-horizontal bordered-row">
+                                <div class="form-group">
+                                    <div class="col-sm-12 text-center">
+                                        <h3><img
+                                                src="{% static 'firewall/icons/firewall.png' %}"> {% trans "In winter we must protect each other.." %}
+                                            <img ng-hide="modsecLoading" src="/static/images/loading.gif"></h3>
+                                    </div>
+                                    <div style="margin-top: 2%;" class="col-sm-12">
+                                        <textarea ng-model="requestData" rows="15"
+                                                  class="form-control">{{ requestData }}</textarea>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
                     </form>
                 </div>

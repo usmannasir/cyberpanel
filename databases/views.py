@@ -474,7 +474,6 @@ def applyMySQLChanges(request):
 def upgrademysqlnow(request):
     try:
         from plogical.virtualHostUtilities import virtualHostUtilities
-        logging.writeToFile("----------------------habbi")
         userID = request.session['userID']
 
         currentACL = ACLManager.loadedACL(userID)
@@ -498,5 +497,45 @@ def upgrademysqlnow(request):
                     'tempStatusPath': tempStatusPath}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def upgrademysqlstatus(request):
+    try:
+        data = json.loads(request.body)
+        statusfile = data['statusfile']
+        installStatus = ProcessUtilities.outputExecutioner("sudo cat " + statusfile)
+
+        if installStatus.find("[200]") > -1:
+
+            command = 'sudo rm -f ' + statusfile
+            ProcessUtilities.executioner(command)
+
+            final_json = json.dumps({
+                'error_message': "None",
+                'requestStatus': installStatus,
+                'abort': 1,
+                'installed': 1,
+            })
+            return HttpResponse(final_json)
+        elif installStatus.find("[404]") > -1:
+            command = 'sudo rm -f ' + statusfile
+            ProcessUtilities.executioner(command)
+            final_json = json.dumps({
+                'abort': 1,
+                'installed': 0,
+                'error_message': "None",
+                'requestStatus': installStatus,
+            })
+            return HttpResponse(final_json)
+
+        else:
+            final_json = json.dumps({
+                'abort': 0,
+                'error_message': "None",
+                'requestStatus': installStatus,
+            })
+            return HttpResponse(final_json)
     except KeyError:
         return redirect(loadLoginPage)

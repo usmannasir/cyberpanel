@@ -11,6 +11,7 @@ urlpatterns = [
     url(r'^OptimizeMySQL', views.OptimizeMySQL, name='OptimizeMySQL'),
     url(r'^upgrademysqlnow', views.upgrademysqlnow, name='upgrademysqlnow'),
     url(r'^UpgradeMySQL', views.UpgradeMySQL, name='UpgradeMySQL'),
+    url(r'^upgrademysqlstatus', views.upgrademysqlstatus, name='upgrademysqlstatus'),
     url(r'^getMysqlstatus', views.getMysqlstatus, name='getMysqlstatus'),
     url(r'^restartMySQL', views.restartMySQL, name='restartMySQL'),
     url(r'^generateRecommendations', views.generateRecommendations, name='generateRecommendations'),
