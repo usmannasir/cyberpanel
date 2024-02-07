@@ -1515,15 +1515,18 @@ LogFile /var/log/clamav/clamav.log
 
     @staticmethod
     def FetchPostfixHostname():
-        PostfixPath = '/etc/postfix/main.cf'
-        if os.path.exists(PostfixPath):
-            PostFixConf = open(PostfixPath, 'r').readlines()
+        try:
+            PostfixPath = '/etc/postfix/main.cf'
+            if os.path.exists(PostfixPath):
+                PostFixConf = open(PostfixPath, 'r').readlines()
 
-            for line in PostFixConf:
-                if line.find('myhostname') > -1:
-                    hostname = line.split('=')[1].strip(' ').rstrip('\n')
-                    return hostname
-        else:
+                for line in PostFixConf:
+                    if line.find('myhostname') > -1:
+                        hostname = line.split('=')[1].strip(' ').rstrip('\n')
+                        return hostname
+            else:
+                return 'localhost'
+        except:
             return 'localhost'
 
     @staticmethod

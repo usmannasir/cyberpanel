@@ -31,10 +31,6 @@ class httpProc:
                             templateName = 'baseTemplate/error.html'
                             return render(self.request, templateName, {'error_message': 'You are not authorized to access %s' % (self.function)})
 
-
-
-
-
                 ###
 
                 if self.data == None:
