@@ -1495,7 +1495,7 @@ Automatic Backupv2 failed for %s on %s.
                 CurrentHostName = config['hostname']
                 skipRDNSCheck = config['skipRDNSCheck']
             except:
-                CurrentHostName = ''
+                CurrentHostName = mailUtilities.FetchPostfixHostname()
                 skipRDNSCheck = 1
 
             virtualHostUtilities.OnBoardingHostName(CurrentHostName, '/home/cyberpanel/onboarding_temp_path', skipRDNSCheck)
