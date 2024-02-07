@@ -179,7 +179,7 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
             result = ProcessUtilities.outputExecutioner(command)
             print(f'return code of docker install {result}')
             if result.find("not found") > -1:
-                DockerInstall.submitInstallDocker()
+                DockerInstall.submitInstallDocker(1)
 
             logging.statusWriter(self.JobID, 'Docker is ready to use..,10')
 
