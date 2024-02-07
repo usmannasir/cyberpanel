@@ -34,7 +34,7 @@ class ServerStatusUtil(multi.Thread):
     @staticmethod
     def executioner(command, statusFile):
         try:
-            res = subprocess.call(shlex.split(command), stdout=statusFile, stderr=statusFile)
+            res = subprocess.call(command, stdout=statusFile, stderr=statusFile, shell=True)
             if res == 1:
                 return 0
             else:
