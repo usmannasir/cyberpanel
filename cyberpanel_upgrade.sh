@@ -495,8 +495,13 @@ if [ "$Server_OS" = "Ubuntu" ]; then
   pip3 install --default-timeout=3600 virtualenv==16.7.9
     Check_Return
 else
-  pip3.6 install --default-timeout=3600 virtualenv==16.7.9
-    Check_Return
+  if [ -e /usr/bin/pip3 ]; then
+    $PIP3="/usr/bin/pip3"
+  else
+    $PIP3="pip3.6"
+  fi
+  $PIP3 install --default-timeout=3600 virtualenv==16.7.9
+  Check_Return
 fi
 
 if [[ -f /usr/local/CyberPanel/bin/python2 ]]; then
@@ -518,9 +523,9 @@ fi
 Download_Requirement
 
 if [[ "$Server_OS" = "CentOS" ]] ; then
-  pip3.6 install --default-timeout=3600 virtualenv==16.7.9
+  $PIP3 install --default-timeout=3600 virtualenv==16.7.9
     Check_Return
-  pip3.6 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt
+  $PIP3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt
     Check_Return
 elif [[ "$Server_OS" = "Ubuntu" ]] ; then
   # shellcheck disable=SC1091
@@ -613,7 +618,7 @@ else
   # shellcheck disable=SC1091
   source /usr/local/CyberCP/bin/activate
     Check_Return
-  pip3.6 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt
+  $PIP3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt
     Check_Return
 fi
 
