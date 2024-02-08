@@ -496,9 +496,9 @@ if [ "$Server_OS" = "Ubuntu" ]; then
     Check_Return
 else
   if [ -e /usr/bin/pip3 ]; then
-    $PIP3="/usr/bin/pip3"
+    PIP3="/usr/bin/pip3"
   else
-    $PIP3="pip3.6"
+    PIP3="pip3.6"
   fi
   $PIP3 install --default-timeout=3600 virtualenv==16.7.9
   Check_Return
