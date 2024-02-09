@@ -241,13 +241,15 @@ class ProcessUtilities(multi.Thread):
                     command = '%s-d %s %s' % (ProcessUtilities.token, dir, command)
                     sock.sendall(command.encode('utf-8'))
             else:
+                if command.startswith('sudo'):
+                    command = command.replace('sudo', '', 1)  # Replace 'sudo' with an empty string, only once
+
                 if dir == None:
                     command = '%s-u %s %s' % (ProcessUtilities.token, user, command)
                 else:
                     command = '%s-u %s -d %s %s' % (ProcessUtilities.token, user, dir, command)
 
-                if command.startswith('sudo'):
-                    command = command.replace('sudo', '', 1)  # Replace 'sudo' with an empty string, only once
+
 
                 if os.path.exists(ProcessUtilities.debugPath):
                     if command.find('cat') == -1:
