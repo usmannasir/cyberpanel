@@ -245,8 +245,9 @@ class ProcessUtilities(multi.Thread):
                     command = '%s-u %s %s' % (ProcessUtilities.token, user, command)
                 else:
                     command = '%s-u %s -d %s %s' % (ProcessUtilities.token, user, dir, command)
-                command = command.replace('sudo', '')
 
+                if command.startswith('sudo'):
+                    command = command.replace('sudo', '', 1)  # Replace 'sudo' with an empty string, only once
 
                 if os.path.exists(ProcessUtilities.debugPath):
                     if command.find('cat') == -1:

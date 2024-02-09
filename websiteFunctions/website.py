@@ -2241,10 +2241,29 @@ class WebsiteManager:
             currentACL = ACLManager.loadedACL(userID)
             admin = Administrator.objects.get(pk=userID)
 
+            try:
+                alias = data['alias']
+            except:
+                alias = 0
+
             masterDomain = data['masterDomain']
             domain = data['domainName']
-            phpSelection = data['phpSelection']
-            path = data['path']
+
+
+            if alias == 0:
+                phpSelection = data['phpSelection']
+                path = data['path']
+            else:
+
+                ### if master website have apache then create this sub-domain also as ols + apache
+
+                apachePath = ApacheVhost.configBasePath + masterDomain + '.conf'
+
+                if os.path.exists(apachePath):
+                    data['apacheBackend'] = 1
+
+                phpSelection = Websites.objects.get(domain=masterDomain).phpSelection
+
             tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
             if not validators.domain(domain):
@@ -2281,11 +2300,15 @@ class WebsiteManager:
             if currentACL['admin'] != 1:
                 data['openBasedir'] = 1
 
-            if len(path) > 0:
-                path = path.lstrip("/")
-                path = "/home/" + masterDomain + "/" + path
+            if alias == 0:
+
+                if len(path) > 0:
+                    path = path.lstrip("/")
+                    path = "/home/" + masterDomain + "/" + path
+                else:
+                    path = "/home/" + masterDomain + "/" + domain
             else:
-                path = "/home/" + masterDomain + "/" + domain
+                path = f'/home/{masterDomain}/public_html'
 
             try:
                 apacheBackend = str(data['apacheBackend'])
@@ -2298,7 +2321,7 @@ class WebsiteManager:
                        " --phpVersion '" + phpSelection + "' --ssl " + str(data['ssl']) + " --dkimCheck " + str(
                 data['dkimCheck']) \
                        + " --openBasedir " + str(data['openBasedir']) + ' --path ' + path + ' --websiteOwner ' \
-                       + admin.userName + ' --tempStatusPath ' + tempStatusPath + " --apache " + apacheBackend
+                       + admin.userName + ' --tempStatusPath ' + tempStatusPath + " --apache " + apacheBackend + f' --aliasDomain {str(alias)}'
 
             ProcessUtilities.popenExecutioner(execPath)
             time.sleep(2)
@@ -2320,13 +2343,18 @@ class WebsiteManager:
             admin = Administrator.objects.get(pk=userID)
             masterDomain = data['masterDomain']
 
+            try:
+                alias = data['alias']
+            except:
+                alias = 0
+
             if ACLManager.checkOwnership(masterDomain, admin, currentACL) == 1:
                 pass
             else:
                 return ACLManager.loadErrorJson('fetchStatus', 0)
 
             cdManager = ChildDomainManager(masterDomain)
-            json_data = cdManager.findChildDomainsJson()
+            json_data = cdManager.findChildDomainsJson(alias)
 
             final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
@@ -2441,7 +2469,7 @@ class WebsiteManager:
             childDomains = []
 
             for web in websites:
-                for child in web.childdomains_set.all():
+                for child in web.childdomains_set.filter(alais=0):
                     if child.domain == f'mail.{web.domain}':
                         pass
                     else:
@@ -3499,6 +3527,22 @@ class WebsiteManager:
             website = Websites.objects.get(domain=self.domain)
             website.phpSelection = data['phpSelection']
             website.save()
+
+            ### check if there are any alias domains under the main website and then change php for them too
+
+            for alias in website.childdomains_set.filter(alais=1):
+
+                try:
+
+                    confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + alias.domain
+                    completePathToConfigFile = confPath + "/vhost.conf"
+                    execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+                    execPath = execPath + " changePHP --phpVersion '" + phpVersion + "' --path " + completePathToConfigFile
+                    ProcessUtilities.popenExecutioner(execPath)
+                except BaseException as msg:
+                    logging.CyberCPLogFileWriter.writeToFile(f'Error changing PHP for alias: {str(msg)}')
+
+
         except:
             website = ChildDomains.objects.get(domain=self.domain)
             website.phpSelection = data['phpSelection']

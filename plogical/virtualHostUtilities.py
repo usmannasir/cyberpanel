@@ -1243,7 +1243,7 @@ class virtualHostUtilities:
 
     @staticmethod
     def createDomain(masterDomain, virtualHostName, phpVersion, path, ssl, dkimCheck, openBasedir, owner, apache,
-                     tempStatusPath='/home/cyberpanel/fakePath', LimitsCheck=1):
+                     tempStatusPath='/home/cyberpanel/fakePath', LimitsCheck=1, alias = 0):
         try:
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Running some checks..,0')
@@ -1336,7 +1336,7 @@ class virtualHostUtilities:
 
             if LimitsCheck:
                 website = ChildDomains(master=master, domain=virtualHostName, path=path, phpSelection=phpVersion,
-                                       ssl=ssl)
+                                       ssl=ssl, alais=alias)
                 website.save()
 
             if ssl == 1:
@@ -1852,9 +1852,14 @@ def main():
         except:
             tempStatusPath = '/home/cyberpanel/fakePath'
 
+        try:
+            aliasDomain = int(args.aliasDomain)
+        except:
+            aliasDomain = 0
+
         virtualHostUtilities.createDomain(args.masterDomain, args.virtualHostName, args.phpVersion, args.path,
                                           int(args.ssl), dkimCheck, openBasedir, args.websiteOwner, apache,
-                                          tempStatusPath)
+                                          tempStatusPath, 1, aliasDomain)
     elif args.function == "issueSSL":
         virtualHostUtilities.issueSSL(args.virtualHostName, args.path, args.administratorEmail)
     elif args.function == "issueSSLv2":

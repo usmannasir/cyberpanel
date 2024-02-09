@@ -15,9 +15,9 @@ class ChildDomainManager:
         self.masterDomain = masterDomain
         self.childDomain = childDomain
 
-    def findChildDomainsJson(self):
+    def findChildDomainsJson(self, alias=0):
         master = Websites.objects.get(domain=self.masterDomain)
-        childDomains = master.childdomains_set.all()
+        childDomains = master.childdomains_set.filter(alais=alias)
 
         json_data = "["
         checker = 0

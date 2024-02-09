@@ -533,7 +533,6 @@ class IncScheduler(multi.Thread):
                         if result.find(pid) > -1 and result.find('IncScheduler.py') > -1:
                             quit(1)
 
-
                     except:
                         ### Save some important info in backup config
                         oldJobContinue = 0

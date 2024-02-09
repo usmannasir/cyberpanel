@@ -266,7 +266,7 @@ class phpUtilities:
         if os.path.exists(ProcessUtilities.debugPath):
             logging.CyberCPLogFileWriter.writeToFile(result)
 
-        command = result + " -v | awk '/^PHP/ {print $2}'"
+        command = result + " -v 2>/dev/null | awk '/^PHP/ {print $2}'"
         php_version = ProcessUtilities.outputExecutioner(command, None, True).rstrip('\n')
         return f"PHP {php_version}"
 
@@ -291,8 +291,6 @@ class phpUtilities:
                 return PHPManager.findPHPVersions()[-2]
 
 
-
-
     @staticmethod
     def InstallSaidPHP(php):
         if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or  ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
@@ -302,10 +300,6 @@ class phpUtilities:
 
 
         ProcessUtilities.executioner(command, None, True)
-
-
-
-
 
 
 

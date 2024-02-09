@@ -2047,6 +2047,13 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
             except:
                 pass
 
+            query = "ALTER TABLE `websiteFunctions_childdomains` ADD `alais` INT NOT NULL DEFAULT '0' AFTER `master_id`; "
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+
             try:
                 connection.close()
             except:

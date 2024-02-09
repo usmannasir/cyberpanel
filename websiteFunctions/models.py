@@ -27,6 +27,8 @@ class ChildDomains(models.Model):
     path = models.CharField(max_length=200,default=None)
     ssl = models.IntegerField()
     phpSelection = models.CharField(max_length=10,default=None)
+    alais = models.IntegerField(default=0)
+
 
 class Backups(models.Model):
     website = models.ForeignKey(Websites,on_delete=models.CASCADE)

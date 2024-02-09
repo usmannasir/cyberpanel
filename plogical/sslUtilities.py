@@ -37,6 +37,10 @@ class sslUtilities:
                 if san_extension:
                     # Extract and print the domains from SAN
                     san_domains = san_extension.value.get_values_for_type(x509.DNSName)
+                    try:
+                        logging.CyberCPLogFileWriter.writeToFile(f'Covered domains: {str(san_domains)}')
+                    except:
+                        pass
                     return 1, san_domains
                 else:
                     # If SAN is not present, return the Common Name as a fallback
@@ -54,19 +58,51 @@ class sslUtilities:
             x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, open(filePath, 'r').read())
             SSLProvider = x509.get_issuer().get_components()[1][1].decode('utf-8')
 
-            if SSLProvider != 'Denial':
-                return sslUtilities.ISSUE_SSL
-            else:
-                status, domains = sslUtilities.getDomainsCovered(filePath)
 
+
+            #### totally seprate check to see if both non-www and www are covered
+
+            if SSLProvider == "Let's Encrypt":
+                status, domains = sslUtilities.getDomainsCovered(filePath)
                 if status:
                     if len(domains) > 1:
-                        return sslUtilities.DONT_ISSUE
+                        ### need further checks here to see if ssl is valid for less then 15 days etc
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            '[CheckIfSSLNeedsToBeIssued] SSL exists for %s and both versions are covered, just need to ensure if SSL is valid for less then 15 days.' % (virtualHostName), 0)
+                        pass
                     else:
                         return sslUtilities.ISSUE_SSL
-        else:
-            return sslUtilities.ISSUE_SSL
 
+            #####
+
+            expireData = x509.get_notAfter().decode('ascii')
+            from datetime import datetime
+            finalDate = datetime.strptime(expireData, '%Y%m%d%H%M%SZ')
+            now = datetime.now()
+            diff = finalDate - now
+
+            if int(diff.days) >= 15 and SSLProvider!='Denial':
+                logging.CyberCPLogFileWriter.writeToFile(
+                    '[CheckIfSSLNeedsToBeIssued] SSL exists for %s and is not ready to fetch new SSL., skipping..' % (
+                        virtualHostName), 0)
+
+                return sslUtilities.DONT_ISSUE
+            elif SSLProvider == 'Denial':
+                logging.CyberCPLogFileWriter.writeToFile(
+                    f'[CheckIfSSLNeedsToBeIssued] Self-signed SSL found, lets issue new SSL for {virtualHostName}', 0)
+                return sslUtilities.ISSUE_SSL
+            elif SSLProvider != "Let's Encrypt":
+                logging.CyberCPLogFileWriter.writeToFile(
+                    f'[CheckIfSSLNeedsToBeIssued] Custom SSL found for {virtualHostName}', 0)
+                return sslUtilities.DONT_ISSUE
+            else:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    f'[CheckIfSSLNeedsToBeIssued] We will issue SSL for {virtualHostName}', 0)
+                return sslUtilities.ISSUE_SSL
+        else:
+            logging.CyberCPLogFileWriter.writeToFile(
+                f'[CheckIfSSLNeedsToBeIssued] We will issue SSL for {virtualHostName}', 0)
+            return sslUtilities.ISSUE_SSL
 
     @staticmethod
     def checkIfSSLMap(virtualHostName):
@@ -435,6 +471,7 @@ context /.well-known/acme-challenge {
 
     @staticmethod
     def obtainSSLForADomain(virtualHostName, adminEmail, sslpath, aliasDomain=None):
+
         from plogical.acl import ACLManager
         from plogical.sslv2 import sslUtilities as sslv2
         import json
