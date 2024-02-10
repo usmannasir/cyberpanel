@@ -1739,7 +1739,7 @@ class BackupManager:
 
             selectedJob = data['selectedJob']
             backupFrequency = data['backupFrequency']
-            backupRetention = data['backupRetention']
+
 
             nbj = NormalBackupJobs.objects.get(name=selectedJob)
 
@@ -1749,6 +1749,7 @@ class BackupManager:
             config = json.loads(nbj.config)
             config[IncScheduler.frequency] = backupFrequency
             try:
+                backupRetention = data['backupRetention']
                 config[IncScheduler.retention] = backupRetention
             except:
                 pass
