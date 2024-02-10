@@ -31,6 +31,7 @@ from googleapiclient.discovery import build
 from websiteFunctions.models import NormalBackupDests, NormalBackupJobs, NormalBackupSites
 from plogical.IncScheduler import IncScheduler
 
+
 class BackupManager:
     localBackupPath = '/home/cyberpanel/localBackupPath'
 
@@ -56,6 +57,16 @@ class BackupManager:
         proc = httpProc(request, 'backup/backup.html', {'websiteList': websitesName}, 'createBackup')
         return proc.render()
 
+    def backupSiteV2(self, request=None, userID=None, data=None):
+        currentACL = ACLManager.loadedACL(userID)
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+
+        command = 'chmod 755 /home/backup'
+        ProcessUtilities.executioner(command)
+
+        proc = httpProc(request, 'backup/backupV2.html', {'websiteList': websitesName}, 'createBackup')
+        return proc.render()
+
     def RestoreV2backupSite(self, request=None, userID=None, data=None):
         if ACLManager.CheckForPremFeature('all'):
             BackupStat = 1
@@ -63,7 +74,8 @@ class BackupManager:
             BackupStat = 0
         currentACL = ACLManager.loadedACL(userID)
         websitesName = ACLManager.findAllSites(currentACL, userID)
-        proc = httpProc(request, 'IncBackups/RestoreV2Backup.html', {'websiteList': websitesName, 'BackupStat': BackupStat}, 'createBackup')
+        proc = httpProc(request, 'IncBackups/RestoreV2Backup.html',
+                        {'websiteList': websitesName, 'BackupStat': BackupStat}, 'createBackup')
         return proc.render()
 
     def CreateV2backupSite(self, request=None, userID=None, data=None):
@@ -81,7 +93,8 @@ class BackupManager:
 
         currentACL = ACLManager.loadedACL(userID)
         websitesName = ACLManager.findAllSites(currentACL, userID)
-        proc = httpProc(request, 'IncBackups/ScheduleV2Backup.html', {'websiteList': websitesName, "BackupStat": BackupStat}, 'createBackup')
+        proc = httpProc(request, 'IncBackups/ScheduleV2Backup.html',
+                        {'websiteList': websitesName, "BackupStat": BackupStat}, 'createBackup')
         return proc.render()
 
     def gDrive(self, request=None, userID=None, data=None):
@@ -340,7 +353,6 @@ class BackupManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-
     def changeFileRetention(self, request=None, userID=None, data=None):
         try:
 
@@ -362,15 +374,13 @@ class BackupManager:
             else:
                 return ACLManager.loadErrorJson('status', 0)
 
-
-
             conf = gD.auth
             # logging.CyberCPLogFileWriter.writeToFile("...... conf...%s " % conf)
             config = json.loads(conf)
             # logging.CyberCPLogFileWriter.writeToFile("...... config...%s " % config)
             config['FileRetentiontime'] = Retentiontime
 
-            gD.auth=json.dumps(config)
+            gD.auth = json.dumps(config)
             gD.save()
 
             data_ret = {'status': 1}
@@ -433,6 +443,25 @@ class BackupManager:
                 if filename.endswith(ext):
                     all_files.append(filename)
             proc = httpProc(request, 'backup/restore.html', {'backups': all_files}, 'restoreBackup')
+            return proc.render()
+
+    def restoreSiteV2(self, request=None, userID=None, data=None):
+        path = os.path.join("/home", "backup")
+        if not os.path.exists(path):
+            proc = httpProc(request, 'backup/restoreV2.html', None, 'restoreBackup')
+            return proc.render()
+        else:
+            all_files = []
+            ext = ".tar.gz"
+
+            command = 'sudo chown -R  cyberpanel:cyberpanel ' + path
+            ACLManager.executeCall(command)
+
+            files = os.listdir(path)
+            for filename in files:
+                if filename.endswith(ext):
+                    all_files.append(filename)
+            proc = httpProc(request, 'backup/restoreV2.html', {'backups': all_files}, 'restoreBackup')
             return proc.render()
 
     def getCurrentBackups(self, userID=None, data=None):
@@ -1495,7 +1524,6 @@ class BackupManager:
             recordsToShow = int(data['recordsToShow'])
             page = int(str(data['page']).strip('\n'))
 
-
             if ACLManager.currentContextPermission(currentACL, 'scheduleBackups') == 0:
                 return ACLManager.loadErrorJson('scheduleStatus', 0)
 
@@ -1726,7 +1754,6 @@ class BackupManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-
     def deleteAccountNormal(self, request=None, userID=None, data=None):
         try:
 
@@ -1838,7 +1865,7 @@ class BackupManager:
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            #currentStatus:"cat: /home/cyberpanel/9219: No such file or directory"
+            # currentStatus:"cat: /home/cyberpanel/9219: No such file or directory"
 
             statusData = ProcessUtilities.outputExecutioner("cat " + statusFile).splitlines()
 

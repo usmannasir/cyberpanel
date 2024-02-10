@@ -1,0 +1,161 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="listFTPAccountsV2" class="p-8">
+        <div class="flex lg:flex-row justify-between items-center sm:flex-col">
+            <div>
+                <p class="text-4xl font-bold">List FTP Accounts</p>
+                <p class="text-xs text-gray-600 py-2 font-semibold">List FTP Accounts or change their passwords.</p>
+            </div>
+        </div>
+        <div class="py-4">
+            <p class="text-xl font-bold">List FTP Accounts</p>
+            <img ng-hide="ftpLoading" src="{% static 'images/loading.gif' %}">
+        </div>
+        {% if not status %}
+
+            <div class="col-md-12 text-center" style="margin-bottom: 2%;">
+                <h3>{% trans "PureFTPD is disabled." %}
+                    <a href="{% url 'managePureFtpd' %}">
+                        <button class="btn btn-alt btn-hover btn-blue-alt">
+                            <span>{% trans "Enable Now" %}</span>
+                            <i class="glyph-icon icon-arrow-right"></i>
+                        </button>
+                    </a></h3>
+            </div>
+        {% else %}
+            <hr>
+            <div class="flex mt-4 py-2 px-6">
+                <div>
+                    <p class="font-semibold w-60">Select Domain</p>
+                </div>
+                <div>
+                    <select ng-change="fetchFTPAccounts()" ng-model="selectedDomain"
+                            class="w-80 bg-gray-100 rounded px-2 py-1">
+                        {% for items in websiteList %}
+                            <option>{{ items }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <hr>
+            <div ng-hide="notificationsBox" class="py-4">
+                <div class="col-sm-6">
+                    <div ng-hide="recordsFetched"
+                         class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                        <p>{% trans "Records successfully fetched for" %} <strong>{$ domainFeteched
+                            $}</strong></p>
+                    </div>
+                    <div ng-hide="passwordChanged"
+                         class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                        <p>{% trans "Password changed for" %} <strong>{$ ftpUsername $}</strong></p>
+                    </div>
+                    <div ng-hide="canNotChangePassword"
+                         class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                        <p>{% trans "Cannot change password for <strong>{$ ftpUsername $}</strong>. Error message:" %}
+                            {$ errorMessage $}</p>
+                    </div>
+                    <div ng-hide="couldNotConnect"
+                         class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                        <p>{% trans "Could Not Connect to server. Please refresh this page" %}</p>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div ng-hide="changePasswordBox" class="mb-3">
+                <div class="flex py-2 px-6 dbDetails">
+                    <div>
+                        <p class="font-semibold w-60">{$ ftpUsername $}</p>
+                    </div>
+                    <div>
+                        <input name="dom" type="password" class="w-80 bg-gray-100 rounded px-2 py-1"
+                               ng-model="ftpPassword"
+                               required>
+                    </div>
+                    <div class="w-80 ml-4">
+                        <button ng-click="generatePassword()" class="bg-orange-500 text-white font-semibold px-2 py-1">
+                            Generate
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <div ng-hide="generatedPasswordView" class="flex py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">Generated Password</p>
+                        </div>
+                        <div>
+                            <input name="dom" type="text" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                   ng-model="ftpPassword" required>
+                        </div>
+                        <div class="w-80 ml-4">
+                            <button ng-click="usePassword()"
+                                    class="bg-orange-500 text-white font-semibold px-2 py-1">
+                                Use
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-center mt-6">
+                    <button ng-click="changePasswordBtn()"
+                            class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                        Change Password
+                    </button>
+                </div>
+            </div>
+            <hr>
+            <div ng-hide="ftpAccounts" class="relative py-5 overflow-x-auto">
+                <table class="w-full text-sm text-left rtl:text-right">
+                    <thead>
+                    <tr>
+                        <th scope="col" class="px-6 py-3">
+                            ID
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            User Name
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            Directory
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            Size
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            Password
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody ng-repeat="record in records track by $index"
+                           class="border shadow-lg py-3 px-6 rounded-b-lg">
+                    <tr>
+                        <td ng-bind="record.id" class="px-6 py-4">
+                        </td>
+                        <td ng-bind="record.user" class="px-6 py-4">
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                     stroke-width="1.5"
+                                     stroke="currentColor" class="w-6 h-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"/>
+                                </svg>
+                                <span class="ml-2">{$ record.dir $}</span>
+                            </div>
+                        </td>
+                        <td ng-bind="record.quotasize" class="px-6 py-4">
+                        </td>
+                        <td class="px-6 py-4">
+                            <button type="button" ng-click="changePassword(record.user)"
+                                    class="bg-orange-500 text-white font-semibold px-2 py-1">{% trans "Change" %}</button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

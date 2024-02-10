@@ -203,7 +203,6 @@ urlpatterns = [
 
     ### Apache Manager
 
-    url(r'^ApacheManager/(?P<domain>(.*))$', views.ApacheManager, name='ApacheManager'),
     url(r'^getSwitchStatus$', views.getSwitchStatus, name='getSwitchStatus'),
     url(r'^switchServer$', views.switchServer, name='switchServer'),
     url(r'^statusFunc$', views.statusFunc, name='statusFunc'),

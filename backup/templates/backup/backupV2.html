@@ -1,0 +1,144 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="backupWebsiteControlV2" class="p-8">
+        <div class="flex lg:flex-row justify-between items-center sm:flex-col">
+            <div class="flex items-center">
+                <p class="text-4xl font-bold">Backup Website -</p>
+                 <a target="_blank" href="http://go.cyberpanel.net/backup"
+                     class="bg-blue-200 px-2 py-1 font-bold mt-2 ml-3"
+                     title=""><span>{% trans "Backup Docs" %}</span></a>
+            </div>
+        </div>
+        <p class="text-xs text-gray-600 py-2 font-semibold">This page can be used to Backup your websites</p>
+        <div class="py-4">
+            <p class="text-xl font-bold">Backup Website</p>
+            <img ng-hide="backupLoading" src="{% static 'images/loading.gif' %}">
+        </div>
+        <hr>
+        <div class="flex mt-4 py-2 px-6">
+            <div>
+                <p class="font-semibold w-60">Select Website</p>
+            </div>
+            <div>
+                <select id="create-backup-select" ng-model="websiteToBeBacked"
+                        class="w-80 bg-gray-100 rounded px-2 py-1">
+                    {% for items in websiteList %}
+                        <option>{{ items }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="flex mt-4 py-2 px-6 destinationHide">
+            <div>
+                <p class="font-semibold w-60">Destination</p>
+            </div>
+            <div>
+                <select ng-change="destinationSelection()" ng-model="backupDestinations"
+                        class="w-80 bg-gray-100 rounded px-2 py-1">
+                    <option>{% trans "Home" %}</option>
+                </select>
+            </div>
+        </div>
+        <hr>
+        <div ng-hide="runningBackup" class="relative py-5 overflow-x-auto">
+            <table class="w-full text-sm text-left rtl:text-right">
+                <thead>
+                <tr>
+                    <th scope="col" class="px-6 py-3">
+                        File Name
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Status <img ng-hide="backupLoadingBottom" src="{% static 'images/loading.gif' %}">
+                    </th>
+                </tr>
+                </thead>
+                <tbody class="border shadow-lg py-3 px-6 rounded-b-lg">
+                <tr>
+                    <td class="px-6 py-4">
+                        Running
+                    </td>
+                    <td class="px-6 py-4">
+                        {$ fileName $}
+                    </td>
+                    <td class="px-6 py-4 text-red-500 font-bold">
+                        {$ status $}
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="flex justify-center mt-6 destinationHide">
+            <button ng-click="createBackup()" id="createBackup"
+                    class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                Create Backup
+            </button>
+        </div>
+        <div ng-hide="cancelButton" class="flex justify-center mt-6">
+            <button ng-click="cancelBackup()" id="createBackup"
+                    class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                Cancel Backup
+            </button>
+        </div>
+        <div class="relative py-5 overflow-x-auto">
+            <table class="w-full text-sm text-left rtl:text-right">
+                <thead>
+                <tr>
+                    <th scope="col" class="px-6 py-3">
+                        ID
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        File
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Date
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Size
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Status
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Delete
+                    </th>
+                </tr>
+                </thead>
+                <tbody ng-repeat="record in records track by $index"
+                       class="border shadow-lg py-3 px-6 rounded-b-lg">
+                <tr>
+                    <td ng-bind="record.id" class="px-6 py-4">
+                    </td>
+                    <td ng-bind="record.file" class="px-6 py-4">
+                    </td>
+                    <td ng-bind="record.date" class="px-6 py-4">
+                    </td>
+                    <td ng-bind="record.size" class="px-6 py-4">
+                    </td>
+                    <td ng-bind="record.status" class="px-6 py-4">
+                    </td>
+                    <td ng-click="deleteBackup(record.id)" class="px-6 py-4">
+                        <img class="cursor-pointer" src="{% static 'images/delete.png' %}">
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="py-4">
+            <div class="col-sm-4">
+                <div id="websiteDeleteFailure"
+                     class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                    <p>{% trans "Cannot delete website, Error message:  " %}{$ errorMessage $}</p>
+                </div>
+                <div id="websiteDeleteSuccess"
+                     class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                    <p>Website <strong>{$ deletedWebsite $}</strong> {% trans "Successfully Deleted" %}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

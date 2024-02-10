@@ -4,6 +4,8 @@ from django.shortcuts import redirect
 from .ftpManager import FTPManager
 from loginSystem.views import loadLoginPage
 from .pluginManager import pluginManager
+
+
 # Create your views here.
 
 def loadFTPHome(request):
@@ -13,6 +15,7 @@ def loadFTPHome(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def createFTPAccount(request):
     try:
 
@@ -21,7 +24,7 @@ def createFTPAccount(request):
             return result
 
         fm = FTPManager(request)
-        coreResult =  fm.createFTPAccount()
+        coreResult = fm.createFTPAccount()
 
         result = pluginManager.postCreateFTPAccount(request, coreResult)
         if result != 200:
@@ -31,6 +34,27 @@ def createFTPAccount(request):
 
     except KeyError:
         return redirect(loadLoginPage)
+
+
+def createFTPAccountV2(request):
+    try:
+
+        result = pluginManager.preCreateFTPAccount(request)
+        if result != 200:
+            return result
+
+        fm = FTPManager(request)
+        coreResult = fm.createFTPAccountV2()
+
+        result = pluginManager.postCreateFTPAccount(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
 
 def submitFTPCreation(request):
     try:
@@ -51,6 +75,7 @@ def submitFTPCreation(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def deleteFTPAccount(request):
     try:
         fm = FTPManager(request)
@@ -58,12 +83,22 @@ def deleteFTPAccount(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
+def deleteFTPAccountV2(request):
+    try:
+        fm = FTPManager(request)
+        return fm.deleteFTPAccountV2()
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 def fetchFTPAccounts(request):
     try:
         fm = FTPManager(request)
         return fm.fetchFTPAccounts()
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def submitFTPDelete(request):
     try:
@@ -84,6 +119,7 @@ def submitFTPDelete(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def listFTPAccounts(request):
     try:
         fm = FTPManager(request)
@@ -91,12 +127,22 @@ def listFTPAccounts(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
+def listFTPAccountsV2(request):
+    try:
+        fm = FTPManager(request)
+        return fm.listFTPAccountsV2()
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 def getAllFTPAccounts(request):
     try:
         fm = FTPManager(request)
         return fm.getAllFTPAccounts()
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def changePassword(request):
     try:

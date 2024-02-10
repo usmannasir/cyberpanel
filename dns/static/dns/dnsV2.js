@@ -1291,6 +1291,19 @@ function changeBackgroundColor(button) {
         btn.classList.add('bg-white');
     });
 }
+function showTab1(tabId1, tabColour) {
+    // Hide all tabs
+    var tabs1 = document.getElementsByClassName('tab-content1');
+    for (var i = 0; i < tabs1.length; i++) {
+        tabs1[i].style.display = 'none';
+    }
+
+    // Show the selected tab
+    var selectedTab1 = document.getElementById(tabId1);
+    if (selectedTab1) {
+        selectedTab1.style.display = 'block';
+    }
+}
 
 
 dnsTabButton.addEventListener("click", function () {

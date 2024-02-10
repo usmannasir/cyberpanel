@@ -1,0 +1,114 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="createFTPAccountV2" class="p-8">
+        <div>
+            <p class="text-4xl font-bold">Create FTP Account</p>
+            <p class="text-xs text-gray-600 py-2 font-semibold">Select the website from list, and its home directory
+                will be set as the path to ftp account.</p>
+        </div>
+        <div>
+            <div class="py-4">
+                <p class="text-xl font-bold">Create FTP Account</p>
+                <img ng-hide="ftpLoading" src="{% static 'images/loading.gif' %}">
+            </div>
+            <hr>
+            {% if not status %}
+
+                <div class="col-md-12 text-center" style="margin-bottom: 2%;">
+                    <h3>{% trans "PureFTPD is disabled." %}
+                        <a href="{% url 'managePureFtpd' %}">
+                            <button class="btn btn-alt btn-hover btn-blue-alt">
+                                <span>{% trans "Enable Now" %}</span>
+                                <i class="glyph-icon icon-arrow-right"></i>
+                            </button>
+                        </a></h3>
+                </div>
+            {% else %}
+                <div>
+                    <div class="flex mt-4 py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">Select Website</p>
+                        </div>
+                        <div>
+                            <select ng-model="ftpDomain"
+                                    class="w-80 bg-gray-100 rounded px-2 py-1 create-ftp-acct-select">
+                                {% for items in websiteList %}
+                                    <option>{{ items }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex py-2 px-6 ftpDetails">
+                        <div>
+                            <p class="font-semibold w-60">User Name</p>
+                        </div>
+                        <div>
+                            <input ng-change="hideFewDetails()" type="text" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                   ng-model="ftpUserName" required>
+                        </div>
+                        <div class="text-orange-500 font-semibold ml-3">
+                            <p>{{ OwnerFTP }}_{$ ftpUserName $}</p>
+                        </div>
+                    </div>
+                    <div class="flex py-2 px-6 ftpDetails">
+                        <div>
+                            <p class="font-semibold w-60">FTP Password</p>
+                        </div>
+                        <div>
+                            <input type="password" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="ftpPassword"
+                                   required>
+                        </div>
+                        <div class="w-80 ml-4">
+                            <button ng-click="generatePassword()"
+                                    class="bg-orange-500 text-white font-semibold px-2 py-1">
+                                Generate
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex py-2 px-6 ftpPasswordView">
+                            <div>
+                                <p class="font-semibold w-60">Generated Password</p>
+                            </div>
+                            <div>
+                                <input type="text" name="email" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                       ng-model="ftpPassword"
+                                       required>
+                            </div>
+                            <div class="w-80 ml-4">
+                                <button ng-click="usePassword()"
+                                        class="bg-orange-500 text-white font-semibold px-2 py-1">
+                                    Use
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div ng-hide="ftpDetails" class="flex py-2 px-6 ftpDetails">
+                            <div>
+                                <p class="font-semibold w-60">Path (Relative)</p>
+                            </div>
+                            <div>
+                                <input placeholder="{% trans 'Leave empty to select default home directory.' %}"
+                                       type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="ftpPath"
+                                       required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-center mt-6 dbDetails">
+                        <button ng-click="createFTPAccount()"
+                                class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                            Create FTP
+                        </button>
+                    </div>
+                </div>
+                </div>
+            {% endif %}
+    </div>
+{% endblock %}

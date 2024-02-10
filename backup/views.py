@@ -14,6 +14,7 @@ from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from django.shortcuts import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
+
 def loadBackupHome(request):
     try:
         userID = request.session['userID']
@@ -21,6 +22,7 @@ def loadBackupHome(request):
         return bm.loadBackupHome(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def backupSite(request):
     try:
@@ -30,6 +32,16 @@ def backupSite(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
+def backupSiteV2(request):
+    try:
+        userID = request.session['userID']
+        bm = BackupManager()
+        return bm.backupSiteV2(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 def gDrive(request):
     try:
         userID = request.session['userID']
@@ -37,6 +49,7 @@ def gDrive(request):
         return bm.gDrive(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def gDriveSetup(request):
     try:
@@ -46,6 +59,7 @@ def gDriveSetup(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def fetchgDriveSites(request):
     try:
         userID = request.session['userID']
@@ -53,6 +67,7 @@ def fetchgDriveSites(request):
         return wm.fetchgDriveSites(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def addSitegDrive(request):
     try:
@@ -62,6 +77,7 @@ def addSitegDrive(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def deleteAccountgDrive(request):
     try:
         userID = request.session['userID']
@@ -69,6 +85,7 @@ def deleteAccountgDrive(request):
         return wm.deleteAccountgDrive(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def changeAccountFrequencygDrive(request):
     try:
@@ -78,6 +95,7 @@ def changeAccountFrequencygDrive(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def changeFileRetention(request):
     try:
         userID = request.session['userID']
@@ -85,6 +103,7 @@ def changeFileRetention(request):
         return wm.changeFileRetention(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def deleteSitegDrive(request):
     try:
@@ -94,6 +113,7 @@ def deleteSitegDrive(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def fetchDriveLogs(request):
     try:
         userID = request.session['userID']
@@ -102,11 +122,21 @@ def fetchDriveLogs(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def restoreSite(request):
     try:
         userID = request.session['userID']
         bm = BackupManager()
         return bm.restoreSite(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def restoreSiteV2(request):
+    try:
+        userID = request.session['userID']
+        bm = BackupManager()
+        return bm.restoreSiteV2(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -119,6 +149,7 @@ def getCurrentBackups(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def submitBackupCreation(request):
     try:
         userID = request.session['userID']
@@ -128,7 +159,7 @@ def submitBackupCreation(request):
             return result
 
         wm = BackupManager()
-        coreResult =  wm.submitBackupCreation(userID, json.loads(request.body))
+        coreResult = wm.submitBackupCreation(userID, json.loads(request.body))
 
         return coreResult
 
@@ -226,6 +257,7 @@ def submitDestinationCreation(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def getCurrentBackupDestinations(request):
     try:
         userID = request.session['userID']
@@ -234,6 +266,7 @@ def getCurrentBackupDestinations(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def getConnectionStatus(request):
     try:
         userID = request.session['userID']
@@ -241,6 +274,7 @@ def getConnectionStatus(request):
         return bm.getConnectionStatus(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def deleteDestination(request):
     try:
@@ -260,6 +294,7 @@ def deleteDestination(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def scheduleBackup(request):
     try:
         userID = request.session['userID']
@@ -268,6 +303,7 @@ def scheduleBackup(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def getCurrentBackupSchedules(request):
     try:
         userID = request.session['userID']
@@ -275,6 +311,7 @@ def getCurrentBackupSchedules(request):
         return wm.getCurrentBackupSchedules(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def submitBackupSchedule(request):
     try:
@@ -294,6 +331,7 @@ def submitBackupSchedule(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def scheduleDelete(request):
     try:
         userID = request.session['userID']
@@ -312,6 +350,7 @@ def scheduleDelete(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def remoteBackups(request):
     try:
         userID = request.session['userID']
@@ -319,6 +358,7 @@ def remoteBackups(request):
         return bm.remoteBackups(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def submitRemoteBackups(request):
     try:
@@ -338,6 +378,7 @@ def submitRemoteBackups(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def starRemoteTransfer(request):
     try:
         userID = request.session['userID']
@@ -356,6 +397,7 @@ def starRemoteTransfer(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def getRemoteTransferStatus(request):
     try:
         userID = request.session['userID']
@@ -363,6 +405,7 @@ def getRemoteTransferStatus(request):
         return wm.getRemoteTransferStatus(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def remoteBackupRestore(request):
     try:
@@ -382,6 +425,7 @@ def remoteBackupRestore(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def localRestoreStatus(request):
     try:
         userID = request.session['userID']
@@ -389,6 +433,7 @@ def localRestoreStatus(request):
         return wm.localRestoreStatus(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def cancelRemoteBackup(request):
     try:
@@ -398,6 +443,7 @@ def cancelRemoteBackup(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def backupLogs(request):
     try:
         userID = request.session['userID']
@@ -405,6 +451,7 @@ def backupLogs(request):
         return bm.backupLogs(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def fetchLogs(request):
     try:
@@ -415,6 +462,7 @@ def fetchLogs(request):
 
     except KeyError:
         return redirect(loadLoginPage)
+
 
 @csrf_exempt
 def localInitiate(request):
@@ -428,6 +476,7 @@ def localInitiate(request):
     except BaseException as msg:
         logging.writeToFile(str(msg))
 
+
 def fetchgNormalSites(request):
     try:
         userID = request.session['userID']
@@ -435,6 +484,7 @@ def fetchgNormalSites(request):
         return wm.fetchgNormalSites(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def fetchNormalJobs(request):
     try:
@@ -444,6 +494,7 @@ def fetchNormalJobs(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def addSiteNormal(request):
     try:
         userID = request.session['userID']
@@ -451,6 +502,7 @@ def addSiteNormal(request):
         return wm.addSiteNormal(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def deleteSiteNormal(request):
     try:
@@ -460,6 +512,7 @@ def deleteSiteNormal(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def changeAccountFrequencyNormal(request):
     try:
         userID = request.session['userID']
@@ -468,6 +521,7 @@ def changeAccountFrequencyNormal(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def deleteAccountNormal(request):
     try:
         userID = request.session['userID']
@@ -475,6 +529,7 @@ def deleteAccountNormal(request):
         return wm.deleteAccountNormal(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def fetchNormalLogs(request):
     try:

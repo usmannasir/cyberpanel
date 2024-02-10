@@ -74,21 +74,21 @@
                     <ul class="flex py-2">
                         <li id="dns_tab_button"
                             class="hover:bg-orange-200 border-2 border-black rounded-l-3xl px-2 py-2 w-60 cursor-pointer active"
-                            onclick="showTab('dns_tab')">
+                            onclick="showTab1('dns_tab')">
                             <a class="flex justify-center">
                                 <p class="text-2xl font-bold">Manage DNS</p>
                             </a>
                         </li>
                         <li id="api_tab_button"
                             class="hover:bg-orange-200 border-2 border-black rounded-r-3xl px-2 py-2 w-60 cursor-pointer"
-                            onclick="showTab('api_tab')">
+                            onclick="showTab1('api_tab')">
                             <a class="flex justify-center">
                                 <p class="text-2xl font-bold">API Settings</p>
                             </a>
                         </li>
                     </ul>
                     <hr>
-                    <div id="dns_tab" class="tab-content">
+                    <div id="dns_tab" class="tab-content1">
                         <div>
                             <div>
                                 <div class="flex mt-4 py-2 px-6 items-center">
@@ -531,7 +531,7 @@
                             <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
                         </div>
                     </div>
-                    <div id="api_tab" class="tab-content">
+                    <div id="api_tab" class="tab-content1" style="display: none;">
                         <div class="flex mt-4 py-2 px-6">
                             <div>
                                 <p class="font-semibold w-60">CloudFlare Email</p>

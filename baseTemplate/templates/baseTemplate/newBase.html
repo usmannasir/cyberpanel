@@ -733,17 +733,17 @@
                     </div>
                     <ul id="dropdown-example-8" class="hidden py-2 space-y-2">
                         <li>
-                            <a href="#"
+                            <a href="{% url 'createFTPAccountV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 Create FTP Account</a>
                         </li>
                         <li>
-                            <a href="#"
+                            <a href="{% url 'listFTPAccountsV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 List FTP Account</a>
                         </li>
                         <li>
-                            <a href="#"
+                            <a href="{% url 'deleteFTPAccountV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 Delete FTP Account</a>
                         </li>
@@ -817,12 +817,12 @@
                     </div>
                     <ul id="dropdown-example-10" class="hidden py-2 space-y-2">
                         <li>
-                            <a href="#"
+                            <a href="{% url 'backupSiteV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 Create Backup</a>
                         </li>
                         <li>
-                            <a href="#"
+                            <a href="{% url 'restoreSiteV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 Restore Backup</a>
                         </li>
@@ -1689,6 +1689,8 @@
 <script src="{% static 'mailServer/mailServerV2.js' %}"></script>
 <script src="{% static 'emailPremium/emailPremiumV2.js' %}"></script>
 <script src="{% static 'filemanager/js/fileManagerV2.js' %}"></script>
+<script src="{% static 'ftp/ftpV2.js' %}"></script>
+<script src="{% static 'backup/backupV2.js' %}"></script>
 </body>
 
 </html>

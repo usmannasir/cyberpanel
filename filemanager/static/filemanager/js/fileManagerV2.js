@@ -150,9 +150,10 @@ newapp.controller('fileManagerCtrlV2', function ($scope, $http, FileUploader, $w
         //
 
         var iNodePlus = document.createElement('i');
-        iNodePlus.setAttribute('class', 'fa fa-plus');
-        iNodePlus.setAttribute('aria-hidden', 'true');
-        iNodePlus.style.color = "#007bff";
+        iNodePlus.textContent = "+";
+        iNodePlus.setAttribute('class', 'font-bold text-3xl');
+        // iNodePlus.setAttribute('aria-hidden', 'true');
+        // iNodePlus.style.color = "#007bff";
 
         var iNodeFolder = document.createElement('i');
         iNodeFolder.setAttribute('class', 'fa fa-folder');
@@ -225,9 +226,10 @@ newapp.controller('fileManagerCtrlV2', function ($scope, $http, FileUploader, $w
         var spaceNode = document.createTextNode(" ");
 
         var iNodeMinus = document.createElement('i');
-        iNodeMinus.setAttribute('class', 'fa fa-minus');
-        iNodeMinus.setAttribute('aria-hidden', 'true');
-        iNodeMinus.style.color = "#007bff";
+        iNodeMinus.textContent = "-";
+        iNodeMinus.setAttribute('class', 'font-bold text-3xl');
+        // iNodeMinus.setAttribute('aria-hidden', 'true');
+        // iNodeMinus.style.color = "#007bff";
 
         // prepare node
 
@@ -263,9 +265,10 @@ newapp.controller('fileManagerCtrlV2', function ($scope, $http, FileUploader, $w
         var spaceNode = document.createTextNode(" ");
 
         var iNodePlus = document.createElement('i');
-        iNodePlus.setAttribute('class', 'fa fa-plus');
-        iNodePlus.setAttribute('aria-hidden', 'true');
-        iNodePlus.style.color = "#007bff";
+        iNodePlus.textContent = "+";
+        iNodePlus.setAttribute('class', 'font-bold text-3xl');
+        // iNodePlus.setAttribute('aria-hidden', 'true');
+        // iNodePlus.style.color = "#007bff";
 
         // prepare node
 

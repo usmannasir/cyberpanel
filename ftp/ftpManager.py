@@ -11,12 +11,14 @@ django.setup()
 import json
 from django.shortcuts import redirect
 from django.http import HttpResponse
+
 try:
     from .models import Users
     from loginSystem.models import Administrator
 except:
     pass
 import plogical.CyberCPLogFileWriter as logging
+
 try:
     from loginSystem.views import loadLoginPage
     from websiteFunctions.models import Websites
@@ -29,8 +31,9 @@ import os
 from plogical.processUtilities import ProcessUtilities
 import argparse
 
+
 class FTPManager:
-    def __init__(self, request, extraArgs = None):
+    def __init__(self, request, extraArgs=None):
         self.request = request
         self.extraArgs = extraArgs
 
@@ -53,6 +56,23 @@ class FTPManager:
         websitesName = ACLManager.findAllSites(currentACL, userID)
 
         proc = httpProc(self.request, 'ftp/createFTPAccount.html',
+                        {'websiteList': websitesName, 'OwnerFTP': admin.userName, "status": 1}, 'createFTPAccount')
+        return proc.render()
+
+    def createFTPAccountV2(self):
+        userID = self.request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        admin = Administrator.objects.get(pk=userID)
+
+        if not os.path.exists('/home/cyberpanel/pureftpd'):
+            proc = httpProc(self.request, 'ftp/createFTPAccountV2.html',
+                            {"status": 0}, 'createFTPAccount')
+            return proc.render()
+
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+
+        proc = httpProc(self.request, 'ftp/createFTPAccountV2.html',
                         {'websiteList': websitesName, 'OwnerFTP': admin.userName, "status": 1}, 'createFTPAccount')
         return proc.render()
 
@@ -93,7 +113,6 @@ class FTPManager:
             except:
                 path = 'None'
 
-
             result = FTPUtilities.submitFTPCreation(domainName, userName, password, path, admin.userName, api)
 
             if result[0] == 1:
@@ -122,6 +141,21 @@ class FTPManager:
         websitesName = ACLManager.findAllSites(currentACL, userID)
 
         proc = httpProc(self.request, 'ftp/deleteFTPAccount.html',
+                        {'websiteList': websitesName, "status": 1}, 'deleteFTPAccount')
+        return proc.render()
+
+    def deleteFTPAccountV2(self):
+        userID = self.request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if not os.path.exists('/home/cyberpanel/pureftpd'):
+            proc = httpProc(self.request, 'ftp/deleteFTPAccountV2.html',
+                            {"status": 0}, 'deleteFTPAccount')
+            return proc.render()
+
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+
+        proc = httpProc(self.request, 'ftp/deleteFTPAccountV2.html',
                         {'websiteList': websitesName, "status": 1}, 'deleteFTPAccount')
         return proc.render()
 
@@ -207,6 +241,20 @@ class FTPManager:
 
         websitesName = ACLManager.findAllSites(currentACL, userID)
         proc = httpProc(self.request, 'ftp/listFTPAccounts.html',
+                        {'websiteList': websitesName, "status": 1}, 'listFTPAccounts')
+        return proc.render()
+
+    def listFTPAccountsV2(self):
+        userID = self.request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if not os.path.exists('/home/cyberpanel/pureftpd'):
+            proc = httpProc(self.request, 'ftp/listFTPAccountsV2.html',
+                            {"status": 0}, 'listFTPAccounts')
+            return proc.render()
+
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        proc = httpProc(self.request, 'ftp/listFTPAccountsV2.html',
                         {'websiteList': websitesName, "status": 1}, 'listFTPAccounts')
         return proc.render()
 
@@ -365,7 +413,8 @@ class FTPManager:
             except:
                 pass
 
-            if (ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8) or (
+            if (
+                    ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8) or (
                     ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20 and ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu):
                 command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/ssl/private/pure-ftpd.pem -out /etc/ssl/private/pure-ftpd.pem'
             else:
@@ -383,7 +432,6 @@ class FTPManager:
 
             else:
                 shutil.copytree("/usr/local/CyberCP/install/pure-ftpd-one", ftpdPath)
-
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
                 try:
@@ -488,7 +536,8 @@ class FTPManager:
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.CyberCPLogFileWriter.writeToFile('%s. [setupConnection:75]' % (str(msg)))
 
-            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Removing and re-installing FTP..,5')
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                      'Removing and re-installing FTP..,5')
 
             if self.installPureFTPD() == 0:
                 logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
@@ -505,7 +554,8 @@ class FTPManager:
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Configurations reset..,70')
 
             if self.installPureFTPDConfigurations(settings.DATABASES['default']['PASSWORD']) == 0:
-                logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'installPureFTPDConfigurations failed. [404].')
+                logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                          'installPureFTPDConfigurations failed. [404].')
                 return 0
 
             if self.startPureFTPD() == 0:
@@ -524,8 +574,8 @@ class FTPManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-def main():
 
+def main():
     parser = argparse.ArgumentParser(description='CyberPanel')
     parser.add_argument('function', help='Specify a function to call!')
     parser.add_argument('--tempStatusPath', help='Path of temporary status file.')
@@ -536,6 +586,7 @@ def main():
         extraArgs = {'tempStatusPath': args.tempStatusPath}
         ftp = FTPManager(None, extraArgs)
         ftp.ResetFTPConfigurations()
+
 
 if __name__ == "__main__":
     main()
