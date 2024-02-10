@@ -1748,7 +1748,10 @@ class BackupManager:
 
             config = json.loads(nbj.config)
             config[IncScheduler.frequency] = backupFrequency
-            config[IncScheduler.retention] = backupRetention
+            try:
+                config[IncScheduler.retention] = backupRetention
+            except:
+                pass
 
             nbj.config = json.dumps(config)
             nbj.save()
