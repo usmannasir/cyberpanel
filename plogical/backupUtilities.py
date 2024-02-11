@@ -1316,6 +1316,7 @@ class backupUtilities:
 
             return [1, "None"]
 
+
         except paramiko.AuthenticationException:
             return [0, 'Authentication failed. [sendKey]']
         except paramiko.SSHException as e:

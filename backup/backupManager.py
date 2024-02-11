@@ -1754,6 +1754,7 @@ class BackupManager:
             except:
                 pass
 
+
             nbj.config = json.dumps(config)
             nbj.save()
 
