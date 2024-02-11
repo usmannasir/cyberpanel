@@ -631,7 +631,7 @@ app.controller('phpMyAdmin', function ($scope, $http, $window) {
 });
 
 
-app.controller('Mysqlmanager', function ($scope, $http, $compile, $window) {
+app.controller('Mysqlmanager', function ($scope, $http, $compile, $window, $timeout) {
     $scope.cyberPanelLoading = true;
     $scope.mysql_status = 'test'
 
