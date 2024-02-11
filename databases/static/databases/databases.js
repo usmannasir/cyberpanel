@@ -837,3 +837,162 @@ app.controller('OptimizeMysql', function ($scope, $http) {
         }
     }
 })
+
+
+app.controller('mysqlupdate', function ($scope, $http, $timeout) {
+    $scope.cyberPanelLoading = true;
+    $scope.dbLoading = true;
+    $scope.modeSecInstallBox = true;
+    $scope.modsecLoading = true;
+    $scope.failedToStartInallation = true;
+    $scope.couldNotConnect = true;
+    $scope.modSecSuccessfullyInstalled = true;
+    $scope.installationFailed = true;
+
+    $scope.Upgardemysql = function () {
+        $scope.dbLoading = false;
+        $scope.installform = true;
+        $scope.modSecNotifyBox = true;
+        $scope.modeSecInstallBox = false;
+        $scope.modsecLoading = false;
+        $scope.failedToStartInallation = true;
+        $scope.couldNotConnect = true;
+        $scope.modSecSuccessfullyInstalled = true;
+        $scope.installationFailed = true;
+
+
+        url = "/dataBases/upgrademysqlnow";
+
+        var data = {
+            mysqlversion: $scope.version
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+
+
+        function ListInitialData(response) {
+            $scope.cyberhosting = true;
+            if (response.data.status === 1) {
+                $scope.modSecNotifyBox = true;
+                $scope.modeSecInstallBox = false;
+                $scope.modsecLoading = false;
+                $scope.failedToStartInallation = true;
+                $scope.couldNotConnect = true;
+                $scope.modSecSuccessfullyInstalled = true;
+                $scope.installationFailed = true;
+
+                $scope.statusfile = response.data.tempStatusPath
+
+                $timeout(getRequestStatus, 1000);
+
+            } else {
+                $scope.errorMessage = response.data.error_message;
+
+                $scope.modSecNotifyBox = false;
+                $scope.modeSecInstallBox = true;
+                $scope.modsecLoading = true;
+                $scope.failedToStartInallation = false;
+                $scope.couldNotConnect = true;
+                $scope.modSecSuccessfullyInstalled = true;
+            }
+
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.cyberhosting = true;
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+        }
+    }
+
+
+    function getRequestStatus() {
+
+        $scope.modSecNotifyBox = true;
+        $scope.modeSecInstallBox = false;
+        $scope.modsecLoading = false;
+        $scope.failedToStartInallation = true;
+        $scope.couldNotConnect = true;
+        $scope.modSecSuccessfullyInstalled = true;
+        $scope.installationFailed = true;
+
+        url = "/dataBases/upgrademysqlstatus";
+
+        var data = {
+            statusfile: $scope.statusfile
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.abort === 0) {
+
+                $scope.modSecNotifyBox = true;
+                $scope.modeSecInstallBox = false;
+                $scope.modsecLoading = false;
+                $scope.failedToStartInallation = true;
+                $scope.couldNotConnect = true;
+                $scope.modSecSuccessfullyInstalled = true;
+                $scope.installationFailed = true;
+
+                $scope.requestData = response.data.requestStatus;
+                $timeout(getRequestStatus, 1000);
+            } else {
+                // Notifications
+                $timeout.cancel();
+                $scope.modSecNotifyBox = false;
+                $scope.modeSecInstallBox = false;
+                $scope.modsecLoading = true;
+                $scope.failedToStartInallation = true;
+                $scope.couldNotConnect = true;
+
+                $scope.requestData = response.data.requestStatus;
+
+                if (response.data.installed === 0) {
+                    $scope.installationFailed = false;
+                    $scope.errorMessage = response.data.error_message;
+                } else {
+                    $scope.modSecSuccessfullyInstalled = false;
+                    $timeout(function () {
+                        $window.location.reload();
+                    }, 3000);
+                }
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.modSecNotifyBox = false;
+            $scope.modeSecInstallBox = false;
+            $scope.modsecLoading = true;
+            $scope.failedToStartInallation = true;
+            $scope.couldNotConnect = false;
+            $scope.modSecSuccessfullyInstalled = true;
+            $scope.installationFailed = true;
+
+
+        }
+
+    }
+});
