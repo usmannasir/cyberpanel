@@ -123,7 +123,9 @@
                 var option = document.createElement("option");
                 option.value = branch;
                 option.text = branch;
-                branchSelect.appendChild(option);
+                if (branch.startsWith("v") && branch.indexOf("dev") === -1) {
+                    branchSelect.appendChild(option);
+                }
             });
         }
 
