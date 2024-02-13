@@ -17,10 +17,11 @@ from CLScript.CLMain import CLMain
 
 class CloudLinuxDomains(CLMain):
 
-    def __init__(self, name, owner):
+    def __init__(self, name, owner, with_php):
         CLMain.__init__(self)
         self.owner = owner
         self.name = name
+        self.with_php = with_php
 
     def listAll(self):
         data = {}
@@ -47,16 +48,20 @@ class CloudLinuxDomains(CLMain):
         print(json.dumps(final))
 
 
+import argparse
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='CyberPanel CloudLinux Manager')
     parser.add_argument('-o', '--owner', help='Owner')
     parser.add_argument('-n', '--name', help='Owner')
-    parser.add_argument('-p', '--with-php', help='False (X-Ray support only)')
+    parser.add_argument('-p', '--with-php', action='store_true', help='False (X-Ray support only)')
 
     args = parser.parse_args()
 
-    pi = CloudLinuxDomains(args.name, args.owner)
+    # Assuming CloudLinuxDomains class exists
+    pi = CloudLinuxDomains(args.name, args.owner, args.with_php)
     try:
         pi.listAll()
     except:
         pi.listAll()
+
