@@ -76,12 +76,17 @@ class virtualHostUtilities:
         except:
             CurrentHostName = ''
 
-        if not skipRDNSCheck:
-            if not os.path.exists('/home/cyberpanel/postfix'):
+        if skipRDNSCheck:
+            pass
+        else:
+            if os.path.exists('/home/cyberpanel/postfix'):
+                pass
+            else:
                 message = 'This server does not come with postfix installed. [404]'
                 print(message)
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, message)
                 logging.CyberCPLogFileWriter.writeToFile(message)
+                return 0
 
 
         ####
