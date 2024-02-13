@@ -119,14 +119,16 @@
         // Function to populate the branch dropdown
         function populateBranches(branches) {
             var branchSelect = document.getElementById("branchSelect");
-            branches.forEach((branch) => {
+            for (let i = branches.length - 1; i >= 0; i--) {
+                const branch = branches[i];
                 var option = document.createElement("option");
                 option.value = branch;
                 option.text = branch;
-                if (branch.startsWith("v") && branch.indexOf("dev") === -1) {
+                if (branch.startsWith("v") && branch.indexOf("dev") === -1 && branch.indexOf("version-counter") === -1) {
                     branchSelect.appendChild(option);
                 }
-            });
+            }
+
         }
 
         function getBranches(url, branches, page) {
