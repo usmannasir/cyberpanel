@@ -8,6 +8,9 @@ urlpatterns = [
     url(r'^createDNSZone', views.createDNSZone, name='createDNSZone'),
     url(r'^addDeleteDNSRecords$', views.addDeleteDNSRecords, name='addDeleteDNSRecords'),
     url(r'^addDeleteDNSRecordsCloudFlare$', views.addDeleteDNSRecordsCloudFlare, name='addDeleteDNSRecordsCloudFlare'),
+    url(r'^ResetDNSConfigurations$', views.ResetDNSConfigurations, name='ResetDNSConfigurations'),
+    url(r'^resetDNSnow$', views.resetDNSnow, name='resetDNSnow'),
+    url(r'^getresetstatus', views.getresetstatus, name='getresetstatus'),
 
     # JS Functions
     url(r'^NSCreation',views.NSCreation,name="NSCreation"),

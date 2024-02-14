@@ -1,10 +1,16 @@
 # -*- coding: utf-8 -*-
+import time
+from random import randint
 
-from django.shortcuts import redirect
+from django.shortcuts import redirect, HttpResponse
 from loginSystem.views import loadLoginPage
+from plogical.acl import ACLManager
+from plogical.httpProc import httpProc
+from plogical.processUtilities import ProcessUtilities
 from .dnsManager import DNSManager
 from .pluginManager import pluginManager
 import json
+
 
 # Create your views here.
 
@@ -16,6 +22,7 @@ def loadDNSHome(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def createNameserver(request):
     try:
         userID = request.session['userID']
@@ -23,6 +30,7 @@ def createNameserver(request):
         return dm.createNameserver(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def NSCreation(request):
     try:
@@ -43,6 +51,7 @@ def NSCreation(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def createDNSZone(request):
     try:
         userID = request.session['userID']
@@ -50,6 +59,7 @@ def createDNSZone(request):
         return dm.createDNSZone(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def zoneCreation(request):
     try:
@@ -60,7 +70,7 @@ def zoneCreation(request):
             return result
 
         dm = DNSManager()
-        coreResult =  dm.zoneCreation(userID, json.loads(request.body))
+        coreResult = dm.zoneCreation(userID, json.loads(request.body))
 
         result = pluginManager.postZoneCreation(request, coreResult)
         if result != 200:
@@ -70,6 +80,7 @@ def zoneCreation(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def addDeleteDNSRecords(request):
     try:
         userID = request.session['userID']
@@ -77,6 +88,7 @@ def addDeleteDNSRecords(request):
         return dm.addDeleteDNSRecords(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def updateRecord(request):
     try:
@@ -86,6 +98,7 @@ def updateRecord(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def getCurrentRecordsForDomain(request):
     try:
         userID = request.session['userID']
@@ -93,6 +106,7 @@ def getCurrentRecordsForDomain(request):
         return dm.getCurrentRecordsForDomain(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def addDNSRecord(request):
     try:
@@ -103,7 +117,7 @@ def addDNSRecord(request):
             return result
 
         dm = DNSManager()
-        coreResult =  dm.addDNSRecord(userID, json.loads(request.body))
+        coreResult = dm.addDNSRecord(userID, json.loads(request.body))
 
         result = pluginManager.postAddDNSRecord(request, coreResult)
         if result != 200:
@@ -114,6 +128,7 @@ def addDNSRecord(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def deleteDNSRecord(request):
     try:
         userID = request.session['userID']
@@ -123,7 +138,7 @@ def deleteDNSRecord(request):
             return result
 
         dm = DNSManager()
-        coreResult =  dm.deleteDNSRecord(userID, json.loads(request.body))
+        coreResult = dm.deleteDNSRecord(userID, json.loads(request.body))
 
         result = pluginManager.postDeleteDNSRecord(request, coreResult)
         if result != 200:
@@ -133,6 +148,7 @@ def deleteDNSRecord(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def deleteDNSZone(request):
     try:
         userID = request.session['userID']
@@ -140,6 +156,7 @@ def deleteDNSZone(request):
         return dm.deleteDNSZone(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def submitZoneDeletion(request):
     try:
@@ -177,6 +194,7 @@ def saveNSConfigurations(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def addDeleteDNSRecordsCloudFlare(request):
     try:
         userID = request.session['userID']
@@ -184,6 +202,86 @@ def addDeleteDNSRecordsCloudFlare(request):
         return dm.addDeleteDNSRecordsCloudFlare(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
+
+def ResetDNSConfigurations(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        proc = httpProc(request, 'dns/resetdnsconf.html')
+        return proc.render()
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def resetDNSnow(request):
+    try:
+        from plogical.virtualHostUtilities import virtualHostUtilities
+        userID = request.session['userID']
+
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('FilemanagerAdmin', 0)
+
+        data = json.loads(request.body)
+        tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+        execPath = f"/usr/local/CyberCP/bin/python /usr/local/CyberCP/dns/dnsManager.py ResetDNSConfigurations --tempStatusPath {tempStatusPath}"
+
+        ProcessUtilities.popenExecutioner(execPath)
+        time.sleep(2)
+
+        data_ret = {'status': 1, 'error_message': "None",
+                    'tempStatusPath': tempStatusPath}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def getresetstatus(request):
+    try:
+        data = json.loads(request.body)
+        statusfile = data['statusfile']
+        installStatus = ProcessUtilities.outputExecutioner("sudo cat " + statusfile)
+
+        if installStatus.find("[200]") > -1:
+
+            command = 'sudo rm -f ' + statusfile
+            ProcessUtilities.executioner(command)
+
+            final_json = json.dumps({
+                'error_message': "None",
+                'requestStatus': installStatus,
+                'abort': 1,
+                'installed': 1,
+            })
+            return HttpResponse(final_json)
+        elif installStatus.find("[404]") > -1:
+            command = 'sudo rm -f ' + statusfile
+            ProcessUtilities.executioner(command)
+            final_json = json.dumps({
+                'abort': 1,
+                'installed': 0,
+                'error_message': "None",
+                'requestStatus': installStatus,
+            })
+            return HttpResponse(final_json)
+
+        else:
+            final_json = json.dumps({
+                'abort': 0,
+                'error_message': "None",
+                'requestStatus': installStatus,
+            })
+            return HttpResponse(final_json)
+    except KeyError:
+        return redirect(loadLoginPage)
+
 
 def saveCFConfigs(request):
     try:
@@ -197,7 +295,6 @@ def saveCFConfigs(request):
         return redirect(loadLoginPage)
 
 
-
 def getCurrentRecordsForDomainCloudFlare(request):
     try:
         userID = request.session['userID']
@@ -206,47 +303,51 @@ def getCurrentRecordsForDomainCloudFlare(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def deleteDNSRecordCloudFlare(request):
     try:
         userID = request.session['userID']
 
         dm = DNSManager()
-        coreResult =  dm.deleteDNSRecordCloudFlare(userID, json.loads(request.body))
+        coreResult = dm.deleteDNSRecordCloudFlare(userID, json.loads(request.body))
 
         return coreResult
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def addDNSRecordCloudFlare(request):
     try:
         userID = request.session['userID']
 
         dm = DNSManager()
-        coreResult =  dm.addDNSRecordCloudFlare(userID, json.loads(request.body))
+        coreResult = dm.addDNSRecordCloudFlare(userID, json.loads(request.body))
 
         return coreResult
 
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def syncCF(request):
     try:
         userID = request.session['userID']
 
         dm = DNSManager()
-        coreResult =  dm.syncCF(userID, json.loads(request.body))
+        coreResult = dm.syncCF(userID, json.loads(request.body))
 
         return coreResult
 
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def enableProxy(request):
     try:
         userID = request.session['userID']
 
         dm = DNSManager()
-        coreResult =  dm.enableProxy(userID, json.loads(request.body))
+        coreResult = dm.enableProxy(userID, json.loads(request.body))
 
         return coreResult
     except KeyError:

@@ -285,7 +285,7 @@ app.controller('deleteFTPAccount', function ($scope, $http) {
 /* Java script code to delete ftp account ends here */
 
 
-app.controller('listFTPAccounts', function ($scope, $http) {
+app.controller('listFTPAccounts', function ($scope, $http, ) {
 
     $scope.recordsFetched = true;
     $scope.passwordChanged = true;
@@ -454,4 +454,155 @@ app.controller('listFTPAccounts', function ($scope, $http) {
         $scope.generatedPasswordView = true;
     };
 
+});
+
+
+
+app.controller('Resetftpconf', function ($scope, $http, $timeout){
+    $scope.Loading = true;
+    $scope.NotifyBox = true;
+    $scope.InstallBox = true;
+
+
+    $scope.resetftp = function () {
+        $scope.Loading = false;
+        $scope.installationDetailsForm = true;
+        $scope.InstallBox = false;
+
+
+
+         url = "/ftp/resetftpnow";
+
+        var data = {
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+
+
+         function ListInitialData(response) {
+
+            if (response.data.status === 1) {
+                $scope.NotifyBox = true;
+                $scope.InstallBox = false;
+                $scope.Loading = false;
+                $scope.failedToStartInallation = true;
+                $scope.couldNotConnect = true;
+                $scope.modSecSuccessfullyInstalled = true;
+                $scope.installationFailed = true;
+
+                $scope.statusfile = response.data.tempStatusPath
+
+                $timeout(getRequestStatus, 1000);
+
+            } else {
+                $scope.errorMessage = response.data.error_message;
+
+                $scope.NotifyBox = false;
+                $scope.InstallBox = true;
+                $scope.Loading = true;
+                $scope.failedToStartInallation = false;
+                $scope.couldNotConnect = true;
+                $scope.modSecSuccessfullyInstalled = true;
+            }
+
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.cyberhosting = true;
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+        }
+    }
+
+
+
+    function getRequestStatus() {
+
+        $scope.NotifyBox = true;
+        $scope.InstallBox = false;
+        $scope.Loading = false;
+        $scope.failedToStartInallation = true;
+        $scope.couldNotConnect = true;
+        $scope.modSecSuccessfullyInstalled = true;
+        $scope.installationFailed = true;
+
+        url = "/ftp/getresetstatus";
+
+        var data = {
+            statusfile: $scope.statusfile
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.abort === 0) {
+
+                $scope.NotifyBox = true;
+                $scope.InstallBox = false;
+                $scope.Loading = false;
+                $scope.failedToStartInallation = true;
+                $scope.couldNotConnect = true;
+                $scope.modSecSuccessfullyInstalled = true;
+                $scope.installationFailed = true;
+
+                $scope.requestData = response.data.requestStatus;
+                $timeout(getRequestStatus, 1000);
+            } else {
+                // Notifications
+                $timeout.cancel();
+                $scope.NotifyBox = false;
+                $scope.InstallBox = false;
+                $scope.Loading = true;
+                $scope.failedToStartInallation = true;
+                $scope.couldNotConnect = true;
+
+                $scope.requestData = response.data.requestStatus;
+
+                if (response.data.installed === 0) {
+                    $scope.installationFailed = false;
+                    $scope.errorMessage = response.data.error_message;
+                } else {
+                    $scope.modSecSuccessfullyInstalled = false;
+                    $timeout(function () {
+                        $window.location.reload();
+                    }, 3000);
+                }
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.NotifyBox = false;
+            $scope.InstallBox = false;
+            $scope.Loading = true;
+            $scope.failedToStartInallation = true;
+            $scope.couldNotConnect = false;
+            $scope.modSecSuccessfullyInstalled = true;
+            $scope.installationFailed = true;
+
+
+        }
+
+    }
 });

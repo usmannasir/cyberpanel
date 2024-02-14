@@ -549,6 +549,11 @@
                                                     title="{% trans 'CloudFlare' %}"><span>{% trans "CloudFlare" %}</span></a>
                                             </li>
                                         {% endif %}
+                                        {% if admin or addDeleteRecords %}
+                                            <li><a href="{% url 'ResetDNSConfigurations' %}"
+                                                   title="{% trans 'Reset DNS Configurations' %}"><span>{% trans "Reset DNS Configurations" %}</span></a>
+                                            </li>
+                                        {% endif %}
                                     </ul>
 
                                 </div><!-- .sidebar-submenu -->
@@ -632,6 +637,11 @@
                                         {% if admin or listFTPAccounts %}
                                             <li><a href="{% url 'listFTPAccounts' %}"
                                                    title="{% trans 'List FTP Accounts' %}"><span>{% trans "List FTP Accounts" %}</span></a>
+                                            </li>
+                                        {% endif %}
+                                        {% if admin or listFTPAccounts %}
+                                            <li><a href="{% url 'ResetFTPConfigurations' %}"
+                                                   title="{% trans 'Reset FTP Configurations' %}"><span>{% trans "Reset FTP Configurations" %}</span></a>
                                             </li>
                                         {% endif %}
                                     </ul>
@@ -1088,6 +1098,7 @@
                                         <li><a href="{% url 'managePureFtpd' %}"
                                                title="{% trans 'Manage FTP' %}"><span>{% trans "Manage FTP" %}</span></a>
                                         </li>
+
                                     </ul>
 
                                 </div><!-- .sidebar-submenu -->
