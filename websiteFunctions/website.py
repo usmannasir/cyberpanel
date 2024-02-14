@@ -4602,10 +4602,21 @@ StrictHostKeyChecking no
 
             DiskUsage, DiskUsagePercentage, bwInMB, bwUsage = virtualHostUtilities.FindStats(items)
 
+            vhFile = f'/usr/local/lsws/conf/vhosts/{items.domain}/vhost.conf'
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(vhFile)
+
+            try:
+                from plogical.phpUtilities import phpUtilities
+                PHPVersionActual = phpUtilities.WrapGetPHPVersionFromFileToGetVersionWithPHP(vhFile)
+            except:
+                PHPVersionActual = 'PHP 8.1'
+
             diskUsed = "%sMB" % str(DiskUsage)
             dic = {'domain': items.domain, 'adminEmail': items.adminEmail, 'ipAddress': ipAddress,
                    'admin': items.admin.userName, 'package': items.package.packageName, 'state': state,
-                   'diskUsed': diskUsed}
+                   'diskUsed': diskUsed, 'phpVersion': PHPVersionActual}
 
             if checker == 0:
                 json_data = json_data + json.dumps(dic)
