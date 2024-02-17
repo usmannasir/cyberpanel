@@ -89,7 +89,7 @@ def createDockersite(request):
         return HttpResponse(json_data)
 
     wm = WebsiteManager()
-    return wm.submitDockerSiteCreation(adminUser, json.loads(request.body))
+    return wm.submitDockerSiteCreation(admin.owner, json.loads(request.body))
 
 
 @csrf_exempt
