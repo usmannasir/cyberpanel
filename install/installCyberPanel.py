@@ -362,17 +362,11 @@ gpgcheck=1
             if FetchCloudLinuxVersion() >= 88:
                 repo = '/etc/yum.repos.d/mariadb.repo'
                 repoContent = '''
-# MariaDB 10.11 RedHatEnterpriseLinux repository list - created 2023-10-30 14:19 UTC
-# https://mariadb.org/download/
 [mariadb]
 name = MariaDB
-# rpm.mariadb.org is a dynamic mirror if your preferred mirror goes offline. See https://mariadb.org/mirrorbits/ for$
-# baseurl = https://rpm.mariadb.org/10.11/rhel/$releasever/$basearch
-baseurl = https://mirror.23m.com/mariadb/yum/10.11/rhel/$releasever/$basearch
-module_hotfixes = 1
-# gpgkey = https://rpm.mariadb.org/RPM-GPG-KEY-MariaDB
-gpgkey = https://mirror.23m.com/mariadb/yum/RPM-GPG-KEY-MariaDB
-gpgcheck = 1
+baseurl = https://rpm.mariadb.org/10.6/rhel/$releasever/$basearch
+gpgkey= https://rpm.mariadb.org/RPM-GPG-KEY-MariaDB
+gpgcheck=1
 '''
                 WriteToFile = open(repo, 'w')
                 WriteToFile.write(repoContent)
