@@ -40,7 +40,7 @@ def get_Ubuntu_release():
 def FetchCloudLinuxVersion():
     if os.path.exists('/etc/os-release'):
         data = open('/etc/os-release', 'r').read()
-        if (data.find('CloudLinux') > -1 or data.find('cloudlinux') > -1) and (data.find('8.9') > -1 or data.find('Anatoly Levchenko') > -1):
+        if (data.find('CloudLinux') > -1 or data.find('cloudlinux') > -1 or data.find('AlmaLinux') > -1 or data.find('almalinux')) and (data.find('8.9') > -1 or data.find('Anatoly Levchenko') > -1 or data.find('Midnight Oncill') > -1):
             return 89
         elif (data.find('CloudLinux') > -1 or data.find('cloudlinux') > -1) and (data.find('8.8') > -1 or data.find('Anatoly Filipchenko') > -1):
             return 88
