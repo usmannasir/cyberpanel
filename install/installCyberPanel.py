@@ -37,15 +37,17 @@ def get_Ubuntu_release():
     return release
 
 
-def FetchCloudLinuxVersion():
+def FetchCloudLinuxAlmaVersionVersion():
     if os.path.exists('/etc/os-release'):
         data = open('/etc/os-release', 'r').read()
-        if (data.find('CloudLinux') > -1 or data.find('cloudlinux') > -1 or data.find('AlmaLinux') > -1 or data.find('almalinux')) and (data.find('8.9') > -1 or data.find('Anatoly Levchenko') > -1 or data.find('Midnight Oncill') > -1):
-            return 89
+        if (data.find('CloudLinux') > -1 or data.find('cloudlinux') > -1) and (data.find('8.9') > -1 or data.find('Anatoly Levchenko') > -1):
+            return 'cl-89'
         elif (data.find('CloudLinux') > -1 or data.find('cloudlinux') > -1) and (data.find('8.8') > -1 or data.find('Anatoly Filipchenko') > -1):
-            return 88
+            return 'cl-88'
+        elif (data.find('AlmaLinux') > -1 or data.find('almalinux') > -1) and (data.find('8.9') > -1 or data.find('Midnight Oncilla') > -1):
+            return 'al-88'
         elif (data.find('AlmaLinux') > -1 or data.find('almalinux') > -1) and (data.find('8.7') > -1 or data.find('Stone Smilodon') > -1):
-            return 87
+            return 'al-87'
     else:
         return -1
 
@@ -361,31 +363,23 @@ gpgcheck=1
             command = 'dnf install mariadb-server -y'
         elif self.distro == cent8 or self.distro == openeuler:
 
-            if FetchCloudLinuxVersion() >= 88:
-                repo = '/etc/yum.repos.d/mariadb.repo'
-                repoContent = '''
-[mariadb]
-name = MariaDB
-baseurl = https://rpm.mariadb.org/10.6/rhel/$releasever/$basearch
-gpgkey= https://rpm.mariadb.org/RPM-GPG-KEY-MariaDB
-gpgcheck=1
-'''
-                WriteToFile = open(repo, 'w')
-                WriteToFile.write(repoContent)
-                WriteToFile.close()
-            elif FetchCloudLinuxVersion() >= 87:
-                repo = '/etc/yum.repos.d/mariadb.repo'
-                repoContent = '''
-[mariadb]
-name = MariaDB
-baseurl = https://rpm.mariadb.org/10.6/rhel/$releasever/$basearch
-gpgkey= https://rpm.mariadb.org/RPM-GPG-KEY-MariaDB
-gpgcheck=1
-'''
-                WriteToFile = open(repo, 'w')
-                WriteToFile.write(repoContent)
-                WriteToFile.close()
+            clAPVersion = FetchCloudLinuxAlmaVersionVersion()
+            type = clAPVersion.split('-')[0]
+            version = int(clAPVersion.split('-')[1])
 
+
+            if type == 'cl' and version >= 88:
+                repo = '/etc/yum.repos.d/mariadb.repo'
+                repoContent = '''
+[mariadb]
+name = MariaDB
+baseurl = https://rpm.mariadb.org/10.6/rhel/$releasever/$basearch
+gpgkey= https://rpm.mariadb.org/RPM-GPG-KEY-MariaDB
+gpgcheck=1
+'''
+                WriteToFile = open(repo, 'w')
+                WriteToFile.write(repoContent)
+                WriteToFile.close()
             else:
 
                 command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=10.11'
