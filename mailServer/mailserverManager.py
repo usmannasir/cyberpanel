@@ -542,7 +542,7 @@ class MailServerManager(multi.Thread):
 
             for items in records:
                 dic = {'email': items.email,
-                       'DiskUsage': '%sMB' % items.DiskUsage
+                       'DiskUsage': '%sMB' % items.DiskUsage.rstrip('MB')
                        }
 
                 if checker == 0:
