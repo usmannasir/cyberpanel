@@ -3,6 +3,8 @@ import json
 import os
 import sys
 import time
+from random import randint
+
 sys.path.append('/usr/local/CyberCP')
 
 try:
@@ -43,6 +45,60 @@ class Docker_Sites(multi.Thread):
                 self.DockerAppName = f"{self.data['name'].replace(' ', '')}_{self.data['name'].replace(' ', '-')}"
         except:
             pass
+
+        command = 'cat /etc/csf/csf.conf'
+        result = ProcessUtilities.outputExecutioner(command)
+
+        if result.find('SECTION:Initial Settings') > -1:
+
+            from plogical.csf import CSF
+            from plogical.virtualHostUtilities import virtualHostUtilities
+            currentSettings = CSF.fetchCSFSettings()
+
+            tcpIN = currentSettings['tcpIN']
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(f'TCPIN docker: {tcpIN}')
+
+
+
+            if tcpIN.find('8088') == -1:
+
+                ports = f'{tcpIN},8088'
+
+                portsPath = '/home/cyberpanel/' + str(randint(1000, 9999))
+
+                if os.path.exists(portsPath):
+                    os.remove(portsPath)
+
+                writeToFile = open(portsPath, 'w')
+                writeToFile.write(ports)
+                writeToFile.close()
+
+                execPath = "sudo /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
+                execPath = execPath + f" modifyPorts --protocol TCP_IN --ports " + portsPath
+                ProcessUtilities.executioner(execPath)
+
+            tcpOUT = currentSettings['tcpOUT']
+            if tcpOUT.find('8088') == -1:
+
+                ports = f'{tcpOUT},8088'
+
+                portsPath = '/home/cyberpanel/' + str(randint(1000, 9999))
+
+                if os.path.exists(portsPath):
+                    os.remove(portsPath)
+
+                writeToFile = open(portsPath, 'w')
+                writeToFile.write(ports)
+                writeToFile.close()
+
+                execPath = "sudo /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
+                execPath = execPath + f" modifyPorts --protocol TCP_OUT --ports " + portsPath
+                ProcessUtilities.executioner(execPath)
+
+
+
 
     def run(self):
         try:
