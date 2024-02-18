@@ -44,6 +44,8 @@ def FetchCloudLinuxVersion():
             return 89
         elif (data.find('CloudLinux') > -1 or data.find('cloudlinux') > -1) and (data.find('8.8') > -1 or data.find('Anatoly Filipchenko') > -1):
             return 88
+        elif (data.find('AlmaLinux') > -1 or data.find('almalinux') > -1) and (data.find('8.7') > -1 or data.find('Stone Smilodon') > -1):
+            return 87
     else:
         return -1
 
@@ -360,6 +362,18 @@ gpgcheck=1
         elif self.distro == cent8 or self.distro == openeuler:
 
             if FetchCloudLinuxVersion() >= 88:
+                repo = '/etc/yum.repos.d/mariadb.repo'
+                repoContent = '''
+[mariadb]
+name = MariaDB
+baseurl = https://rpm.mariadb.org/10.6/rhel/$releasever/$basearch
+gpgkey= https://rpm.mariadb.org/RPM-GPG-KEY-MariaDB
+gpgcheck=1
+'''
+                WriteToFile = open(repo, 'w')
+                WriteToFile.write(repoContent)
+                WriteToFile.close()
+            elif FetchCloudLinuxVersion() >= 87:
                 repo = '/etc/yum.repos.d/mariadb.repo'
                 repoContent = '''
 [mariadb]
