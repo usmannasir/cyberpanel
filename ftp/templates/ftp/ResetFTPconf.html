@@ -1,0 +1,70 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Reset FTP Configurations - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Reset FTP Configurations" %}</h2>
+            <p>{% trans "Reset your FTP Configurations here." %}</p>
+        </div>
+        <div ng-controller="Resetftpconf">
+            <div class="panel-body">
+                <div ng-hide="installationDetailsForm" class="form-group">
+                    <div class="col-sm-4">
+                        <button
+                                type="button" ng-click="resetftp()"
+                                class="btn btn-primary btn-lg">{% trans "Reset Configuration" %}</button>
+                    </div>
+                </div>
+
+
+                <div ng-hide="NotifyBox" class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-6">
+
+                                <div ng-hide="failedToStartInallation" class="alert alert-danger">
+                                    <p>{% trans "Failed to start installation, Error message: " %} {$ errorMessage
+                                        $}</p>
+                                </div>
+
+                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                    <p>{% trans "Could not connect. Please refresh this page." %} </p>
+                                </div>
+
+                                <div ng-hide="installationFailed" class="alert alert-danger">
+                                    <p>{% trans "Installation failed." %} {$ errorMessage $}</p>
+                                </div>
+
+                                <div ng-hide="modSecSuccessfullyInstalled" class="alert alert-success">
+                                    <p>{% trans "successfully Completed Reset Process." %}</p>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div ng-hide="InstallBox" class="col-md-12">
+
+                            <form action="/" id="" class="form-horizontal bordered-row">
+                                <div class="form-group">
+                                    <div class="col-sm-12 text-center">
+                                        <h3> {% trans "Reseting...." %}
+                                            <img ng-hide="Loading" src="/static/images/loading.gif"></h3>
+                                    </div>
+                                    <div style="margin-top: 2%;" class="col-sm-12">
+                                        <textarea ng-model="requestData" rows="15"
+                                                  class="form-control">{$ requestData $}</textarea>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
