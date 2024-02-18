@@ -863,6 +863,15 @@ EOF
 
     dnf config-manager --set-enabled PowerTools > /dev/null 2>&1
     dnf config-manager --set-enabled powertools > /dev/null 2>&1
+
+    cat <<EOF >/etc/yum.repos.d/MariaDB.repo
+[mariadb]
+name = MariaDB
+baseurl = https://rpm.mariadb.org/10.6/rhel/\$releasever/\$basearch
+gpgkey= https://rpm.mariadb.org/RPM-GPG-KEY-MariaDB
+gpgcheck=1
+EOF
+
   
 #    cat <<EOF >/etc/yum.repos.d/CentOS-PowerTools-CyberPanel.repo
 #[powertools-for-cyberpanel]
