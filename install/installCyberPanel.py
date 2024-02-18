@@ -369,17 +369,15 @@ gpgcheck=1
 
 
             if type == 'cl' and version >= 88:
-                repo = '/etc/yum.repos.d/mariadb.repo'
-                repoContent = '''
-[mariadb]
-name = MariaDB
-baseurl = https://rpm.mariadb.org/10.6/rhel/$releasever/$basearch
-gpgkey= https://rpm.mariadb.org/RPM-GPG-KEY-MariaDB
-gpgcheck=1
-'''
-                WriteToFile = open(repo, 'w')
-                WriteToFile.write(repoContent)
-                WriteToFile.close()
+
+                command = 'yum remove db-governor db-governor-mysql -y'
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+
+                command = 'yum install governor-mysql'
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+
+                command = '/usr/share/lve/dbgovernor/mysqlgovernor.py --mysql-version=mariadb106 --yes'
+
             else:
 
                 command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=10.11'
@@ -395,7 +393,7 @@ gpgcheck=1
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
 
-            command = 'dnf install MariaDB-server MariaDB-client MariaDB-backup -y'
+                command = 'dnf install MariaDB-server MariaDB-client MariaDB-backup -y'
 
         install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
