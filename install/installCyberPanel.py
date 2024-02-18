@@ -373,10 +373,13 @@ gpgcheck=1
                 command = 'yum remove db-governor db-governor-mysql -y'
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
-                command = 'yum install governor-mysql'
+                command = 'yum install governor-mysql -y'
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
-                command = '/usr/share/lve/dbgovernor/mysqlgovernor.py --mysql-version=mariadb106 --yes'
+                command = '/usr/share/lve/dbgovernor/mysqlgovernor.py --mysql-version=mariadb106'
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+
+                command = '/usr/share/lve/dbgovernor/mysqlgovernor.py --install --yes'
 
             else:
 
