@@ -37,6 +37,16 @@ def get_Ubuntu_release():
     return release
 
 
+def FetchCloudLinuxVersion():
+    if os.path.exists('/etc/os-release'):
+        data = open('/etc/os-release', 'r').read()
+        if (data.find('CloudLinux') > -1 or data.find('cloudlinux') > -1) and (data.find('8.9') > -1 or data.find('Anatoly Levchenko') > -1):
+            return 89
+        elif (data.find('CloudLinux') > -1 or data.find('cloudlinux') > -1) and (data.find('8.8') > -1 or data.find('Anatoly Filipchenko') > -1):
+            return 88
+    else:
+        return -1
+
 class InstallCyberPanel:
     mysql_Root_password = ""
     mysqlPassword = ""
@@ -349,17 +359,38 @@ gpgcheck=1
             command = 'dnf install mariadb-server -y'
         elif self.distro == cent8 or self.distro == openeuler:
 
-            command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=10.11'
-            install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+            if FetchCloudLinuxVersion() >= 88:
+                repo = '/etc/yum.repos.d/mariadb.repo'
+                repoContent = '''
+# MariaDB 10.11 RedHatEnterpriseLinux repository list - created 2023-10-30 14:19 UTC
+# https://mariadb.org/download/
+[mariadb]
+name = MariaDB
+# rpm.mariadb.org is a dynamic mirror if your preferred mirror goes offline. See https://mariadb.org/mirrorbits/ for$
+# baseurl = https://rpm.mariadb.org/10.11/rhel/$releasever/$basearch
+baseurl = https://mirror.23m.com/mariadb/yum/10.11/rhel/$releasever/$basearch
+module_hotfixes = 1
+# gpgkey = https://rpm.mariadb.org/RPM-GPG-KEY-MariaDB
+gpgkey = https://mirror.23m.com/mariadb/yum/RPM-GPG-KEY-MariaDB
+gpgcheck = 1
+'''
+                WriteToFile = open(repo, 'w')
+                WriteToFile.write(repoContent)
+                WriteToFile.close()
 
-            command = 'yum remove mariadb* -y'
-            install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+            else:
 
-            command = 'sudo dnf -qy module disable mariadb'
-            install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+                command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=10.11'
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
-            command = 'sudo dnf module reset mariadb -y'
-            install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+                command = 'yum remove mariadb* -y'
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+
+                command = 'sudo dnf -qy module disable mariadb'
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+
+                command = 'sudo dnf module reset mariadb -y'
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
 
             command = 'dnf install MariaDB-server MariaDB-client MariaDB-backup -y'
