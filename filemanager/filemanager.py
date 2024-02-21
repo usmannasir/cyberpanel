@@ -386,17 +386,18 @@ class FileManager:
 
                 RemoveOK = 1
 
-                command = 'touch %s/hello.txt' % (self.homePath)
+                command = 'touch %s/public_html/hello.txt' % (self.homePath)
                 result = ProcessUtilities.outputExecutioner(command)
 
-                if result.find('No such file or directory') > -1:
+
+                if result.find('cannot touch') > -1:
                     RemoveOK = 0
 
                     command = 'chattr -R -i %s' % (self.homePath)
                     ProcessUtilities.executioner(command)
 
                 else:
-                    command = 'rm -f %s/hello.txt' % (self.homePath)
+                    command = 'rm -f %s/public_html/hello.txt' % (self.homePath)
                     ProcessUtilities.executioner(command)
 
 
@@ -424,6 +425,24 @@ class FileManager:
                 if RemoveOK == 0:
                     command = 'chattr -R +i %s' % (self.homePath)
                     ProcessUtilities.executioner(command)
+                    
+                    command = 'chattr -R -i %s' % (self.homePath) + '/logs/'
+                    ProcessUtilities.executioner(command)
+                    
+                    command = 'chattr -R -i %s' % (self.homePath) + '/.trash/'
+                    ProcessUtilities.executioner(command)
+                    
+                    command = 'chattr -R -i %s' % (self.homePath) + '/backup/'
+                    ProcessUtilities.executioner(command)
+                    
+                    command = 'chattr -R -i %s' % (self.homePath) + '/incbackup/'
+                    ProcessUtilities.executioner(command)
+                    
+                    command = 'chattr -R -i %s' % (self.homePath) + '/lscache/'
+                    ProcessUtilities.executioner(command)
+                    
+                    command = 'chattr -R -i %s' % (self.homePath) + '/.cagefs/'
+                    ProcessUtilities.executioner(command)
             except:
                 try:
                     skipTrash = self.data['skipTrash']
@@ -435,17 +454,17 @@ class FileManager:
 
                 RemoveOK = 1
 
-                command = 'touch %s/hello.txt' % (self.homePath)
+                command = 'touch %s/public_html/hello.txt' % (self.homePath)
                 result = ProcessUtilities.outputExecutioner(command)
 
-                if result.find('No such file or directory') > -1:
+                if result.find('cannot touch') > -1:
                     RemoveOK = 0
 
                     command = 'chattr -R -i %s' % (self.homePath)
                     ProcessUtilities.executioner(command)
 
                 else:
-                    command = 'rm -f %s/hello.txt' % (self.homePath)
+                    command = 'rm -f %s/public_html/hello.txt' % (self.homePath)
                     ProcessUtilities.executioner(command)
 
                 for item in self.data['fileAndFolders']:
@@ -461,6 +480,24 @@ class FileManager:
 
                 if RemoveOK == 0:
                     command = 'chattr -R +i %s' % (self.homePath)
+                    ProcessUtilities.executioner(command)
+                    
+                    command = 'chattr -R -i %s' % (self.homePath) + '/logs/'
+                    ProcessUtilities.executioner(command)
+                    
+                    command = 'chattr -R -i %s' % (self.homePath) + '/.trash/'
+                    ProcessUtilities.executioner(command)
+                    
+                    command = 'chattr -R -i %s' % (self.homePath) + '/backup/'
+                    ProcessUtilities.executioner(command)
+                    
+                    command = 'chattr -R -i %s' % (self.homePath) + '/incbackup/'
+                    ProcessUtilities.executioner(command)
+                    
+                    command = 'chattr -R -i %s' % (self.homePath) + '/lscache/'
+                    ProcessUtilities.executioner(command)
+                    
+                    command = 'chattr -R -i %s' % (self.homePath) + '/.cagefs/'
                     ProcessUtilities.executioner(command)
 
             json_data = json.dumps(finalData)
