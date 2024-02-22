@@ -215,7 +215,7 @@ urlpatterns = [
     url(r'^saveApacheConfigsToFile$', views.saveApacheConfigsToFile, name='saveApacheConfigsToFile'),
 
     ## Catch all for domains
-    url(r'^(?P<domain>(.*))/(?P<childDomain>(.*))$', views.launchChild, name='launchChild'),
+    url(r'^(?P<domain>(.*))/(?P<childDomain>(.*))$', views.launchChildv2, name='launchChildv2'),
     url(r'^(?P<domain>(.*))$', views.domainV2, name='domainv2'),
 
 ]
