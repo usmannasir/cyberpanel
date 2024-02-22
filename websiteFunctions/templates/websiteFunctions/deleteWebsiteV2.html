@@ -35,7 +35,7 @@
         </div>
         <div class="flex justify-center mt-4">
             <button ng-click="deleteWebsite()"
-                    class="bg-orange-500 px-3 py-4 rounded-lg text-xl font-semibold text-white">
+                    class="bg-orange-500 px-3 py-2 rounded-lg text-xl font-semibold text-white">
                 Delete Website
             </button>
 
@@ -53,11 +53,13 @@
         </div>
         <div>
             <div class="flex justify-center mt-4">
-                <div id="websiteDeleteFailure" class="text-red-500 font-semibold">
+                <div id="websiteDeleteFailure"
+                     class="flex justify-center w-full mt-2 bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
                     <p>{% trans "Cannot delete website, Error message: " %} {$ errorMessage $}</p>
                 </div>
                 <br>
-                <div id="websiteDeleteSuccess" class="text-green-500 font-semibold">
+                <div id="websiteDeleteSuccess"
+                     class="flex justify-center w-full mt-2 bg-green-500 px-2 rounded-lg py-1 font-semibold">
                     <p>{% trans "Website" %} <strong>{$ deletedWebsite $}</strong> {% trans "Successfully Deleted." %}
                     </p>
                 </div>

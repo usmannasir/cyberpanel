@@ -9,6 +9,7 @@ urlpatterns = [
     url(r'^restoreSite', views.restoreSite, name='restoreSite'),
     url(r'^V2/restoreSiteV2', views.restoreSiteV2, name='restoreSiteV2'),
     url(r'^gDrive$', views.gDrive, name='gDrive'),
+    url(r'^V2/gDriveV2$', views.gDriveV2, name='gDriveV2'),
     url(r'^gDriveSetup$', views.gDriveSetup, name='gDriveSetup'),
     url(r'^fetchgDriveSites$', views.fetchgDriveSites, name='fetchgDriveSites'),
     url(r'^addSitegDrive$', views.addSitegDrive, name='addSitegDrive'),
@@ -28,6 +29,7 @@ urlpatterns = [
     url(r'^submitRestore', views.submitRestore, name='submitRestore'),
 
     url(r'^backupDestinations', views.backupDestinations, name='backupDestinations'),
+    url(r'^V2/backupDestinationsV2', views.backupDestinationsV2, name='backupDestinationsV2'),
 
     url(r'^getCurrentBackupDestinations', views.getCurrentBackupDestinations, name='getCurrentBackupDestinations'),
 
@@ -38,6 +40,7 @@ urlpatterns = [
     url(r'^deleteDestination', views.deleteDestination, name='deleteDestination'),
 
     url(r'^scheduleBackup', views.scheduleBackup, name='scheduleBackup'),
+    url(r'^V2/scheduleBackupV2', views.scheduleBackupV2, name='scheduleBackupV2'),
 
     url(r'^getCurrentBackupSchedules', views.getCurrentBackupSchedules, name='getCurrentBackupSchedules'),
 
@@ -46,6 +49,7 @@ urlpatterns = [
     url(r'^scheduleDelete', views.scheduleDelete, name='scheduleDelete'),
 
     url(r'^remoteBackups', views.remoteBackups, name='remoteBackups'),
+    url(r'^V2/remoteBackupsV2', views.remoteBackupsV2, name='remoteBackupsV2'),
     url(r'^submitRemoteBackups', views.submitRemoteBackups, name='submitRemoteBackups'),
     url(r'^getRemoteTransferStatus', views.getRemoteTransferStatus, name='getRemoteTransferStatus'),
     url(r'^remoteBackupRestore', views.remoteBackupRestore, name='remoteBackupRestore'),

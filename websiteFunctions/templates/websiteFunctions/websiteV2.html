@@ -470,7 +470,7 @@
                 </div>
                 <div>
                     <ul class="flex w-full grid lg:grid-cols-4">
-                        <li class="px-3 py-3">
+                        <a href="{% url 'ApacheManagerV2' domain=domain %}" class="px-3 py-3">
                             <div class="flex items-center">
                                 <div>
                                     <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
@@ -487,7 +487,7 @@
                                     <p class="px-2 font-bold" style="font-size: 70%;">Apache Manager</p>
                                 </div>
                             </div>
-                        </li>
+                        </a>
                         <li ng-click="fetchConfigurations()" class="px-3 py-3 cursor-pointer">
                             <div class="flex items-center">
                                 <div>
@@ -836,7 +836,7 @@
                             </div>
                         </li>
                         <li class="px-3 py-3">
-                            <div class="flex items-center">
+                            <a href="{% url 'createFTPAccountV2' %}" class="flex items-center">
                                 <div>
                                     <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
                                          xmlns="http://www.w3.org/2000/svg">
@@ -855,12 +855,11 @@
                                 <div>
                                     <p class="px-2 font-bold" style="font-size: 70%;">Create FTP Account</p>
                                 </div>
-                            </div>
+                            </a>
                         </li>
                         <li class="px-3 py-3">
-                            <div class="flex items-center">
+                            <a href="{% url 'deleteFTPAccountV2' %}" class="flex items-center">
                                 <div>
-
                                     <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
                                          xmlns="http://www.w3.org/2000/svg">
                                         <path d="M38.3333 12.5L29.4999 21.6667L24.8333 17" stroke="#FF9A00"
@@ -876,7 +875,7 @@
                                 <div>
                                     <p class="px-2 font-bold" style="font-size: 70%;">Delete FTP Account</p>
                                 </div>
-                            </div>
+                            </a>
                         </li>
                     </ul>
                     {#                    open_basedir HTML#}
@@ -943,7 +942,7 @@
                 </div>
                 <div>
                     <ul class="flex w-full grid lg:grid-cols-4">
-                        <li class="px-3 py-3">
+                        <a id="emailListsV2" target="_self" title="{% trans 'Create Lists' %}" class="px-3 py-3">
                             <div class="flex items-center">
                                 <div>
                                     <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
@@ -956,11 +955,11 @@
                                                 fill="#FF9A00"/>
                                     </svg>
                                 </div>
-                                <div>
+                                <div id="emailListsChildV2">
                                     <p class="px-2 font-bold" style="font-size: 70%;">Create Lists</p>
                                 </div>
                             </div>
-                        </li>
+                        </a>
                         <li class="px-3 py-3">
                             <div class="flex items-center">
                                 <div>

@@ -1,0 +1,229 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="BackupScheduleV2" class="p-8">
+        <div>
+            <p class="text-4xl font-bold">Backup File Configurations</p>
+        </div>
+
+        <div class="py-4">
+            <p class="text-xl font-bold">Schedule Backups</p>
+            <img ng-hide="BackupScheduleLoading"
+                 src="{% static 'images/loading.gif' %}">
+        </div>
+        <hr>
+        <form name="websiteCreationForm" action="/" id="createPackages">
+            <div ng-hide="installationDetailsForm" class="flex mt-4 py-2 px-6">
+                <div>
+                    <p class="font-semibold w-48">Schedule Name</p>
+                </div>
+                <div>
+                    <input name="Hostname" type="text" class="w-80 bg-gray-100 rounded px-2 py-1"
+                           ng-model="ScheduleName"
+                           required>
+                </div>
+            </div>
+            <span style="display: none" id="RemoteConfigID"> {{ RemoteConfigID }}</span>
+            <div ng-hide="installationDetailsForm" class="flex py-2 px-6">
+                <div>
+                    <p class="font-semibold w-48">Backup Frequency</p>
+                </div>
+                <div>
+                    <select ng-model="Bfrequency"
+                            class="w-80 bg-gray-100 rounded px-2 py-1">
+                        <option>30 Minutes</option>
+                        <option>1 Hour</option>
+                        <option>6 Hours</option>
+                        <option>12 Hours</option>
+                        <option>1 Day</option>
+                        <option>3 Days</option>
+                        <option>1 Week</option>
+                    </select>
+                </div>
+            </div>
+            <div ng-hide="installationDetailsForm" class="flex py-2 px-6">
+                <div>
+                    <p class="font-semibold w-48">Backup File Retention</p>
+                </div>
+                <div>
+                    <select ng-model="Fretention"
+                            class="w-80 bg-gray-100 rounded px-2 py-1">
+                        <option>3 Days</option>
+                        <option>1 Week</option>
+                        <option>3 Weeks</option>
+                        <option>1 Month</option>
+                    </select>
+                </div>
+            </div>
+            <div ng-hide="installationDetailsForm" class="flex py-2 px-6">
+                <div>
+                    <p class="font-semibold w-48">Backup Type</p>
+                </div>
+                <div>
+                    <select ng-model="BackupType"
+                            class="w-80 bg-gray-100 rounded px-2 py-1">
+                        <option>Only DataBase</option>
+                        <option>Only Website</option>
+                        <option>Website and Database Both</option>
+                    </select>
+                </div>
+            </div>
+            <div ng-hide="installationDetailsForm" class="flex justify-center mt-3">
+                <button ng-click="SaveBackupSchedule()"
+                        class="bg-orange-500 px-3 py-2 rounded-lg text-xl font-semibold text-white">
+                    Save Backup Schedule
+                </button>
+            </div>
+        </form>
+        <div class="py-4">
+            <p class="text-xl font-bold">Configure Backup Schedules</p>
+        </div>
+        <div class="relative py-8 overflow-x-auto">
+            <table class="w-full text-sm text-left rtl:text-right">
+                <thead>
+                <tr>
+                    <th scope="col" class="px-6 py-3">
+                        ID
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Schedule Name
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Backup Frequency
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Backup File Retention
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Last Run
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Remote Configuration
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Action
+                    </th>
+                </tr>
+                </thead>
+                {% for sub in Backupschedule %}
+                    <tbody class="border shadow-lg py-3 px-6 rounded-b-lg">
+                    <tr>
+                        <td class="px-6 py-4 font-bold">
+                            {{ sub.id }}
+                        </td>
+                        <td class="px-6 py-4">
+                            {{ sub.Name }}
+                        </td>
+                        <td class="px-6 py-4">
+                            {{ sub.Frequency }}
+                        </td>
+                        <td class="px-6 py-4">
+                            {{ sub.Retention }}
+                        </td>
+                        <td class="px-6 py-4">
+                            {{ sub.LastRun }}
+                        </td>
+                        <td class="px-6 py-4">
+                            {{ sub.RemoteConfiguration }}
+                        </td>
+                        <td class="px-6 py-4">
+                            <button onclick="return false;"
+                                    ng-click="getupdateid({{ sub.id }})"
+                                    class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                                    href="#" data-modal-target="edit" data-modal-toggle="edit">{% trans "EDIT" %}
+                            </button>
+                            <div id="edit" tabindex="-1"
+                                 class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+                                <div class="relative p-4 w-full max-w-2xl max-h-full">
+                                    <div class="relative bg-white shadow dark:bg-gray-700">
+                                        <div class="flex items-center bg-blue-400 px-4 py-4">
+                                            <p class="font-bold">Update Remote Backup Schedules</p>
+                                            <img id="containerSettingLoading" src="/static/images/loading.gif"
+                                                 style="display: none;">
+                                            <button type="button" data-modal-toggle="edit"
+                                                    class="absolute top-2 end-1 text-black bg-transparent hover:text-black rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
+                                                    data-modal-hide="edit">
+                                                <svg class="w-3 h-3" aria-hidden="true"
+                                                     xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                     viewBox="0 0 14 14">
+                                                    <path stroke="currentColor" stroke-linecap="round"
+                                                          stroke-linejoin="round" stroke-width="2"
+                                                          d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                                                </svg>
+                                                <span class="sr-only">Close modal</span>
+                                            </button>
+                                        </div>
+                                        <div class="p-4 md:p-5">
+                                            <form name="containerSettingsForm" action="/">
+                                                <div ng-hide="installationDetailsForm" class="flex mt-4 py-2 px-6">
+                                                    <div>
+                                                        <p class="font-semibold w-60">Backup Frequency</p>
+                                                    </div>
+                                                    <div>
+                                                        <select ng-model="RemoteFrequency"
+                                                                class="w-80 bg-gray-100 rounded px-2 py-1">
+                                                            <option>30 Minutes</option>
+                                                            <option>1 Hour</option>
+                                                            <option>6 Hours</option>
+                                                            <option>12 Hours</option>
+                                                            <option>1 Day</option>
+                                                            <option>3 Days</option>
+                                                            <option>1 Week</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div ng-hide="installationDetailsForm" class="flex py-2 px-6">
+                                                    <div>
+                                                        <p class="font-semibold w-60">Backup File Retention</p>
+                                                    </div>
+                                                    <div>
+                                                        <select ng-model="RemoteFileretention"
+                                                                class="w-80 bg-gray-100 rounded px-2 py-1">
+                                                            <option>3 Days</option>
+                                                            <option>1 Week</option>
+                                                            <option>3 Weeks</option>
+                                                            <option>1 Month</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                            <div class="flex justify-end gap-2 px-2 py-2">
+                                                <button type="button" ng-disabled="savingSettings"
+                                                        class="bg-orange-500 font-bold px-2 py-2 text-white"
+                                                        ng-click="UpdateRemoteschedules()">Save
+                                                </button>
+                                                <button type="button" ng-disabled="savingSettings"
+                                                        class="bg-gray-200 font-bold px-2 py-2"
+                                                        data-modal-toggle="edit"
+                                                        data-modal-hide="edit">
+                                                    Close
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button aria-label=""
+                                    onclick="DeleteBackupfileConfigNow('{% url 'BackupfileConfigV2' %}?ID={{ RemoteConfigID }}&DeleteID={{ sub.id }}')"
+                                    type="button"
+                                    class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                                Delete
+                            </button>
+                            <a href="{% url 'AddRemoteBackupsiteV2' %}?ID={{ sub.id }}"
+                               aria-label=""
+                               type="button"
+                               class="mt-1 bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded">
+                                Add WordPress Sites
+                            </a>
+                        </td>
+                    </tr>
+                    </tbody>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+{% endblock %}

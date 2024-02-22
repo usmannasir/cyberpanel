@@ -1,0 +1,347 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    {% if apachemanager %}
+        <div ng-controller="ApacheManagerV2" class="p-8">
+            <div>
+                <p class="text-4xl font-bold">Apache Manager</p>
+                <p class="text-xs text-gray-600 py-2 font-semibold">Switch between Apache (as reverse proxy) and
+                    OpenLiteSpeed.</p>
+            </div>
+            <div>
+                <div class="flex items-center py-4">
+                    <p id="domainNamePage" class="text-xl font-bold">{{ domainName }}</p>
+                    <img ng-hide="cyberpanelloading"
+                         src="{% static 'images/loading.gif' %}">
+                </div>
+                <div ng-hide="apacheOLS" class="flex items-center py-4">
+                    <p id="domainNamePage" class="text-gray-500 font-bold">
+                        <span class="text-red-500">{{ domainName }}</span> is currently using Apache as
+                        Reverse
+                        Proxy to
+                        OpenLiteSpeed.</p>
+                    <img style="height: 25px" ng-hide="cyberpanelloading"
+                         src="{% static 'images/loading.gif' %}">
+                </div>
+                <hr>
+                <div>
+                    <div ng-hide="apacheOLS" class="flex mt-4 py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">PHP</p>
+                        </div>
+                        <div>
+                            <select ng-model="phpSelection" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                    id="example-select">
+                                {% for php in phps %}
+                                    <option>{{ php }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-3 py-2 px-6">
+                        <a onclick="return false;"
+                           ng-hide="apacheOLS"
+                           ng-click="switchServer(2)"
+                           class="bg-orange-500 px-3 py-1 font-semibold text-white"
+                           href="#" data-modal-target="switchToPure" data-modal-toggle="switchToPure">
+                            Switch to pure OpenLiteSpeed.
+                        </a>
+                        <div id="switchToPure" tabindex="-1"
+                             class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+                            <div class="relative p-4 w-full max-w-2xl max-h-full">
+                                <div class="relative bg-white shadow dark:bg-gray-700">
+                                    <div class="flex items-center bg-blue-400 px-4 py-4">
+                                        <p id="myLargeModalLabel" class="font-bold">{$ functionStatus $} <img
+                                                ng-hide="cyberpanelloading"
+                                                src="{% static 'images/loading.gif' %}"></p>
+                                        <button type="button" data-modal-toggle="switchToPure"
+                                                class="absolute top-2 end-1 text-black bg-transparent hover:text-black rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
+                                                data-modal-hide="switchToPure">
+                                            <svg class="w-3 h-3" aria-hidden="true"
+                                                 xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                 viewBox="0 0 14 14">
+                                                <path stroke="currentColor" stroke-linecap="round"
+                                                      stroke-linejoin="round" stroke-width="2"
+                                                      d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                                            </svg>
+                                            <span class="sr-only">Close modal</span>
+                                        </button>
+                                    </div>
+                                    <div class="p-4 md:p-5">
+                                        <div class="w-full bg-gray-100 rounded-full mt-3">
+                                            <div ng-style="functionProgress" id="installProgress"
+                                                 class="bg-green-600 text-xs font-medium text-white text-center p-2 leading-none rounded-full"
+                                                 style="width:0%">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div ng-hide="apacheOLS">
+                        <div class="py-2 px-6">
+                            <div ng-hide="apacheOLS">
+                                <p class="font-semibold w-60 text-xl">Apache Configurations</p>
+                            </div>
+                            <div>
+                                <textarea ng-model="configData" rows="20" class="w-full border"></textarea>
+                            </div>
+                            <div ng-hide="saveConfigBtn" class="mt-2">
+                                <button ng-click="saveApacheConfig()"
+                                        class="bg-orange-500 px-3 py-1 font-semibold text-white">
+                                    Save Apache Configurations
+                                </button>
+                            </div>
+                        </div>
+                        <div ng-hide="apacheOLS" class="flex items-center py-4">
+                            <p class="text-xl font-bold">PHP-FPM Configurations</p>
+                            <img style="height: 25px" ng-hide="cyberpanelloading"
+                                 src="{% static 'images/loading.gif' %}">
+                        </div>
+                        <div ng-hide="apacheOLS">
+                            <div class="flex py-2 px-6">
+                                <div>
+                                    <p class="font-semibold w-60">pm.max_children</p>
+                                </div>
+                                <div>
+                                    <input class="w-80 bg-gray-100 rounded px-2 py-1" type="text"
+                                           ng-model="pmMaxChildren"/>
+                                </div>
+                            </div>
+                            <div class="flex py-2 px-6">
+                                <div>
+                                    <p class="font-semibold w-60">pm.start_servers</p>
+                                </div>
+                                <div>
+                                    <input class="w-80 bg-gray-100 rounded px-2 py-1" type="text"
+                                           ng-model="pmStartServers"/>
+                                </div>
+                            </div>
+                            <div class="flex py-2 px-6">
+                                <div>
+                                    <p class="font-semibold w-60">pm.min_spare_servers</p>
+                                </div>
+                                <div>
+                                    <input class="w-80 bg-gray-100 rounded px-2 py-1" type="text"
+                                           ng-model="pmMinSpareServers"/>
+                                </div>
+                            </div>
+                            <div class="flex py-2 px-6">
+                                <div>
+                                    <p class="font-semibold w-60">pm.max_spare_servers</p>
+                                </div>
+                                <div>
+                                    <input class="w-80 bg-gray-100 rounded px-2 py-1" type="text"
+                                           ng-model="pmMaxSpareServers"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="py-2 px-6 mt-2">
+                            <a ng-hide="apacheOLS" ng-click="tuneSettings()"
+                               href="#" class="bg-orange-500 px-3 py-1 font-semibold text-white">Tune
+                                PHP-FPM Settings.</a>
+                            <p ng-hide="pureOLS" class="px-2 mt-2">
+                                <span class="text-red-500 font-bold">{{ domainName }}</span> is currently using pure
+                                OpenLiteSpeed, PHP-FPM is
+                                not used with OpenLiteSpeed, thus tuning is disabled.</p>
+                            <!-- Using OpenLiteSpeed -->
+                            <p ng-hide="lswsEnt" class="px-2"><span
+                                    class="text-red-500 font-bold">{{ domainName }}</span> is
+                                using LiteSpeed Enterprise.
+                                PHP-FPM is not
+                                used
+                                with LiteSpeed
+                                Enterprise.</p>
+                        </div>
+                    </div>
+                    <div ng-hide="pureOLS" class="py-4">
+                        <p class="text-gray-500 font-bold"><span
+                                class="text-red-500 font-bold">{{ domainName }}</span> is currently using pure
+                            OpenLiteSpeed.</p>
+                    </div>
+                    <hr>
+                    <div ng-hide="pureOLS" class="flex py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">PHP</p>
+                        </div>
+                        <div>
+                            <select ng-model="phpSelection" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                    id="example-select">
+                                {% for php in phps %}
+                                    <option>{{ php }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-2 py-2 px-6">
+                        <a onclick="return false;"
+                           ng-hide="pureOLS"
+                           ng-click="switchServer(1)"
+                           class="bg-orange-500 px-3 py-1 font-semibold text-white"
+                           href="#" data-modal-target="switchToOpenLiteSpeed" data-modal-toggle="switchToOpenLiteSpeed">
+                            Switch to OpenLiteSpeed + Apache as reverse proxy.
+                        </a>
+                        <div id="switchToOpenLiteSpeed" tabindex="-1"
+                             class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+                            <div class="relative p-4 w-full max-w-2xl max-h-full">
+                                <div class="relative bg-white shadow dark:bg-gray-700">
+                                    <div class="flex items-center bg-blue-400 px-4 py-4">
+                                        <p id="myLargeModalLabel" class="font-bold">{$ functionStatus $} <img
+                                                style="height: 25px"
+                                                ng-hide="cyberpanelloading"
+                                                src="{% static 'images/loading.gif' %}"></p>
+                                        <button type="button" data-modal-toggle="switchToOpenLiteSpeed"
+                                                class="absolute top-2 end-1 text-black bg-transparent hover:text-black rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
+                                                data-modal-hide="switchToOpenLiteSpeed">
+                                            <svg class="w-3 h-3" aria-hidden="true"
+                                                 xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                 viewBox="0 0 14 14">
+                                                <path stroke="currentColor" stroke-linecap="round"
+                                                      stroke-linejoin="round" stroke-width="2"
+                                                      d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                                            </svg>
+                                            <span class="sr-only">Close modal</span>
+                                        </button>
+                                    </div>
+                                    <div class="p-4 md:p-5">
+                                        <div class="w-full bg-gray-100 rounded-full mt-3">
+                                            <div ng-style="functionProgress" id="installProgress"
+                                                 class="bg-green-600 text-xs font-medium text-white text-center p-2 leading-none rounded-full"
+                                                 style="width:0%">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <p ng-hide="lswsEnt" class="mt-2">
+                            <span class="text-red-500 font-bold">{{ domainName }}</span>
+                            is using LiteSpeed Enterprise. When LiteSpeed
+                            Enterprise is active switching is not required.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <style>
+
+            h1 {
+                color: #333;
+                margin-bottom: 15px;
+            }
+
+            h2 {
+                color: #555;
+                margin-bottom: 10px;
+            }
+
+            h3 {
+                color: #777;
+                margin-bottom: 5px;
+            }
+
+            p {
+                color: #444;
+                margin: 1%;
+            }
+
+            ol {
+                color: #444;
+                margin: 1%;
+            }
+        </style>
+        <div class="container">
+            <div id="page-title" align="center">
+                <h1><strong>OpenLiteSpeed + Apache as Backend </strong></h1>
+                <h1>Introducing CyberPanel's Revolutionary Hybrid Web Server: OpenLiteSpeed + Apache!</h1>
+                <p>
+                    Are you seeking the ultimate web hosting solution that combines blazing-fast performance with
+                    unparalleled feature versatility? Look no further! CyberPanel is proud to present its groundbreaking
+                    new feature: the OpenLiteSpeed + Apache hybrid web server. This cutting-edge innovation is designed
+                    to take your website's performance and functionality to unprecedented heights, offering the best of
+                    both worlds in a single, seamless package.
+                </p>
+
+                <h2>Unmatched Speed with OpenLiteSpeed:</h2>
+                <p>
+                    Harness the raw power of OpenLiteSpeed, the industry-leading, high-performance web server that
+                    ensures lightning-fast response times and unparalleled efficiency. OpenLiteSpeed is renowned for its
+                    remarkable performance capabilities, enabling your websites to handle a massive influx of traffic
+                    without compromising on speed or reliability. Experience near-instantaneous page loads and swift
+                    data transfers, providing an unbeatable user experience that keeps visitors engaged and coming back
+                    for more.
+                </p>
+
+                <h2>Unrivaled Features with Apache:</h2>
+                <p>
+                    While OpenLiteSpeed excels in speed and efficiency, we understand that Apache is favored by many web
+                    developers for its extensive feature set and compatibility. CyberPanel's innovative hybrid approach
+                    allows you to harness the full potential of Apache as a backend, granting access to an impressive
+                    array of modules, scripts, and configurations. Enjoy the freedom to leverage the vast Apache
+                    ecosystem, ensuring seamless integration with a wide range of applications and platforms.
+                </p>
+
+                <h2>The Perfect Fusion:</h2>
+                <p>
+                    By merging OpenLiteSpeed and Apache, CyberPanel has created a truly game-changing web server
+                    solution that combines the unparalleled speed of OpenLiteSpeed with the feature-rich environment of
+                    Apache. The result is a synergistic combination that sets new industry standards, empowering you to
+                    elevate your web hosting to unprecedented levels of performance and functionality.
+                </p>
+
+                <h3>Key Features and Benefits:</h3>
+                <ol>
+                    <li>Lightning-Fast Performance: Experience unrivaled speed and responsiveness, ensuring your
+                        websites load at blazing speeds, delighting visitors and improving search engine rankings.
+                    </li>
+                    <li>Versatile Feature Set: Harness the extensive features of Apache while benefiting from the speed
+                        and efficiency of OpenLiteSpeed, providing unmatched flexibility and compatibility.
+                    </li>
+                    <li>Enhanced Security: CyberPanel's OpenLiteSpeed + Apache configuration includes robust security
+                        measures to safeguard your websites and data against potential threats.
+                    </li>
+                    <li>Scalability and Stability: Enjoy the ability to handle high traffic loads effortlessly, ensuring
+                        your websites remain stable and responsive under any circumstances.
+                    </li>
+                    <li>Easy Management: CyberPanel's user-friendly interface makes it simple to manage and configure
+                        the OpenLiteSpeed + Apache hybrid web server, even for less experienced users.
+                    </li>
+                    <li>Cost-Effective Solution: Optimize your web hosting infrastructure with CyberPanel's innovative
+                        hybrid web server, eliminating the need for costly hardware upgrades while boosting overall
+                        performance.
+                    </li>
+                </ol>
+
+                <p>
+                    Unleash the true potential of your websites with CyberPanel's OpenLiteSpeed + Apache hybrid web
+                    server. Experience unparalleled speed, efficiency, and versatility in one unified solution. Upgrade
+                    your web hosting experience today and revolutionize the way you deliver content to your audience.
+                    Embrace the future of web hosting with CyberPanel's groundbreaking innovation!
+                </p>
+            </div>
+            <p align="center">
+                <iframe width="788.54" height="443" src="https://www.youtube.com/embed/ts5wR9G2FsE"
+                        title="YouTube video player" frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen></iframe>
+            </p>
+            <div style="margin-top: 2%">
+                <stripe-pricing-table pricing-table-id="prctbl_1MQtdYJMfY1fWGMszc4tx78j"
+                                      publishable-key="pk_live_51ITXBmJMfY1fWGMs2G0LAydJweIDMp2WaYocM0xyzdn03WaHUbMw6uxfVuktAkgpRyUql7tz7gF5OwdccEZLd6Ot00XX6tGoZx">
+                </stripe-pricing-table>
+                <stripe-pricing-table pricing-table-id="prctbl_1LpSqSJMfY1fWGMsxSNhPLsc"
+                                      publishable-key="pk_live_51ITXBmJMfY1fWGMs2G0LAydJweIDMp2WaYocM0xyzdn03WaHUbMw6uxfVuktAkgpRyUql7tz7gF5OwdccEZLd6Ot00XX6tGoZx">
+                </stripe-pricing-table>
+                <stripe-pricing-table pricing-table-id="prctbl_1M6WpCJMfY1fWGMsQXFlZWcW"
+                                      publishable-key="pk_live_51ITXBmJMfY1fWGMs2G0LAydJweIDMp2WaYocM0xyzdn03WaHUbMw6uxfVuktAkgpRyUql7tz7gF5OwdccEZLd6Ot00XX6tGoZx">
+                </stripe-pricing-table>
+            </div>
+
+        </div>
+    {% endif %}
+{% endblock %}

@@ -1,5 +1,6 @@
 from django.conf.urls import url
 from . import views
+
 urlpatterns = [
     url(r'^$', views.emailMarketing, name='emailMarketing'),
     url(r'^fetchUsers$', views.fetchUsers, name='fetchUsers'),
@@ -7,9 +8,11 @@ urlpatterns = [
     url(r'^saveConfigureVerify$', views.saveConfigureVerify, name='saveConfigureVerify'),
     url(r'^fetchVerifyLogs$', views.fetchVerifyLogs, name='fetchVerifyLogs'),
     url(r'^(?P<domain>(.*))/emailLists$', views.createEmailList, name='createEmailList'),
+    url(r'^V2/(?P<domain>(.*))/emailListsV2$', views.createEmailListV2, name='createEmailListV2'),
     url(r'^submitEmailList$', views.submitEmailList, name='submitEmailList'),
     url(r'^(?P<domain>(.*))/manageLists$', views.manageLists, name='manageLists'),
     url(r'^(?P<domain>(.*))/manageSMTP$', views.manageSMTP, name='manageSMTP'),
+    url(r'^V2/(?P<domain>(.*))/manageSMTPV2$', views.manageSMTPV2, name='manageSMTPV2'),
     url(r'^(?P<domain>(.*))/configureVerify$', views.configureVerify, name='configureVerify'),
     url(r'^fetchEmails$', views.fetchEmails, name='fetchEmails'),
     url(r'^deleteList$', views.deleteList, name='deleteList'),

@@ -607,35 +607,28 @@
                     {#                       #}
                     {#                    </div>#}
 
-                    <ul class="progress-box">
+                    <ul>
                         <li>
-
-                            <div class="progress-title">
-                                {% trans "CPU Usage" %}
-                                <b>{$ cpuUsage $}%</b>
-                            </div>
-                            <div class="progressbar-small progressbar" data-value="{$ cpuUsage $}">
-                                <div class="progressbar-value bg-yellow tooltip-button" title="{$ cpuUsage $}%">
+                            <div>
+                                <p class="font-semibold">CPU Usage</p>
+                                <div class="radial-progress bg-gray-200 text-orange-500"
+                                     style="--value:{$ cpuUsage $};" role="progressbar">{$ cpuUsage $}%
                                 </div>
                             </div>
                         </li>
                         <li>
-                            <b class="pull-right">{$ ramUsage $}%</b>
-                            <div class="progress-title">
-                                {% trans "RAM Usage" %}
-                            </div>
-                            <div class="progressbar-small progressbar" data-value="{$ ramUsage $}">
-                                <div class="progressbar-value bg-red tooltip-button" title="{$ ramUsage $}%"></div>
+                            <div>
+                                <p class="font-semibold">RAM Usage</p>
+                                <div class="radial-progress bg-gray-200 text-orange-500"
+                                     style="--value:{$ ramUsage $};" role="progressbar">{$ ramUsage $}%
+                                </div>
                             </div>
                         </li>
                         <li>
-                            <div class="progress-title">
-                                {% trans "Disk Usage" %}
-                                <b>{$ diskUsage $}%</b>
-                            </div>
-                            <div class="progressbar" data-value="{$ diskUsage $}">
-                                <div class="progressbar-value bg-green">
-                                    <div class="progress-label">{$ diskUsage $}%</div>
+                            <div>
+                                <p class="font-semibold">Disk Usage</p>
+                                <div class="radial-progress bg-gray-200 text-orange-500"
+                                     style="--value:{$ diskUsage $};" role="progressbar">{$ diskUsage $}%
                                 </div>
                             </div>
                         </li>

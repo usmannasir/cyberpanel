@@ -1,0 +1,167 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    {% if PremStat %}
+        <div ng-controller="sslIssueCtrlV2V2" class="p-8">
+            <div class="flex lg:flex-row justify-between items-center sm:flex-col">
+                <div class="flex items-center">
+                    <p class="text-4xl font-bold">SSL v2 -</p>
+                    <a target="_blank" href="https://youtu.be/kDUANNvtOwE"
+                       style="height: 23px;line-height: 21px;"
+                       class="bg-blue-200 px-2 font-bold mt-2 ml-3"
+                       title=""><span>{% trans "DNS Docs" %}</span></a>
+                </div>
+            </div>
+            <p class="text-xs text-gray-600 py-2 font-semibold">On this page, you have the option to configure DNS
+                providers that CyberPanel can utilize for issuing SSL certificates, providing enhanced flexibility and
+                ease of renewal.
+            </p>
+            <p align="center" style="margin-top: 2%; margin-bottom: 2%">
+                <iframe width="788.54" height="443" src="https://www.youtube.com/embed/kDUANNvtOwE"
+                        title="YouTube video player" frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen></iframe>
+            </p>
+            <div class="flex items-center py-4">
+                <p class="text-xl font-bold">SSL v2</p>
+            </div>
+            <hr>
+            {% if SaveSuccess %}
+                <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-6">
+                        <div class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                            <p>{% trans "Changes saved succesfully." %}</p>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            <ul class="flex py-2">
+                <li id="dns_tab_button"
+                    class="hover:bg-orange-200 border-2 border-black rounded-l-3xl px-2 py-2 w-60 cursor-pointer active"
+                    onclick="showTab1('issue_SSL')">
+                    <a class="flex justify-center">
+                        <p class="text-2xl font-bold">Issue SSL</p>
+                    </a>
+                </li>
+                <li id="api_tab_button"
+                    class="hover:bg-orange-200 border-2 border-black rounded-r-3xl px-2 py-2 w-60 cursor-pointer"
+                    onclick="showTab1('api_settings')">
+                    <a class="flex justify-center">
+                        <p class="text-2xl font-bold">API Settings</p>
+                    </a>
+                </li>
+            </ul>
+            <div id="issue_SSL" class="tab-content1">
+                <div class="flex mt-4 py-2 px-6 items-center">
+                    <div>
+                        <p class="font-semibold w-60">Select Domain</p>
+                    </div>
+                    <div>
+                        <select ng-model="virtualHost"
+                                class="w-80 bg-gray-100 rounded px-2 py-1">
+                            {% for items in websiteList %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="flex ml-3">
+                        <button ng-click="issueSSL()"
+                                class="bg-orange-500 text-white font-semibold px-2 py-1">
+                            Issue SSL
+                        </button>
+                        <img ng-hide="manageSSLLoading" src="{% static 'images/loading.gif' %}">
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold">SSL Status: {$ sslStatus $}</h3>
+                    <div>
+                        <textarea ng-model="sslLogs" class="w-full border"
+                                  rows="20"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div id="api_settings" class="tab-content1" style="display: none;">
+                <form method="post" action="{% url 'v2ManageSSLV2' %}">
+                    {% csrf_token %}
+                    <p class="text-xl font-bold">Cloudflare Settings</p>
+                    <div class="flex mt-4 py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">CloudFlare Email</p>
+                        </div>
+                        <div>
+                            <input name="SAVED_CF_Email" type="text" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                   value="{{ SAVED_CF_Email }}" required>
+                        </div>
+                    </div>
+                    <div class="flex mt-4 py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">API Token</p>
+                        </div>
+                        <div>
+                            <input name="SAVED_CF_Key" type="text" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                   value="{{ SAVED_CF_Key }}" required>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-center mt-6 mb-2">
+                            <button type="submit"
+                                    class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                                Save
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    {% else %}
+        <style>
+            .feturecard {
+                width: 30%;
+                padding: 46px;
+                margin: 15px
+            }
+        </style>
+        <div class="container">
+            <div id="page-title" align="center">
+                <h1 style="color: black"><strong>SSLv2 Comes with Full Automation + Wildcard SSLs! </strong></h1>
+                <p style="font-size: 15px; color: black; margin-top: 1%">Are you tired of the hassle that comes with
+                    setting up SSL certificates for your website? Do you want a faster and easier way to secure your
+                    website without the need for manual verification? <br><br>
+
+                    Introducing CyberPanel's new feature, SSL v2! With SSL v2, you can automatically issue SSL
+                    certificates using the ACME DNS verification method. This means that you no longer have to worry
+                    about going through the manual process of verifying ownership of your domain. <br><br>
+
+                    What's even better is that we've integrated two of the most popular domain registrars, Cloudflare
+                    and Namecheap, so you can easily issue SSL certificates with just a few clicks. No more fiddling
+                    around with complicated settings and DNS configurations! <br><br>
+
+                    With SSL v2, you can rest easy knowing that your website is secure and your visitors' data is
+                    protected. Don't wait any longer to upgrade your website's security - get SSL v2 today!<br></p>
+            </div>
+            <p align="center">
+                <iframe width="788.54" height="443" src="https://www.youtube.com/embed/kDUANNvtOwE"
+                        title="YouTube video player" frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen></iframe>
+            </p>
+            <div style="margin-top: 2%">
+                <stripe-pricing-table pricing-table-id="prctbl_1MQtdYJMfY1fWGMszc4tx78j"
+                                      publishable-key="pk_live_51ITXBmJMfY1fWGMs2G0LAydJweIDMp2WaYocM0xyzdn03WaHUbMw6uxfVuktAkgpRyUql7tz7gF5OwdccEZLd6Ot00XX6tGoZx">
+                </stripe-pricing-table>
+                <stripe-pricing-table pricing-table-id="prctbl_1LpSqSJMfY1fWGMsxSNhPLsc"
+                                      publishable-key="pk_live_51ITXBmJMfY1fWGMs2G0LAydJweIDMp2WaYocM0xyzdn03WaHUbMw6uxfVuktAkgpRyUql7tz7gF5OwdccEZLd6Ot00XX6tGoZx">
+                </stripe-pricing-table>
+                <stripe-pricing-table pricing-table-id="prctbl_1M6WpCJMfY1fWGMsQXFlZWcW"
+                                      publishable-key="pk_live_51ITXBmJMfY1fWGMs2G0LAydJweIDMp2WaYocM0xyzdn03WaHUbMw6uxfVuktAkgpRyUql7tz7gF5OwdccEZLd6Ot00XX6tGoZx">
+                </stripe-pricing-table>
+            </div>
+
+        </div>
+    {% endif %}
+{% endblock %}

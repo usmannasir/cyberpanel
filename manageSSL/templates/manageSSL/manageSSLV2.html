@@ -1,0 +1,64 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+
+    <div ng-controller="sslIssueCtrlV2" class="p-8">
+        <div class="flex lg:flex-row justify-between items-center sm:flex-col">
+            <div class="flex items-center">
+                <p class="text-4xl font-bold">Manage SSL -</p>
+                <a target="_blank" href="http://go.cyberpanel.net/ssl-docs"
+                   style="height: 23px;line-height: 21px;"
+                   class="bg-blue-200 px-2 font-bold mt-2 ml-3"
+                   title=""><span>{% trans "SSL Docs" %}</span></a>
+            </div>
+        </div>
+        <p class="text-xs text-gray-600 py-2 font-semibold">This page can be used to issue Let’s Encrypt SSL for
+            existing websites on server.
+        </p>
+        <div class="flex items-center py-4">
+            <p class="text-xl font-bold">Manage SSL</p>
+            <img ng-hide="manageSSLLoading" src="{% static 'images/loading.gif' %}">
+        </div>
+        <hr>
+        <div class="flex mt-4 py-2 px-6">
+            <div>
+                <p class="font-semibold w-60">Select Website</p>
+            </div>
+            <div>
+                <select ng-change="showbtn()" ng-model="virtualHost" class="w-80 bg-gray-100 rounded px-2 py-1">
+                    {% for items in websiteList %}
+                        <option>{{ items }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div ng-hide="issueSSLBtn">
+            <div class="flex justify-center mt-6 mb-2">
+                <button ng-click="issueSSL()"
+                        class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                    Issue SSL
+                </button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-3 control-label"></label>
+            <div class="col-sm-6">
+                <div ng-hide="canNotIssue"
+                     class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                    <p>{% trans "Cannot issue SSL. Error message:" %} {$ errorMessage $}</p>
+                </div>
+                <div ng-hide="sslIssued" class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                    <p>{% trans "SSL Issued for" %} <strong>{$ sslDomain $}</strong></p>
+                </div>
+                <div ng-hide="couldNotConnect"
+                     class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                    <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -398,6 +398,83 @@ class WebsiteManager:
             from django.shortcuts import reverse
             return redirect(reverse('pricing'))
 
+    def RestoreHomeV2(self, request=None, userID=None, BackupID=None):
+        Data = {}
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+        if ACLManager.CheckForPremFeature('wp-manager'):
+
+            Data['backupobj'] = WPSitesBackup.objects.get(pk=BackupID)
+
+            if ACLManager.CheckIPBackupObjectOwner(currentACL, Data['backupobj'], admin) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            config = json.loads(Data['backupobj'].config)
+            Data['FileName'] = config['name']
+            try:
+                Data['Backuptype'] = config['Backuptype']
+            except:
+                Data['Backuptype'] = None
+            Data['WPsites'] = ACLManager.GetALLWPObjects(currentACL, userID)
+            proc = httpProc(request, 'websiteFunctions/WPRestoreHomeV2.html',
+                            Data, 'createWebsite')
+            return proc.render()
+        else:
+            from django.shortcuts import reverse
+            return redirect(reverse('pricing'))
+
+    def RemoteBackupConfigV2(self, request=None, userID=None, DeleteID=None):
+        Data = {}
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+        try:
+            if DeleteID != None:
+                BackupconfigDelete = RemoteBackupConfig.objects.get(pk=DeleteID)
+                BackupconfigDelete.delete()
+        except:
+            pass
+
+        if ACLManager.CheckForPremFeature('wp-manager'):
+
+            Data['WPsites'] = ACLManager.GetALLWPObjects(currentACL, userID)
+            allcon = RemoteBackupConfig.objects.all()
+            Data['backupconfigs'] = []
+            for i in allcon:
+                configr = json.loads(i.config)
+                if i.configtype == "SFTP":
+                    Data['backupconfigs'].append({
+                        'id': i.pk,
+                        'Type': i.configtype,
+                        'HostName': configr['Hostname'],
+                        'Path': configr['Path']
+                    })
+                elif i.configtype == "S3":
+                    Provider = configr['Provider']
+                    if Provider == "Backblaze":
+                        Data['backupconfigs'].append({
+                            'id': i.pk,
+                            'Type': i.configtype,
+                            'HostName': Provider,
+                            'Path': configr['S3keyname']
+                        })
+                    else:
+                        Data['backupconfigs'].append({
+                            'id': i.pk,
+                            'Type': i.configtype,
+                            'HostName': Provider,
+                            'Path': configr['S3keyname']
+                        })
+
+            proc = httpProc(request, 'websiteFunctions/RemoteBackupConfigV2.html',
+                            Data, 'createWebsite')
+            return proc.render()
+        else:
+            from django.shortcuts import reverse
+            return redirect(reverse('pricing'))
+
     def RemoteBackupConfig(self, request=None, userID=None, DeleteID=None):
         Data = {}
         currentACL = ACLManager.loadedACL(userID)
@@ -483,6 +560,42 @@ class WebsiteManager:
             from django.shortcuts import reverse
             return redirect(reverse('pricing'))
 
+    def BackupfileConfigV2(self, request=None, userID=None, RemoteConfigID=None, DeleteID=None):
+        Data = {}
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+        Data['RemoteConfigID'] = RemoteConfigID
+        RemoteConfigobj = RemoteBackupConfig.objects.get(pk=RemoteConfigID)
+        try:
+            if DeleteID != None:
+                RemoteBackupConfigDelete = RemoteBackupSchedule.objects.get(pk=DeleteID)
+                RemoteBackupConfigDelete.delete()
+        except:
+            pass
+
+        if ACLManager.CheckForPremFeature('wp-manager'):
+            Data['WPsites'] = ACLManager.GetALLWPObjects(currentACL, userID)
+            allsechedule = RemoteBackupSchedule.objects.filter(RemoteBackupConfig=RemoteConfigobj)
+            Data['Backupschedule'] = []
+            for i in allsechedule:
+                lastrun = i.lastrun
+                LastRun = time.strftime('%Y-%m-%d', time.localtime(float(lastrun)))
+                Data['Backupschedule'].append({
+                    'id': i.pk,
+                    'Name': i.Name,
+                    'RemoteConfiguration': i.RemoteBackupConfig.configtype,
+                    'Retention': i.fileretention,
+                    'Frequency': i.timeintervel,
+                    'LastRun': LastRun
+                })
+            proc = httpProc(request, 'websiteFunctions/BackupfileConfigV2.html',
+                            Data, 'createWebsite')
+            return proc.render()
+        else:
+            from django.shortcuts import reverse
+            return redirect(reverse('pricing'))
+
     def AddRemoteBackupsite(self, request=None, userID=None, RemoteScheduleID=None, DeleteSiteID=None):
         Data = {}
         currentACL = ACLManager.loadedACL(userID)
@@ -512,6 +625,41 @@ class WebsiteManager:
                 except:
                     pass
             proc = httpProc(request, 'websiteFunctions/AddRemoteBackupSite.html',
+                            Data, 'createWebsite')
+            return proc.render()
+        else:
+            from django.shortcuts import reverse
+            return redirect(reverse('pricing'))
+
+    def AddRemoteBackupsiteV2(self, request=None, userID=None, RemoteScheduleID=None, DeleteSiteID=None):
+        Data = {}
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+        Data['RemoteScheduleID'] = RemoteScheduleID
+        RemoteBackupScheduleobj = RemoteBackupSchedule.objects.get(pk=RemoteScheduleID)
+
+        try:
+            if DeleteSiteID != None:
+                RemoteBackupsitesDelete = RemoteBackupsites.objects.get(pk=DeleteSiteID)
+                RemoteBackupsitesDelete.delete()
+        except:
+            pass
+
+        if ACLManager.CheckForPremFeature('wp-manager'):
+            Data['WPsites'] = ACLManager.GetALLWPObjects(currentACL, userID)
+            allRemoteBackupsites = RemoteBackupsites.objects.filter(owner=RemoteBackupScheduleobj)
+            Data['RemoteBackupsites'] = []
+            for i in allRemoteBackupsites:
+                try:
+                    wpsite = WPSites.objects.get(pk=i.WPsites)
+                    Data['RemoteBackupsites'].append({
+                        'id': i.pk,
+                        'Title': wpsite.title,
+                    })
+                except:
+                    pass
+            proc = httpProc(request, 'websiteFunctions/AddRemoteBackupSiteV2.html',
                             Data, 'createWebsite')
             return proc.render()
         else:
@@ -7000,6 +7148,26 @@ StrictHostKeyChecking no
             apachemanager = 0
 
         proc = httpProc(request, 'websiteFunctions/ApacheManager.html',
+                        {'domainName': self.domain, 'phps': phps, 'apachemanager': apachemanager})
+        return proc.render()
+
+    def ApacheManagerV2(self, request=None, userID=None, data=None):
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+        if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        phps = PHPManager.findPHPVersions()
+
+        if ACLManager.CheckForPremFeature('all'):
+            apachemanager = 1
+        else:
+            apachemanager = 0
+
+        proc = httpProc(request, 'websiteFunctions/ApacheManagerV2.html',
                         {'domainName': self.domain, 'phps': phps, 'apachemanager': apachemanager})
         return proc.render()
 

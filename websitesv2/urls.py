@@ -8,7 +8,6 @@ urlpatterns = [
     url(r'^createWebsiteV2$', views.createWebsiteV2, name='createWebsiteV2'),
     url(r'^listWebsitesV2$', views.listWebsitesV2, name='listWebsitesV2'),
 
-
     url(r'^CreateNewDomainV2$', views.CreateNewDomainV2, name='CreateNewDomainV2'),
 
     ### WordPress
@@ -60,6 +59,10 @@ urlpatterns = [
     url(r'^AddnewpluginV2$', views.AddnewpluginV2, name='AddnewpluginV2'),
     url(r'^EidtPlugin$', views.EidtPlugin, name='EidtPlugin'),
     url(r'^EidtPluginV2$', views.EidtPluginV2, name='EidtPluginV2'),
+    url(r'^RemoteBackupConfigV2$', views.RemoteBackupConfigV2, name='RemoteBackupConfigV2'),
+    url(r'^RestoreHomeV2$', views.RestoreHomeV2, name='RestoreHomeV2'),
+    url(r'^BackupfileConfigV2$', views.BackupfileConfigV2, name='BackupfileConfigV2'),
+    url(r'^AddRemoteBackupsiteV2$', views.AddRemoteBackupsiteV2, name='AddRemoteBackupsiteV2'),
 
     ## AddPlugin Ajax
     url(r'^SearchOnkeyupPlugin$', views.SearchOnkeyupPlugin, name='SearchOnkeyupPlugin'),
@@ -203,6 +206,7 @@ urlpatterns = [
 
     ### Apache Manager
 
+    url(r'^V2/ApacheManagerV2/(?P<domain>(.*))$', views.ApacheManagerV2, name='ApacheManagerV2'),
     url(r'^getSwitchStatus$', views.getSwitchStatus, name='getSwitchStatus'),
     url(r'^switchServer$', views.switchServer, name='switchServer'),
     url(r'^statusFunc$', views.statusFunc, name='statusFunc'),

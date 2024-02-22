@@ -1,0 +1,232 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="RemoteBackupConfigV2" class="p-8">
+        <div>
+            <p class="text-4xl font-bold">Remote Backup Configurations</p>
+        </div>
+
+        <div class="py-4">
+            <p class="text-xl font-bold">Configure Remote Backups</p>
+            <img ng-hide="RemoteBackupLoading"
+                 src="{% static 'images/loading.gif' %}">
+        </div>
+        <hr>
+        <form name="websiteCreationForm" action="/" id="createPackages">
+            <div ng-hide="installationDetailsForm" class="flex mt-4 py-2 px-6">
+                <div>
+                    <p class="font-semibold w-48">Select Remote Backup Type</p>
+                </div>
+                <div>
+                    <select ng-model="RemoteBackuptype" ng-change="SelectRemoteBackuptype()"
+                            class="w-80 bg-gray-100 rounded px-2 py-1">
+                        <option>SFTP</option>
+                        <option>S3</option>
+                    </select>
+                </div>
+            </div>
+            <div ng-hide="SFTPBackUpdiv" class="flex py-2 px-6">
+                <div>
+                    <p class="font-semibold w-48">Hostname</p>
+                </div>
+                <div>
+                    <input name="Hostname" type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="Hostname"
+                           required>
+                </div>
+            </div>
+            <div ng-hide="SFTPBackUpdiv" class="flex py-2 px-6">
+                <div>
+                    <p class="font-semibold w-48">Username</p>
+                </div>
+                <div>
+                    <input name="Username" type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="Username"
+                           required>
+                </div>
+            </div>
+            <div ng-hide="SFTPBackUpdiv" class="flex py-2 px-6">
+                <div>
+                    <p class="font-semibold w-48">Password</p>
+                </div>
+                <div>
+                    <input name="Password" type="password" class="w-80 bg-gray-100 rounded px-2 py-1"
+                           ng-model="Password"
+                           required>
+                </div>
+            </div>
+            <div ng-hide="SFTPBackUpdiv" class="flex py-2 px-6">
+                <div>
+                    <p class="font-semibold w-48">path</p>
+                </div>
+                <div>
+                    <input name="path" type="path" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="path"
+                           required>
+                </div>
+            </div>
+            <div ng-hide="Selectprovider" class="flex py-2 px-6">
+                <div>
+                    <p class="font-semibold w-48">Choose Provider</p>
+                </div>
+                <div>
+                    <select ng-model="Providervalue" ng-change="SelectProvidertype()"
+                            class="w-80 bg-gray-100 rounded px-2 py-1">
+                        <option selected="selected">Amazon</option>
+                        <option>Wasabi</option>
+                        <option>Backblaze</option>
+                    </select>
+                </div>
+            </div>
+            <div ng-hide="S3keyNamediv" class="flex py-2 px-6">
+                <div>
+                    <p class="font-semibold w-48">Name</p>
+                </div>
+                <div>
+                    <input name="S3keyName" type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="S3keyName"
+                           required>
+                </div>
+            </div>
+            <div ng-hide="EndpointURLdiv" class="flex py-2 px-6">
+                <div>
+                    <p class="font-semibold w-48">Endpoint URL</p>
+                </div>
+                <div>
+                    <input name="EndpointURL" type="text" class="w-80 bg-gray-100 rounded px-2 py-1"
+                           ng-model="EndpointURL"
+                           required>
+                </div>
+            </div>
+            <div ng-hide="Accesskeydiv" class="flex py-2 px-6">
+                <div>
+                    <p class="font-semibold w-48">Access Key</p>
+                </div>
+                <div>
+                    <input name="Accesskey" type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="Accesskey"
+                           required>
+                </div>
+            </div>
+            <div ng-hide="SecretKeydiv" class="flex py-2 px-6">
+                <div>
+                    <p class="font-semibold w-48">Secret Key</p>
+                </div>
+                <div>
+                    <input name="SecretKey" type="password" class="w-80 bg-gray-100 rounded px-2 py-1"
+                           ng-model="SecretKey"
+                           required>
+                </div>
+            </div>
+            <div ng-hide="installationDetailsForm" class="flex justify-center mt-3">
+                <button ng-click="SaveBackupConfig()"
+                        class="bg-orange-500 px-3 py-2 rounded-lg text-xl font-semibold text-white">
+                    Save Configurations
+                </button>
+            </div>
+        </form>
+        <div class="py-4">
+            <p class="text-xl font-bold">Saved Remote Configuration</p>
+        </div>
+        <div class="relative py-8 overflow-x-auto">
+            <table class="w-full text-sm text-left rtl:text-right">
+                <thead>
+                <tr>
+                    <th scope="col" class="px-6 py-3">
+                        Backup Type
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        HostName
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Path / Key Name
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Action
+                    </th>
+                </tr>
+                </thead>
+                {% for sub in backupconfigs %}
+                    <tbody class="border shadow-lg py-3 px-6 rounded-b-lg">
+                    <tr>
+                        <td class="px-6 py-4 font-bold">
+                            {{ sub.Type }}
+                        </td>
+                        <td class="px-6 py-4">
+                            {{ sub.HostName }}
+                        </td>
+                        <td class="px-6 py-4">
+                            {{ sub.Path }}
+                        </td>
+                        <td class="px-6 py-4">
+                            <a href="{% url 'BackupfileConfigV2' %}?ID={{ sub.id }}"
+                               aria-label=""
+                               type="button"
+                               class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded">
+                                Schedule Backups
+                            </a>
+                            <button
+                                    aria-label=""
+                                    onclick="DeleteBackupConfigNow('{% url 'RemoteBackupConfig' %}?DeleteID={{ sub.id }}')"
+                                    type="button"
+                                    class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                                Delete
+                            </button>
+                            {#                            <a>#}
+                            {#                                <button data-modal-target="Deletewpsite" data-modal-toggle="Deletewpsite"#}
+                            {#                                        class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"#}
+                            {#                                        type="button"#}
+                            {#                                        onclick="DeleteBackupConfigNow('{% url 'RemoteBackupConfig' %}?DeleteID={{ sub.id }}')">#}
+                            {#                                    Delete#}
+                            {#                                </button>#}
+                            {#                                <div id="Deletewpsite" tabindex="-1"#}
+                            {#                                     class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">#}
+                            {#                                    <div class="relative p-4 w-full max-w-md max-h-full">#}
+                            {#                                        <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">#}
+                            {#                                            <button type="button" data-modal-toggle="Deletewpsite"#}
+                            {#                                                    class="absolute top-3 end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"#}
+                            {#                                                    data-modal-hide="Deletewpsite">#}
+                            {#                                                <svg class="w-3 h-3" aria-hidden="true"#}
+                            {#                                                     xmlns="http://www.w3.org/2000/svg" fill="none"#}
+                            {#                                                     viewBox="0 0 14 14">#}
+                            {#                                                    <path stroke="currentColor" stroke-linecap="round"#}
+                            {#                                                          stroke-linejoin="round" stroke-width="2"#}
+                            {#                                                          d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>#}
+                            {#                                                </svg>#}
+                            {#                                                <span class="sr-only">Close modal</span>#}
+                            {#                                            </button>#}
+                            {#                                            <div class="p-4 md:p-5 text-center">#}
+                            {#                                                <svg class="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200"#}
+                            {#                                                     aria-hidden="true"#}
+                            {#                                                     xmlns="http://www.w3.org/2000/svg" fill="none"#}
+                            {#                                                     viewBox="0 0 20 20">#}
+                            {#                                                    <path stroke="currentColor" stroke-linecap="round"#}
+                            {#                                                          stroke-linejoin="round" stroke-width="2"#}
+                            {#                                                          d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>#}
+                            {#                                                </svg>#}
+                            {#                                                <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">#}
+                            {#                                                    Are you sure you want to#}
+                            {#                                                    delete this site?</h3>#}
+                            {#                                                <button data-modal-hide="Deletewpsite" type="button"#}
+                            {#                                                        data-modal-toggle="Deletewpsite"#}
+                            {#                                                        onclick="FinalDeleteWPNow()"#}
+                            {#                                                        class="text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center me-2">#}
+                            {#                                                    Yes, I'm sure#}
+                            {#                                                </button>#}
+                            {#                                                <button data-modal-hide="Deletewpsite" type="button"#}
+                            {#                                                        data-modal-toggle="Deletewpsite"#}
+                            {#                                                        class="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600">#}
+                            {#                                                    No, cancel#}
+                            {#                                                </button>#}
+                            {#                                            </div>#}
+                            {#                                        </div>#}
+                            {#                                    </div>#}
+                            {#                                </div>#}
+                            {#                            </a>#}
+                        </td>
+                    </tr>
+                    </tbody>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+{% endblock %}

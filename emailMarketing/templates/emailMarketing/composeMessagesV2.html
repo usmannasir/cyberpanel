@@ -1,0 +1,79 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="composeMessageCTRLV2" class="p-8">
+        <div>
+            <p class="text-4xl font-bold">Compose Email Message</p>
+            <p class="text-xs text-gray-600 py-2 font-semibold">On this page you can compose email message to be sent
+                out later.</p>
+        </div>
+        <div class="py-4">
+            <p class="text-xl font-bold">Compose Email Message</p>
+            <img ng-hide="cyberPanelLoading" src="{% static 'images/loading.gif' %}">
+        </div>
+        <hr>
+        <div>
+            <div>
+                <div ng-hide="installationDetailsForm">
+                    <div class="flex mt-4 py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-48">Template Name</p>
+                        </div>
+                        <div>
+                            <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="name" required>
+                        </div>
+                    </div>
+                    <div class="flex py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-48">Email Subject</p>
+                        </div>
+                        <div>
+                            <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="subject" required>
+                        </div>
+                    </div>
+                    <div class="flex py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-48">From Name</p>
+                        </div>
+                        <div>
+                            <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="fromName" required>
+                        </div>
+                    </div>
+                    <div class="flex py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-48">From Email</p>
+                        </div>
+                        <div>
+                            <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="fromEmail" required>
+                        </div>
+                    </div>
+                    <div class="flex py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-48">Reply Email</p>
+                        </div>
+                        <div>
+                            <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="replyTo" required>
+                        </div>
+                    </div>
+                </div>
+                <div ng-hide="request" class="py-2 px-6">
+                    <div>
+                        <textarea placeholder="Paste your email message, any format is accepted. (HTML or Plain)"
+                                  ng-model="emailMessage" rows="15" class="border"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div ng-hide="installationProgress" class="flex justify-center">
+                <button ng-click="saveTemplate()"
+                        class="bg-orange-500 px-3 py-4 rounded-lg text-xl font-semibold text-white">
+                    Save Template
+                </button>
+            </div>
+        </div>
+    </div>
+{% endblock %}

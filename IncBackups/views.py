@@ -23,8 +23,6 @@ from .IncBackupsControl import IncJobs
 from .models import IncJob, BackupJob, JobSites
 
 
-
-
 def def_renderer(request, templateName, args, context=None):
     proc = httpProc(request, templateName,
                     args, context)
@@ -53,10 +51,7 @@ def _get_user_acl(request):
     return user_id, current_acl
 
 
-
-
 def create_backup(request):
-
     try:
         user_id, current_acl = _get_user_acl(request)
         if ACLManager.currentContextPermission(current_acl, 'createBackup') == 0:
@@ -73,6 +68,23 @@ def create_backup(request):
         return redirect(loadLoginPage)
 
 
+def create_backupV2(request):
+    try:
+        user_id, current_acl = _get_user_acl(request)
+        if ACLManager.currentContextPermission(current_acl, 'createBackup') == 0:
+            return ACLManager.loadError()
+
+        websites = ACLManager.findAllSites(current_acl, user_id)
+
+        destinations = _get_destinations(local=True)
+
+        return def_renderer(request, 'IncBackups/createBackupV2.html',
+                            {'websiteList': websites, 'destinations': destinations}, 'createBackup')
+    except BaseException as msg:
+        logging.writeToFile(str(msg))
+        return redirect(loadLoginPage)
+
+
 def backup_destinations(request):
     try:
         user_id, current_acl = _get_user_acl(request)
@@ -80,6 +92,18 @@ def backup_destinations(request):
             return ACLManager.loadError()
 
         return def_renderer(request, 'IncBackups/incrementalDestinations.html', {}, 'addDeleteDestinations')
+    except BaseException as msg:
+        logging.writeToFile(str(msg))
+        return redirect(loadLoginPage)
+
+
+def backup_destinationsV2(request):
+    try:
+        user_id, current_acl = _get_user_acl(request)
+        if ACLManager.currentContextPermission(current_acl, 'addDeleteDestinations') == 0:
+            return ACLManager.loadError()
+
+        return def_renderer(request, 'IncBackups/incrementalDestinationsV2.html', {}, 'addDeleteDestinations')
     except BaseException as msg:
         logging.writeToFile(str(msg))
         return redirect(loadLoginPage)
@@ -219,6 +243,7 @@ def populate_current_records(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
+
 def remove_destination(request):
     try:
         user_id, current_acl = _get_user_acl(request)
@@ -245,6 +270,7 @@ def remove_destination(request):
         final_dic = {'destStatus': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
+
 
 def fetch_current_backups(request):
     try:
@@ -291,6 +317,7 @@ def fetch_current_backups(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
+
 def submit_backup_creation(request):
     try:
         user_id, current_acl = _get_user_acl(request)
@@ -328,6 +355,7 @@ def submit_backup_creation(request):
         final_dic = {'status': 0, 'metaStatus': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
+
 
 def get_backup_status(request):
     try:
@@ -392,6 +420,7 @@ def get_backup_status(request):
         logging.writeToFile(str(msg) + " [backupStatus]")
         return HttpResponse(final_json)
 
+
 def delete_backup(request):
     try:
 
@@ -421,6 +450,7 @@ def delete_backup(request):
         final_dic = {'destStatus': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
+
 
 def fetch_restore_points(request):
     try:
@@ -455,6 +485,7 @@ def fetch_restore_points(request):
         final_dic = {'status': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
+
 
 def restore_point(request):
     try:
@@ -513,6 +544,23 @@ def schedule_backups(request):
         destinations = _get_destinations(local=True)
 
         return def_renderer(request, 'IncBackups/backupSchedule.html',
+                            {'websiteList': websites, 'destinations': destinations}, 'scheduleBackups')
+    except BaseException as msg:
+        logging.writeToFile(str(msg))
+        return redirect(loadLoginPage)
+
+
+def schedule_backupsV2(request):
+    try:
+        user_id, current_acl = _get_user_acl(request)
+        if ACLManager.currentContextPermission(current_acl, 'scheduleBackups') == 0:
+            return ACLManager.loadError()
+
+        websites = ACLManager.findAllSites(current_acl, user_id)
+
+        destinations = _get_destinations(local=True)
+
+        return def_renderer(request, 'IncBackups/backupScheduleV2.html',
                             {'websiteList': websites, 'destinations': destinations}, 'scheduleBackups')
     except BaseException as msg:
         logging.writeToFile(str(msg))
@@ -638,6 +686,23 @@ def restore_remote_backups(request):
         return redirect(loadLoginPage)
 
 
+def restore_remote_backupsV2(request):
+    try:
+        user_id, current_acl = _get_user_acl(request)
+        if ACLManager.currentContextPermission(current_acl, 'createBackup') == 0:
+            return ACLManager.loadError()
+
+        websites = ACLManager.findAllSites(current_acl, user_id)
+
+        destinations = _get_destinations()
+
+        return def_renderer(request, 'IncBackups/restoreRemoteBackupsV2.html',
+                            {'websiteList': websites, 'destinations': destinations}, 'createBackup')
+    except BaseException as msg:
+        logging.writeToFile(str(msg))
+        return redirect(loadLoginPage)
+
+
 def save_changes(request):
     try:
         user_id, current_acl = _get_user_acl(request)
@@ -712,6 +777,7 @@ def add_website(request):
         final_json = json.dumps({'status': 0, 'error_message': str(msg)})
         return HttpResponse(final_json)
 
+
 #### Backups v2
 
 def ConfigureV2Backup(request):
@@ -729,18 +795,44 @@ def ConfigureV2Backup(request):
         websites = ACLManager.findAllSites(current_acl, user_id)
         #
         # destinations = _get_destinations(local=True)
-        proc = httpProc(request, 'IncBackups/ConfigureV2Backup.html', {'websiteList': websites, 'BackupStat': BackupStat})
+        proc = httpProc(request, 'IncBackups/ConfigureV2Backup.html',
+                        {'websiteList': websites, 'BackupStat': BackupStat})
         return proc.render()
 
     except BaseException as msg:
         logging.writeToFile(str(msg))
         return redirect(loadLoginPage)
 
+
+def ConfigureV2BackupV2(request):
+    try:
+        user_id, current_acl = _get_user_acl(request)
+
+        if ACLManager.currentContextPermission(current_acl, 'createBackup') == 0:
+            return ACLManager.loadError()
+
+        if ACLManager.CheckForPremFeature('all'):
+            BackupStat = 1
+        else:
+            BackupStat = 0
+
+        websites = ACLManager.findAllSites(current_acl, user_id)
+        #
+        # destinations = _get_destinations(local=True)
+        proc = httpProc(request, 'IncBackups/ConfigureV2BackupV2.html',
+                        {'websiteList': websites, 'BackupStat': BackupStat})
+        return proc.render()
+
+    except BaseException as msg:
+        logging.writeToFile(str(msg))
+        return redirect(loadLoginPage)
+
+
 def ConfigureV2BackupSetup(request):
     try:
         userID = request.session['userID']
 
-        req_data={}
+        req_data = {}
         req_data['name'] = 'GDrive'
         req_data['token'] = request.GET.get('t')
         req_data['refresh_token'] = request.GET.get('r')
@@ -753,7 +845,6 @@ def ConfigureV2BackupSetup(request):
 
         currentACL = ACLManager.loadedACL(userID)
         admin = Administrator.objects.get(pk=userID)
-
 
         if ACLManager.checkOwnership(website, admin, currentACL) == 1:
             pass
@@ -769,8 +860,9 @@ def ConfigureV2BackupSetup(request):
         return ConfigureV2Backup(request)
 
     except BaseException as msg:
-        logging.writeToFile("Error configure"+str(msg))
+        logging.writeToFile("Error configure" + str(msg))
         return redirect(loadLoginPage)
+
 
 def CreateV2Backup(request):
     try:
@@ -780,13 +872,22 @@ def CreateV2Backup(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
+def CreateV2BackupV2(request):
+    try:
+        userID = request.session['userID']
+        bm = BackupManager()
+        return bm.CreateV2backupSiteV2(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 def CreateV2BackupButton(request):
     try:
         userID = request.session['userID']
         data = json.loads(request.body)
         Selectedwebsite = data['Selectedwebsite']
         Selectedrepo = data['Selectedrepo']
-
 
         currentACL = ACLManager.loadedACL(userID)
         admin = Administrator.objects.get(pk=userID)
@@ -795,7 +896,6 @@ def CreateV2BackupButton(request):
             pass
         else:
             return ACLManager.loadError()
-
 
         extra_args = {}
         extra_args['function'] = 'InitiateBackup'
@@ -816,7 +916,7 @@ def CreateV2BackupButton(request):
 
         time.sleep(2)
 
-        data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None',}
+        data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None', }
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
@@ -824,6 +924,7 @@ def CreateV2BackupButton(request):
         data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
 
 def CreateV2BackupStatus(request):
     try:
@@ -833,6 +934,7 @@ def CreateV2BackupStatus(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def RestoreV2backupSite(request):
     try:
         userID = request.session['userID']
@@ -840,6 +942,7 @@ def RestoreV2backupSite(request):
         return bm.RestoreV2backupSite(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def RestorePathV2(request):
     try:
@@ -870,14 +973,13 @@ def RestorePathV2(request):
         # extra_args['BackupEmails'] = data['websiteEmails'] if 'websiteEmails' in data else False
         # extra_args['BackupDatabase'] = data['websiteDatabases'] if 'websiteDatabases' in data else False
 
-
         background = CPBackupsV2(extra_args)
         background.start()
 
         # vm = CPBackupsV2({'domain': Selectedwebsite, 'BackendName': Selectedrepo, "function": "", 'BasePath': '/home/backup'})
         # status = vm.InitiateRestore(SnapShotId, Path)
 
-        data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None',}
+        data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None', }
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
@@ -885,6 +987,7 @@ def RestorePathV2(request):
         data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
 
 def selectwebsiteRetorev2(request):
     import re
@@ -901,11 +1004,11 @@ def selectwebsiteRetorev2(request):
         else:
             return ACLManager.loadError()
 
-        obj = Websites.objects.get(domain = str(Selectedwebsite))
-        #/home/cyberpanel.net/.config/rclone/rclone.conf
-        path = '/home/%s/.config/rclone/rclone.conf' %(obj.domain)
+        obj = Websites.objects.get(domain=str(Selectedwebsite))
+        # /home/cyberpanel.net/.config/rclone/rclone.conf
+        path = '/home/%s/.config/rclone/rclone.conf' % (obj.domain)
 
-        command = 'cat %s'%(path)
+        command = 'cat %s' % (path)
         result = pu.outputExecutioner(command)
 
         if result.find('type') > -1:
@@ -917,13 +1020,13 @@ def selectwebsiteRetorev2(request):
             final_json = json.dumps({'status': 0, 'fetchStatus': 0, 'error_message': 'Could not Find repo'})
             return HttpResponse(final_json)
 
-
         # final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": 1})
         # return HttpResponse(final_json)
     except BaseException as msg:
         final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
+
 
 def ConfigureSftpV2Backup(request):
     try:
@@ -949,7 +1052,6 @@ def ConfigureSftpV2Backup(request):
         req_data['password'] = sfptpasswd
         req_data['Repo_Name'] = Repo_Name
 
-
         cpbuv2 = CPBackupsV2(
             {'domain': Selectedwebsite, 'BasePath': '/home/backup', 'BackupDatabase': 1, 'BackupData': 1,
              'BackupEmails': 1, 'BackendName': 'SFTP', 'function': None})
@@ -967,6 +1069,7 @@ def ConfigureSftpV2Backup(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
+
 def selectwebsiteCreatev2(request):
     import re
     try:
@@ -982,15 +1085,14 @@ def selectwebsiteCreatev2(request):
         else:
             return ACLManager.loadError()
 
-        obj = Websites.objects.get(domain = str(Selectedwebsite))
-        #/home/cyberpanel.net/.config/rclone/rclone.conf
-        path = '/home/%s/.config/rclone/rclone.conf' %(obj.domain)
+        obj = Websites.objects.get(domain=str(Selectedwebsite))
+        # /home/cyberpanel.net/.config/rclone/rclone.conf
+        path = '/home/%s/.config/rclone/rclone.conf' % (obj.domain)
 
-        command = 'cat %s'%(path)
+        command = 'cat %s' % (path)
         CurrentContent = pu.outputExecutioner(command)
 
         status, currentSchedules = CPBackupsV2.FetchCurrentSchedules(str(Selectedwebsite))
-
 
         if CurrentContent.find('No such file or directory') > -1:
             LocalRclonePath = f'/home/{obj.domain}/.config/rclone'
@@ -1010,7 +1112,8 @@ def selectwebsiteCreatev2(request):
             if result.find('type') > -1:
                 pattern = r'\[(.*?)\]'
                 matches = re.findall(pattern, result)
-                final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": matches, 'currentSchedules': currentSchedules})
+                final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": matches,
+                                         'currentSchedules': currentSchedules})
                 return HttpResponse(final_json)
             else:
                 final_json = json.dumps({'status': 0, 'fetchStatus': 0, 'error_message': 'Could not Find repo'})
@@ -1022,12 +1125,13 @@ def selectwebsiteCreatev2(request):
             if result.find('type') > -1:
                 pattern = r'\[(.*?)\]'
                 matches = re.findall(pattern, result)
-                final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": matches, 'currentSchedules': currentSchedules})
+                final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": matches,
+                                         'currentSchedules': currentSchedules})
                 return HttpResponse(final_json)
             else:
-                final_json = json.dumps({'status': 0, 'fetchStatus': 0, 'error_message': 'Could not Find repo', 'currentSchedules': currentSchedules})
+                final_json = json.dumps({'status': 0, 'fetchStatus': 0, 'error_message': 'Could not Find repo',
+                                         'currentSchedules': currentSchedules})
                 return HttpResponse(final_json)
-
 
         # logging.writeToFile(str(CurrentContent))
         # final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": None})
@@ -1040,12 +1144,13 @@ def selectwebsiteCreatev2(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
+
 def selectreporestorev2(request):
     try:
         userID = request.session['userID']
         data = json.loads(request.body)
         Selectedrepo = data['Selectedrepo']
-        Selectedwebsite= data['Selectedwebsite']
+        Selectedwebsite = data['Selectedwebsite']
         currentACL = ACLManager.loadedACL(userID)
         admin = Administrator.objects.get(pk=userID)
 
@@ -1054,12 +1159,11 @@ def selectreporestorev2(request):
         else:
             return ACLManager.loadError()
 
-
         # f'rustic -r testremote snapshots --password "" --json 2>/dev/null'
         # final_json = json.dumps({'status': 0, 'fetchStatus': 1, 'error_message': Selectedrepo })
         # return HttpResponse(final_json)
 
-        vm = CPBackupsV2({'domain': Selectedwebsite, 'BackendName': Selectedrepo, "function":""})
+        vm = CPBackupsV2({'domain': Selectedwebsite, 'BackendName': Selectedrepo, "function": ""})
         status, data = vm.FetchSnapShots()
 
         if status == 1:
@@ -1067,7 +1171,7 @@ def selectreporestorev2(request):
             return HttpResponse(final_json)
         else:
             # final_json = json.dumps({'status': 0, 'fetchStatus': 1, 'error_message': ac,})
-            final_json = json.dumps({'status': 0, 'fetchStatus': 1, 'error_message': 'Cannot Find!',})
+            final_json = json.dumps({'status': 0, 'fetchStatus': 1, 'error_message': 'Cannot Find!', })
             return HttpResponse(final_json)
 
 
@@ -1076,6 +1180,7 @@ def selectreporestorev2(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
+
 def schedulev2Backups(request):
     try:
         userID = request.session['userID']
@@ -1083,6 +1188,16 @@ def schedulev2Backups(request):
         return bm.schedulev2Backups(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
+
+def schedulev2BackupsV2(request):
+    try:
+        userID = request.session['userID']
+        bm = BackupManager()
+        return bm.schedulev2BackupsV2(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
 
 def DeleteScheduleV2(request):
     try:
@@ -1103,8 +1218,8 @@ def DeleteScheduleV2(request):
         else:
             return ACLManager.loadError()
 
-
-        status, message = CPBackupsV2.DeleteSchedule(Selectedwebsite, repo, frequency, websiteData, websiteDatabases, websiteEmails)
+        status, message = CPBackupsV2.DeleteSchedule(Selectedwebsite, repo, frequency, websiteData, websiteDatabases,
+                                                     websiteEmails)
 
         final_dic = {'status': 1, 'error_message': message}
         final_json = json.dumps(final_dic)
@@ -1118,6 +1233,7 @@ def DeleteScheduleV2(request):
         final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
+
 
 def CreateScheduleV2(request):
     try:
@@ -1144,8 +1260,8 @@ def CreateScheduleV2(request):
         else:
             return ACLManager.loadError()
 
-
-        status, message = CPBackupsV2.CreateScheduleV2(Selectedwebsite, repo, frequency, websiteData, websiteDatabases, websiteEmails, retention)
+        status, message = CPBackupsV2.CreateScheduleV2(Selectedwebsite, repo, frequency, websiteData, websiteDatabases,
+                                                       websiteEmails, retention)
 
         final_dic = {'status': 1, 'error_message': message}
         final_json = json.dumps(final_dic)

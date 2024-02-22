@@ -14,9 +14,10 @@ from .models import SMTPHosts, EmailTemplate
 from loginSystem.models import Administrator
 from .emACL import emACL
 
+
 class EmailMarketingManager:
 
-    def __init__(self, request = None, domain = None):
+    def __init__(self, request=None, domain=None):
         self.request = request
         self.domain = domain
 
@@ -118,6 +119,25 @@ class EmailMarketingManager:
         except KeyError as msg:
             return redirect(loadLoginPage)
 
+    def createEmailListV2(self):
+        try:
+            userID = self.request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            if emACL.checkIfEMEnabled(admin.userName) == 0:
+                return ACLManager.loadError()
+
+            proc = httpProc(self.request, 'emailMarketing/createEmailListV2.html', {'domain': self.domain})
+            return proc.render()
+        except KeyError as msg:
+            return redirect(loadLoginPage)
+
     def submitEmailList(self):
         try:
 
@@ -170,7 +190,8 @@ class EmailMarketingManager:
 
             listNames = emACL.getEmailsLists(self.domain)
 
-            proc = httpProc(self.request, 'emailMarketing/manageLists.html', {'listNames': listNames, 'domain': self.domain})
+            proc = httpProc(self.request, 'emailMarketing/manageLists.html',
+                            {'listNames': listNames, 'domain': self.domain})
             return proc.render()
 
         except KeyError as msg:
@@ -256,7 +277,8 @@ class EmailMarketingManager:
             verified = emailList.verified
             notVerified = emailList.notVerified
 
-            data_ret = {'status': 1, 'logs': json_data, 'pagination': pagination, 'totalEmails': totalEmail, 'verified': verified, 'notVerified': notVerified}
+            data_ret = {'status': 1, 'logs': json_data, 'pagination': pagination, 'totalEmails': totalEmail,
+                        'verified': verified, 'notVerified': notVerified}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -495,6 +517,33 @@ class EmailMarketingManager:
         except KeyError as msg:
             return redirect(loadLoginPage)
 
+    def manageSMTPV2(self):
+        try:
+            userID = self.request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            if emACL.checkIfEMEnabled(admin.userName) == 0:
+                return ACLManager.loadError()
+
+            website = Websites.objects.get(domain=self.domain)
+            emailLists = website.emaillists_set.all()
+            listNames = []
+
+            for items in emailLists:
+                listNames.append(items.listName)
+
+            proc = httpProc(self.request, 'emailMarketing/manageSMTPHostsV2.html',
+                            {'listNames': listNames, 'domain': self.domain})
+            return proc.render()
+        except KeyError as msg:
+            return redirect(loadLoginPage)
+
     def saveSMTPHost(self):
         try:
             userID = self.request.session['userID']
@@ -502,7 +551,6 @@ class EmailMarketingManager:
 
             if emACL.checkIfEMEnabled(admin.userName) == 0:
                 return ACLManager.loadErrorJson()
-
 
             data = json.loads(self.request.body)
 
@@ -694,7 +742,8 @@ class EmailMarketingManager:
                 return ACLManager.loadErrorJson()
 
             admin = Administrator.objects.get(pk=userID)
-            newTemplate = EmailTemplate(owner=admin, name=name.replace(' ', ''), subject=subject, fromName=fromName, fromEmail=fromEmail,
+            newTemplate = EmailTemplate(owner=admin, name=name.replace(' ', ''), subject=subject, fromName=fromName,
+                                        fromEmail=fromEmail,
                                         replyTo=replyTo, emailMessage=emailMessage)
             newTemplate.save()
 
@@ -718,7 +767,6 @@ class EmailMarketingManager:
             templateNames = emACL.allTemplates(currentACL, admin)
             hostNames = emACL.allSMTPHosts(currentACL, admin)
             listNames = emACL.allEmailsLists(currentACL, admin)
-
 
             Data = {}
             Data['templateNames'] = templateNames

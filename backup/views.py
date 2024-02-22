@@ -51,6 +51,15 @@ def gDrive(request):
         return redirect(loadLoginPage)
 
 
+def gDriveV2(request):
+    try:
+        userID = request.session['userID']
+        bm = BackupManager()
+        return bm.gDriveV2(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 def gDriveSetup(request):
     try:
         userID = request.session['userID']
@@ -238,6 +247,15 @@ def backupDestinations(request):
         return redirect(loadLoginPage)
 
 
+def backupDestinationsV2(request):
+    try:
+        userID = request.session['userID']
+        bm = BackupManager()
+        return bm.backupDestinationsV2(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 def submitDestinationCreation(request):
     try:
         userID = request.session['userID']
@@ -304,6 +322,15 @@ def scheduleBackup(request):
         return redirect(loadLoginPage)
 
 
+def scheduleBackupV2(request):
+    try:
+        userID = request.session['userID']
+        bm = BackupManager()
+        return bm.scheduleBackupV2(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 def getCurrentBackupSchedules(request):
     try:
         userID = request.session['userID']
@@ -356,6 +383,15 @@ def remoteBackups(request):
         userID = request.session['userID']
         bm = BackupManager()
         return bm.remoteBackups(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def remoteBackupsV2(request):
+    try:
+        userID = request.session['userID']
+        bm = BackupManager()
+        return bm.remoteBackupsV2(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
 

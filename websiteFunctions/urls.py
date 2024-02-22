@@ -36,6 +36,7 @@ urlpatterns = [
     url(r'^RestoreHome$', views.RestoreHome, name='RestoreHome'),
     url(r'^AutoLogin$', views.AutoLogin, name='AutoLogin'),
     url(r'^RemoteBackupConfig$', views.RemoteBackupConfig, name='RemoteBackupConfig'),
+    url(r'^RemoteBackupConfigV2$', views.RemoteBackupConfigV2, name='RemoteBackupConfigV2'),
     url(r'^BackupfileConfig$', views.BackupfileConfig, name='BackupfileConfig'),
     url(r'^AddRemoteBackupsite$', views.AddRemoteBackupsite, name='AddRemoteBackupsite'),
     url(r'^pricing$', views.WordpressPricing, name='pricing'),
@@ -154,7 +155,6 @@ urlpatterns = [
 
     url(r'^prestaShopInstall$', views.prestaShopInstall, name='prestaShopInstall'),
     url(r'^(?P<domain>(.*))/installPrestaShop$', views.installPrestaShop, name='installPrestaShop'),
-
 
     ## magento
 

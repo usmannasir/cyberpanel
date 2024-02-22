@@ -9,6 +9,7 @@ import json
 from plogical.acl import ACLManager
 from plogical.processUtilities import ProcessUtilities
 
+
 # Create your views here.
 
 def loadSSLHome(request):
@@ -26,6 +27,16 @@ def manageSSL(request):
     proc = httpProc(request, 'manageSSL/manageSSL.html',
                     {'websiteList': websitesName}, 'manageSSL')
     return proc.render()
+
+
+def manageSSLV2(request):
+    userID = request.session['userID']
+    currentACL = ACLManager.loadedACL(userID)
+    websitesName = ACLManager.findAllSites(currentACL, userID)
+    proc = httpProc(request, 'manageSSL/manageSSLV2.html',
+                    {'websiteList': websitesName}, 'manageSSL')
+    return proc.render()
+
 
 def v2ManageSSL(request):
     userID = request.session['userID']
@@ -46,7 +57,6 @@ def v2ManageSSL(request):
         DNS.ConfigureCloudflareInAcme(SAVED_CF_Key, SAVED_CF_Email)
         data['SaveSuccess'] = 1
 
-
     RetStatus, SAVED_CF_Key, SAVED_CF_Email = ACLManager.FetchCloudFlareAPIKeyFromAcme()
     from plogical.dnsUtilities import DNS
     DNS.ConfigurePowerDNSInAcme()
@@ -58,6 +68,39 @@ def v2ManageSSL(request):
     proc = httpProc(request, 'manageSSL/v2ManageSSL.html',
                     data, 'manageSSL')
     return proc.render()
+
+
+def v2ManageSSLV2(request):
+    userID = request.session['userID']
+    currentACL = ACLManager.loadedACL(userID)
+    websitesName = ACLManager.findAllSites(currentACL, userID)
+
+    data = {}
+
+    if ACLManager.CheckForPremFeature('all'):
+        data['PremStat'] = 1
+    else:
+        data['PremStat'] = 0
+
+    if request.method == 'POST':
+        SAVED_CF_Key = request.POST.get('SAVED_CF_Key')
+        SAVED_CF_Email = request.POST.get('SAVED_CF_Email')
+        from plogical.dnsUtilities import DNS
+        DNS.ConfigureCloudflareInAcme(SAVED_CF_Key, SAVED_CF_Email)
+        data['SaveSuccess'] = 1
+
+    RetStatus, SAVED_CF_Key, SAVED_CF_Email = ACLManager.FetchCloudFlareAPIKeyFromAcme()
+    from plogical.dnsUtilities import DNS
+    DNS.ConfigurePowerDNSInAcme()
+
+    data['SAVED_CF_Key'] = SAVED_CF_Key
+    data['SAVED_CF_Email'] = SAVED_CF_Email
+    data['websiteList'] = websitesName
+
+    proc = httpProc(request, 'manageSSL/v2ManageSSLV2.html',
+                    data, 'manageSSL')
+    return proc.render()
+
 
 def v2IssueSSL(request):
     try:
@@ -202,6 +245,15 @@ def sslForHostName(request):
     return proc.render()
 
 
+def sslForHostNameV2(request):
+    userID = request.session['userID']
+    currentACL = ACLManager.loadedACL(userID)
+    websitesName = ACLManager.findAllSites(currentACL, userID, 1)
+    proc = httpProc(request, 'manageSSL/sslForHostNameV2.html',
+                    {'websiteList': websitesName}, 'hostnameSSL')
+    return proc.render()
+
+
 def obtainHostNameSSL(request):
     try:
         userID = request.session['userID']
@@ -273,6 +325,18 @@ def sslForMailServer(request):
     websitesName = websitesName + ACLManager.findChildDomains(websitesName)
 
     proc = httpProc(request, 'manageSSL/sslForMailServer.html',
+                    {'websiteList': websitesName}, 'mailServerSSL')
+    return proc.render()
+
+
+def sslForMailServerV2(request):
+    userID = request.session['userID']
+    currentACL = ACLManager.loadedACL(userID)
+
+    websitesName = ACLManager.findAllSites(currentACL, userID)
+    websitesName = websitesName + ACLManager.findChildDomains(websitesName)
+
+    proc = httpProc(request, 'manageSSL/sslForMailServerV2.html',
                     {'websiteList': websitesName}, 'mailServerSSL')
     return proc.render()
 

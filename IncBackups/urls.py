@@ -3,8 +3,11 @@ from . import views
 
 urlpatterns = [
     url(r'^createBackup$', views.create_backup, name='createBackupInc'),
+    url(r'^V2/createBackupV2$', views.create_backupV2, name='createBackupIncV2'),
     url(r'^restoreRemoteBackups$', views.restore_remote_backups, name='restoreRemoteBackupsInc'),
+    url(r'^V2/restoreRemoteBackupsV2$', views.restore_remote_backupsV2, name='restoreRemoteBackupsIncV2'),
     url(r'^backupDestinations$', views.backup_destinations, name='backupDestinationsInc'),
+    url(r'^V2/backupDestinationsV2$', views.backup_destinationsV2, name='backupDestinationsIncV2'),
     url(r'^addDestination$', views.add_destination, name='addDestinationInc'),
     url(r'^populateCurrentRecords$', views.populate_current_records, name='populateCurrentRecordsInc'),
     url(r'^removeDestination$', views.remove_destination, name='removeDestinationInc'),
@@ -15,6 +18,7 @@ urlpatterns = [
     url(r'^fetchRestorePoints$', views.fetch_restore_points, name='fetchRestorePointsInc'),
     url(r'^restorePoint$', views.restore_point, name='restorePointInc'),
     url(r'^scheduleBackups$', views.schedule_backups, name='scheduleBackupsInc'),
+    url(r'^V2/scheduleBackupsV2$', views.schedule_backupsV2, name='scheduleBackupsIncV2'),
     url(r'^submitBackupSchedule$', views.submit_backup_schedule, name='submitBackupScheduleInc'),
     url(r'^scheduleDelete$', views.schedule_delete, name='scheduleDeleteInc'),
     url(r'^getCurrentBackupSchedules$', views.get_current_backup_schedules, name='getCurrentBackupSchedulesInc'),
@@ -24,7 +28,9 @@ urlpatterns = [
     url(r'^addWebsite$', views.add_website, name='addWebsite'),
     ### V2 Backups URls
     url(r'^CreateV2Backup$', views.CreateV2Backup, name='CreateV2Backup'),
+    url(r'^V2/CreateV2BackupV2$', views.CreateV2BackupV2, name='CreateV2BackupV2'),
     url(r'^ConfigureV2Backup$', views.ConfigureV2Backup, name='ConfigureV2Backup'),
+    url(r'^V2/ConfigureV2BackupV2$', views.ConfigureV2BackupV2, name='ConfigureV2BackupV2'),
     url(r'^ConfigureV2BackupSetup$', views.ConfigureV2BackupSetup, name='ConfigureV2BackupSetup'),
     url(r'^RestoreV2backupSite$', views.RestoreV2backupSite, name='RestoreV2backupSite'),
     url(r'^selectwebsiteRetorev2$', views.selectwebsiteRetorev2, name='selectwebsiteRetorev2'),
@@ -36,6 +42,7 @@ urlpatterns = [
     url(r'^ConfigureSftpV2Backup$', views.ConfigureSftpV2Backup, name='ConfigureSftpV2Backup'),
 
     url(r'^schedulev2Backups$', views.schedulev2Backups, name='schedulev2Backups'),
+    url(r'^V2/schedulev2BackupsV2$', views.schedulev2BackupsV2, name='schedulev2BackupsV2'),
     url(r'^DeleteScheduleV2$', views.DeleteScheduleV2, name='DeleteScheduleV2'),
     url(r'^CreateScheduleV2$', views.CreateScheduleV2, name='CreateScheduleV2'),
 

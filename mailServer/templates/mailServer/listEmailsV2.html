@@ -17,7 +17,7 @@
                 </div>
             </div>
             <div>
-                <a class="bg-orange-500 text-white font-semibold px-2 py-1"
+                <a class="bg-orange-500 px-3 py-3 rounded-lg text-xl font-semibold text-white"
                    href="{% url "createEmailAccountV2" %}">{% trans "Create Email" %}</a>
             </div>
         </div>
@@ -25,7 +25,7 @@
             them.</p>
     </div>
     <div>
-    <div class="py-4">
+    <div class="flex items-center py-4">
         <p class="text-xl font-bold">List Email Accounts</p>
         <img ng-hide="cyberpanelLoading"
              src="{% static 'images/loading.gif' %}">

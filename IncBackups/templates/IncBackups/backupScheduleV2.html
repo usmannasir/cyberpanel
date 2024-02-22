@@ -1,0 +1,193 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+
+    <div ng-controller="scheduleBackupIncV2" class="p-8">
+        <div class="flex lg:flex-row justify-between items-center sm:flex-col">
+            <div class="flex items-center">
+                <p class="text-4xl font-bold">Schedule Backup -</p>
+                <a target="_blank" href="https://cyberpanel.net/"
+                   style="height: 23px;line-height: 21px;"
+                   class="bg-blue-200 px-2 font-bold mt-2 ml-3"
+                   title=""><span>{% trans "Remote Backups" %}</span></a>
+            </div>
+        </div>
+        <p class="text-xs text-gray-600 py-2 font-semibold">On this page you can schedule Backups to localhost or remote
+            server (If you have added one).
+        </p>
+        <div class="flex items-center py-4">
+            <p class="text-xl font-bold">Schedule Backup</p>
+            <img ng-hide="cyberpanelLoading"
+                 src="{% static 'images/loading.gif' %}">
+        </div>
+        <hr>
+        <div class="flex mt-4 py-2 px-6">
+            <div>
+                <p class="font-semibold w-60">Select Destination</p>
+            </div>
+            <div>
+                <select ng-change="scheduleFreqView()" ng-model="backupDest" class="w-80 bg-gray-100 rounded px-2 py-1">
+                    {% for items in destinations %}
+                        <option>{{ items }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div>
+            <div ng-hide="scheduleFreq" class="flex mt-4 py-2 px-6">
+                <div>
+                    <p class="font-semibold w-60">Select Frequency</p>
+                </div>
+                <div>
+                    <select ng-change="scheduleBtnView()" ng-model="backupFreq"
+                            class="w-80 bg-gray-100 rounded px-2 py-1">
+                        <option>Daily</option>
+                        <option>Weekly</option>
+                    </select>
+                </div>
+            </div>
+            <div ng-hide="scheduleRetention" class="flex mt-4 px-6">
+                <div>
+                    <p class="font-semibold w-60">Select Backup Retention. Leave 0 for no limit</p>
+                </div>
+                <div>
+                    <input ng-model="backupRetention" type="number" class="w-80 bg-gray-100 rounded px-2 py-1"
+                           value="0">
+                </div>
+            </div>
+            <div ng-hide="scheduleFreq">
+                <div class="flex mt-4 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Backup Content</p>
+                    </div>
+                    <div>
+                        <label>
+                            <input ng-model="websiteData" type="checkbox" value="">
+                            Data
+                        </label>
+                    </div>
+                </div>
+                <div class="flex px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <label>
+                            <input ng-model="websiteDatabases" type="checkbox" value="">
+                            Databases
+                        </label>
+                    </div>
+                </div>
+                <div class="flex px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <div class="checkbox">
+                            <label>
+                                <input ng-model="websiteEmails" type="checkbox" value="">
+                                Emails
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div ng-hide="scheduleFreq">
+                <div class="flex justify-center mt-6 mb-2">
+                    <button ng-click="addSchedule()"
+                            class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                        Add Destination
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div ng-hide="scheduleFreq" class="form-group">
+            <div class="col-sm-12">
+                <input type="text" ng-model="accountsSearch"
+                       placeholder="{% trans 'Search Accounts..' %}"
+                       class="w-full bg-gray-100 rounded px-2 py-1">
+            </div>
+        </div>
+        <div ng-hide="scheduleFreq" class="relative py-5 overflow-x-auto">
+            <table class="w-full text-sm text-left rtl:text-right">
+                <thead>
+                <tr class="bg-gray-200 mt-6 w-full rounded-t-lg border-b-2 border-gray-400">
+                    <th scope="col" class="px-6 py-3">
+                        Select sites to be included in this job
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        <input ng-model="webSiteStatus" ng-change="allChecked(webSiteStatus)"
+                               type="checkbox" value="">
+                    </th>
+                </tr>
+                </thead>
+                <tbody ng-repeat="web in WebSitesList | filter:accountsSearch"
+                       class="border shadow-lg py-3 px-6 rounded-b-lg">
+                <tr>
+                    <td ng-bind="web.domain" class="px-6 py-4">
+                    </td>
+                    <td ng-click="" class="px-6 py-4">
+                        <input ng-model="webSiteStatus"
+                               ng-change="addRemoveWebsite(web.domain,webSiteStatus)"
+                               type="checkbox" value="">
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="row">
+            <div class="col-sm-4 col-sm-offset-8">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination">
+                        <li ng-repeat="page in pagination"
+                            ng-click="getFurtherWebsitesFromDB($index+1)" id="webPages"><a
+                                href="">{$ $index + 1 $}</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        <div class="relative py-5 overflow-x-auto">
+            <table class="w-full text-sm text-left rtl:text-right">
+                <thead>
+                <tr class="bg-gray-200 mt-6 w-full rounded-t-lg border-b-2 border-gray-400">
+                    <th scope="col" class="px-6 py-3">
+                        ID
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Destination
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Frequency
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Sites
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Delete
+                    </th>
+                </tr>
+                </thead>
+                <tbody ng-repeat="record in records track by $index"
+                       class="border shadow-lg py-3 px-6 rounded-b-lg">
+                <tr>
+                    <td ng-bind="record.id" class="px-6 py-4">
+                    </td>
+                    <td ng-bind="record.destination" class="px-6 py-4">
+                    </td>
+                    <td ng-bind="record.frequency" class="px-6 py-4">
+                    </td>
+                    <td ng-bind="record.numberOfSites" class="px-6 py-4">
+                    </td>
+                    <td class="px-6 py-4">
+                        Delete Edit
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

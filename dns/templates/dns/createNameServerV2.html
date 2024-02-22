@@ -7,7 +7,12 @@
 
     <div ng-controller="createNameserverV2" class="p-8">
         <div>
-            <p class="text-4xl font-bold">Create NameServer</p>
+            <div class="flex items-center">
+                <p class="text-4xl font-bold">Create NameServer -</p>
+                 <a target="_blank" href="http://go.cyberpanel.net/dns-records"
+                     class="bg-blue-200 px-2 font-bold mt-2 ml-3"
+                     title=""><span>{% trans "DNS Docs" %}</span></a>
+            </div>
             <p class="text-xs text-gray-600 py-2 font-semibold">You can use this page to setup nameservers using
                 which
                 people on the internet can resolve websites hosted on this server.</p>
@@ -66,7 +71,6 @@
                             <input value="IP Address for first nameserver." name="firstNSIP" type="text"
                                    class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="firstNSIP" required>
                         </div>
-                        <div class="text-orange-500 font-semibold ml-3"><p>{% trans "MB (0 = Unlimited)" %}</p></div>
                     </div>
                     <div class="flex py-2 px-6">
                         <div>

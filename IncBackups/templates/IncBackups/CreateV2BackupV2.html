@@ -1,0 +1,133 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="CreateV2BackupV2" class="p-8">
+        <div class="flex lg:flex-row justify-between items-center sm:flex-col">
+            <div class="flex items-center">
+                <p class="text-4xl font-bold">Create V2 Backup -</p>
+                <a target="_blank" href="http://go.cyberpanel.net/backup"
+                   style="height: 23px;line-height: 21px;"
+                   class="bg-blue-200 px-2 font-bold mt-2 ml-3"
+                   title=""><span>{% trans "Backup Docs" %}</span></a>
+            </div>
+        </div>
+        <p class="text-xs text-gray-600 py-2 font-semibold">This page can be used to create your backup
+        </p>
+        <div class="flex items-center py-4">
+            <p class="text-xl font-bold">Create v2 Backup</p>
+            <img ng-hide="backupLoading" src="{% static 'images/loading.gif' %}">
+            <a class="ml-2 font-semibold text-gray-500" href="{% url 'RestoreV2backupSite' %}">- Restore Backups</a>
+        </div>
+        <hr>
+        <p class="border" align="center" style="margin-top: 2%; margin-bottom: 2%">
+            <iframe width="788.54" height="443" src="https://www.youtube.com/embed/7dI1013xvUc"
+                    title="YouTube video player" frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowfullscreen></iframe>
+        </p>
+        <div class="flex mt-4 py-2 px-6">
+            <div>
+                <p class="font-semibold w-60">Select Website</p>
+            </div>
+            <div>
+                <select id="create-backup-select" ng-change="selectwebsite()" ng-model="selwebsite"
+                        class="w-80 bg-gray-100 rounded px-2 py-1">
+                    {% for items in websiteList %}
+                        <option value="{{ items }}">{{ items }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="flex mt-4 py-2 px-6">
+            <div>
+                <p class="font-semibold w-60">Select Repo</p>
+            </div>
+            <div>
+                <select id="reposelectbox" ng-change="selectrepo()" ng-model="testhabbi"
+                        class="w-80 bg-gray-100 rounded px-2 py-1">
+                </select>
+            </div>
+        </div>
+        <div class="flex mt-4 px-6">
+            <div>
+                <p class="font-semibold w-60">Backup Content</p>
+            </div>
+            <div>
+                <div class="checkbox">
+                    <label>
+                        <input ng-model="websiteData" type="checkbox" value="">
+                        Data
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="flex px-6">
+            <div>
+                <p class="font-semibold w-60"></p>
+            </div>
+            <div>
+                <div class="checkbox">
+                    <label>
+                        <input ng-model="websiteDatabases" type="checkbox" value="">
+                        Databases
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="flex px-6">
+            <div>
+                <p class="font-semibold w-60"></p>
+            </div>
+            <div>
+                <div class="checkbox">
+                    <label>
+                        <input ng-model="websiteEmails" type="checkbox" value="">
+                        Emails
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div>
+            <div class="flex justify-center mt-6 mb-2">
+                <button id="CreateV2BackupButton" ng-click="CreateV2BackupButton()"
+                        class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                    Create Backup
+                </button>
+            </div>
+        </div>
+        <div ng-hide="installationProgress">
+            <div class="col-sm-7">
+                <div class="flex justify-center font-bold text-xl">
+                    <h2>{$ currentStatus $}</h2>
+                </div>
+                <div class="w-full bg-gray-100 rounded-full mt-3">
+                    <div id="installProgress"
+                         class="bg-green-600 text-xs font-medium text-white text-center p-2 leading-none rounded-full"
+                         style="width:0%">
+                    </div>
+                </div>
+                <div ng-hide="errorMessageBox"
+                     class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                    <p>{% trans "Error message:" %} {$ errorMessage $}</p>
+                </div>
+                <div ng-hide="success" class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                    <p>{% trans "Backup succesfully." %}</p>
+                </div>
+                <div ng-hide="couldNotConnect"
+                     class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                    <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                </div>
+            </div>
+        </div>
+        <div ng-hide="installationProgress" class="flex justify-center mt-3">
+            <div class="col-sm-4">
+                <button type="button" ng-disabled="goBackDisable" ng-click="goBack()"
+                        class="bg-blue-500 px-3 py-2 rounded-lg text-xl font-semibold text-white">{% trans "Go Back" %}</button>
+            </div>
+        </div>
+    </div>
+{% endblock %}

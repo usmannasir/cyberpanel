@@ -1,0 +1,146 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="remoteBackupControlV2" class="p-8">
+        <div class="flex lg:flex-row justify-between items-center sm:flex-col">
+            <div class="flex items-center">
+                <p class="text-4xl font-bold">Remote Backups -</p>
+                <a target="_blank" href="http://go.cyberpanel.net/remote-transfer"
+                   style="height: 23px;line-height: 21px;" class="bg-blue-200 px-2 font-bold mt-2 ml-3"
+                   title=""><span>{% trans "Remote Transfer" %}</span></a>
+            </div>
+        </div>
+        <p class="text-xs text-gray-600 py-2 font-semibold">This feature can import website(s) from remote server
+        </p>
+        <div class="py-4">
+            <p class="text-xl font-bold">Remote Backups</p>
+            <img ng-hide="backupLoading" src="{% static 'images/loading.gif' %}">
+        </div>
+        <hr>
+        <p ng-bind="transferStatus"></p>
+        <div class="flex mt-4 py-2 px-6">
+            <div>
+                <p class="font-semibold w-60">IP Address</p>
+            </div>
+            <div>
+                <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="IPAddress" required>
+            </div>
+        </div>
+        <div class="flex mt-4 py-2 px-6">
+            <div>
+                <p class="font-semibold w-60">Password</p>
+            </div>
+            <div>
+                <input ng-change="passwordEnter()" type="password" class="w-80 bg-gray-100 rounded px-2 py-1"
+                       ng-model="password" required>
+            </div>
+        </div>
+        <div ng-hide="backupButton" class="flex justify-center mt-6 mb-2">
+            <button ng-disabled="fetchAccountsBtn" ng-click="fetchAccountsFromRemoteServer()"
+                    class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                Fetch Accounts
+            </button>
+        </div>
+        <div ng-hide="transferBoxBtn">
+            <div class="flex justify-center mt-6 mb-2">
+                <button ng-disabled="startTransferbtn" ng-click="startTransfer()"
+                        class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                    Start Transfer
+                </button>
+            </div>
+            <div class="flex justify-center mt-6 mb-2">
+                <button ng-disabled="stopTransferbtn" ng-click="cancelRemoteBackup()"
+                        class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                    Cancel
+                </button>
+            </div>
+        </div>
+        <div ng-hide="notificationsBox" class="form-group">
+            <label class="col-sm-3 control-label"></label>
+            <div class="col-sm-4">
+                <div ng-hide="errorMessage"
+                     class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                    <p>{$ error_message $}</p>
+                </div>
+                <div ng-hide="couldNotConnect"
+                     class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                    <p>{% trans "Could not connect, please refresh this page." %}</p>
+                </div>
+                <div ng-hide="accountsFetched"
+                     class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                    <p>{% trans "Accounts Successfully Fetched from remote server." %}</p>
+                </div>
+                <div ng-hide="backupProcessStarted"
+                     class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                    <p>{% trans "Backup Process successfully started." %}</p>
+                </div>
+                <div ng-hide="backupCancelled"
+                     class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                    <p>{% trans "Backup successfully cancelled." %}</p>
+                </div>
+            </div>
+        </div>
+        <div ng-hide="accountsInRemoteServerTable" class="flex mt-4 py-2 px-6">
+            <div>
+                <p class="font-semibold w-60"></p>
+            </div>
+            <div>
+                <input type="text" ng-model="accountsSearch" placeholder="{% trans 'Search Accounts..' %}"
+                       class="w-80 bg-gray-100 rounded px-2 py-1">
+            </div>
+        </div>
+        <hr>
+        <div ng-hide="accountsInRemoteServerTable" class="relative py-5 overflow-x-auto">
+            <table class="w-full text-sm text-left rtl:text-right">
+                <thead>
+                <tr>
+                    <th scope="col" class="px-6 py-3">
+                        Website
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        PHP
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Package
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Email
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        <input ng-model="webSiteStatus" ng-change="allChecked(webSiteStatus)" type="checkbox" value="">
+                    </th>
+                </tr>
+                </thead>
+                <tbody ng-repeat="record in records | filter:accountsSearch"
+                       class="border shadow-lg py-3 px-6 rounded-b-lg">
+                <tr>
+                    <td ng-bind="record.website" class="px-6 py-4">
+                    </td>
+                    <td ng-bind="record.php" class="px-6 py-4">
+                    </td>
+                    <td ng-bind="record.package" class="px-6 py-4">
+                    </td>
+                    <td ng-bind="record.email" class="px-6 py-4">
+                    </td>
+                    <td ng-click="" class="px-6 py-4">
+                        <input ng-model="webSiteStatus" ng-change="addRemoveWebsite(record.website,webSiteStatus)"
+                               type="checkbox" value="">
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div ng-hide="backupStatus" class="form-group">
+            <div class="col-sm-6">
+                <textarea ng-model="requestData" rows="15" class="form-control"></textarea>
+            </div>
+            <div class="col-sm-6">
+                <textarea ng-model="restoreData" rows="15" class="form-control"></textarea>
+            </div>
+        </div>
+    </div>
+{% endblock %}

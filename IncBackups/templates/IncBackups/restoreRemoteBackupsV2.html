@@ -1,0 +1,125 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+
+    <div ng-controller="restoreRemoteBackupsIncV2" class="p-8">
+        <div class="flex lg:flex-row justify-between items-center sm:flex-col">
+            <div class="flex items-center">
+                <p class="text-4xl font-bold">Restore Remote Incremental Backups -</p>
+                <a target="_blank"
+                   href="https://cyberpanel.net/docs/3-restore-backups-from-remote-destination/"
+                   style="height: 23px;line-height: 21px;"
+                   class="bg-blue-200 px-2 font-bold mt-2 ml-3"
+                   title=""><span>{% trans "Backup Docs" %}</span></a>
+            </div>
+        </div>
+        <p class="text-xs text-gray-600 py-2 font-semibold">This page can be used to restore remote incremental backups
+            for your websites.
+        </p>
+        <div class="flex items-center py-4">
+            <p class="text-xl font-bold">Backup Website</p>
+            <img ng-hide="cyberpanelLoading"
+                 src="{% static 'images/loading.gif' %}">
+        </div>
+        <hr>
+        <div class="flex mt-4 py-2 px-6">
+            <div>
+                <p class="font-semibold w-60">Select Website</p>
+            </div>
+            <div>
+                <select ng-change="showThings()" ng-model="websiteToBeBacked"
+                        class="w-80 bg-gray-100 rounded px-2 py-1">
+                    {% for items in websiteList %}
+                        <option>{{ items }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div>
+            <div ng-hide="destination" class="flex mt-4 py-2 px-6">
+                <div>
+                    <p class="font-semibold w-60">Destination</p>
+                </div>
+                <div>
+                    <select ng-model="backupDestinations"
+                            class="w-80 bg-gray-100 rounded px-2 py-1">
+                        {% for items in destinations %}
+                            <option>{{ items }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div ng-hide="destination" class="flex mt-4 px-6">
+                <div>
+                    <p class="font-semibold w-60">Encrypted Backup Password</p>
+                </div>
+                <div>
+                    <input type="password" name="password" class="w-80 bg-gray-100 rounded px-2 py-1"
+                           ng-model="password"
+                           required>
+                </div>
+            </div>
+            <div ng-hide="destination">
+                <div class="flex justify-center mt-6 mb-2">
+                    <button ng-click="fetchDetails()"
+                            class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                        Fetch Restore Points
+                    </button>
+                    <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                </div>
+            </div>
+        </div>
+        <div ng-hide="runningBackup" class="form-group">
+            <div class="border">
+                <div class="col-sm-12">
+                    <textarea ng-model="status" class="w-full" rows="10"></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="relative py-5 overflow-x-auto">
+            <table class="w-full text-sm text-left rtl:text-right">
+                <thead>
+                <tr class="bg-gray-200 mt-6 w-full rounded-t-lg border-b-2 border-gray-400">
+                    <th scope="col" class="px-6 py-3">
+                        Snapshot ID
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Date
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Host
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Path
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Actions
+                    </th>
+                </tr>
+                </thead>
+                <tbody ng-repeat="web in WebSitesList | filter:accountsSearch"
+                       class="border shadow-lg py-3 px-6 rounded-b-lg">
+                <tr>
+                    <td ng-bind="record.id" class="px-6 py-4">
+                    </td>
+                    <td ng-bind="record.date" class="px-6 py-4">
+                    </td>
+                    <td ng-bind="record.host" class="px-6 py-4">
+                    </td>
+                    <td ng-bind="record.path" class="px-6 py-4">
+                    </td>
+                    <td class="px-6 py-4">
+                        <a ng-click="restorePoint(record.id, record.path)"
+                           class=""
+                           title=""><span>Restore</span></a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

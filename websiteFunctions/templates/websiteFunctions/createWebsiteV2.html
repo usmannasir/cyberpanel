@@ -78,17 +78,16 @@
                         <p class="font-semibold w-48">Additional Features</p></label>
                     </div>
                     <div class="text-gray-500 font-semibold">
-                        <div class="col-sm-9">
-                            <div class="checkbox">
+                        <div>
+                            <div>
                                 <label>
                                     <input ng-model="sslCheck" type="checkbox" value="">
                                     SSL
                                 </label>
                             </div>
                         </div>
-                        <label class="col-sm-3 control-label"></label>
-                        <div class="col-sm-9">
-                            <div class="checkbox">
+                        <div>
+                            <div>
                                 <label>
                                     {% if test_domain_data %}
                                         <input ng-model="apacheBackend" type="checkbox" value="">
@@ -103,27 +102,24 @@
                                 </label>
                             </div>
                         </div>
-                        <label class="col-sm-3 control-label"></label>
-                        <div class="col-sm-9">
-                            <div class="checkbox">
+                        <div>
+                            <div>
                                 <label>
                                     <input ng-model="dkimCheck" type="checkbox" value="">
                                     DKIM Support
                                 </label>
                             </div>
                         </div>
-                        <label class="col-sm-3 control-label"></label>
-                        <div class="col-sm-9">
-                            <div class="checkbox">
+                        <div>
+                            <div>
                                 <label>
                                     <input ng-model="openBasedir" type="checkbox" value="">
                                     open_basedir Protection
                                 </label>
                             </div>
                         </div>
-                        <label class="col-sm-3 control-label"></label>
-                        <div class="col-sm-9">
-                            <div class="checkbox">
+                        <div>
+                            <div>
                                 <label>
                                     <input ng-model="mailDomain" type="checkbox" value="">
                                     Create Mail Domain
@@ -137,7 +133,7 @@
         <div ng-hide="installationDetailsForm" class="flex justify-center">
             <button ng-disabled="websiteCreationForm.dom.$error.required || websiteCreationForm.email.$invalid"
                     ng-click="createWebsite()"
-                    class="bg-orange-500 px-3 py-4 rounded-lg text-xl font-semibold text-white">
+                    class="bg-orange-500 px-3 py-2 rounded-lg text-xl font-semibold text-white">
                 Create Website
             </button>
         </div>
@@ -152,17 +148,17 @@
                      style="width:0%">
                 </div>
             </div>
-            <div ng-hide="errorMessageBox" class="flex justify-center font-bold text-xl mt-3">
+            <div ng-hide="errorMessageBox"
+                 class="flex justify-center mt-2 bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
                 <h2>{$ errorMessage $}</h2>
             </div>
-            <div ng-hide="success" class="flex justify-center font-bold text-xl mt-3">
+            <div ng-hide="success" class="flex justify-center mt-2 bg-green-500 px-2 rounded-lg py-1 font-semibold">
                 <h2>Website succesfully created.</h2>
             </div>
-            <div ng-hide="couldNotConnect" class="flex justify-center font-bold text-xl mt-3">
+            <div ng-hide="couldNotConnect"
+                 class="flex justify-center mt-2 bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
                 <h2>Could not connect to server. Please refresh this page.</h2>
             </div>
-
-
         </div>
 
         <div ng-hide="installationProgress" class="flex justify-center mt-3">

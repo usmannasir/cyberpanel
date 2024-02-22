@@ -1,0 +1,127 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="RestoreWPBackupV2" class="p-8">
+        <div>
+            <p id="domainNamePage" class="text-4xl font-bold">Restore Backups</p>
+            <p class="text-xs text-gray-600 py-2 font-semibold">On this page you can Restore, list, modify and delete
+                Backups Wordpress Sites from your server.</p>
+        </div>
+        <div class="flex gap-3 py-4 items-center">
+            <p id="backupid" class="text-xl font-bold text-white px-1 bg-orange-500">{{ backupobj.id }}</p>
+            <p id="backuptype" class="text-xl font-bold">{{ Backuptype }}</p>
+        </div>
+        <hr>
+        <div class="flex py-4 items-center">
+            <p class="text-xl font-bold"> {{ FileName }} </p>
+            <img id="wordpresshomeloading" style="display: none"
+                 src="{% static 'images/loading.gif' %}">
+        </div>
+        <hr>
+        <form name="websiteCreationForm" action="/" id="createPackages">
+            {% if Backuptype == "DataBase Backup" %}
+                <div id="exinstingsitedivDB" ng-hide="installationDetailsForm" class="flex mt-4 py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Choose WPsite Restore Destination</p>
+                    </div>
+                    <div>
+                        <select id="DesSite" class="w-80 bg-gray-100 rounded px-2 py-1" required>
+                            <option value="-1">Select WordPress Site</option>
+                            {% for i in WPsites %}
+                                <option value="{{ i.id }}">{{ i.FinalURL }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            {% else %}
+                <div ng-hide="installationDetailsForm" class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Choose Restoring Method</p>
+                    </div>
+                    <div>
+                        <select ng-click="checkmethode()" id="RestoreMethode" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                required>
+                            <option value="-1">Select Method</option>
+                            <option value="1">Restore to New Site</option>
+                            <option value="0">Restore to Existing Site</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="exinstingsitediv" ng-hide="installationDetailsForm" style="display: none"
+                     class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Choose WPsite Restore Destination</p>
+                    </div>
+                    <div>
+                        <select id="DesSite" class="w-80 bg-gray-100 rounded px-2 py-1" required>
+                            <option value="-1">Select WordPress Site</option>
+                            {% for i in WPsites %}
+                                <option value="{{ i.id }}">{{ i.FinalURL }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div id="Newsitediv" ng-hide="installationDetailsForm" style="display: none" class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Domain Name</p>
+                    </div>
+                    <div>
+                        <input ng-model="domainNameCreate" id="wprestoresubdirdomain"
+                               class="w-80 bg-gray-100 rounded px-2 py-1"
+                               type="text" value="55"
+                               name="wprestoresubdirdomain"
+                               style="display: block;"
+                               placeholder="{% trans "Do not enter WWW, it will be auto created!" %}">
+                        <input id="wprestoresubdirpath" class="w-80 bg-gray-100 rounded px-2 py-1 mt-2"
+                               placeholder="{% trans "Leave empty for default" %}"
+                               type="text" value="Leave empty for default"
+                               name="wprestoresubdirpath" ng-model="installPath"
+                               style="display: block;">
+                    </div>
+                </div>
+            {% endif %}
+            <div ng-model="installationDetailsForm" class="flex justify-center mt-3">
+                <button id="RestoreWPbackupNow"
+                        ng-click="RestoreWPbackupNow()"
+                        class="bg-orange-500 px-3 py-2 rounded-lg text-xl font-semibold text-white">
+                    Restore Backup Now
+                </button>
+            </div>
+            <div ng-hide="installationProgress" class="form-group">
+
+                <div class="flex justify-center font-bold text-xl">
+                    <h2>{$ currentStatus $}</h2>
+                </div>
+                <div class="w-full bg-gray-100 rounded-full mt-3">
+                    <div id="installProgressbackup"
+                         class="bg-green-600 text-xs font-medium text-white text-center p-2 leading-none rounded-full"
+                         style="width:0%">
+                    </div>
+                </div>
+                <div ng-hide="errorMessageBox"
+                     class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                    <p>{% trans "Error message:" %} {$ errorMessage $}</p>
+                </div>
+                <div ng-hide="success" class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                    <p>{% trans "Backup succesfully created." %}</p>
+                </div>
+                <div ng-hide="couldNotConnect"
+                     class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                    <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                </div>
+            </div>
+
+            <div ng-hide="installationProgress" class="flex justify-center mt-3">
+                <button ng-disabled="goBackDisable"
+                        ng-click="goBack()"
+                        class="bg-blue-500 px-3 py-2 rounded-lg text-xl font-semibold text-white">
+                    Go Back
+                </button>
+            </div>
+        </form>
+    </div>
+{% endblock %}

@@ -11,8 +11,9 @@
             <p class="text-xs text-gray-600 py-2 font-semibold">This page can be used to suspend/unsuspend website</p>
         </div>
         <div>
-            <div class="py-4">
+            <div class="flex items-center py-4">
                 <p class="text-xl font-bold">Suspend/Unsuspend Website</p>
+                <img ng-hide="suspendLoading" src="{% static 'images/loading.gif' %}">
             </div>
             <hr>
             <div>
@@ -22,19 +23,19 @@
                     </div>
                     <div>
                         <select ng-change="showSuspendUnsuspend()" ng-model="websiteToBeSuspended"
-                                class="form-control w-80 bg-gray-100 rounded px-2 py-1">
+                                class="w-80 bg-gray-100 rounded px-2 py-1">
                             {% for items in websiteList %}
                                 <option>{{ items }}</option>
                             {% endfor %}
                         </select>
                     </div>
                 </div>
-                <div class="flex mt-4 py-2 px-6">
+                <div ng-hide="stateView" class="flex mt-4 py-2 px-6">
                     <div>
                         <p class="font-semibold w-60">Suspend/Unsuspend Website</p>
                     </div>
                     <div>
-                        <select ng-model="state" class="form-control w-80 bg-gray-100 rounded px-2 py-1">
+                        <select ng-model="state" class="w-80 bg-gray-100 rounded px-2 py-1">
                             <option>{% trans "Suspend" %}</option>
                             <option>{% trans "Un-Suspend" %}</option>
                         </select>
@@ -44,9 +45,30 @@
         </div>
         <div class="flex justify-center mt-4">
             <button ng-click="save()"
-                    class="bg-orange-500 px-3 py-4 rounded-lg text-xl font-semibold text-white">
+                    class="bg-orange-500 px-3 py-2 rounded-lg text-xl font-semibold text-white">
                 Save
             </button>
+        </div>
+        <div class="mt-2">
+            <div>
+                <div ng-hide="websiteSuspendFailure"
+                     class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                    <p>{% trans "Cannot suspend website, Error message: " %}{$ errorMessage $}</p>
+                </div>
+                <div ng-hide="websiteUnsuspendFailure"
+                     class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                    <p>{% trans "Cannot unsuspend website. Error message:" %} {$ errorMessage $}</p>
+                </div>
+                <div ng-hide="websiteSuccess"
+                     class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                    <p>{% trans "Website " %}<strong>{$ websiteStatus
+                        $}</strong> {% trans "Successfully " %}{$ finalStatus $}.</p>
+                </div>
+                <div ng-hide="couldNotConnect"
+                     class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                    <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                </div>
+            </div>
         </div>
     </div>
 {% endblock %}

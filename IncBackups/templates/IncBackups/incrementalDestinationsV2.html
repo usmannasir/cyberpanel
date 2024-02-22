@@ -1,0 +1,156 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+
+    <div ng-controller="incrementalDestinationsV2" class="p-8">
+        <div class="flex lg:flex-row justify-between items-center sm:flex-col">
+            <div class="flex items-center">
+                <p class="text-4xl font-bold">Set up Incremental Backup Destinations -</p>
+                <a target="_blank"
+                   href="https://cyberpanel.net/docs/1-add-remove-destinations-for-incremental-backups/"
+                   style="height: 23px;line-height: 21px;"
+                   class="bg-blue-200 px-2 font-bold mt-2 ml-3"
+                   title=""><span>{% trans "Remote Backups" %}</span></a>
+            </div>
+        </div>
+        <p class="text-xs text-gray-600 py-2 font-semibold">On this page you can set up your Backup destinations. (SFTP
+            and AWS)
+        </p>
+        <div class="flex items-center py-4">
+            <p class="text-xl font-bold">Set up Backup Destinations.</p>
+            <img ng-hide="cyberpanelLoading"
+                 src="{% static 'images/loading.gif' %}">
+        </div>
+        <hr>
+        <div class="flex mt-4 py-2 px-6">
+            <div>
+                <p class="font-semibold w-60">Select Type</p>
+            </div>
+            <div>
+                <select ng-change="fetchDetails()" ng-model="destinationType"
+                        class="w-80 bg-gray-100 rounded px-2 py-1">
+                    {#                                    <option>SFTP</option>#}
+                    <option>AWS</option>
+                </select>
+            </div>
+        </div>
+        <div>
+            <div ng-hide="sftpHide" class="flex mt-4 py-2 px-6">
+                <div>
+                    <p class="font-semibold w-60">IP Address</p>
+                </div>
+                <div>
+                    <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="IPAddress" required>
+                </div>
+            </div>
+            <div ng-hide="sftpHide" class="flex mt-4 px-6">
+                <div>
+                    <p class="font-semibold w-60">Password</p>
+                </div>
+                <div>
+                    <input placeholder="" type="password" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="password"
+                           required>
+                </div>
+            </div>
+            <div ng-hide="sftpHide" class="flex mt-4 px-6">
+                <div>
+                    <p class="font-semibold w-60">Port</p>
+                </div>
+                <div>
+                    <input placeholder="{% trans "Backup server SSH Port, leave empty for 22." %}"
+                           type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="backupSSHPort" required>
+                </div>
+            </div>
+            <div ng-hide="sftpHide">
+                <div class="flex justify-center mt-6 mb-2">
+                    <button ng-click="addDestination('SFTP')"
+                            class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                        Add Destination
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div ng-hide="sftpHide" class="relative py-5 overflow-x-auto">
+            <table class="w-full text-sm text-left rtl:text-right">
+                <thead>
+                <tr class="bg-gray-200 mt-6 w-full rounded-t-lg border-b-2 border-gray-400">
+                    <th scope="col" class="px-6 py-3">
+                        IP
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Port
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Delete
+                    </th>
+                </tr>
+                </thead>
+                <tbody ng-repeat="record in records track by $index"
+                       class="border shadow-lg py-3 px-6 rounded-b-lg">
+                <tr>
+                    <td ng-bind="record.ip" class="px-6 py-4">
+                    </td>
+                    <td ng-bind="record.port" class="px-6 py-4">
+                    </td>
+                    <td ng-click="removeDestination('SFTP',record.ip)" class="px-6 py-4">
+                        <img class="ml-2 cursor-pointer" src="{% static 'images/delete.png' %}">
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div ng-hide="awsHide" class="flex mt-4 px-6">
+            <div>
+                <p class="font-semibold w-60">AWS_ACCESS_KEY_ID</p>
+            </div>
+            <div>
+                <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="AWS_ACCESS_KEY_ID" required>
+            </div>
+        </div>
+        <div ng-hide="awsHide" class="flex mt-4 px-6">
+            <div>
+                <p class="font-semibold w-60">AWS_SECRET_ACCESS_KEY</p>
+            </div>
+            <div>
+                <input placeholder="" type="password" class="w-80 bg-gray-100 rounded px-2 py-1"
+                       ng-model="AWS_SECRET_ACCESS_KEY" required>
+            </div>
+        </div>
+        <div ng-hide="awsHide">
+            <div class="flex justify-center mt-6 mb-2">
+                <button ng-click="addDestination('AWS')"
+                        class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                    Add Destination
+                </button>
+            </div>
+        </div>
+        <div ng-hide="awsHide" class="relative py-5 overflow-x-auto">
+            <table class="w-full text-sm text-left rtl:text-right">
+                <thead>
+                <tr class="bg-gray-200 mt-6 w-full rounded-t-lg border-b-2 border-gray-400">
+                    <th scope="col" class="px-6 py-3">
+                        AWS_ACCESS_KEY_ID
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Delete
+                    </th>
+                </tr>
+                </thead>
+                <tbody ng-repeat="record in records track by $index"
+                       class="border shadow-lg py-3 px-6 rounded-b-lg">
+                <tr>
+                    <td ng-bind="record.AWS_ACCESS_KEY_ID" class="px-6 py-4">
+                    </td>
+                    <td ng-click="removeDestination('AWS', record.AWS_ACCESS_KEY_ID)" class="px-6 py-4">
+                        <img class="ml-2 cursor-pointer" src="{% static 'images/delete.png' %}">
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

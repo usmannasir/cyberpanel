@@ -1,0 +1,130 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    {% if BackupStat %}
+        <div ng-controller="ConfigureV2BackupV2" class="p-8">
+            <div class="flex items-center py-4">
+                <p class="text-xl font-bold">Configure v2 Backup Destinations</p>
+                <img ng-hide="cyberpanelLoading"
+                     src="{% static 'images/loading.gif' %}">
+            </div>
+            <hr>
+            <div class="flex mt-4 py-2 px-6">
+                <div>
+                    <p class="font-semibold w-60">Select Website</p>
+                </div>
+                <div>
+                    <select id="selwebsite" ng-change="selectwebsite()" ng-model="selwebsite"
+                            class="w-80 bg-gray-100 rounded px-2 py-1">
+                        {% for items in websiteList %}
+                            <option value="{{ items }}">{{ items }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="flex mt-4 py-2 px-6">
+                <div>
+                    <p class="font-semibold w-60">Select Backup Type</p>
+                </div>
+                <div>
+                    <select ng-change="selectbackuptype()" ng-model="v2backuptype"
+                            class="w-80 bg-gray-100 rounded px-2 py-1">
+                        <option>SFTP</option>
+                        <option>GDrive</option>
+                    </select>
+                </div>
+            </div>
+            {#            <div>#}
+            {#                <div class="flex justify-center mt-6 mb-2">#}
+            {#                    <button id="CreateV2BackupButton" ng-click="CreateV2BackupButton()"#}
+            {#                            class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">#}
+            {#                        Create Backup#}
+            {#                    </button>#}
+            {#                </div>#}
+            {#            </div>#}
+            {#            <div ng-hide="installationProgress">#}
+            {#                <div class="col-sm-7">#}
+            {#                    <div class="flex justify-center font-bold text-xl">#}
+            {#                        <h2>{$ currentStatus $}</h2>#}
+            {#                    </div>#}
+            {#                    <div class="w-full bg-gray-100 rounded-full mt-3">#}
+            {#                        <div id="installProgress"#}
+            {#                             class="bg-green-600 text-xs font-medium text-white text-center p-2 leading-none rounded-full"#}
+            {#                             style="width:0%">#}
+            {#                        </div>#}
+            {#                    </div>#}
+            {#                    <div ng-hide="errorMessageBox"#}
+            {#                         class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">#}
+            {#                        <p>{% trans "Error message:" %} {$ errorMessage $}</p>#}
+            {#                    </div>#}
+            {#                    <div ng-hide="success" class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">#}
+            {#                        <p>{% trans "Backup succesfully." %}</p>#}
+            {#                    </div>#}
+            {#                    <div ng-hide="couldNotConnect"#}
+            {#                         class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">#}
+            {#                        <p>{% trans "Could not connect to server. Please refresh this page." %}</p>#}
+            {#                    </div>#}
+            {#                </div>#}
+            {#            </div>#}
+            {#            <div ng-hide="installationProgress" class="flex justify-center mt-3">#}
+            {#                <div class="col-sm-4">#}
+            {#                    <button type="button" ng-disabled="goBackDisable" ng-click="goBack()"#}
+            {#                            class="bg-blue-500 px-3 py-2 rounded-lg text-xl font-semibold text-white">{% trans "Go Back" %}</button>#}
+            {#                </div>#}
+            {#            </div>#}
+        </div>
+    {% else %}
+        <style>
+            .feturecard {
+                width: 30%;
+                padding: 46px;
+                margin: 15px
+            }
+        </style>
+        <div class="container">
+            <div id="page-title" align="center">
+                <h1 style="color: black"><strong>Backups v2 - Incremental Backups! </strong></h1>
+                <p style="font-size: 15px; color: black; margin-top: 1%">Is your website's data protection strategy up
+                    to par? Are you tired of dealing with slow and unreliable backup solutions that don't offer the
+                    level of robustness you need? <br><br>
+
+                    Introducing CyberPanel's latest feature, Backups v2! With Backups v2, you can ensure that your
+                    website's data is protected like never before. Our advanced incremental backup system utilizes
+                    rclone, a powerful backup tool that supports over 30+ backends, including popular cloud storage
+                    providers like Google Drive, Dropbox, Amazon S3, and more!<br><br>
+
+                    Gone are the days of slow and cumbersome full backups. With Backups v2, you can take advantage of
+                    incremental backups that only capture changes to your data, making the process lightning-fast and
+                    highly efficient. This means you can save time and bandwidth while still maintaining the highest
+                    level of data integrity.<br><br>
+
+                    Whether you have a small blog or a large e-commerce website, Backups v2 is tailored to meet your
+                    needs. With its robustness and versatility, you can have peace of mind knowing that your website's
+                    data is backed up securely and can be easily restored whenever you need it.
+                    <br></p>
+            </div>
+            <p align="center">
+                <iframe width="788.54" height="443" src="https://www.youtube.com/embed/7dI1013xvUc"
+                        title="YouTube video player" frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen></iframe>
+            </p>
+            <div style="margin-top: 2%">
+                <stripe-pricing-table pricing-table-id="prctbl_1MQtdYJMfY1fWGMszc4tx78j"
+                                      publishable-key="pk_live_51ITXBmJMfY1fWGMs2G0LAydJweIDMp2WaYocM0xyzdn03WaHUbMw6uxfVuktAkgpRyUql7tz7gF5OwdccEZLd6Ot00XX6tGoZx">
+                </stripe-pricing-table>
+                <stripe-pricing-table pricing-table-id="prctbl_1LpSqSJMfY1fWGMsxSNhPLsc"
+                                      publishable-key="pk_live_51ITXBmJMfY1fWGMs2G0LAydJweIDMp2WaYocM0xyzdn03WaHUbMw6uxfVuktAkgpRyUql7tz7gF5OwdccEZLd6Ot00XX6tGoZx">
+                </stripe-pricing-table>
+                <stripe-pricing-table pricing-table-id="prctbl_1M6WpCJMfY1fWGMsQXFlZWcW"
+                                      publishable-key="pk_live_51ITXBmJMfY1fWGMs2G0LAydJweIDMp2WaYocM0xyzdn03WaHUbMw6uxfVuktAkgpRyUql7tz7gF5OwdccEZLd6Ot00XX6tGoZx">
+                </stripe-pricing-table>
+            </div>
+
+        </div>
+    {% endif %}
+{% endblock %}

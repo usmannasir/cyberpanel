@@ -3,6 +3,8 @@
 from django.shortcuts import redirect
 from loginSystem.views import loadLoginPage
 from .emailMarketingManager import EmailMarketingManager
+
+
 # Create your views here.
 
 
@@ -14,6 +16,7 @@ def emailMarketing(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def fetchUsers(request):
     try:
         userID = request.session['userID']
@@ -21,6 +24,7 @@ def fetchUsers(request):
         return emm.fetchUsers()
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def enableDisableMarketing(request):
     try:
@@ -30,6 +34,7 @@ def enableDisableMarketing(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def createEmailList(request, domain):
     try:
         userID = request.session['userID']
@@ -37,6 +42,16 @@ def createEmailList(request, domain):
         return emm.createEmailList()
     except KeyError:
         return redirect(loadLoginPage)
+
+
+def createEmailListV2(request, domain):
+    try:
+        userID = request.session['userID']
+        emm = EmailMarketingManager(request, domain)
+        return emm.createEmailListV2()
+    except KeyError:
+        return redirect(loadLoginPage)
+
 
 def submitEmailList(request):
     try:
@@ -46,6 +61,7 @@ def submitEmailList(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def manageLists(request, domain):
     try:
         userID = request.session['userID']
@@ -53,6 +69,7 @@ def manageLists(request, domain):
         return emm.manageLists()
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def configureVerify(request, domain):
     try:
@@ -62,6 +79,7 @@ def configureVerify(request, domain):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def saveConfigureVerify(request):
     try:
         userID = request.session['userID']
@@ -69,6 +87,7 @@ def saveConfigureVerify(request):
         return emm.saveConfigureVerify()
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def fetchVerifyLogs(request):
     try:
@@ -78,6 +97,7 @@ def fetchVerifyLogs(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def fetchEmails(request):
     try:
         userID = request.session['userID']
@@ -85,6 +105,7 @@ def fetchEmails(request):
         return emm.fetchEmails()
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def deleteList(request):
     try:
@@ -94,6 +115,7 @@ def deleteList(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def emailVerificationJob(request):
     try:
         userID = request.session['userID']
@@ -101,6 +123,7 @@ def emailVerificationJob(request):
         return emm.emailVerificationJob()
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def deleteEmail(request):
     try:
@@ -110,6 +133,7 @@ def deleteEmail(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def manageSMTP(request, domain):
     try:
         userID = request.session['userID']
@@ -117,6 +141,16 @@ def manageSMTP(request, domain):
         return emm.manageSMTP()
     except KeyError:
         return redirect(loadLoginPage)
+
+
+def manageSMTPV2(request, domain):
+    try:
+        userID = request.session['userID']
+        emm = EmailMarketingManager(request, domain)
+        return emm.manageSMTPV2()
+    except KeyError:
+        return redirect(loadLoginPage)
+
 
 def saveSMTPHost(request):
     try:
@@ -126,6 +160,7 @@ def saveSMTPHost(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def fetchSMTPHosts(request):
     try:
         userID = request.session['userID']
@@ -133,6 +168,7 @@ def fetchSMTPHosts(request):
         return emm.fetchSMTPHosts()
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def smtpHostOperations(request):
     try:
@@ -142,6 +178,7 @@ def smtpHostOperations(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def composeEmailMessage(request):
     try:
         userID = request.session['userID']
@@ -149,6 +186,7 @@ def composeEmailMessage(request):
         return emm.composeEmailMessage()
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def saveEmailTemplate(request):
     try:
@@ -158,6 +196,7 @@ def saveEmailTemplate(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def sendEmails(request):
     try:
         userID = request.session['userID']
@@ -165,6 +204,7 @@ def sendEmails(request):
         return emm.sendEmails()
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def templatePreview(request, templateName):
     try:
@@ -174,6 +214,7 @@ def templatePreview(request, templateName):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def fetchJobs(request):
     try:
         userID = request.session['userID']
@@ -181,6 +222,7 @@ def fetchJobs(request):
         return emm.fetchJobs()
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def startEmailJob(request):
     try:
@@ -190,6 +232,7 @@ def startEmailJob(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def deleteTemplate(request):
     try:
         userID = request.session['userID']
@@ -197,6 +240,7 @@ def deleteTemplate(request):
         return emm.deleteTemplate()
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def deleteJob(request):
     try:

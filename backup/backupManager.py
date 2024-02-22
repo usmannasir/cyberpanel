@@ -84,6 +84,12 @@ class BackupManager:
         proc = httpProc(request, 'IncBackups/CreateV2Backup.html', {'websiteList': websitesName}, 'createBackup')
         return proc.render()
 
+    def CreateV2backupSiteV2(self, request=None, userID=None, data=None):
+        currentACL = ACLManager.loadedACL(userID)
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        proc = httpProc(request, 'IncBackups/CreateV2BackupV2.html', {'websiteList': websitesName}, 'createBackup')
+        return proc.render()
+
     def schedulev2Backups(self, request=None, userID=None, data=None):
 
         if ACLManager.CheckForPremFeature('all'):
@@ -97,6 +103,19 @@ class BackupManager:
                         {'websiteList': websitesName, "BackupStat": BackupStat}, 'createBackup')
         return proc.render()
 
+    def schedulev2BackupsV2(self, request=None, userID=None, data=None):
+
+        if ACLManager.CheckForPremFeature('all'):
+            BackupStat = 1
+        else:
+            BackupStat = 0
+
+        currentACL = ACLManager.loadedACL(userID)
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        proc = httpProc(request, 'IncBackups/ScheduleV2BackupV2.html',
+                        {'websiteList': websitesName, "BackupStat": BackupStat}, 'createBackup')
+        return proc.render()
+
     def gDrive(self, request=None, userID=None, data=None):
         currentACL = ACLManager.loadedACL(userID)
         admin = Administrator.objects.get(pk=userID)
@@ -106,6 +125,18 @@ class BackupManager:
             gDriveAcctsList.append(items.name)
         websitesName = ACLManager.findAllSites(currentACL, userID)
         proc = httpProc(request, 'backup/googleDrive.html', {'accounts': gDriveAcctsList, 'websites': websitesName},
+                        'createBackup')
+        return proc.render()
+
+    def gDriveV2(self, request=None, userID=None, data=None):
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+        gDriveAcctsList = []
+        gDriveAccts = admin.gdrive_set.all()
+        for items in gDriveAccts:
+            gDriveAcctsList.append(items.name)
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        proc = httpProc(request, 'backup/googleDriveV2.html', {'accounts': gDriveAcctsList, 'websites': websitesName},
                         'createBackup')
         return proc.render()
 
@@ -779,6 +810,10 @@ class BackupManager:
         proc = httpProc(request, 'backup/backupDestinations.html', {}, 'addDeleteDestinations')
         return proc.render()
 
+    def backupDestinationsV2(self, request=None, userID=None, data=None):
+        proc = httpProc(request, 'backup/backupDestinationsV2.html', {}, 'addDeleteDestinations')
+        return proc.render()
+
     def submitDestinationCreation(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
@@ -951,6 +986,17 @@ class BackupManager:
                         'scheduleBackups')
         return proc.render()
 
+    def scheduleBackupV2(self, request, userID=None, data=None):
+        currentACL = ACLManager.loadedACL(userID)
+        destinations = NormalBackupDests.objects.all()
+        dests = []
+        for dest in destinations:
+            dests.append(dest.name)
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        proc = httpProc(request, 'backup/backupScheduleV2.html', {'destinations': dests, 'websites': websitesName},
+                        'scheduleBackups')
+        return proc.render()
+
     def getCurrentBackupSchedules(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
@@ -1075,6 +1121,10 @@ class BackupManager:
 
     def remoteBackups(self, request, userID=None, data=None):
         proc = httpProc(request, 'backup/remoteBackups.html', None, 'remoteBackups')
+        return proc.render()
+
+    def remoteBackupsV2(self, request, userID=None, data=None):
+        proc = httpProc(request, 'backup/remoteBackupsV2.html', None, 'remoteBackups')
         return proc.render()
 
     def submitRemoteBackups(self, userID=None, data=None):

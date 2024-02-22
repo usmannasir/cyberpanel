@@ -1,0 +1,82 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="BackupScheduleV2" class="p-8">
+        <div>
+            <p class="text-4xl font-bold">Backup Sites Configurations</p>
+        </div>
+
+        <div class="py-4">
+            <p class="text-xl font-bold">Add WordPress Sites for Remote Backup</p>
+            <img ng-hide="BackupScheduleLoading"
+                 src="{% static 'images/loading.gif' %}">
+        </div>
+        <hr>
+        <form name="websiteCreationForm" action="/" id="createPackages">
+            <span style="display: none" id="RemoteScheduleID"> {{ RemoteScheduleID }}</span>
+            <div ng-hide="installationDetailsForm" class="flex mt-4 py-2 px-6">
+                <div>
+                    <p class="font-semibold w-48">Selecte WordPress Site</p>
+                </div>
+                <div>
+                    <select ng-model="Wpsite" id="Wpsite"
+                            class="w-80 bg-gray-100 rounded px-2 py-1">
+                        {% for i in WPsites %}
+                            <option value="{{ i.id }}">{{ i.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div ng-hide="installationDetailsForm" class="flex justify-center mt-3">
+                <button ng-click="AddWPsiteforRemoteBackup()"
+                        class="bg-orange-500 px-3 py-2 rounded-lg text-xl font-semibold text-white">
+                    Save Backup Schedule
+                </button>
+            </div>
+        </form>
+        <div class="py-4">
+            <p class="text-xl font-bold">Saved Sites For Remote Backup</p>
+        </div>
+        <div class="relative py-8 overflow-x-auto">
+            <table class="w-full text-sm text-left rtl:text-right">
+                <thead>
+                <tr>
+                    <th scope="col" class="px-6 py-3">
+                        ID
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        WordPress Title
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Action
+                    </th>
+                </tr>
+                </thead>
+                {% for sub in RemoteBackupsites %}
+                    <tbody class="border shadow-lg py-3 px-6 rounded-b-lg">
+                    <tr>
+                        <td class="px-6 py-4 font-bold">
+                            {{ sub.id }}
+                        </td>
+                        <td class="px-6 py-4">
+                            {{ sub.Title }}
+                        </td>
+                        <td class="px-6 py-4">
+                            <button aria-label=""
+                                    onclick="DeleteRemoteBackupsiteNow('{% url 'AddRemoteBackupsiteV2' %}?ID={{ RemoteScheduleID }}&DeleteID={{ sub.id }}')"
+                                    type="button"
+                                    class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                    </tbody>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+{% endblock %}

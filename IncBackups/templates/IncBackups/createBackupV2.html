@@ -1,0 +1,140 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+
+    <div ng-controller="createIncrementalBackupsV2" class="p-8">
+        <div class="flex lg:flex-row justify-between items-center sm:flex-col">
+            <div class="flex items-center">
+                <p class="text-4xl font-bold">Backup Website -</p>
+                <a target="_blank" href="https://cyberpanel.net/docs/2-create-restore-incremental-backups/"
+                   style="height: 23px;line-height: 21px;"
+                   class="bg-blue-200 px-2 font-bold mt-2 ml-3"
+                   title=""><span>{% trans "Backup Docs" %}</span></a>
+            </div>
+        </div>
+        <p class="text-xs text-gray-600 py-2 font-semibold">This page can be used to create incremental backups for your
+            websites.
+        </p>
+        <div class="flex items-center py-4">
+            <p class="text-xl font-bold">Backup Website</p>
+            <img ng-hide="cyberpanelLoading"
+                 src="{% static 'images/loading.gif' %}">
+        </div>
+        <hr>
+        <div class="flex mt-4 py-2 px-6">
+            <div>
+                <p class="font-semibold w-60">Select Website</p>
+            </div>
+            <div>
+                <select ng-change="fetchDetails()" ng-model="websiteToBeBacked"
+                        class="w-80 bg-gray-100 rounded px-2 py-1">
+                    {% for items in websiteList %}
+                        <option>{{ items }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div ng-hide="destination">
+            <div class="flex mt-4 py-2 px-6">
+                <div>
+                    <p class="font-semibold w-60">Destination</p>
+                </div>
+                <div>
+                    <select ng-change="destinationSelection()" ng-model="backupDestinations"
+                            class="w-80 bg-gray-100 rounded px-2 py-1">
+                        {% for items in destinations %}
+                            <option>{{ items }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="flex mt-4 px-6">
+                <div>
+                    <p class="font-semibold w-60">Backup Content</p>
+                </div>
+                <div>
+                    <label>
+                        <input ng-model="websiteData" type="checkbox" value="">
+                        Data
+                    </label>
+                </div>
+            </div>
+            <div class="flex px-6">
+                <div>
+                    <p class="font-semibold w-60"></p>
+                </div>
+                <div>
+                    <label>
+                        <input ng-model="websiteDatabases" type="checkbox" value="">
+                        Databases
+                    </label>
+                </div>
+            </div>
+            <div class="flex px-6">
+                <div>
+                    <p class="font-semibold w-60"></p>
+                </div>
+                <div>
+                    <label>
+                        <input ng-model="websiteEmails" type="checkbox" value="">
+                        Emails
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div ng-hide="runningBackup" class="border">
+            <div>
+                <div>
+                    <textarea ng-model="status" class="w-full" rows="10"></textarea>
+                </div>
+            </div>
+        </div>
+        <div ng-hide="backupButton">
+            <div class="flex justify-center mt-6 mb-2">
+                <button ng-click="createBackup()"
+                        class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                    Create Backup
+                </button>
+            </div>
+        </div>
+        <div class="relative py-5 overflow-x-auto">
+            <table class="w-full text-sm text-left rtl:text-right">
+                <thead>
+                <tr class="bg-gray-200 mt-6 w-full rounded-t-lg border-b-2 border-gray-400">
+                    <th scope="col" class="px-6 py-3">
+                        ID
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Date
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Restore
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Delete
+                    </th>
+                </tr>
+                </thead>
+                <tbody ng-repeat="record in records track by $index"
+                       class="border shadow-lg py-3 px-6 rounded-b-lg">
+                <tr>
+                    <td ng-bind="record.id" class="px-6 py-4">
+                    </td>
+                    <td ng-bind="record.date" class="px-6 py-4">
+                    </td>
+                    <td class="px-6 py-4">
+                        Restore
+                    </td>
+                    <td ng-click="deleteBackup(record.id)" class="px-6 py-4">
+                        <img class="ml-2 cursor-pointer" src="{% static 'images/delete.png' %}">
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

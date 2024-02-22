@@ -1,0 +1,222 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="manageEmailLists" class="p-8">
+        <div>
+            <div class="flex justify-between items-center">
+                <div>
+                    <div>
+                        <p class="text-4xl font-bold">Manage Email Lists - <span id="domainNamePage">{{ domain }}</span>
+                        </p>
+                        <p class="text-xs text-gray-600 py-2 font-semibold">On this page you can manage your email lists
+                            (Delete, Verify, Add More Emails).</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div>
+            <div class="py-4">
+                <p class="text-xl font-bold">Manage Email Lists</p>
+                <img ng-hide="cyberPanelLoading"
+                     src="{% static 'images/loading.gif' %}">
+            </div>
+            <hr>
+            <div>
+                <div class="flex mt-4 py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Select List</p>
+                    </div>
+                    <div>
+                        <select ng-change="fetchEmails(1)" ng-model="listName"
+                                class="w-80 bg-gray-100 rounded px-2 py-1">
+                            {% for items in listNames %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div ng-hide="emailsAccounts" class="form-group">
+
+                    <div ng-hide="mailConfigured==1">
+                        <div class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                            <p>{% trans "SSL for email is not configured properly, you may get Self-Signed error on mail clients such as Outlook and Thunderbird. More details " %}<a
+                                    href="https://cyberpanel.net/docs/6-self-signed-ssl-error-on-outlook-thunderbird/">here</a>.
+                            </p>
+                        </div>
+                        <a target="_blank" href="" class="flex justify-center mt-3">
+                            <button ng-click='fixMailSSL()' class="bg-orange-500 text-white font-semibold px-2 py-1">Fix
+                                Now
+                            </button>
+                        </a>
+                    </div>
+
+                    <div class="py-4">
+                        <p class="text-xl font-bold">Details To Configure Mail Clients</p>
+                    </div>
+                    <div>
+                        <div>
+                            <div ng-hide="creationBox" class="relative py-5 overflow-x-auto">
+                                <table class="w-full text-sm text-left rtl:text-right">
+                                    <thead>
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3">
+                                            Emails
+                                        </th>
+                                        <th scope="col" class="px-6 py-3">
+                                            Disk Usage
+                                        </th>
+                                        <th scope="col" class="px-6 py-3">
+                                            Actions
+                                        </th>
+                                    </tr>
+                                    </thead>
+                                    <tbody ng-repeat="record in records track by $index"
+                                           class="border shadow-lg py-3 px-6 rounded-b-lg">
+                                    <tr>
+                                        <td ng-bind="record.email" class="px-6 py-4">
+                                        </td>
+                                        <td ng-bind="record.DiskUsage" class="px-6 py-4">
+                                        </td>
+                                        <td class="flex gap-2 px-6 py-4">
+                                            <button ng-click="changePasswordInitial(record.email)"
+                                                    class="bg-orange-500 text-white font-semibold px-2 py-1">Change
+                                                Password
+                                            </button>
+                                            <button ng-click="deleteEmailAccountFinal(record.email)"
+                                                    class="bg-red-500 text-white font-semibold px-2 py-1">Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div>
+                            <div ng-hide="creationBox" class="relative py-5 overflow-x-auto">
+                                <table class="w-full text-sm text-left rtl:text-right">
+                                    <div class="bg-gray-200 mt-6 w-full rounded-t-lg border-b-2 border-gray-400">
+                                        <p class="font-bold px-4 py-1">POP3</p>
+                                    </div>
+                                    <thead>
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3">
+                                            Server Hostname
+                                        </th>
+                                        <th scope="col" class="px-6 py-3">
+                                            Port
+                                        </th>
+                                        <th scope="col" class="px-6 py-3">
+                                            Port
+                                        </th>
+                                        <th scope="col" class="px-6 py-3">
+                                            SSL
+                                        </th>
+                                    </tr>
+                                    </thead>
+                                    <tbody class="border shadow-lg py-3 px-6 rounded-b-lg">
+                                    <tr>
+                                        <td class="px-6 py-4">
+                                            {$ serverHostname $}
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            110
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            995 (SSL)
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            STARTTLS
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div ng-hide="creationBox" class="relative py-5 overflow-x-auto">
+                                <table class="w-full text-sm text-left rtl:text-right">
+                                    <div class="bg-gray-200 mt-6 w-full rounded-t-lg border-b-2 border-gray-400">
+                                        <p class="font-bold px-4 py-1">IMAP</p>
+                                    </div>
+                                    <thead>
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3">
+                                            Server Hostname
+                                        </th>
+                                        <th scope="col" class="px-6 py-3">
+                                            Port
+                                        </th>
+                                        <th scope="col" class="px-6 py-3">
+                                            Port
+                                        </th>
+                                        <th scope="col" class="px-6 py-3">
+                                            SSL
+                                        </th>
+                                    </tr>
+                                    </thead>
+                                    <tbody class="border shadow-lg py-3 px-6 rounded-b-lg">
+                                    <tr>
+                                        <td class="px-6 py-4">
+                                            {$ serverHostname $}
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            143
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            993 (SSL)
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            STARTTLS
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div ng-hide="creationBox" class="relative py-5 overflow-x-auto">
+                                <table class="w-full text-sm text-left rtl:text-right">
+                                    <div class="bg-gray-200 mt-6 w-full rounded-t-lg border-b-2 border-gray-400">
+                                        <p class="font-bold px-4 py-1">SMTP</p>
+                                    </div>
+                                    <thead>
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3">
+                                            Server Hostname
+                                        </th>
+                                        <th scope="col" class="px-6 py-3">
+                                            Port
+                                        </th>
+                                        <th scope="col" class="px-6 py-3">
+                                            Port
+                                        </th>
+                                        <th scope="col" class="px-6 py-3">
+                                            465 SSL
+                                        </th>
+                                    </tr>
+                                    </thead>
+                                    <tbody class="border shadow-lg py-3 px-6 rounded-b-lg">
+                                    <tr>
+                                        <td class="px-6 py-4">
+                                            {$ serverHostname $}
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            25
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            587 (SSL)
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            STARTTLS
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

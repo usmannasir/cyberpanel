@@ -7,7 +7,11 @@
 
     <div ng-controller="configureDefaultNameserversV2" class="p-8">
         <div>
-            <p class="text-4xl font-bold">Configure Default Nameserver</p>
+            <div class="flex items-center">
+                <p class="text-4xl font-bold">Configure Default Nameserver -</p>
+                <a target="_blank" href="http://go.cyberpanel.net/dns-records"
+                   class="bg-blue-200 px-2 font-bold mt-2 ml-3" title=""><span>{% trans "DNS Docs" %}</span></a>
+            </div>
             <p class="text-xs text-gray-600 py-2 font-semibold">You can use this page to setup nameservers using which
                 people on the internet can resolve websites hosted on this server.</p>
         </div>
@@ -27,7 +31,7 @@
             </div>
         {% else %}
             <div>
-                <div class="py-4">
+                <div class="flex items-center py-4">
                     <p class="text-xl font-bold">Details</p>
                     <img ng-hide="cyberPanelLoading" src="{% static 'images/loading.gif' %}">
                 </div>

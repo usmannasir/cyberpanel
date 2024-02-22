@@ -6,13 +6,15 @@
     {% load static %}
 
     <div ng-controller="listChildDomainsMainV2" class="p-8">
-        <div class="flex lg:flex-row justify-between items-center sm:flex-col">
-            <div>
+        <div>
+            <div class="flex items-center">
                 <p class="text-4xl font-bold">List Child Domains</p>
-                <p class="text-xs text-gray-600 py-2 font-semibold">On this page you can launch,list,modify and
-                    child domains
-                    from your server</p>
+                <img ng-hide="cyberPanelLoading"
+                     src="{% static 'images/loading.gif' %}">
             </div>
+            <p class="text-xs text-gray-600 py-2 font-semibold">On this page you can launch,list,modify and
+                child domains
+                from your server</p>
         </div>
         <!-- Search Bar -->
         <div class="flex justify-between py-1 mt-4">
@@ -45,8 +47,11 @@
         <div class="py-8">
             <div class="border shadow-lg rounded-lg px-3">
                 <div ng-repeat="web in WebSitesList track by $index" class="px-2">
-                    <div class="bg-gray-200 mt-6 w-full rounded-t-lg border-b-2 border-gray-400">
+                    <div class="flex items-center bg-gray-200 mt-6 w-full rounded-t-lg border-b-2 border-gray-400">
                         <p class="font-bold px-4 py-1" ng-bind="web.domain"></p>
+                        <a class="text-blue-600 font-semibold" target="_blank"
+                           href="/filemanagerv2/{$ web.masterDomain $}" title="Open File Manager">
+                            - File Manager</a>
                     </div>
                     <div class="py-3 mb-3 rounded-b-lg border-b-2 border-gray-400 overflow-x-auto">
                         <table>
@@ -54,7 +59,7 @@
                             <div>
                                 <tr>
                                     <th class="w-32 pt-2">
-                                        <a href="/websites/{$ web.masterDomain $}/{$ web.domain $}"
+                                        <a href="/v2Websites/{$ web.masterDomain $}/{$ web.domain $}"
                                            class="flex items-center ml-3">
                                             <svg width="20" height="20" viewBox="0 0 30 30" fill="none"
                                                  xmlns="http://www.w3.org/2000/svg">
@@ -72,37 +77,42 @@
                                             <p class="ml-2 text-blue-600 font-semibold">Manage</p>
                                         </a>
                                     </th>
-                                    <th ng-click="initConvert(web.domain)"
-                                        class="w-36 pt-2 font-semibold text-green-700 text-sm">
-                                        <div class="col-md-4 content-box-header">
-                                            <i class="p fa fa-arrows-h btn-icon text-muted" data-toggle="tooltip"
-                                               data-placement="right" title="Convert to Website">&emsp;</i>
-                                            <span>
-        <a onclick="openModal()" href="#" style="text-transform: none">Convert to Website</a>
-    </span>
-
-                                            <!-- Modal -->
-                                            <div id="modal"
-                                                 class="fixed inset-0 overflow-auto bg-black bg-opacity-50 hidden flex items-center justify-center">
-                                                <div class="bg-white p-8 rounded shadow-lg w-full md:w-1/2">
-                                                    <button onclick="closeModal()"
-                                                            class="absolute top-4 right-4 text-gray-700 hover:text-gray-900">
-                                                        <i class="fa fa-times"></i>
-                                                    </button>
-                                                    <h1 class="text-2xl font-bold mb-4 text-black">Convert Child Domain
-                                                        to Normal
-                                                        Website
-                                                    </h1>
-                                                    <form name="containerSettingsForm" action="/" class="mb-4">
-                                                        <div>
+                                    <th class="w-36 pt-2">
+                                        <a onclick="return false;"
+                                           ng-click="initConvert(web.domain)"
+                                           class="font-semibold text-green-700 text-sm"
+                                           href="#" data-modal-target="edit"
+                                           data-modal-toggle="edit">{% trans "Convert To Website" %}
+                                        </a>
+                                        <div id="edit" tabindex="-1"
+                                             class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+                                            <div class="relative p-4 w-full max-w-2xl max-h-full">
+                                                <div class="relative bg-white shadow dark:bg-gray-700">
+                                                    <div class="flex items-center bg-blue-400 px-4 py-4">
+                                                        <p class="font-bold">Convert Child Domain to Normal Website</p>
+                                                        <button type="button" data-modal-toggle="edit"
+                                                                class="absolute top-2 end-1 text-black bg-transparent hover:text-black rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
+                                                                data-modal-hide="edit">
+                                                            <svg class="w-3 h-3" aria-hidden="true"
+                                                                 xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                                 viewBox="0 0 14 14">
+                                                                <path stroke="currentColor" stroke-linecap="round"
+                                                                      stroke-linejoin="round" stroke-width="2"
+                                                                      d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                                                            </svg>
+                                                            <span class="sr-only">Close modal</span>
+                                                        </button>
+                                                    </div>
+                                                    <div class="p-4 md:p-5">
+                                                        <form name="containerSettingsForm">
                                                             <div ng-hide="installationDetailsForm"
-                                                                 class="flex py-2 px-6">
+                                                                 class="flex mt-4 py-2 px-6">
                                                                 <div>
-                                                                    <p class="font-semibold w-48">Domain Name</p>
+                                                                    <p class="font-semibold w-60">Domain Name</p>
                                                                 </div>
                                                                 <div>
                                                                     <input name="dom" type="text"
-                                                                           class="form-control w-80 bg-gray-100 rounded px-2 py-1"
+                                                                           class="w-80 bg-gray-100 rounded px-2 py-1"
                                                                            ng-model="domainName"
                                                                            placeholder="{% trans "Do not enter WWW, it will be auto created!" %}"
                                                                            readonly>
@@ -111,11 +121,11 @@
                                                             <div ng-hide="installationDetailsForm"
                                                                  class="flex py-2 px-6">
                                                                 <div>
-                                                                    <p class="font-semibold w-48">Select Owner</p>
+                                                                    <p class="font-semibold w-60">Select Owner</p>
                                                                 </div>
                                                                 <div>
                                                                     <select ng-model="$parent.websiteOwner"
-                                                                            class="form-control w-80 bg-gray-100 rounded px-2 py-1">
+                                                                            class="w-80 bg-gray-100 rounded px-2 py-1">
                                                                         {% for items in owernList %}
                                                                             <option>{{ items }}</option>
                                                                         {% endfor %}
@@ -123,9 +133,9 @@
                                                                 </div>
                                                             </div>
                                                             <div ng-hide="installationDetailsForm"
-                                                                 class="flex mt-4 py-2 px-6">
+                                                                 class="flex py-2 px-6">
                                                                 <div>
-                                                                    <p class="font-semibold w-48">Select Package</p>
+                                                                    <p class="font-semibold w-60">Select Package</p>
                                                                 </div>
                                                                 <div>
                                                                     <select ng-model="$parent.packageForWebsite"
@@ -139,43 +149,44 @@
                                                             <div ng-hide="installationDetailsForm"
                                                                  class="flex py-2 px-6">
                                                                 <div>
-                                                                    <p class="font-semibold w-48">Email</p>
+                                                                    <p class="font-semibold w-60">Email</p>
                                                                 </div>
                                                                 <div>
                                                                     <input type="email" name="email"
-                                                                           class="form-control w-80 bg-gray-100 rounded px-2 py-1"
+                                                                           class="w-80 bg-gray-100 rounded px-2 py-1"
                                                                            ng-model="$parent.adminEmail" required>
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                        <div ng-hide="installationDetailsForm" class="flex py-2 px-6">
-                                                            <div>
-                                                                <p class="font-semibold w-48">Select PHP</p>
+                                                            <div ng-hide="installationDetailsForm"
+                                                                 class="flex py-2 px-6">
+                                                                <div>
+                                                                    <p class="font-semibold w-60">Select PHP</p>
+                                                                </div>
+                                                                <div>
+                                                                    <select ng-model="$parent.phpSelection"
+                                                                            class="w-80 bg-gray-100 rounded px-2 py-1">
+                                                                        {% for php in phps %}
+                                                                            <option>{{ php }}</option>
+                                                                        {% endfor %}
+                                                                    </select>
+                                                                </div>
                                                             </div>
-                                                            <div>
-                                                                <select ng-model="$parent.phpSelection"
-                                                                        class="form-control w-80 bg-gray-100 rounded px-2 py-1">
-                                                                    {% for php in phps %}
-                                                                        <option>{{ php }}</option>
-                                                                    {% endfor %}
-                                                                </select>
-                                                            </div>
-                                                        </div>
+                                                        </form>
                                                         <div class="flex justify-end mt-3">
                                                             <button ng-click="convert()"
                                                                     class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                                                                 Convert
                                                             </button>
-                                                            <button onclick="closeModal()"
+                                                            <button data-modal-toggle="edit"
+                                                                    data-modal-hide="edit"
                                                                     class="ml-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
                                                                 Close
                                                             </button>
                                                         </div>
-                                                    </form>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-
                                     </th>
                                     <th class="w-32 pt-2 font-semibold text-sm"><span ng-bind="web.admin"
                                                                                       style="text-transform: none"></span>
@@ -189,44 +200,56 @@
                                                                                          href=""
                                                                                          style="text-transform: none">Issue SSL</a></span>
                                     </th>
-                                    <th class="w-32 pt-2 font-semibold text-red-700 text-sm">
-                                        <div class="col-md-4 content-box-header">
-                                            <i class="p fa fa-arrows-h btn-icon text-muted" data-toggle="tooltip"
-                                               data-placement="right" title="Delete">&emsp;</i>
-                                            <span><a onclick="openModal()" href="#"
-                                                     style="text-transform: none">Delete</a>
-
-                                                <!-- Modal -->
-                                        <div id="modal"
-                                             class="fixed inset-0 z-50 hidden overflow-auto bg-black bg-opacity-50">
-                                            <div class="flex items-center justify-center h-full">
-                                                <div class="bg-white p-8 rounded shadow-lg">
-                                                    <button onclick="closeModal()"
-                                                            class="absolute top-4 right-4 text-gray-700 hover:text-gray-900">
-                                                        <i class="fa fa-times"></i>
-                                                    </button>
-                                                    <h1 class="text-2xl font-bold mb-4">Delete Child Domain</h1>
-                                                    <form class="mb-4">
-                                                        <!-- Your form content here -->
-                                                        <div class="mb-4">
-                                                            <input type="checkbox" id="deleteDocRoot"
-                                                                   name="deleteDocRoot" class="mr-2">
-                                                            <label for="deleteDocRoot">Delete Document Root</label>
+                                    <th class="w-32 pt-2">
+                                        <a onclick="return false;"
+                                           ng-click="deleteUserInitial(record.name)"
+                                           class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded"
+                                           href="#" data-modal-target="delete"
+                                           data-modal-toggle="delete">{% trans "Delete" %}
+                                        </a>
+                                        <div id="delete" tabindex="-1"
+                                             class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+                                            <div class="relative p-4 w-full max-w-2xl max-h-full">
+                                                <div class="relative bg-white shadow dark:bg-gray-700">
+                                                    <div class="flex items-center bg-blue-400 px-4 py-4">
+                                                        <p class="font-bold">Delete Child Domain</p>
+                                                        <img ng-hide="cyberpanelLoading"
+                                                             src="{% static 'images/loading.gif' %}">
+                                                        <button type="button" data-modal-toggle="delete"
+                                                                class="absolute top-2 end-1 text-black bg-transparent hover:text-black rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
+                                                                data-modal-hide="delete">
+                                                            <svg class="w-3 h-3" aria-hidden="true"
+                                                                 xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                                 viewBox="0 0 14 14">
+                                                                <path stroke="currentColor" stroke-linecap="round"
+                                                                      stroke-linejoin="round" stroke-width="2"
+                                                                      d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                                                            </svg>
+                                                            <span class="sr-only">Close modal</span>
+                                                        </button>
+                                                    </div>
+                                                    <div class="p-4 md:p-5">
+                                                        <form class="mb-4">
+                                                            <!-- Your form content here -->
+                                                            <div class="mb-4">
+                                                                <input type="checkbox" id="deleteDocRoot"
+                                                                       name="deleteDocRoot" class="mr-2">
+                                                                <label for="deleteDocRoot">Delete Document Root</label>
+                                                            </div>
+                                                        </form>
+                                                        <div class="flex justify-end">
+                                                            <button ng-click="deleteChildDomain()"
+                                                                    class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                                                                Delete Now
+                                                            </button>
+                                                            <button data-modal-hide="delete" data-modal-toggle="delete"
+                                                                    class="ml-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+                                                                Close
+                                                            </button>
                                                         </div>
-                                                    </form>
-                                                    <div class="flex justify-end">
-                                                        <button ng-click="deleteChildDomain()"
-                                                                class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
-                                                            Delete Now
-                                                        </button>
-                                                        <button onclick="closeModal()"
-                                                                class="ml-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
-                                                            Close
-                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
                                         </div>
                                     </th>
                                 </tr>
@@ -245,7 +268,163 @@
                 <option ng-repeat="page in pagination">{$ $index + 1 $}</option>
             </select>
         </div>
-
     </div>
-    </div>
+    <th class="w-36 pt-2">
+        <a onclick="return false;"
+           ng-click="initConvert(web.domain)"
+           class="font-semibold text-green-700 text-sm"
+           href="#" data-modal-target="edit"
+           data-modal-toggle="edit">{% trans "Convert To Website" %}
+        </a>
+        <div id="edit" tabindex="-1"
+             class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+            <div class="relative p-4 w-full max-w-2xl max-h-full">
+                <div class="relative bg-white shadow dark:bg-gray-700">
+                    <div class="flex items-center bg-blue-400 px-4 py-4">
+                        <p class="font-bold">Convert Child Domain to Normal Website</p>
+                        <button type="button" data-modal-toggle="edit"
+                                class="absolute top-2 end-1 text-black bg-transparent hover:text-black rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
+                                data-modal-hide="edit">
+                            <svg class="w-3 h-3" aria-hidden="true"
+                                 xmlns="http://www.w3.org/2000/svg" fill="none"
+                                 viewBox="0 0 14 14">
+                                <path stroke="currentColor" stroke-linecap="round"
+                                      stroke-linejoin="round" stroke-width="2"
+                                      d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                            </svg>
+                            <span class="sr-only">Close modal</span>
+                        </button>
+                    </div>
+                    <div class="p-4 md:p-5">
+                        <form name="containerSettingsForm">
+                            <div ng-hide="installationDetailsForm"
+                                 class="flex mt-4 py-2 px-6">
+                                <div>
+                                    <p class="font-semibold w-60">Domain Name</p>
+                                </div>
+                                <div>
+                                    <input name="dom" type="text"
+                                           class="w-80 bg-gray-100 rounded px-2 py-1"
+                                           ng-model="domainName"
+                                           placeholder="{% trans "Do not enter WWW, it will be auto created!" %}"
+                                           readonly>
+                                </div>
+                            </div>
+                            <div ng-hide="installationDetailsForm" class="flex py-2 px-6">
+                                <div>
+                                    <p class="font-semibold w-60">Select Owner</p>
+                                </div>
+                                <div>
+                                    <select ng-model="$parent.websiteOwner"
+                                            class="w-80 bg-gray-100 rounded px-2 py-1">
+                                        {% for items in owernList %}
+                                            <option>{{ items }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div ng-hide="installationDetailsForm" class="flex py-2 px-6">
+                                <div>
+                                    <p class="font-semibold w-60">Select Package</p>
+                                </div>
+                                <div>
+                                    <select ng-model="$parent.packageForWebsite"
+                                            class="form-control w-80 bg-gray-100 rounded px-2 py-1">
+                                        {% for items in packageList %}
+                                            <option>{{ items }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div ng-hide="installationDetailsForm" class="flex py-2 px-6">
+                                <div>
+                                    <p class="font-semibold w-60">Email</p>
+                                </div>
+                                <div>
+                                    <input type="email" name="email"
+                                           class="w-80 bg-gray-100 rounded px-2 py-1"
+                                           ng-model="$parent.adminEmail" required>
+                                </div>
+                            </div>
+                            <div ng-hide="installationDetailsForm" class="flex py-2 px-6">
+                                <div>
+                                    <p class="font-semibold w-60">Select PHP</p>
+                                </div>
+                                <div>
+                                    <select ng-model="$parent.phpSelection"
+                                            class="w-80 bg-gray-100 rounded px-2 py-1">
+                                        {% for php in phps %}
+                                            <option>{{ php }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </form>
+                        <div class="flex justify-end mt-3">
+                            <button ng-click="convert()"
+                                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                                Convert
+                            </button>
+                            <button data-modal-toggle="edit"
+                                    data-modal-hide="edit"
+                                    class="ml-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </th>
+    <th class="w-32 pt-2">
+        <a onclick="return false;"
+           ng-click="deleteUserInitial(record.name)"
+           class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded"
+           href="#" data-modal-target="delete" data-modal-toggle="delete">{% trans "Delete" %}
+        </a>
+        <div id="delete" tabindex="-1"
+             class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+            <div class="relative p-4 w-full max-w-2xl max-h-full">
+                <div class="relative bg-white shadow dark:bg-gray-700">
+                    <div class="flex items-center bg-blue-400 px-4 py-4">
+                        <p class="font-bold">Delete Child Domain</p>
+                        <img ng-hide="cyberpanelLoading"
+                             src="{% static 'images/loading.gif' %}">
+                        <button type="button" data-modal-toggle="delete"
+                                class="absolute top-2 end-1 text-black bg-transparent hover:text-black rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
+                                data-modal-hide="delete">
+                            <svg class="w-3 h-3" aria-hidden="true"
+                                 xmlns="http://www.w3.org/2000/svg" fill="none"
+                                 viewBox="0 0 14 14">
+                                <path stroke="currentColor" stroke-linecap="round"
+                                      stroke-linejoin="round" stroke-width="2"
+                                      d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                            </svg>
+                            <span class="sr-only">Close modal</span>
+                        </button>
+                    </div>
+                    <div class="p-4 md:p-5">
+                        <form class="mb-4">
+                            <!-- Your form content here -->
+                            <div class="mb-4">
+                                <input type="checkbox" id="deleteDocRoot"
+                                       name="deleteDocRoot" class="mr-2">
+                                <label for="deleteDocRoot">Delete Document Root</label>
+                            </div>
+                        </form>
+                        <div class="flex justify-end">
+                            <button ng-click="deleteChildDomain()"
+                                    class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                                Delete Now
+                            </button>
+                            <button data-modal-hide="delete" data-modal-toggle="delete"
+                                    class="ml-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </th>
 {% endblock %}

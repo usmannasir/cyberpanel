@@ -1,0 +1,194 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="backupDestinationsV2" class="p-8">
+        <div class="flex lg:flex-row justify-between items-center sm:flex-col">
+            <div class="flex items-center">
+                <p class="text-4xl font-bold">Set up Backup Destinations -</p>
+                <a target="_blank"
+                   href="https://go.cyberpanel.net/remote-backup"
+                   style="height: 23px;line-height: 21px;"
+                   class="bg-blue-200 px-2 font-bold mt-2 ml-3"
+                   title=""><span>{% trans "Remote Backups" %}</span></a>
+            </div>
+        </div>
+        <p class="text-xs text-gray-600 py-2 font-semibold">On this page you can set up your Backup destinations. (SFTP)
+        </p>
+        <div class="py-4">
+            <p class="text-xl font-bold">Set up Backup Destinations.</p>
+            <img ng-hide="cyberpanelLoading"
+                 src="{% static 'images/loading.gif' %}">
+        </div>
+        <hr>
+        <div class="flex mt-4 py-2 px-6">
+            <div>
+                <p class="font-semibold w-60">Select Type</p>
+            </div>
+            <div>
+                <select ng-change="fetchDetails()" ng-model="destinationType"
+                        class="w-80 bg-gray-100 rounded px-2 py-1">
+                    <option>local</option>
+                    <option>SFTP</option>
+                </select>
+            </div>
+        </div>
+        <div ng-hide="sftpHide" class="flex mt-4 py-2 px-6">
+            <div>
+                <p class="font-semibold w-60">Name</p>
+            </div>
+            <div>
+                <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="name" required>
+            </div>
+        </div>
+        <div ng-hide="sftpHide" class="flex mt-4 py-2 px-6">
+            <div>
+                <p class="font-semibold w-60">IP Address</p>
+            </div>
+            <div>
+                <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="IPAddress" required>
+            </div>
+        </div>
+        <div ng-hide="sftpHide" class="flex mt-4 py-2 px-6">
+            <div>
+                <p class="font-semibold w-60">Username</p>
+            </div>
+            <div>
+                <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="userName" required>
+            </div>
+        </div>
+        <div ng-hide="sftpHide" class="flex mt-4 py-2 px-6">
+            <div>
+                <p class="font-semibold w-60">Password</p>
+            </div>
+            <div>
+                <input placeholder="" type="password" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="password"
+                       required>
+            </div>
+        </div>
+        <div ng-hide="sftpHide" class="flex mt-4 py-2 px-6">
+            <div>
+                <p class="font-semibold w-60">Port</p>
+            </div>
+            <div>
+                <input placeholder="{% trans "Backup server SSH Port, leave empty for 22." %}"
+                       type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="backupSSHPort" required>
+            </div>
+        </div>
+        <div ng-hide="sftpHide" class="flex mt-4 py-2 px-6">
+            <div>
+                <p class="font-semibold w-60">Path</p>
+            </div>
+            <div>
+                <input placeholder="Path on remote server to store backups." type="text"
+                       class="w-80 bg-gray-100 rounded px-2 py-1"
+                       ng-model="path" required>
+            </div>
+        </div>
+        <div ng-hide="sftpHide" class="flex justify-center mt-6 mb-2">
+            <button ng-click="addDestination('SFTP')"
+                    class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                Add Destination
+            </button>
+        </div>
+        <hr>
+        <div ng-hide="sftpHide" class="relative py-5 overflow-x-auto">
+            <table class="w-full text-sm text-left rtl:text-right">
+                <thead>
+                <tr>
+                    <th scope="col" class="px-6 py-3">
+                        Name
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        IP
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Username
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Path
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Port
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Delete
+                    </th>
+                </tr>
+                </thead>
+                <tbody ng-repeat="record in records track by $index" class="border shadow-lg py-3 px-6 rounded-b-lg">
+                <tr>
+                    <td ng-bind="record.name" class="px-6 py-4">
+                    </td>
+                    <td ng-bind="record.ip" class="px-6 py-4">
+                    </td>
+                    <td ng-bind="record.username" class="px-6 py-4">
+                    </td>
+                    <td ng-bind="record.path" class="px-6 py-4">
+                    </td>
+                    <td ng-bind="record.port" class="px-6 py-4">
+                    </td>
+                    <td ng-click="removeDestination('SFTP', record.name)" class="px-6 py-4">
+                        <img src="{% static 'images/delete.png' %}">
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div ng-hide="localHide" class="flex mt-4 py-2 px-6">
+            <div>
+                <p class="font-semibold w-60">Name</p>
+            </div>
+            <div>
+                <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="name" required>
+            </div>
+        </div>
+        <div ng-hide="localHide" class="flex mt-4 py-2 px-6">
+            <div>
+                <p class="font-semibold w-60">Local Path</p>
+            </div>
+            <div>
+                <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="localPath" required>
+            </div>
+        </div>
+        <div ng-hide="localHide" class="flex justify-center mt-6 mb-2">
+            <button ng-click="addDestination('local')"
+                    class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                Add Destination
+            </button>
+        </div>
+        <hr>
+        <div ng-hide="localHide" class="relative py-5 overflow-x-auto">
+            <table class="w-full text-sm text-left rtl:text-right">
+                <thead>
+                <tr>
+                    <th scope="col" class="px-6 py-3">
+                        Name
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Path
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Delete
+                    </th>
+                </tr>
+                </thead>
+                <tbody ng-repeat="record in records track by $index"
+                       class="border shadow-lg py-3 px-6 rounded-b-lg">
+                <tr>
+                    <td ng-bind="record.name" class="px-6 py-4">
+                    </td>
+                    <td ng-bind="record.path" class="px-6 py-4">
+                    </td>
+                    <td ng-click="removeDestination('local', record.name)" class="px-6 py-4">
+                        <img src="{% static 'images/delete.png' %}">
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

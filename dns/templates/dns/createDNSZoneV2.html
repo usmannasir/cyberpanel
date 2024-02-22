@@ -6,8 +6,10 @@
     {% load static %}
 
     <div ng-controller="createDNSZoneV2" class="p-8">
-        <div>
-            <p class="text-4xl font-bold">Create DNS Zone</p>
+        <div class="flex items-center">
+            <p class="text-4xl font-bold">Create DNS Zone -</p>
+            <a target="_blank" href="http://go.cyberpanel.net/dns-records"
+               class="bg-blue-200 px-2 font-bold mt-2 ml-3" title=""><span>{% trans "DNS Docs" %}</span></a>
         </div>
         <p class="text-xs text-gray-600 py-2 font-semibold">This page is used to create DNS zone, to edit dns
             zone you can visit Modify DNS Zone Page.</p>
@@ -27,7 +29,7 @@
             </div>
         {% else %}
             <div>
-                <div class="py-4">
+                <div class="flex items-center py-4">
                     <p class="text-xl font-bold">Details</p>
                     <img ng-hide="createDNSZoneLoading" src="{% static 'images/loading.gif' %}">
                 </div>

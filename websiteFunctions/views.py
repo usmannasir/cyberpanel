@@ -114,6 +114,17 @@ def RestoreHome(request):
         return redirect(loadLoginPage)
 
 
+def RestoreHomeV2(request):
+    try:
+        userID = request.session['userID']
+
+        BackupID = request.GET.get('BackupID')
+        wm = WebsiteManager()
+        return wm.RestoreHomeV2(request, userID, BackupID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 def RemoteBackupConfig(request):
     try:
         userID = request.session['userID']
@@ -121,6 +132,17 @@ def RemoteBackupConfig(request):
         DeleteID = request.GET.get('DeleteID')
         wm = WebsiteManager()
         return wm.RemoteBackupConfig(request, userID, DeleteID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def RemoteBackupConfigV2(request):
+    try:
+        userID = request.session['userID']
+
+        DeleteID = request.GET.get('DeleteID')
+        wm = WebsiteManager()
+        return wm.RemoteBackupConfigV2(request, userID, DeleteID)
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -137,6 +159,18 @@ def BackupfileConfig(request):
         return redirect(loadLoginPage)
 
 
+def BackupfileConfigV2(request):
+    try:
+        userID = request.session['userID']
+
+        ID = request.GET.get('ID')
+        DeleteID = request.GET.get('DeleteID')
+        wm = WebsiteManager()
+        return wm.BackupfileConfigV2(request, userID, ID, DeleteID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 def AddRemoteBackupsite(request):
     try:
         userID = request.session['userID']
@@ -145,6 +179,18 @@ def AddRemoteBackupsite(request):
         DeleteSiteID = request.GET.get('DeleteID')
         wm = WebsiteManager()
         return wm.AddRemoteBackupsite(request, userID, ID, DeleteSiteID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def AddRemoteBackupsiteV2(request):
+    try:
+        userID = request.session['userID']
+
+        ID = request.GET.get('ID')
+        DeleteSiteID = request.GET.get('DeleteID')
+        wm = WebsiteManager()
+        return wm.AddRemoteBackupsiteV2(request, userID, ID, DeleteSiteID)
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -2021,6 +2067,15 @@ def ApacheManager(request, domain):
         userID = request.session['userID']
         wm = WebsiteManager(domain)
         return wm.ApacheManager(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def ApacheManagerV2(request, domain):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager(domain)
+        return wm.ApacheManagerV2(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
 

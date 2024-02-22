@@ -12,8 +12,10 @@
                 master website</p>
         </div>
         <div>
-            <div class="py-4">
+            <div class="flex items-center py-4">
                 <p class="text-xl font-bold">Details</p>
+                <img ng-hide="domainLoading"
+                     src="{% static 'images/loading.gif' %}">
             </div>
             <hr>
             <div>
@@ -42,12 +44,13 @@
                 </div>
                 <div ng-hide="DomainCreateForm" class="flex py-2 px-6">
                     <div>
-                        <p class="font-semibold w-60">Path: /home{$ masterDomain
+                        <p class="font-semibold w-60">Path: /home/{$ masterDomain
                             $}/</p>
                     </div>
                     <div>
-                        <input type="email" name="email" class="form-control w-80 bg-gray-100 rounded px-2 py-1"
-                               ng-model="docRootPath" required>
+                        <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="docRootPath" required>
+                        <div ng-show="websiteCreationForm.dom.$error.pattern"
+                             class="current-pack">{% trans "Invalid Domain (Note: You don't need to add 'http' or 'https')" %}</div>
                     </div>
                 </div>
                 <div ng-hide="DomainCreateForm" class="flex py-2 px-6">
@@ -67,35 +70,32 @@
                         <p class="font-semibold w-48">Additional Features</p></label>
                     </div>
                     <div class="text-gray-500 font-semibold">
-                        <div class="col-sm-9">
-                            <div class="checkbox">
+                        <div>
+                            <div>
                                 <label>
                                     <input ng-model="sslCheck" type="checkbox" value="">
                                     SSL
                                 </label>
                             </div>
                         </div>
-                        <label class="col-sm-3 control-label"></label>
-                        <div class="col-sm-9">
-                            <div class="checkbox">
+                        <div>
+                            <div>
                                 <label>
                                     <input ng-model="apacheBackend" type="checkbox" value="">
                                     Apache as Reverse Proxy (Beta, for Ubuntu 22 and AlmaLinux 8)
                                 </label>
                             </div>
                         </div>
-                        <label class="col-sm-3 control-label"></label>
-                        <div class="col-sm-9">
-                            <div class="checkbox">
+                        <div>
+                            <div>
                                 <label>
                                     <input ng-model="dkimCheck" type="checkbox" value="">
                                     DKIM Support
                                 </label>
                             </div>
                         </div>
-                        <label class="col-sm-3 control-label"></label>
-                        <div class="col-sm-9">
-                            <div class="checkbox">
+                        <div>
+                            <div>
                                 <label>
                                     <input ng-model="openBasedir" type="checkbox" value="">
                                     open_basedir Protection
@@ -108,8 +108,39 @@
         </div>
         <div ng-hide="DomainCreateForm" class="flex justify-center mt-4">
             <button ng-click="createDomain()"
-                    class="bg-orange-500 px-3 py-4 rounded-lg text-xl font-semibold text-white">
+                    class="bg-orange-500 px-3 py-2 rounded-lg text-xl font-semibold text-white">
                 Create Domain
+            </button>
+        </div>
+        <div ng-hide="installationProgress" class="form-group">
+
+            <div class="flex justify-center font-bold text-xl">
+                <h2>{$ currentStatus $}</h2>
+            </div>
+            <div class="w-full bg-gray-100 rounded-full mt-3">
+                <div id="installProgress"
+                     class="bg-green-600 text-xs font-medium text-white text-center p-2 leading-none rounded-full"
+                     style="width:0%">
+                </div>
+            </div>
+            <div ng-hide="errorMessageBox"
+                 class="flex justify-center mt-2 bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                <p>{% trans "Error message:" %} {$ errorMessage $}</p>
+            </div>
+            <div ng-hide="success" class="flex justify-center mt-2 bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                <p>{% trans "Website succesfully created." %}</p>
+            </div>
+            <div ng-hide="couldNotConnect"
+                 class="flex justify-center mt-2 bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+            </div>
+        </div>
+
+        <div ng-hide="installationProgress" class="flex justify-center mt-3">
+            <button ng-disabled="goBackDisable"
+                    ng-click="goBack()"
+                    class="bg-blue-500 px-3 py-2 rounded-lg text-xl font-semibold text-white">
+                Go Back
             </button>
         </div>
     </div>

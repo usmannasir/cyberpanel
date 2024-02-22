@@ -14,128 +14,250 @@
                     from your server</p>
             </div>
         </div>
-
-        <div class="py-8 overflow-x-auto">
-            <div class="px-5">
-                <table>
-                    <thead>
-                    <div>
-                        <tr>
-                            <th class="w-72 text-xl">Wordpress Site Title</th>
-                            <th class="w-52 text-xl">Login</th>
-                            <th class="w-52 text-xl">Domain</th>
-                            <th class="w-52 text-xl">Action</th>
-                        </tr>
-                    </div>
-                    </thead>
-                </table>
-            </div>
-
-            <div class="rounded-lg px-3 mt-5">
-                <div class="px-2">
-                    {% for sub in wpsite %}
-                        <div class="border shadow-lg py-3 mb-3 rounded-b-lg">
-                            <table>
-                                <tbody>
-
-                                <tr>
-                                    <th class="w-72 pt-2 font-semibold text-sm"><a
-                                            href="{% url 'WPHomeV2' %}?ID={{ sub.id }}">
-                                        <p style="font-weight: bold; text-transform: uppercase; ">{{ sub.title }}</p>
-                                    </a>
-                                    </th>
-                                    <th class="w-52 pt-2 font-semibold text-sm flex justify-center">
-                                        <a title="Auto Login"
-                                           style="margin-right: 2%; margin-left: 10px;"
-                                           target="_blank"
-                                           href="{% url 'AutoLogin' %}?id={{ sub.id }}">
-                                            <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img"
-                                                 width="20"
-                                                 style="margin: 3px;" height="20"
-                                                 preserveAspectRatio="xMidYMid meet"
-                                                 viewBox="0 0 16 16">
-                                                <g fill="#006600">
-                                                    <path d="M12.633 7.653c0-.848-.305-1.435-.566-1.892l-.08-.13c-.317-.51-.594-.958-.594-1.48c0-.63.478-1.218 1.152-1.218c.02 0 .039.002.058.003l.031.003A6.838 6.838 0 0 0 8 1.137A6.855 6.855 0 0 0 2.266 4.23c.16.005.313.009.442.009c.717 0 1.828-.087 1.828-.087c.37-.022.414.521.044.565c0 0-.371.044-.785.065l2.5 7.434l1.5-4.506l-1.07-2.929c-.369-.022-.719-.065-.719-.065c-.37-.022-.326-.588.043-.566c0 0 1.134.087 1.808.087c.718 0 1.83-.087 1.83-.087c.37-.022.413.522.043.566c0 0-.372.043-.785.065l2.48 7.377l.684-2.287l.054-.173c.27-.86.469-1.495.469-2.046zM1.137 8a6.864 6.864 0 0 0 3.868 6.176L1.73 5.206A6.837 6.837 0 0 0 1.137 8z"></path>
-                                                    <path d="M6.061 14.583L8.121 8.6l2.109 5.78c.014.033.03.064.049.094a6.854 6.854 0 0 1-4.218.109zm7.96-9.876c.03.219.047.453.047.706c0 .696-.13 1.479-.522 2.458l-2.096 6.06a6.86 6.86 0 0 0 2.572-9.224z"></path>
-                                                    <path fill-rule="evenodd"
-                                                          d="M0 8c0-4.411 3.589-8 8-8c4.41 0 8 3.589 8 8s-3.59 8-8 8c-4.411 0-8-3.589-8-8zm.367 0c0 4.209 3.424 7.633 7.633 7.633c4.208 0 7.632-3.424 7.632-7.633C15.632 3.79 12.208.367 8 .367C3.79.367.367 3.79.367 8z"></path>
-                                                </g>
-                                            </svg>
-                                        </a>
-                                    </th>
-                                    <th class="w-52 pt-2 font-semibold text-sm"><a target="_blank"
-                                                                                   style="color: #6aa7ff"
-                                                                                   href="http://{{ sub.url }}">Visit
-                                        <i class="glyph-icon icon-external-link-square"
-                                           title="{{ sub.url }}"></i></a>
-                                    </th>
-                                    <th class="w-52 pt-2 font-semibold text-sm">
-                                        <div class="flex items-center justify-center">
-
-                                            <button data-modal-target="Deletewpsite" data-modal-toggle="Deletewpsite"
-                                                    class="block text-white bg-orange-500 hover:bg-orange-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
-                                                    type="button"
-                                                    onclick="DeleteWPNowV2('{% url 'ListWPSitesV2' %}?DeleteID={{ sub.id }}')">
-                                                Delete
-                                            </button>
-
-                                            <div id="Deletewpsite" tabindex="-1"
-                                                 class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
-                                                <div class="relative p-4 w-full max-w-md max-h-full">
-                                                    <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
-                                                        <button type="button" data-modal-toggle="Deletewpsite"
-                                                                class="absolute top-3 end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
-                                                                data-modal-hide="Deletewpsite">
-                                                            <svg class="w-3 h-3" aria-hidden="true"
-                                                                 xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                                 viewBox="0 0 14 14">
-                                                                <path stroke="currentColor" stroke-linecap="round"
-                                                                      stroke-linejoin="round" stroke-width="2"
-                                                                      d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
-                                                            </svg>
-                                                            <span class="sr-only">Close modal</span>
-                                                        </button>
-                                                        <div class="p-4 md:p-5 text-center">
-                                                            <svg class="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200"
-                                                                 aria-hidden="true"
-                                                                 xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                                 viewBox="0 0 20 20">
-                                                                <path stroke="currentColor" stroke-linecap="round"
-                                                                      stroke-linejoin="round" stroke-width="2"
-                                                                      d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                                                            </svg>
-                                                            <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
-                                                                Are you sure you want to
-                                                                delete this WordPress site?</h3>
-                                                            <button data-modal-hide="Deletewpsite" type="button"
-                                                                    data-modal-toggle="Deletewpsite"
-                                                                    onclick="FinalDeleteWPNowV2()"
-                                                                    class="text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center me-2">
-                                                                Yes, I'm sure
-                                                            </button>
-                                                            <button data-modal-hide="Deletewpsite" type="button"
-                                                                    data-modal-toggle="Deletewpsite"
-                                                                    class="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600">
-                                                                No, cancel
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                        </div>
-
-                                    </th>
-
-                                </tr>
-
-                                </tbody>
-                            </table>
+        <div class="relative py-8 overflow-x-auto">
+            <table class="w-full text-sm text-left rtl:text-right">
+                <thead>
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-xl w-52">
+                        <div class="flex justify-center">
+                            Wordpress Site Title
                         </div>
-                    {% endfor %}
-                </div>
-
-            </div>
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-xl w-52">
+                        <div class="flex justify-center">
+                            Login
+                        </div>
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-xl w-52">
+                        <div class="flex justify-center">
+                            Domain
+                        </div>
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-xl w-52">
+                        <div class="flex justify-center">
+                            Action
+                        </div>
+                    </th>
+                </tr>
+                </thead>
+                {% for sub in wpsite %}
+                    <tbody class="border shadow-lg py-3 px-6 rounded-b-lg">
+                    <tr>
+                        <td class="px-6 py-4 w-72">
+                            <div class="flex justify-center">
+                                <a style="font-weight: bold; text-transform: uppercase;"
+                                   href="{% url 'WPHomeV2' %}?ID={{ sub.id }}">
+                                    <p>{{ sub.title }}</p>
+                                </a>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 w-52">
+                            <div class="flex justify-center">
+                                <a title="Auto Login"
+                                   target="_blank"
+                                   href="{% url 'AutoLogin' %}?id={{ sub.id }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img"
+                                         width="20"
+                                         style="margin: 3px;" height="20"
+                                         preserveAspectRatio="xMidYMid meet"
+                                         viewBox="0 0 16 16">
+                                        <g fill="#006600">
+                                            <path d="M12.633 7.653c0-.848-.305-1.435-.566-1.892l-.08-.13c-.317-.51-.594-.958-.594-1.48c0-.63.478-1.218 1.152-1.218c.02 0 .039.002.058.003l.031.003A6.838 6.838 0 0 0 8 1.137A6.855 6.855 0 0 0 2.266 4.23c.16.005.313.009.442.009c.717 0 1.828-.087 1.828-.087c.37-.022.414.521.044.565c0 0-.371.044-.785.065l2.5 7.434l1.5-4.506l-1.07-2.929c-.369-.022-.719-.065-.719-.065c-.37-.022-.326-.588.043-.566c0 0 1.134.087 1.808.087c.718 0 1.83-.087 1.83-.087c.37-.022.413.522.043.566c0 0-.372.043-.785.065l2.48 7.377l.684-2.287l.054-.173c.27-.86.469-1.495.469-2.046zM1.137 8a6.864 6.864 0 0 0 3.868 6.176L1.73 5.206A6.837 6.837 0 0 0 1.137 8z"></path>
+                                            <path d="M6.061 14.583L8.121 8.6l2.109 5.78c.014.033.03.064.049.094a6.854 6.854 0 0 1-4.218.109zm7.96-9.876c.03.219.047.453.047.706c0 .696-.13 1.479-.522 2.458l-2.096 6.06a6.86 6.86 0 0 0 2.572-9.224z"></path>
+                                            <path fill-rule="evenodd"
+                                                  d="M0 8c0-4.411 3.589-8 8-8c4.41 0 8 3.589 8 8s-3.59 8-8 8c-4.411 0-8-3.589-8-8zm.367 0c0 4.209 3.424 7.633 7.633 7.633c4.208 0 7.632-3.424 7.632-7.633C15.632 3.79 12.208.367 8 .367C3.79.367.367 3.79.367 8z"></path>
+                                        </g>
+                                    </svg>
+                                </a>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 w-52">
+                            <div class="flex justify-center">
+                                <a style="color: #6aa7ff; font-weight: bold;" target="_blank"
+                                   href="http://{{ sub.url }}">Visit
+                                </a>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 w-52">
+                            <div class="flex items-center justify-center">
+                                <button data-modal-target="Deletewpsite" data-modal-toggle="Deletewpsite"
+                                        class="block text-white bg-orange-500 hover:bg-orange-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+                                        type="button"
+                                        onclick="DeleteWPNowV2('{% url 'ListWPSitesV2' %}?DeleteID={{ sub.id }}')">
+                                    Delete
+                                </button>
+                                <div id="Deletewpsite" tabindex="-1"
+                                     class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+                                    <div class="relative p-4 w-full max-w-md max-h-full">
+                                        <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
+                                            <button type="button" data-modal-toggle="Deletewpsite"
+                                                    class="absolute top-3 end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
+                                                    data-modal-hide="Deletewpsite">
+                                                <svg class="w-3 h-3" aria-hidden="true"
+                                                     xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                     viewBox="0 0 14 14">
+                                                    <path stroke="currentColor" stroke-linecap="round"
+                                                          stroke-linejoin="round" stroke-width="2"
+                                                          d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                                                </svg>
+                                                <span class="sr-only">Close modal</span>
+                                            </button>
+                                            <div class="p-4 md:p-5 text-center">
+                                                <svg class="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200"
+                                                     aria-hidden="true"
+                                                     xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                     viewBox="0 0 20 20">
+                                                    <path stroke="currentColor" stroke-linecap="round"
+                                                          stroke-linejoin="round" stroke-width="2"
+                                                          d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                                </svg>
+                                                <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
+                                                    Are you sure you want to
+                                                    delete this WordPress site?</h3>
+                                                <button data-modal-hide="Deletewpsite" type="button"
+                                                        data-modal-toggle="Deletewpsite"
+                                                        onclick="FinalDeleteWPNowV2()"
+                                                        class="text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center me-2">
+                                                    Yes, I'm sure
+                                                </button>
+                                                <button data-modal-hide="Deletewpsite" type="button"
+                                                        data-modal-toggle="Deletewpsite"
+                                                        class="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600">
+                                                    No, cancel
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                {% endfor %}
+            </table>
         </div>
+
+        {#        <div class="py-8 overflow-x-auto">#}
+        {#            <div class="px-5">#}
+        {#                <table>#}
+        {#                    <thead>#}
+        {#                    <div>#}
+        {#                        <tr>#}
+        {#                            <th class="w-72 text-xl">Wordpress Site Title</th>#}
+        {#                            <th class="w-52 text-xl">Login</th>#}
+        {#                            <th class="w-52 text-xl">Domain</th>#}
+        {#                            <th class="w-52 text-xl">Action</th>#}
+        {#                        </tr>#}
+        {#                    </div>#}
+        {#                    </thead>#}
+        {#                </table>#}
+        {#            </div>#}
+        {##}
+        {#            <div class="rounded-lg px-3 mt-5">#}
+        {#                <div class="px-2">#}
+        {#                    {% for sub in wpsite %}#}
+        {#                        <div class="border shadow-lg py-3 mb-3 rounded-b-lg">#}
+        {#                            <table>#}
+        {#                                <tbody>#}
+        {##}
+        {#                                <tr>#}
+        {#                                    <th class="w-72 pt-2 font-semibold text-sm"><a#}
+        {#                                            href="{% url 'WPHomeV2' %}?ID={{ sub.id }}">#}
+        {#                                        <p style="font-weight: bold; text-transform: uppercase; ">{{ sub.title }}</p>#}
+        {#                                    </a>#}
+        {#                                    </th>#}
+        {#                                    <th class="w-52 pt-2 font-semibold text-sm flex justify-center">#}
+        {#                                        <a title="Auto Login"#}
+        {#                                           style="margin-right: 2%; margin-left: 10px;"#}
+        {#                                           target="_blank"#}
+        {#                                           href="{% url 'AutoLogin' %}?id={{ sub.id }}">#}
+        {#                                            <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img"#}
+        {#                                                 width="20"#}
+        {#                                                 style="margin: 3px;" height="20"#}
+        {#                                                 preserveAspectRatio="xMidYMid meet"#}
+        {#                                                 viewBox="0 0 16 16">#}
+        {#                                                <g fill="#006600">#}
+        {#                                                    <path d="M12.633 7.653c0-.848-.305-1.435-.566-1.892l-.08-.13c-.317-.51-.594-.958-.594-1.48c0-.63.478-1.218 1.152-1.218c.02 0 .039.002.058.003l.031.003A6.838 6.838 0 0 0 8 1.137A6.855 6.855 0 0 0 2.266 4.23c.16.005.313.009.442.009c.717 0 1.828-.087 1.828-.087c.37-.022.414.521.044.565c0 0-.371.044-.785.065l2.5 7.434l1.5-4.506l-1.07-2.929c-.369-.022-.719-.065-.719-.065c-.37-.022-.326-.588.043-.566c0 0 1.134.087 1.808.087c.718 0 1.83-.087 1.83-.087c.37-.022.413.522.043.566c0 0-.372.043-.785.065l2.48 7.377l.684-2.287l.054-.173c.27-.86.469-1.495.469-2.046zM1.137 8a6.864 6.864 0 0 0 3.868 6.176L1.73 5.206A6.837 6.837 0 0 0 1.137 8z"></path>#}
+        {#                                                    <path d="M6.061 14.583L8.121 8.6l2.109 5.78c.014.033.03.064.049.094a6.854 6.854 0 0 1-4.218.109zm7.96-9.876c.03.219.047.453.047.706c0 .696-.13 1.479-.522 2.458l-2.096 6.06a6.86 6.86 0 0 0 2.572-9.224z"></path>#}
+        {#                                                    <path fill-rule="evenodd"#}
+        {#                                                          d="M0 8c0-4.411 3.589-8 8-8c4.41 0 8 3.589 8 8s-3.59 8-8 8c-4.411 0-8-3.589-8-8zm.367 0c0 4.209 3.424 7.633 7.633 7.633c4.208 0 7.632-3.424 7.632-7.633C15.632 3.79 12.208.367 8 .367C3.79.367.367 3.79.367 8z"></path>#}
+        {#                                                </g>#}
+        {#                                            </svg>#}
+        {#                                        </a>#}
+        {#                                    </th>#}
+        {#                                    <th class="w-52 pt-2 font-semibold text-sm"><a target="_blank"#}
+        {#                                                                                   style="color: #6aa7ff"#}
+        {#                                                                                   href="http://{{ sub.url }}">Visit#}
+        {#                                        <i class="glyph-icon icon-external-link-square"#}
+        {#                                           title="{{ sub.url }}"></i></a>#}
+        {#                                    </th>#}
+        {#                                    <th class="w-52 pt-2 font-semibold text-sm">#}
+        {#                                        <div class="flex items-center justify-center">#}
+        {##}
+        {#                                            <button data-modal-target="Deletewpsite" data-modal-toggle="Deletewpsite"#}
+        {#                                                    class="block text-white bg-orange-500 hover:bg-orange-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center"#}
+        {#                                                    type="button"#}
+        {#                                                    onclick="DeleteWPNowV2('{% url 'ListWPSitesV2' %}?DeleteID={{ sub.id }}')">#}
+        {#                                                Delete#}
+        {#                                            </button>#}
+        {##}
+        {#                                            <div id="Deletewpsite" tabindex="-1"#}
+        {#                                                 class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">#}
+        {#                                                <div class="relative p-4 w-full max-w-md max-h-full">#}
+        {#                                                    <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">#}
+        {#                                                        <button type="button" data-modal-toggle="Deletewpsite"#}
+        {#                                                                class="absolute top-3 end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"#}
+        {#                                                                data-modal-hide="Deletewpsite">#}
+        {#                                                            <svg class="w-3 h-3" aria-hidden="true"#}
+        {#                                                                 xmlns="http://www.w3.org/2000/svg" fill="none"#}
+        {#                                                                 viewBox="0 0 14 14">#}
+        {#                                                                <path stroke="currentColor" stroke-linecap="round"#}
+        {#                                                                      stroke-linejoin="round" stroke-width="2"#}
+        {#                                                                      d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>#}
+        {#                                                            </svg>#}
+        {#                                                            <span class="sr-only">Close modal</span>#}
+        {#                                                        </button>#}
+        {#                                                        <div class="p-4 md:p-5 text-center">#}
+        {#                                                            <svg class="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200"#}
+        {#                                                                 aria-hidden="true"#}
+        {#                                                                 xmlns="http://www.w3.org/2000/svg" fill="none"#}
+        {#                                                                 viewBox="0 0 20 20">#}
+        {#                                                                <path stroke="currentColor" stroke-linecap="round"#}
+        {#                                                                      stroke-linejoin="round" stroke-width="2"#}
+        {#                                                                      d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>#}
+        {#                                                            </svg>#}
+        {#                                                            <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">#}
+        {#                                                                Are you sure you want to#}
+        {#                                                                delete this WordPress site?</h3>#}
+        {#                                                            <button data-modal-hide="Deletewpsite" type="button"#}
+        {#                                                                    data-modal-toggle="Deletewpsite"#}
+        {#                                                                    onclick="FinalDeleteWPNowV2()"#}
+        {#                                                                    class="text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center me-2">#}
+        {#                                                                Yes, I'm sure#}
+        {#                                                            </button>#}
+        {#                                                            <button data-modal-hide="Deletewpsite" type="button"#}
+        {#                                                                    data-modal-toggle="Deletewpsite"#}
+        {#                                                                    class="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600">#}
+        {#                                                                No, cancel#}
+        {#                                                            </button>#}
+        {#                                                        </div>#}
+        {#                                                    </div>#}
+        {#                                                </div>#}
+        {#                                            </div>#}
+        {##}
+        {#                                        </div>#}
+        {##}
+        {#                                    </th>#}
+        {##}
+        {#                                </tr>#}
+        {##}
+        {#                                </tbody>#}
+        {#                            </table>#}
+        {#                        </div>#}
+        {#                    {% endfor %}#}
+        {#                </div>#}
+        {##}
+        {#            </div>#}
+        {#        </div>#}
     </div>
 {% endblock %}

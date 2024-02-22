@@ -6,8 +6,10 @@
     {% load static %}
 
     <div ng-controller="deleteDNSZoneV2" class="p-8">
-        <div>
-            <p class="text-4xl font-bold">Delete DNS Zone</p>
+        <div class="flex items-center">
+            <p class="text-4xl font-bold">Delete DNS Zone -</p>
+            <a target="_blank" href="http://go.cyberpanel.net/dns-records"
+               class="bg-blue-200 px-2 font-bold mt-2 ml-3" title=""><span>{% trans "DNS Docs" %}</span></a>
         </div>
         <p class="text-xs text-gray-600 py-2 font-semibold">This page can be used to delete DNS Zone. Deleting
             the DNS zone will remove all its related records as well.</p>
@@ -28,7 +30,7 @@
         {% else %}
             <div>
                 <div class="py-4">
-                    <p class="text-xl font-bold">Details</p>
+                    <p class="text-xl font-bold">Delete DNS Zone</p>
                 </div>
                 <hr>
                 <div id="createPackages">
