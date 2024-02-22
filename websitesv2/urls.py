@@ -197,6 +197,7 @@ urlpatterns = [
     url(r'^fetchChangesInFile$', views.fetchChangesInFile, name='fetchChangesInFile'),
     url(r'^saveGitConfigurations$', views.saveGitConfigurations, name='saveGitConfigurations'),
     url(r'^fetchGitLogs$', views.fetchGitLogs, name='fetchGitLogs'),
+    url(r'^listChildDomainsV2$', views.listChildDomainsV2, name='listChildDomainsV2'),
 
     ### SSH Configs
 

@@ -6,7 +6,7 @@ urlpatterns = [
     url(r'^createWebsite$', views.createWebsite, name='createWebsite'),
     url(r'^listWebsites$', views.listWebsites, name='listWebsites'),
     url(r'^listChildDomains$', views.listChildDomains, name='listChildDomains'),
-    url(r'^listChildDomainsV2$', views.listChildDomainsV2, name='listChildDomainsV2'),
+
     url(r'^modifyWebsite$', views.modifyWebsite, name='modifyWebsite'),
     url(r'^modifyWebsiteV2$', views.modifyWebsiteV2, name='modifyWebsiteV2'),
     url(r'^deleteWebsite$', views.deleteWebsite, name='deleteWebsite'),
