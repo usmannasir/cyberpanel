@@ -44,6 +44,8 @@ def FetchCloudLinuxAlmaVersionVersion():
             return 'cl-89'
         elif (data.find('CloudLinux') > -1 or data.find('cloudlinux') > -1) and (data.find('8.8') > -1 or data.find('Anatoly Filipchenko') > -1):
             return 'cl-88'
+        elif (data.find('AlmaLinux') > -1 or data.find('almalinux') > -1) and (data.find('9.3') > -1 or data.find('Shamrock Pampas Cat') > -1):
+            return 'al-93'
         elif (data.find('AlmaLinux') > -1 or data.find('almalinux') > -1) and (data.find('8.9') > -1 or data.find('Midnight Oncilla') > -1):
             return 'al-88'
         elif (data.find('AlmaLinux') > -1 or data.find('almalinux') > -1) and (data.find('8.7') > -1 or data.find('Stone Smilodon') > -1):
@@ -295,7 +297,7 @@ class InstallCyberPanel:
 
             command = 'dnf install lsphp81* lsphp82* --exclude *imagick* -y --skip-broken'
             subprocess.call(command, shell=True)
-        
+
         if self.distro == openeuler:
             command = 'dnf install lsphp71* lsphp72* lsphp73* lsphp74* lsphp80* -y'
             subprocess.call(command, shell=True)
@@ -354,7 +356,7 @@ name = MariaDB
 baseurl = http://yum.mariadb.org/10.11/rhel8-amd64
 module_hotfixes=1
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
-gpgcheck=1            
+gpgcheck=1
 """
             WriteToFile = open(RepoPath, 'w')
             WriteToFile.write(RepoContent)

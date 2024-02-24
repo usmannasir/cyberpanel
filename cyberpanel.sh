@@ -263,6 +263,8 @@ elif grep -q "Red Hat Enterprise Linux" /etc/os-release ; then
   Server_OS="RedHat"
 elif grep -q "AlmaLinux-8" /etc/os-release ; then
   Server_OS="AlmaLinux"
+elif grep -q "AlmaLinux-9" /etc/os-release ; then
+  Server_OS="AlmaLinux"
 elif grep -q -E "CloudLinux 7|CloudLinux 8" /etc/os-release ; then
   Server_OS="CloudLinux"
 elif grep -q -E "Rocky Linux" /etc/os-release ; then
@@ -273,8 +275,8 @@ elif grep -q -E "openEuler 20.03|openEuler 22.03" /etc/os-release ; then
   Server_OS="openEuler"
 else
   echo -e "Unable to detect your system..."
-  echo -e "\nCyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, CentOS 7, CentOS 8, CentOS 9, RHEL 8, RHEL 9, AlmaLinux 8, RockyLinux 8, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03...\n"
-  Debug_Log2 "CyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, CentOS 7, CentOS 8, CentOS 9, RHEL 8, RHEL 9, AlmaLinux 8, RockyLinux 8, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03... [404]"
+  echo -e "\nCyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, CentOS 7, CentOS 8, CentOS 9, RHEL 8, RHEL 9, AlmaLinux 8, AlmaLinux 9, RockyLinux 8, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03...\n"
+  Debug_Log2 "CyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, CentOS 7, CentOS 8, CentOS 9, RHEL 8, RHEL 9, AlmaLinux 8, AlmaLinux 9, RockyLinux 8, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03... [404]"
   exit
 fi
 
@@ -864,7 +866,7 @@ EOF
     dnf config-manager --set-enabled PowerTools > /dev/null 2>&1
     dnf config-manager --set-enabled powertools > /dev/null 2>&1
 
-  
+
 #    cat <<EOF >/etc/yum.repos.d/CentOS-PowerTools-CyberPanel.repo
 #[powertools-for-cyberpanel]
 #name=CentOS Linux \$releasever - PowerTools
@@ -1066,7 +1068,7 @@ else
 
   DEBIAN_FRONTEND=noninteractive apt install -y cron inetutils-ping
     Check_Return
-# Oracle Ubuntu ARM misses ping and cron 
+# Oracle Ubuntu ARM misses ping and cron
 
   DEBIAN_FRONTEND=noninteractive apt install -y locales
   locale-gen "en_US.UTF-8"
@@ -1184,11 +1186,11 @@ if ! grep -q "pid_max" /etc/rc.local 2>/dev/null ; then
     echo 1 > /sys/kernel/mm/ksm/run" >>/etc/rc.d/rc.local
     chmod +x /etc/rc.d/rc.local
   else
-    if [[ -f /etc/rc.local ]] ; then 
+    if [[ -f /etc/rc.local ]] ; then
       echo -e "#!/bin/bash\n$(cat /etc/rc.local)" > /etc/rc.local
-    else 
+    else
       echo "#!/bin/bash" > /etc/rc.local
-    fi 
+    fi
     echo "echo 1000000 > /proc/sys/kernel/pid_max
     echo 1 > /sys/kernel/mm/ksm/run" >>/etc/rc.local
     chmod +x /etc/rc.local
