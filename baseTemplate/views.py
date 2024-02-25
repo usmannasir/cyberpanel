@@ -151,13 +151,6 @@ def getLoadAverage(request):
 def versionManagment(request):
     ## Get latest version
 
-    val = request.session['userID']
-    currentACL = ACLManager.loadedACL(val)
-    if currentACL['admin'] == 1:
-        pass
-    else:
-        return ACLManager.loadErrorJson('FilemanagerAdmin', 0)
-
     getVersion = requests.get('https://cyberpanel.net/version.txt')
     latest = getVersion.json()
     latestVersion = latest['version']
@@ -178,14 +171,6 @@ def versionManagment(request):
 
     Currentcomt = output.rstrip("\n")
     notechk = True
-
-    # command ="git fetch -C /usr/local/CyberCP/"
-    # output = ProcessUtilities.outputExecutioner(command)
-    #
-    # command ="git -C /usr/local/CyberCP/ log %s..%s --pretty=oneline | wc -l" % ( Currentcomt, latestcomit)
-    # output = ProcessUtilities.outputExecutioner(command)
-    #
-    # numCommits = output.rstrip("\n")
 
     if (Currentcomt == latestcomit):
         notechk = False

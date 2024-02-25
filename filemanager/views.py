@@ -201,12 +201,7 @@ def FileManagerRoot(request):
         cosmetic = CyberPanelCosmetic()
         cosmetic.save()
 
-    userID = request.session['userID']
-    currentACL = ACLManager.loadedACL(userID)
-    ipFile = "/etc/cyberpanel/machineIP"
-    f = open(ipFile)
-    ipData = f.read()
-    ipAddressLocal = ipData.split('\n', 1)[0]
+    ipAddressLocal = ACLManager.fetchIP()
 
     try:
 
@@ -232,13 +227,8 @@ def FileManagerRoot(request):
     except BaseException as msg:
         template = 'baseTemplate/FileManager.html'
 
-    if currentACL['admin'] == 1:
-        pass
-    else:
-        return ACLManager.loadErrorJson('FilemanagerAdmin', 0)
-
     from plogical.httpProc import httpProc
-    proc = httpProc(request, template)
+    proc = httpProc(request, template, None, 'admin')
     return proc.render()
 
 def downloadFile(request):
