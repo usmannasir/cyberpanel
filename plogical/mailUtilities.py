@@ -711,6 +711,70 @@ milter_default_action = accept
 
 
     @staticmethod
+    def SetupEmailLimits():
+        rlFile = '/etc/rspamd/override.d/ratelimit.conf'
+        rlContent = '''
+   custom_keywords = "/etc/rspamd/custom_ratelimit.lua";
+'''
+        if not os.path.exists(rlFile):
+
+            WriteToFile = open(rlFile, 'w')
+            WriteToFile.write(rlContent)
+            WriteToFile.close()
+
+            rlLUA = '/etc/rspamd/custom_ratelimit.lua'
+            rlLUAContent = '''
+local custom_keywords = {}
+local d = {}
+
+-- create map
+d['badusers'] = rspamd_config:add_map({
+  ['url']= '/etc/rspamd/badusers.map',
+  ['type'] = 'map',
+  ['description'] = 'Bad users'
+})
+
+custom_keywords.customrl = function(task)
+  local rspamd_logger = require "rspamd_logger"
+  -- get authenticated user
+  local user = task:get_user()
+  -- define a default ratelimit
+  local default_rl = "10 / 1m"
+  if not user then return end -- no user, return nil
+  local user_rl = d['badusers']:get_key(user)
+  if user_rl then
+    local limit, duration, unit = string.match(user_rl, "(%d+)%s-/%s-(%d+)(%a*)")
+    if limit and duration then
+      duration = tonumber(duration)
+      if unit == 'm' then
+        duration = duration * 60 -- convert minutes to seconds
+      elseif unit == 'h' then
+        duration = duration * 3600 -- convert hours to seconds
+      elseif unit == 'd' then
+        duration = duration * 86400 -- convert days to seconds
+      end
+      local custom_rl = limit .. " / " .. duration .. "s"
+      rspamd_logger.infox(rspamd_config, "User %s has custom ratelimit: %s", user, custom_rl)
+      return "rs_customrl_" .. user, custom_rl
+    else
+      rspamd_logger.errx(rspamd_config, "Invalid ratelimit format for user %s, using default: %s", user, default_rl)
+      return "rs_customrl_" .. user, default_rl
+    end
+  else
+    rspamd_logger.infox(rspamd_config, "User %s not found in bad users map, using default ratelimit: %s", user, default_rl)
+    return "rs_customrl_" .. user, default_rl
+  end
+end
+
+return custom_keywords
+'''
+
+            WriteToFile = open(rlLUA, 'w')
+            WriteToFile.write(rlLUAContent)
+            WriteToFile.close()
+
+
+    @staticmethod
     def installRspamd(install, rspamd):
         from manageServices.serviceManager import ServiceManager
         try:
@@ -1538,6 +1602,47 @@ LogFile /var/log/clamav/clamav.log
         except socket.herror as e:
             # Handle errors, e.g., if reverse DNS lookup fails
             return None
+
+    @staticmethod
+    def SaveEmailLimitsNew(tempPath):
+        try:
+            content = open(tempPath, 'r').read()
+            email = content.split(' ')[0]
+            path = '/etc/rspamd/badusers.map'
+
+            WriteCheck = 0
+
+            if os.path.exists(path):
+                data = open(path, 'r').readlines()
+
+                WriteToFile = open(path, 'w')
+                
+                for line in data:
+                    if line.find(email) > -1:
+                        WriteToFile.write(content)
+                        WriteCheck = 1
+                    else:
+                        WriteToFile.write(line)
+
+                if WriteCheck == 0:
+                    WriteToFile.write(content)
+
+                WriteToFile.close()
+
+            else:
+                WriteToFile = open(path, 'w')
+                WriteToFile.write(content)
+                WriteToFile.close()
+
+            command = 'systemctl restart rspamd'
+            ProcessUtilities.executioner(command)
+
+            print(f'1,None')
+
+        except BaseException as msg:
+            print(f'0,{str(msg)}')
+
+
 
     ####### Imported below functions from mailserver/mailservermanager, need to refactor later
 
@@ -2547,6 +2652,10 @@ def main():
         extraArgs = {'tempStatusPath': args.tempStatusPath}
         background = MailServerManagerUtils(None, 'ResetEmailConfigurations', extraArgs)
         background.ResetEmailConfigurations()
+    elif args.function == 'SetupEmailLimits':
+        mailUtilities.SetupEmailLimits()
+    elif args.function == 'SaveEmailLimitsNew':
+        mailUtilities.SaveEmailLimitsNew(args.tempConfigPath)
 
 if __name__ == "__main__":
     main()

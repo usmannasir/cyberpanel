@@ -77,7 +77,7 @@
 
     <!-- HELPERS -->
 
-    {% with version="2.3.5.3" %}
+    {% with version="2.3.5.4" %}
 
         <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/finalBase/finalBase.css' %}">
 
@@ -587,6 +587,11 @@
                                             </li>
                                         {% endif %}
                                         {% if admin or emailForwarding %}
+                                            <li><a href="{% url 'EmailLimits' %}"
+                                                   title="{% trans 'Email Limits' %}"><span>{% trans "Email Limits" %}</span></a>
+                                            </li>
+                                        {% endif %}
+                                        {% if admin or emailForwarding %}
                                             <li><a href="{% url 'emailForwarding' %}"
                                                    title="{% trans 'Email Forwarding' %}"><span>{% trans "Email Forwarding" %}</span></a>
                                             </li>
@@ -1052,12 +1057,12 @@
                                         <li><a href="{% url 'mailQueue' %}"
                                                title="{% trans 'Mail Queue' %}"><span>{% trans "Mail Queue" %}</span></a>
                                         </li>
-                                        <li><a href="{% url 'emailPolicyServer' %}"
-                                               title="{% trans 'Email Policy Server' %}"><span>{% trans "Email Policy Server" %}</span></a>
-                                        </li>
-                                        <li><a href="{% url 'listDomains' %}"
-                                               title="{% trans 'Email Limits' %}"><span>{% trans "Email Limits" %}</span></a>
-                                        </li>
+{#                                        <li><a href="{% url 'emailPolicyServer' %}"#}
+{#                                               title="{% trans 'Email Policy Server' %}"><span>{% trans "Email Policy Server" %}</span></a>#}
+{#                                        </li>#}
+{#                                        <li><a href="{% url 'listDomains' %}"#}
+{#                                               title="{% trans 'Email Limits' %}"><span>{% trans "Email Limits" %}</span></a>#}
+{#                                        </li>#}
                                         <li><a href="{% url 'SpamAssassin' %}"
                                                title="{% trans 'SpamAssassin Configurations' %}"><span>{% trans "SpamAssassin" %}</span></a>
                                         </li>

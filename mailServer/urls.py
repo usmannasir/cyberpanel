@@ -8,20 +8,17 @@ urlpatterns = [
     url(r'^submitEmailCreation', views.submitEmailCreation, name='submitEmailCreation'),
     url(r'^fetchEmails$', views.fetchEmails, name='fetchEmails'),
 
-
     ## Mail Forwardings
     url(r'^emailForwarding$', views.emailForwarding, name='emailForwarding'),
     url(r'^submitEmailForwardingCreation$', views.submitEmailForwardingCreation, name='submitEmailForwardingCreation'),
     url(r'^fetchCurrentForwardings$', views.fetchCurrentForwardings, name='fetchCurrentForwardings'),
     url(r'^submitForwardDeletion$', views.submitForwardDeletion, name='submitForwardDeletion'),
 
-
     ## Delete email
     url(r'^deleteEmailAccount', views.deleteEmailAccount, name='deleteEmailAccount'),
     url(r'^getEmailsForDomain$', views.getEmailsForDomain, name='getEmailsForDomain'),
     url(r'^submitEmailDeletion', views.submitEmailDeletion, name='submitEmailDeletion'),
     url(r'^fixMailSSL', views.fixMailSSL, name='fixMailSSL'),
-
 
     ## Change email password
     url(r'^changeEmailAccountPassword', views.changeEmailAccountPassword, name='changeEmailAccountPassword'),
@@ -36,5 +33,9 @@ urlpatterns = [
     url(r'^installOpenDKIM', views.installOpenDKIM, name='installOpenDKIM'),
     url(r'^installStatusOpenDKIM', views.installStatusOpenDKIM, name='installStatusOpenDKIM'),
 
+    ### email limits
+
+    url(r'^EmailLimits$', views.EmailLimits, name='EmailLimits'),
+    url(r'^SaveEmailLimitsNew$', views.SaveEmailLimitsNew, name='SaveEmailLimitsNew'),
 
 ]

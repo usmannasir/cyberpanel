@@ -886,7 +886,7 @@ app.controller('emailForwarding', function ($scope, $http) {
 
     $scope.fetchCurrentForwardings = function () {
 
-        if($scope.forwardingOption == null || $scope.selectedEmail == null ){
+        if ($scope.forwardingOption == null || $scope.selectedEmail == null) {
             $scope.forwardLoading = true;
             return 0;
         }
@@ -1345,3 +1345,210 @@ app.controller('listEmails', function ($scope, $http) {
 
 
 /* Java script code for List Emails Ends here */
+
+
+/* Java script code for EmailLimitsNew */
+app.controller('EmailLimitsNew', function ($scope, $http) {
+
+    $scope.creationBox = true;
+    $scope.emailDetails = true;
+    $scope.forwardLoading = true;
+    $scope.forwardError = true;
+    $scope.forwardSuccess = true;
+    $scope.couldNotConnect = true;
+    $scope.notifyBox = true;
+
+
+    $scope.showEmailDetails = function () {
+
+        $scope.creationBox = true;
+        $scope.emailDetails = true;
+        $scope.forwardLoading = false;
+        $scope.forwardError = true;
+        $scope.forwardSuccess = true;
+        $scope.couldNotConnect = true;
+        $scope.notifyBox = true;
+
+        var url = "/email/getEmailsForDomain";
+
+
+        var data = {
+            domain: $scope.emailDomain
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.fetchStatus === 1) {
+
+                $scope.emails = JSON.parse(response.data.data);
+
+                $scope.creationBox = true;
+                $scope.emailDetails = false;
+                $scope.forwardLoading = true;
+                $scope.forwardError = true;
+                $scope.forwardSuccess = true;
+                $scope.couldNotConnect = true;
+                $scope.notifyBox = false;
+
+            } else {
+                $scope.creationBox = true;
+                $scope.emailDetails = true;
+                $scope.forwardLoading = true;
+                $scope.forwardError = false;
+                $scope.forwardSuccess = true;
+                $scope.couldNotConnect = true;
+                $scope.notifyBox = false;
+
+                $scope.errorMessage = response.data.error_message;
+
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.creationBox = true;
+            $scope.emailDetails = true;
+            $scope.forwardLoading = true;
+            $scope.forwardError = true;
+            $scope.forwardSuccess = true;
+            $scope.couldNotConnect = false;
+            $scope.notifyBox = false;
+
+
+        }
+
+
+    };
+
+    $scope.selectForwardingEmail = function () {
+
+        $scope.creationBox = false;
+        $scope.emailDetails = false;
+        $scope.forwardLoading = true;
+        $scope.forwardError = true;
+        $scope.forwardSuccess = true;
+        $scope.couldNotConnect = true;
+        $scope.notifyBox = true;
+
+        // Given email to search for
+        var givenEmail = $scope.selectedEmail;
+
+        for (var i = 0; i < $scope.emails.length; i++) {
+            if ($scope.emails[i].email === givenEmail) {
+                // Extract numberofEmails and duration
+                var numberofEmails = $scope.emails[i].numberofEmails;
+                var duration = $scope.emails[i].duration;
+
+                $scope.numberofEmails = numberofEmails;
+                $scope.duration = duration;
+
+                // Use numberofEmails and duration as needed
+                console.log("Number of emails:", numberofEmails);
+                console.log("Duration:", duration);
+
+                // Break out of the loop since the email is found
+                break;
+            }
+        }
+
+    };
+
+    $scope.SaveChanges = function () {
+
+        $scope.creationBox = false;
+        $scope.emailDetails = false;
+        $scope.forwardLoading = false;
+        $scope.forwardError = true;
+        $scope.forwardSuccess = true;
+        $scope.couldNotConnect = true;
+        $scope.notifyBox = true;
+
+        var url = "/email/SaveEmailLimitsNew";
+
+
+        var data = {
+            numberofEmails: $scope.numberofEmails,
+            source: $scope.selectedEmail,
+            duration: $scope.duration
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.status === 1) {
+
+                $scope.creationBox = false;
+                $scope.emailDetails = false;
+                $scope.forwardLoading = true;
+                $scope.forwardError = true;
+                $scope.forwardSuccess = true;
+                $scope.couldNotConnect = true;
+                $scope.notifyBox = true;
+
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Changes applied.',
+                    type: 'success'
+                });
+
+                $scope.showEmailDetails();
+            } else {
+                $scope.creationBox = false;
+                $scope.emailDetails = false;
+                $scope.forwardLoading = true;
+                $scope.forwardError = false;
+                $scope.forwardSuccess = true;
+                $scope.couldNotConnect = true;
+                $scope.notifyBox = false;
+
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.creationBox = true;
+            $scope.emailDetails = true;
+            $scope.forwardLoading = true;
+            $scope.forwardError = true;
+            $scope.forwardSuccess = true;
+            $scope.couldNotConnect = false;
+            $scope.notifyBox = false;
+
+
+        }
+
+
+    };
+
+
+});
+/* Java script for EmailLimitsNew */

@@ -245,3 +245,22 @@ def installStatusOpenDKIM(request):
         return HttpResponse(final_json)
 
 
+def EmailLimits(request):
+    try:
+        msM = MailServerManager(request)
+        return msM.EmailLimits()
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def SaveEmailLimitsNew(request):
+    try:
+        msM = MailServerManager(request)
+        coreResult = msM.SaveEmailLimitsNew()
+        return coreResult
+    except KeyError as msg:
+        data_ret = {'createStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+
+

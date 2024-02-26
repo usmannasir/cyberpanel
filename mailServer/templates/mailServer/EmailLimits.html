@@ -1,0 +1,141 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Email Limits - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Setup Email Limits" %} - <a target="_blank" href="https://cyberpanel.net/KnowledgeBase/home/email-limits/"
+                                                      style="height: 23px;line-height: 21px;"
+                                                      class="btn btn-border btn-alt border-red btn-link font-red"
+                                                      title=""><span>{% trans "Email Limits Docs" %}</span></a></h2>
+            <p>{% trans "This page help you setup email limits for your emails." %}</p>
+        </div>
+
+        <div ng-controller="EmailLimitsNew" class="panel">
+            <div class="panel-body">
+                <h3 class="content-box-header">
+                    {% trans "Setup Email Limits" %} <img ng-hide="forwardLoading"
+                                                          src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
+
+                    {% if not status %}
+
+                        <div class="col-md-12 text-center" style="margin-bottom: 2%;">
+                            <h3>{% trans "Postfix is disabled." %}
+                                <a href="{% url 'managePostfix' %}">
+                                    <button class="btn btn-alt btn-hover btn-blue-alt">
+                                        <span>{% trans "Enable Now" %}</span>
+                                        <i class="glyph-icon icon-arrow-right"></i>
+                                    </button>
+                                </a></h3>
+                        </div>
+
+                    {% else %}
+
+
+                        <form action="/" class="form-horizontal bordered-row panel-body">
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "Select Website" %} </label>
+                                <div class="col-sm-6">
+                                    <select ng-change="showEmailDetails()" ng-model="emailDomain" class="form-control">
+                                        {% for items in websiteList %}
+                                            <option>{{ items }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+
+                            <!------ Modification form that appears after a click --------------->
+
+                            <div ng-hide="emailDetails" class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "Select Email" %} </label>
+                                <div class="col-sm-6">
+                                    <select ng-change="selectForwardingEmail()" ng-model="selectedEmail"
+                                            class="form-control">
+                                        <option ng-repeat="email in emails track by $index">{$ email.email $}</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {#                <div ng-hide="emailDetails" class="form-group">#}
+                            {#                    <label class="col-sm-3 control-label">{% trans "Forwarding Options" %} </label>#}
+                            {#                    <div class="col-sm-6">#}
+                            {#                        <select ng-change="selectForwardingEmail()" ng-model="forwardingOption" class="form-control">#}
+                            {#                                <option>Forward to email</option>#}
+                            {#                                <option>Pipe to program</option>#}
+                            {#                        </select>#}
+                            {#                    </div>#}
+                            {#                </div>#}
+
+                            <!------ Modification form that appears after a click --------------->
+
+                            <div ng-hide="notifyBox" class="form-group">
+                                <label class="col-sm-3 control-label"></label>
+                                <div class="col-sm-4">
+                                    <div ng-hide="forwardError" class="alert alert-danger">
+                                        <p>{$ errorMessage $}</p>
+                                    </div>
+
+                                    <div ng-hide="forwardSuccess" class="alert alert-success">
+                                        <p>{$ successMessage $}</p>
+                                    </div>
+                                    <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                        <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                    </div>
+
+                                </div>
+
+
+                            </div>
+
+                            <!------ List of records --------------->
+
+                            <div ng-hide="creationBox" class="form-group">
+
+                                <div class="col-sm-12">
+
+                                <div class="alert alert-info">
+                                    <p>{$ selectedEmail $} will be able to send {$ numberofEmails $} emails every {$ duration $}.</p>
+                                </div>
+                                </div>
+
+                                <div class="col-sm-4">
+                                    <input placeholder="{% trans 'Number of Emails' %}" type="number" class="form-control"
+                                           ng-model="numberofEmails">
+                                </div>
+
+                                <div class="col-sm-4">
+                                    <input placeholder="{% trans 'Duration' %} {% trans 'or path to the program' %}"
+                                           type="text" class="form-control" ng-model="duration" required>
+                                </div>
+
+
+                                <div class="col-sm-4">
+                                    <button style="width: 100%;" type="button" ng-click="SaveChanges()"
+                                            class="btn btn-primary">{% trans "Save Changes" %}</button>
+                                </div>
+                            </div>
+
+
+                        </form>
+
+                    {% endif %}
+
+
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+
+{% endblock %}
