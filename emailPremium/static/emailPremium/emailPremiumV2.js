@@ -140,7 +140,7 @@ newapp.controller('EmailDebuugerV2', function ($scope, $http, $timeout, $window)
                 $scope.Port993 = report.Port993;
                 $scope.Port995 = report.Port995;
                 //document.getElementById('MailSSLURL').href = 'https://' + report.serverHostName + ":" + report.port + '/cloudAPI/access?token=' + report.token + "&serverUserName=" + report.userName + '&redirect=/manageSSL/sslForMailServer';
-                document.getElementById('MailSSLURL').href = '/manageSSL/sslForMailServer';
+                document.getElementById('MailSSLURLV2').href = '/manageSSL/V2/sslForMailServerV2';
 
 
                 $scope.ReportStatus = false;

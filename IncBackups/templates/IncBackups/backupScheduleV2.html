@@ -87,7 +87,7 @@
                         <p class="font-semibold w-60"></p>
                     </div>
                     <div>
-                        <div class="checkbox">
+                        <div>
                             <label>
                                 <input ng-model="websiteEmails" type="checkbox" value="">
                                 Emails
@@ -183,11 +183,342 @@
                     <td ng-bind="record.numberOfSites" class="px-6 py-4">
                     </td>
                     <td class="px-6 py-4">
-                        Delete Edit
-                    </td>
+                        <a onclick="return false;"
+                           ng-click="delSchedule(record.id)"
+                           class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded"
+                           href="#">{% trans "Delete" %}
+                        </a>
+                        {#                        <a onclick="return false;"#}
+                        {#                           ng-click="editInitial(record.id)"#}
+                        {#                           class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-1 px-2 rounded"#}
+                        {#                           href="#" data-modal-target="edit"#}
+                        {#                           data-modal-toggle="edit">{% trans "EDIT" %}#}
+                        {#                        </a>#}
+                        {#                        <div id="edit" tabindex="-1"#}
+                        {#                             class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">#}
+                        {#                            <div class="relative p-4 w-full max-w-2xl max-h-full">#}
+                        {#                                <div class="relative bg-white shadow dark:bg-gray-700">#}
+                        {#                                    <div class="flex items-center bg-blue-400 px-4 py-4">#}
+                        {#                                        <p class="font-bold">Edit Job</p>#}
+                        {#                                        <img ng-hide="cyberpanelLoading"#}
+                        {#                                             src="{% static 'images/loading.gif' %}">#}
+                        {#                                        <button type="button" data-modal-toggle="edit"#}
+                        {#                                                class="absolute top-2 end-1 text-black bg-transparent hover:text-black rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"#}
+                        {#                                                data-modal-hide="edit">#}
+                        {#                                            <svg class="w-3 h-3" aria-hidden="true"#}
+                        {#                                                 xmlns="http://www.w3.org/2000/svg" fill="none"#}
+                        {#                                                 viewBox="0 0 14 14">#}
+                        {#                                                <path stroke="currentColor" stroke-linecap="round"#}
+                        {#                                                      stroke-linejoin="round" stroke-width="2"#}
+                        {#                                                      d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>#}
+                        {#                                            </svg>#}
+                        {#                                            <span class="sr-only">Close modal</span>#}
+                        {#                                        </button>#}
+                        {#                                    </div>#}
+                        {#                                    <div class="p-4 md:p-5">#}
+                        {#                                        <form name="containerSettingsForm">#}
+                        {#                                            <div ng-hide="installationDetailsForm"#}
+                        {#                                                 class="flex mt-4 py-2 px-6">#}
+                        {#                                                <div>#}
+                        {#                                                    <p class="font-semibold w-60">Job ID</p>#}
+                        {#                                                </div>#}
+                        {#                                                <div>#}
+                        {#                                                    <input name="name" type="number"#}
+                        {#                                                           class="w-80 bg-gray-100 rounded px-2 py-1"#}
+                        {#                                                           ng-model="jobID" readonly>#}
+                        {#                                                </div>#}
+                        {#                                            </div>#}
+                        {#                                            <div ng-hide="installationDetailsForm"#}
+                        {#                                                 class="flex py-2 px-6">#}
+                        {#                                                <div>#}
+                        {#                                                    <p class="font-semibold w-60">Data</p>#}
+                        {#                                                </div>#}
+                        {#                                                <div>#}
+                        {#                                                    <input ng-model="$parent.websiteData"#}
+                        {#                                                           type="checkbox" value="">#}
+                        {#                                                    Data#}
+                        {#                                                </div>#}
+                        {#                                            </div>#}
+                        {#                                            <div ng-hide="installationDetailsForm"#}
+                        {#                                                 class="flex py-2 px-6">#}
+                        {#                                                <div>#}
+                        {#                                                    <p class="font-semibold w-60">Databases</p>#}
+                        {#                                                </div>#}
+                        {#                                                <div>#}
+                        {#                                                    <label>#}
+                        {#                                                        <input ng-model="$parent.websiteDatabases"#}
+                        {#                                                               type="checkbox" value="">#}
+                        {#                                                        Databases#}
+                        {#                                                    </label>#}
+                        {#                                                </div>#}
+                        {#                                            </div>#}
+                        {#                                            <div ng-hide="installationDetailsForm"#}
+                        {#                                                 class="flex py-2 px-6">#}
+                        {#                                                <div>#}
+                        {#                                                    <p class="font-semibold w-60">Emails</p>#}
+                        {#                                                </div>#}
+                        {#                                                <div>#}
+                        {#                                                    <label>#}
+                        {#                                                        <input ng-model="$parent.websiteEmails"#}
+                        {#                                                               type="checkbox" value="">#}
+                        {#                                                        Emails#}
+                        {#                                                    </label>#}
+                        {#                                                </div>#}
+                        {#                                            </div>#}
+                        {#                                        </form>#}
+                        {#                                        <div ng-hide="installationDetailsForm" class="flex justify-center mt-3">#}
+                        {#                                            <button ng-click="saveChanges()"#}
+                        {#                                                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">#}
+                        {#                                                Save Changes#}
+                        {#                                            </button>#}
+                        {#                                        </div>#}
+                        {#                                        <ul class="flex py-2 justify-center">#}
+                        {#                                            <li id="dns_tab_button"#}
+                        {#                                                class="hover:bg-orange-200 border-2 border-black rounded-l-3xl px-2 py-2 w-60 cursor-pointer active"#}
+                        {#                                                onclick="showTab1('sites')">#}
+                        {#                                                <a class="flex justify-center">#}
+                        {#                                                    <p class="text-2xl font-bold">Sites</p>#}
+                        {#                                                </a>#}
+                        {#                                            </li>#}
+                        {#                                            <li id="api_tab_button"#}
+                        {#                                                class="hover:bg-orange-200 border-2 border-black rounded-r-3xl px-2 py-2 w-60 cursor-pointer"#}
+                        {#                                                onclick="showTab1('add_sites')">#}
+                        {#                                                <a class="flex justify-center">#}
+                        {#                                                    <p class="text-2xl font-bold">Add Sites</p>#}
+                        {#                                                </a>#}
+                        {#                                            </li>#}
+                        {#                                        </ul>#}
+                        {#                                        <div id="sites" class="tab-content1">#}
+                        {#                                            <div class="relative py-5 overflow-x-auto">#}
+                        {#                                                <table class="w-full text-sm text-left rtl:text-right">#}
+                        {#                                                    <thead>#}
+                        {#                                                    <tr class="bg-gray-200 mt-6 w-full rounded-t-lg border-b-2 border-gray-400">#}
+                        {#                                                        <th scope="col" class="px-6 py-3">#}
+                        {#                                                            ID#}
+                        {#                                                        </th>#}
+                        {#                                                        <th scope="col" class="px-6 py-3">#}
+                        {#                                                            Website#}
+                        {#                                                        </th>#}
+                        {#                                                        <th scope="col" class="px-6 py-3">#}
+                        {#                                                            Actions#}
+                        {#                                                        </th>#}
+                        {#                                                    </tr>#}
+                        {#                                                    </thead>#}
+                        {#                                                    <tbody ng-repeat="record in websites track by $index"#}
+                        {#                                                           class="border shadow-lg py-3 px-6 rounded-b-lg">#}
+                        {#                                                    <tr>#}
+                        {#                                                        <td ng-bind="record.id" class="px-6 py-4">#}
+                        {#                                                        </td>#}
+                        {#                                                        <td ng-bind="record.website" class="px-6 py-4">#}
+                        {#                                                        </td>#}
+                        {#                                                        <td class="px-6 py-4">#}
+                        {#                                                            <a onclick="return false;"#}
+                        {#                                                               ng-click="removeSite(record.website)"#}
+                        {#                                                               class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded"#}
+                        {#                                                               href="#">{% trans "Delete" %}#}
+                        {#                                                            </a>#}
+                        {#                                                        </td>#}
+                        {#                                                    </tr>#}
+                        {#                                                    </tbody>#}
+                        {#                                                </table>#}
+                        {#                                            </div>#}
+                        {#                                        </div>#}
+                        {#                                        <div id="add_sites" class="tab-content1">#}
+                        {#                                            <div ng-hide="installationDetailsForm"#}
+                        {#                                                 class="flex mt-4 py-2 px-6">#}
+                        {#                                                <div class="flex items-center">#}
+                        {#                                                    <p class="font-semibold w-60">Select Site</p>#}
+                        {#                                                    <img ng-hide="cyberpanelLoading"#}
+                        {#                                                         src="{% static 'images/loading.gif' %}">#}
+                        {#                                                </div>#}
+                        {#                                                <div>#}
+                        {#                                                    <select ng-model="$parent.websiteToBeAdded"#}
+                        {#                                                            class="w-80 bg-gray-100 rounded px-2 py-1">#}
+                        {#                                                        {% for items in websiteList %}#}
+                        {#                                                            <option>{{ items }}</option>#}
+                        {#                                                        {% endfor %}#}
+                        {#                                                    </select>#}
+                        {#                                                </div>#}
+                        {#                                            </div>#}
+                        {#                                            <div ng-hide="savebtn" class="flex justify-center mt-3">#}
+                        {#                                                <button ng-click="addWebsite()"#}
+                        {#                                                        class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">#}
+                        {#                                                    Add#}
+                        {#                                                </button>#}
+                        {#                                            </div>#}
+                        {#                                        </div>#}
+                        {#                                    </div>#}
+                        {#                                </div>#}
+                        {#                            </div>#}
+                        {#                        </div>#}
+                        {#                    </td>#}
                 </tr>
                 </tbody>
             </table>
         </div>
     </div>
+    <a onclick="return false;"
+       ng-click="editInitial(record.id)"
+       class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-1 px-2 rounded"
+       href="#" data-modal-target="edit"
+       data-modal-toggle="edit">{% trans "EDIT" %}
+    </a>
+    <div id="edit" tabindex="-1"
+         class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+        <div class="relative p-4 w-full max-w-2xl max-h-full">
+            <div class="relative bg-white shadow dark:bg-gray-700">
+                <div class="flex items-center bg-blue-400 px-4 py-4">
+                    <p class="font-bold">Edit Job</p>
+                    <img ng-hide="cyberpanelLoading"
+                         src="{% static 'images/loading.gif' %}">
+                    <button type="button" data-modal-toggle="edit"
+                            class="absolute top-2 end-1 text-black bg-transparent hover:text-black rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
+                            data-modal-hide="edit">
+                        <svg class="w-3 h-3" aria-hidden="true"
+                             xmlns="http://www.w3.org/2000/svg" fill="none"
+                             viewBox="0 0 14 14">
+                            <path stroke="currentColor" stroke-linecap="round"
+                                  stroke-linejoin="round" stroke-width="2"
+                                  d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                        </svg>
+                        <span class="sr-only">Close modal</span>
+                    </button>
+                </div>
+                <div class="p-4 md:p-5">
+                    <form name="containerSettingsForm">
+                        <div ng-hide="installationDetailsForm"
+                             class="flex mt-4 py-2 px-6">
+                            <div>
+                                <p class="font-semibold w-60">Job ID</p>
+                            </div>
+                            <div>
+                                <input name="name" type="number"
+                                       class="w-80 bg-gray-100 rounded px-2 py-1"
+                                       ng-model="jobID" readonly>
+                            </div>
+                        </div>
+                        <div ng-hide="installationDetailsForm"
+                             class="flex py-2 px-6">
+                            <div>
+                                <p class="font-semibold w-60">Data</p>
+                            </div>
+                            <div>
+                                <input ng-model="$parent.websiteData"
+                                       type="checkbox" value="">
+                                Data
+                            </div>
+                        </div>
+                        <div ng-hide="installationDetailsForm"
+                             class="flex py-2 px-6">
+                            <div>
+                                <p class="font-semibold w-60">Databases</p>
+                            </div>
+                            <div>
+                                <label>
+                                    <input ng-model="$parent.websiteDatabases"
+                                           type="checkbox" value="">
+                                    Databases
+                                </label>
+                            </div>
+                        </div>
+                        <div ng-hide="installationDetailsForm"
+                             class="flex py-2 px-6">
+                            <div>
+                                <p class="font-semibold w-60">Emails</p>
+                            </div>
+                            <div>
+                                <label>
+                                    <input ng-model="$parent.websiteEmails"
+                                           type="checkbox" value="">
+                                    Emails
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                    <div ng-hide="installationDetailsForm" class="flex justify-center mt-3">
+                        <button ng-click="saveChanges()"
+                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                            Save Changes
+                        </button>
+                    </div>
+                    <ul class="flex py-2 justify-center">
+                        <li id="dns_tab_button"
+                            class="hover:bg-orange-200 border-2 border-black rounded-l-3xl px-2 py-2 w-60 cursor-pointer active"
+                            onclick="showTab1('sites')">
+                            <a class="flex justify-center">
+                                <p class="text-2xl font-bold">Sites</p>
+                            </a>
+                        </li>
+                        <li id="api_tab_button"
+                            class="hover:bg-orange-200 border-2 border-black rounded-r-3xl px-2 py-2 w-60 cursor-pointer"
+                            onclick="showTab1('add_sites')">
+                            <a class="flex justify-center">
+                                <p class="text-2xl font-bold">Add Sites</p>
+                            </a>
+                        </li>
+                    </ul>
+                    <div id="sites" class="tab-content1">
+                        <div class="relative py-5 overflow-x-auto">
+                            <table class="w-full text-sm text-left rtl:text-right">
+                                <thead>
+                                <tr class="bg-gray-200 mt-6 w-full rounded-t-lg border-b-2 border-gray-400">
+                                    <th scope="col" class="px-6 py-3">
+                                        ID
+                                    </th>
+                                    <th scope="col" class="px-6 py-3">
+                                        Website
+                                    </th>
+                                    <th scope="col" class="px-6 py-3">
+                                        Actions
+                                    </th>
+                                </tr>
+                                </thead>
+                                <tbody ng-repeat="record in websites track by $index"
+                                       class="border shadow-lg py-3 px-6 rounded-b-lg">
+                                <tr>
+                                    <td ng-bind="record.id" class="px-6 py-4">
+                                    </td>
+                                    <td ng-bind="record.website" class="px-6 py-4">
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <a onclick="return false;"
+                                           ng-click="removeSite(record.website)"
+                                           class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded"
+                                           href="#">{% trans "Delete" %}
+                                        </a>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="add_sites" class="tab-content1" style="display: none;">
+                        <div ng-hide="installationDetailsForm"
+                             class="flex mt-4 py-2 px-6">
+                            <div class="flex items-center">
+                                <p class="font-semibold w-60">Select Site</p>
+                                <img ng-hide="cyberpanelLoading"
+                                     src="{% static 'images/loading.gif' %}">
+                            </div>
+                            <div>
+                                <select ng-model="$parent.websiteToBeAdded"
+                                        class="w-80 bg-gray-100 rounded px-2 py-1">
+                                    {% for items in websiteList %}
+                                        <option>{{ items }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div ng-hide="savebtn" class="flex justify-center mt-3">
+                            <button ng-click="addWebsite()"
+                                    class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                                Add
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </td>
 {% endblock %}

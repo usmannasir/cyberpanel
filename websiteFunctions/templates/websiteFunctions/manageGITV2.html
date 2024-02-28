@@ -6,21 +6,20 @@
     {% load static %}
 
     <div ng-controller="manageGITV2" class="p-8">
-        <div>
-            <p class="text-4xl font-bold">Manage GIT - <a target="_blank"
-                                                          href="https://go.cyberpanel.net/manageGit"
-                                                          style="height: 23px;line-height: 21px;"
-                                                          class="btn btn-border btn-alt border-red btn-link font-red"
-                                                          title=""><span>{% trans "Git Docs" %}</span></a></p>
-            <p class="text-xs text-gray-600 py-2 font-semibold">Manage and track folders via Git
-                for {{ domainName }}.</p>
+        <div class="flex items-center">
+            <p class="text-4xl font-bold">Manage GIT -</p>
+            <a target="_blank"
+               href="https://go.cyberpanel.net/manageGit"
+               class="bg-blue-200 px-2 font-bold mt-2 ml-3"
+               title=""><span>{% trans "Git Docs" %}</span></a>
         </div>
-        <div>a
-            <div class="py-4">
-                <h3 class="title-hero">
-                    {% trans "Manage and track folders via Git for " %} <span id="domain">{{ domainName }}</span>. <img
-                        ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
-                </h3>
+        <p class="text-xs text-gray-600 py-2 font-semibold">Manage and track folders via Git
+            for {{ domainName }}.</p>
+        <div>
+            <div class="flex items-center py-4">
+                <p class="text-xl font-bold">Manage and track folders via Git for <span
+                        id="domain">{{ domainName }}</span></p>
+                <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
             </div>
             <hr>
             <div>
@@ -38,18 +37,23 @@
                     </div>
                 </div>
                 <p ng-hide="gitTracking">{% trans "This folder does not have Git tracking, click below to initiate a repository and start tracking files." %}</p>
-                <button ng-hide="gitTracking" style="margin-left: 2%" type="button"
-                        class="bg-orange-500 px-3 py-4 rounded-lg text-xl font-semibold text-white"
-                        ng-click="initRepo()">
-                    Init Repo
-                </button>
-
-                <button data-toggle="modal" data-target="#attachExistingRepo" ng-disabled="home==0"
-                        ng-hide="gitTracking" style="margin-left: 2%" type="button"
-                        class="bg-orange-500 px-3 py-4 rounded-lg text-xl font-semibold text-white">
-                    Attach Existing Repo <img
-                        ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
-                </button>
+                <div class="flex gap-2">
+                    <div>
+                        <button ng-hide="gitTracking" type="button"
+                                class="bg-orange-500 px-3 py-2 mt-2 rounded-lg text-xl font-semibold text-white"
+                                ng-click="initRepo()">
+                            Init Repo
+                        </button>
+                    </div>
+                    <div class="flex items-center">
+                        <button data-toggle="modal" data-target="#attachExistingRepo" ng-disabled="home==0"
+                                ng-hide="gitTracking" type="button"
+                                class="bg-orange-500 px-3 py-2 mt-2 rounded-lg text-xl font-semibold text-white">
+                            Attach Existing Repo
+                        </button>
+                        <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                    </div>
+                </div>
             </div>
         </div>
 

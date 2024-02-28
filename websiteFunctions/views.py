@@ -1794,6 +1794,15 @@ def sshAccess(request, domain):
         return redirect(loadLoginPage)
 
 
+def sshAccessV2(request, domain):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager(domain)
+        return wm.sshAccessV2(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 def saveSSHAccessChanges(request):
     try:
         userID = request.session['userID']
@@ -1808,6 +1817,15 @@ def setupStaging(request, domain):
         userID = request.session['userID']
         wm = WebsiteManager(domain)
         return wm.setupStaging(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def setupStagingV2(request, domain):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager(domain)
+        return wm.setupStagingV2(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
 

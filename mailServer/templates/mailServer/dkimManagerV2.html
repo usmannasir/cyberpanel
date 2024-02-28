@@ -13,10 +13,12 @@
                    class="bg-blue-400 px-2 py-1 text-white font-semibold ml-3"
                    title=""><span>{% trans "DKIM Docs" %}</span></a>
             </div>
+            <p class="text-xs text-gray-600 py-2 font-semibold">This page can be used to generate and view DKIM keys for
+                Domains</p>
         </div>
         {% if openDKIMInstalled == 0 %}
             <div>
-            <div class="py-4">
+            <div class="flex items-center py-4">
                 <p class="text-xl font-bold">DKIM Manager</p>
                 <img ng-hide="manageDKIMLoading" src="{% static 'images/loading.gif' %}">
             </div>
@@ -63,9 +65,10 @@
 
         {% else %}
             <div class="panel-body">
-                <h3 class="content-box-header">
-                    {% trans "DKIM Manager" %} <img ng-hide="manageDKIMLoading" src="{% static 'images/loading.gif' %}">
-                </h3>
+                <div class="flex items-center py-4">
+                    <p class="text-xl font-bold">DKIM Manager</p>
+                    <img ng-hide="manageDKIMLoading" src="{% static 'images/loading.gif' %}">
+                </div>
                 <div class="example-box-wrapper">
 
                     <form action="/" class="form-horizontal bordered-row panel-body">

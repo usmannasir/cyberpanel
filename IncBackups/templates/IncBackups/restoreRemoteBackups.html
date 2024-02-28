@@ -23,7 +23,7 @@
             <div class="panel-body">
                 <h3 class="title-hero">
                     {% trans "Backup Website" %} <img ng-hide="cyberpanelLoading"
-                                                       src="{% static 'images/loading.gif' %}">
+                                                      src="{% static 'images/loading.gif' %}">
                 </h3>
                 <div class="example-box-wrapper">
 
@@ -109,7 +109,7 @@
                                         <td ng-bind="record.path"></td>
                                         <td>
                                             <a ng-click="restorePoint(record.id, record.path)"
-                                               class="btn btn-border btn-alt border-green btn-link font-green"
+                                               class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-1 px-2 rounded"
                                                title=""><span>Restore</span></a>
                                         </td>
                                     </tr>

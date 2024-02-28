@@ -1,0 +1,103 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="sshAccessV2" class="p-8">
+        <div class="flex items-center">
+            <p class="text-4xl font-bold">SSH Access -</p>
+        </div>
+        <p class="text-xs text-gray-600 py-2 font-semibold">Set up SSH access and enable/disable CageFS
+            for {{ domainName }} CageFS require CloudLinux OS. </p>
+        <div>
+            <div class="flex items-center py-4">
+                <p class="text-xl font-bold">Set up SSH access for <span
+                        id="domain">{{ domainName }}</span></p>
+                <img ng-hide="wpInstallLoading"
+                     src="{% static 'images/loading.gif' %}"> -
+                <a target="_blank"
+                   href="https://go.cyberpanel.net/SFTPAccess"
+                   class="bg-blue-200 px-2 font-bold mt-2 ml-3"
+                   title=""><span>SFTP Docs</span></a>
+            </div>
+            <hr>
+            <form name="websiteCreationForm" action="/" id="createPackages">
+                <p ng-hide="installationDetailsForm" class="text-xs text-gray-600 py-2 font-semibold">SSH user for
+                    <spam id="domainName">{{ domainName }}</spam>
+                    is <span id="externalApp">{{ externalApp }}</span>
+                </p>
+                <hr>
+                <div>
+                    <div class="flex mt-4 py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-48">Password</p>
+                        </div>
+                        <div>
+                            <input type="password" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="password"
+                                   required>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-center mt-2">
+                    <button ng-hide="installationDetailsForm" type="button"
+                            class="bg-orange-500 px-3 py-2 mt-2 rounded-lg text-xl font-semibold text-white"
+                            ng-click="setupSSHAccess()">
+                        Save Changes
+                    </button>
+                </div>
+                <div class="relative py-8 overflow-x-auto">
+                    <table class="w-full text-sm text-left rtl:text-right">
+                        <thead>
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-xl">
+                                User Name
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-xl">
+                                Key
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-xl">
+                                Delete
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody ng-repeat="record in records track by $index"
+                               class="border shadow-lg py-3 px-6 rounded-b-lg">
+                        <tr>
+                            <td ng-bind="record.userName" class="px-6 py-4">
+                                root
+                            </td>
+                            <td ng-bind="record.key" class="px-6 py-4">
+                            </td>
+                            <td ng-click="deleteKey(record.key)" class="px-6 py-4">
+                                <div class="text-red-500 font-bold">X</div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div ng-hide="keyBox">
+                    <div>
+                        <textarea placeholder="Paste your public key here..." ng-model="keyData"
+                                  rows="6" class="w-full">{{ logs }}</textarea>
+                    </div>
+                </div>
+                <div class="flex justify-center" ng-hide="showKeyBox">
+                    <div>
+                        <button type="button" ng-click="addKey()"
+                                class="bg-orange-500 px-3 py-2 mt-2 rounded-lg text-xl font-semibold text-white">{% trans "Add Key" %}</button>
+
+                    </div>
+                </div>
+                <div class="flex justify-center" ng-hide="saveKeyBtn">
+                    <div>
+                        <button type="button" ng-click="saveKey()"
+                                class="bg-orange-500 px-3 py-2 mt-2 rounded-lg text-xl font-semibold text-white">{% trans "Save" %}</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+    </div>
+{% endblock %}

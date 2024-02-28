@@ -252,18 +252,21 @@ newapp.controller('CreateV2BackupV2', function ($scope, $http, $timeout, $compil
 newapp.controller('ConfigureV2BackupV2', function ($scope, $http, $timeout) {
     $scope.cyberpanelLoading = true;
     $scope.selectbackuptype = function () {
+        var backuptype = $scope.v2backuptype;
 
+        // Reset cyberpanelLoading to false initially
         $scope.cyberpanelLoading = false;
 
-        var backuptype = $scope.v2backuptype
         if (backuptype === 'GDrive') {
+            // Show GdriveModal
             $scope.cyberpanelLoading = true;
-            $('#GdriveModal').modal('show');
+            document.getElementById('GDrive').classList.remove('hidden'); // Show the modal
         } else if (backuptype === 'SFTP') {
+            // Show SFTPModal (if you have defined it similarly)
             $scope.cyberpanelLoading = true;
-            $('#SFTPModal').modal('show');
+            // Add logic to show SFTPModal if needed
         }
-    }
+    };
 
 
     $scope.setupAccount = function () {

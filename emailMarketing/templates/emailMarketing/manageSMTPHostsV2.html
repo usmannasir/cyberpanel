@@ -12,7 +12,7 @@
                 used to send emails.</p>
         </div>
         <div>
-            <div class="py-4">
+            <div class="flex items-center py-4">
                 <p class="text-xl font-bold">Manage SMTP Hosts</p>
                 <img ng-hide="cyberPanelLoading" src="{% static 'images/loading.gif' %}">
             </div>
@@ -53,9 +53,9 @@
                 </div>
             </div>
         </div>
-        <div ng-hide="installationProgress" class="flex justify-center">
+        <div ng-hide="installationProgress" class="flex justify-center mt-2">
             <button ng-click="saveSMTPHost()"
-                    class="bg-orange-500 px-3 py-4 rounded-lg text-xl font-semibold text-white">
+                    class="bg-orange-500 px-3 py-2 rounded-lg text-xl font-semibold text-white">
                 Save Host
             </button>
         </div>

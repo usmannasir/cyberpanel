@@ -11,7 +11,7 @@
             <p class="text-xs text-gray-600 py-2 font-semibold">On this page you can compose email message to be sent
                 out later.</p>
         </div>
-        <div class="py-4">
+        <div class="flex items-center py-4">
             <p class="text-xl font-bold">Compose Email Message</p>
             <img ng-hide="cyberPanelLoading" src="{% static 'images/loading.gif' %}">
         </div>
@@ -60,17 +60,17 @@
                         </div>
                     </div>
                 </div>
-                <div ng-hide="request" class="py-2 px-6">
+                <div ng-hide="request" class="w-full">
                     <div>
                         <textarea placeholder="Paste your email message, any format is accepted. (HTML or Plain)"
-                                  ng-model="emailMessage" rows="15" class="border"></textarea>
+                                  ng-model="emailMessage" rows="15" class="border w-full"></textarea>
                     </div>
                 </div>
             </div>
 
-            <div ng-hide="installationProgress" class="flex justify-center">
+            <div ng-hide="installationProgress" class="flex justify-center mt-2">
                 <button ng-click="saveTemplate()"
-                        class="bg-orange-500 px-3 py-4 rounded-lg text-xl font-semibold text-white">
+                        class="bg-orange-500 px-3 py-2 rounded-lg text-xl font-semibold text-white">
                     Save Template
                 </button>
             </div>

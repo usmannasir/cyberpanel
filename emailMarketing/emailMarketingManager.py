@@ -197,6 +197,29 @@ class EmailMarketingManager:
         except KeyError as msg:
             return redirect(loadLoginPage)
 
+    def manageListsV2(self):
+        try:
+            userID = self.request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            if emACL.checkIfEMEnabled(admin.userName) == 0:
+                return ACLManager.loadError()
+
+            listNames = emACL.getEmailsLists(self.domain)
+
+            proc = httpProc(self.request, 'emailMarketing/manageListsV2.html',
+                            {'listNames': listNames, 'domain': self.domain})
+            return proc.render()
+
+        except KeyError as msg:
+            return redirect(loadLoginPage)
+
     def configureVerify(self):
         try:
 
@@ -721,6 +744,20 @@ class EmailMarketingManager:
         except KeyError as msg:
             return redirect(loadLoginPage)
 
+    def composeEmailMessageV2(self):
+        try:
+            userID = self.request.session['userID']
+            admin = Administrator.objects.get(pk=userID)
+
+            if emACL.checkIfEMEnabled(admin.userName) == 0:
+                return ACLManager.loadErrorJson()
+
+            proc = httpProc(self.request, 'emailMarketing/composeMessagesV2.html',
+                            None)
+            return proc.render()
+        except KeyError as msg:
+            return redirect(loadLoginPage)
+
     def saveEmailTemplate(self):
         try:
             userID = self.request.session['userID']
@@ -774,6 +811,31 @@ class EmailMarketingManager:
             Data['listNames'] = listNames
 
             proc = httpProc(self.request, 'emailMarketing/sendEmails.html',
+                            Data)
+            return proc.render()
+
+        except KeyError as msg:
+            return redirect(loadLoginPage)
+
+    def sendEmailsV2(self):
+        try:
+            userID = self.request.session['userID']
+            admin = Administrator.objects.get(pk=userID)
+
+            if emACL.checkIfEMEnabled(admin.userName) == 0:
+                return ACLManager.loadErrorJson()
+
+            currentACL = ACLManager.loadedACL(userID)
+            templateNames = emACL.allTemplates(currentACL, admin)
+            hostNames = emACL.allSMTPHosts(currentACL, admin)
+            listNames = emACL.allEmailsLists(currentACL, admin)
+
+            Data = {}
+            Data['templateNames'] = templateNames
+            Data['hostNames'] = hostNames
+            Data['listNames'] = listNames
+
+            proc = httpProc(self.request, 'emailMarketing/sendEmailsV2.html',
                             Data)
             return proc.render()
 

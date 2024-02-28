@@ -7389,6 +7389,371 @@ function DeleteBackupfileConfigNow(url) {
     window.location.href = url;
 }
 
+newapp.controller('sshAccessV2', function ($scope, $http, $timeout) {
+
+    $scope.wpInstallLoading = true;
+
+    $scope.setupSSHAccess = function () {
+        $scope.wpInstallLoading = false;
+
+        url = "/websites/saveSSHAccessChanges";
+
+        var data = {
+            domain: $("#domainName").text(),
+            externalApp: $("#externalApp").text(),
+            password: $scope.password
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.wpInstallLoading = true;
+
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Changes Successfully Applied.',
+                    type: 'success'
+                });
+            } else {
+
+
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+
+        }
+
+    };
+
+    /// SSH Key at user level
+
+    $scope.keyBox = true;
+    $scope.saveKeyBtn = true;
+
+    $scope.addKey = function () {
+        $scope.showKeyBox = true;
+        $scope.keyBox = false;
+        $scope.saveKeyBtn = false;
+    };
+
+    function populateCurrentKeys() {
+
+        url = "/websites/getSSHConfigs";
+
+        var data = {
+            domain: $("#domainName").text(),
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            if (response.data.status === 1) {
+                $scope.records = JSON.parse(response.data.data);
+            }
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.couldNotConnect = false;
+        }
+
+
+    }
+
+    populateCurrentKeys();
+
+    $scope.deleteKey = function (key) {
+
+        $scope.wpInstallLoading = false;
+
+        url = "/websites/deleteSSHKey";
+
+        var data = {
+            domain: $("#domainName").text(),
+            key: key,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.wpInstallLoading = true;
+            if (response.data.delete_status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Key deleted successfully.',
+                    type: 'success'
+                });
+                populateCurrentKeys();
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.wpInstallLoading = true;
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+        }
+
+
+    }
+
+    $scope.saveKey = function (key) {
+
+        $scope.wpInstallLoading = false;
+
+        url = "/websites/addSSHKey";
+
+        var data = {
+            domain: $("#domainName").text(),
+            key: $scope.keyData,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.wpInstallLoading = true;
+            if (response.data.add_status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Key added successfully.',
+                    type: 'success'
+                });
+                populateCurrentKeys();
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+        }
+
+
+    }
+
+
+});
+newapp.controller('cloneWebsiteV2', function ($scope, $http, $timeout, $window) {
+
+    $('form').submit(function (e) {
+        e.preventDefault();
+    });
+
+    $scope.cyberpanelLoading = true;
+    $scope.installationDetailsForm = false;
+    $scope.installationProgress = true;
+    $scope.goBackDisable = true;
+
+    $scope.cloneEnter = function ($event) {
+        var keyCode = $event.which || $event.keyCode;
+        if (keyCode === 13) {
+            $scope.cyberpanelLoading = false;
+            $scope.startCloning();
+        }
+    };
+
+    var statusFile;
+
+    $scope.startCloning = function () {
+
+        $scope.cyberpanelLoading = false;
+        $scope.installationDetailsForm = true;
+        $scope.installationProgress = false;
+        $scope.goBackDisable = true;
+
+        $scope.currentStatus = "Cloning started..";
+
+        url = "/websites/startCloning";
+
+
+        var data = {
+            masterDomain: $("#domainName").text(),
+            domainName: $scope.domain
+
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+
+            if (response.data.status === 1) {
+                statusFile = response.data.tempStatusPath;
+                getCreationStatus();
+            } else {
+
+                $scope.cyberpanelLoading = true;
+                $scope.installationDetailsForm = true;
+                $scope.installationProgress = false;
+                $scope.goBackDisable = false;
+
+                $scope.currentStatus = response.data.error_message;
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.cyberpanelLoading = true;
+            $scope.installationDetailsForm = true;
+            $scope.installationProgress = false;
+            $scope.goBackDisable = false;
+
+        }
+
+    };
+    $scope.goBack = function () {
+        $scope.cyberpanelLoading = true;
+        $scope.installationDetailsForm = false;
+        $scope.installationProgress = true;
+        $scope.goBackDisable = true;
+        $("#installProgress").css("width", "0%");
+    };
+
+    function getCreationStatus() {
+
+        url = "/websites/installWordpressStatus";
+
+        var data = {
+            statusFile: statusFile
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.abort === 1) {
+
+                if (response.data.installStatus === 1) {
+
+                    $scope.cyberpanelLoading = true;
+                    $scope.installationDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.goBackDisable = false;
+
+                    $("#installProgress").css("width", "100%");
+                    $scope.installPercentage = "100";
+                    $scope.currentStatus = response.data.currentStatus;
+                    $timeout.cancel();
+
+                } else {
+
+                    $scope.cyberpanelLoading = true;
+                    $scope.installationDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.goBackDisable = false;
+
+                    $scope.currentStatus = response.data.error_message;
+
+                    $("#installProgress").css("width", "0%");
+                    $scope.installPercentage = "0";
+                    $scope.goBackDisable = false;
+
+                }
+
+            } else {
+                $("#installProgress").css("width", response.data.installationProgress + "%");
+                $scope.installPercentage = response.data.installationProgress;
+                $scope.currentStatus = response.data.currentStatus;
+                $timeout(getCreationStatus, 1000);
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.cyberpanelLoading = true;
+            $scope.installationDetailsForm = true;
+            $scope.installationProgress = false;
+            $scope.goBackDisable = false;
+
+        }
+
+
+    }
+
+});
 
 
 

@@ -127,7 +127,94 @@
                     <td ng-bind="record.date" class="px-6 py-4">
                     </td>
                     <td class="px-6 py-4">
-                        Restore
+                        {#                        <a onclick="return false;"#}
+                        {#                           class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-1 px-2 rounded"#}
+                        {#                           href="#" data-modal-target="edit"#}
+                        {#                           data-modal-toggle="edit">{% trans " Restore Points" %}#}
+                        {#                        </a>#}
+                        {#                        <div id="edit" tabindex="-1"#}
+                        {#                             class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">#}
+                        {#                            <div class="relative p-4 w-full max-w-2xl max-h-full">#}
+                        {#                                <div class="relative bg-white shadow dark:bg-gray-700">#}
+                        {#                                    <div class="flex items-center bg-blue-400 px-4 py-4">#}
+                        {#                                        <p class="font-bold">Restore Points</p>#}
+                        {#                                        <img ng-hide="cyberpanelLoading"#}
+                        {#                                             src="{% static 'images/loading.gif' %}">#}
+                        {#                                        <button type="button" data-modal-toggle="edit"#}
+                        {#                                                class="absolute top-2 end-1 text-black bg-transparent hover:text-black rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"#}
+                        {#                                                data-modal-hide="edit">#}
+                        {#                                            <svg class="w-3 h-3" aria-hidden="true"#}
+                        {#                                                 xmlns="http://www.w3.org/2000/svg" fill="none"#}
+                        {#                                                 viewBox="0 0 14 14">#}
+                        {#                                                <path stroke="currentColor" stroke-linecap="round"#}
+                        {#                                                      stroke-linejoin="round" stroke-width="2"#}
+                        {#                                                      d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>#}
+                        {#                                            </svg>#}
+                        {#                                            <span class="sr-only">Close modal</span>#}
+                        {#                                        </button>#}
+                        {#                                    </div>#}
+                        {#                                    <div class="p-4 md:p-5">#}
+                        {#                                        <div class="relative py-5 overflow-x-auto">#}
+                        {#                                            <table class="w-full text-sm text-left rtl:text-right">#}
+                        {#                                                <thead>#}
+                        {#                                                <tr class="bg-gray-200 mt-6 w-full rounded-t-lg border-b-2 border-gray-400">#}
+                        {#                                                    <th scope="col" class="px-6 py-3">#}
+                        {#                                                        Job ID#}
+                        {#                                                    </th>#}
+                        {#                                                    <th scope="col" class="px-6 py-3">#}
+                        {#                                                        Snapshot ID#}
+                        {#                                                    </th>#}
+                        {#                                                    <th scope="col" class="px-6 py-3">#}
+                        {#                                                        Type#}
+                        {#                                                    </th>#}
+                        {#                                                    <th scope="col" class="px-6 py-3">#}
+                        {#                                                        Destination#}
+                        {#                                                    </th>#}
+                        {#                                                    <th scope="col" class="px-6 py-3">#}
+                        {#                                                        Action#}
+                        {#                                                    </th>#}
+                        {#                                                </tr>#}
+                        {#                                                </thead>#}
+                        {#                                                <tbody ng-repeat="job in jobs track by $index"#}
+                        {#                                                       class="border shadow-lg py-3 px-6 rounded-b-lg">#}
+                        {#                                                <tr>#}
+                        {#                                                    <td ng-bind="job.id" class="px-6 py-4">#}
+                        {#                                                    </td>#}
+                        {#                                                    <td ng-bind="job.snapshotid" class="px-6 py-4">#}
+                        {#                                                    </td>#}
+                        {#                                                    <td ng-bind="job.type" class="px-6 py-4">#}
+                        {#                                                    </td>#}
+                        {#                                                    <td ng-bind="job.destination" class="px-6 py-4">#}
+                        {#                                                    </td>#}
+                        {#                                                    <td class="px-6 py-4">#}
+                        {#                                                        <a ng-click="restorePoint(job.id, 0)"#}
+                        {#                                                           class="btn btn-border btn-alt border-green btn-link font-green"#}
+                        {#                                                           title=""><span>Restore</span></a>#}
+                        {#                                                    </td>#}
+                        {#                                                </tr>#}
+                        {#                                                </tbody>#}
+                        {#                                            </table>#}
+                        {#                                        </div>#}
+                        {#                                        <div ng-hide="restoreSt">#}
+                        {#                                            <div>#}
+                        {#                                                <div>#}
+                        {#                                                    <textarea ng-model="status"#}
+                        {#                                                              class="w-full"#}
+                        {#                                                              rows="7"></textarea>#}
+                        {#                                                </div>#}
+                        {#                                            </div>#}
+                        {#                                        </div>#}
+                        {#                                        <div class="flex justify-end mt-3">#}
+                        {#                                            <button data-modal-toggle="edit"#}
+                        {#                                                    data-modal-hide="edit"#}
+                        {#                                                    class="ml-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">#}
+                        {#                                                Close#}
+                        {#                                            </button>#}
+                        {#                                        </div>#}
+                        {#                                    </div>#}
+                        {#                                </div>#}
+                        {#                            </div>#}
+                        {#                        </div>#}
                     </td>
                     <td ng-click="deleteBackup(record.id)" class="px-6 py-4">
                         <img class="ml-2 cursor-pointer" src="{% static 'images/delete.png' %}">
@@ -135,6 +222,94 @@
                 </tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+    <a onclick="return false;"
+       class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-1 px-2 rounded"
+       href="#" data-modal-target="edit"
+       data-modal-toggle="edit">{% trans " Restore Points" %}
+    </a>
+    <div id="edit" tabindex="-1"
+         class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+        <div class="relative p-4 w-full max-w-2xl max-h-full">
+            <div class="relative bg-white shadow dark:bg-gray-700">
+                <div class="flex items-center bg-blue-400 px-4 py-4">
+                    <p class="font-bold">Restore Points</p>
+                    <img ng-hide="cyberpanelLoading"
+                         src="{% static 'images/loading.gif' %}">
+                    <button type="button" data-modal-toggle="edit"
+                            class="absolute top-2 end-1 text-black bg-transparent hover:text-black rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
+                            data-modal-hide="edit">
+                        <svg class="w-3 h-3" aria-hidden="true"
+                             xmlns="http://www.w3.org/2000/svg" fill="none"
+                             viewBox="0 0 14 14">
+                            <path stroke="currentColor" stroke-linecap="round"
+                                  stroke-linejoin="round" stroke-width="2"
+                                  d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                        </svg>
+                        <span class="sr-only">Close modal</span>
+                    </button>
+                </div>
+                <div class="p-4 md:p-5">
+                    <div class="relative py-5 overflow-x-auto">
+                        <table class="w-full text-sm text-left rtl:text-right">
+                            <thead>
+                            <tr class="bg-gray-200 mt-6 w-full rounded-t-lg border-b-2 border-gray-400">
+                                <th scope="col" class="px-6 py-3">
+                                    Job ID
+                                </th>
+                                <th scope="col" class="px-6 py-3">
+                                    Snapshot ID
+                                </th>
+                                <th scope="col" class="px-6 py-3">
+                                    Type
+                                </th>
+                                <th scope="col" class="px-6 py-3">
+                                    Destination
+                                </th>
+                                <th scope="col" class="px-6 py-3">
+                                    Action
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody ng-repeat="job in jobs track by $index"
+                                   class="border shadow-lg py-3 px-6 rounded-b-lg">
+                            <tr>
+                                <td ng-bind="job.id" class="px-6 py-4">
+                                </td>
+                                <td ng-bind="job.snapshotid" class="px-6 py-4">
+                                </td>
+                                <td ng-bind="job.type" class="px-6 py-4">
+                                </td>
+                                <td ng-bind="job.destination" class="px-6 py-4">
+                                </td>
+                                <td class="px-6 py-4">
+                                    <a ng-click="restorePoint(job.id, 0)"
+                                       class="btn btn-border btn-alt border-green btn-link font-green"
+                                       title=""><span>Restore</span></a>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div ng-hide="restoreSt">
+                        <div>
+                            <div class="border">
+                                                    <textarea ng-model="status"
+                                                              class="w-full"
+                                                              rows="7"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-end mt-3">
+                        <button data-modal-toggle="edit"
+                                data-modal-hide="edit"
+                                class="ml-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 {% endblock %}

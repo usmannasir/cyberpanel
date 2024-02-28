@@ -5,7 +5,7 @@
 
     {% load static %}
 
-    <div ng-controller="manageEmailLists" class="p-8">
+    <div ng-controller="manageEmailListsV2" class="p-8">
         <div>
             <div class="flex justify-between items-center">
                 <div>
@@ -19,7 +19,7 @@
             </div>
         </div>
         <div>
-            <div class="py-4">
+            <div class="flex items-center py-4">
                 <p class="text-xl font-bold">Manage Email Lists</p>
                 <img ng-hide="cyberPanelLoading"
                      src="{% static 'images/loading.gif' %}">

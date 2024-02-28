@@ -71,6 +71,15 @@ def manageLists(request, domain):
         return redirect(loadLoginPage)
 
 
+def manageListsV2(request, domain):
+    try:
+        userID = request.session['userID']
+        emm = EmailMarketingManager(request, domain)
+        return emm.manageListsV2()
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 def configureVerify(request, domain):
     try:
         userID = request.session['userID']
@@ -188,6 +197,15 @@ def composeEmailMessage(request):
         return redirect(loadLoginPage)
 
 
+def composeEmailMessageV2(request):
+    try:
+        userID = request.session['userID']
+        emm = EmailMarketingManager(request)
+        return emm.composeEmailMessageV2()
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 def saveEmailTemplate(request):
     try:
         userID = request.session['userID']
@@ -202,6 +220,15 @@ def sendEmails(request):
         userID = request.session['userID']
         emm = EmailMarketingManager(request)
         return emm.sendEmails()
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def sendEmailsV2(request):
+    try:
+        userID = request.session['userID']
+        emm = EmailMarketingManager(request)
+        return emm.sendEmailsV2()
     except KeyError:
         return redirect(loadLoginPage)
 

@@ -38,6 +38,121 @@
                     </select>
                 </div>
             </div>
+            <div id="GDrive" tabindex="-1"
+                 class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+                <div class="relative p-4 w-full max-w-2xl max-h-full">
+                    <div class="relative bg-white shadow dark:bg-gray-700">
+                        <div class="flex items-center bg-blue-400 px-4 py-4">
+                            <p class="font-bold">Convert Child Domain to Normal Website</p>
+                            <button type="button" data-modal-toggle="edit"
+                                    class="absolute top-2 end-1 text-black bg-transparent hover:text-black rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
+                                    data-modal-hide="edit">
+                                <svg class="w-3 h-3" aria-hidden="true"
+                                     xmlns="http://www.w3.org/2000/svg" fill="none"
+                                     viewBox="0 0 14 14">
+                                    <path stroke="currentColor" stroke-linecap="round"
+                                          stroke-linejoin="round" stroke-width="2"
+                                          d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                                </svg>
+                                <span class="sr-only">Close modal</span>
+                            </button>
+                        </div>
+                        <div class="p-4 md:p-5">
+                            <form name="containerSettingsForm">
+                                <div ng-hide="installationDetailsForm"
+                                     class="flex mt-4 py-2 px-6">
+                                    <div>
+                                        <p class="font-semibold w-60">Domain Name</p>
+                                    </div>
+                                    <div>
+                                        <input name="dom" type="text"
+                                               class="w-80 bg-gray-100 rounded px-2 py-1"
+                                               ng-model="domainName"
+                                               placeholder="{% trans "Do not enter WWW, it will be auto created!" %}"
+                                               readonly>
+                                    </div>
+                                </div>
+                            </form>
+                            <div class="flex justify-end mt-3">
+                                <button ng-click="convert()"
+                                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                                    Convert
+                                </button>
+                                <button data-modal-toggle="edit"
+                                        data-modal-hide="edit"
+                                        class="ml-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div id="SFTPModal" class="modal fade" role="dialog">
+                <div class="modal-dialog modal-lg">
+
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;
+                            </button>
+                            <h4 class="modal-title">{% trans "Set up account" %}</h4>
+                        </div>
+                        <div class="modal-body">
+
+                            <form name="containerSettingsForm" action="/" class="form-horizontal">
+
+                                <div ng-hide="installationDetailsForm" class="form-group">
+                                    <label class="col-sm-3 control-label">{% trans "Repo Name" %}</label>
+                                    <div class="col-sm-6">
+                                        <input name="reponame" type="text" class="form-control"
+                                               ng-model="reponame">
+                                    </div>
+                                </div>
+
+                                <div ng-hide="installationDetailsForm" class="form-group">
+                                    <label class="col-sm-3 control-label">{% trans "Host Name" %}</label>
+                                    <div class="col-sm-6">
+                                        <input name="accountName" type="text" class="form-control"
+                                               ng-model="hostName">
+                                    </div>
+                                </div>
+
+                                <div ng-hide="installationDetailsForm" class="form-group">
+                                    <label class="col-sm-3 control-label">{% trans "Username" %}</label>
+                                    <div class="col-sm-6">
+                                        <input name="accountName" type="text" class="form-control"
+                                               ng-model="UserName">
+                                    </div>
+                                </div>
+
+                                <div ng-hide="installationDetailsForm" class="form-group">
+                                    <label class="col-sm-3 control-label">{% trans "Password" %}</label>
+                                    <div class="col-sm-6">
+                                        <input name="accountName" type="text" class="form-control"
+                                               ng-model="sfptpasswd">
+                                    </div>
+                                </div>
+
+                            </form>
+
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary"
+                                    ng-click="ConfigerSFTP()">Save <img
+                                    ng-hide="cyberpanelLoading"
+                                    src="{% static 'images/loading.gif' %}">
+                            </button>
+                            <button type="button" ng-disabled="savingSettings"
+                                    class="btn btn-default" data-dismiss="modal">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             {#            <div>#}
             {#                <div class="flex justify-center mt-6 mb-2">#}
             {#                    <button id="CreateV2BackupButton" ng-click="CreateV2BackupButton()"#}

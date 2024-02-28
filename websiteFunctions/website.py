@@ -5357,6 +5357,22 @@ StrictHostKeyChecking no
                         {'domainName': self.domain, 'externalApp': externalApp})
         return proc.render()
 
+    def sshAccessV2(self, request=None, userID=None, data=None):
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+        if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        website = Websites.objects.get(domain=self.domain)
+        externalApp = website.externalApp
+
+        proc = httpProc(request, 'websiteFunctions/sshAccessV2.html',
+                        {'domainName': self.domain, 'externalApp': externalApp})
+        return proc.render()
+
     def saveSSHAccessChanges(self, userID=None, data=None):
         try:
 
@@ -5408,6 +5424,22 @@ StrictHostKeyChecking no
         externalApp = website.externalApp
 
         proc = httpProc(request, 'websiteFunctions/setupStaging.html',
+                        {'domainName': self.domain, 'externalApp': externalApp})
+        return proc.render()
+
+    def setupStagingV2(self, request=None, userID=None, data=None):
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+        if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        website = Websites.objects.get(domain=self.domain)
+        externalApp = website.externalApp
+
+        proc = httpProc(request, 'websiteFunctions/setupStagingV2.html',
                         {'domainName': self.domain, 'externalApp': externalApp})
         return proc.render()
 
