@@ -3572,6 +3572,90 @@ class WebsiteManager:
         else:
             proc = httpProc(request, 'websiteFunctions/launchChild.html',
                             {"error": 1, "domain": "This child domain does not exists"})
+
+    def launchChildv2(self, request=None, userID=None, data=None):
+
+        if ChildDomains.objects.filter(domain=self.childDomain).exists():
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            website = Websites.objects.get(domain=self.domain)
+
+            Data = {}
+
+            Data['ftpTotal'] = website.package.ftpAccounts
+            Data['ftpUsed'] = website.users_set.all().count()
+
+            Data['databasesUsed'] = website.databases_set.all().count()
+            Data['databasesTotal'] = website.package.dataBases
+
+            Data['domain'] = self.domain
+            Data['childDomain'] = self.childDomain
+
+            DiskUsage, DiskUsagePercentage, bwInMB, bwUsage = virtualHostUtilities.FindStats(website)
+
+            ## bw usage calculations
+
+            Data['bwInMBTotal'] = website.package.bandwidth
+            Data['bwInMB'] = bwInMB
+            Data['bwUsage'] = bwUsage
+
+            if DiskUsagePercentage > 100:
+                DiskUsagePercentage = 100
+
+            Data['diskUsage'] = DiskUsagePercentage
+            Data['diskInMB'] = DiskUsage
+            Data['diskInMBTotal'] = website.package.diskSpace
+
+            Data['phps'] = PHPManager.findPHPVersions()
+
+            servicePath = '/home/cyberpanel/postfix'
+            if os.path.exists(servicePath):
+                Data['email'] = 1
+            else:
+                Data['email'] = 0
+
+            servicePath = '/home/cyberpanel/pureftpd'
+            if os.path.exists(servicePath):
+                Data['ftp'] = 1
+            else:
+                Data['ftp'] = 0
+
+            ## Getting SSL Information
+            try:
+                import OpenSSL
+                from datetime import datetime
+                filePath = '/etc/letsencrypt/live/%s/fullchain.pem' % (self.childDomain)
+                x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM,
+                                                       open(filePath, 'r').read())
+                expireData = x509.get_notAfter().decode('ascii')
+                finalDate = datetime.strptime(expireData, '%Y%m%d%H%M%SZ')
+
+                now = datetime.now()
+                diff = finalDate - now
+                Data['viewSSL'] = 1
+                Data['days'] = str(diff.days)
+                Data['authority'] = x509.get_issuer().get_components()[1][1].decode('utf-8')
+
+                if Data['authority'] == 'Denial':
+                    Data['authority'] = '%s has SELF-SIGNED SSL.' % (self.childDomain)
+                else:
+                    Data['authority'] = '%s has SSL from %s.' % (self.childDomain, Data['authority'])
+
+            except BaseException as msg:
+                Data['viewSSL'] = 0
+                logging.CyberCPLogFileWriter.writeToFile(str(msg))
+
+            proc = httpProc(request, 'websiteFunctions/launchChildv2.html', Data)
+            return proc.render()
+        else:
+            proc = httpProc(request, 'websiteFunctions/launchChildv2.html',
+                            {"error": 1, "domain": "This child domain does not exists"})
             return proc.render()
 
     def getDataFromLogFile(self, userID=None, data=None):

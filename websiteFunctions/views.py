@@ -1324,6 +1324,14 @@ def launchChild(request, domain, childDomain):
     except KeyError:
         return redirect(loadLoginPage)
 
+def launchChildv2(request, domain, childDomain):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager(domain, childDomain)
+        return wm.launchChildv2(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
 
 def getDataFromLogFile(request):
     try:
