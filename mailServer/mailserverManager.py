@@ -108,6 +108,10 @@ class MailServerManager(multi.Thread):
             domainName = data['domain']
             userName = data['username'].lower()
             password = data['passwordByPass']
+            try:
+                EmailLimits = data['EmailLimits']
+            except:
+                EmailLimits = -1
 
 
             admin = Administrator.objects.get(pk=userID)
@@ -122,6 +126,22 @@ class MailServerManager(multi.Thread):
             result = mailUtilities.createEmailAccount(domainName, userName.lower(), password)
 
             if result[0] == 1:
+
+                if EmailLimits != -1:
+
+                    lt = '30d'
+                    limitString = f'@{domainName} {str(EmailLimits)}/{lt}\n'
+
+                    RandomFile = "/home/cyberpanel/" + str(randint(100000, 999999))
+                    writeToFile = open(RandomFile, 'w')
+                    writeToFile.write(limitString)
+                    writeToFile.close()
+
+                    execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+                    execPath = execPath + f" SaveEmailLimitsNew --tempConfigPath {RandomFile}"
+                    ProcessUtilities.outputExecutioner(execPath)
+
+
                 data_ret = {'status': 1, 'createEmailStatus': 1, 'error_message': "None"}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
