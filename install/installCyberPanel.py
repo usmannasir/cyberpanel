@@ -413,7 +413,7 @@ gpgcheck=1
                 passwordCMD = "use mysql;DROP DATABASE IF EXISTS test;DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%%';GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '%s';flush privileges;" % (
                     InstallCyberPanel.mysql_Root_password)
 
-            command = 'mysql -u root -e "' + passwordCMD + '"'
+            command = 'mariadb -u root -e "' + passwordCMD + '"'
 
             install.preFlightsChecks.call(command, self.distro, command, command, 0, 0, os.EX_OSERR)
 
