@@ -94,6 +94,22 @@ class ApplicationInstaller(multi.Thread):
         command = f'/usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/upgrade.py "SoftUpgrade,{self.data["branchSelect"]}"'
         ProcessUtilities.executioner(command)
 
+    @staticmethod
+    def setupComposer():
+
+        if os.path.exists('composer.sh'):
+            os.remove('composer.sh')
+
+        if not os.path.exists('/usr/bin/composer'):
+            command = "wget https://cyberpanel.sh/composer.sh"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = "chmod +x composer.sh"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = "./composer.sh"
+            ProcessUtilities.executioner(command, 'root', True)
+
     def InstallNodeJS(self):
 
         command = 'npm'
@@ -102,8 +118,39 @@ class ApplicationInstaller(multi.Thread):
             return 1
 
         if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-            command = 'dnf module enable nodejs -y dnf install nodejs -y'
-            ProcessUtilities.executioner(command, 'root', True)
+            nodeV = ProcessUtilities.fetch_latest_lts_version_for_node()
+
+            if ACLManager.ISARM():
+                command = f'wget https://nodejs.org/dist/{nodeV}/node-{nodeV}-linux-arm64.tar.xz'
+                ProcessUtilities.executioner(command, 'root', True)
+
+                command = f'tar -xf node-{nodeV}-linux-arm64.tar.xz '
+                ProcessUtilities.executioner(command, 'root', True)
+
+                command = f'cp node-{nodeV}-linux-arm64/bin/node /usr/bin/node'
+                ProcessUtilities.executioner(command, 'root', True)
+
+                command = 'curl -qL https://www.npmjs.com/install.sh | sh'
+                ProcessUtilities.executioner(command, 'root', True)
+
+                command = f'rm -rf node-{nodeV}-linux-arm64*'
+                ProcessUtilities.executioner(command, 'root', True)
+            else:
+
+                command = f'wget https://nodejs.org/dist/{nodeV}/node-{nodeV}-linux-x64.tar.xz'
+                ProcessUtilities.executioner(command, 'root', True)
+
+                command = f'tar -xf node-{nodeV}-linux-x64.tar.xz'
+                ProcessUtilities.executioner(command, 'root', True)
+
+                command = f'cp node-{nodeV}-linux-x64/bin/node /usr/bin/node'
+                ProcessUtilities.executioner(command, 'root', True)
+
+                command = 'curl -qL https://www.npmjs.com/install.sh | sh'
+                ProcessUtilities.executioner(command, 'root', True)
+
+                command = f'rm -rf node-{nodeV}-linux-x64*'
+                ProcessUtilities.executioner(command, 'root', True)
         else:
             #command = 'curl -fsSL <https://deb.nodesource.com/setup_20.x> | sudo -E bash -'
             #ProcessUtilities.executioner(command, 'root', True)
@@ -133,6 +180,8 @@ class ApplicationInstaller(multi.Thread):
             statusFile.close()
 
             self.InstallNodeJS()
+            from plogical.upgrade import Upgrade
+            ApplicationInstaller.setupComposer()
 
 
             ### lets first find php path

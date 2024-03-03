@@ -376,4 +376,23 @@ class ProcessUtilities(multi.Thread):
         return execPath
 
 
+    @staticmethod
+    def fetch_latest_lts_version_for_node():
+        import requests
+        url = "https://api.github.com/repos/nodejs/node/releases"
+        try:
+            response = requests.get(url)
+            if response.status_code == 200:
+                releases = response.json()
+                for release in releases:
+                    if release.get('prerelease') == False and 'LTS' in release.get('name'):
+                        lts_version = release.get('tag_name')
+                        return lts_version
+            else:
+                print("Failed to fetch releases. Status code:", response.status_code)
+        except Exception as e:
+            print("An error occurred:", e)
+        return None
+
+
 
