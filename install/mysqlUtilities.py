@@ -14,7 +14,7 @@ class mysqlUtilities:
                 from json import loads
                 mysqlData = loads(open("/etc/cyberpanel/mysqlPassword", 'r').read())
 
-                initCommand = 'mysql -h %s --port %s -u %s -p%s -e "' % (mysqlData['mysqlhost'], mysqlData['mysqlport'], mysqlData['mysqluser'], mysqlData['mysqlpassword'])
+                initCommand = 'mariadb -h %s --port %s -u %s -p%s -e "' % (mysqlData['mysqlhost'], mysqlData['mysqlport'], mysqlData['mysqluser'], mysqlData['mysqlpassword'])
                 remote = 1
             except:
                 passFile = "/etc/cyberpanel/mysqlPassword"
@@ -23,7 +23,7 @@ class mysqlUtilities:
                 data = f.read()
                 password = data.split('\n', 1)[0]
 
-                initCommand = 'mysql -u root -p' + password + ' -e "'
+                initCommand = 'mariadb -u root -p' + password + ' -e "'
                 remote = 0
 
             command = initCommand + createDB + '"'
