@@ -374,9 +374,11 @@ class ApacheVhost:
         # General Configurations tab
         try:
             confFile = open(vhFile, "w+")
+            virtualHostName = vhFile.split('/')[6]
 
             currentConf = vhostConfs.OLSLBConf
             currentConf = currentConf.replace('{adminEmails}', administratorEmail)
+            currentConf = currentConf.replace('{domain}', virtualHostName)
 
             confFile.write(currentConf)
             confFile.close()

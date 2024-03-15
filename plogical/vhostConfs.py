@@ -395,6 +395,19 @@ REWRITERULE ^(.*)$ HTTP://proxyApacheBackendSSL/$1 [P,L]
   END_rules
 }
 
+vhssl  {
+  keyFile                 /etc/letsencrypt/live/{domain}/privkey.pem
+  certFile                /etc/letsencrypt/live/{domain}/fullchain.pem
+  certChain               1
+  sslProtocol             24
+  enableECDHE             1
+  renegProtection         1
+  sslSessionCache         1
+  enableSpdy              15
+  enableStapling           1
+  ocspRespMaxAge           86400
+}
+
 """
     phpFpmPool = """[{www}]
 listen = {sockPath}{Sock}.sock
