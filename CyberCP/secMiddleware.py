@@ -81,7 +81,8 @@ class secMiddleware:
                                 "(") > -1 or items.find(")") > -1 \
                                     or items.find("'") > -1 or items.find("[") > -1 or items.find(
                                 "]") > -1 or items.find("{") > -1 or items.find("}") > -1 \
-                                    or items.find(":") > -1 or items.find("<") > -1 or items.find(">") > -1 or items.find("&") > -1:
+                                    or items.find(":") > -1 or items.find("<") > -1 or items.find(
+                                ">") > -1 or items.find("&") > -1:
                                 logging.writeToFile(request.body)
                                 final_dic = {
                                     'error_message': "Data supplied is not accepted, following characters are not allowed in the input ` $ & ( ) [ ] { } ; : ‘ < >.",
@@ -109,7 +110,7 @@ class secMiddleware:
                         'cloudAPI') > -1 or FinalURL.find(
                         'verifyLogin') > -1 or FinalURL.find('submitUserCreation') > -1:
                         continue
-                    if key == 'scriptUrl' or key == 'CLAMAV_VIRUS' or key == "Rspamdserver" or key == 'smtpd_milters' or key == 'non_smtpd_milters' or key == 'key' or key == 'cert' or key == 'recordContentAAAA' or key == 'backupDestinations' or key == 'ports' \
+                    if key == 'ownerPassword' or key == 'scriptUrl' or key == 'CLAMAV_VIRUS' or key == "Rspamdserver" or key == 'smtpd_milters' or key == 'non_smtpd_milters' or key == 'key' or key == 'cert' or key == 'recordContentAAAA' or key == 'backupDestinations' or key == 'ports' \
                             or key == 'imageByPass' or key == 'passwordByPass' or key == 'PasswordByPass' or key == 'cronCommand' \
                             or key == 'emailMessage' or key == 'configData' or key == 'rewriteRules' \
                             or key == 'modSecRules' or key == 'recordContentTXT' or key == 'SecAuditLogRelevantStatus' \
@@ -121,7 +122,8 @@ class secMiddleware:
                         ")") > -1 \
                             or value.find("'") > -1 or value.find("[") > -1 or value.find("]") > -1 or value.find(
                         "{") > -1 or value.find("}") > -1 \
-                            or value.find(":") > -1 or value.find("<") > -1 or value.find(">") > -1 or value.find("&") > -1:
+                            or value.find(":") > -1 or value.find("<") > -1 or value.find(">") > -1 or value.find(
+                        "&") > -1:
                         logging.writeToFile(request.body)
                         final_dic = {
                             'error_message': "Data supplied is not accepted, following characters are not allowed in the input ` $ & ( ) [ ] { } ; : ‘ < >.",
