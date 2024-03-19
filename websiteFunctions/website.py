@@ -3326,6 +3326,13 @@ class WebsiteManager:
         configData = data['configData']
         self.domain = data['virtualHost']
 
+        if len(configData) == 0:
+            status = {"configstatus": 0, 'error_message': 'Error: you are trying to save empty vhost file, your website will stop working.'}
+
+            final_json = json.dumps(status)
+            return HttpResponse(final_json)
+
+
         command = 'cat %s' % ('/usr/local/lsws/conf/dvhost_redis.conf')
 
         if ProcessUtilities.outputExecutioner(command).find('127.0.0.1') == -1:
