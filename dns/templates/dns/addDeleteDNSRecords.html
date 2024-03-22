@@ -64,6 +64,8 @@
                                                 href="">AAAA</a></li>
                                         <li ng-click="fetchRecordsTabs('cNameRecord')" id="cNameRecord"><a
                                                 href="">CNAME</a></li>
+                                        <li ng-click="fetchRecordsTabs('httpsRecord')" id="httpsRecord"><a
+                                                href="">HTTPS</a></li>
                                         <li ng-click="fetchRecordsTabs('mxRecord')" id="mxRecord"><a href="">MX</a></li>
                                         <li ng-click="fetchRecordsTabs('txtRecord')" id="txtRecord"><a href="">TXT</a>
                                         </li>
@@ -158,6 +160,32 @@
 
                                 <!------------- CNAME Record box ------------->
 
+                                <!------------- HTTPS Record box ------------->
+
+
+                                <div class="col-sm-3 httpsRecord">
+                                    <input placeholder="{% trans 'Name' %}" type="text" class="form-control"
+                                           ng-model="recordName" required>
+                                </div>
+
+                                <div class="col-sm-3 httpsRecord">
+                                    <input placeholder="{% trans 'TTL' %}" type="number" min="0" max="86400" class="form-control"
+                                           ng-model="ttl" required>
+                                </div>
+
+                                <div class="col-sm-3 httpsRecord">
+                                    <input placeholder="{% trans 'Text' %}" type="text" class="form-control"
+                                           ng-model="recordContentHTTPS" required>
+                                </div>
+
+
+                                <div class="col-sm-3 httpsRecord">
+                                    <button style="width: 100%;" type="button" ng-click="addDNSRecord('HTTPS')"
+                                            class="btn btn-primary">{% trans "Add" %}</button>
+                                </div>
+
+                                <!------------- HTTPS Record box ------------->
+
                                 <!------------- MX Record box ------------->
 
 
@@ -187,7 +215,7 @@
                                             class="btn btn-primary">{% trans "Add" %}</button>
                                 </div>
 
-                                <!------------- CNAME Record box ------------->
+                                <!------------- MX Record box ------------->
 
 
                                 <!------------- SPF Record box ------------->
