@@ -223,6 +223,8 @@ class DNSManager:
                 fetchType = 'AAAA'
             elif currentSelection == 'cNameRecord':
                 fetchType = 'CNAME'
+            elif currentSelection == 'httpsRecord':
+                fetchType = 'HTTPS'
             elif currentSelection == 'mxRecord':
                 fetchType = 'MX'
             elif currentSelection == 'txtRecord':
@@ -355,7 +357,21 @@ class DNSManager:
                 recordContentCNAME = data['recordContentCNAME']  ## IP or pointing value
 
                 DNS.createDNSRecord(zone, value, recordType, recordContentCNAME, 0, ttl)
+            
+            elif recordType == "HTTPS":
 
+                if recordName == "@":
+                    value = zoneDomain
+                ## re.match
+                elif match(r'([1-9][0-9]{0,5})\s([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?\s?(alpn=[\da-z,-]+)?\s?(ipv4hint=[\d.,]+)?\s?(ipv6hint=[\da-zA-Z:,]+)?', recordName,
+                           M | I):
+                    value = recordName
+                else:
+                    value = recordName + "." + zoneDomain
+
+                recordContentHTTPS = data['recordContentHTTPS']  ## ## valid value with priority, cname link or domain and alpn and ipv4, ipv6 hints
+
+                DNS.createDNSRecord(zone, value, recordType, recordContentHTTPS, 0, ttl)
             elif recordType == "SPF":
 
                 if recordName == "@":
@@ -743,6 +759,8 @@ class DNSManager:
                     fetchType = 'AAAA'
                 elif currentSelection == 'cNameRecord':
                     fetchType = 'CNAME'
+                elif currentSelection == 'httpsRecord':
+                    fetchType = 'HTTPS'
                 elif currentSelection == 'mxRecord':
                     fetchType = 'MX'
                 elif currentSelection == 'txtRecord':
@@ -948,6 +966,21 @@ class DNSManager:
                     recordContentCNAME = data['recordContentCNAME']  ## IP or pointing value
 
                     DNS.createDNSRecordCloudFlare(cf, zone, value, recordType, recordContentCNAME, 0, ttl)
+
+                elif recordType == "HTTPS":
+
+                    if recordName == "@":
+                        value = zoneDomain
+                    ## re.match
+                    elif match(r'([1-9][0-9]{0,5})\s([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?\s?(alpn=[\da-z,-]+)?\s?(ipv4hint=[\d.,]+)?\s?(ipv6hint=[\da-zA-Z:,]+)?', recordName,
+                               M | I):
+                        value = recordName
+                    else:
+                        value = recordName + "." + zoneDomain
+
+                    recordContentHTTPS = data['recordContentHTTPS']  ## valid value with priority, cname link or domain and alpn and ipv4, ipv6 hints
+
+                    DNS.createDNSRecordCloudFlare(cf, zone, value, recordType, recordContentHTTPS, 0, ttl)
 
                 elif recordType == "SPF":
 
