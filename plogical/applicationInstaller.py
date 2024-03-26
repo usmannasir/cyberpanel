@@ -33,7 +33,7 @@ class ApplicationInstaller(multi.Thread):
     REMOTE = 0
     PORT = '3306'
     MauticVersion = '4.4.9'
-    PrestaVersion = '1.7.8.3'
+    PrestaVersion = '8.1.5'
 
     def __init__(self, installApp, extraArgs):
         multi.Thread.__init__(self)
