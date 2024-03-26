@@ -170,6 +170,7 @@ app.controller('addModifyDNSRecords', function ($scope, $http) {
         // Hide records boxes
         $(".aaaaRecord").hide();
         $(".cNameRecord").hide();
+        $(".httpsRecord").hide();
         $(".mxRecord").hide();
         $(".txtRecord").hide();
         $(".spfRecord").hide();
@@ -237,6 +238,12 @@ app.controller('addModifyDNSRecords', function ($scope, $http) {
                 data.selectedZone = $scope.selectedZone;
                 data.recordName = $scope.recordName;
                 data.recordContentCNAME = $scope.recordContentCNAME;
+                data.ttl = $scope.ttl;
+                data.recordType = type;
+            } else if (type === "HTTPS") {
+                data.selectedZone = $scope.selectedZone;
+                data.recordName = $scope.recordName;
+                data.recordContentHTTPS = $scope.recordContentHTTPS;
                 data.ttl = $scope.ttl;
                 data.recordType = type;
             } else if (type === "SPF") {
@@ -815,6 +822,7 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http, $window
     // Hide records boxes
     $(".aaaaRecord").hide();
     $(".cNameRecord").hide();
+    $(".httpsRecord").hide();
     $(".mxRecord").hide();
     $(".txtRecord").hide();
     $(".spfRecord").hide();
@@ -881,6 +889,12 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http, $window
             data.selectedZone = $scope.selectedZone;
             data.recordName = $scope.recordName;
             data.recordContentCNAME = $scope.recordContentCNAME;
+            data.ttl = $scope.ttl;
+            data.recordType = type;
+        } else if (type === "HTTPS") {
+            data.selectedZone = $scope.selectedZone;
+            data.recordName = $scope.recordName;
+            data.recordContentHTTPS = $scope.recordContentHTTPS;
             data.ttl = $scope.ttl;
             data.recordType = type;
         } else if (type === "SPF") {

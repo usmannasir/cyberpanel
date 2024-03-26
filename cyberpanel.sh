@@ -349,6 +349,10 @@ elif [[ -d /etc/httpd/conf/plesk.conf.d/ ]] || [[ -d /etc/apache2/plesk.conf.d/ 
   echo -e "\nPlesk detected...\n"
   Debug_Log2 "Plesk detected...exit... [404]"
   exit
+elif [[ -d /usr/local/panel/ ]]; then
+  echo -e "\nOpenPanel detected...\n"
+  Debug_Log2 "OpenPanel detected...exit... [404]"
+  exit
 fi
 }
 
