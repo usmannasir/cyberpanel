@@ -1003,6 +1003,22 @@ class ApplicationInstaller(multi.Thread):
                 dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website)
                 self.permPath = '/home/%s/public_html' % (website.domain)
 
+            ### lets first find php path
+
+            from plogical.phpUtilities import phpUtilities
+
+            vhFile = f'/usr/local/lsws/conf/vhosts/{domainName}/vhost.conf'
+
+            phpPath = phpUtilities.GetPHPVersionFromFile(vhFile, domainName)
+
+            ### basically for now php 8.1 is being checked
+
+            if not os.path.exists(phpPath):
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines('PHP 8.1 missing installing now..,20')
+                statusFile.close()
+                phpUtilities.InstallSaidPHP('81')
+
             ## Security Check
 
             # command = 'chmod 755 %s' % (self.permPath)
@@ -1026,9 +1042,10 @@ class ApplicationInstaller(multi.Thread):
             statusFile.writelines('Downloading and extracting PrestaShop Core..,30')
             statusFile.close()
 
-            command = "wget https://download.prestashop.com/download/releases/prestashop_%s.zip -P %s" % (
-            ApplicationInstaller.PrestaVersion,
-            finalPath)
+            # command = "wget https://download.prestashop.com/download/releases/prestashop_%s.zip -P %s" % (
+            # ApplicationInstaller.PrestaVersion,
+            # finalPath)
+            command = f"wget https://github.com/PrestaShop/PrestaShop/releases/download/{ApplicationInstaller.PrestaVersion}/prestashop_{ApplicationInstaller.PrestaVersion}.zip -P {finalPath}"
             ProcessUtilities.executioner(command, externalApp)
 
             command = "unzip -o %sprestashop_%s.zip -d " % (finalPath, ApplicationInstaller.PrestaVersion) + finalPath
@@ -1036,6 +1053,7 @@ class ApplicationInstaller(multi.Thread):
 
             command = "unzip -o %sprestashop.zip -d " % (finalPath) + finalPath
             ProcessUtilities.executioner(command, externalApp)
+
 
             ##
 
@@ -1054,11 +1072,14 @@ class ApplicationInstaller(multi.Thread):
             statusFile.writelines('Installing and configuring PrestaShop..,60')
             statusFile.close()
 
-            command = "php " + finalPath + "install/index_cli.php --domain=" + finalURL + \
+            command = f"{phpPath} " + finalPath + "install/index_cli.php --domain=" + finalURL + \
                       " --db_server=localhost --db_name=" + dbName + " --db_user=" + dbUser + " --db_password=" + dbPassword \
                       + " --name='" + shopName + "' --firstname=" + firstName + " --lastname=" + lastName + \
                       " --email=" + email + " --password=" + password
-            ProcessUtilities.executioner(command, externalApp)
+            resut = ProcessUtilities.outputExecutioner(command, externalApp)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(resut)
 
             ##
 

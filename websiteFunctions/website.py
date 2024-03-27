@@ -4514,6 +4514,12 @@ StrictHostKeyChecking no
             if data['home'] == '0':
                 extraArgs['path'] = data['path']
 
+            completePathToConfigFile = f'/usr/local/lsws/conf/vhosts/{self.domain}/vhost.conf'
+
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = execPath + " changePHP --phpVersion 'PHP 8.1' --path " + completePathToConfigFile
+            ProcessUtilities.executioner(execPath)
+
             background = ApplicationInstaller('prestashop', extraArgs)
             background.start()
 
