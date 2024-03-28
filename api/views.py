@@ -73,6 +73,24 @@ def createWebsite(request):
     wm = WebsiteManager()
     return wm.createWebsiteAPI(json.loads(request.body))
 
+@csrf_exempt
+def createDockersite(request):
+    data = json.loads(request.body)
+    adminUser = data['adminUser']
+    admin = Administrator.objects.get(userName=adminUser)
+
+    if os.path.exists(ProcessUtilities.debugPath):
+        logging.writeToFile(f'Create dockersite payload in API {str(data)}')
+
+    if admin.api == 0:
+        data_ret = {"existsStatus": 0, 'createDockerSiteStatus': 0,
+                    'error_message': "API Access Disabled."}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+    wm = WebsiteManager()
+    return wm.submitDockerSiteCreation(admin.owner, json.loads(request.body))
+
 
 @csrf_exempt
 def getPackagesListAPI(request):
