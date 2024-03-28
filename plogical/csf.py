@@ -154,16 +154,21 @@ def configservercsfiframe(request):
 
             # Some initial configurations
 
+            try:
+                cpPort = open(ProcessUtilities.portPath, 'r').read().split(':')[1].rstrip('\n')
+            except:
+                cPort = '8090'
+
             data = open('/etc/csf/csf.conf', 'r').readlines()
             writeToConf = open('/etc/csf/csf.conf', 'w')
 
             for items in data:
                 if items.find('TCP_IN') > -1 and items.find('=') > -1 and (items[0] != '#'):
                     writeToConf.writelines(
-                        'TCP_IN = "20,21,22,25,53,80,110,995,143,443,465,587,993,995,1025,7080,8090,40110:40210,8088,5678"\n')
+                        f'TCP_IN = "20,21,22,25,53,80,110,995,143,443,465,587,993,995,1025,7080,{cPort},40110:40210,8088,5678"\n')
                 elif items.find('TCP_OUT') > -1 and items.find('=') > -1 and (items[0] != '#'):
                     writeToConf.writelines(
-                        'TCP_OUT = "20,21,22,25,43,53,80,110,113,443,587,993,995,8090,40110:40210,8088,5678"\n')
+                        f'TCP_OUT = "20,21,22,25,43,53,80,110,113,443,587,993,995,{cPort},40110:40210,8088,5678"\n')
                 elif items.find('UDP_IN') > -1 and items.find('=') > -1 and (items[0] != '#'):
                     writeToConf.writelines('UDP_IN = "20,21,53,443"\n')
                 elif items.find('UDP_OUT') > -1 and items.find('=') > -1 and (items[0] != '#'):
