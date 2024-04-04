@@ -360,7 +360,7 @@ gpgcheck=1
             WriteToFile.write(RepoContent)
             WriteToFile.close()
 
-            command = 'dnf install mariadb-server -y'
+            command = 'yum install mariadb-server -y'
         elif self.distro == cent8 or self.distro == openeuler:
 
             clAPVersion = FetchCloudLinuxAlmaVersionVersion()
