@@ -48,16 +48,31 @@ class CloudLinuxDomains(CLMain):
                     "document_root": "/home/%s/public_html/" % (webs.domain),
                     "is_main": True,
                     "php": {
-                        "version": php,
-                        "ini_path": f"/usr/local/lsws/lsphp{php}/etc/php.d ",
+                        "version": php[:2],
+                        "ini_path": f"/usr/local/lsws/lsphp{php[:2]}/etc/php.d ",
                         "is_native": False
                     }
 
                 }
+
+
                 for webs in webs.childdomains_set.all():
+                    completePathToConfigFile = f'/usr/local/lsws/conf/vhosts/{webs.domain}/vhost.conf'
+                    from plogical.phpUtilities import phpUtilities
+                    from managePHP.phpManager import PHPManager
+                    phpVersion = phpUtilities.WrapGetPHPVersionFromFileToGetVersionWithPHP(completePathToConfigFile)
+                    php = PHPManager.getPHPString(phpVersion)
+
                     data[webs.domain] = {"owner": webs.master.externalApp,
                                          "document_root": webs.path,
-                                         "is_main": False}
+                                         "is_main": False,
+                                         "php": {
+                                             "version": php[:2],
+                                             "ini_path": f"/usr/local/lsws/lsphp{php[:2]}/etc/php.d ",
+                                             "is_native": False
+                                         }
+
+                                         }
 
             else:
                 data[webs.domain] = {"owner": webs.externalApp,
