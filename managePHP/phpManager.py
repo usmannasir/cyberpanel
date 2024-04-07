@@ -1,3 +1,5 @@
+import os.path
+
 from plogical.processUtilities import ProcessUtilities
 import json
 import re
@@ -28,12 +30,19 @@ class PHPManager:
             # Get the lines containing 'lsphp' in the output
             lsphp_lines = [line for line in result.split('\n') if 'lsphp' in line]
 
+
             # Extract the version from the lines and format it as 'PHP x.y'
             php_versions = ['PHP ' + line.split()[8][5] + '.' + line.split()[8][6:] for line in lsphp_lines]
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+                logging.writeToFile(f'Found PHP versions in findPHPVersions: {php_versions}')
 
             # Now php_versions contains the formatted PHP versions
             return php_versions
         except BaseException as msg:
+            from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+            logging.writeToFile(f'Error while finding php versions on system: {str(msg)}')
             return ['PHP 7.0', 'PHP 7.1', 'PHP 7.2', 'PHP 7.3', 'PHP 7.4', 'PHP 8.0', 'PHP 8.1']
 
     @staticmethod

@@ -49,12 +49,11 @@ class CloudLinuxDomains(CLMain):
                     "is_main": True,
                     "php": {
                         "version": php[:2],
-                        "ini_path": f"/usr/local/lsws/lsphp{php[:2]}/etc/php.d ",
+                        "ini_path": f"/usr/local/lsws/lsphp{php[:2]}/etc/php.d",
                         "is_native": False
                     }
 
                 }
-
 
                 for webs in webs.childdomains_set.all():
                     completePathToConfigFile = f'/usr/local/lsws/conf/vhosts/{webs.domain}/vhost.conf'
@@ -68,7 +67,7 @@ class CloudLinuxDomains(CLMain):
                                          "is_main": False,
                                          "php": {
                                              "version": php[:2],
-                                             "ini_path": f"/usr/local/lsws/lsphp{php[:2]}/etc/php.d ",
+                                             "ini_path": f"/usr/local/lsws/lsphp{php[:2]}/etc/php.d",
                                              "is_native": False
                                          }
 
