@@ -20,6 +20,9 @@ class DockerInstall:
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
 
+                command = 'yum install yum-utils -y'
+                ServerStatusUtil.executioner(command, statusFile)
+
                 command = 'yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo'
                 ServerStatusUtil.executioner(command, statusFile)
 
