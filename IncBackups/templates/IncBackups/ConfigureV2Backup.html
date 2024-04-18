@@ -69,6 +69,23 @@
                                                 </div>
                                             </div>
 
+                                            <div ng-hide="installationDetailsForm" class="form-group">
+                                                <p class="text-center"><a href="https://rclone.org/drive/#making-your-own-client-id">Learn how to create this.</a>. These field can be left empty but backups may not work then. </p>
+                                                <label class="col-sm-3 control-label">{% trans "client_id" %}</label>
+                                                <div class="col-sm-6">
+                                                    <input name="client_id" type="text" class="form-control"
+                                                           ng-model="client_id">
+                                                </div>
+                                            </div>
+
+                                            <div ng-hide="installationDetailsForm" class="form-group">
+                                                <label class="col-sm-3 control-label">{% trans "client_secret" %}</label>
+                                                <div class="col-sm-6">
+                                                    <input name="client_secret" type="text" class="form-control"
+                                                           ng-model="client_secret">
+                                                </div>
+                                            </div>
+
                                         </form>
 
                                     </div>

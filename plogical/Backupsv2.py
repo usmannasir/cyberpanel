@@ -203,6 +203,8 @@ port = {config["sshPort"]}
 [{config["accountname"]}]
 type = drive
 scope = drive
+client_id={config["client_id"]}
+client_secret={config["client_secret"]}
 token = {token}
 team_drive =
 '''

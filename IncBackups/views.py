@@ -747,6 +747,8 @@ def ConfigureV2BackupSetup(request):
         req_data['token_uri'] = request.GET.get('to')
         req_data['scopes'] = request.GET.get('s')
         req_data['accountname'] = request.GET.get('n')
+        req_data['client_id'] = request.GET.get('client_id')
+        req_data['client_secret'] = request.GET.get('client_secret')
         website = request.GET.get('d')
 
         # logging.writeToFile('domainname is ====%s'%(request.GET.get))
@@ -770,7 +772,9 @@ def ConfigureV2BackupSetup(request):
 
     except BaseException as msg:
         logging.writeToFile("Error configure"+str(msg))
-        return redirect(loadLoginPage)
+        data_ret = {'status': 0, 'error_message': str(msg) + request.get_raw_uri() }
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
 
 def CreateV2Backup(request):
     try:
