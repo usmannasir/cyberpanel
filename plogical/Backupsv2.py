@@ -199,6 +199,10 @@ port = {config["sshPort"]}
                 token = """{"access_token":"%s","token_type":"Bearer","refresh_token":"%s", "expiry":"2024-04-08T21:53:00.123456789Z"}""" % (
                 config["token"], config["refresh_token"])
 
+                if config["client_id"] == 'undefined':
+                    config["client_id"] = ''
+                    config["client_secret"] = ''
+
                 content = f'''
 [{config["accountname"]}]
 type = drive
