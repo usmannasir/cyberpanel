@@ -77,7 +77,7 @@ class ServiceManager:
             writeToFile.writelines('also-notify=' + ipStringNoSubnet + '\n')
             writeToFile.writelines('daemon=no\n')
             writeToFile.writelines('disable-axfr=no\n')
-            writeToFile.writelines('master=yes\n')
+            writeToFile.writelines('primary=yes\n')
             writeToFile.close()
 
             command = 'sudo mv ' + tempPath + ' ' + path
@@ -117,17 +117,17 @@ class ServiceManager:
                     writeToFile.writelines(items  + '\n')
 
                 slaveData = """
-slave=yes
+secondary=yes
 daemon=yes
 disable-axfr=yes
 guardian=yes
 local-address=0.0.0.0
 local-port=53
-master=no
-slave-cycle-interval=60
+primary=no
+xfr-cycle-interval=60
 setgid=pdns
 setuid=pdns
-superslave=yes
+autosecondary=yes
 """
 
                 writeToFile.writelines(slaveData)
