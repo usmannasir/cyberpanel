@@ -1,0 +1,45 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+
+    <div ng-controller="readErrorLogsV2" class="p-8">
+        <div class="flex lg:flex-row justify-between items-center sm:flex-col">
+            <div>
+                <p class="text-4xl font-bold">Error Logs</p>
+                <p class="text-xs text-gray-600 py-2 font-semibold">Error Logs for main web server.</p>
+            </div>
+        </div>
+        <div class="flex items-center py-4">
+            <p class="text-xl font-bold">Last 50 Lines</p>
+            <img ng-hide="logFileLoading" src="{% static 'images/loading.gif' %}">
+        </div>
+        <hr>
+        <div class="border mt-4 py-2 px-6">
+            <textarea ng-model="logsData" class="w-full" rows="30">{{ logs }}</textarea>
+        </div>
+        <div>
+            <div class="flex gap-2 justify-center mt-6 mb-2">
+                <button ng-click="fetchLogs()"
+                        class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                    Refresh
+                </button>
+                <button ng-click="clearLogs()"
+                        class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                    Clear Logs
+                </button>
+            </div>
+        </div>
+        <div ng-hide="logsFeteched"
+             class="flex justify-center w-full mt-2 bg-green-500 px-2 rounded-lg py-1 font-semibold">
+            <p>{% trans "Last 50 Lines Fetched" %}</p>
+        </div>
+        <div ng-hide="couldNotFetchLogs"
+             class="flex justify-center w-full mt-2 bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+            <p>{% trans "Could not fetch logs. Use the command line to view the log file." %}</p>
+        </div>
+    </div>
+{% endblock %}

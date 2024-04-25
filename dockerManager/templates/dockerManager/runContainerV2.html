@@ -1,0 +1,209 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="runContainerV2" class="p-8">
+        <div>
+            <div class="flex justify-between items-center">
+                <div>
+                    <div class="flex items-center">
+                        <p class="text-4xl font-bold">Run Container</p>
+                    </div>
+                </div>
+            </div>
+            <p class="text-xs text-gray-600 py-2 font-semibold">Modify parameters for your new container</p>
+        </div>
+        <div class="border px-8 py-2 mt-3">
+            <div class="flex justify-between items-center  py-4">
+                <div class="flex items-center">
+                    <p class="text-xl font-bold">Container Details</p>
+                    <img ng-hide="containerCreationLoading"
+                         src="{% static 'images/loading.gif' %}">
+                </div>
+            </div>
+            <div ng-hide="installationDetailsForm" class="flex py-2 px-6">
+                <div>
+                    <p class="font-semibold w-60">Name</p>
+                </div>
+                <div ng-init="name='{{ name }}' ">
+                    <input name="name" type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="name" required>
+                </div>
+            </div>
+            <div ng-hide="installationDetailsForm" class="flex py-2 px-6">
+                <div>
+                    <p class="font-semibold w-60">Image</p>
+                </div>
+                <div ng-init="image='{{ image }}' ">
+                    <input name="image" type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="image" required
+                           disabled="disabled">
+                </div>
+            </div>
+            <div ng-hide="installationDetailsForm" class="flex py-2 px-6">
+                <div>
+                    <p class="font-semibold w-60">Tag</p>
+                </div>
+                <div ng-init="tag='{{ tag }}' ">
+                    <input name="tag" type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="tag" required
+                           disabled="disabled">
+                </div>
+            </div>
+            <div ng-hide="installationDetailsForm" class="flex py-2 px-6">
+                <div>
+                    <p class="font-semibold w-60">Select Owner</p>
+                </div>
+                <div>
+                    <select ng-model="dockerOwner" class="w-80 bg-gray-100 rounded px-2 py-1">
+                        {% for items in ownerList %}
+                            <option>{{ items }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div ng-hide="installationDetailsForm" class="flex items-center py-2 px-6">
+                <div>
+                    <p class="font-semibold w-60">Memory limit</p>
+                </div>
+                <div>
+                    <input name="memory" type="number" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="memory"
+                           required>
+                </div>
+                <div class="ml-2">
+                    <p>MB</p>
+                </div>
+            </div>
+            {% for port, protocol in portConfig.items %}
+                <div ng-hide="installationDetailsForm" class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Port</p>
+                    </div>
+                    <div ng-init="iport[{{ port }}]={{ port }} ">
+                        <input name="iport[{{ port }}]" type="text" class="w-24 bg-gray-100 rounded px-2 py-1"
+                               ng-model="iport[{{ port }}]" required disabled="disabled">
+                    </div>
+                    <div class="ml-2" ng-init="portType['{{ port }}']='{{ protocol }}'">
+                        <input name="portType['{{ port }}']" type="text" class="w-20 bg-gray-100 rounded px-2 py-1"
+                               ng-model="portType['{{ port }}']" required disabled="disabled">
+                    </div>
+                    <div class="flex items-center ml-2">
+                        <p class="font-semibold w-8">to</p>
+                    </div>
+                    <div>
+                        <input name="eport['{{ port }}']" type="number" class="w-24 bg-gray-100 rounded px-2 py-1"
+                               ng-model="eport['{{ port }}']" required>
+                    </div>
+                </div>
+            {% endfor %}
+            <span ng-init="envList = {}"></span>
+            {% for env, value in envList.items %}
+                <span ng-init="envList[{{ forloop.counter0 }}] =  {'name':'{{ env }}' , 'value':'{{ value }}'} "></span>
+            {% endfor %}
+            <div class="border">
+                <div ng-hide="installationDetailsForm" class="flex justify-center mt-2">
+                    <p class="font-semibold">
+                        ENV
+                    </p>
+                </div>
+                <div ng-repeat="env in envList track by $index" ng-hide="installationDetailsForm"
+                     class="flex justify-center py-2 px-6">
+                    <div ng-show="$first">
+                        <p class="font-semibold"></p>
+                    </div>
+                    {#                <p class="font-semibold w-60"></p>#}
+                    <div>
+                        <input name="$index" type="text" class="w-80 bg-gray-100 rounded px-2 py-1"
+                               ng-model="envList[$index].name" required>
+                    </div>
+                    <div class="ml-1">
+                        <input name="$index" type="text" class="w-80 bg-gray-100 rounded px-2 py-1"
+                               ng-model="envList[$index].value" required>
+                    </div>
+                </div>
+                <div class="flex justify-center mt-2 mb-2" ng-hide="installationDetailsForm">
+                    <button type="button"
+                            class="bg-orange-500 px-3 py-1 rounded-lg font-semibold text-white cursor-pointer"
+                            ng-click="addEnvField()">Add more
+                    </button>
+                </div>
+            </div>
+            <div class="border mt-2">
+                <div ng-hide="installationDetailsForm" class="flex justify-center mt-2">
+                    <p class="font-semibold">
+                        Map Volumes
+                    </p>
+                </div>
+                <div ng-repeat="volume in volList track by $index" ng-hide="installationDetailsForm"
+                     class="flex items-center py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-28"></p>
+                    </div>
+                    {#                <p class="font-semibold w-60"></p>#}
+                    <div>
+                        <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="volList[$index].dest"
+                               placeholder="Destination" required>
+                    </div>
+                    <div class="ml-1">
+                        <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="volList[$index].src"
+                               placeholder="Source" required>
+                    </div>
+                    <div class="ml-1" ng-show="$last">
+                        <div>
+                            <button type="button" ng-click="removeVolField()">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                     stroke-width="1.5"
+                                     stroke="currentColor" class="w-6 h-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-center mt-2 mb-2" ng-hide="installationDetailsForm">
+                    <button type="button"
+                            class="bg-orange-500 px-3 py-1 rounded-lg font-semibold text-white cursor-pointer"
+                            ng-click="addVolField()">Add Field
+                    </button>
+                </div>
+            </div>
+            <div ng-hide="installationDetailsForm" class="flex justify-center mt-3">
+                <button ng-click="createContainer()"
+                        class="bg-orange-500 px-3 py-2 rounded-lg text-xl font-semibold text-white">
+                    Create Container
+                </button>
+            </div>
+            <div ng-hide="installationProgress" class="mt-2">
+                <div class="flex justify-center font-bold text-xl">
+                    <h2>{$ currentStatus $}</h2>
+                </div>
+                <div class="w-full bg-gray-100 rounded-full mt-3">
+                    <div id="installProgress"
+                         class="bg-green-600 text-xs font-medium text-white text-center p-2 leading-none rounded-full"
+                         style="width:0%">
+                    </div>
+                </div>
+                <div ng-hide="errorMessageBox"
+                     class="flex mt-2 justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                    <p>{% trans "Error message:" %} {$ errorMessage $}</p>
+                </div>
+                <div ng-hide="success" class="flex mt-2 justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                    <p>{% trans "Container succesfully created." %}</p>
+                </div>
+                <div ng-hide="couldNotConnect"
+                     class="flex mt-2 justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                    <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                </div>
+            </div>
+
+            <div ng-hide="installationProgress" class="flex justify-center mt-3">
+                <button ng-disabled="goBackDisable"
+                        ng-click="goBack()"
+                        class="bg-blue-500 px-3 py-2 rounded-lg text-xl font-semibold text-white">
+                    Go Back
+                </button>
+            </div>
+        </div>
+    </div>
+{% endblock %}

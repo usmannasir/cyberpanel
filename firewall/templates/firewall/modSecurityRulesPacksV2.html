@@ -1,0 +1,131 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="modSecRulesPackV2" class="p-8">
+        <div>
+            <div class="flex items-center">
+                <p class="text-4xl font-bold">ModSecurity Rules Packages! -</p>
+                <a target="_blank" href="http://go.cyberpanel.net/modsec-docs"
+                   class="bg-blue-200 px-2 font-bold mt-2 ml-3"
+                   title=""><span>{% trans "ModSec Docs" %}</span></a>
+            </div>
+            <p class="text-xs text-gray-600 py-2 font-semibold">Install/Un-install ModSecurity rules packages.</p>
+        </div>
+        <div class="border px-8 py-2">
+            <div class="flex items-center py-4">
+                <p class="text-xl font-bold">ModSecurity Rules Packages!</p>
+                <img ng-hide="modsecLoading" src="/static/images/loading.gif">
+            </div>
+            <div>
+                {% if modSecInstalled == 0 %}
+                    <div class="flex justify-center mt-3">
+                        <p>ModSecurity is not installed</p>
+                    </div>
+                    <div>
+                        <a href="{% url 'modSecurity' %}">
+                            <div class="flex justify-center mt-2 mb-4">
+                                <button ng-click="saveChanges()"
+                                        class="bg-orange-500 text-white font-semibold px-4 py-1 text-xl">
+                                    <div class="flex">
+                                        <p>Install Now</p>
+                                        <i class="glyph-icon icon-arrow-right"></i>
+                                    </div>
+                                </button>
+                            </div>
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="relative py-5 overflow-x-auto">
+                        <table id="datatable-example" class="w-full text-sm text-left rtl:text-right">
+                            <thead>
+                            <tr>
+                                <th scope="col" class="px-6 py-3">
+                                    Package
+                                </th>
+                                <th scope="col" class="px-6 py-3">
+                                    Status
+                                </th>
+                                <th scope="col" class="px-6 py-3">
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody class="border shadow-lg py-3 px-6 rounded-b-lg">
+                            <tr>
+                                <td class="px-6 py-4">OWASP ModSecurity Core Rules</td>
+                                <td class="px-6 py-4">
+                                    <div>
+                                        <label class="relative inline-flex items-center cursor-pointer mt-1">
+                                            <input id="owaspInstalled" type="checkbox" value=""
+                                                   class="sr-only peer">
+                                            <div class="w-11 h-6 bg-gray-200 rounded-full peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-orange-600">
+                                            </div>
+                                        </label>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <button type="button" ng-disabled="owaspDisable" ng-click="fetchRulesFile('owasp')"
+                                            class="bg-orange-500 text-white font-semibold px-2 py-1">{% trans "Configure" %}</button>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-2">
+                        <div ng-hide="installationQuote"
+                             class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                            <p>{% trans "Operation successful." %}</p>
+                        </div>
+                        <div ng-hide="couldNotConnect"
+                             class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                            <p>{% trans "Could not connect. Please refresh this page." %} </p>
+                        </div>
+                        <div ng-hide="installationFailed"
+                             class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                            <p>{% trans "Operation failed, Error message: " %} {$ errorMessage $}</p>
+                        </div>
+                        <div ng-hide="installationSuccess"
+                             class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                            <p>{% trans "Operation successful." %}</p>
+                        </div>
+                    </div>
+                    <div ng-hide="ruleFiles" class="relative py-5 overflow-x-auto">
+                        <table class="w-full text-sm text-left rtl:text-right">
+                            <thead>
+                            <tr>
+                                <th scope="col" class="px-6 py-3">
+                                    ID
+                                </th>
+                                <th scope="col" class="px-6 py-3">
+                                    Supplier
+                                </th>
+                                <th scope="col" class="px-6 py-3">
+                                    Filename
+                                </th>
+                                <th scope="col" class="px-6 py-3">
+                                    Status
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody ng-repeat="record in records track by $index"
+                                   class="border shadow-lg py-3 px-6 rounded-b-lg">
+                            <tr>
+                                <td ng-bind="record.id" class="px-6 py-4"></td>
+                                <td ng-bind="record.packName" class="px-6 py-4"></td>
+                                <td ng-bind="record.fileName" class="px-6 py-4"></td>
+                                <td class="px-6 py-4">
+                                    <input ng-click="removeRuleFile(record.fileName,record.packName,record.status)"
+                                           ng-checked="record.status" type="checkbox">
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    </div>
+                {% endif %}
+        </div>
+    </div>
+{% endblock %}

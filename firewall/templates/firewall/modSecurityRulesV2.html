@@ -1,0 +1,69 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="modSecRulesV2" class="p-8">
+        <div>
+            <div class="flex items-center">
+                <p class="text-4xl font-bold">ModSecurity Rules! -</p>
+                <a target="_blank" href="http://go.cyberpanel.net/modsec-docs"
+                   class="bg-blue-200 px-2 font-bold mt-2 ml-3"
+                   title=""><span>{% trans "ModSec Docs" %}</span></a>
+            </div>
+            <p class="text-xs text-gray-600 py-2 font-semibold">On this page you can add/delete ModSecurity rules.</p>
+        </div>
+        <div class="border px-8 py-2">
+            <div class="flex items-center py-4">
+                <p class="text-xl font-bold">ModSecurity Rules</p>
+                <img ng-hide="modsecLoading" src="/static/images/loading.gif">
+            </div>
+            <div>
+                {% if modSecInstalled == 1 %}
+                    <div>
+                        <textarea ng-model="currentModSecRules" rows="15" class="w-full border"></textarea>
+                    </div>
+                    <div class="flex justify-center mt-2">
+                        <button ng-click="saveModSecRules()"
+                                class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                            Save Rules!
+                        </button>
+                    </div>
+                    <div class="mt-2">
+                        <div ng-hide="rulesSaved"
+                             class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                            <p>{% trans "ModSecurity Rules Saved" %}</p>
+                        </div>
+                        <div ng-hide="couldNotConnect"
+                             class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                            <p>{% trans "Could not connect. Please refresh this page." %} </p>
+                        </div>
+                        <div ng-hide="couldNotSave"
+                             class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                            <p>{% trans "Could not save rules, Error message: " %} {$ errorMessage $}</p>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="flex justify-center mt-3">
+                        <p>ModSecurity is not installed</p>
+                    </div>
+                    <div>
+                        <a href="{% url 'modSecurity' %}">
+                            <div class="flex justify-center mt-2 mb-4">
+                                <button ng-click="saveChanges()"
+                                        class="bg-orange-500 text-white font-semibold px-4 py-1 text-xl">
+                                    <div class="flex">
+                                        <p>Install Now</p>
+                                        <i class="glyph-icon icon-arrow-right"></i>
+                                    </div>
+                                </button>
+                            </div>
+                        </a>
+                    </div>
+                    </div>
+                {% endif %}
+        </div>
+    </div>
+{% endblock %}

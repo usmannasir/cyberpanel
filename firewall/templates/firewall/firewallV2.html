@@ -1,0 +1,130 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="firewallControllerV2" class="p-8">
+        <div class="flex lg:flex-row justify-between items-center sm:flex-col">
+            <div>
+                <p class="text-4xl font-bold">Add/Delete Firewall Rules</p>
+                <p class="text-xs text-gray-600 py-2 font-semibold">On this page you can add/delete firewall rules. (By
+                    default all ports are blocked, except mentioned below)</p>
+            </div>
+        </div>
+        <div class="flex items-center py-4">
+            <p class="text-xl font-bold">Add/Delete Rules</p>
+            <img ng-hide="rulesLoading" src="{% static 'images/loading.gif' %}">
+        </div>
+        <hr>
+        <div class="flex justify-center gap-2 py-4">
+            <a class="bg-orange-500 text-white font-semibold px-2 py-1" href="">Status <span class="font-bold">{$ status
+                $}</span></a>
+            <a ng-click="startFirewall()" href="#" class="bg-green-500 text-white font-semibold px-2 py-1" title="">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                    <path fill-rule="evenodd"
+                          d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z"
+                          clip-rule="evenodd"/>
+                </svg>
+            </a>
+            <a ng-click="stopFirewall()" href="#" class="bg-red-500 text-white font-semibold px-2 py-1" title="">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                    <path fill-rule="evenodd"
+                          d="M6.75 5.25a.75.75 0 0 1 .75-.75H9a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H7.5a.75.75 0 0 1-.75-.75V5.25Zm7.5 0A.75.75 0 0 1 15 4.5h1.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H15a.75.75 0 0 1-.75-.75V5.25Z"
+                          clip-rule="evenodd"/>
+                </svg>
+            </a>
+            <a ng-click="reloadFireWall()" href="#" class="bg-blue-500 text-white font-semibold px-2 py-1" title="">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                    <path fill-rule="evenodd"
+                          d="M4.755 10.059a7.5 7.5 0 0 1 12.548-3.364l1.903 1.903h-3.183a.75.75 0 1 0 0 1.5h4.992a.75.75 0 0 0 .75-.75V4.356a.75.75 0 0 0-1.5 0v3.18l-1.9-1.9A9 9 0 0 0 3.306 9.67a.75.75 0 1 0 1.45.388Zm15.408 3.352a.75.75 0 0 0-.919.53 7.5 7.5 0 0 1-12.548 3.364l-1.902-1.903h3.183a.75.75 0 0 0 0-1.5H2.984a.75.75 0 0 0-.75.75v4.992a.75.75 0 0 0 1.5 0v-3.18l1.9 1.9a9 9 0 0 0 15.059-4.035.75.75 0 0 0-.53-.918Z"
+                          clip-rule="evenodd"/>
+                </svg>
+            </a>
+        </div>
+        <div class="mt-2">
+            <div ng-hide="actionFailed"
+                 class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                <p>{% trans "Action failed. Error message:" %} {$ errorMessage $}</p>
+            </div>
+            <div ng-hide="actionSuccess"
+                 class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                <p>{% trans "Action successful." %}</p>
+            </div>
+        </div>
+        <hr>
+        <div ng-hide="rulesDetails" class="flex mt-4 py-2 px-6 gap-2">
+            <div>
+                <input placeholder="Rule Name" type="text" class="bg-gray-100 rounded px-2 py-1"
+                       ng-model="ruleName"
+                       required>
+            </div>
+            <div>
+                <select ng-model="ruleProtocol" class="bg-gray-100 rounded px-2 py-1">
+                    <option>tcp</option>
+                    <option>udp</option>
+                </select>
+            </div>
+            <div>
+                <input placeholder="IP -> 0.0.0.0/0 for All IPs" type="text" class="bg-gray-100 rounded px-2 py-1"
+                       ng-model="ruleIP" required>
+            </div>
+            <div>
+                <input placeholder="Port" type="text" class="bg-gray-100 rounded px-2 py-1" ng-model="rulePort"
+                       required>
+            </div>
+            <div>
+                <button ng-click="addRule()" class="bg-orange-500 text-white font-semibold px-2 py-1">
+                    ADD
+                </button>
+            </div>
+        </div>
+        <hr>
+        <div ng-hide="rulesDetails" class="relative py-5 overflow-x-auto">
+            <table class="w-full text-sm text-left rtl:text-right">
+                <thead>
+                <tr>
+                    <th scope="col" class="px-6 py-3">
+                        ID
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Name
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Protocol
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        IP Address
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Port
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Delete
+                    </th>
+                </tr>
+                </thead>
+                <tbody ng-repeat="rule in rules track by $index"
+                       class="border shadow-lg py-3 px-6 rounded-b-lg">
+                <tr>
+                    <td ng-bind="rule.id" class="px-6 py-4">
+                    </td>
+                    <td ng-bind="rule.name" class="px-6 py-4">
+                    </td>
+                    <td ng-bind="rule.proto" class="px-6 py-4">
+                    </td>
+                    <td ng-bind="rule.ipAddress" class="px-6 py-4">
+                    </td>
+                    <td ng-bind="rule.port" class="px-6 py-4">
+                    </td>
+                    <td ng-click="deleteRule(rule.id,rule.proto,rule.port,rule.ipAddress)"
+                        class="px-6 py-4">
+                        <button class="bg-red-500 ml-2 px-2 py-1 rounded text-white font-bold">X</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

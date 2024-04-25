@@ -38,6 +38,7 @@ def loadPHPHome(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def installExtensions(request):
     try:
 
@@ -232,7 +233,6 @@ def installExtensions(request):
             phpExtension.save()
 
             ## non-active packages
-
 
             phpExtension = installedPackages(phpVers=php53,
                                              extensionName="lsphp53-debuginfo",
@@ -489,6 +489,1242 @@ def installExtensions(request):
 
             ## non-active packages
 
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-debuginfo",
+                                             description="Debug information for package lsphp54",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-mysql56-debuginfo",
+                                             description="Debug information for package lsphp54-mysql56",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-lsphp53-devel",
+                                             description="Files needed for building PHP extensions",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-mysql56",
+                                             description="PHP scripting language for creating dynamic web sites",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-mysqlnd",
+                                             description="A module for PHP applications that use MySQL databases",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-opcache",
+                                             description="The Zend OPcache",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-pecl-apc-devel",
+                                             description="APC developer files (header)",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-pecl-apc-panel",
+                                             description="APC control panel",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-sqlite",
+                                             description="Extension for the SQLite V2 Embeddable SQL Database Engine",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-xcache",
+                                             description="PHP accelerator, optimizer, encoder and dynamic content cacher",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-xcache-admin",
+                                             description="XCache Administration",
+                                             status=0)
+
+            phpExtension.save()
+
+            ### ################ #################
+
+            ##### Gather php 55 information
+
+            ### ################ #################
+
+            php55 = PHP.objects.get(phpVers="php55")
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-bcmath",
+                                             description="A module for PHP applications for using the bcmath library",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-common",
+                                             description="Common files for PHP",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-dba",
+                                             description="A database abstraction layer module for PHP applications",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-enchant",
+                                             description="Human Language and Character Encoding Support",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-gd",
+                                             description="A module for PHP applications for using the gd graphics library",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-imap",
+                                             description="A module for PHP applications that use IMAP",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-intl",
+                                             description="Internationalization extension for PHP application",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-ioncube-loader",
+                                             description="Ioncube Loader",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-ldap",
+                                             description="A module for PHP applications that use LDAP",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-mbstring",
+                                             description="A module for PHP applications which need multi-byte string handling",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-mcrypt",
+                                             description="Standard PHP module provides mcrypt library support",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-mysql",
+                                             description="A module for PHP applications that use MySQL databases",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-odbc",
+                                             description="A module for PHP applications that use ODBC databases",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-pdo",
+                                             description="A database access abstraction module for PHP applications",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-pear",
+                                             description="PHP Extension and Application Repository framework",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-pgsql",
+                                             description="A PostgreSQL database module for PHP",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-process",
+                                             description="Modules for PHP script using system process interfaces",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-pspell",
+                                             description="A module for PHP applications for using pspell interfaces",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-recode",
+                                             description="A module for PHP applications for using the recode library",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-snmp",
+                                             description="A module for PHP applications that query SNMP-managed devices",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-soap",
+                                             description="A module for PHP applications that use the SOAP protocol",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-tidy",
+                                             description="Standard PHP module provides tidy library support",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-xml",
+                                             description="A module for PHP applications which use XML",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-xmlrpc",
+                                             description="A module for PHP applications which use the XML-RPC protocol",
+                                             status=1)
+
+            phpExtension.save()
+
+            ## non-active packages
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-debuginfo",
+                                             description="Debug information for package lsphp55",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-mysql56-debuginfo",
+                                             description="Debug information for package lsphp55-mysql56",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-lsphp53-devel",
+                                             description="Files needed for building PHP extensions",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp55-mysql56",
+                                             description="PHP scripting language for creating dynamic web sites",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-mysqlnd",
+                                             description="A module for PHP applications that use MySQL databases",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-opcache",
+                                             description="The Zend OPcache",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-sqlite",
+                                             description="Extension for the SQLite V2 Embeddable SQL Database Engine",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-xcache",
+                                             description="PHP accelerator, optimizer, encoder and dynamic content cacher",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp55-xcache-admin",
+                                             description="XCache Administration",
+                                             status=0)
+
+            phpExtension.save()
+
+            ### ################ #################
+
+            ##### Gather php 56 information
+
+            ### ################ #################
+
+            php56 = PHP.objects.get(phpVers="php56")
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-bcmath",
+                                             description="A module for PHP applications for using the bcmath library",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-common",
+                                             description="Common files for PHP",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-dba",
+                                             description="A database abstraction layer module for PHP applications",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-enchant",
+                                             description="Human Language and Character Encoding Support",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-gd",
+                                             description="A module for PHP applications for using the gd graphics library",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-gmp",
+                                             description="A module for PHP applications for using the GNU MP library",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-imap",
+                                             description="A module for PHP applications that use IMAP",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-intl",
+                                             description="Internationalization extension for PHP application",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-ioncube-loader",
+                                             description="Ioncube Loader",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-ldap",
+                                             description="A module for PHP applications that use LDAP",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-mbstring",
+                                             description="A module for PHP applications which need multi-byte string handling",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-mcrypt",
+                                             description="Standard PHP module provides mcrypt library support",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-mysql",
+                                             description="A module for PHP applications that use MySQL databases",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-odbc",
+                                             description="A module for PHP applications that use ODBC databases",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-pdo",
+                                             description="A database access abstraction module for PHP applications",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php55,
+                                             extensionName="lsphp56-pear",
+                                             description="PHP Extension and Application Repository framework",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-pgsql",
+                                             description="A PostgreSQL database module for PHP",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-process",
+                                             description="Modules for PHP script using system process interfaces",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-pspell",
+                                             description="A module for PHP applications for using pspell interfaces",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-recode",
+                                             description="A module for PHP applications for using the recode library",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-snmp",
+                                             description="A module for PHP applications that query SNMP-managed devices",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-soap",
+                                             description="A module for PHP applications that use the SOAP protocol",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-tidy",
+                                             description="Standard PHP module provides tidy library support",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-xml",
+                                             description="A module for PHP applications which use XML",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-xmlrpc",
+                                             description="A module for PHP applications which use the XML-RPC protocol",
+                                             status=1)
+
+            phpExtension.save()
+
+            ## non-active packages
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-debuginfo",
+                                             description="Debug information for package lsphp56",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-mysql56-debuginfo",
+                                             description="Debug information for package lsphp56-mysql56",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-devel",
+                                             description="Files needed for building PHP extensions",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-mysql56",
+                                             description="PHP scripting language for creating dynamic web sites",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-mysqlnd",
+                                             description="A module for PHP applications that use MySQL databases",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-opcache",
+                                             description="The Zend OPcache",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-sqlite",
+                                             description="Extension for the SQLite V2 Embeddable SQL Database Engine",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-xcache",
+                                             description="PHP accelerator, optimizer, encoder and dynamic content cacher",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-xcache-admin",
+                                             description="XCache Administration",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php56,
+                                             extensionName="lsphp56-pecl-imagick",
+                                             description="Extension to create and modify images using ImageMagick",
+                                             status=0)
+
+            phpExtension.save()
+
+            ### ################ #################
+
+            ##### Gather php 70 information
+
+            ### ################ #################
+
+            phpVersion = PHP.objects.get(phpVers="php70")
+
+            phpPath = ''
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                phpPath = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'php70.xml')
+            else:
+                phpPath = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp70.xml')
+
+            php = ElementTree.parse(phpPath)
+
+            phpExtensions = php.findall('extension')
+
+            for extension in phpExtensions:
+                extensionName = extension.find('extensionName').text
+                extensionDescription = extension.find('extensionDescription').text
+                status = int(extension.find('status').text)
+
+                phpExtension = installedPackages(phpVers=phpVersion,
+                                                 extensionName=extensionName,
+                                                 description=extensionDescription,
+                                                 status=status)
+
+                phpExtension.save()
+
+            ### ################ #################
+
+            ##### Gather php 71 information
+
+            ### ################ #################
+
+            phpVersion = PHP.objects.get(phpVers="php71")
+
+            phpPath = ''
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                phpPath = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'php71.xml')
+            else:
+                phpPath = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp71.xml')
+
+            php = ElementTree.parse(phpPath)
+
+            phpExtensions = php.findall('extension')
+
+            for extension in phpExtensions:
+                extensionName = extension.find('extensionName').text
+                extensionDescription = extension.find('extensionDescription').text
+                status = int(extension.find('status').text)
+
+                phpExtension = installedPackages(phpVers=phpVersion,
+                                                 extensionName=extensionName,
+                                                 description=extensionDescription,
+                                                 status=status)
+
+                phpExtension.save()
+
+        if PHP.objects.count() == 6:
+
+            newPHP72 = PHP(phpVers="php72")
+            newPHP72.save()
+
+            php72Path = ''
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                php72Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'php72.xml')
+            else:
+                php72Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp72.xml')
+
+            php72 = ElementTree.parse(php72Path)
+
+            php72Extensions = php72.findall('extension')
+
+            for extension in php72Extensions:
+                extensionName = extension.find('extensionName').text
+                extensionDescription = extension.find('extensionDescription').text
+                status = int(extension.find('status').text)
+
+                phpExtension = installedPackages(phpVers=newPHP72,
+                                                 extensionName=extensionName,
+                                                 description=extensionDescription,
+                                                 status=status)
+
+                phpExtension.save()
+
+        if PHP.objects.count() == 7:
+
+            newPHP73 = PHP(phpVers="php73")
+            newPHP73.save()
+
+            php73Path = ''
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                php73Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'php73.xml')
+            else:
+                php73Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp73.xml')
+
+            php73 = ElementTree.parse(php73Path)
+
+            php73Extensions = php73.findall('extension')
+
+            for extension in php73Extensions:
+                extensionName = extension.find('extensionName').text
+                extensionDescription = extension.find('extensionDescription').text
+                status = int(extension.find('status').text)
+
+                phpExtension = installedPackages(phpVers=newPHP73,
+                                                 extensionName=extensionName,
+                                                 description=extensionDescription,
+                                                 status=status)
+
+                phpExtension.save()
+
+        if PHP.objects.count() == 8:
+
+            newPHP74 = PHP(phpVers="php74")
+            newPHP74.save()
+
+            php74Path = ''
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                php74Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'php74.xml')
+            else:
+                php74Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp74.xml')
+
+            php74 = ElementTree.parse(php74Path)
+
+            php74Extensions = php74.findall('extension')
+
+            for extension in php74Extensions:
+                extensionName = extension.find('extensionName').text
+                extensionDescription = extension.find('extensionDescription').text
+                status = int(extension.find('status').text)
+
+                phpExtension = installedPackages(phpVers=newPHP74,
+                                                 extensionName=extensionName,
+                                                 description=extensionDescription,
+                                                 status=status)
+
+                phpExtension.save()
+        try:
+            newPHP80 = PHP(phpVers="php80")
+            newPHP80.save()
+
+            php80Path = ''
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                php80Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'php80.xml')
+            else:
+                php80Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp80.xml')
+
+            php80 = ElementTree.parse(php80Path)
+
+            php80Extensions = php80.findall('extension')
+
+            for extension in php80Extensions:
+                extensionName = extension.find('extensionName').text
+                extensionDescription = extension.find('extensionDescription').text
+                status = int(extension.find('status').text)
+
+                phpExtension = installedPackages(phpVers=newPHP80,
+                                                 extensionName=extensionName,
+                                                 description=extensionDescription,
+                                                 status=status)
+
+                phpExtension.save()
+        except:
+            pass
+
+        try:
+            newPHP81 = PHP(phpVers="php81")
+            newPHP81.save()
+
+            php81Path = ''
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                php81Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'php81.xml')
+            else:
+                php81Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp81.xml')
+
+            php81 = ElementTree.parse(php81Path)
+
+            php81Extensions = php81.findall('extension')
+
+            for extension in php81Extensions:
+                extensionName = extension.find('extensionName').text
+                extensionDescription = extension.find('extensionDescription').text
+                status = int(extension.find('status').text)
+
+                phpExtension = installedPackages(phpVers=newPHP81,
+                                                 extensionName=extensionName,
+                                                 description=extensionDescription,
+                                                 status=status)
+
+                phpExtension.save()
+        except:
+            pass
+
+        # apache = ApacheController.checkIfApacheInstalled()
+        apache = 1
+
+        proc = httpProc(request, 'managePHP/installExtensions.html',
+                        {'phps': PHPManager.findPHPVersions(), 'apache': apache}, 'admin')
+        return proc.render()
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def installExtensionsV2(request):
+    try:
+
+        if PHP.objects.count() == 0:
+            for i in range(3, 7):
+                php = "php" + str(5) + str(i)
+                newPHP = PHP(phpVers=php)
+                newPHP.save()
+
+            newPHP = PHP(phpVers="php70")
+            newPHP.save()
+            newPHP = PHP(phpVers="php71")
+            newPHP.save()
+
+            ### Gather php 53 information
+
+            php53 = PHP.objects.get(phpVers="php53")
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-bcmath",
+                                             description="A module for PHP applications for using the bcmath library",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-common",
+                                             description="Common files for PHP",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-dba",
+                                             description="A database abstraction layer module for PHP applications",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-enchant",
+                                             description="Human Language and Character Encoding Support",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-gd",
+                                             description="A module for PHP applications for using the gd graphics library",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-imap",
+                                             description="A module for PHP applications that use IMAP",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-intl",
+                                             description="Internationalization extension for PHP application",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-ioncube-loader",
+                                             description="Ioncube Loader",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-ldap",
+                                             description="A module for PHP applications that use LDAP",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-mbstring",
+                                             description="A module for PHP applications which need multi-byte string handling",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-mcrypt",
+                                             description="Standard PHP module provides mcrypt library support",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-mysql",
+                                             description="A module for PHP applications that use MySQL databases",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-odbc",
+                                             description="A module for PHP applications that use ODBC databases",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-pdo",
+                                             description="A database access abstraction module for PHP applications",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-pear",
+                                             description="PHP Extension and Application Repository framework",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-pecl-apc",
+                                             description="APC caches and optimizes PHP intermediate code",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-pgsql",
+                                             description="A PostgreSQL database module for PHP",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-process",
+                                             description="Modules for PHP script using system process interfaces",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-pspell",
+                                             description="A module for PHP applications for using pspell interfaces",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-recode",
+                                             description="A module for PHP applications for using the recode library",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-snmp",
+                                             description="A module for PHP applications that query SNMP-managed devices",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-soap",
+                                             description="A module for PHP applications that use the SOAP protocol",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-tidy",
+                                             description="Standard PHP module provides tidy library support",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-xml",
+                                             description="A module for PHP applications which use XML",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-xmlrpc",
+                                             description="A module for PHP applications which use the XML-RPC protocol",
+                                             status=1)
+
+            phpExtension.save()
+
+            ## non-active packages
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-debuginfo",
+                                             description="Debug information for package lsphp53",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-lsphp53-devel",
+                                             description="Files needed for building PHP extensions",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-mysql56",
+                                             description="PHP scripting language for creating dynamic web sites",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-mysqlnd",
+                                             description="A module for PHP applications that use MySQL databases",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-opcache",
+                                             description="The Zend OPcache",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-pecl-apc-devel",
+                                             description="APC developer files (header)",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-pecl-apc-panel",
+                                             description="APC control panel",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-sqlite",
+                                             description="Extension for the SQLite V2 Embeddable SQL Database Engine",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-xcache",
+                                             description="PHP accelerator, optimizer, encoder and dynamic content cacher",
+                                             status=0)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp53-xcache-admin",
+                                             description="XCache Administration",
+                                             status=0)
+
+            phpExtension.save()
+
+            ### ################ #################
+
+            ##### Gather php 54 information
+
+            ### ################ #################
+
+            php54 = PHP.objects.get(phpVers="php54")
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-bcmath",
+                                             description="A module for PHP applications for using the bcmath library",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-common",
+                                             description="Common files for PHP",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp53-dba",
+                                             description="A database abstraction layer module for PHP applications",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp54-enchant",
+                                             description="Human Language and Character Encoding Support",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-gd",
+                                             description="A module for PHP applications for using the gd graphics library",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-imap",
+                                             description="A module for PHP applications that use IMAP",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp54-intl",
+                                             description="Internationalization extension for PHP application",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-ioncube-loader",
+                                             description="Ioncube Loader",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-ldap",
+                                             description="A module for PHP applications that use LDAP",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-mbstring",
+                                             description="A module for PHP applications which need multi-byte string handling",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-mcrypt",
+                                             description="Standard PHP module provides mcrypt library support",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-mysql",
+                                             description="A module for PHP applications that use MySQL databases",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-odbc",
+                                             description="A module for PHP applications that use ODBC databases",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-pdo",
+                                             description="A database access abstraction module for PHP applications",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-pear",
+                                             description="PHP Extension and Application Repository framework",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-pecl-apc",
+                                             description="APC caches and optimizes PHP intermediate code",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php53,
+                                             extensionName="lsphp54-pgsql",
+                                             description="A PostgreSQL database module for PHP",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-process",
+                                             description="Modules for PHP script using system process interfaces",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-pspell",
+                                             description="A module for PHP applications for using pspell interfaces",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-recode",
+                                             description="A module for PHP applications for using the recode library",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-snmp",
+                                             description="A module for PHP applications that query SNMP-managed devices",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-soap",
+                                             description="A module for PHP applications that use the SOAP protocol",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-tidy",
+                                             description="Standard PHP module provides tidy library support",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-xml",
+                                             description="A module for PHP applications which use XML",
+                                             status=1)
+
+            phpExtension.save()
+
+            phpExtension = installedPackages(phpVers=php54,
+                                             extensionName="lsphp54-xmlrpc",
+                                             description="A module for PHP applications which use the XML-RPC protocol",
+                                             status=1)
+
+            phpExtension.save()
+
+            ## non-active packages
 
             phpExtension = installedPackages(phpVers=php54,
                                              extensionName="lsphp54-debuginfo",
@@ -745,7 +1981,6 @@ def installExtensions(request):
 
             ## non-active packages
 
-
             phpExtension = installedPackages(phpVers=php55,
                                              extensionName="lsphp55-debuginfo",
                                              description="Debug information for package lsphp55",
@@ -992,9 +2227,7 @@ def installExtensions(request):
 
             phpExtension.save()
 
-
             ## non-active packages
-
 
             phpExtension = installedPackages(phpVers=php56,
                                              extensionName="lsphp56-debuginfo",
@@ -1239,7 +2472,7 @@ def installExtensions(request):
                 phpExtension.save()
         except:
             pass
-        
+
         try:
             newPHP81 = PHP(phpVers="php81")
             newPHP81.save()
@@ -1271,13 +2504,14 @@ def installExtensions(request):
 
         # apache = ApacheController.checkIfApacheInstalled()
         apache = 1
-        
-        proc = httpProc(request, 'managePHP/installExtensions.html',
+
+        proc = httpProc(request, 'managePHP/installExtensionsV2.html',
                         {'phps': PHPManager.findPHPVersions(), 'apache': apache}, 'admin')
         return proc.render()
 
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def getExtensionsInformation(request):
     try:
@@ -1318,7 +2552,7 @@ def getExtensionsInformation(request):
 
                 result = ProcessUtilities.outputExecutioner(command).split('\n')
 
-                #records = php.installedpackages_set.all()
+                # records = php.installedpackages_set.all()
 
                 json_data = "["
                 checker = 0
@@ -1362,7 +2596,6 @@ def getExtensionsInformation(request):
                                    'status': status
                                    }
 
-
                             if checker == 0:
                                 json_data = json_data + json.dumps(dic)
                                 checker = 1
@@ -1383,6 +2616,7 @@ def getExtensionsInformation(request):
         final_dic = {'fetchStatus': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
+
 
 def submitExtensionRequest(request):
     try:
@@ -1422,6 +2656,7 @@ def submitExtensionRequest(request):
                      'error_message': "Not Logged In, please refresh the page or login again."}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
+
 
 def getRequestStatus(request):
     try:
@@ -1548,6 +2783,7 @@ def getRequestStatus(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
+
 def getRequestStatusApache(request):
     try:
         userID = request.session['userID']
@@ -1672,9 +2908,10 @@ def getRequestStatusApache(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
+
 def editPHPConfigs(request):
     try:
-        #apache = ApacheController.checkIfApacheInstalled()
+        # apache = ApacheController.checkIfApacheInstalled()
         apache = 1
         proc = httpProc(request, 'managePHP/editPHPConfig.html',
                         {'phps': PHPManager.findPHPVersions(), 'apache': apache}, 'admin')
@@ -1682,6 +2919,19 @@ def editPHPConfigs(request):
 
     except KeyError:
         return redirect(loadLoginPage)
+
+
+def editPHPConfigsV2(request):
+    try:
+        # apache = ApacheController.checkIfApacheInstalled()
+        apache = 1
+        proc = httpProc(request, 'managePHP/editPHPConfigV2.html',
+                        {'phps': PHPManager.findPHPVersions(), 'apache': apache}, 'admin')
+        return proc.render()
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
 
 def getCurrentPHPConfig(request):
     try:
@@ -1767,6 +3017,7 @@ def getCurrentPHPConfig(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def savePHPConfigBasic(request):
     try:
         userID = request.session['userID']
@@ -1811,7 +3062,7 @@ def savePHPConfigBasic(request):
                 else:
                     allow_url_include = "allow_url_include = Off"
 
-                #phpVers = "php" + PHPManager.getPHPString(phpVers)
+                # phpVers = "php" + PHPManager.getPHPString(phpVers)
 
                 if request.GET.get('apache', None) == None:
                     apache = 0
@@ -1821,7 +3072,7 @@ def savePHPConfigBasic(request):
                 ##
 
                 execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
-                execPath = execPath + " savePHPConfigBasic --phpVers '" + phpVers + "' --allow_url_fopen '" + allow_url_fopen +\
+                execPath = execPath + " savePHPConfigBasic --phpVers '" + phpVers + "' --allow_url_fopen '" + allow_url_fopen + \
                            "' --display_errors '" + display_errors + "' --file_uploads '" + file_uploads + "' --allow_url_include '" \
                            + allow_url_include + "' --memory_limit " + memory_limit + " --max_execution_time " + \
                            max_execution_time + " --upload_max_filesize " + upload_max_filesize \
@@ -1932,6 +3183,7 @@ def savePHPConfigAdvance(request):
     except KeyError as msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[saveConfigsToFile]")
         return HttpResponse("Not Logged in as admin")
+
 
 ## Restart PHP
 

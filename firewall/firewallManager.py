@@ -24,21 +24,21 @@ from plogical.csf import CSF
 from plogical.processUtilities import ProcessUtilities
 from serverStatus.serverStatusUtil import ServerStatusUtil
 
-class FirewallManager:
 
+class FirewallManager:
     imunifyPath = '/usr/bin/imunify360-agent'
     CLPath = '/etc/sysconfig/cloudlinux'
     imunifyAVPath = '/etc/sysconfig/imunify360/integration.conf'
 
-    def __init__(self, request = None):
+    def __init__(self, request=None):
         self.request = request
 
-    def securityHome(self, request = None, userID = None):
+    def securityHome(self, request=None, userID=None):
         proc = httpProc(request, 'firewall/index.html',
                         None, 'admin')
         return proc.render()
 
-    def firewallHome(self, request = None, userID = None):
+    def firewallHome(self, request=None, userID=None):
         csfPath = '/etc/csf'
 
         if os.path.exists(csfPath):
@@ -48,7 +48,17 @@ class FirewallManager:
                             None, 'admin')
             return proc.render()
 
-    def getCurrentRules(self, userID = None):
+    def firewallHomeV2(self, request=None, userID=None):
+        csfPath = '/etc/csf'
+
+        if os.path.exists(csfPath):
+            return redirect('/configservercsf/')
+        else:
+            proc = httpProc(request, 'firewall/firewallV2.html',
+                            None, 'admin')
+            return proc.render()
+
+    def getCurrentRules(self, userID=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
 
@@ -64,12 +74,12 @@ class FirewallManager:
 
             for items in rules:
                 dic = {
-                       'id': items.id,
-                       'name': items.name,
-                       'proto': items.proto,
-                       'port': items.port,
-                       'ipAddress': items.ipAddress,
-                       }
+                    'id': items.id,
+                    'name': items.name,
+                    'proto': items.proto,
+                    'port': items.port,
+                    'ipAddress': items.ipAddress,
+                }
 
                 if checker == 0:
                     json_data = json_data + json.dumps(dic)
@@ -86,7 +96,7 @@ class FirewallManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def addRule(self, userID = None, data = None):
+    def addRule(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
 
@@ -94,7 +104,6 @@ class FirewallManager:
                 pass
             else:
                 return ACLManager.loadErrorJson('add_status', 0)
-
 
             ruleName = data['ruleName']
             ruleProtocol = data['ruleProtocol']
@@ -115,7 +124,7 @@ class FirewallManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def deleteRule(self, userID = None, data = None):
+    def deleteRule(self, userID=None, data=None):
         try:
 
             currentACL = ACLManager.loadedACL(userID)
@@ -124,7 +133,6 @@ class FirewallManager:
                 pass
             else:
                 return ACLManager.loadErrorJson('delete_status', 0)
-
 
             ruleID = data['id']
             ruleProtocol = data['proto']
@@ -145,7 +153,7 @@ class FirewallManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def reloadFirewall(self, userID = None, data = None):
+    def reloadFirewall(self, userID=None, data=None):
         try:
 
             currentACL = ACLManager.loadedACL(userID)
@@ -173,7 +181,7 @@ class FirewallManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def startFirewall(self, userID = None, data = None):
+    def startFirewall(self, userID=None, data=None):
         try:
 
             currentACL = ACLManager.loadedACL(userID)
@@ -201,7 +209,7 @@ class FirewallManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def stopFirewall(self, userID = None, data = None):
+    def stopFirewall(self, userID=None, data=None):
         try:
 
             currentACL = ACLManager.loadedACL(userID)
@@ -229,7 +237,7 @@ class FirewallManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def firewallStatus(self, userID = None, data = None):
+    def firewallStatus(self, userID=None, data=None):
         try:
 
             currentACL = ACLManager.loadedACL(userID)
@@ -256,12 +264,17 @@ class FirewallManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def secureSSH(self, request = None, userID = None):
+    def secureSSH(self, request=None, userID=None):
         proc = httpProc(request, 'firewall/secureSSH.html',
                         None, 'admin')
         return proc.render()
 
-    def getSSHConfigs(self, userID = None, data = None):
+    def secureSSHV2(self, request=None, userID=None):
+        proc = httpProc(request, 'firewall/secureSSHV2.html',
+                        None, 'admin')
+        return proc.render()
+
+    def getSSHConfigs(self, userID=None, data=None):
         try:
 
             currentACL = ACLManager.loadedACL(userID)
@@ -320,8 +333,6 @@ class FirewallManager:
                             key = "ssh-rsa " + keydata[1][:50]
                             userName = ''
 
-
-
                         dic = {'userName': userName,
                                'key': key,
                                }
@@ -342,7 +353,7 @@ class FirewallManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def saveSSHConfigs(self, userID = None, data = None):
+    def saveSSHConfigs(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
 
@@ -361,7 +372,8 @@ class FirewallManager:
                 rootLogin = "0"
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/firewallUtilities.py"
-            execPath = execPath + " saveSSHConfigs --type " + str(type) + " --sshPort " + sshPort + " --rootLogin " + rootLogin
+            execPath = execPath + " saveSSHConfigs --type " + str(
+                type) + " --sshPort " + sshPort + " --rootLogin " + rootLogin
 
             output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -400,11 +412,11 @@ class FirewallManager:
                 return HttpResponse(final_json)
 
         except BaseException as msg:
-            final_dic = {'status': 0 ,'saveStatus': 0, 'error_message': str(msg)}
+            final_dic = {'status': 0, 'saveStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def deleteSSHKey(self, userID = None, data = None):
+    def deleteSSHKey(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
 
@@ -434,7 +446,7 @@ class FirewallManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def addSSHKey(self, userID = None, data = None):
+    def addSSHKey(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
 
@@ -470,7 +482,7 @@ class FirewallManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def loadModSecurityHome(self, request = None, userID = None):
+    def loadModSecurityHome(self, request=None, userID=None):
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             OLS = 1
             confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
@@ -492,7 +504,29 @@ class FirewallManager:
                         {'modSecInstalled': modSecInstalled, 'OLS': OLS}, 'admin')
         return proc.render()
 
-    def installModSec(self, userID = None, data = None):
+    def loadModSecurityHomeV2(self, request=None, userID=None):
+        if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+            OLS = 1
+            confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+
+            command = "sudo cat " + confPath
+            httpdConfig = ProcessUtilities.outputExecutioner(command).splitlines()
+
+            modSecInstalled = 0
+
+            for items in httpdConfig:
+                if items.find('module mod_security') > -1:
+                    modSecInstalled = 1
+                    break
+        else:
+            OLS = 0
+            modSecInstalled = 1
+
+        proc = httpProc(request, 'firewall/modSecurityV2.html',
+                        {'modSecInstalled': modSecInstalled, 'OLS': OLS}, 'admin')
+        return proc.render()
+
+    def installModSec(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
 
@@ -516,7 +550,7 @@ class FirewallManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def installStatusModSec(self, userID = None, data = None):
+    def installStatusModSec(self, userID=None, data=None):
         try:
 
             command = "sudo cat " + modSec.installLogPath
@@ -570,7 +604,7 @@ class FirewallManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def fetchModSecSettings(self, userID = None, data = None):
+    def fetchModSecSettings(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
 
@@ -711,7 +745,7 @@ class FirewallManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def saveModSecConfigurations(self, userID = None, data = None):
+    def saveModSecConfigurations(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
 
@@ -751,7 +785,6 @@ class FirewallManager:
                 SecAuditLogType = "SecAuditLogType " + SecAuditLogType
 
                 ## writing data temporary to file
-
 
                 tempConfigPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
@@ -808,7 +841,6 @@ class FirewallManager:
 
                 ## writing data temporary to file
 
-
                 tempConfigPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
                 confPath = open(tempConfigPath, "w")
@@ -844,7 +876,7 @@ class FirewallManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    def modSecRules(self, request = None, userID = None):
+    def modSecRules(self, request=None, userID=None):
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
 
@@ -864,7 +896,27 @@ class FirewallManager:
                         {'modSecInstalled': modSecInstalled}, 'admin')
         return proc.render()
 
-    def fetchModSecRules(self, userID = None, data = None):
+    def modSecRulesV2(self, request=None, userID=None):
+        if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+            confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+
+            command = "sudo cat " + confPath
+            httpdConfig = ProcessUtilities.outputExecutioner(command).split('\n')
+
+            modSecInstalled = 0
+
+            for items in httpdConfig:
+                if items.find('module mod_security') > -1:
+                    modSecInstalled = 1
+                    break
+        else:
+            modSecInstalled = 1
+
+        proc = httpProc(request, 'firewall/modSecurityRulesV2.html',
+                        {'modSecInstalled': modSecInstalled}, 'admin')
+        return proc.render()
+
+    def fetchModSecRules(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
 
@@ -921,7 +973,7 @@ class FirewallManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def saveModSecRules(self, userID = None, data = None):
+    def saveModSecRules(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
 
@@ -958,7 +1010,7 @@ class FirewallManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    def modSecRulesPacks(self, request = None, userID = None):
+    def modSecRulesPacks(self, request=None, userID=None):
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
 
             confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
@@ -979,7 +1031,28 @@ class FirewallManager:
                         {'modSecInstalled': modSecInstalled}, 'admin')
         return proc.render()
 
-    def getOWASPAndComodoStatus(self, userID = None, data = None):
+    def modSecRulesPacksV2(self, request=None, userID=None):
+        if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+
+            confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+
+            command = "sudo cat " + confPath
+            httpdConfig = ProcessUtilities.outputExecutioner(command).split('\n')
+
+            modSecInstalled = 0
+
+            for items in httpdConfig:
+                if items.find('module mod_security') > -1:
+                    modSecInstalled = 1
+                    break
+        else:
+            modSecInstalled = 1
+
+        proc = httpProc(request, 'firewall/modSecurityRulesPacksV2.html',
+                        {'modSecInstalled': modSecInstalled}, 'admin')
+        return proc.render()
+
+    def getOWASPAndComodoStatus(self, userID=None, data=None):
         try:
 
             currentACL = ACLManager.loadedACL(userID)
@@ -1069,7 +1142,7 @@ class FirewallManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def installModSecRulesPack(self, userID = None, data = None):
+    def installModSecRulesPack(self, userID=None, data=None):
         try:
 
             currentACL = ACLManager.loadedACL(userID)
@@ -1119,7 +1192,7 @@ class FirewallManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    def getRulesFiles(self, userID = None, data = None):
+    def getRulesFiles(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
 
@@ -1255,7 +1328,7 @@ class FirewallManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def enableDisableRuleFile(self, userID = None, data = None):
+    def enableDisableRuleFile(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
 
@@ -1307,6 +1380,20 @@ class FirewallManager:
                         {'csfInstalled': csfInstalled}, 'admin')
         return proc.render()
 
+    def csfV2(self):
+        csfInstalled = 1
+        try:
+            command = 'csf -h'
+            output = ProcessUtilities.outputExecutioner(command)
+            if output.find("command not found") > -1:
+                csfInstalled = 0
+        except subprocess.CalledProcessError:
+            csfInstalled = 0
+
+        proc = httpProc(self.request, 'firewall/csfV2.html',
+                        {'csfInstalled': csfInstalled}, 'admin')
+        return proc.render()
+
     def installCSF(self):
         try:
             userID = self.request.session['userID']
@@ -1339,39 +1426,39 @@ class FirewallManager:
 
             installStatus = ProcessUtilities.outputExecutioner("sudo cat " + CSF.installLogPath)
 
-            if installStatus.find("[200]")>-1:
+            if installStatus.find("[200]") > -1:
 
                 command = 'sudo rm -f ' + CSF.installLogPath
                 ProcessUtilities.executioner(command)
 
                 final_json = json.dumps({
-                                         'error_message': "None",
-                                         'requestStatus': installStatus,
-                                         'abort':1,
-                                         'installed': 1,
-                                         })
+                    'error_message': "None",
+                    'requestStatus': installStatus,
+                    'abort': 1,
+                    'installed': 1,
+                })
                 return HttpResponse(final_json)
             elif installStatus.find("[404]") > -1:
                 command = 'sudo rm -f ' + CSF.installLogPath
                 ProcessUtilities.executioner(command)
                 final_json = json.dumps({
-                                         'abort':1,
-                                         'installed':0,
-                                         'error_message': "None",
-                                         'requestStatus': installStatus,
-                                         })
+                    'abort': 1,
+                    'installed': 0,
+                    'error_message': "None",
+                    'requestStatus': installStatus,
+                })
                 return HttpResponse(final_json)
 
             else:
                 final_json = json.dumps({
-                                         'abort':0,
-                                         'error_message': "None",
-                                         'requestStatus': installStatus,
-                                         })
+                    'abort': 0,
+                    'error_message': "None",
+                    'requestStatus': installStatus,
+                })
                 return HttpResponse(final_json)
 
         except BaseException as msg:
-            final_dic = {'abort':1, 'installed':0, 'error_message': str(msg)}
+            final_dic = {'abort': 1, 'installed': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
@@ -1413,9 +1500,8 @@ class FirewallManager:
 
             currentSettings = CSF.fetchCSFSettings()
 
-
-            data_ret = {"fetchStatus": 1, 'testingMode' : currentSettings['TESTING'],
-                        'tcpIN' : currentSettings['tcpIN'],
+            data_ret = {"fetchStatus": 1, 'testingMode': currentSettings['TESTING'],
+                        'tcpIN': currentSettings['tcpIN'],
                         'tcpOUT': currentSettings['tcpOUT'],
                         'udpIN': currentSettings['udpIN'],
                         'udpOUT': currentSettings['udpOUT'],
@@ -1462,7 +1548,7 @@ class FirewallManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def modifyPorts(self, data = None):
+    def modifyPorts(self, data=None):
         try:
 
             userID = self.request.session['userID']
@@ -1567,6 +1653,37 @@ class FirewallManager:
                             data, 'admin')
             return proc.render()
 
+    def imunifyV2(self):
+        ipFile = "/etc/cyberpanel/machineIP"
+        f = open(ipFile)
+        ipData = f.read()
+        ipAddress = ipData.split('\n', 1)[0]
+
+        fullAddress = '%s:%s' % (ipAddress, ProcessUtilities.fetchCurrentPort())
+
+        data = {}
+        data['ipAddress'] = fullAddress
+
+        data['CL'] = 1
+
+        if os.path.exists(FirewallManager.imunifyPath):
+            data['imunify'] = 1
+        else:
+            data['imunify'] = 0
+
+        if data['CL'] == 0:
+            proc = httpProc(self.request, 'firewall/notAvailableV2.html',
+                            data, 'admin')
+            return proc.render()
+        elif data['imunify'] == 0:
+            proc = httpProc(self.request, 'firewall/notAvailableV2.html',
+                            data, 'admin')
+            return proc.render()
+        else:
+            proc = httpProc(self.request, 'firewall/imunifyV2.html',
+                            data, 'admin')
+            return proc.render()
+
     def submitinstallImunify(self):
         try:
             userID = self.request.session['userID']
@@ -1615,6 +1732,31 @@ class FirewallManager:
             return proc.render()
         else:
             proc = httpProc(self.request, 'firewall/imunifyAV.html',
+                            data, 'admin')
+            return proc.render()
+
+    def imunifyAVV2(self):
+        ipFile = "/etc/cyberpanel/machineIP"
+        f = open(ipFile)
+        ipData = f.read()
+        ipAddress = ipData.split('\n', 1)[0]
+
+        fullAddress = '%s:%s' % (ipAddress, ProcessUtilities.fetchCurrentPort())
+
+        data = {}
+        data['ipAddress'] = fullAddress
+
+        if os.path.exists(FirewallManager.imunifyAVPath):
+            data['imunify'] = 1
+        else:
+            data['imunify'] = 0
+
+        if data['imunify'] == 0:
+            proc = httpProc(self.request, 'firewall/notAvailableAVV2.html',
+                            data, 'admin')
+            return proc.render()
+        else:
+            proc = httpProc(self.request, 'firewall/imunifyAVV2.html',
                             data, 'admin')
             return proc.render()
 

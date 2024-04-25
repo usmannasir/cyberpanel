@@ -1,0 +1,266 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    {% if OLS %}
+        <div ng-controller="tunePHPV2" class="p-8">
+            <div>
+                <p class="text-4xl font-bold">PHP Tuning</p>
+                <p class="text-xs text-gray-600 py-2 font-semibold">Set how each version of PHP behaves in your server
+                    here.</p>
+            </div>
+            <div>
+                <div class="flex items-center py-4">
+                    <p class="text-xl font-bold">Select PHP Version</p>
+                    <img id="tunePHPLoading"
+                         src="{% static 'images/loading.gif' %}">
+                </div>
+                <hr>
+                <form action="/" id="modifyPackageForm">
+                    <div>
+                        <div class="flex mt-4 py-2 px-6">
+                            <div>
+                                <p class="font-semibold w-60">Select Domain</p>
+                            </div>
+                            <div>
+                                <select ng-change="fetchPHPDetails()" ng-model="domainSelection"
+                                        class="w-80 bg-gray-100 rounded px-2 py-1">
+                                    {% for items in websiteList %}
+                                        <option>{{ items }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div ng-hide="hideDetails" class="flex py-2 px-6">
+                            <div>
+                                <p class="font-semibold w-60">Initial Request Timeout (secs)</p>
+                            </div>
+                            <div>
+                                <input type="number" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="initTimeout"
+                                       required>
+                            </div>
+                        </div>
+                        <div ng-hide="hideDetails" class="flex py-2 px-6">
+                            <div>
+                                <p class="font-semibold w-60">Max Connections</p>
+                            </div>
+                            <div>
+                                <input type="number" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="maxConns"
+                                       required>
+                            </div>
+                        </div>
+                        <div ng-hide="hideDetails" class="flex py-2 px-6">
+                            <div>
+                                <p class="font-semibold w-60">Memory Soft Limit</p>
+                            </div>
+                            <div>
+                                <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="memSoftLimit"
+                                       required>
+                            </div>
+                        </div>
+                        <div ng-hide="hideDetails" class="flex py-2 px-6">
+                            <div>
+                                <p class="font-semibold w-60">Memory Hard Limit</p>
+                            </div>
+                            <div>
+                                <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="memHardLimit"
+                                       required>
+                            </div>
+                        </div>
+                        <div ng-hide="hideDetails" class="flex py-2 px-6">
+                            <div>
+                                <p class="font-semibold w-60">Process Soft Limit</p>
+                            </div>
+                            <div>
+                                <input type="number" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="procSoftLimit"
+                                       required>
+                            </div>
+                        </div>
+                        <div ng-hide="hideDetails" class="flex py-2 px-6">
+                            <div>
+                                <p class="font-semibold w-60">Process Hard Limit</p>
+                            </div>
+                            <div>
+                                <input type="number" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="procHardLimit"
+                                       required>
+                            </div>
+                        </div>
+                        <div ng-hide="hideDetails" class="flex py-2 px-6">
+                            <div>
+                                <p class="font-semibold w-60">Persistent Connection</p>
+                            </div>
+                            <div>
+                                <select ng-model="persistConn" class="w-80 bg-gray-100 rounded px-2 py-1">
+                                    <option>{% trans "Enable" %}</option>
+                                    <option>{% trans "Disable" %}</option>
+                                </select>
+                            </div>
+                            <div class="w-80 ml-4">
+                                {$ persistStatus $}
+                            </div>
+                        </div>
+                        <div ng-hide="hideDetails" class="flex justify-center mt-6">
+                            <button ng-click="tunePHPFunc()"
+                                    class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                                Tune PHP
+                            </button>
+                        </div>
+                        <div class="mt-4">
+                            <div id="canNotFetch"
+                                 class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                                <p>{% trans "Cannot fetch details. Error message:" %} {$ errorMessage $}</p>
+                            </div>
+                            <div id="canNotTune"
+                                 class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                                <p>{% trans "Cannot tune. Error message:" %} {$ errorMessage $}</p>
+                            </div>
+                            <div id="successfullyFetched"
+                                 class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                                <p>{% trans "Details Successfully fetched." %}</p>
+                            </div>
+                            <div id="successfullyTuned"
+                                 class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                                <p>{% trans "PHP for " %}<strong>{$ phpVersionTuned
+                                    $}</strong> {% trans "Successfully tuned." %}</p>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    {% else %}
+        <div ng-controller="tunePHPV2" class="p-8">
+            <div>
+                <p class="text-4xl font-bold">PHP Tuning</p>
+                <p class="text-xs text-gray-600 py-2 font-semibold">Set how each version of PHP behaves in your server
+                    here.</p>
+            </div>
+            <div>
+                <div class="flex items-center py-4">
+                    <p class="text-xl font-bold">Select PHP Version</p>
+                    <img id="tunePHPLoading"
+                         src="{% static 'images/loading.gif' %}">
+                </div>
+                <hr>
+                <form action="/" id="modifyPackageForm">
+                    <div>
+                        <div class="flex mt-4 py-2 px-6">
+                            <div>
+                                <p class="font-semibold w-60">Select PHP</p>
+                            </div>
+                            <div>
+                                <select ng-change="fetchPHPDetails()" ng-model="domainSelection"
+                                        class="w-80 bg-gray-100 rounded px-2 py-1">
+                                    <option>lsphp53</option>
+                                    <option>lsphp54</option>
+                                    <option>lsphp55</option>
+                                    <option>lsphp56</option>
+                                    <option>lsphp71</option>
+                                    <option>lsphp72</option>
+                                    <option>lsphp73</option>
+                                    <option>lsphp74</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div ng-hide="hideDetails" class="flex py-2 px-6">
+                            <div>
+                                <p class="font-semibold w-60">Initial Request Timeout (secs)</p>
+                            </div>
+                            <div>
+                                <input type="number" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="initTimeout"
+                                       required>
+                            </div>
+                        </div>
+                        <div ng-hide="hideDetails" class="flex py-2 px-6">
+                            <div>
+                                <p class="font-semibold w-60">Max Connections</p>
+                            </div>
+                            <div>
+                                <input type="number" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="maxConns"
+                                       required>
+                            </div>
+                        </div>
+                        <div ng-hide="hideDetails" class="flex py-2 px-6">
+                            <div>
+                                <p class="font-semibold w-60">Memory Soft Limit</p>
+                            </div>
+                            <div>
+                                <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="memSoftLimit"
+                                       required>
+                            </div>
+                        </div>
+                        <div ng-hide="hideDetails" class="flex py-2 px-6">
+                            <div>
+                                <p class="font-semibold w-60">Memory Hard Limit</p>
+                            </div>
+                            <div>
+                                <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="memHardLimit"
+                                       required>
+                            </div>
+                        </div>
+                        <div ng-hide="hideDetails" class="flex py-2 px-6">
+                            <div>
+                                <p class="font-semibold w-60">Process Soft Limit</p>
+                            </div>
+                            <div>
+                                <input type="number" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="procSoftLimit"
+                                       required>
+                            </div>
+                        </div>
+                        <div ng-hide="hideDetails" class="flex py-2 px-6">
+                            <div>
+                                <p class="font-semibold w-60">Process Hard Limit</p>
+                            </div>
+                            <div>
+                                <input type="number" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="procHardLimit"
+                                       required>
+                            </div>
+                        </div>
+                        <div ng-hide="hideDetails" class="flex py-2 px-6">
+                            <div>
+                                <p class="font-semibold w-60">Persistent Connection</p>
+                            </div>
+                            <div>
+                                <select ng-model="persistConn" class="w-80 bg-gray-100 rounded px-2 py-1">
+                                    <option>{% trans "Enable" %}</option>
+                                    <option>{% trans "Disable" %}</option>
+                                </select>
+                            </div>
+                            <div class="w-80 ml-4">
+                                {$ persistStatus $}
+                            </div>
+                        </div>
+                        <div ng-hide="hideDetails" class="flex justify-center mt-6">
+                            <button ng-click="tunePHPFunc()"
+                                    class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                                Tune PHP
+                            </button>
+                        </div>
+                        <div class="mt-4">
+                            <div id="canNotFetch"
+                                 class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                                <p>{% trans "Cannot fetch details. Error message:" %} {$ errorMessage $}</p>
+                            </div>
+                            <div id="canNotTune"
+                                 class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                                <p>{% trans "Cannot tune. Error message:" %} {$ errorMessage $}</p>
+                            </div>
+                            <div id="successfullyFetched"
+                                 class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                                <p>{% trans "Details Successfully fetched." %}</p>
+                            </div>
+                            <div id="successfullyTuned"
+                                 class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                                <p>{% trans "PHP for " %}<strong>{$ phpVersionTuned
+                                    $}</strong> {% trans "Successfully tuned." %}</p>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

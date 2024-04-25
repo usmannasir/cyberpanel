@@ -1,0 +1,67 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="manageImagesV2" class="p-8">
+        <div>
+            <div class="flex justify-between items-center">
+                <div>
+                    <div class="flex items-center">
+                        <p class="text-4xl font-bold">Create new container</p>
+                    </div>
+                </div>
+                <div>
+                    <a class="bg-orange-500 px-3 py-2 rounded-lg text-xl font-semibold text-white"
+                       href="{% url "manageImagesV2" %}">{% trans "Manage Images" %}</a>
+                </div>
+            </div>
+        </div>
+        <div class="border px-8 py-2 mt-3">
+            <div class="flex justify-between items-center  py-4">
+                <div class="flex items-center">
+                    <p class="text-xl font-bold">Locally Available Images</p>
+                    <img id="imageLoading" src="/static/images/loading.gif" style="display: none;">
+                </div>
+            </div>
+            <div class="relative py-5 overflow-x-auto">
+                <table id="imageList" class="w-full text-sm text-left rtl:text-right">
+                    <thead>
+                    <tr>
+                        <th scope="col" class="px-6 py-3">
+                            Name (Installed)
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            Tags
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            Action
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody class="border shadow-lg py-3 px-6 rounded-b-lg">
+                    {% for name, image in images.items %}
+                        <tr>
+                            <td class="px-6 py-4">{{ image.name }}</td>
+                            <td class="px-6 py-4">
+                                <select class="w-80 bg-gray-100 rounded px-2 py-1" id="{{ forloop.counter }}"
+                                        ng-model="imageTag['{{ image.name2 }}']">
+                                    {% for tag in image.tags %}
+                                        <option>{{ tag }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td class="px-6 py-4">
+                                <a class="bg-orange-500 px-3 py-1 rounded-lg font-semibold text-white cursor-pointer"
+                                   ng-href="/docker/V2/runContainerV2/?image={{ image.name }}&tag={$ imageTag['{{ image.name2 }}'] $}">{% trans "Create" %}</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}

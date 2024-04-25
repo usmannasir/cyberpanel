@@ -1,0 +1,381 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    {% if OLS %}
+        <div ng-controller="modSecV2" class="p-8">
+            <div>
+                <div class="flex items-center">
+                    <p class="text-4xl font-bold">ModSecurity Configurations! -</p>
+                    <a target="_blank"
+                       href="http://go.cyberpanel.net/modsec-docs"
+                       class="bg-blue-200 px-2 font-bold mt-2 ml-3"
+                       title=""><span>{% trans "ModSec Docs" %}</span></a>
+                </div>
+                <p class="text-xs text-gray-600 py-2 font-semibold">On this page you can configure ModSecurity
+                    settings.</p>
+            </div>
+            <div class="border px-8 py-2">
+                <div class="flex items-center py-4">
+                    <p class="text-xl font-bold">ModSecurity</p>
+                    <img ng-hide="modsecLoading" src="/static/images/loading.gif">
+                </div>
+                <div>
+                    {% if modSecInstalled == 0 %}
+                        <div class="flex justify-center mt-3">
+                            <p>ModSecurity is not installed</p>
+                        </div>
+                        <div>
+                            <a href="{% url 'modSecurity' %}">
+                                <div class="flex justify-center mt-2 mb-4">
+                                    <button ng-click="installModSec()"
+                                            class="bg-orange-500 text-white font-semibold px-4 py-1 text-xl">
+                                        <div class="flex">
+                                            <p>Install Now</p>
+                                            <i class="glyph-icon icon-arrow-right"></i>
+                                        </div>
+                                    </button>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="mt-2">
+                            <div ng-hide="modSecNotifyBox" class="form-group">
+                                <div class="col-sm-6">
+                                    <div ng-hide="failedToStartInallation"
+                                         class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                                        <p>{% trans "Failed to start installation, Error message: " %} {$
+                                            errorMessage
+                                            $}</p>
+                                    </div>
+                                    <div ng-hide="couldNotConnect"
+                                         class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                                        <p>{% trans "Could not connect. Please refresh this page." %} </p>
+                                    </div>
+                                    <div ng-hide="installationFailed" class="alert alert-danger">
+                                        <p>{% trans "Installation failed." %} {$ errorMessage $}</p>
+                                    </div>
+                                    <div ng-hide="modSecSuccessfullyInstalled"
+                                         class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                                        <p>{% trans "ModSecurity successfully installed, refreshing page in 3 seconds.." %}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div ng-hide="modeSecInstallBox">
+                            <form action="/" id="" class="form-horizontal bordered-row">
+                                <div class="flex justify-center">
+                                    <h3><img
+                                            src="{% static 'firewall/icons/firewall.png' %}"> {% trans "Winter is coming, but so is ModSecurity." %}
+                                        <img ng-hide="modsecLoading" src="/static/images/loading.gif"></h3>
+                                </div>
+                                <div>
+                                 <textarea ng-model="requestData" rows="15"
+                                           class="border w-full">{{ requestData }}</textarea>
+                                </div>
+                            </form>
+                        </div>
+                    {% else %}
+                        <form action="/" id="createPackages">
+                            <div ng-hide="phpDetailsBox" class="flex py-2 px-6">
+                                <div>
+                                    <p class="font-semibold w-60">ModSecurity Status</p>
+                                </div>
+                                <div>
+                                    <label class="relative inline-flex items-center cursor-pointer mt-1">
+                                        <input id="modsecurity_status" type="checkbox" value=""
+                                               class="sr-only peer">
+                                        <div class="w-11 h-6 bg-gray-200 rounded-full peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-orange-600">
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div ng-hide="phpDetailsBox" class="flex py-2 px-6">
+                                <div>
+                                    <p class="font-semibold w-60">SecAuditEngine</p>
+                                </div>
+                                <div>
+                                    <label class="relative inline-flex items-center cursor-pointer mt-1">
+                                        <input id="SecAuditEngine" type="checkbox" value=""
+                                               class="sr-only peer">
+                                        <div class="w-11 h-6 bg-gray-200 rounded-full peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-orange-600">
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div ng-hide="phpDetailsBox" class="flex py-2 px-6">
+                                <div>
+                                    <p class="font-semibold w-60">SecRuleEngine</p>
+                                </div>
+                                <div>
+                                    <label class="relative inline-flex items-center cursor-pointer mt-1">
+                                        <input id="SecRuleEngine" type="checkbox" value=""
+                                               class="sr-only peer">
+                                        <div class="w-11 h-6 bg-gray-200 rounded-full peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-orange-600">
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="flex py-2 px-6">
+                                <div>
+                                    <p class="font-semibold w-60">SecDebugLogLevel</p>
+                                </div>
+                                <div>
+                                    <div class="selector" style="width: 79px;">
+                                        {#                                    <span style="width: 57px; -moz-user-select: none;">{$ SecDebugLogLevel$}</span>#}
+                                        <select ng-model="SecDebugLogLevel" class="w-80 bg-gray-100 rounded px-2 py-1">
+                                            <option>0</option>
+                                            <option>1</option>
+                                            <option>2</option>
+                                            <option>3</option>
+                                            <option>4</option>
+                                            <option>5</option>
+                                            <option>6</option>
+                                            <option>7</option>
+                                            <option>8</option>
+                                            <option>9</option>
+                                        </select><i class="glyph-icon icon-caret-down"></i></div>
+                                </div>
+                            </div>
+                            <div class="flex py-2 px-6">
+                                <div>
+                                    <p class="font-semibold w-60">SecAuditLogParts</p>
+                                </div>
+                                <div>
+                                    <input placeholder="ABIJDEFHZ" type="text"
+                                           class="w-80 bg-gray-100 rounded px-2 py-1"
+                                           ng-model="SecAuditLogParts" required>
+                                </div>
+                            </div>
+                            <div class="flex py-2 px-6">
+                                <div>
+                                    <p class="font-semibold w-60">SecAuditLogRelevantStatus</p>
+                                </div>
+                                <div>
+                                    <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                           ng-model="SecAuditLogRelevantStatus"
+                                           required>
+                                </div>
+                            </div>
+                            <div class="flex py-2 px-6">
+                                <div>
+                                    <p class="font-semibold w-60">SecAuditLogType</p>
+                                </div>
+                                <div>
+                                    <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                           ng-model="SecAuditLogType"
+                                           required>
+                                </div>
+                            </div>
+                            <div class="flex justify-center mt-6">
+                                <button ng-click="saveModSecConfigurations()"
+                                        class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                                    Save Changes
+                                </button>
+                            </div>
+                            <div class="mt-2">
+                                <div class="col-sm-4">
+                                    <div ng-hide="failedToSave"
+                                         class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                                        <p>{% trans "Failed to save ModSecurity configurations. Error message: " %}
+                                            {$ errorMessage $}</p>
+                                    </div>
+                                    <div ng-hide="successfullySaved"
+                                         class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                                        <p>{% trans "ModSecurity configurations successfully saved." %}</p>
+                                    </div>
+                                    <div ng-hide="couldNotConnect"
+                                         class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                                        <p>{% trans "Could not connect. Please refresh this page." %} </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                        </div>
+                    {% endif %}
+            </div>
+        </div>
+
+    {% else %}
+        <div ng-controller="modSecV2" class="p-8">
+            <div>
+                <div class="flex items-center">
+                    <p class="text-4xl font-bold">ModSecurity Configurations! -</p>
+                    <a target="_blank"
+                       href="http://go.cyberpanel.net/modsec-docs"
+                       class="bg-blue-200 px-2 font-bold mt-2 ml-3"
+                       title=""><span>{% trans "ModSec Docs" %}</span></a>
+                </div>
+                <p class="text-xs text-gray-600 py-2 font-semibold">On this page you can configure ModSecurity
+                    settings.</p>
+            </div>
+            <div class="border px-8 py-2">
+                <div class="flex items-center py-4">
+                    <p class="text-xl font-bold">ModSecurity</p>
+                    <img ng-hide="modsecLoading" src="/static/images/loading.gif">
+                </div>
+                <div>
+                    {% if modSecInstalled == 0 %}
+                        <div class="flex justify-center mt-3">
+                            <p>ModSecurity is not installed</p>
+                        </div>
+                        <div>
+                            <a href="{% url 'modSecurity' %}">
+                                <div class="flex justify-center mt-2 mb-4">
+                                    <button ng-click="installModSec()"
+                                            class="bg-orange-500 text-white font-semibold px-4 py-1 text-xl">
+                                        <div class="flex">
+                                            <p>Install Now</p>
+                                            <i class="glyph-icon icon-arrow-right"></i>
+                                        </div>
+                                    </button>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="mt-2">
+                            <div ng-hide="modSecNotifyBox" class="form-group">
+                                <div class="col-sm-6">
+                                    <div ng-hide="failedToStartInallation"
+                                         class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                                        <p>{% trans "Failed to start installation, Error message: " %} {$
+                                            errorMessage
+                                            $}</p>
+                                    </div>
+                                    <div ng-hide="couldNotConnect"
+                                         class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                                        <p>{% trans "Could not connect. Please refresh this page." %} </p>
+                                    </div>
+                                    <div ng-hide="installationFailed" class="alert alert-danger">
+                                        <p>{% trans "Installation failed." %} {$ errorMessage $}</p>
+                                    </div>
+                                    <div ng-hide="modSecSuccessfullyInstalled"
+                                         class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                                        <p>{% trans "ModSecurity successfully installed, refreshing page in 3 seconds.." %}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div ng-hide="modeSecInstallBox">
+                            <form action="/" id="" class="form-horizontal bordered-row">
+                                <div class="flex justify-center">
+                                    <h3><img
+                                            src="{% static 'firewall/icons/firewall.png' %}"> {% trans "Winter is coming, but so is ModSecurity." %}
+                                        <img ng-hide="modsecLoading" src="/static/images/loading.gif"></h3>
+                                </div>
+                                <div>
+                                 <textarea ng-model="requestData" rows="15"
+                                           class="border w-full">{{ requestData }}</textarea>
+                                </div>
+                            </form>
+                        </div>
+                    {% else %}
+                        <form action="/" id="createPackages">
+                            <div ng-hide="phpDetailsBox" class="flex py-2 px-6">
+                                <div>
+                                    <p class="font-semibold w-60">SecAuditEngine</p>
+                                </div>
+                                <div>
+                                    <label class="relative inline-flex items-center cursor-pointer mt-1">
+                                        <input id="SecAuditEngine" type="checkbox" value=""
+                                               class="sr-only peer">
+                                        <div class="w-11 h-6 bg-gray-200 rounded-full peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-orange-600">
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div ng-hide="phpDetailsBox" class="flex py-2 px-6">
+                                <div>
+                                    <p class="font-semibold w-60">SecRuleEngine</p>
+                                </div>
+                                <div>
+                                    <label class="relative inline-flex items-center cursor-pointer mt-1">
+                                        <input id="SecRuleEngine" type="checkbox" value=""
+                                               class="sr-only peer">
+                                        <div class="w-11 h-6 bg-gray-200 rounded-full peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-orange-600">
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="flex py-2 px-6">
+                                <div>
+                                    <p class="font-semibold w-60">SecDebugLogLevel</p>
+                                </div>
+                                <div>
+                                    <div class="selector" style="width: 79px;">
+                                        {#                                    <span style="width: 57px; -moz-user-select: none;">{$ SecDebugLogLevel$}</span>#}
+                                        <select ng-model="SecDebugLogLevel" class="w-80 bg-gray-100 rounded px-2 py-1">
+                                            <option>0</option>
+                                            <option>1</option>
+                                            <option>2</option>
+                                            <option>3</option>
+                                            <option>4</option>
+                                            <option>5</option>
+                                            <option>6</option>
+                                            <option>7</option>
+                                            <option>8</option>
+                                            <option>9</option>
+                                        </select><i class="glyph-icon icon-caret-down"></i></div>
+                                </div>
+                            </div>
+                            <div class="flex py-2 px-6">
+                                <div>
+                                    <p class="font-semibold w-60">SecAuditLogParts</p>
+                                </div>
+                                <div>
+                                    <input placeholder="ABIJDEFHZ" type="text"
+                                           class="w-80 bg-gray-100 rounded px-2 py-1"
+                                           ng-model="SecAuditLogParts" required>
+                                </div>
+                            </div>
+                            <div class="flex py-2 px-6">
+                                <div>
+                                    <p class="font-semibold w-60">SecAuditLogRelevantStatus</p>
+                                </div>
+                                <div>
+                                    <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                           ng-model="SecAuditLogRelevantStatus"
+                                           required>
+                                </div>
+                            </div>
+                            <div class="flex py-2 px-6">
+                                <div>
+                                    <p class="font-semibold w-60">SecAuditLogType</p>
+                                </div>
+                                <div>
+                                    <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                           ng-model="SecAuditLogType"
+                                           required>
+                                </div>
+                            </div>
+                            <div class="flex justify-center mt-6">
+                                <button ng-click="saveModSecConfigurations()"
+                                        class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                                    Save Changes
+                                </button>
+                            </div>
+                            <div class="mt-2">
+                                <div class="col-sm-4">
+                                    <div ng-hide="failedToSave"
+                                         class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                                        <p>{% trans "Failed to save ModSecurity configurations. Error message: " %}
+                                            {$ errorMessage $}</p>
+                                    </div>
+                                    <div ng-hide="successfullySaved"
+                                         class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                                        <p>{% trans "ModSecurity configurations successfully saved." %}</p>
+                                    </div>
+                                    <div ng-hide="couldNotConnect"
+                                         class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                                        <p>{% trans "Could not connect. Please refresh this page." %} </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                        </div>
+                    {% endif %}
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

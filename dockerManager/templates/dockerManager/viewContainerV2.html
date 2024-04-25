@@ -1,0 +1,438 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="viewContainerV2" class="p-8">
+        <div>
+            <div class="flex justify-between items-center">
+                <div>
+                    <div ng-init="cName='{{ name }}'" class="flex items-center">
+                        <p class="text-4xl font-bold">Manage Container</p>
+                    </div>
+                </div>
+            </div>
+            <p class="text-xs text-gray-600 py-2 font-semibold">Currently managing: {{ name }}</p>
+        </div>
+        <div class="border px-8 py-2 mt-3">
+            <div class="flex items-center">
+                <p class="text-xl font-bold">Container Information</p>
+                <img id="infoLoading" src="/static/images/loading.gif" style="display: none;">
+            </div>
+            <div class="flex flex-col md:flex-col lg:flex-row justify-center gap-3">
+                <div class="border w-full">
+                    <div class="mt-2">
+                        <div class="px-2 py-2">
+                            <p class="font-semibold">Memory Usage</p>
+                        </div>
+                        <div class="px-2">
+                            <div class="w-full bg-gray-200 dark:bg-gray-700">
+                                <div class="bg-blue-600 text-xs font-medium text-black text-center p-1 leading-none"
+                                     style="width: {{ memoryUsage }}%"> {{ memoryUsage | floatformat:"2" }}%
+                                </div>
+                            </div>
+                        </div>
+                        <div class="px-2 py-2">
+                            <p class="font-semibold">CPU Usage</p>
+                        </div>
+                        <div class="px-2">
+                            <div class="w-full bg-gray-200 dark:bg-gray-700">
+                                <div class="bg-blue-600 text-xs font-medium text-black text-center p-1 leading-none"
+                                     style="width: {{ cpuUsage }}%"> {{ cpuUsage }}%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="border w-full">
+                    <div class="p-3">
+                        {% trans "Container ID" %}: {{ cid }}
+                        <br>
+                        {% trans "Image" %}: {{ image }}
+                        <span ng-show="'{{ image }}' == 'unknown:unknown'"
+                              title="Actions involving container recreation cannot be executed">
+                                            <i class="fa fa-warning btn-icon"></i>
+                                        </span>
+                        <br>
+                        {% if ports %}
+                            {% trans "Ports" %}: <br>
+                            {% for iport, eport  in ports.items %}
+                                {{ iport }} {% trans "to" %} {{ eport }}<br>
+                            {% endfor %}
+                        {% endif %}
+                        <div class="flex justify-center">
+                            <button onclick="return false;"
+                                    ng-click="showLog(web.name)"
+                                    href="#" data-modal-target="showLog" data-modal-toggle="showLog">
+                                <div class="flex items-center gap-1 text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center me-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                         stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                              d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 0 1 1.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.559.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.894.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 0 1-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.398.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 0 1-.12-1.45l.527-.737c.25-.35.272-.806.108-1.204-.165-.397-.506-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 0 1 .12-1.45l.773-.773a1.125 1.125 0 0 1 1.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894Z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                              d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                                    </svg>
+                                    <p>Settings</p>
+                                </div>
+                            </button>
+                            <div id="showLog" tabindex="-1"
+                                 class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+                                <div class="relative p-4 w-full max-w-2xl max-h-full">
+                                    <div class="relative bg-white shadow dark:bg-gray-700">
+                                        <div class="flex items-center bg-blue-400 px-4 py-4">
+                                            <p class="font-bold">{% trans "Container Settings" %}</p>
+                                            <img id="containerSettingLoading" src="/static/images/loading.gif"
+                                                 style="display: none;">
+                                            <button type="button" data-modal-toggle="showLog"
+                                                    class="absolute top-2 end-1 text-black bg-transparent hover:text-black rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
+                                                    data-modal-hide="showLog">
+                                                <svg class="w-3 h-3" aria-hidden="true"
+                                                     xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                     viewBox="0 0 14 14">
+                                                    <path stroke="currentColor" stroke-linecap="round"
+                                                          stroke-linejoin="round" stroke-width="2"
+                                                          d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                                                </svg>
+                                                <span class="sr-only">Close modal</span>
+                                            </button>
+                                        </div>
+                                        <div class="p-4 md:p-5">
+                                            <form name="containerSettingsForm" action="/">
+                                                <div ng-hide="installationDetailsForm"
+                                                     class="flex items-center py-2 px-6">
+                                                    <div>
+                                                        <p class="font-semibold w-32">Memory limit</p>
+                                                    </div>
+                                                    <div ng-init="memory={{ memoryLimit }}">
+                                                        <input name="memory" type="number"
+                                                               class="w-80 bg-gray-100 rounded px-2 py-1"
+                                                               ng-model="memory"
+                                                               required>
+                                                    </div>
+                                                    <div class="ml-2">
+                                                        <p>MB</p>
+                                                    </div>
+                                                </div>
+                                                <div ng-hide="installationDetailsForm"
+                                                     class="flex items-center py-2 px-6">
+                                                    <div>
+                                                        <p class="font-semibold w-32">Start on reboot</p>
+                                                    </div>
+                                                    <div ng-init="startOnReboot={{ startOnReboot }}">
+                                                        <input ng-model="startOnReboot" type="checkbox" value="">
+                                                    </div>
+                                                </div>
+                                                <div ng-hide="installationDetailsForm"
+                                                     class="flex items-center py-2 px-6">
+                                                    <div>
+                                                        <p class="font-semibold w-32">Confirmation</p>
+                                                    </div>
+                                                    <div>
+                                                        <input ng-model="envConfirmation" type="checkbox">
+                                                    </div>
+                                                    <div class="ml-2">
+                                                        <p>Editing ENV or Volume will recreate container.</p>
+                                                    </div>
+                                                </div>
+                                                <span ng-init="envList = {}"></span>
+                                                {% for env, value in envList.items %}
+
+                                                    <span ng-init="envList[{{ forloop.counter0 }}] =  {'name':'{{ env }}' , 'value':'{{ value }}'} "></span>
+
+                                                {% endfor %}
+                                                <div>
+                                                    <div ng-hide="installationDetailsForm"
+                                                         class="flex justify-center mt-2">
+                                                        <p class="font-semibold">
+                                                            ENV
+                                                        </p>
+                                                    </div>
+                                                    <div ng-repeat="env in envList track by $index"
+                                                         ng-hide="installationDetailsForm"
+                                                         class="flex justify-center py-2 px-6">
+                                                        <div ng-show="$first">
+                                                            <p class="font-semibold"></p>
+                                                        </div>
+                                                        {#                <p class="font-semibold w-60"></p>#}
+                                                        <div>
+                                                            <input name="$index" ng-disabled="!envConfirmation"
+                                                                   type="text"
+                                                                   class="w-40 bg-gray-100 rounded px-2 py-1"
+                                                                   ng-model="envList[$index].name"
+                                                                   required>
+                                                        </div>
+                                                        <div class="ml-1">
+                                                            <input name="$index" ng-disabled="!envConfirmation"
+                                                                   type="text"
+                                                                   class="w-40 bg-gray-100 rounded px-2 py-1"
+                                                                   ng-model="envList[$index].value"
+                                                                   required>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex justify-center mt-2 mb-2">
+                                                        <button type="button" ng-disabled="!envConfirmation"
+                                                                class="bg-orange-500 px-3 py-1 rounded-lg font-semibold text-white cursor-pointer"
+                                                                ng-click="addEnvField()">Add more
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <span ng-init="volList = {}"></span>
+                                                <span ng-init="volListNumber=1"></span>
+                                                {% for key, value in volList.items %}
+                                                    <span ng-init="volList[{{ forloop.counter0 }}] =  {'dest':'{{ value.bind }}' , 'src':'{{ key }}'}"></span>
+                                                    <span ng-init="volListNumber={{ forloop.counter0 }} + 1"></span>
+                                                {% endfor %}
+                                                <div>
+                                                    <div ng-hide="installationDetailsForm"
+                                                         class="flex justify-center mt-2">
+                                                        <p class="font-semibold">
+                                                            Map Volumes
+                                                        </p>
+                                                    </div>
+                                                    <div ng-repeat="volume in volList track by $index"
+                                                         ng-hide="installationDetailsForm"
+                                                         class="flex items-center py-2 px-6">
+                                                        <div>
+                                                            <p class="font-semibold w-28"></p>
+                                                        </div>
+                                                        {#                <p class="font-semibold w-60"></p>#}
+                                                        <div>
+                                                            <input type="text" ng-disabled="!envConfirmation"
+                                                                   class="w-80 bg-gray-100 rounded px-2 py-1"
+                                                                   ng-model="volList[$index].dest"
+                                                                   placeholder="Destination" required>
+                                                        </div>
+                                                        <div class="ml-1">
+                                                            <input type="text" ng-disabled="!envConfirmation"
+                                                                   class="w-80 bg-gray-100 rounded px-2 py-1"
+                                                                   ng-model="volList[$index].src" placeholder="Source"
+                                                                   required>
+                                                        </div>
+                                                        <div class="ml-1" ng-show="$last">
+                                                            <div>
+                                                                <button type="button" ng-disabled="!envConfirmation"
+                                                                        ng-click="removeVolField()">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                                         viewBox="0 0 24 24"
+                                                                         stroke-width="1.5"
+                                                                         stroke="currentColor" class="w-6 h-6">
+                                                                        <path stroke-linecap="round"
+                                                                              stroke-linejoin="round"
+                                                                              d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                                                    </svg>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex justify-center mt-2 mb-2"
+                                                         ng-hide="installationDetailsForm">
+                                                        <button type="button" ng-disabled="!envConfirmation"
+                                                                class="bg-orange-500 px-3 py-1 rounded-lg font-semibold text-white cursor-pointer"
+                                                                ng-click="addVolField()">Add Field
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                        <div class="flex gap-1 justify-end py-2">
+                                            <button ng-click="saveSettings()" type="button"
+                                                    ng-disabled="savingSettings"
+                                                    class="text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center me-2">{% trans "Save" %}</button>
+                                            <button type="button" ng-disabled="savingSettings"
+                                                    class="text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center me-2"
+                                                    data-modal-toggle="showLog"
+                                                    data-modal-hide="showLog">{% trans "Close" %}</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center me-2"
+                                    ng-click="recreate()">
+                                Recreate
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="border px-8 py-2 mt-3">
+            <div class="flex items-center mb-2">
+                <p class="text-xl font-bold">Actions</p>
+            </div>
+            <div class="flex flex-col md:flex-col lg:flex-row justify-center gap-3">
+                <div class="border w-full p-3">
+                    <div class="flex justify-between">
+                        <div class="flex items-center">
+                            <p ng-init="status='{{ status }}'">Main Actions</p>
+                            <img id="actionLoading" src="/static/images/loading.gif"
+                                 style="display: none;width: 20px;">
+                        </div>
+                        <div>
+                            <button ng-click='refreshStatus()'>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                     stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <p class="font-bold">Status:</p>
+                        <span class="ml-1" ng-bind="status"></span>
+                    </div>
+                    <div class="flex justify-center mt-2">
+                        <div ng-disabled="status=='running'" ng-click="cAction('start')"
+                             class="flex cursor-pointer items-center text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 font-medium rounded-lg text-sm inline-flex items-center px-2.5 py-1 text-center me-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                 stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/>
+                            </svg>
+                            <p>Start</p>
+                        </div>
+                        <div ng-disabled="status!='running'" ng-click="cAction('restart')"
+                             class="flex cursor-pointer items-center text-white bg-blue-600 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm inline-flex items-center px-2.5 py-1 text-center me-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                 stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/>
+                            </svg>
+                            <p>Restart</p>
+                        </div>
+                        <div ng-disabled="status!='running'" ng-click="cAction('stop')"
+                             class="flex cursor-pointer items-center text-white bg-orange-600 hover:bg-orange-800 focus:ring-4 focus:outline-none focus:ring-orange-300 dark:focus:ring-orange-800 font-medium rounded-lg text-sm inline-flex items-center px-2.5 py-1 text-center me-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                 stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M5.25 7.5A2.25 2.25 0 0 1 7.5 5.25h9a2.25 2.25 0 0 1 2.25 2.25v9a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-9Z"/>
+                            </svg>
+                            <p>Stop</p>
+                        </div>
+                        <div ng-click="cRemove()"
+                             class="flex cursor-pointer items-center text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-2.5 py-1 text-center me-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                 stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+                            </svg>
+                            <p>Remove</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="border w-full p-3">
+                    <div class="flex justify-between">
+                        <div class="flex items-center">
+                            <p ng-init="rPolicy='{{ restartPolicy }}'">Other Actions</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <p class="font-bold">Restart on system reboot:</p>
+                        <span class="ml-1" ng-bind="rPolicy"></span>
+                    </div>
+                    <div class="flex justify-center mt-2">
+                        <button>
+                            <a href="/docker/exportContainer/?name={{ name }}"
+                               class="flex cursor-pointer items-center text-white bg-orange-600 hover:bg-orange-800 focus:ring-4 focus:outline-none focus:ring-orange-300 dark:focus:ring-orange-800 font-medium rounded-lg text-sm inline-flex items-center px-2.5 py-1 text-center me-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                     stroke-width="1.5"
+                                     stroke="currentColor" class="w-6 h-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/>
+                                </svg>
+                                <p>
+                                    Export File
+                                </p>
+                            </a>
+                        </button>
+                        <button onclick="return false;"
+                                ng-disabled="loadingTop" ng-click="showTop()"
+                                href="#" data-modal-target="viewprocess" data-modal-toggle="viewprocess">
+                            <div class="flex cursor-pointer items-center text-white bg-orange-600 hover:bg-orange-800 focus:ring-4 focus:outline-none focus:ring-orange-300 dark:focus:ring-orange-800 font-medium rounded-lg text-sm inline-flex items-center px-2.5 py-1 text-center me-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                     stroke-width="1.5"
+                                     stroke="currentColor" class="w-6 h-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                                </svg>
+                                <p class="ml-1">
+                                    View Process
+                                </p>
+                            </div>
+                        </button>
+                        <div id="viewprocess" tabindex="-1"
+                             class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+                            <div class="relative p-4 w-full max-w-2xl max-h-full">
+                                <div class="relative bg-white shadow dark:bg-gray-700">
+                                    <div class="flex items-center bg-blue-400 px-4 py-4">
+                                        <p class="font-bold">{% trans "Container Processes" %}</p>
+                                        <button type="button" data-modal-toggle="viewprocess"
+                                                class="absolute top-2 end-1 text-black bg-transparent hover:text-black rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
+                                                data-modal-hide="viewprocess">
+                                            <svg class="w-3 h-3" aria-hidden="true"
+                                                 xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                 viewBox="0 0 14 14">
+                                                <path stroke="currentColor" stroke-linecap="round"
+                                                      stroke-linejoin="round" stroke-width="2"
+                                                      d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                                            </svg>
+                                            <span class="sr-only">Close modal</span>
+                                        </button>
+                                    </div>
+                                    <div class="p-4 md:p-5">
+                                        <div class="relative py-5 overflow-x-auto">
+                                            <table id="datatable-example"
+                                                   class="w-full text-sm text-left rtl:text-right">
+                                                <thead>
+                                                <tr>
+                                                    <th ng-repeat="item in topHead track by $index" class="px-6 py-3">
+                                                        {$ item $}
+                                                    </th>
+                                                </tr>
+                                                </thead>
+                                                <tbody ng-repeat="process in topProcesses track by $index"
+                                                       class="border shadow-lg py-3 px-6 rounded-b-lg">
+                                                <tr>
+                                                    <td ng-repeat="item in process track by $index" class="px-6 py-4">
+                                                        {$ item $}
+                                                    </td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-1 justify-end py-2">
+                                        <button ng-click="showTop()" type="button"
+                                                ng-disabled="savingSettings"
+                                                class="text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center me-2">{% trans "Refresh" %}</button>
+                                        <button type="button" ng-disabled="savingSettings"
+                                                class="text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center me-2"
+                                                data-modal-toggle="viewprocess"
+                                                data-modal-hide="viewprocess">{% trans "Close" %}</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="border px-8 py-2 mt-3">
+            <div ng-init="loadLogs('{{ name }}')" class="flex justify-between items-center">
+                <p class="text-xl font-bold">Logs</p>
+                <span style="cursor:pointer;" class="pull-right" ng-click="loadLogs('{{ name }}')"></span>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                     stroke="currentColor" class="w-6 h-6 cursor-pointer">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/>
+                </svg>
+            </div>
+            <div class="mt-2">
+                <textarea name="logs" class="border w-full" id="" cols="30" rows="10">{$ logs $}</textarea><br>
+            </div>
+        </div>
+    </div>
+{% endblock %}

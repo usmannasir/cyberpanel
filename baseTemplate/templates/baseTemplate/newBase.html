@@ -1036,7 +1036,7 @@
                     </div>
                     <ul id="dropdown-example-14" class="hidden py-2 space-y-2">
                         <li>
-                            <a href="#"
+                            <a href="{% url 'FilemanagerV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 View
                                 Profile</a>
@@ -1123,7 +1123,7 @@
                     </div>
                     <ul id="dropdown-example-16" class="hidden py-2 space-y-2">
                         <li>
-                            <a href="#"
+                            <a href="{% url 'litespeedStatusV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 Create Limits</a>
                         </li>
@@ -1163,17 +1163,17 @@
                     </div>
                     <ul id="dropdown-example-17" class="hidden py-2 space-y-2">
                         <li>
-                            <a href="#"
+                            <a href="{% url 'manageImagesV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 Manage Images</a>
                         </li>
                         <li>
-                            <a href="#"
+                            <a href="{% url 'listContainersV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 Manage Containers</a>
                         </li>
                         <li>
-                            <a href="#"
+                            <a href="{% url 'containerImageV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 Create New Container</a>
                         </li>
@@ -1205,12 +1205,12 @@
                     </div>
                     <ul id="dropdown-example-18" class="hidden py-2 space-y-2">
                         <li>
-                            <a href="#"
+                            <a href="{% url 'liteSpeedTuningV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 Litespeed Tuning</a>
                         </li>
                         <li>
-                            <a href="#"
+                            <a href="{% url 'phpTuningV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 PHP Tuning</a>
                         </li>
@@ -1250,12 +1250,12 @@
                     </div>
                     <ul id="dropdown-example-19" class="hidden py-2 space-y-2">
                         <li>
-                            <a href="#"
+                            <a href="{% url 'topProcessesV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 Top Processes</a>
                         </li>
                         <li>
-                            <a href="#"
+                            <a href="{% url 'litespeedStatusV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 LiteSpeed Status</a>
                         </li>
@@ -1310,12 +1310,12 @@
                     </div>
                     <ul id="dropdown-example-20" class="hidden py-2 space-y-2">
                         <li>
-                            <a href="#"
+                            <a href="{% url 'installExtensionsV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 Install Extension</a>
                         </li>
                         <li>
-                            <a href="#"
+                            <a href="{% url 'editPHPConfigsV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 Edit PHP Configs</a>
                         </li>
@@ -1346,32 +1346,37 @@
                     </div>
                     <ul id="dropdown-example-21" class="hidden py-2 space-y-2">
                         <li>
-                            <a href="#"
+                            <a href="{% url 'serverMailV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 Server Mail</a>
                         </li>
                         <li>
-                            <a href="#"
+                            <a href="{% url 'cyberCPMainLogFileV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 Cyberpanel Main Log File</a>
                         </li>
                         <li>
-                            <a href="#"
+                            <a href="{% url 'accessLogsV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 Access Log</a>
                         </li>
                         <li>
-                            <a href="#"
+                            <a href="{% url 'errorLogsV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 Error Logs</a>
                         </li>
                         <li>
-                            <a href="#"
+                            <a href="{% url 'emaillogsV2' %}"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Email Logs</a>
+                        </li>
+                        <li>
+                            <a href="{% url 'ftplogsV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 FTP Logs</a>
                         </li>
                         <li>
-                            <a href="#"
+                            <a href="{% url 'modSecAuditLogsV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 ModSec Audit Logs</a>
                         </li>
@@ -1403,42 +1408,42 @@
                     </div>
                     <ul id="dropdown-example-22" class="hidden py-2 space-y-2">
                         <li>
-                            <a href="#"
+                            <a href="{% url 'firewallHomeV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 Firewall</a>
                         </li>
                         <li>
-                            <a href="#"
+                            <a href="{% url 'secureSSHV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 Security SSH</a>
                         </li>
                         <li>
-                            <a href="#"
+                            <a href="{% url 'modSecurityV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 ModSecurity Conf</a>
                         </li>
                         <li>
-                            <a href="#"
+                            <a href="{% url 'modSecRulesV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 ModSecurity Rules</a>
                         </li>
                         <li>
-                            <a href="#"
+                            <a href="{% url 'modSecRulesPacksV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 ModSecurity Rules Pack</a>
                         </li>
                         <li>
-                            <a href="#"
+                            <a href="{% url 'csfV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 CSF</a>
                         </li>
                         <li>
-                            <a href="#"
+                            <a href="{% url 'imunifyV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 Imunify 360</a>
                         </li>
                         <li>
-                            <a href="#"
+                            <a href="{% url 'imunifyAVV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 ImunifyAV</a>
                         </li>
@@ -1695,6 +1700,12 @@
 <script src="{% static 'emailMarketing/emailMarketingV2.js' %}"></script>
 <script src="{% static 'IncBackups/IncBackupsV2.js' %}"></script>
 <script src="{% static 'manageSSL/manageSSLV2.js' %}"></script>
+<script src="{% static 'serverLogs/serverLogsV2.js' %}"></script>
+<script src="{% static 'serverStatus/serverStatusV2.js' %}"></script>
+<script src="{% static 'firewall/firewallV2.js' %}"></script>
+<script src="{% static 'dockerManager/dockerManagerV2.js' %}"></script>
+<script src="{% static 'managePHP/managePHPV2.js' %}"></script>
+<script src="{% static 'tuning/tuningV2.js' %}"></script>
 </body>
 
 </html>

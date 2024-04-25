@@ -4,6 +4,8 @@ from django.shortcuts import redirect
 import json
 from loginSystem.views import loadLoginPage
 from .tuning import tuningManager
+
+
 # Create your views here.
 
 
@@ -15,6 +17,7 @@ def loadTuningHome(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def liteSpeedTuning(request):
     try:
         userID = request.session['userID']
@@ -22,6 +25,16 @@ def liteSpeedTuning(request):
         return tm.liteSpeedTuning(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
+
+def liteSpeedTuningV2(request):
+    try:
+        userID = request.session['userID']
+        tm = tuningManager()
+        return tm.liteSpeedTuningV2(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
 
 def phpTuning(request):
     try:
@@ -31,6 +44,16 @@ def phpTuning(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
+def phpTuningV2(request):
+    try:
+        userID = request.session['userID']
+        tm = tuningManager()
+        return tm.phpTuningV2(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 def tuneLitespeed(request):
     try:
         userID = request.session['userID']
@@ -38,6 +61,7 @@ def tuneLitespeed(request):
         return tm.tuneLitespeed(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def tunePHP(request):
     try:

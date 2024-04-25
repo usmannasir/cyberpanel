@@ -1,0 +1,80 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="installImunifyAVV2" class="p-8">
+        <div>
+            <div class="flex items-center">
+                <p class="text-4xl font-bold">ImunifyAV -</p>
+                <a target="_blank"
+                   href="https://go.cyberpanel.net/imunify"
+                   class="bg-blue-200 px-2 font-bold mt-2 ml-3"
+                   title=""><span>{% trans "Imunify Docs" %}</span></a>
+            </div>
+            <p class="text-xs text-gray-600 py-2 font-semibold">Access ImunifyAV</p>
+        </div>
+        <div class="py-4">
+            <p class="text-xl font-bold">ImunifyAV</p>
+            <p class="text-xs text-gray-600 py-2 font-semibold">ImunifyAV is now integrated via their new API. You can
+                manage Imunify by clicking below. You can use your server root credentials to access Imunify.</p>
+            <div class="flex justify-center py-2">
+                <a target="_blank" href="/imunifyav">
+                    class="bg-orange-500 text-white font-bold px-4 py-1">
+                    Access Now
+                </a>
+            </div>
+        </div>
+        <div>
+            <div class="flex items-center py-4">
+                <p class="text-xl font-bold">ImunifyAV Not working?</p>
+                <img ng-hide="installDockerStatus"
+                     src="{% static 'images/loading.gif' %}">
+            </div>
+            <p class="text-xs text-gray-600 py-2 font-semibold">If for some reason ImunifyAV is not working, you can
+                re-install it using the form below.</p>
+        </div>
+        <div>
+            <div class="alert alert-info">
+                <div class="bg-black alert-icon">
+                    <i class="glyph-icon icon-comment"></i>
+                </div>
+                <div class="alert-content">
+                    <h4 class="alert-title">We will run following commands again:</h4>
+                    <br>
+                    <p><code>wget https://repo.imunify360.cloudlinux.com/defence360/imav-deploy.sh</code></p>
+                    <br>
+                    <p><code>bash imav-deploy.sh</code></p>
+                    <br>
+
+                    <p>If you can still not access ImunifyAV after re-installation, just run
+                        the above commands on your server terminal.</p>
+                </div>
+            </div>
+            <div>
+                <div class="mt-2" ng-hide="installBoxGen">
+                    <form action="/" id="" class="form-horizontal bordered-row">
+                        <div class="form-group">
+                            <div class="mt-2">
+                                <textarea ng-model="requestData" rows="15"
+                                          class="border w-full">{{ requestData }}</textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div>
+                <form action="/" id="" class="form-horizontal bordered-row">
+                    <div ng-hide="dockerInstallBTN" ng-hide="installationDetailsForm" class="flex justify-center py-2">
+                        <button ng-click="submitinstallImunify()"
+                                class="bg-orange-500 text-white font-bold px-4 py-1">
+                            Install Now
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="installImunifyV2" class="p-8">
+        <div>
+            <div class="flex items-center">
+                <p class="text-4xl font-bold">Imunify -</p>
+                <a target="_blank"
+                   href="https://go.cyberpanel.net/imunify"
+                   class="bg-blue-200 px-2 font-bold mt-2 ml-3"
+                   title=""><span>{% trans "Imunify Docs" %}</span></a>
+            </div>
+            <p class="text-xs text-gray-600 py-2 font-semibold">Access Imunify</p>
+        </div>
+        <div class="py-4">
+            <p class="text-xl font-bold">Imunify</p>
+            <p class="text-xs text-gray-600 py-2 font-semibold">Imunify is now integrated via their new API. You can
+                manage Imunify by clicking below. You can use your server root credentials to access Imunify. Login
+                details for Imunify360 is your server root and its password.</p>
+            <div class="flex justify-center py-2">
+                <a target="_blank" href="/imunifyV2">
+                    class="bg-orange-500 text-white font-bold px-4 py-1">
+                    Access Now
+                </a>
+            </div>
+        </div>
+        <div>
+            <div class="flex items-center py-4">
+                <p class="text-xl font-bold">Imunify360 Not working?</p>
+                <img ng-hide="installDockerStatus" src="{% static 'images/loading.gif' %}">
+            </div>
+            <p class="text-xs text-gray-600 py-2 font-semibold">If for some reason Imunify360 is not working, you can
+                re-install it using the form below.</p>
+        </div>
+        <div>
+            <div class="alert alert-info">
+                <div class="bg-black alert-icon">
+                    <i class="glyph-icon icon-comment"></i>
+                </div>
+                <div class="alert-content">
+                    <h4 class="alert-title">We will run following commands again:</h4>
+                    <br>
+                    <p><code>wget https://repo.imunify360.cloudlinux.com/defence360/i360deploy.sh -O
+                        i360deploy.sh</code></p>
+                    <br>
+                    <p><code>bash i360deploy.sh --key YOUR_KEY --yes</code></p>
+                    <br>
+
+                    <p>If you can still not access Imunify360 after re-installation, just run
+                        the above commands on your server terminal, make sure to replace <code>YOUR_KEY</code>
+                        with your
+                        Imunify360 Key.</p>
+                </div>
+            </div>
+            <div>
+                <div class="mt-2" ng-hide="installBoxGen">
+                    <form action="/" id="" class="form-horizontal bordered-row">
+                        <div class="form-group">
+                            <div class="mt-2">
+                                <textarea ng-model="requestData" rows="15"
+                                          class="border w-full">{{ requestData }}</textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div>
+                <form action="/" id="" class="form-horizontal bordered-row">
+                    <div ng-hide="dockerInstallBTN" class="flex py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">Imunify Key</p>
+                        </div>
+                        <div>
+                            <input name="key" type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="key"
+                                   required>
+                        </div>
+                    </div>
+                    <div ng-hide="dockerInstallBTN" ng-hide="installationDetailsForm" class="flex justify-center py-2">
+                        <button ng-click="submitinstallImunify()"
+                                class="bg-orange-500 text-white font-bold px-4 py-1">
+                            Re-Install Now
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

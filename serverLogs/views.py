@@ -9,6 +9,8 @@ from plogical.virtualHostUtilities import virtualHostUtilities
 from plogical.acl import ACLManager
 from plogical.processUtilities import ProcessUtilities
 import os
+
+
 # Create your views here.
 
 def logsHome(request):
@@ -16,30 +18,66 @@ def logsHome(request):
                     None, 'admin')
     return proc.render()
 
+
 def accessLogs(request):
     proc = httpProc(request, 'serverLogs/accessLogs.html',
                     None, 'admin')
     return proc.render()
+
+
+def accessLogsV2(request):
+    proc = httpProc(request, 'serverLogs/accessLogsV2.html',
+                    None, 'admin')
+    return proc.render()
+
 
 def errorLogs(request):
     proc = httpProc(request, 'serverLogs/errorLogs.html',
                     None, 'admin')
     return proc.render()
 
+
+def errorLogsV2(request):
+    proc = httpProc(request, 'serverLogs/errorLogsV2.html',
+                    None, 'admin')
+    return proc.render()
+
+
 def ftplogs(request):
     proc = httpProc(request, 'serverLogs/ftplogs.html',
                     None, 'admin')
     return proc.render()
+
+
+def ftplogsV2(request):
+    proc = httpProc(request, 'serverLogs/ftplogsV2.html',
+                    None, 'admin')
+    return proc.render()
+
 
 def emailLogs(request):
     proc = httpProc(request, 'serverLogs/emailLogs.html',
                     None, 'admin')
     return proc.render()
 
+
+def emailLogsV2(request):
+    proc = httpProc(request, 'serverLogs/emailLogsV2.html',
+                    None, 'admin')
+    return proc.render()
+
+
 def modSecAuditLogs(request):
     proc = httpProc(request, 'serverLogs/modSecAuditLog.html',
                     None, 'admin')
     return proc.render()
+
+
+def modSecAuditLogsV2(request):
+    proc = httpProc(request, 'serverLogs/modSecAuditLogV2.html',
+                    None, 'admin')
+    return proc.render()
+
 
 def getLogsFromFile(request):
     try:
@@ -85,10 +123,12 @@ def getLogsFromFile(request):
             return HttpResponse(final_json)
 
     except KeyError as msg:
-        status = {"status": 0, "logstatus":0,"error":"Could not fetch data from log file, please see CyberCP main log file through command line."}
+        status = {"status": 0, "logstatus": 0,
+                  "error": "Could not fetch data from log file, please see CyberCP main log file through command line."}
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[getLogsFromFile]")
         final_json = json.dumps(status)
         return HttpResponse(final_json)
+
 
 def clearLogFile(request):
     try:
@@ -132,6 +172,7 @@ def clearLogFile(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+
 def serverMail(request):
     smtpPath = '/home/cyberpanel/smtpDetails'
     data = {}
@@ -146,6 +187,23 @@ def serverMail(request):
     proc = httpProc(request, 'serverLogs/serverMail.html',
                     data, 'admin')
     return proc.render()
+
+
+def serverMailV2(request):
+    smtpPath = '/home/cyberpanel/smtpDetails'
+    data = {}
+
+    if os.path.exists(smtpPath):
+        mailSettings = json.loads(open(smtpPath, 'r').read())
+        data['smtpHost'] = mailSettings['smtpHost']
+        data['smtpPort'] = mailSettings['smtpPort']
+        data['smtpUserName'] = mailSettings['smtpUserName']
+        data['smtpPassword'] = mailSettings['smtpPassword']
+
+    proc = httpProc(request, 'serverLogs/serverMailV2.html',
+                    data, 'admin')
+    return proc.render()
+
 
 def saveSMTPSettings(request):
     try:
@@ -201,7 +259,6 @@ def saveSMTPSettings(request):
                 data_ret = {"status": 0, 'error_message': 'No suitable authentication method was found.'}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
-
 
         status = {"status": 1}
         final_json = json.dumps(status)

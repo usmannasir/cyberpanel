@@ -3,11 +3,13 @@ from . import views
 
 urlpatterns = [
     url(r'^$', views.loadDockerHome, name='dockerHome'),
-#     url(r'^images', views.loadImages, name='loadImages'),
+    #     url(r'^images', views.loadImages, name='loadImages'),
     url(r'^getTags', views.getTags, name='getTags'),
     url(r'^runContainer', views.runContainer, name='runContainer'),
+    url(r'^V2/runContainerV2', views.runContainerV2, name='runContainerV2'),
     url(r'^submitContainerCreation', views.submitContainerCreation, name='submitContainerCreation'),
     url(r'^listContainers', views.listContainers, name='listContainers'),
+    url(r'^V2/listContainersV2', views.listContainersV2, name='listContainersV2'),
     url(r'^getContainerList', views.getContainerList, name='getContainerList'),
     url(r'^getContainerLogs', views.getContainerLogs, name='getContainerLogs'),
     url(r'^installImage', views.installImage, name='installImage'),
@@ -20,10 +22,13 @@ urlpatterns = [
     url(r'^assignContainer', views.assignContainer, name='assignContainer'),
     url(r'^searchImage', views.searchImage, name='searchImage'),
     url(r'^manageImages', views.manageImages, name='manageImages'),
+    url(r'^V2/manageImagesV2', views.manageImagesV2, name='manageImagesV2'),
     url(r'^getImageHistory', views.getImageHistory, name='getImageHistory'),
     url(r'^removeImage', views.removeImage, name='removeImage'),
     url(r'^recreateContainer', views.recreateContainer, name='recreateContainer'),
     url(r'^installDocker', views.installDocker, name='installDocker'),
     url(r'^images', views.images, name='containerImage'),
+    url(r'^V2/imagesV2', views.imagesV2, name='containerImageV2'),
     url(r'^view/(?P<name>(.*))$', views.viewContainer, name='viewContainer'),
+    url(r'^V2/view/(?P<name>(.*))$', views.viewContainerV2, name='viewContainerV2'),
 ]

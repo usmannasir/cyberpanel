@@ -1,0 +1,223 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="editPHPConfigV2" class="p-8">
+        <div>
+            <div class="flex items-center">
+                <p class="text-4xl font-bold">Edit PHP Configurations</p>
+            </div>
+            <p class="text-xs text-gray-600 py-2 font-semibold">Edit PHP Configurations on this page.</p>
+        </div>
+        <div class="flex items-center py-4">
+            <p class="text-xl font-bold">Edit PHP Configurations</p>
+            <div>
+                - {% if apache %}
+                <a href="{% url 'editPHPConfigs' %}?apache=apache">Edit Apache Configurations</a>{% endif %}
+            </div>
+        </div>
+        <div>
+            <ul class="flex py-2">
+                <li id="dns_tab_button"
+                    class="hover:bg-orange-200 border-2 border-black rounded-l-3xl px-2 py-2 w-60 cursor-pointer active"
+                    onclick="showTab1('basic')">
+                    <a class="flex justify-center">
+                        <p class="text-2xl font-bold">Basic</p>
+                    </a>
+                </li>
+                <li id="api_tab_button"
+                    class="hover:bg-orange-200 border-2 border-black rounded-r-3xl px-2 py-2 w-60 cursor-pointer"
+                    onclick="showTab1('api_tab')">
+                    <a class="flex justify-center">
+                        <p class="text-2xl font-bold">Advanced</p>
+                    </a>
+                </li>
+            </ul>
+            <hr>
+            <div id="basic" class="tab-content1">
+                <div>
+                    <div>
+                        <div class="flex mt-4 py-2 px-6 items-center">
+                            <div>
+                                <p class="font-semibold w-60">Select PHP</p>
+                            </div>
+                            <div>
+                                <select ng-change="fetchPHPDetails()" ng-model="phpSelection"
+                                        class="w-80 bg-gray-100 rounded px-2 py-1">
+                                    {% for php in phps %}
+                                        <option>{{ php }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="ml-2">
+                                <img ng-hide="loadingPHP" src="{% static 'images/loading.gif' %}">
+                            </div>
+                        </div>
+                        <div ng-hide="phpDetailsBox" class="flex mt-4 py-2 px-6 items-center">
+                            <div>
+                                <p class="font-semibold w-60">display_errors</p>
+                            </div>
+                            <div>
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="display_errors" value="" class="sr-only peer">
+                                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                        </div>
+                        <div ng-hide="phpDetailsBox" class="flex mt-4 py-2 px-6 items-center">
+                            <div>
+                                <p class="font-semibold w-60">file_uploads</p>
+                            </div>
+                            <div>
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="file_uploads" value="" class="sr-only peer">
+                                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                        </div>
+                        <div ng-hide="phpDetailsBox" class="flex mt-4 py-2 px-6 items-center">
+                            <div>
+                                <p class="font-semibold w-60">allow_url_fopen</p>
+                            </div>
+                            <div>
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="allow_url_fopen" value="" class="sr-only peer">
+                                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                        </div>
+                        <div ng-hide="phpDetailsBox" class="flex mt-4 py-2 px-6 items-center">
+                            <div>
+                                <p class="font-semibold w-60">allow_url_include</p>
+                            </div>
+                            <div>
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="allow_url_include" value="" class="sr-only peer">
+                                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div ng-hide="phpDetailsBox" class="flex mt-4 py-2 px-6 items-center">
+                    <div>
+                        <p class="font-semibold w-60">memory_limit</p>
+                    </div>
+                    <div>
+                        <input ng-model="memory_limit" type="text" class="w-80 bg-gray-100 rounded px-2 py-1" required>
+                    </div>
+                </div>
+                <div ng-hide="phpDetailsBox" ng-hide="phpDetailsBox" class="flex mt-4 py-2 px-6 items-center">
+                    <div>
+                        <p class="font-semibold w-60">max_execution_time</p>
+                    </div>
+                    <div>
+                        <input ng-model="max_execution_time" type="text" class="w-80 bg-gray-100 rounded px-2 py-1"
+                               required>
+                    </div>
+                </div>
+                <div ng-hide="phpDetailsBox" class="flex mt-4 py-2 px-6 items-center">
+                    <div>
+                        <p class="font-semibold w-60">upload_max_filesize</p>
+                    </div>
+                    <div>
+                        <input ng-model="upload_max_filesize" type="text" class="w-80 bg-gray-100 rounded px-2 py-1"
+                               required>
+                    </div>
+                </div>
+                <div ng-hide="phpDetailsBox" class="flex mt-4 py-2 px-6 items-center">
+                    <div>
+                        <p class="font-semibold w-60">post_max_size</p>
+                    </div>
+                    <div>
+                        <input ng-model="post_max_size" type="text" class="w-80 bg-gray-100 rounded px-2 py-1" required>
+                    </div>
+                </div>
+                <div ng-hide="phpDetailsBox" class="flex mt-4 py-2 px-6 items-center">
+                    <div>
+                        <p class="font-semibold w-60">max_input_time</p>
+                    </div>
+                    <div>
+                        <input ng-model="max_input_time" type="text" class="w-80 bg-gray-100 rounded px-2 py-1"
+                               required>
+                    </div>
+                </div>
+                <div ng-hide="savebtn" class="flex justify-center mt-6 gap-1">
+                    <button ng-click="saveChanges()"
+                            class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                        Save Changes
+                    </button>
+                    <button ng-click="restartPHP()"
+                            class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                        Restart PHP
+                    </button>
+                </div>
+            </div>
+            <div class="mt-3">
+                <div ng-hide="canNotFetch"
+                     class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                    <p>{% trans "Error message: " %}{$ errorMessage $}</p>
+                </div>
+                <div ng-hide="detailsSaved" class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                    <p>{% trans "PHP Configs Saved." %}</p>
+                </div>
+                <div ng-hide="couldNotConnect"
+                     class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                    <p>{% trans "Could not connect. Please refresh this page." %}</p>
+                </div>
+            </div>
+            <div id="api_tab" class="tab-content1" style="display: none;">
+                <div class="flex mt-4 py-2 px-6 items-center">
+                    <div>
+                        <p class="font-semibold w-60">Select PHP</p>
+                    </div>
+                    <div>
+                        <select ng-change="fetchAdvancePHPDetails()" ng-model="phpSelection"
+                                class="w-80 bg-gray-100 rounded px-2 py-1">
+                            {% for php in phps %}
+                                <option>{{ php }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="ml-2">
+                        <img ng-hide="loadingPHP" src="{% static 'images/loading.gif' %}">
+                    </div>
+                </div>
+                <div ng-hide="configDataView">
+                    <div>
+                        <textarea ng-model="configData" rows="30" class="border w-full"></textarea>
+                    </div>
+                </div>
+
+                <div ng-hide="savebtnAdvance" class="flex justify-center mt-6 gap-1">
+                    <button ng-click="saveChangesAdvance()"
+                            class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                        Save Changes
+                    </button>
+                    <button ng-click="restartPHP()"
+                            class="flex items-center bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                        <p>Restart PHP</p>
+                        <img ng-hide="cyberPanelLoading" src="{% static 'images/loading.gif' %}">
+                    </button>
+                </div>
+                <div class="mt-3">
+                    <div ng-hide="canNotFetchAdvanced"
+                         class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                        <p>{% trans "Error message:" %} {$ errorMessage $}</p>
+                    </div>
+                    <div ng-hide="detailsSavedAdvanced"
+                         class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                        <p>{% trans "PHP Configs Saved." %}</p>
+                    </div>
+                    <div ng-hide="couldNotConnect"
+                         class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                        <p>{% trans "Could not connect. Please refresh this page." %}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

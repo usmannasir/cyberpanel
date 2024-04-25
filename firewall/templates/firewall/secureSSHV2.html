@@ -1,0 +1,160 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="secureSSHCTRLV2" class="p-8">
+        <div>
+            <div class="flex items-center">
+                <p class="text-4xl font-bold">Secure SSH -</p>
+                <a target="_blank" href="http://go.cyberpanel.net/ssh-docs"
+                   class="bg-blue-200 px-2 font-bold mt-2 ml-3"
+                   title=""><span>{% trans "SSH Docs" %}</span></a>
+            </div>
+            <p class="text-xs text-gray-600 py-2 font-semibold">Secure or harden SSH Configurations.</p>
+        </div>
+        <div class="flex items-center py-4">
+            <p class="text-xl font-bold">Secure SSH</p>
+            <img ng-hide="secureSSHLoading" src="{% static 'images/loading.gif' %}">
+        </div>
+        <div>
+            <ul class="flex py-2">
+                <li id="dns_tab_button"
+                    class="hover:bg-orange-200 border-2 border-black rounded-l-3xl px-2 py-2 w-60 cursor-pointer active"
+                    onclick="showTab1('basic')">
+                    <a class="flex justify-center">
+                        <p class="text-2xl font-bold">Basic</p>
+                    </a>
+                </li>
+                <li id="api_tab_button"
+                    class="hover:bg-orange-200 border-2 border-black rounded-r-3xl px-2 py-2 w-60 cursor-pointer"
+                    onclick="showTab1('ssh_keys')">
+                    <a class="flex justify-center">
+                        <p class="text-2xl font-bold">SSH Keys</p>
+                    </a>
+                </li>
+            </ul>
+            <hr>
+            <div id="basic" class="tab-content1">
+                <div>
+                    <div>
+                        <div ng-hide="emailDetails" class="flex mt-4 py-2 px-6 items-center">
+                            <div>
+                                <p class="font-semibold w-60">SSH Port</p>
+                            </div>
+                            <div>
+                                <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="sshPort"
+                                       required>
+                            </div>
+                        </div>
+                        <div class="flex mt-4 py-2 px-6 items-center">
+                            <div>
+                                <p class="font-semibold w-60">Permit Root Login</p>
+                            </div>
+                            <div>
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="rootLogin" value="" class="sr-only peer">
+                                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="flex px-6 items-center">
+                            <div>
+                                <p class="font-semibold w-60"></p>
+                            </div>
+                            <div class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                                <p>{% trans "Before disabling root login, make sure you have another account with sudo priviliges on server." %}</p>
+                            </div>
+                        </div>
+                        <div class="flex justify-center mt-6">
+                            <button ng-click="saveChanges()"
+                                    class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                                Save Changes
+                            </button>
+                        </div>
+                        <div class="mt-2">
+                            <div>
+                                <div ng-hide="couldNotSave"
+                                     class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                                    <p>{% trans "Error message: " %}{$ errorMessage $}</p>
+                                </div>
+                                <div ng-hide="detailsSaved"
+                                     class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                                    <p>{% trans "SSH Configurations Saved." %}</p>
+                                </div>
+                                <div ng-hide="couldNotConnect"
+                                     class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                                    <p>{% trans "Could not connect. Please refresh this page." %}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="ssh_keys" class="tab-content1" style="display: none;">
+                <div class="relative py-5 overflow-x-auto">
+                    <table class="w-full text-sm text-left rtl:text-right">
+                        <thead>
+                        <tr>
+                            <th scope="col" class="px-6 py-3">
+                                Username
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Key
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Delete
+                            </th>
+                        </tr>
+                        </thead>
+                        <hr>
+                        <tbody ng-repeat="record in records track by $index"
+                               class="border shadow-lg py-3 px-6 rounded-b-lg">
+                        <tr>
+                            <td ng-bind="record.userName" class="px-8 py-4 font-bold">
+                                root
+                            </td>
+                            <td ng-bind="record.key" class="px-6 py-4">
+                            </td>
+                            <td ng-click="deleteKey(record.key)" class="px-6 py-4">
+                                <button class="bg-red-500 ml-2 px-2 py-1 rounded text-white font-bold">X</button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div ng-hide="keyBox" class="mt-2">
+                        <textarea placeholder="Paste your public key here..." ng-model="keyData"
+                                  rows="6" class="w-full border">{{ logs }}</textarea>
+                </div>
+                <div ng-hide="showKeyBox" class="flex justify-center mt-2">
+                    <button ng-click="addKey()"
+                            class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                        Add Key
+                    </button>
+                </div>
+                <div ng-hide="saveKeyBtn" class="flex justify-center mt-2">
+                    <button ng-click="saveKey()"
+                            class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                        Save
+                    </button>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-4">
+                        <div ng-hide="keyDeleted"
+                             class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                            <p>{% trans "SSH Key Deleted" %}</p>
+                        </div>
+                        <div ng-hide="couldNotConnect"
+                             class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                            <p>{% trans "Could not connect. Please refresh this page." %}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

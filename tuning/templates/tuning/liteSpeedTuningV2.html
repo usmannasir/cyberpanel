@@ -1,0 +1,105 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="litespeedTuningV2" class="p-8">
+        <div>
+            <p class="text-4xl font-bold">LiteSpeed Tuning</p>
+            <p class="text-xs text-gray-600 py-2 font-semibold">You can use this page to tweak your server according to
+                your website requirments.</p>
+        </div>
+        <div>
+            <div class="flex items-center py-4">
+                <p class="text-xl font-bold">Tuning Details</p>
+                <img id="tuningLoading" src="{% static 'images/loading.gif' %}">
+            </div>
+            <hr>
+            <div>
+                <div class="flex mt-4 py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Max Connections</p>
+                    </div>
+                    <div>
+                        <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="maxConnections"
+                               required>
+                    </div>
+                </div>
+                <div class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Max SSL Connections</p>
+                    </div>
+                    <div>
+                        <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="maxSSLConnections"
+                               required>
+                    </div>
+                </div>
+                <div class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Connection Timeout</p>
+                    </div>
+                    <div>
+                        <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="connectionTimeOut"
+                               required>
+                    </div>
+                </div>
+                <div class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Keep Alive Timeout</p>
+                    </div>
+                    <div>
+                        <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="keepAliveTimeOut"
+                               required>
+                    </div>
+                </div>
+                <div class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Cache Size in memory</p>
+                    </div>
+                    <div>
+                        <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="cacheSizeInMemory"
+                               required>
+                    </div>
+                </div>
+                <div class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Enable GZIP Compression</p>
+                    </div>
+                    <div>
+                        <select ng-model="gzipCompression" class="w-80 bg-gray-100 rounded px-2 py-1">
+                            <option>Enable</option>
+                            <option>Disable</option>
+                        </select>
+                    </div>
+                    <div class="w-80 ml-4">
+                        {$ gzipStatus $}
+                    </div>
+                </div>
+                <div class="flex justify-center mt-6">
+                    <button ng-click="saveTuningSettings()"
+                            class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                        Tune Web Server
+                    </button>
+                </div>
+
+                <div class="mt-4">
+                    <div id="canNotFetchTuning"
+                         class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                        <p>{% trans "Cannot fetch Current Value, but you can still submit new changes, error reported from server:" %}
+                            {$ errMessage $}</p>
+                    </div>
+                    <div id="notTuned"
+                         class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                        <p>{% trans "Cannot save details, Error Message: " %}{$ errMessage $} </p>
+                    </div>
+                    <div id="tuned" class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                        <p>{% trans "Web Server Successfully tuned." %} </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+{% endblock %}

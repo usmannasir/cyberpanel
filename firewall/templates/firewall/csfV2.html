@@ -1,0 +1,253 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="csfV2" class="p-8">
+        <div>
+            <div class="flex items-center">
+                <p class="text-4xl font-bold">CSF (ConfigServer Security and Firewall)!</p>
+            </div>
+            <p class="text-xs text-gray-600 py-2 font-semibold">On this page you can configure CSF (ConfigServer
+                Security and Firewall) settings.</p>
+        </div>
+        {% if csfInstalled == 0 %}
+            <div class="border px-8 py-2">
+                <div class="flex items-center py-4">
+                    <p class="text-xl font-bold">CSF</p>
+                    <img ng-hide="csfLoading" src="/static/images/loading.gif">
+                </div>
+                <div class="flex justify-center mt-3">
+                    <p>CSF is not installed</p>
+                </div>
+                <div>
+                    <div class="flex justify-center mt-2 mb-4">
+                        <button ng-click="installCSF()"
+                                class="bg-orange-500 text-white font-semibold px-4 py-1 text-xl">
+                            <div class="flex">
+                                <p>Install Now</p>
+                                <i class="glyph-icon icon-arrow-right"></i>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <div ng-hide="modSecNotifyBox" class="form-group">
+                        <div class="col-sm-6">
+                            <div ng-hide="failedToStartInallation"
+                                 class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                                <p>{% trans "Failed to start installation, Error message: " %} {$ errorMessage
+                                    $}</p>
+                            </div>
+                            <div ng-hide="couldNotConnect"
+                                 class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                                <p>{% trans "Could not connect. Please refresh this page." %} </p>
+                            </div>
+                            <div ng-hide="installationFailed"
+                                 class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                                <p>{% trans "Installation failed." %} {$ errorMessage $}</p>
+                            </div>
+                            <div ng-hide="modSecSuccessfullyInstalled"
+                                 class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                                <p>{% trans "CSF successfully installed, refreshing page in 3 seconds.." %}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div ng-hide="modeSecInstallBox">
+                    <form action="/" id="" class="form-horizontal bordered-row">
+                        <div class="flex justify-center items-center py-2">
+                            <img src="{% static 'firewall/icons/firewall.png' %}">
+                            <p class="px-2">In winter we must protect each other..</p>
+                            <img ng-hide="modsecLoading" src="/static/images/loading.gif">
+                        </div>
+                        <div>
+                            <textarea ng-model="requestData" rows="15"
+                                      class="border w-full">{{ requestData }}</textarea>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        {% else %}
+            <div>
+                <ul class="flex justify-end bg-gray-100 py-2 mt-4 text-xl font-semibold text-gray-600 px-4 gap-8">
+                    {#                    <li>#}
+                    {#                        <div class="flex items-center">#}
+                    {#                            <p class="text-xl font-bold">CSF</p>#}
+                    {#                            <img ng-hide="csfLoading" src="/static/images/loading.gif">#}
+                    {#                        </div>#}
+                    {#                    </li>#}
+                    <li class="hover:text-orange-600 active"><a href="#" onclick="showTab('tab1')" aria-selected="true">General</a>
+                    </li>
+                    <li class="hover:text-orange-600"><a href="#" ng-click="GetCurrentPlugins()"
+                                                         onclick="showTab('tab2')">CSF</a></li>
+                    <li class="hover:text-orange-600"><a href="#" ng-click="GetCurrentThemes()"
+                                                         onclick="showTab('tab3')">LDF</a></li>
+                </ul>
+            </div>
+            <div id="tab1" class="tab-content">
+                <div id="general">
+                    <form id="createPackages">
+                        <div class="flex mt-4 py-2 px-6 items-center">
+                            <div>
+                                <p class="font-semibold w-60">Remove CSF</p>
+                            </div>
+                            <div>
+                                <div>
+                                    <div class="flex justify-center">
+                                        <button ng-click="removeCSF()"
+                                                class="bg-orange-500 text-white font-semibold px-4 py-1">
+                                            <div class="flex">
+                                                <p>Completely Remove CSF</p>
+                                                <i class="glyph-icon icon-arrow-right"></i>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex mt-4 py-2 px-6 items-center">
+                            <div>
+                                <p class="font-semibold w-60">Firewall</p>
+                            </div>
+                            <div>
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="firewallStatus" value="" class="sr-only peer">
+                                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="flex mt-4 py-2 px-6 items-center">
+                            <div>
+                                <p class="font-semibold w-60">Testing Mode</p>
+                            </div>
+                            <div>
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="testingMode" value="" class="sr-only peer">
+                                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="flex mt-4 py-2 px-6 items-center">
+                            <div>
+                                <p class="font-semibold w-60">TCP IN Ports</p>
+                            </div>
+                            <div>
+                                <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                       ng-model="tcpOUT"
+                                       required>
+                            </div>
+                            <div class="ml-2">
+                                <button type="button" ng-click="modifyPorts('TCP_OUT')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                         stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                              d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25M9 16.5v.75m3-3v3M15 12v5.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex mt-4 py-2 px-6 items-center">
+                            <div>
+                                <p class="font-semibold w-60">TCP Out Ports</p>
+                            </div>
+                            <div>
+                                <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="tcpOUT">
+                            </div>
+                            <div class="ml-2">
+                                <button type="button" ng-click="modifyPorts('TCP_OUT')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                         stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                              d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25M9 16.5v.75m3-3v3M15 12v5.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex mt-4 py-2 px-6 items-center">
+                            <div>
+                                <p class="font-semibold w-60">UDP In Ports</p>
+                            </div>
+                            <div>
+                                <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="udpIN">
+                            </div>
+                            <div class="ml-2">
+                                <button type="button" ng-click="modifyPorts('UDP_IN')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                         stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                              d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25M9 16.5v.75m3-3v3M15 12v5.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex mt-4 py-2 px-6 items-center">
+                            <div>
+                                <p class="font-semibold w-60">UDP Out Ports</p>
+                            </div>
+                            <div>
+                                <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="udpOUT">
+                            </div>
+                            <div class="ml-2">
+                                <button type="button" ng-click="modifyPorts('UDP_OUT')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                         stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                              d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25M9 16.5v.75m3-3v3M15 12v5.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div id="tab2" class="tab-content" style="display: none;">
+                <div id="csf">
+                    <form id="createPackages">
+                        <div class="flex mt-4 py-2 px-6 items-center">
+                            <div>
+                                <p class="font-semibold w-60">Allow IP</p>
+                            </div>
+                            <div>
+                                <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="allowIP">
+                            </div>
+                            <div class="ml-2">
+                                <button type="button" ng-click="modifyIPs('allowIP')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                         stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                              d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25M9 16.5v.75m3-3v3M15 12v5.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex mt-4 py-2 px-6 items-center">
+                            <div>
+                                <p class="font-semibold w-60">Block IP Address</p>
+                            </div>
+                            <div>
+                                <input type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="blockIP">
+                            </div>
+                            <div class="ml-2">
+                                <button type="button" ng-click="modifyIPs('blockIP')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                         stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                              d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25M9 16.5v.75m3-3v3M15 12v5.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div id="tab3" class="tab-content" style="display: none;">
+                <div id="lfd">
+                    <p class="font-semibold w-60">Comming Soon..</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

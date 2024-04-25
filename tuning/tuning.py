@@ -30,6 +30,11 @@ class tuningManager:
                         None, 'admin')
         return proc.render()
 
+    def liteSpeedTuningV2(self, request, userID):
+        proc = httpProc(request, 'tuning/liteSpeedTuningV2.html',
+                        None, 'admin')
+        return proc.render()
+
     def phpTuning(self, request, userID):
         currentACL = ACLManager.loadedACL(userID)
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
@@ -41,6 +46,20 @@ class tuningManager:
         else:
             OLS = 0
             proc = httpProc(request, 'tuning/phpTuning.html',
+                            {'OLS': OLS}, 'admin')
+            return proc.render()
+
+    def phpTuningV2(self, request, userID):
+        currentACL = ACLManager.loadedACL(userID)
+        if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+            websitesName = ACLManager.findAllSites(currentACL, userID)
+            OLS = 1
+            proc = httpProc(request, 'tuning/phpTuning.html',
+                            {'websiteList': websitesName, 'OLS': OLS}, 'admin')
+            return proc.render()
+        else:
+            OLS = 0
+            proc = httpProc(request, 'tuning/phpTuningV2.html',
                             {'OLS': OLS}, 'admin')
             return proc.render()
 

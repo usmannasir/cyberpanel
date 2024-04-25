@@ -1,0 +1,336 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+
+    <div ng-controller="topProcessesV2" class="p-8">
+        <div class="flex lg:flex-row justify-between items-center sm:flex-col">
+            <div>
+                <div class="flex items-center">
+                    <p class="text-4xl font-bold">Top Processes</p>
+                    <img height="20px" ng-hide="cyberPanelLoading"
+                         src="/static/images/loading.gif">
+                </div>
+                <p class="text-xs text-gray-600 py-2 font-semibold">List of top processes on your server. (Refresh every
+                    3 seconds)</p>
+            </div>
+        </div>
+        <div class="flex flex-col md:flex-col lg:flex-row justify-between gap-4">
+            <div class="w-full">
+                <div class="relative py-5 overflow-x-auto">
+                    <table class="w-full text-sm text-left rtl:text-right">
+                        <thead>
+                        <tr>
+                            <th scope="col" class="px-6 py-3">
+                                Cores
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Model Name
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                CPU Mhz
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Cache Size
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody class="border shadow-lg py-3 px-6 rounded-b-lg">
+                        <tr>
+                            <td class="px-6 py-4">
+                                {$ cores $}
+                            </td>
+                            <td class="px-6 py-4">
+                                {$ modelName $}
+                            </td>
+                            <td class="px-6 py-4">
+                                {$ cpuMHZ $}
+                            </td>
+                            <td class="px-6 py-4">
+                                {$ cacheSize $}
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="w-full">
+                <div class="relative py-5 overflow-x-auto">
+                    <table class="w-full text-sm text-left rtl:text-right">
+                        <thead>
+                        <tr>
+                            <th scope="col" class="px-6 py-3">
+                                Processes
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Running
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Sleeping
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Stopped
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Zombie
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody class="border shadow-lg py-3 px-6 rounded-b-lg">
+                        <tr>
+                            <td class="px-6 py-4">
+                                {$ totalProcesses $}
+                            </td>
+                            <td class="px-6 py-4">
+                                {$ runningProcesses $}
+                            </td>
+                            <td class="px-6 py-4">
+                                {$ sleepingProcesses $}
+                            </td>
+                            <td class="px-6 py-4">
+                                {$ stoppedProcesses $}
+                            </td>
+                            <td class="px-6 py-4">
+                                {$ zombieProcesses $}
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="flex flex-col md:flex-col lg:flex-row justify-between gap-4">
+            <div class="w-full">
+                <div class="relative py-5 overflow-x-auto">
+                    <table class="w-full text-sm text-left rtl:text-right">
+                        <thead>
+                        <tr>
+                            <th scope="col" class="px-6 py-3">
+                                CPU Load
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                1 Min
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                5 Min
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                15 Min
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody class="border shadow-lg py-3 px-6 rounded-b-lg">
+                        <tr>
+                            <td class="px-6 py-4">
+                                {$ cpuNow $}
+                            </td>
+                            <td class="px-6 py-4">
+                                {$ cpuOne $}
+                            </td>
+                            <td class="px-6 py-4">
+                                {$ cpuFive $}
+                            </td>
+                            <td class="px-6 py-4">
+                                {$ cpuFifteen $}
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="w-full">
+                <div class="relative py-5 overflow-x-auto">
+                    <table class="w-full text-sm text-left rtl:text-right">
+                        <thead>
+                        <tr>
+                            <th scope="col" class="px-6 py-3">
+                                I/O Wait
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Idle Time
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                HW Interrupts
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Softirqs
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody class="border shadow-lg py-3 px-6 rounded-b-lg">
+                        <tr>
+                            <td class="px-6 py-4">
+                                {$ ioWait $}
+                            </td>
+                            <td class="px-6 py-4">
+                                {$ idleTime $}
+                            </td>
+                            <td class="px-6 py-4">
+                                {$ hwInterrupts $}
+                            </td>
+                            <td class="px-6 py-4">
+                                {$ Softirqs $}
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="flex flex-col md:flex-col lg:flex-row justify-between gap-4">
+            <div class="w-full">
+                <div class="relative py-5 overflow-x-auto">
+                    <table class="w-full text-sm text-left rtl:text-right">
+                        <thead>
+                        <tr>
+                            <th scope="col" class="px-6 py-3">
+                                Memory
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Free
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Used
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                buff/cache
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody class="border shadow-lg py-3 px-6 rounded-b-lg">
+                        <tr>
+                            <td class="px-6 py-4">
+                                {$ totalMemory $}
+                            </td>
+                            <td class="px-6 py-4">
+                                {$ freeMemory $}
+                            </td>
+                            <td class="px-6 py-4">
+                                {$ usedMemory $}
+                            </td>
+                            <td class="px-6 py-4">
+                                {$ buffCache $}
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="w-full">
+                <div class="relative py-5 overflow-x-auto">
+                    <table class="w-full text-sm text-left rtl:text-right">
+                        <thead>
+                        <tr>
+                            <th scope="col" class="px-6 py-3">
+                                SWAP
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Free
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Used
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                buff/cache
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody class="border shadow-lg py-3 px-6 rounded-b-lg">
+                        <tr>
+                            <td class="px-6 py-4">
+                                {$ swapTotalMemory $}
+                            </td>
+                            <td class="px-6 py-4">
+                                {$ swapFreeMemory $}
+                            </td>
+                            <td class="px-6 py-4">
+                                {$ swapUsedMemory $}
+                            </td>
+                            <td class="px-6 py-4">
+                                {$ swapBuffCache $}
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center py-4">
+            <p class="text-xl font-bold">Top Processes</p>
+        </div>
+        <div class="relative flex items-center w-full h-12 rounded-lg bg-gray-100 overflow-hidden">
+            <div class="grid place-items-center h-full w-12 text-gray-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                     stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+            </div>
+            <input placeholder="Search..." ng-model="search" name="dom" type="text"
+                   class="h-full w-full bg-gray-100 outline-none text-sm text-gray-700 pr-2" ng-model="domainNameCreate"
+                   required>
+        </div>
+        <div>
+            <div class="relative py-5 overflow-x-auto">
+                <table class="w-full text-sm text-left rtl:text-right">
+                    <thead>
+                    <tr>
+                        <th scope="col" class="px-6 py-3">
+                            PID
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            User
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            VIRT
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            RES
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            State
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            %CPU
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            %MEM
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            Time
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            Command
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            Actions
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody ng-repeat="process in processes | filter:search"
+                           class="border shadow-lg py-3 px-6 rounded-b-lg">
+                    <tr>
+                        <td ng-bind="process.PID" class="px-6 py-4"></td>
+                        <td ng-bind="process.User" class="px-6 py-4"></td>
+                        <td ng-bind="process.VIRT" class="px-6 py-4"></td>
+                        <td ng-bind="process.RES" class="px-6 py-4"></td>
+                        <td ng-bind="process.S" class="px-6 py-4"></td>
+                        <td ng-bind="process.CPU" class="px-6 py-4"></td>
+                        <td ng-bind="process.MEM" class="px-6 py-4"></td>
+                        <td ng-bind="process.Time" class="px-6 py-4"></td>
+                        <td ng-bind="process.Command" class="px-6 py-4"></td>
+                        <td class="px-6 py-4">
+                            <button ng-click="killProcess(process.PID)"
+                                    class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">KILL
+                            </button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}

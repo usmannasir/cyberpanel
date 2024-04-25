@@ -1,0 +1,139 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+
+    <div ng-controller="installExtensionsV2" class="p-8">
+        <div class="flex lg:flex-row justify-between items-center sm:flex-col">
+            <div class="flex items-center">
+                <p class="text-4xl font-bold">Install PHP Extensions -</p>
+                <div style="height: 23px;line-height: 21px;"
+                     class="bg-blue-200 px-2 font-bold mt-2 ml-3">
+                    {% if apache %}
+                        <a href="{% url 'installExtensions' %}?apache=apache">Manage Apache Extensions</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <p class="text-xs text-gray-600 py-2 font-semibold">Install/uninstall php extensions on this page.
+        </p>
+        <div class="flex items-center py-4">
+            <p class="text-xl font-bold">Select PHP Version</p>
+            <img ng-hide="loadingExtensions"
+                 src="{% static 'images/loading.gif' %}">
+        </div>
+        <hr>
+        <form action="/" id="modifyPackageForm">
+            <div class="flex mt-4 py-2 px-6">
+                <div>
+                    <p class="font-semibold w-60">Select PHP</p>
+                </div>
+                <div>
+                    <select ng-disabled="phpSelectionDisabled" ng-change="fetchPHPDetails()"
+                            ng-model="phpSelection" class="w-80 bg-gray-100 rounded px-2 py-1">
+                        {% for php in phps %}
+                            <option>{{ php }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="mt-2" ng-hide="availableExtensions">
+                <div class="relative flex items-center w-full h-12 rounded-lg bg-gray-100 overflow-hidden">
+                    <div class="grid place-items-center h-full w-12 text-gray-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                             stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                    <input type="text" ng-model="extSearch" placeholder="{% trans 'Search Extensions..' %}"
+                           class="h-full w-full bg-gray-100 outline-none text-sm text-gray-700 pr-2">
+                </div>
+            </div>
+            <div ng-hide="availableExtensions" class="relative py-5 overflow-x-auto">
+                <table class="w-full text-sm text-left rtl:text-right">
+                    <thead>
+                    <tr class="bg-gray-200 mt-6 w-full rounded-t-lg border-b-2 border-gray-400">
+                        <th scope="col" class="px-6 py-3">
+                            ID
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            PHP
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            Extension Name
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            Description
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            Status
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            Install
+                        </th>
+                        <th scope="col" class="px-6 py-3">
+                            Uninstall
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody ng-repeat="record in records | filter:extSearch"
+                           class="border shadow-lg py-3 px-6 rounded-b-lg">
+                    <tr>
+                        <td ng-bind="record.id" class="px-6 py-4">
+                        </td>
+                        <td ng-bind="record.phpVers" class="px-6 py-4">
+                        </td>
+                        <td ng-bind="record.extensionName" class="px-6 py-4">
+                        </td>
+                        <td ng-bind="record.description" class="px-6 py-4">
+                        </td>
+                        <td ng-bind="record.status" class="px-6 py-4">
+                        </td>
+                        <td class="px-6 py-4">
+                            <button ng-disabled="record.status=='Installed'" type="button"
+                                    ng-click="installExt(record.extensionName)"
+                                    class="btn ra-100 btn-blue-alt">{% trans "Install" %}</button>
+                        </td>
+                        <td class="px-6 py-4">
+                            <button ng-disabled="record.status=='Not-Installed'" type="button"
+                                    ng-click="uninstallExt(record.extensionName)"
+                                    class="btn ra-100 btn-blue-alt">{% trans "Uninstall" %}</button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div ng-hide="request" class="mt-2">
+                <div>
+                    <button ng-disabled="goback" style="margin-bottom: 1%" type="button"
+                            ng-click="fetchPHPDetails()"
+                            class="bg-orange-500 text-white font-bold px-2 py-1">{% trans "Go Back" %}</button>
+                    <textarea ng-model="requestData" rows="15"
+                              class="border w-full">{{ requestData }}</textarea>
+                </div>
+            </div>
+
+            <!----- Log box ----------------->
+            <div>
+                <div ng-hide="canNotFetch"
+                     class="flex justify-center w-full mt-2 bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                    <p>{% trans "Cannot fetch details. Error message:" %} {$ errorMessage $}</p>
+                </div>
+                <div ng-hide="canNotPerform"
+                     class="flex justify-center w-full mt-2 bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                    <p>{% trans "Cannot perform operation. Error message:" %} {$ errorMessage $}</p>
+                </div>
+                <div ng-hide="couldNotConnect"
+                     class="flex justify-center w-full mt-2 bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                    <p>{% trans "Could not connect. Please refresh this page." %}</p>
+                </div>
+            </div>
+
+
+        </form>
+    </div>
+{% endblock %}

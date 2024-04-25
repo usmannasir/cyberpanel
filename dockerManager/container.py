@@ -3,6 +3,7 @@
 import os.path
 import sys
 import django
+
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
@@ -24,10 +25,11 @@ from serverStatus.serverStatusUtil import ServerStatusUtil
 import threading as multi
 from plogical.httpProc import httpProc
 
+
 # Use default socket to connect
 class ContainerManager(multi.Thread):
 
-    def __init__(self, name=None, function=None, request = None, templateName = None, data = None):
+    def __init__(self, name=None, function=None, request=None, templateName=None, data=None):
         multi.Thread.__init__(self)
         self.name = name
         self.function = function
@@ -47,7 +49,7 @@ class ContainerManager(multi.Thread):
                 command = 'sudo systemctl restart gunicorn.socket'
                 ProcessUtilities.executioner(command)
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile( str(msg) + ' [ContainerManager.run]')
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [ContainerManager.run]')
 
     @staticmethod
     def executioner(command, statusFile):
@@ -99,8 +101,8 @@ class ContainerManager(multi.Thread):
             val = request.session['userID']
             admin = Administrator.objects.get(pk=val)
             proc = httpProc(request, 'dockerManager/images.html', {"type": admin.type,
-                                                                 'image': image,
-                                                                 'tag': tag})
+                                                                   'image': image,
+                                                                   'tag': tag})
             return proc.render()
 
         envList = {};
@@ -126,6 +128,56 @@ class ContainerManager(multi.Thread):
                 "envList": envList}
 
         template = 'dockerManager/runContainer.html'
+        proc = httpProc(request, template, Data, 'admin')
+        return proc.render()
+
+    def createContainerV2(self, request=None, userID=None, data=None):
+        client = docker.from_env()
+        dockerAPI = docker.APIClient()
+
+        adminNames = ACLManager.loadAllUsers(userID)
+        tag = request.GET.get('tag')
+        image = request.GET.get('image')
+        tag = tag.split(" (")[0]
+
+        if "/" in image:
+            name = image.split("/")[0] + "." + image.split("/")[1]
+        else:
+            name = image
+
+        try:
+            inspectImage = dockerAPI.inspect_image(image + ":" + tag)
+        except docker.errors.ImageNotFound:
+            val = request.session['userID']
+            admin = Administrator.objects.get(pk=val)
+            proc = httpProc(request, 'dockerManager/images.html', {"type": admin.type,
+                                                                   'image': image,
+                                                                   'tag': tag})
+            return proc.render()
+
+        envList = {};
+        if 'Env' in inspectImage['Config']:
+            for item in inspectImage['Config']['Env']:
+                if '=' in item:
+                    splitedItem = item.split('=', 1)
+                    print(splitedItem)
+                    envList[splitedItem[0]] = splitedItem[1]
+                else:
+                    envList[item] = ""
+
+        portConfig = {};
+        if 'ExposedPorts' in inspectImage['Config']:
+            for item in inspectImage['Config']['ExposedPorts']:
+                portDef = item.split('/')
+                portConfig[portDef[0]] = portDef[1]
+
+        if image is None or image is '' or tag is None or tag is '':
+            return redirect(loadImages)
+
+        Data = {"ownerList": adminNames, "image": image, "name": name, "tag": tag, "portConfig": portConfig,
+                "envList": envList}
+
+        template = 'dockerManager/runContainerV2.html'
         proc = httpProc(request, template, Data, 'admin')
         return proc.render()
 
@@ -192,6 +244,69 @@ class ContainerManager(multi.Thread):
         except BaseException as msg:
             return HttpResponse(str(msg))
 
+    def loadContainerHomeV2(self, request=None, userID=None, data=None):
+        try:
+            name = self.name
+
+            if ACLManager.checkContainerOwnership(name, userID) != 1:
+                return ACLManager.loadError()
+
+            client = docker.from_env()
+            dockerAPI = docker.APIClient()
+
+            try:
+                container = client.containers.get(name)
+            except docker.errors.NotFound as err:
+                return HttpResponse("Container not found")
+
+            data = {}
+            con = Containers.objects.get(name=name)
+            data['name'] = name
+            data['image'] = con.image + ":" + con.tag
+            data['ports'] = json.loads(con.ports)
+            data['cid'] = con.cid
+            data['envList'] = json.loads(con.env)
+            data['volList'] = json.loads(con.volumes)
+
+            stats = container.stats(decode=False, stream=False)
+            logs = container.logs(stream=True)
+
+            data['status'] = container.status
+            data['memoryLimit'] = con.memory
+            if con.startOnReboot == 1:
+                data['startOnReboot'] = 'true'
+                data['restartPolicy'] = "Yes"
+            else:
+                data['startOnReboot'] = 'false'
+                data['restartPolicy'] = "No"
+
+            if 'usage' in stats['memory_stats']:
+                # Calculate Usage
+                # Source: https://github.com/docker/docker/blob/28a7577a029780e4533faf3d057ec9f6c7a10948/api/client/stats.go#L309
+                data['memoryUsage'] = (stats['memory_stats']['usage'] / stats['memory_stats']['limit']) * 100
+
+                try:
+                    cpu_count = len(stats["cpu_stats"]["cpu_usage"]["percpu_usage"])
+                except:
+                    cpu_count = 0
+
+                data['cpuUsage'] = 0.0
+                cpu_delta = float(stats["cpu_stats"]["cpu_usage"]["total_usage"]) - \
+                            float(stats["precpu_stats"]["cpu_usage"]["total_usage"])
+                system_delta = float(stats["cpu_stats"]["system_cpu_usage"]) - \
+                               float(stats["precpu_stats"]["system_cpu_usage"])
+                if system_delta > 0.0:
+                    data['cpuUsage'] = round(cpu_delta / system_delta * 100.0 * cpu_count, 3)
+            else:
+                data['memoryUsage'] = 0
+                data['cpuUsage'] = 0
+
+            template = 'dockerManager/viewContainerV2.html'
+            proc = httpProc(request, template, data, 'admin')
+            return proc.render()
+        except BaseException as msg:
+            return HttpResponse(str(msg))
+
     def listContainers(self, request=None, userID=None, data=None):
         client = docker.from_env()
         dockerAPI = docker.APIClient()
@@ -229,6 +344,49 @@ class ContainerManager(multi.Thread):
                 pagination.append('<li><a href="\#">' + str(i) + '</a></li>')
 
         template = 'dockerManager/listContainers.html'
+        proc = httpProc(request, template, {"pagination": pagination,
+                                            "unlistedContainers": unlistedContainers,
+                                            "adminNames": adminNames,
+                                            "showUnlistedContainer": showUnlistedContainer}, 'admin')
+        return proc.render()
+
+    def listContainersV2(self, request=None, userID=None, data=None):
+        client = docker.from_env()
+        dockerAPI = docker.APIClient()
+
+        currentACL = ACLManager.loadedACL(userID)
+        containers = ACLManager.findAllContainers(currentACL, userID)
+
+        allContainers = client.containers.list()
+        containersList = []
+        showUnlistedContainer = True
+
+        # TODO: Add condition to show unlisted Containers only if user has admin level access
+
+        unlistedContainers = []
+        for container in allContainers:
+            if container.name not in containers:
+                unlistedContainers.append(container)
+
+        if not unlistedContainers:
+            showUnlistedContainer = False
+
+        adminNames = ACLManager.loadAllUsers(userID)
+
+        pages = float(len(containers)) / float(10)
+        pagination = []
+
+        if pages <= 1.0:
+            pages = 1
+            pagination.append('<li><a href="\#"></a></li>')
+        else:
+            pages = ceil(pages)
+            finalPages = int(pages) + 1
+
+            for i in range(1, finalPages):
+                pagination.append('<li><a href="\#">' + str(i) + '</a></li>')
+
+        template = 'dockerManager/listContainersV2.html'
         proc = httpProc(request, template, {"pagination": pagination,
                                             "unlistedContainers": unlistedContainers,
                                             "adminNames": adminNames,
@@ -299,7 +457,7 @@ class ContainerManager(multi.Thread):
             volumes = {}
             for index, volume in volList.items():
                 volumes[volume['src']] = {'bind': volume['dest'],
-                                             'mode': 'rw'}
+                                          'mode': 'rw'}
 
             ## Create Configurations
             admin = Administrator.objects.get(userName=dockerOwner)
@@ -772,6 +930,54 @@ class ContainerManager(multi.Thread):
         except BaseException as msg:
             return HttpResponse(str(msg))
 
+    def imagesV2(self, request=None, userID=None, data=None):
+        try:
+            admin = Administrator.objects.get(pk=userID)
+
+            client = docker.from_env()
+            dockerAPI = docker.APIClient()
+
+            try:
+                imageList = client.images.list()
+            except docker.errors.APIError as err:
+                return HttpResponse(str(err))
+
+            images = {}
+            names = []
+
+            for image in imageList:
+                try:
+                    name = image.attrs['RepoTags'][0].split(":")[0]
+                    if "/" in name:
+                        name2 = ""
+                        for item in name.split("/"):
+                            name2 += ":" + item
+                    else:
+                        name2 = name
+
+                    tags = []
+                    for tag in image.tags:
+                        getTag = tag.split(":")
+                        if len(getTag) == 2:
+                            tags.append(getTag[1])
+                    print(tags)
+                    if name in names:
+                        images[name]['tags'].extend(tags)
+                    else:
+                        names.append(name)
+                        images[name] = {"name": name,
+                                        "name2": name2,
+                                        "tags": tags}
+                except:
+                    continue
+
+            template = 'dockerManager/imagesV2.html'
+            proc = httpProc(request, template, {"images": images, "test": ''}, 'admin')
+            return proc.render()
+
+        except BaseException as msg:
+            return HttpResponse(str(msg))
+
     def manageImages(self, request=None, userID=None, data=None):
         try:
 
@@ -796,6 +1002,36 @@ class ContainerManager(multi.Thread):
                     continue
 
             template = 'dockerManager/manageImages.html'
+            proc = httpProc(request, template, {"images": images}, 'admin')
+            return proc.render()
+
+        except BaseException as msg:
+            return HttpResponse(str(msg))
+
+    def manageImagesV2(self, request=None, userID=None, data=None):
+        try:
+
+            client = docker.from_env()
+            dockerAPI = docker.APIClient()
+
+            imageList = client.images.list()
+
+            images = {}
+            names = []
+
+            for image in imageList:
+                try:
+                    name = image.attrs['RepoTags'][0].split(":")[0]
+                    if name in names:
+                        images[name]['tags'].extend(image.tags)
+                    else:
+                        names.append(name)
+                        images[name] = {"name": name,
+                                        "tags": image.tags}
+                except:
+                    continue
+
+            template = 'dockerManager/manageImagesV2.html'
             proc = httpProc(request, template, {"images": images}, 'admin')
             return proc.render()
 
