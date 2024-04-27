@@ -27,4 +27,8 @@ urlpatterns = [
     url(r'^CyberPanelPort$', views.CyberPanelPort, name='CyberPanelPort'),
     url(r'^submitPortChange$', views.submitPortChange, name='submitPortChange'),
 
+
+    url(r'^Switchoffsecurity$', views.Switchoffsecurity, name='Switchoffsecurity'),
+    url(r'^securityruleUpdate$', views.securityruleUpdate, name='securityruleUpdate'),
+
 ]
