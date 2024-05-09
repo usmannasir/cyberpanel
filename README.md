@@ -34,27 +34,24 @@ Web Hosting Control Panel that uses OpenLiteSpeed as the underlying Web Server.
 # Supported OS Versions
 
 * Ubuntu 18.04
+* Ubuntu 20.04
+* Ubuntu 20.10
+* Ubuntu 22.04
+* CentOS 7
+* CentOS 8
+* CentOS 9
+* RHEL 8
+* RHEL 9
+* AlmaLinux 8
+* AlmaLinux 9
+* RockyLinux 8
+* CloudLinux 7
+* CloudLinux 8
+* openEuler 20.03
+* openEuler 22.03
 
-# Supported OS Versions 
+* CyberPanel is supported on x86_64 based 
 
-*openEuler 22.03
-
-*Ubuntu 18.04
-*Ubuntu 20.04
-*Ubuntu 20.10
-*Ubuntu 22.04
-*CentOS 7
-*CentOS 8
-*CentOS 9
-*RHEL 8
-*RHEL 9
-*AlmaLinux 8
-*RockyLinux 8
-*AlmaLinux 9
-*CloudLinux 7
-*CloudLinux 8
-*openEuler 20.03,
-*openEuler 22.03
 
 # Installation Instructions
 
