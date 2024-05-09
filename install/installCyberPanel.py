@@ -48,7 +48,7 @@ def FetchCloudLinuxAlmaVersionVersion():
             return 'al-88'
         elif (data.find('AlmaLinux') > -1 or data.find('almalinux') > -1) and (data.find('8.7') > -1 or data.find('Stone Smilodon') > -1):
             return 'al-87'
-        elif (data.find('AlmaLinux') > -1 or data.find('almalinux') > -1) and (data.find('9.3') > -1 or data.find('Shamrock Pampas') > -1):
+        elif (data.find('AlmaLinux') > -1 or data.find('almalinux') > -1) and (data.find('9.4') > -1 or data.find('9.3') > -1 or data.find('Shamrock Pampas') > -1 or data.find('Seafoam Ocelot') > -1):
             return 'al-93'
     else:
         return -1
