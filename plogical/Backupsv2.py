@@ -1051,10 +1051,19 @@ team_drive =
     def refresh_V2Gdive_token(refresh_token):
         try:
             # refresh_token = "1//09pPJHjUgyp09CgYIARAAGAkSNgF-L9IrZ0FLMhuKVfPEwmv_6neFto3JJ-B9uXBYu1kPPdsPhSk1OJXDBA3ZvC3v_AH9S1rTIQ"
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile('Current Token: ' + refresh_token )
+
             finalData = json.dumps({'refresh_token': refresh_token})
             r = requests.post("https://platform.cyberpersons.com/refreshToken", data=finalData
                               )
             newtoken = json.loads(r.text)['access_token']
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile('newtoken: ' + newtoken )
+                logging.CyberCPLogFileWriter.writeToFile(r.text)
+
             return newtoken
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(f'Error in tkupdate: {str(msg)}')
