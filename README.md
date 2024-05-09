@@ -34,7 +34,6 @@ Web Hosting Control Panel that uses OpenLiteSpeed as the underlying Web Server.
 # Supported OS Versions
 
 * CyberPanel is supported on x86_64 based
-
 * Ubuntu 18.04
 * Ubuntu 20.04
 * Ubuntu 20.10
