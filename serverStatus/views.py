@@ -28,10 +28,18 @@ EXPIRE = 3
 VERSION = '2.3'
 BUILD = 5
 
+
 def serverStatusHome(request):
     proc = httpProc(request, 'serverStatus/index.html',
                     None, 'admin')
     return proc.render()
+
+
+def Switchoffsecurity(request):
+    proc = httpProc(request, 'serverStatus/Switchoffsecurity.html',
+                    None, 'admin')
+    return proc.render()
+
 
 def litespeedStatus(request):
     try:
@@ -91,6 +99,7 @@ def litespeedStatus(request):
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[litespeedStatus]")
         return redirect(loadLoginPage)
 
+
 def stopOrRestartLitespeed(request):
     try:
         userID = request.session['userID']
@@ -124,9 +133,11 @@ def stopOrRestartLitespeed(request):
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[stopOrRestartLitespeed]")
         return HttpResponse("Not Logged in as admin")
 
+
 def cyberCPMainLogFile(request):
     proc = httpProc(request, 'serverStatus/cybercpmainlogfile.html', None, 'admin')
     return proc.render()
+
 
 def getFurtherDataFromLogFile(request):
     try:
@@ -151,6 +162,7 @@ def getFurtherDataFromLogFile(request):
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[getFurtherDataFromLogFile]")
         return HttpResponse("Not Logged in as admin")
 
+
 def services(request):
     data = {}
 
@@ -167,6 +179,7 @@ def services(request):
 
     proc = httpProc(request, 'serverStatus/services.html', data, 'admin')
     return proc.render()
+
 
 def servicesStatus(request):
     try:
@@ -276,6 +289,7 @@ def servicesStatus(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def servicesAction(request):
     try:
         userID = request.session['userID']
@@ -328,6 +342,7 @@ def servicesAction(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
+
 def switchTOLSWS(request):
     try:
         userID = request.session['userID']
@@ -361,6 +376,35 @@ def switchTOLSWS(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+
+def securityruleUpdate(request):
+    try:
+        userID = request.session['userID']
+
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('status', 0)
+
+        data = json.loads(request.body)
+
+        ActivateTags = data['ActivateTags']
+        DeactivatedTags = data['DeactivatedTags']
+        RuleID = data['RuleID']
+        Regular_expressions = data['Regular_expressions']
+
+        data_ret = {'status': 1, 'error_message': "None", }
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+    except BaseException as msg:
+        data_ret = {'status': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+
 def switchTOLSWSStatus(request):
     try:
 
@@ -387,9 +431,10 @@ def switchTOLSWSStatus(request):
     except BaseException as msg:
         command = "sudo rm -f " + serverStatusUtil.ServerStatusUtil.lswsInstallStatusPath
         ProcessUtilities.popenExecutioner(command)
-        data_ret = {'status': 0,'abort': 1, 'requestStatus': str(msg), 'installed': 0}
+        data_ret = {'status': 0, 'abort': 1, 'requestStatus': str(msg), 'installed': 0}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
 
 def licenseStatus(request):
     try:
@@ -407,7 +452,8 @@ def licenseStatus(request):
             serial = ProcessUtilities.outputExecutioner(command)
 
             if serial.find('No such file or directory') > -1:
-                final_dic = {'status': 1, "erroMessage": 0, 'lsSerial': 'Trial License in use.', 'lsexpiration': 'Trial license expires 15 days after activation.'}
+                final_dic = {'status': 1, "erroMessage": 0, 'lsSerial': 'Trial License in use.',
+                             'lsexpiration': 'Trial license expires 15 days after activation.'}
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
 
@@ -427,6 +473,7 @@ def licenseStatus(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
+
 def refreshLicense(request):
     try:
         userID = request.session['userID']
@@ -438,7 +485,6 @@ def refreshLicense(request):
                 pass
             else:
                 return ACLManager.loadErrorJson('status', 0)
-
 
             command = 'sudo /usr/local/lsws/bin/lshttpd -V'
             ProcessUtilities.outputExecutioner(command)
@@ -511,6 +557,7 @@ def changeLicense(request):
 def topProcesses(request):
     proc = httpProc(request, "serverStatus/topProcesses.html", None, 'admin')
     return proc.render()
+
 
 def topProcessesStatus(request):
     try:
@@ -586,7 +633,6 @@ def topProcessesStatus(request):
         memoryInf0[1] = list(filter(None, memoryInf0[1].split(' ')))
         memoryInf0[2] = list(filter(None, memoryInf0[2].split(' ')))
 
-
         try:
             data['totalMemory'] = '%sMB' % (memoryInf0[1][1])
         except:
@@ -605,7 +651,6 @@ def topProcessesStatus(request):
             data['buffCache'] = '%sMB' % (memoryInf0[1][5])
         except:
             data['buffCache'] = '%sMB' % ('0')
-
 
         ## Swap
 
@@ -681,8 +726,8 @@ def topProcessesStatus(request):
         total, used, free = shutil.disk_usage("/")
 
         data['TotalDisk'] = '%s GB' % (total // (2 ** 30))
-        data['TotalDiskUsed'] = '%s GB' %  (used // (2 ** 30))
-        data['TotalDiskFree'] =' %s GB' %  (free // (2 ** 30))
+        data['TotalDiskUsed'] = '%s GB' % (used // (2 ** 30))
+        data['TotalDiskFree'] = ' %s GB' % (free // (2 ** 30))
 
         final_json = json.dumps(data)
         return HttpResponse(final_json)
@@ -691,6 +736,7 @@ def topProcessesStatus(request):
         data_ret = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
 
 def killProcess(request):
     try:
@@ -721,9 +767,11 @@ def killProcess(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
+
 def packageManager(request):
     proc = httpProc(request, "serverStatus/packageManager.html", None, 'admin')
     return proc.render()
+
 
 def fetchPackages(request):
     try:
@@ -842,8 +890,7 @@ def fetchPackages(request):
 
         ## make list of packages that need update
 
-
-        #if os.path.exists(ProcessUtilities.debugPath):
+        # if os.path.exists(ProcessUtilities.debugPath):
         #    logging.CyberCPLogFileWriter.writeToFile('All packages: %s' % (str(packages)))
 
         from s3Backups.s3Backups import S3Backups
@@ -857,7 +904,7 @@ def fetchPackages(request):
         counter = 0
 
         if os.path.exists(ProcessUtilities.debugPath):
-             logging.CyberCPLogFileWriter.writeToFile('Final packages: %s' % (str(finalPackages)))
+            logging.CyberCPLogFileWriter.writeToFile('Final packages: %s' % (str(finalPackages)))
 
         import re
         for items in finalPackages:
@@ -896,7 +943,9 @@ def fetchPackages(request):
                         else:
                             lock = 0
 
-                        dic = {'package': nowSplitted[0].split('/')[0], 'version': '%s %s' % (nowSplitted[1].split(' ')[1], nowSplitted[1].split(' ')[2]), 'upgrade': upgrade, 'lock': lock}
+                        dic = {'package': nowSplitted[0].split('/')[0],
+                               'version': '%s %s' % (nowSplitted[1].split(' ')[1], nowSplitted[1].split(' ')[2]),
+                               'upgrade': upgrade, 'lock': lock}
 
                         counter = counter + 1
                         if checker == 0:
@@ -922,7 +971,6 @@ def fetchPackages(request):
                                 upgrade = 'Not needed.'
                         else:
                             upgrade = 'Upgrade available'
-
 
                         if details[0].split('.')[0] in locked:
                             lock = 1
@@ -965,7 +1013,8 @@ def fetchPackages(request):
 
         json_data = json_data + ']'
 
-        data_ret = {'status': 1, 'packages': json_data, 'pagination': pagination, 'fetchedPackages': counter, 'totalPackages': len(packages)}
+        data_ret = {'status': 1, 'packages': json_data, 'pagination': pagination, 'fetchedPackages': counter,
+                    'totalPackages': len(packages)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
@@ -973,6 +1022,7 @@ def fetchPackages(request):
         data_ret = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
 
 def fetchPackageDetails(request):
     try:
@@ -1004,6 +1054,7 @@ def fetchPackageDetails(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+
 def updatePackage(request):
     try:
 
@@ -1027,7 +1078,7 @@ def updatePackage(request):
         extraArgs = {}
         extraArgs['package'] = package
 
-        from plogical.applicationInstaller import  ApplicationInstaller
+        from plogical.applicationInstaller import ApplicationInstaller
 
         background = ApplicationInstaller('updatePackage', extraArgs)
         background.start()
@@ -1042,6 +1093,7 @@ def updatePackage(request):
         data_ret = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
 
 def lockStatus(request):
     try:
@@ -1179,7 +1231,7 @@ def submitPortChange(request):
 
         ProcessUtilities.executioner('systemctl restart lscpd')
 
-        data_ret = {'status': 1,}
+        data_ret = {'status': 1, }
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
