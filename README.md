@@ -21,10 +21,10 @@ Web Hosting Control Panel that uses OpenLiteSpeed as the underlying Web Server.
 * PHP 8.2
 * PHP 8.1
 * PHP 8.0
-* PHP 7.4
+* PHP 7.4 (Ubuntu 22.04 and up does not support php below this version.)
 * PHP 7.3
 * PHP 7.2
-* PHP 7.1
+* PHP 7.1 (Almalinux 8.x and up does not support php below this version.)
 * PHP 7.0
 * PHP 5.6
 * PHP 5.5
