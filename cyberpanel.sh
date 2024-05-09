@@ -263,6 +263,8 @@ elif grep -q "Red Hat Enterprise Linux" /etc/os-release ; then
   Server_OS="RedHat"
 elif grep -q "AlmaLinux-8" /etc/os-release ; then
   Server_OS="AlmaLinux"
+elif grep -q "AlmaLinux-9" /etc/os-release ; then
+  Server_OS="AlmaLinux"
 elif grep -q -E "CloudLinux 7|CloudLinux 8" /etc/os-release ; then
   Server_OS="CloudLinux"
 elif grep -q -E "Rocky Linux" /etc/os-release ; then

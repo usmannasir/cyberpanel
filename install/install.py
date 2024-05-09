@@ -56,7 +56,8 @@ def get_distro():
 
         if data.find('CentOS Linux release 8') > -1:
             return cent8
-        if data.find('AlmaLinux release 8') > -1:
+        ## if almalinux 9 then pretty much same as cent8
+        if data.find('AlmaLinux release 8') > -1 or data.find('AlmaLinux release 9') > -1:
             return cent8
         if data.find('Rocky Linux release 8') > -1 or data.find('Rocky Linux 8') > -1 or data.find('rocky:8') > -1:
             return cent8
