@@ -17,6 +17,8 @@ Web Hosting Control Panel that uses OpenLiteSpeed as the underlying Web Server.
 
 # Supported PHP Versions
 
+* PHP 8.3
+* PHP 8.2
 * PHP 8.1
 * PHP 8.0
 * PHP 7.4
@@ -29,6 +31,39 @@ Web Hosting Control Panel that uses OpenLiteSpeed as the underlying Web Server.
 * PHP 5.4
 * PHP 5.3
 
+# Supported OS Versions
+
+*CentOS 7
+*CentOS 8
+*CloudLinux 7
+*AlmaLinux 8
+*AlmaLinux 9
+*RockyLinux 8
+*Ubuntu 18.04
+*Ubuntu 20.04
+*Ubuntu 20.10
+*openEuler 20.03
+*openEuler 22.03
+
+# Supported OS Versions 
+*CyberPanel is supported on x86_64 based
+
+*Ubuntu 18.04
+*Ubuntu 20.04
+*Ubuntu 20.10
+*Ubuntu 22.04
+*CentOS 7
+*CentOS 8
+*CentOS 9
+*RHEL 8
+*RHEL 9
+*AlmaLinux 8
+*RockyLinux 8
+*AlmaLinux 9
+*CloudLinux 7
+*CloudLinux 8
+*openEuler 20.03,
+*openEuler 22.03
 
 # Installation Instructions
 
