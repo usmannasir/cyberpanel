@@ -72,4 +72,4 @@ sh <(curl https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgr
 * [Forums.](https://community.cyberpanel.net)
 * [Discord.](https://discord.gg/g8k8Db3)
 * [Facebook Group.](https://www.facebook.com/groups/cyberpanel)
-* [YouTube Channel.](https://www.youtube.com/channel/UCS6sgUWEhaFl1TO238Ck0xw)
+* [YouTube Channel.](https://www.youtube.com/@Cyber-Panel)
