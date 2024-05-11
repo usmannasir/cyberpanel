@@ -38,7 +38,7 @@ Web Hosting Control Panel that uses OpenLiteSpeed as the underlying Web Server.
 * Ubuntu 20.04
 * Ubuntu 20.10
 * Ubuntu 22.04
-* CentOS 7
+* CentOS 7 (CentOS Linux 7 will reach end of life (EOL) on June 30, 2024.)
 * CentOS 8
 * CentOS 9
 * RHEL 8
