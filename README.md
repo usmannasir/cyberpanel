@@ -34,22 +34,22 @@ Web Hosting Control Panel that uses OpenLiteSpeed as the underlying Web Server.
 # Supported OS Versions
 
 * CyberPanel is supported on x86_64 based
-* Ubuntu 18.04
-* Ubuntu 20.04
-* Ubuntu 20.10
-* Ubuntu 22.04
-* CentOS 7 (CentOS Linux 7 will reach end of life (EOL) on June 30, 2024.)
-* CentOS 8
-* CentOS 9
-* RHEL 8
-* RHEL 9
-* AlmaLinux 8
-* AlmaLinux 9
-* RockyLinux 8
-* CloudLinux 7
-* CloudLinux 8
-* openEuler 20.03
-* openEuler 22.03
+* Ubuntu 18.04 (will reach end of life (EOL) on May 31, 2023.)
+* Ubuntu 20.04 (will reach end of life (EOL) on April , 2025.)
+* Ubuntu 20.10 (will reach end of life (EOL) on July 22, 2021.)
+* Ubuntu 22.04 (will reach end of life (EOL) on Apr 2022 - Apr 2027.)
+* CentOS 7 (will reach end of life (EOL) on June 30, 2024.)
+* CentOS 8 (will reach end of life (EOL) on December 31, 2021.)
+* CentOS 9 (will reach end of life (EOL) on May 31, 2027.)
+* RHEL 8 (will reach end of life (EOL) on May 31, 2029.)
+* RHEL 9 (will reach end of life (EOL) on May 31, 2032.)
+* AlmaLinux 8 (will reach end of life (EOL) on May 01, 2024).)
+* AlmaLinux 9 (will reach end of life (EOL) on May 31, 2027.)
+* RockyLinux 8 (will reach end of life (EOL) on 31 May, 2029.)
+* CloudLinux 7 (will reach end of life (EOL) on 01 July, 2024.)
+* CloudLinux 8 (will reach end of life (EOL) on 31 May, 2029.)
+* openEuler 20.03 (will reach end of life (EOL) on April, 2022.)
+* openEuler 22.03 (will reach end of life (EOL) on March, 2024.)
 
 # Installation Instructions
 
