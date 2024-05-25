@@ -1,0 +1,170 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Switch off security - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+    <style>
+        .tagcontainer {
+            display: flex;
+            justify-content: space-evenly;
+        }
+
+        .tags-container {
+            width: 200px;
+            height: 300px;
+            overflow-y: auto;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+        }
+
+        .tags-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .tags {
+            width: calc(100% - 20px); /* Adjusted width to accommodate the icon */
+            justify-content: space-between;
+            margin: 5px 0; /* Added margin top and bottom */
+            display: flex; /* Added to ensure icon and text are aligned */
+            align-items: center; /* Added to vertically center the icon */
+            padding: 5px;
+        }
+
+        .tags:hover {
+            background-color: lightblue;
+        }
+
+        .tag-icon {
+            display: none; /* Initially hide the SVG icon */
+        }
+
+        .tags:hover .tag-icon {
+            display: inline-block; /* Show the SVG icon on hover */
+        }
+
+        /* Adjusted SVG styling */
+        svg {
+            flex-shrink: 0; /* Prevent SVG from shrinking */
+            margin-left: 5px; /* Added space between text and icon */
+        }
+
+        .search-input {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><g fill="none" stroke="currentColor"><circle cx="11" cy="11" r="5.5"/><path stroke-linecap="round" stroke-linejoin="round" d="m15 15l4 4"/></g></svg>');
+            background-repeat: no-repeat;
+            background-position: calc(100% - 10px) center;
+            padding-right: 30px; /* Adjust based on the size of your SVG icon */
+        }
+
+        .search-input:focus {
+            outline: none; /* Optional: Remove outline on focus */
+        }
+
+
+    </style>
+
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Switch off security rules" %} <img src="{% static 'images/lsON.png' %}"
+                                                             style="margin-bottom: 5px;"></h2>
+            <p>{% trans "Here you can switch off security rules. It is handy if you find out that a security rule is too restrictive for some websites. To deactivate security rules, specify their IDs (for example, 340003 or 340005-340007), tags (for example, CVE-2011-4898), or regular expressions used in rule messages (for example, XSS)." %}</p>
+        </div>
+
+
+        <div ng-controller="securityrule" class="panel">
+            <div class="panel-body">
+                <h3 class="content-box-header">
+                    {% trans "Security Rules" %} <img ng-hide="securityruleLoading"
+                                                      src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
+
+                    <form action="/" id="createPackages"
+                          class="form-horizontal bordered-row panel-body">
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Security Rule IDs" %}</label>
+                            <div class="col-sm-6">
+                                <input name="dom" type="text" class="form-control" ng-model="ruleID"
+                                       required>
+                            </div>
+                        </div>
+
+
+                        <div class="form-group tagcontainer">
+                            <div>
+                                <div class="tags-label">Activate Tags</div>
+                                <div class="tags-container">
+                                    <input type="text" ng-model="tagFilter" placeholder="Search tags"
+                                           class="search-input">
+                                    <div ng-repeat="tag in ActivateTags | filter:tagFilter"
+                                         ng-click="toggleActivation(tag)">
+                                        <span class="tags">{$ tag $}
+                                            <svg class="tag-icon" xmlns="http://www.w3.org/2000/svg" width="1em"
+                                                 height="1em"
+                                                 viewBox="0 0 24 24">
+                                                <path fill="none" stroke="currentColor" stroke-linecap="round"
+                                                      stroke-linejoin="round"
+                                                      stroke-width="2" d="m10 17l5-5-5-5"/>
+                                            </svg>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="tags-label">Deactivated Tags</div>
+                                <div class="tags-container">
+                                    <input type="text" ng-model="deactivatedTagFilter" placeholder="Search tags"
+                                           class="search-input">
+                                    <div ng-repeat="tag in DeactivatedTags | filter:deactivatedTagFilter"
+                                         ng-click="toggleActivation(tag)">
+                                            <span class="tags">{$ tag $}
+                                                <svg class="tag-icon" xmlns="http://www.w3.org/2000/svg" width="1em"
+                                                     height="1em"
+                                                     viewBox="0 0 24 24">
+                                                    <path fill="none" stroke="currentColor" stroke-linecap="round"
+                                                          stroke-linejoin="round"
+                                                          stroke-width="2" d="m14 7l-5 5 5 5"/>
+                                                </svg>
+                                            </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Regular expressions in rule messages " %}</label>
+                            <div class="col-sm-6">
+                                <textarea name="dom" type="text" class="form-control" ng-model="Regular_expressions"
+                                          rows="5"
+                                          required> </textarea>
+                            </div>
+                        </div>
+
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                <button
+                                        type="button" ng-click="applychanges()"
+                                        class="btn btn-primary btn-lg">{% trans "Save Changes" %}</button>
+
+                            </div>
+                        </div>
+
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

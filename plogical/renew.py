@@ -19,9 +19,9 @@ class Renew:
         try:
             logging.writeToFile('Running SSL Renew Utility')
 
-            ## For websites
+            ## For Non-suspended websites only
 
-            for website in Websites.objects.all():
+            for website in Websites.objects.filter(status=1):
                 logging.writeToFile('Checking SSL for %s.' % (website.domain), 0)
                 filePath = '/etc/letsencrypt/live/%s/fullchain.pem' % (website.domain)
 

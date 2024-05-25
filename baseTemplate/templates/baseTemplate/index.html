@@ -204,19 +204,19 @@
 
                 <div ng-controller="loadAvg" id="header-nav-right">
                     {% comment %}<a class="hide-on-phone hdr-btn" style="background-color: unset;width: 33px" href="#"
-                       title="{% trans 'CPU Load Average' %}" data-placement="bottom">
+                                    title="{% trans 'CPU Load Average' %}" data-placement="bottom">
                         <span class="badge bg-red" id="load1">{$ one $}</span>
                     </a>
 
-                    <a class="hide-on-phone hdr-btn" style="background-color: unset;width: 33px" href="#"
-                       title="{% trans 'CPU Load Average' %}" data-placement="bottom">
-                        <span class="badge bg-red" id="load2">{$ two $}</span>
-                    </a>
+                        <a class="hide-on-phone hdr-btn" style="background-color: unset;width: 33px" href="#"
+                           title="{% trans 'CPU Load Average' %}" data-placement="bottom">
+                            <span class="badge bg-red" id="load2">{$ two $}</span>
+                        </a>
 
-                    <a class="hide-on-phone hdr-btn" style="background-color: unset;width: 33px" href="#"
-                       title="{% trans 'CPU Load Average' %}" data-placement="bottom">
-                        <span class="badge bg-red" id="load3">{$ three $}</span>
-                    </a>{% endcomment %}
+                        <a class="hide-on-phone hdr-btn" style="background-color: unset;width: 33px" href="#"
+                           title="{% trans 'CPU Load Average' %}" data-placement="bottom">
+                            <span class="badge bg-red" id="load3">{$ three $}</span>
+                        </a>{% endcomment %}
                     <a class="header-btn" target="_blank"
                        href="https://www.youtube.com/channel/UCS6sgUWEhaFl1TO238Ck0xw?sub_confirmation=1"
                        title="{% trans 'Youtube Channel' %}">
@@ -947,6 +947,9 @@
                                         <li><a href="{% url 'packageManager' %}"
                                                title="{% trans 'Package Manager' %}"><span>{% trans "Package Manager" %}</span></a>
                                         </li>
+{#                                        <li><a href="{% url 'Switchoffsecurity' %}"#}
+{#                                               title="{% trans 'Switch off security' %}"><span>{% trans "Switch off security" %}</span></a>#}
+{#                                        </li>#}
                                     </ul>
 
                                 </div><!-- .sidebar-submenu -->
@@ -1057,12 +1060,12 @@
                                         <li><a href="{% url 'mailQueue' %}"
                                                title="{% trans 'Mail Queue' %}"><span>{% trans "Mail Queue" %}</span></a>
                                         </li>
-{#                                        <li><a href="{% url 'emailPolicyServer' %}"#}
-{#                                               title="{% trans 'Email Policy Server' %}"><span>{% trans "Email Policy Server" %}</span></a>#}
-{#                                        </li>#}
-{#                                        <li><a href="{% url 'listDomains' %}"#}
-{#                                               title="{% trans 'Email Limits' %}"><span>{% trans "Email Limits" %}</span></a>#}
-{#                                        </li>#}
+                                        {#                                        <li><a href="{% url 'emailPolicyServer' %}"#}
+                                        {#                                               title="{% trans 'Email Policy Server' %}"><span>{% trans "Email Policy Server" %}</span></a>#}
+                                        {#                                        </li>#}
+                                        {#                                        <li><a href="{% url 'listDomains' %}"#}
+                                        {#                                               title="{% trans 'Email Limits' %}"><span>{% trans "Email Limits" %}</span></a>#}
+                                        {#                                        </li>#}
                                         <li><a href="{% url 'SpamAssassin' %}"
                                                title="{% trans 'SpamAssassin Configurations' %}"><span>{% trans "SpamAssassin" %}</span></a>
                                         </li>

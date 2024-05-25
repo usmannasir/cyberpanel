@@ -199,10 +199,16 @@ port = {config["sshPort"]}
                 token = """{"access_token":"%s","token_type":"Bearer","refresh_token":"%s", "expiry":"2024-04-08T21:53:00.123456789Z"}""" % (
                 config["token"], config["refresh_token"])
 
+                if config["client_id"] == 'undefined':
+                    config["client_id"] = ''
+                    config["client_secret"] = ''
+
                 content = f'''
 [{config["accountname"]}]
 type = drive
 scope = drive
+client_id={config["client_id"]}
+client_secret={config["client_secret"]}
 token = {token}
 team_drive =
 '''
@@ -1045,10 +1051,19 @@ team_drive =
     def refresh_V2Gdive_token(refresh_token):
         try:
             # refresh_token = "1//09pPJHjUgyp09CgYIARAAGAkSNgF-L9IrZ0FLMhuKVfPEwmv_6neFto3JJ-B9uXBYu1kPPdsPhSk1OJXDBA3ZvC3v_AH9S1rTIQ"
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile('Current Token: ' + refresh_token )
+
             finalData = json.dumps({'refresh_token': refresh_token})
             r = requests.post("https://platform.cyberpersons.com/refreshToken", data=finalData
                               )
             newtoken = json.loads(r.text)['access_token']
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile('newtoken: ' + newtoken )
+                logging.CyberCPLogFileWriter.writeToFile(r.text)
+
             return newtoken
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(f'Error in tkupdate: {str(msg)}')

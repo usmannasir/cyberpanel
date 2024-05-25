@@ -3,7 +3,6 @@
  */
 
 
-
 /* Java script code to start/stop litespeed */
 app.controller('litespeedStatus', function ($scope, $http) {
 
@@ -423,6 +422,87 @@ app.controller('readCyberCPLogFile', function ($scope, $http) {
 /* Java script code to read log file ends here */
 
 /* Services */
+
+
+app.controller('securityrule', function ($scope, $http) {
+
+    $scope.securityruleLoading = true;
+
+
+    $scope.ActivateTags = ['Agents', 'AppsInitialization', 'Backdoor', 'Bruteforce', 'CWAF', 'Domains', 'Drupal', 'FilterASP',
+        'FilterGen', 'FilterInFarme', 'FilterOther', 'FilterPHP', 'FiltersEnd', 'FilterSQL', 'Generic', 'HTTP', 'HTTPDoS',
+        'Incoming', 'Initialzation', 'JComponent', 'Joomla', 'Other', 'OtherApps', 'PHPGen', 'Protocol', 'Request', 'RoRGen',
+        'SQLi', 'WHMCS', 'WordPress', 'WPPlugin', 'XSS']
+
+    $scope.DeactivatedTags = []
+
+
+    $scope.toggleActivation = function (tag) {
+        var index = $scope.ActivateTags.indexOf(tag);
+        if (index > -1) {
+            $scope.ActivateTags.splice(index, 1);
+            $scope.DeactivatedTags.push(tag);
+        } else {
+            index = $scope.DeactivatedTags.indexOf(tag);
+            if (index > -1) {
+                $scope.DeactivatedTags.splice(index, 1);
+                $scope.ActivateTags.push(tag);
+            }
+        }
+    };
+
+
+    $scope.applychanges = function () {
+
+        $scope.securityruleLoading = false;
+        url = "/serverstatus/securityruleUpdate";
+
+        var data = {
+            ActivateTags: $scope.ActivateTags,
+            DeactivatedTags: $scope.DeactivatedTags,
+            RuleID: $scope.ruleID,
+            Regular_expressions: $scope.Regular_expressions
+
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.securityruleLoading = true;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Done',
+                    text: "Changes Applied",
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.securityruleLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+    }
+});
 
 app.controller('servicesManager', function ($scope, $http) {
 
