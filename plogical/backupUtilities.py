@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 
@@ -41,7 +42,7 @@ from random import randint
 from plogical.processUtilities import ProcessUtilities
 
 try:
-    from websiteFunctions.models import Websites, ChildDomains, Backups
+    from websiteFunctions.models import Websites, ChildDomains, Backups, NormalBackupDests
     from databases.models import Databases
     from loginSystem.models import Administrator
     from plogical.dnsUtilities import DNS
@@ -1329,35 +1330,48 @@ class backupUtilities:
         try:
             ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh.connect(IPAddress, port=int(port), username=user, password=password)
+            if password != 'NOT-NEEDED':
 
-            commands = [
-                "mkdir -p .ssh",
-                "rm -f .ssh/temp",
-                "rm -f .ssh/authorized_temp",
-                "cp .ssh/authorized_keys .ssh/temp",
-                "chmod 700 .ssh",
-                "chmod g-w ~",
-            ]
+                ssh.connect(IPAddress, port=int(port), username=user, password=password)
+                commands = [
+                    "mkdir -p .ssh",
+                    "rm -f .ssh/temp",
+                    "rm -f .ssh/authorized_temp",
+                    "cp .ssh/authorized_keys .ssh/temp",
+                    "chmod 700 .ssh",
+                    "chmod g-w ~",
+                ]
 
-            for command in commands:
-                try:
-                    ssh.exec_command(command)
-                except BaseException as msg:
-                    logging.CyberCPLogFileWriter.writeToFile(f'Error executing remote command {command}. Error {str(msg)}')
+                for command in commands:
+                    try:
+                        ssh.exec_command(command)
+                    except BaseException as msg:
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            f'Error executing remote command {command}. Error {str(msg)}')
 
-            ssh.close()
+                ssh.close()
 
-            sendKey = backupUtilities.sendKey(IPAddress, password, port, user)
+                sendKey = backupUtilities.sendKey(IPAddress, password, port, user)
 
-            if sendKey[0] == 1:
-                command = 'chmod 644 %s' % ('/root/.ssh/cyberpanel.pub')
-                ProcessUtilities.executioner(command)
-                return [1, "None"]
+                if sendKey[0] == 1:
+                    command = 'chmod 644 %s' % ('/root/.ssh/cyberpanel.pub')
+                    ProcessUtilities.executioner(command)
+                    return [1, "None"]
+                else:
+                    command = 'chmod 644 %s' % ('/root/.ssh/cyberpanel.pub')
+                    ProcessUtilities.executioner(command)
+                    return [0, sendKey[1]]
             else:
-                command = 'chmod 644 %s' % ('/root/.ssh/cyberpanel.pub')
-                ProcessUtilities.executioner(command)
-                return [0, sendKey[1]]
+                # Load the private key
+                private_key_path = '/root/.ssh/cyberpanel'
+                keyPrivate = paramiko.RSAKey(filename=private_key_path)
+
+                # Connect to the remote server using the private key
+                ssh = paramiko.SSHClient()
+                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                ssh.connect(IPAddress, username=user, pkey=keyPrivate)
+
+                return [1, "None"]
 
         except paramiko.AuthenticationException:
             return [0, 'Authentication failed. [setupSSHKeys]']
@@ -2345,6 +2359,37 @@ def getConnectionStatus(ipAddress):
     except BaseException as msg:
         print(str(msg))
 
+def FetchOCBackupsFolders(id, owner):
+    # Load the private key
+    private_key_path = '/root/.ssh/cyberpanel'
+    keyPrivate = paramiko.RSAKey(filename=private_key_path)
+
+    from IncBackups.models import OneClickBackups
+    admin = Administrator.objects.get(userName=owner)
+    ocb = OneClickBackups.objects.get(pk=id, owner=admin)
+
+    nbd = NormalBackupDests.objects.get(name=ocb.sftpUser)
+    ip = json.loads(nbd.config)['ip']
+
+    # Connect to the remote server using the private key
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(ip, username=ocb.sftpUser, pkey=keyPrivate)
+
+    # Command to list directories under the specified path
+    command = f"ls -d cpbackups/*/"
+
+    # Execute the command
+    stdin, stdout, stderr = ssh.exec_command(command)
+
+    # Read the results
+    directories = stdout.read().decode().splitlines()
+
+    # Print directories
+    for directory in directories:
+        print(directory)
+
+
 
 def main():
     parser = argparse.ArgumentParser(description='CyberPanel Backup Generator')
@@ -2390,6 +2435,10 @@ def main():
     ### CPHomeStorage
 
     parser.add_argument('--CPHomeStorage', help='')
+
+    ### id
+
+    parser.add_argument('--id', help='')
 
 
     args = parser.parse_args()
@@ -2438,6 +2487,9 @@ def main():
         extraArgs['planName'] = args.planName
         bu = backupUtilities(extraArgs)
         bu.SubmitS3BackupRestore()
+
+    elif args.function == 'FetchOCBackupsFolders':
+        FetchOCBackupsFolders(args.id, args.user)
 
 if __name__ == "__main__":
     main()

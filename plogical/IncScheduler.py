@@ -652,8 +652,18 @@ Automatic backup failed for %s on %s.
                     except BaseException as msg:
                         NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO,
                                             message=f'Failed to make sftp connection {str(msg)}').save()
+
                         print(str(msg))
                         continue
+
+                    try:
+
+                        command = f'find cpbackups -type f -mtime +{destinationConfig["retention"]} -exec rm -f {{}} \\;'
+                        ssh.exec_command(command)
+                        logging.writeToFile(command)
+                    except:
+                        pass
+
                     # Execute the command to create the remote directory
                     command = f'mkdir -p {finalPath}'
                     stdin, stdout, stderr = ssh.exec_command(command)

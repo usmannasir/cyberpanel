@@ -1,0 +1,309 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Schedule Backup - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+
+
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+    <div ng-controller="scheduleBackup" class="container">
+        <div id="page-title">
+            <h2>{% trans "Schedule Backup" %} - <a target="_blank"
+                                                   href="https://cyberpanel.net/KnowledgeBase/home/schedule-backups-local-or-sftp/"
+                                                   style="height: 23px;line-height: 21px; text-decoration: underline"
+                                                   class="btn btn-border btn-alt border-red btn-link font-red"
+                                                   title=""><span>{% trans "Remote Backups" %}</span></a>
+            </h2>
+            <p>{% trans "On this page you can schedule Backups to localhost or remote server (If you have added one)" %}</p>
+        </div>
+
+        <div class="panel">
+            <div class="panel-body">
+                <h3 class="title-hero">
+                    {% trans "Create New Backup Schedule" %} <img ng-hide="cyberPanelLoading"
+                                                                  src="{% static 'images/loading.gif' %}"
+                                                                  alt="cyberPanelLoading">
+                </h3>
+                <div class="example-box-wrapper">
+
+
+                    <form action="/" class="form-horizontal bordered-row">
+
+                        <div class="form-group" style="display: none">
+                            <label class="col-sm-3 control-label">{% trans "Name" %}</label>
+                            <div class="col-sm-6">
+                                <input type="text" class="form-control" ng-model="selectedAccountAdd"
+                                       ng-init="selectedAccountAdd='{{ destination }}'" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Name" %}</label>
+                            <div class="col-sm-6">
+                                <input type="text" class="form-control" ng-model="name" required>
+                            </div>
+                        </div>
+
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select Backup Frequency" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-model="backupFrequency" class="form-control">
+                                    <option>Never</option>
+                                    <option>Daily</option>
+                                    <option>Weekly</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select Backup Retention. Leave 0 for no limit" %}</label>
+                            <div class="col-sm-9">
+                                <div class="number">
+                                    <label>
+                                        <input ng-model="backupRetention" type="number" value="0">
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                <button type="button" ng-click="addSchedule()"
+                                        class="btn btn-primary btn-lg btn-block">{% trans "Add Schedule" %}</button>
+
+                            </div>
+                        </div>
+
+                    </form>
+
+
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-body">
+                <h3 class="title-hero">
+                    {% trans "Manage Existing Backup Schedules" %} <img ng-hide="cyberPanelLoading"
+                                                                        src="{% static 'images/loading.gif' %}"
+                                                                        alt="cyberPanelLoading">
+                </h3>
+                <div class="example-box-wrapper">
+
+
+                    <form action="/" class="form-horizontal bordered-row">
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select Destination" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-change="fetchJobs()" ng-model="selectedAccount" class="form-control">
+                                    <option>{{ destination }}</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div ng-hide="jobsHidden" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select Job" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-change="fetchWebsites()" ng-model="selectedJob" class="form-control">
+                                    <option ng-repeat="job in jobs track by $index">{$ job $}</option>
+                                </select>
+                            </div>
+                            <button ng-hide="driveHidden" type="button" ng-click="deleteAccount()"
+                                    class="btn btn-danger">{% trans "Delete" %}</button>
+                        </div>
+
+                        <div ng-hide="driveHidden" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Add Sites for Backup" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-model="selectedWebsite" class="form-control">
+                                    {% for items in websites %}
+                                        <option>{{ items }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <button type="button" ng-click="addSite('one')"
+                                    class="btn btn-primary">{% trans "Add Site" %}</button>
+                            <button type="button" ng-click="addSite('all')"
+                                    class="btn btn-primary">{% trans "Add All" %}</button>
+                        </div>
+
+                        <div ng-hide="driveHidden" class="form-group">
+                            <div style="border: 1px solid green;" class="col-sm-12">
+                                <table style="margin-top: 2%" class="table">
+                                    <thead>
+                                    <tr>
+                                        <th>Last Run</th>
+                                        <th>All Sites</th>
+                                        <th>Frequency ({$ currently $})</th>
+                                        <th>Retention ({$ currently $})</th>
+                                        <th>Current Status</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr>
+                                        <td>{$ lastRun $}</td>
+                                        <td>{$ allSites $}</td>
+                                        <td>
+                                            <select ng-change="changeFrequency()" ng-model="backupFrequency"
+                                                    class="form-control">
+                                                <option>Never</option>
+                                                <option>Daily</option>
+                                                <option>Weekly</option>
+                                            </select>
+                                        </td>
+                                        <td>{$ currentStatus $}</td>
+
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div style="border: 1px solid green;" ng-hide="driveHidden" class="form-group">
+                            <div class="row">
+                                <div style="margin-left: 2%" class="col-sm-3">
+                                    <button data-toggle="modal" data-target="#backupLogs" ng-hide="driveHidden"
+                                            type="button" ng-click="fetchLogs()"
+                                            class="btn btn-gray">{% trans "View Logs" %}</button>
+                                    <div id="backupLogs" class="modal fade" role="dialog">
+                                        <div class="modal-dialog modal-lg">
+                                            <!-- Modal content-->
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close" data-dismiss="modal">&times;
+                                                    </button>
+                                                    <h4 class="modal-title">{% trans "Backup logs" %} <img
+                                                            ng-hide="cyberPanelLoading"
+                                                            src="{% static 'images/loading.gif' %}">
+                                                    </h4>
+                                                </div>
+                                                <div class="modal-body">
+
+                                                    <div class="row">
+                                                        <div class="col-sm-9">
+                                                        </div>
+                                                        <div class="col-sm-2">
+                                                            <div class="form-group">
+                                                                <select ng-model="recordsToShowLogs"
+                                                                        ng-change="fetchLogs()"
+                                                                        class="form-control" id="example-select">
+                                                                    <option>10</option>
+                                                                    <option>50</option>
+                                                                    <option>100</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <table style="margin: 0px; padding-bottom: 2%" class="table">
+                                                        <thead>
+                                                        <tr>
+                                                            <th>Type</th>
+                                                            <th>Message</th>
+                                                        </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                        <tr ng-repeat="log in logs track by $index">
+                                                            <td ng-bind="log.type"></td>
+                                                            <td ng-bind="log.message"></td>
+                                                        </tr>
+                                                        </tbody>
+                                                    </table>
+
+                                                    <div style="margin-top: 2%" class="row">
+                                                        <div class="col-md-12">
+                                                            <div class="row">
+                                                                <div class="col-md-8">
+                                                                </div>
+                                                                <div class="col-md-3">
+                                                                    <div class="form-group">
+                                                                        <select ng-model="currentPageLogs"
+                                                                                class="form-control"
+                                                                                ng-change="fetchLogs()">
+                                                                            <option ng-repeat="page in paginationLogs">
+                                                                                {$
+                                                                                $index + 1
+                                                                                $}
+                                                                            </option>
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                            </div> <!-- end row -->
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                </div>
+                                <div class="col-sm-2">
+                                    <div class="form-group">
+                                        <select ng-model="recordsToShow"
+                                                ng-change="fetchWebsites()"
+                                                class="form-control" id="example-select">
+                                            <option>10</option>
+                                            <option>50</option>
+                                            <option>100</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table style="margin-top: 2%" class="table">
+                                <thead>
+                                <tr>
+                                    <th>Sites</th>
+                                    <th>Action</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr ng-repeat="website in websites track by $index">
+                                    <td ng-bind="website.name"></td>
+                                    <td>
+                                        <button type="button" ng-click="deleteSite(website.name)"
+                                                class="btn btn-danger">{% trans "Delete" %}</button>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+
+                            <div style="margin-top: 2%" class="row">
+                                <div class="col-md-12">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <select ng-model="currentPage" class="form-control"
+                                                        ng-change="fetchWebsites()">
+                                                    <option ng-repeat="page in pagination">{$ $index + 1
+                                                        $}
+                                                    </option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div> <!-- end row -->
+                                </div>
+                            </div>
+                        </div>
+
+                    </form>
+
+
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+
+{% endblock %}

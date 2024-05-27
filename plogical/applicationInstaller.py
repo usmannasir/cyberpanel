@@ -1,8 +1,12 @@
 #!/usr/local/CyberCP/bin/python
 import argparse
+import json
 import os, sys
 import shutil
 import time
+from io import StringIO
+
+import paramiko
 
 from ApachController.ApacheVhosts import ApacheVhost
 from loginSystem.models import Administrator
@@ -18,7 +22,7 @@ import threading as multi
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import subprocess
 from websiteFunctions.models import ChildDomains, Websites, WPSites, WPStaging, wpplugins, WPSitesBackup, \
-    RemoteBackupConfig
+    RemoteBackupConfig, NormalBackupDests
 from plogical import randomPassword
 from plogical.mysqlUtilities import mysqlUtilities
 from databases.models import Databases
@@ -86,6 +90,8 @@ class ApplicationInstaller(multi.Thread):
                 self.RestoreWPbackupNow()
             elif self.installApp == 'UpgradeCP':
                 self.UpgradeCP()
+            elif self.installApp == 'StartOCRestore':
+                self.StartOCRestore()
 
         except BaseException as msg:
             logging.writeToFile(str(msg) + ' [ApplicationInstaller.run]')
@@ -6357,6 +6363,99 @@ class ApplicationInstaller(multi.Thread):
                 pass
             logging.statusWriter(self.tempStatusPath, str(msg))
             return 0, str(msg)
+
+    def StartOCRestore(self):
+        try:
+
+            id = self.extraArgs['id']
+            folder = self.extraArgs['folder']
+            backupfile = self.extraArgs['backupfile']
+            tempStatusPath = self.extraArgs['tempStatusPath']
+            userID = self.extraArgs['userID']
+            self.tempStatusPath = tempStatusPath
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines("Download started..,30")
+            statusFile.close()
+
+            from IncBackups.models import OneClickBackups
+            ocb = OneClickBackups.objects.get(pk=id)
+
+            # Load the private key
+
+            nbd = NormalBackupDests.objects.get(name=ocb.sftpUser)
+            ip = json.loads(nbd.config)['ip']
+
+            # Connect to the remote server using the private key
+            ssh = paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            # Read the private key content
+            private_key_path = '/root/.ssh/cyberpanel'
+            key_content = ProcessUtilities.outputExecutioner(f'cat {private_key_path}').rstrip('\n')
+
+            # Load the private key from the content
+            key_file = StringIO(key_content)
+            key = paramiko.RSAKey.from_private_key(key_file)
+            # Connect to the server using the private key
+            ssh.connect(ip, username=ocb.sftpUser, pkey=key)
+            sftp = ssh.open_sftp()
+
+            sftp.get(f'cpbackups/{folder}/{backupfile}', f'/home/cyberpanel/{backupfile}')
+
+            if not os.path.exists('/home/backup'):
+                command = 'mkdir /home/backup'
+                ProcessUtilities.executioner(command)
+
+            command = f'mv /home/cyberpanel/{backupfile} /home/backup/{backupfile}'
+            ProcessUtilities.executioner(command)
+
+            from backup.backupManager import BackupManager
+            wm = BackupManager()
+            resp = wm.submitRestore({'backupFile': backupfile}, userID)
+
+            if json.loads(resp.content)['restoreStatus'] == 0:
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines(f"Failed to restore backup. Error {json.loads(resp.content)['error_message']}. [404]")
+                statusFile.close()
+
+                command = f'rm -f /home/backup/{backupfile}'
+                ProcessUtilities.executioner(command)
+
+                return 0
+
+            while True:
+                resp = wm.restoreStatus({'backupFile': backupfile})
+                resp = json.loads(resp.content)
+
+                if resp['abort'] == 1 and resp['running'] == 'Completed':
+                    statusFile = open(tempStatusPath, 'w')
+                    statusFile.writelines("Successfully Installed. [200]")
+                    statusFile.close()
+                    command = f'rm -f /home/backup/{backupfile}'
+                    ProcessUtilities.executioner(command)
+                    return 0
+                elif resp['abort'] == 1 and resp['running'] == 'Error':
+                    statusFile = open(tempStatusPath, 'w')
+                    statusFile.writelines(
+                        f"Failed to restore backup. Error {resp['status']}. [404]")
+                    statusFile.close()
+                    command = f'rm -f /home/backup/{backupfile}'
+                    ProcessUtilities.executioner(command)
+                    break
+                else:
+                    statusFile = open(tempStatusPath, 'w')
+                    statusFile.writelines(f"{resp['status']},60")
+                    statusFile.close()
+                    command = f'rm -f /home/backup/{backupfile}'
+                    ProcessUtilities.executioner(command)
+                time.sleep(3)
+
+        except BaseException as msg:
+
+            statusFile = open(self.tempStatusPath, 'w')
+            statusFile.writelines(str(msg) + " [404]")
+            statusFile.close()
+            return 0
 
 
 def main():

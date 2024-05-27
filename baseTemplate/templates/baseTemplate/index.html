@@ -77,7 +77,7 @@
 
     <!-- HELPERS -->
 
-    {% with version="2.3.5.4" %}
+    {% with version="2.3.5.6" %}
 
         <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/finalBase/finalBase.css' %}">
 
@@ -690,6 +690,11 @@
                             <div class="sidebar-submenu">
 
                                 <ul>
+                                {% if admin or createBackup %}
+                                        <li><a href="{% url 'OneClickBackups' %}"
+                                               title="{% trans 'One-Click Backups' %}"><span>{% trans "One-Click Backups" %}</span></a>
+                                        </li>
+                                    {% endif %}
                                     {% if admin or createBackup %}
                                         <li><a href="{% url 'backupSite' %}"
                                                title="{% trans 'Create Backup' %}"><span>{% trans "Create Backup" %}</span></a>
@@ -947,9 +952,9 @@
                                         <li><a href="{% url 'packageManager' %}"
                                                title="{% trans 'Package Manager' %}"><span>{% trans "Package Manager" %}</span></a>
                                         </li>
-{#                                        <li><a href="{% url 'Switchoffsecurity' %}"#}
-{#                                               title="{% trans 'Switch off security' %}"><span>{% trans "Switch off security" %}</span></a>#}
-{#                                        </li>#}
+                                        {#                                        <li><a href="{% url 'Switchoffsecurity' %}"#}
+                                        {#                                               title="{% trans 'Switch off security' %}"><span>{% trans "Switch off security" %}</span></a>#}
+                                        {#                                        </li>#}
                                     </ul>
 
                                 </div><!-- .sidebar-submenu -->
@@ -1147,6 +1152,12 @@
                         <div ng-hide="success" class="alert alert-info">
                             <p>Looks like something is wrong with your initial setup, please double check on <a
                                     href="/base/onboarding">Setup Wizard.</a></p>
+                        </div>
+                    {% endif %}
+                    {% if backupDisplay == 1 %}
+                        <div class="alert alert-warning">
+                            <p>Looks like your websites are not secured with automatic backups. <a
+                                    href="/backup/OneClickBackups">Configure now.</a></p>
                         </div>
                     {% endif %}
                     {% block content %}
