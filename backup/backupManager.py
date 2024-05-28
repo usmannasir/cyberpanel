@@ -751,7 +751,7 @@ class BackupManager:
                 return HttpResponse(final_json)
 
         except BaseException as msg:
-            final_dic = {'restoreStatus': 0, 'error_message': str(msg)}
+            final_dic = {'restoreStatus': 0, 'error_message': str(msg), 'abort': 0, 'running': 'Running..', 'status': ''}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
