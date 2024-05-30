@@ -837,13 +837,13 @@ Automatic backup failed for %s on %s.
                                 startCheck = 0
                                 for directory in directories:
                                     if directory.find(site.domain):
+                                        print(f'site in backup, no need to notify {site.domain}')
                                         startCheck = 1
                                         break
 
                                 if startCheck:
                                     'send notification that backup failed'
                                     import requests
-                                    import json
 
                                     # Define the URL of the endpoint
                                     url = 'http://platform.cyberpersons.com/Billing/BackupFailedNotify'  # Replace with your actual endpoint URL
