@@ -805,6 +805,79 @@ Automatic backup failed for %s on %s.
                     backupjob.config = json.dumps(jobConfig)
                     backupjob.save()
 
+
+                    ### check if todays backups are fine
+
+                    from IncBackups.models import OneClickBackups
+
+                    try:
+
+                        ocb = OneClickBackups.objects.get(sftpUser=destinationConfig['username'])
+                        from plogical.acl import ACLManager
+
+                        for site in websites:
+
+                            from datetime import datetime, timedelta
+
+                            Yesterday = (datetime.now() - timedelta(days=1)).strftime("%m.%d.%Y")
+                            print(f'date of yesterday {Yesterday}')
+
+                            # Command to list directories under the specified path
+                            command = f"ls -d {finalPath}/*"
+
+                            # Execute the command
+                            stdin, stdout, stderr = ssh.exec_command(command)
+
+                            # Read the results
+                            directories = stdout.read().decode().splitlines()
+                            print(f'directories of  {str(directories)}')
+
+                            try:
+
+                                startCheck = 0
+                                for directory in directories:
+                                    if directory.find(site.domain):
+                                        startCheck = 1
+                                        break
+
+                                if startCheck:
+                                    'send notification that backup failed'
+                                    import requests
+                                    import json
+
+                                    # Define the URL of the endpoint
+                                    url = 'http://platform.cyberpersons.com/Billing/BackupFailedNotify'  # Replace with your actual endpoint URL
+
+                                    # Define the payload to send in the POST request
+                                    payload = {
+                                        'sub': ocb.subscription,
+                                        'subject': f'Failed to backup {site.domain} on {ACLManager.fetchIP()}.',
+                                        'message':f'Hi, \n\n Failed to create backup for {site.domain} on on {ACLManager.fetchIP()}. \n\n Please contact our support team at: http://platform.cyberpersons.com\n\nThank you.',
+                                        # Replace with the actual SSH public key
+                                        'sftpUser': ocb.sftpUser,
+                                        'serverIP': ACLManager.fetchIP(),  # Replace with the actual server IP
+                                    }
+
+                                    # Convert the payload to JSON format
+                                    headers = {'Content-Type': 'application/json'}
+                                    dataRet = json.dumps(payload)
+
+                                    # Make the POST request
+                                    response = requests.post(url, headers=headers, data=dataRet)
+
+                                    # # Handle the response
+                                    # # Handle the response
+                                    # if response.status_code == 200:
+                                    #     response_data = response.json()
+                                    #     if response_data.get('status') == 1:
+                            except:
+                                pass
+
+                    except:
+                        pass
+
+
+
     @staticmethod
     def fetchAWSKeys():
         path = '/home/cyberpanel/.aws'
