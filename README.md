@@ -17,9 +17,9 @@ Web Hosting Control Panel that uses OpenLiteSpeed as the underlying Web Server.
 
 # Supported PHP Versions
 
-* PHP 8.3 (will reach end of life (EOL) on 31 Dec 2027.)
-* PHP 8.2 (will reach end of life (EOL) on 31 Dec 2026.)
-* PHP 8.1 (will reach end of life (EOL) on 31 Dec 2025.)
+* PHP 8.3 (will reach end of life (EOL) on 31 Dec, 2027.)
+* PHP 8.2 (will reach end of life (EOL) on 31 Dec, 2026.)
+* PHP 8.1 (will reach end of life (EOL) on 31 Dec, 2025.)
 * PHP 8.0 (will reach end of life (EOL) on 26 Nov, 2023.)
 * PHP 7.4 (Ubuntu 22.04 and up does not support php below this version.) (will reach end of life (EOL) on 28 Nov, 2022.)
 * PHP 7.3 (will reach end of life (EOL) on 6 Dec, 2021.)
@@ -72,4 +72,4 @@ sh <(curl https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgr
 * [Forums.](https://community.cyberpanel.net)
 * [Discord.](https://discord.gg/g8k8Db3)
 * [Facebook Group.](https://www.facebook.com/groups/cyberpanel)
-* [YouTube Channel.](https://www.youtube.com/channel/UCS6sgUWEhaFl1TO238Ck0xw)
+* [YouTube Channel.](https://www.youtube.com/@Cyber-Panel)
