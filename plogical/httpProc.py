@@ -77,6 +77,13 @@ Please launch the <a href="/base/onboarding">set-up wizard</a> to get maximum ou
                     except:
                         pass
 
+                from IncBackups.models import OneClickBackups
+                if OneClickBackups.objects.filter(owner=admin).count() == 0:
+                    self.data['backupDisplay'] = 1
+                else:
+                    self.data['backupDisplay'] = 0
+
+
                 ACLManager.GetServiceStatus(self.data)
 
                 self.data.update(currentACL)

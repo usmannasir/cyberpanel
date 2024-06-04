@@ -483,3 +483,54 @@ def fetchNormalLogs(request):
         return wm.fetchNormalLogs(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
+
+def OneClickBackups(request):
+    try:
+        userID = request.session['userID']
+        bm = BackupManager()
+        return bm.OneClickBackups(request, userID)
+    except KeyError:
+
+        return redirect(loadLoginPage)
+
+def ManageOCBackups(request):
+    try:
+        userID = request.session['userID']
+        bm = BackupManager()
+        return bm.ManageOCBackups(request, userID)
+    except KeyError:
+
+        return redirect(loadLoginPage)
+
+def RestoreOCBackups(request):
+    try:
+        userID = request.session['userID']
+        bm = BackupManager()
+        return bm.RestoreOCBackups(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def fetchOCSites(request):
+    try:
+        userID = request.session['userID']
+        bm = BackupManager()
+        return bm.fetchOCSites(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def StartOCRestore(request):
+    try:
+        userID = request.session['userID']
+        bm = BackupManager()
+        return bm.StartOCRestore(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def DeployAccount(request):
+    try:
+        userID = request.session['userID']
+        bm = BackupManager()
+        return bm.DeployAccount(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
