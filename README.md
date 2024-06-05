@@ -17,34 +17,34 @@ Web Hosting Control Panel that uses OpenLiteSpeed as the underlying Web Server.
 
 # Supported PHP Versions
 
-* PHP 8.3
-* PHP 8.2
-* PHP 8.1
-* PHP 8.0
-* PHP 7.4 (Ubuntu 22.04 and up does not support php below this version.)
-* PHP 7.3
-* PHP 7.2
-* PHP 7.1 (Almalinux 8.x and up does not support php below this version.)
-* PHP 7.0
-* PHP 5.6
-* PHP 5.5
-* PHP 5.4
-* PHP 5.3
+* PHP 8.3 (will reach end of life (EOL) on 31 Dec, 2027.)
+* PHP 8.2 (will reach end of life (EOL) on 31 Dec, 2026.)
+* PHP 8.1 (will reach end of life (EOL) on 31 Dec, 2025.)
+* PHP 8.0 (will reach end of life (EOL) on 26 Nov, 2023.)
+* PHP 7.4 (Ubuntu 22.04 and up does not support php below this version.) (will reach end of life (EOL) on 28 Nov, 2022.)
+* PHP 7.3 (will reach end of life (EOL) on 6 Dec, 2021.)
+* PHP 7.2 (will reach end of life (EOL) on 30 Nov, 2020.)
+* PHP 7.1 (Almalinux 8.x and up does not support php below this version.),(will reach end of life (EOL) on 1 Dec, 2019.)
+* PHP 7.0 (will reach end of life (EOL) on 10 Jan, 2019.)
+* PHP 5.6 (will reach end of life (EOL) on 31 Dec, 2018.)
+* PHP 5.5 (will reach end of life (EOL) on 21 Jul, 2016.)
+* PHP 5.4 (will reach end of life (EOL) on 3 Sep, 2015.)
+* PHP 5.3 (will reach end of life (EOL) on 14 Aug, 2014.)
 
 # Supported OS Versions
 
 * CyberPanel is supported on x86_64 based
-* Ubuntu 18.04 (will reach end of life (EOL) on May 31, 2023.)
-* Ubuntu 20.04 (will reach end of life (EOL) on April , 2025.)
-* Ubuntu 20.10 (will reach end of life (EOL) on July 22, 2021.)
+* Ubuntu 18.04 (will reach end of life (EOL) on 31 May, 2023.)
+* Ubuntu 20.04 (will reach end of life (EOL) on April, 2025.)
+* Ubuntu 20.10 (will reach end of life (EOL) on 22 July, 2021.)
 * Ubuntu 22.04 (will reach end of life (EOL) on Apr 2022 - Apr 2027.)
-* CentOS 7 (will reach end of life (EOL) on June 30, 2024.)
-* CentOS 8 (will reach end of life (EOL) on December 31, 2021.)
-* CentOS 9 (will reach end of life (EOL) on May 31, 2027.)
-* RHEL 8 (will reach end of life (EOL) on May 31, 2029.)
-* RHEL 9 (will reach end of life (EOL) on May 31, 2032.)
-* AlmaLinux 8 (will reach end of life (EOL) on May 01, 2024).)
-* AlmaLinux 9 (will reach end of life (EOL) on May 31, 2027.)
+* CentOS 7 (will reach end of life (EOL) on 30 June, 2024.)
+* CentOS 8 (will reach end of life (EOL) on 31 December, 2021.)
+* CentOS 9 (will reach end of life (EOL) on 31 May, 2027.)
+* RHEL 8 (will reach end of life (EOL) on 31 May, 2029.)
+* RHEL 9 (will reach end of life (EOL) on 31 May, 2032.)
+* AlmaLinux 8 (will reach end of life (EOL) on 01 May, 2024).)
+* AlmaLinux 9 (will reach end of life (EOL) on 31 May, 2027.)
 * RockyLinux 8 (will reach end of life (EOL) on 31 May, 2029.)
 * CloudLinux 7 (will reach end of life (EOL) on 01 July, 2024.)
 * CloudLinux 8 (will reach end of life (EOL) on 31 May, 2029.)
@@ -72,4 +72,4 @@ sh <(curl https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgr
 * [Forums.](https://community.cyberpanel.net)
 * [Discord.](https://discord.gg/g8k8Db3)
 * [Facebook Group.](https://www.facebook.com/groups/cyberpanel)
-* [YouTube Channel.](https://www.youtube.com/channel/UCS6sgUWEhaFl1TO238Ck0xw)
+* [YouTube Channel.](https://www.youtube.com/@Cyber-Panel)
