@@ -657,11 +657,14 @@ Automatic backup failed for %s on %s.
                         continue
 
                     try:
-
-                        command = f'find cpbackups -type f -mtime +{destinationConfig["retention"]} -exec rm -f {{}} \\;'
-                        ssh.exec_command(command)
+                        command = f'find cpbackups -type f -mtime +{jobConfig["retention"]} -exec rm -f {{}} \\;'
                         logging.writeToFile(command)
-                    except:
+                        ssh.exec_command(command)
+                        command = 'find cpbackups -type d -empty -delete'
+                        ssh.exec_command(command)
+
+                    except BaseException as msg:
+                        logging.writeToFile(f'Failed to delete old backups, Error {str(msg)}')
                         pass
 
                     # Execute the command to create the remote directory
