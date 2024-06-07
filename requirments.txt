@@ -57,7 +57,6 @@ py3dns==3.2.1
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pycparser==2.20
-pygpgme==0.3
 PyNaCl==1.4.0
 pyOpenSSL==19.1.0
 pyotp==2.4.1
