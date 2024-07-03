@@ -420,7 +420,6 @@ EOF
   dnf install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-connector-c-devel curl-devel git platform-python-devel tar socat bind-utils
   dnf install gpgme-devel -y
   dnf install python3 -y
-  fi
 
   elif [[ "$Server_OS_Version" = "9" ]] ; then
   rm -f /etc/yum.repos.d/CentOS-PowerTools-CyberPanel.repo
@@ -437,7 +436,6 @@ EOF
   dnf install gpgme-devel -y
   dnf install python3 -y
   fi
-  #all pre-upgrade operation for CentOS 8
 elif [[ "$Server_OS" = "Ubuntu" ]] ; then
 
   apt update -y
