@@ -829,6 +829,29 @@ class ApplicationInstaller(multi.Thread):
             if result.find('Success:') == -1:
                 raise BaseException(result)
 
+
+            ### install CyberSMTP
+
+            command = f"{FinalPHPPath} -d error_reporting=0 /usr/bin/wp plugin install https://github.com/usmannasir/CyberSMTPs/archive/refs/heads/main.zip --allow-root --path=" + finalPath
+            result = ProcessUtilities.outputExecutioner(command, externalApp)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(str(result))
+
+            if result.find('Success:') == -1:
+                raise BaseException(result)
+
+            command = f"{FinalPHPPath} -d error_reporting=0 /usr/bin/wp plugin activate CyberSMTPs --allow-root --path=" + finalPath
+            result = ProcessUtilities.outputExecutioner(command, externalApp)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(str(result))
+
+            if result.find('Success:') == -1:
+                raise BaseException(result)
+
+
+
             try:
                 if self.extraArgs['updates']:
                     if self.extraArgs['updates'] == 'Disabled':
@@ -6364,6 +6387,15 @@ class ApplicationInstaller(multi.Thread):
             logging.statusWriter(self.tempStatusPath, str(msg))
             return 0, str(msg)
 
+    def UpdateDownloadStatus(self, transferred, total):
+        percentage = (transferred / total) * 100
+
+        statusFile = open(self.tempStatusPath, 'w')
+        statusFile.writelines(f'{int(percentage)}% of file is downloaded from remote server..,50')
+        statusFile.close()
+
+
+
     def StartOCRestore(self):
         try:
 
@@ -6400,11 +6432,12 @@ class ApplicationInstaller(multi.Thread):
             ssh.connect(ip, username=ocb.sftpUser, pkey=key)
             sftp = ssh.open_sftp()
 
-            sftp.get(f'cpbackups/{folder}/{backupfile}', f'/home/cyberpanel/{backupfile}')
+            sftp.get(f'cpbackups/{folder}/{backupfile}', f'/home/cyberpanel/{backupfile}', callback=self.UpdateDownloadStatus)
 
             if not os.path.exists('/home/backup'):
                 command = 'mkdir /home/backup'
                 ProcessUtilities.executioner(command)
+
 
             command = f'mv /home/cyberpanel/{backupfile} /home/backup/{backupfile}'
             ProcessUtilities.executioner(command)
@@ -6412,6 +6445,12 @@ class ApplicationInstaller(multi.Thread):
             from backup.backupManager import BackupManager
             wm = BackupManager()
             resp = wm.submitRestore({'backupFile': backupfile}, userID)
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines("Download finished..,60")
+            statusFile.close()
+
+            time.sleep(6)
 
             if json.loads(resp.content)['restoreStatus'] == 0:
                 statusFile = open(tempStatusPath, 'w')
@@ -6423,13 +6462,21 @@ class ApplicationInstaller(multi.Thread):
 
                 return 0
 
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(f'Name of  of the backup file downloaded: {backupfile}')
+
             while True:
                 resp = wm.restoreStatus({'backupFile': backupfile})
+
                 resp = json.loads(resp.content)
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(f'Responce from status function: {str(resp)}')
+
 
                 if resp['abort'] == 1 and resp['running'] == 'Completed':
                     statusFile = open(tempStatusPath, 'w')
-                    statusFile.writelines("Successfully Installed. [200]")
+                    statusFile.writelines("Successfully Restored. [200]")
                     statusFile.close()
                     command = f'rm -f /home/backup/{backupfile}'
                     ProcessUtilities.executioner(command)
@@ -6437,7 +6484,7 @@ class ApplicationInstaller(multi.Thread):
                 elif resp['abort'] == 1 and resp['running'] == 'Error':
                     statusFile = open(tempStatusPath, 'w')
                     statusFile.writelines(
-                        f"Failed to restore backup. Error {resp['status']}. [404]")
+                        f"Failed to restore backup. Error {str(resp['status'])}. [404]")
                     statusFile.close()
                     command = f'rm -f /home/backup/{backupfile}'
                     ProcessUtilities.executioner(command)
@@ -6446,8 +6493,6 @@ class ApplicationInstaller(multi.Thread):
                     statusFile = open(tempStatusPath, 'w')
                     statusFile.writelines(f"{resp['status']},60")
                     statusFile.close()
-                    command = f'rm -f /home/backup/{backupfile}'
-                    ProcessUtilities.executioner(command)
                 time.sleep(3)
 
         except BaseException as msg:

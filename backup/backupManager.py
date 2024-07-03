@@ -751,7 +751,7 @@ class BackupManager:
                 return HttpResponse(final_json)
 
         except BaseException as msg:
-            final_dic = {'restoreStatus': 0, 'error_message': str(msg)}
+            final_dic = {'restoreStatus': 0, 'error_message': str(msg), 'abort': 0, 'running': 'Running..', 'status': ''}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
@@ -2073,6 +2073,12 @@ class BackupManager:
         userID = request.session['userID']
         currentACL = ACLManager.loadedACL(userID)
         admin = Administrator.objects.get(pk=userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+
         from IncBackups.models import OneClickBackups
         ocb = OneClickBackups.objects.get(pk = request.GET.get('id'), owner=admin)
 
@@ -2169,6 +2175,11 @@ class BackupManager:
         try:
             userID = request.session['userID']
             currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
 
             data = json.loads(request.body)
             id = data['idValue']
