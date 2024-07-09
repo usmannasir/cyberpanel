@@ -3214,7 +3214,7 @@ pm.max_spare_servers = 3
 [php74default]
 user = www-data
 group = www-data
-listen ={sockPath}php7.3-fpm.sock
+listen ={sockPath}php7.4-fpm.sock
 listen.owner = www-data
 listen.group = www-data
 pm = dynamic
