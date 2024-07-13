@@ -871,6 +871,13 @@ EOF
     dnf config-manager --set-enabled powertools > /dev/null 2>&1
 
   
+  if [[ "$Server_Country" = *"CN"* ]] ; then
+    sed -i 's|# baseurl=https://repo.almalinux.org|baseurl=https://cyberpanel.sh/repo.almalinux.org|g' /etc/yum.repos.d/almalinux-powertools.repo
+    sed -i 's|mirrorlist=|# mirrorlist=|g' /etc/yum.repos.d/almalinux-powertools.repo
+    sed -i 's|#baseurl=http://dl.rockylinux.org|baseurl=https://cyberpanel.sh/dl.rockylinux.org|g' /etc/yum.repos.d/Rocky-PowerTools.repo
+    sed -i 's|mirrorlist=|# mirrorlist=|g' /etc/yum.repos.d/Rocky-PowerTools.repo
+  fi
+  
 #    cat <<EOF >/etc/yum.repos.d/CentOS-PowerTools-CyberPanel.repo
 #[powertools-for-cyberpanel]
 #name=CentOS Linux \$releasever - PowerTools
