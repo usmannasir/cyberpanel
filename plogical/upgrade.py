@@ -1660,6 +1660,11 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
                 pass
 
             try:
+                cursor.execute('ALTER TABLE dockerManager_containers MODIFY COLUMN name VARCHAR(150);')
+            except:
+                pass
+
+            try:
                 connection.close()
             except:
                 pass
