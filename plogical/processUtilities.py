@@ -15,6 +15,7 @@ class ProcessUtilities(multi.Thread):
     OLS = 0
     centos = 1
     cent8 = 2
+    cent9 = 3
     ubuntu = 0
     ubuntu20 = 3
     ubuntu22Check = 0
@@ -176,7 +177,9 @@ class ProcessUtilities(multi.Thread):
                 return ProcessUtilities.ubuntu20
             return ProcessUtilities.ubuntu
         else:
-            if open('/etc/redhat-release', 'r').read().find('CentOS Linux release 8') > -1 or open('/etc/redhat-release', 'r').read().find('AlmaLinux release 8') > -1 or open('/etc/redhat-release', 'r').read().find('Rocky Linux release 8') > -1:
+            if open('/etc/redhat-release', 'r').read().find('CentOS Linux release 8') > -1 or open('/etc/redhat-release', 'r').read().find('AlmaLinux release 8') > -1 \
+                    or open('/etc/redhat-release', 'r').read().find('Rocky Linux release 8') > -1 \
+                    or open('/etc/redhat-release', 'r').read().find('Rocky Linux release 9') > -1 or open('/etc/redhat-release', 'r').read().find('AlmaLinux release 9') > -1:
                 return ProcessUtilities.cent8
             return ProcessUtilities.centos
 
