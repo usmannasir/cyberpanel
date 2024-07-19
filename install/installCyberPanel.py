@@ -621,6 +621,8 @@ gpgcheck=1
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
 
+
+
                 if get_Ubuntu_release() > 21.00:
                     ### change mysql md5 to crypt
 
@@ -629,6 +631,19 @@ gpgcheck=1
 
                     command = "systemctl restart pure-ftpd-mysql.service"
                     install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            else:
+
+                try:
+                    clAPVersion = FetchCloudLinuxAlmaVersionVersion()
+                    type = clAPVersion.split('-')[0]
+                    version = int(clAPVersion.split('-')[1])
+
+                    if type == 'al' and version >= 90:
+                        command = "sed -i 's/MYSQLCrypt md5/MYSQLCrypt crypt/g' /etc/pure-ftpd/pureftpd-mysql.conf"
+                        install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+                except:
+                    pass
+
 
 
             InstallCyberPanel.stdOut("PureFTPD configured!", 1)

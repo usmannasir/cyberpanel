@@ -19,6 +19,7 @@ class ProcessUtilities(multi.Thread):
     ubuntu = 0
     ubuntu20 = 3
     ubuntu22Check = 0
+    alma9check = 0
     server_address = '/usr/local/lscpd/admin/comm.sock'
     token = "unset"
     portPath = '/usr/local/lscp/conf/bind.conf'
@@ -180,6 +181,10 @@ class ProcessUtilities(multi.Thread):
             if open('/etc/redhat-release', 'r').read().find('CentOS Linux release 8') > -1 or open('/etc/redhat-release', 'r').read().find('AlmaLinux release 8') > -1 \
                     or open('/etc/redhat-release', 'r').read().find('Rocky Linux release 8') > -1 \
                     or open('/etc/redhat-release', 'r').read().find('Rocky Linux release 9') > -1 or open('/etc/redhat-release', 'r').read().find('AlmaLinux release 9') > -1:
+                ## this is check only
+                if open(distroPath, 'r').read().find('AlmaLinux release 9') > -1 or open(distroPath, 'r').read().find('Rocky Linux release 9') > -1:
+                    ProcessUtilities.alma9check = 1
+
                 return ProcessUtilities.cent8
             return ProcessUtilities.centos
 
