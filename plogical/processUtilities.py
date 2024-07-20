@@ -167,6 +167,7 @@ class ProcessUtilities(multi.Thread):
     @staticmethod
     def decideDistro():
         distroPath = '/etc/lsb-release'
+        distroPathAlma = '/etc/redhat-release'
 
         if os.path.exists(distroPath):
             
@@ -182,7 +183,7 @@ class ProcessUtilities(multi.Thread):
                     or open('/etc/redhat-release', 'r').read().find('Rocky Linux release 8') > -1 \
                     or open('/etc/redhat-release', 'r').read().find('Rocky Linux release 9') > -1 or open('/etc/redhat-release', 'r').read().find('AlmaLinux release 9') > -1:
                 ## this is check only
-                if open(distroPath, 'r').read().find('AlmaLinux release 9') > -1 or open(distroPath, 'r').read().find('Rocky Linux release 9') > -1:
+                if open(distroPathAlma, 'r').read().find('AlmaLinux release 9') > -1 or open(distroPathAlma, 'r').read().find('Rocky Linux release 9') > -1:
                     ProcessUtilities.alma9check = 1
 
                 return ProcessUtilities.cent8
