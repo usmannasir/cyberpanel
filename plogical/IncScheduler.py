@@ -833,7 +833,9 @@ Automatic backup failed for %s on %s.
 
                             # Read the results
                             directories = stdout.read().decode().splitlines()
-                            print(f'directories of  {str(directories)}')
+
+                            if os.path.exists(ProcessUtilities.debugPath):
+                                logging.writeToFile(str(directories))
 
                             try:
 
