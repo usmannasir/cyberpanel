@@ -47,7 +47,7 @@
                                 <label class="col-sm-3 control-label">{% trans "Select Repo" %} </label>
                                 <div class="col-sm-6">
 
-                                    <select  ng-change="selectrepo()" ng-model="testhabbi"
+                                    <select ng-change="selectrepo()" ng-model="testhabbi"
                                             class="form-control">
                                         <option ng-repeat="repo in repos track by $index">{$ repo $}</option>
                                     </select>
@@ -171,12 +171,13 @@
                                         <button type="button" class="close" data-dismiss="modal">&times;
                                         </button>
                                         <h4 id="restore_header_text" class="modal-title">{% trans "Delete" %} <img
-                                                ng-hide="backupLoading" src="{% static 'images/loading.gif' %}"> </h4>
+                                                ng-hide="backupLoading" src="{% static 'images/loading.gif' %}"></h4>
                                     </div>
                                     <div class="modal-body" style="">
 
-                                        <span style="font-weight: bolder"><span style="font-weight: bolder">ID: <span style="font-weight: normal"
-                                                                                    id="Snapshot_id_delete"></span></span><br>
+                                        <span style="font-weight: bolder"><span style="font-weight: bolder">ID: <span
+                                                style="font-weight: normal"
+                                                id="Snapshot_id_delete"></span></span><br>
                                         <span style="display: flex;justify-content: center;margin-top: 20px;font-weight: bolder">{% trans "Are you ready to delete this snapshot? This process can not be undone." %} </span>
                                         <div style="display: flex;justify-content: center;margin-top: 10px;margin-bottom: 20px">
                                             <button type="button" class="btn btn-primary "
@@ -288,14 +289,8 @@
                         allowfullscreen></iframe>
             </p>
             <div style="margin-top: 2%">
-                <stripe-pricing-table pricing-table-id="prctbl_1MQtdYJMfY1fWGMszc4tx78j"
-                                      publishable-key="pk_live_51ITXBmJMfY1fWGMs2G0LAydJweIDMp2WaYocM0xyzdn03WaHUbMw6uxfVuktAkgpRyUql7tz7gF5OwdccEZLd6Ot00XX6tGoZx">
-                </stripe-pricing-table>
-                <stripe-pricing-table pricing-table-id="prctbl_1LpSqSJMfY1fWGMsxSNhPLsc"
-                                      publishable-key="pk_live_51ITXBmJMfY1fWGMs2G0LAydJweIDMp2WaYocM0xyzdn03WaHUbMw6uxfVuktAkgpRyUql7tz7gF5OwdccEZLd6Ot00XX6tGoZx">
-                </stripe-pricing-table>
-                <stripe-pricing-table pricing-table-id="prctbl_1M6WpCJMfY1fWGMsQXFlZWcW"
-                                      publishable-key="pk_live_51ITXBmJMfY1fWGMs2G0LAydJweIDMp2WaYocM0xyzdn03WaHUbMw6uxfVuktAkgpRyUql7tz7gF5OwdccEZLd6Ot00XX6tGoZx">
+                <stripe-pricing-table pricing-table-id="prctbl_1PhTRPRs6rG0dTDlJZMzTw0k"
+                                      publishable-key="pk_live_51PgodkRs6rG0dTDl3jCUgxjyjI983GmCdHjzuLfZIsssmDLgKgnXnwQghVCctKMNFIC5K4oMcviTFrHf1ytsYZGa00AGySiWlF">
                 </stripe-pricing-table>
             </div>
 
