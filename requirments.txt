@@ -12,7 +12,6 @@ certifi==2020.11.8
 cffi==1.14.3
 chardet==3.0.4
 cloudflare==2.8.13
-ConfigArgParse==1.2.3
 configobj==5.0.6
 cryptography==3.2.1
 decorator==4.4.2
