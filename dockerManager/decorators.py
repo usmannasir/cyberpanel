@@ -40,7 +40,7 @@ def preDockerRun(function):
                 
         try:
             client = docker.from_env()
-            client.ping()
+            result = client.ping()
         except BaseException as msg:
             logging.writeToFile(str(msg))
             if isPost:

@@ -97,8 +97,7 @@ app.controller('backupWebsiteControl', function ($scope, $http, $timeout) {
                     $scope.status = response.data.status;
                     populateCurrentRecords();
                     return;
-                }
-                else {
+                } else {
                     $scope.destination = true;
                     $scope.backupButton = true;
                     $scope.runningBackup = false;
@@ -109,8 +108,7 @@ app.controller('backupWebsiteControl', function ($scope, $http, $timeout) {
                     $timeout(getBackupStatus, 2000);
 
                 }
-            }
-            else {
+            } else {
                 $timeout.cancel();
                 $scope.backupLoadingBottom = true;
                 $scope.backupLoading = true;
@@ -230,8 +228,7 @@ app.controller('backupWebsiteControl', function ($scope, $http, $timeout) {
                 populateCurrentRecords();
 
 
-            }
-            else {
+            } else {
 
             }
 
@@ -308,8 +305,7 @@ app.controller('restoreWebsiteControl', function ($scope, $http, $timeout) {
                     $scope.restoreFinished = true;
                     $timeout.cancel();
                     return;
-                }
-                else {
+                } else {
                     $scope.running = response.data.running;
                     $scope.fileName = $scope.backupFile;
                     $scope.restoreLoading = false;
@@ -364,18 +360,17 @@ app.controller('restoreWebsiteControl', function ($scope, $http, $timeout) {
 
                 getRestoreStatus();
                 restoreBackupButton.disabled = false;
-            }
-            else {
+            } else {
                 $scope.backupError = false;
                 $scope.errorMessage = response.data.error_message;
-                 restoreBackupButton.disabled = false;
+                restoreBackupButton.disabled = false;
             }
 
         }
 
         function cantLoadInitialDatas(response) {
             $scope.couldNotConnect = false;
-             restoreBackupButton.disabled = false;
+            restoreBackupButton.disabled = false;
         }
 
     };
@@ -404,14 +399,12 @@ app.controller('restoreWebsiteControl', function ($scope, $http, $timeout) {
 
             if (response.data.createWebSiteStatus == 1) {
                 getRestoreStatus();
-            }
-            else if (response.data.existsStatus == 1) {
+            } else if (response.data.existsStatus == 1) {
                 $scope.backupError = false;
                 $scope.errorMessage = response.data.error_message;
                 $scope.restoreButton = true;
                 $scope.runningRestore = true;
-            }
-            else {
+            } else {
                 $scope.websiteDomain = domainName;
                 $scope.backupError = false;
                 $scope.errorMessage = response.data.error_message;
@@ -484,8 +477,7 @@ app.controller('remoteBackupControl', function ($scope, $http, $timeout) {
                 websitesToBeBacked.push(website);
             }
 
-        }
-        else {
+        } else {
 
             var tempArray = [];
 
@@ -504,8 +496,7 @@ app.controller('remoteBackupControl', function ($scope, $http, $timeout) {
 
             websitesToBeBacked = websitesToBeBackedTemp;
             $scope.webSiteStatus = true;
-        }
-        else {
+        } else {
             websitesToBeBacked = [];
             $scope.webSiteStatus = false;
         }
@@ -568,8 +559,7 @@ app.controller('remoteBackupControl', function ($scope, $http, $timeout) {
                 $scope.backupCancelled = true;
 
 
-            }
-            else {
+            } else {
                 $scope.error_message = response.data.error_message;
                 $scope.backupLoading = true;
 
@@ -667,8 +657,7 @@ app.controller('remoteBackupControl', function ($scope, $http, $timeout) {
                 getBackupStatus();
 
 
-            }
-            else {
+            } else {
 
                 $scope.error_message = response.data.error_message;
                 $scope.backupLoading = true;
@@ -730,8 +719,7 @@ app.controller('remoteBackupControl', function ($scope, $http, $timeout) {
                     $scope.backupStatus = false;
                     $scope.requestData = response.data.status;
                     $timeout(getBackupStatus, 2000);
-                }
-                else {
+                } else {
                     $scope.requestData = response.data.status;
                     $timeout.cancel();
 
@@ -739,8 +727,7 @@ app.controller('remoteBackupControl', function ($scope, $http, $timeout) {
 
                     remoteBackupRestore();
                 }
-            }
-            else {
+            } else {
 
                 $scope.error_message = response.data.error_message;
                 $scope.backupLoading = true;
@@ -832,15 +819,13 @@ app.controller('remoteBackupControl', function ($scope, $http, $timeout) {
                     $scope.backupStatus = false;
                     $scope.restoreData = response.data.status;
                     $timeout(localRestoreStatus, 2000);
-                }
-                else {
+                } else {
                     $scope.restoreData = response.data.status;
                     $timeout.cancel();
                     $scope.backupLoading = true;
                     $scope.startTransferbtn = false;
                 }
-            }
-            else {
+            } else {
 
                 $scope.error_message = response.data.error_message;
                 $scope.backupLoading = true;
@@ -895,8 +880,7 @@ app.controller('remoteBackupControl', function ($scope, $http, $timeout) {
                     $scope.backupStatus = false;
                     $scope.requestData = response.data.status;
                     $timeout(getBackupStatus, 2000);
-                }
-                else {
+                } else {
                     $timeout.cancel();
                 }
             }
@@ -980,8 +964,7 @@ app.controller('remoteBackupControl', function ($scope, $http, $timeout) {
                 $scope.fetchAccountsBtn = false;
 
 
-            }
-            else {
+            } else {
 
                 $scope.error_message = response.data.error_message;
                 $scope.backupLoading = true;
@@ -1067,6 +1050,7 @@ app.controller('backupLogsScheduled', function ($scope, $http, $timeout) {
                 });
             }
         }
+
         function cantLoadInitialData(response) {
             $scope.cyberpanelLoading = true;
             new PNotify({
@@ -1085,15 +1069,12 @@ app.controller('backupLogsScheduled', function ($scope, $http, $timeout) {
 ///** Backup site ends **///
 
 
-
-
-
 app.controller('googleDrive', function ($scope, $http) {
 
     $scope.cyberPanelLoading = true;
     $scope.driveHidden = true;
 
-    $scope.setupAccount = function(){
+    $scope.setupAccount = function () {
         window.open("https://platform.cyberpersons.com/gDrive?name=" + $scope.accountName + '&server=' + window.location.href + 'Setup');
     };
 
@@ -1252,7 +1233,7 @@ app.controller('googleDrive', function ($scope, $http) {
 
     $scope.changeRetention = function () {
         $scope.cyberPanelLoading = false;
-           var config = {
+        var config = {
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
             }
@@ -1268,24 +1249,25 @@ app.controller('googleDrive', function ($scope, $http) {
 
         $http.post(dataurl, data, config).then(fileretention, cantLoadInitialData);
 
-            function fileretention(response) {
-                $scope.cyberPanelLoading = true;
-                if (response.data.status === 1) {
-                    new PNotify({
-                        title: 'Success',
-                        text: 'Changes successfully applied',
-                        type: 'success'
-                    });
-                    $scope.fetchWebsites();
-                } else {
-                    new PNotify({
-                        title: 'Operation Failed!',
-                        text: response.data.error_message,
-                        type: 'error'
-                    });
-                }
+        function fileretention(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Changes successfully applied',
+                    type: 'success'
+                });
+                $scope.fetchWebsites();
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
             }
-            function cantLoadInitialData(response) {
+        }
+
+        function cantLoadInitialData(response) {
             $scope.cyberPanelLoading = true;
             new PNotify({
                 title: 'Operation Failed!',
@@ -2060,5 +2042,656 @@ app.controller('scheduleBackup', function ($scope, $http, $window) {
         }
 
     };
+
+});
+
+app.controller('backupPlanNowOneClick', function ($scope, $http, $window) {
+    $scope.cyberpanelLoading = true;
+    $scope.sftpHide = true;
+    $scope.localHide = true;
+
+    $scope.BuyNowBackupP = function (planName, monthlyPrice, yearlyPrice, months) {
+
+        const baseURL = 'https://platform.cyberpersons.com/Billing/CreateOrderforBackupPlans';
+        // Get the current URL
+        var currentURL = window.location.href;
+
+// Find the position of the question mark
+        const queryStringIndex = currentURL.indexOf('?');
+
+// Check if there is a query string
+        currentURL = queryStringIndex !== -1 ? currentURL.substring(0, queryStringIndex) : currentURL;
+
+
+        // Encode parameters to make them URL-safe
+        const params = new URLSearchParams({
+            planName: planName,
+            monthlyPrice: monthlyPrice,
+            yearlyPrice: yearlyPrice,
+            returnURL: currentURL,  // Add the current URL as a query parameter
+            months: months
+        });
+
+
+        // Build the complete URL with query string
+        const fullURL = `${baseURL}?${params.toString()}`;
+
+        // Redirect to the constructed URL
+
+        window.location.href = fullURL;
+
+    }
+
+
+    $scope.fetchDetails = function () {
+
+        if ($scope.destinationType === 'SFTP') {
+            $scope.sftpHide = false;
+            $scope.localHide = true;
+            $scope.populateCurrentRecords();
+        } else {
+            $scope.sftpHide = true;
+            $scope.localHide = false;
+            $scope.populateCurrentRecords();
+        }
+    };
+
+    $scope.populateCurrentRecords = function () {
+
+        $scope.cyberpanelLoading = false;
+
+        url = "/backup/getCurrentBackupDestinations";
+
+        var type = 'SFTP';
+        if ($scope.destinationType === 'SFTP') {
+            type = 'SFTP';
+        } else {
+            type = 'local';
+        }
+
+        var data = {
+            type: type
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+                $scope.records = JSON.parse(response.data.data);
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+    };
+
+    $scope.addDestination = function (type) {
+        $scope.cyberpanelLoading = false;
+
+        url = "/backup/submitDestinationCreation";
+
+        if (type === 'SFTP') {
+            var data = {
+                type: type,
+                name: $scope.name,
+                IPAddress: $scope.IPAddress,
+                userName: $scope.userName,
+                password: $scope.password,
+                backupSSHPort: $scope.backupSSHPort,
+                path: $scope.path
+            };
+        } else {
+            var data = {
+                type: type,
+                path: $scope.localPath,
+                name: $scope.name
+            };
+        }
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            $scope.populateCurrentRecords();
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Destination successfully added.',
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+    };
+
+    $scope.removeDestination = function (type, nameOrPath) {
+        $scope.cyberpanelLoading = false;
+
+
+        url = "/backup/deleteDestination";
+
+        var data = {
+            type: type,
+            nameOrPath: nameOrPath,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            $scope.populateCurrentRecords();
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Destination successfully removed.',
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+    };
+
+    $scope.DeployAccount = function (id) {
+        $scope.cyberpanelLoading = false;
+
+        url = "/backup/DeployAccount";
+
+        var data = {
+            id:id
+
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Successfully deployed.',
+                    type: 'success'
+                });
+                $window.location.reload();
+
+
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.couldNotConnect = false;
+            restoreBackupButton.disabled = false;
+        }
+
+    };
+
+
+});
+
+
+app.controller('OneClickrestoreWebsiteControl', function ($scope, $http, $timeout) {
+
+    $scope.restoreLoading = true;
+    $scope.runningRestore = true;
+    $scope.restoreButton = true;
+    $scope.restoreFinished = false;
+    $scope.couldNotConnect = true;
+    $scope.backupError = true;
+    $scope.siteExists = true;
+    $scope.installationProgress = true;
+
+    // check to start time of status function
+
+    var check = 1;
+
+
+    $scope.fetchDetails = function () {
+        $scope.restoreLoading = false;
+        getRestoreStatus();
+    };
+
+
+    function getRestoreStatus() {
+
+        var backupFile = $scope.backupFile;
+
+        url = "/backup/restoreStatus";
+
+        var data = {
+            backupFile: backupFile,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.restoreStatus === 1) {
+
+                if (response.data.abort === 1) {
+                    $scope.running = response.data.running;
+                    $scope.fileName = $scope.backupFile;
+                    $scope.restoreLoading = true;
+                    $scope.status = response.data.status;
+                    $scope.runningRestore = false;
+                    $scope.restoreButton = false;
+                    $scope.restoreFinished = true;
+                    $timeout.cancel();
+                    return;
+                } else {
+                    $scope.running = response.data.running;
+                    $scope.fileName = $scope.backupFile;
+                    $scope.restoreLoading = false;
+                    $scope.status = response.data.status;
+                    $scope.runningRestore = false;
+                    $scope.restoreButton = true;
+                    $timeout(getRestoreStatus, 2000);
+                }
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.couldNotConnect = false;
+
+
+        }
+
+    };
+
+
+    $scope.restoreBackup = function () {
+        var restoreBackupButton = document.getElementById("restoreBackup");
+        restoreBackupButton.disabled = true;
+        var backupFile = $scope.backupFile;
+        $scope.running = "Lets start.."
+
+        url = "/backup/submitRestore";
+
+        var data = {
+            backupFile: backupFile,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            $scope.restoreLoading = true;
+            if (response.data.restoreStatus == 1) {
+                $scope.runningRestore = false;
+                $scope.running = "Running";
+                $scope.fileName = $scope.backupFile;
+                $scope.status = "Just Started..";
+
+                getRestoreStatus();
+                restoreBackupButton.disabled = false;
+            } else {
+                $scope.backupError = false;
+                $scope.errorMessage = response.data.error_message;
+                restoreBackupButton.disabled = false;
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.couldNotConnect = false;
+            restoreBackupButton.disabled = false;
+        }
+
+    };
+
+    function createWebsite() {
+
+        var backupFile = $scope.backupFile;
+
+        url = "/websites/CreateWebsiteFromBackup";
+
+        var data = {
+            backupFile: backupFile,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            if (response.data.createWebSiteStatus == 1) {
+                getRestoreStatus();
+            } else if (response.data.existsStatus == 1) {
+                $scope.backupError = false;
+                $scope.errorMessage = response.data.error_message;
+                $scope.restoreButton = true;
+                $scope.runningRestore = true;
+            } else {
+                $scope.websiteDomain = domainName;
+                $scope.backupError = false;
+                $scope.errorMessage = response.data.error_message;
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.couldNotConnect = false;
+        }
+
+
+    };
+
+    $scope.FetchOCSites = function () {
+        $scope.restoreLoading = false;
+
+        // Current URL
+        const currentURL = window.location.href;
+
+// Create a URL object
+        const urlN = new URL(currentURL);
+
+// Get the value of the 'id' parameter
+        const idValue = urlN.searchParams.get('id');
+
+
+        url = "/backup/fetchOCSites";
+
+        var data = {
+            idValue: idValue,
+            folder: $scope.ocFolder
+
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            $scope.restoreLoading = true;
+            if (response.data.status === 1) {
+
+                $scope.backups = response.data.finalDirs;
+
+            } else {
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.couldNotConnect = false;
+            restoreBackupButton.disabled = false;
+        }
+
+    };
+
+    $scope.StartOCRestore = function () {
+
+        $scope.restoreLoading = false;
+        $scope.installationDetailsForm = true;
+        $scope.installationProgress = false;
+        $scope.errorMessageBox = true;
+        $scope.success = true;
+        $scope.couldNotConnect = true;
+        $scope.goBackDisable = true;
+        $scope.restoreLoading = false;
+
+
+        $scope.currentStatus = "Starting creation..";
+
+
+        // Current URL
+        const currentURL = window.location.href;
+
+// Create a URL object
+        const urlN = new URL(currentURL);
+
+// Get the value of the 'id' parameter
+        const idValue = urlN.searchParams.get('id');
+
+
+        //alert(domainNameCreate);
+        var data = {
+
+            idValue: idValue,
+            folder: $scope.ocFolder,
+            backupfile: $scope.ocFile
+        }
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        var url = "/backup/StartOCRestore";
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.restoreLoading = true;
+            if (response.data.status === 1) {
+                statusFile = response.data.tempStatusPath;
+                getCreationStatus();
+
+            } else {
+                $scope.goBackDisable = false;
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            alert("Error..." + response)
+
+        }
+
+    };
+    $scope.goBack = function () {
+        $scope.webSiteCreationLoading = true;
+        $scope.installationDetailsForm = false;
+        $scope.installationProgress = true;
+        $scope.errorMessageBox = true;
+        $scope.success = true;
+        $scope.couldNotConnect = true;
+        $scope.goBackDisable = true;
+        $("#installProgress").css("width", "0%");
+    };
+
+    function getCreationStatus() {
+
+        url = "/websites/installWordpressStatus";
+
+        var data = {
+            statusFile: statusFile
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            if (response.data.abort === 1) {
+
+                if (response.data.installStatus === 1) {
+
+                    $scope.restoreLoading = true;
+                    $scope.installationDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.errorMessageBox = true;
+                    $scope.success = false;
+                    $scope.couldNotConnect = true;
+                    $scope.goBackDisable = false;
+
+                    $("#installProgress").css("width", "100%");
+                    $scope.installPercentage = "100";
+                    $scope.currentStatus = response.data.currentStatus ;
+                    $timeout.cancel();
+
+                } else {
+
+                    $scope.restoreLoading = true;
+                    $scope.installationDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.errorMessageBox = false;
+                    $scope.success = true;
+                    $scope.couldNotConnect = true;
+                    $scope.goBackDisable = false;
+
+                    $scope.errorMessage = response.data.error_message;
+
+                    $("#installProgress").css("width", "0%");
+                    $scope.installPercentage = "0";
+                    $scope.goBackDisable = false;
+
+                }
+
+            } else {
+                $scope.restoreLoading = false;
+                $("#installProgress").css("width", response.data.installationProgress + "%");
+                $scope.installPercentage = response.data.installationProgress;
+                $scope.currentStatus = response.data.currentStatus;
+                $timeout(getCreationStatus, 1000);
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.restoreLoading = true;
+            $scope.installationDetailsForm = true;
+            $scope.installationProgress = false;
+            $scope.errorMessageBox = true;
+            $scope.success = true;
+            $scope.couldNotConnect = false;
+            $scope.goBackDisable = false;
+
+        }
+
+
+    }
+
 
 });

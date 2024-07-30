@@ -14,7 +14,6 @@ cffi==1.15.1
 chardet==5.0.0
 charset-normalizer==2.0.12
 cloudflare==2.9.12
-ConfigArgParse==1.5.3
 configobj==5.0.6
 cryptography==38.0.0
 decorator==5.1.1

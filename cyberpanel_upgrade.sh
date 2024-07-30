@@ -121,7 +121,7 @@ elif grep -q -E "CloudLinux 7|CloudLinux 8" /etc/os-release ; then
   Server_OS="CloudLinux"
 elif grep -q -E "Rocky Linux" /etc/os-release ; then
   Server_OS="RockyLinux"
-elif grep -q "AlmaLinux-8" /etc/os-release ; then
+elif grep -q -E "AlmaLinux-8|AlmaLinux-9" /etc/os-release ; then
   Server_OS="AlmaLinux"
 elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04|Ubuntu 20.10|Ubuntu 22.04" /etc/os-release ; then
   Server_OS="Ubuntu"
@@ -420,8 +420,22 @@ EOF
   dnf install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-connector-c-devel curl-devel git platform-python-devel tar socat bind-utils
   dnf install gpgme-devel -y
   dnf install python3 -y
+
+  elif [[ "$Server_OS_Version" = "9" ]] ; then
+  rm -f /etc/yum.repos.d/CentOS-PowerTools-CyberPanel.repo
+
+  if [[ "$Server_Country" = "CN" ]] ; then
+    dnf --nogpg install -y https://cyberpanel.sh/mirror.ghettoforge.org/distributions/gf/gf-release-latest.gf.el9.noarch.rpm
+  else
+    dnf --nogpg install -y https://mirror.ghettoforge.org/distributions/gf/gf-release-latest.gf.el9.noarch.rpm
   fi
-  #all pre-upgrade operation for CentOS 8
+
+  dnf install epel-release -y
+
+  dnf install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-connector-c-devel curl-devel git platform-python-devel tar socat bind-utils
+  dnf install gpgme-devel -y
+  dnf install python3 -y
+  fi
 elif [[ "$Server_OS" = "Ubuntu" ]] ; then
 
   apt update -y

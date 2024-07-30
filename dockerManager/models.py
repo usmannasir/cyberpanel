@@ -6,7 +6,7 @@ from loginSystem.models import Administrator
 
 # Create your models here.
 class Containers(models.Model):
-    name = models.CharField(max_length=50,unique=True)
+    name = models.CharField(max_length=150,unique=True)
     cid = models.CharField(max_length=64, default='')
     admin = models.ForeignKey(Administrator, on_delete=models.CASCADE)
     image = models.CharField(max_length=50, default='unknown')

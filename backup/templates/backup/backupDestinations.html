@@ -12,10 +12,10 @@
     <div class="container">
         <div id="page-title">
             <h2>{% trans "Set up Backup Destinations" %} - <a target="_blank"
-                                                                           href="https://cyberpanel.net/KnowledgeBase/home/add-destination-scheduled-local-sftp-remote-backups/"
-                                                                           style="height: 23px;line-height: 21px;"
-                                                                           class="btn btn-border btn-alt border-red btn-link font-red"
-                                                                           title=""><span>{% trans "Remote Backups" %}</span></a>
+                                                              href="https://cyberpanel.net/KnowledgeBase/home/add-destination-scheduled-local-sftp-remote-backups/"
+                                                              style="height: 23px;line-height: 21px;"
+                                                              class="btn btn-border btn-alt border-red btn-link font-red"
+                                                              title=""><span>{% trans "Remote Backups" %}</span></a>
             </h2>
             <p>{% trans "On this page you can set up your Backup destinations. (SFTP)" %}</p>
         </div>
@@ -24,8 +24,12 @@
             <div class="panel-body">
                 <h3 class="title-hero">
                     {% trans "Set up Backup Destinations." %} <img ng-hide="cyberpanelLoading"
-                                                                    src="{% static 'images/loading.gif' %}">
+                                                                   src="{% static 'images/loading.gif' %}">
                 </h3>
+                <div class="alert alert-warning">
+                    <p>Configure automatic backups to our secure servers in 60 seconds. <a
+                            href="/backup/OneClickBackups">Set-up now.</a></p>
+                </div>
                 <div class="example-box-wrapper">
 
 
@@ -82,7 +86,8 @@
                         <div ng-hide="sftpHide" class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Path" %}</label>
                             <div class="col-sm-6">
-                                <input placeholder="Path on remote server to store backups." type="text" class="form-control" ng-model="path" required>
+                                <input placeholder="Path on remote server to store backups." type="text"
+                                       class="form-control" ng-model="path" required>
                             </div>
                         </div>
 
@@ -122,7 +127,8 @@
                                         <td ng-bind="record.username"></td>
                                         <td ng-bind="record.path"></td>
                                         <td ng-bind="record.port"></td>
-                                        <td ng-click="removeDestination('SFTP', record.name)"><img src="{% static 'images/delete.png' %}">
+                                        <td ng-click="removeDestination('SFTP', record.name)"><img
+                                                src="{% static 'images/delete.png' %}">
                                         </td>
 
                                     </tr>
@@ -164,8 +170,6 @@
                         <!--- SFTP --->
 
 
-
-
                         <!------ List of Destinations --------------->
 
                         <div ng-hide="localHide" class="form-group">
@@ -184,7 +188,8 @@
                                     <tr ng-repeat="record in records track by $index">
                                         <td ng-bind="record.name"></td>
                                         <td ng-bind="record.path"></td>
-                                        <td ng-click="removeDestination('local', record.name)"><img src="{% static 'images/delete.png' %}">
+                                        <td ng-click="removeDestination('local', record.name)"><img
+                                                src="{% static 'images/delete.png' %}">
                                         </td>
 
                                     </tr>

@@ -246,6 +246,7 @@ class vhost:
                     currentConf = currentConf.replace('{open_basedir}', '')
 
 
+
                 confFile.write(currentConf)
                 confFile.close()
 

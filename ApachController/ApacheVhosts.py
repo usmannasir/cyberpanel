@@ -546,6 +546,8 @@ class ApacheVhost:
 
             finalConfPath = ApacheVhost.DecidePHPPath(php, virtualHostName)
 
+            logging.writeToFile(f'apache php final path: {finalConfPath}')
+
             confFile = open(finalConfPath, "w+")
             currentConf = vhostConfs.phpFpmPool
             currentConf = currentConf.replace('{www}', externalApp)

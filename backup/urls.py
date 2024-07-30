@@ -4,6 +4,13 @@ from . import views
 urlpatterns = [
     url(r'^$', views.loadBackupHome, name='loadBackupHome'),
     url(r'^getCurrentBackups', views.getCurrentBackups, name='getCurrentBackups'),
+    url(r'^OneClickBackups', views.OneClickBackups, name='OneClickBackups'),
+    url(r'^ManageOCBackups', views.ManageOCBackups, name='ManageOCBackups'),
+    url(r'^RestoreOCBackups', views.RestoreOCBackups, name='RestoreOCBackups'),
+    url(r'^fetchOCSites', views.fetchOCSites, name='fetchOCSites'),
+    url(r'^StartOCRestore', views.StartOCRestore, name='StartOCRestore'),
+    url(r'^DeployAccount', views.DeployAccount, name='DeployAccount'),
+
     url(r'^backupSite', views.backupSite, name='backupSite'),
     url(r'^restoreSite', views.restoreSite, name='restoreSite'),
     url(r'^gDrive$', views.gDrive, name='gDrive'),
@@ -15,7 +22,6 @@ urlpatterns = [
     url(r'^changeFileRetention$', views.changeFileRetention, name='changeFileRetention'),
     url(r'^deleteSitegDrive$', views.deleteSitegDrive, name='deleteSitegDrive'),
     url(r'^fetchDriveLogs$', views.fetchDriveLogs, name='fetchDriveLogs'),
-
 
     url(r'^submitBackupCreation', views.submitBackupCreation, name='submitBackupCreation'),
     url(r'^cancelBackupCreation', views.cancelBackupCreation, name='cancelBackupCreation'),
@@ -42,9 +48,7 @@ urlpatterns = [
 
     url(r'^submitBackupSchedule', views.submitBackupSchedule, name='submitBackupSchedule'),
 
-
     url(r'^scheduleDelete', views.scheduleDelete, name='scheduleDelete'),
-
 
     url(r'^remoteBackups', views.remoteBackups, name='remoteBackups'),
     url(r'^submitRemoteBackups', views.submitRemoteBackups, name='submitRemoteBackups'),

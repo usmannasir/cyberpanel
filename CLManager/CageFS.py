@@ -63,7 +63,9 @@ class CageFS:
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
                                                       "Checking if LVE Kernel is loaded ..\n", 1)
 
-            if ProcessUtilities.outputExecutioner('uname -a').find('lve') == -1:
+            if ProcessUtilities.outputExecutioner('uname -a').find('lve') > -1 or ProcessUtilities.outputExecutioner('lsmod').find('lve') > -1:
+                pass
+            else:
                 logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
                                                           "CloudLinux is installed but kernel is not loaded, please reboot your server to load appropriate kernel. [404]\n", 1)
                 return 0

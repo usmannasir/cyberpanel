@@ -71,6 +71,32 @@ class Upgrade:
               '"hostnameSSL": 0, "mailServerSSL": 0 }'
 
     @staticmethod
+    def FetchCloudLinuxAlmaVersionVersion():
+        if os.path.exists('/etc/os-release'):
+            data = open('/etc/os-release', 'r').read()
+            if (data.find('CloudLinux') > -1 or data.find('cloudlinux') > -1) and (
+                    data.find('8.9') > -1 or data.find('Anatoly Levchenko') > -1 or data.find('VERSION="8.') > -1):
+                return 'cl-89'
+            elif (data.find('CloudLinux') > -1 or data.find('cloudlinux') > -1) and (
+                    data.find('8.8') > -1 or data.find('Anatoly Filipchenko') > -1):
+                return 'cl-88'
+            elif (data.find('CloudLinux') > -1 or data.find('cloudlinux') > -1) and (
+                    data.find('9.4') > -1 or data.find('VERSION="9.') > -1):
+                return 'cl-88'
+            elif (data.find('AlmaLinux') > -1 or data.find('almalinux') > -1) and (
+                    data.find('8.9') > -1 or data.find('Midnight Oncilla') > -1 or data.find('VERSION="8.') > -1):
+                return 'al-88'
+            elif (data.find('AlmaLinux') > -1 or data.find('almalinux') > -1) and (
+                    data.find('8.7') > -1 or data.find('Stone Smilodon') > -1):
+                return 'al-87'
+            elif (data.find('AlmaLinux') > -1 or data.find('almalinux') > -1) and (
+                    data.find('9.4') > -1 or data.find('9.3') > -1 or data.find('Shamrock Pampas') > -1 or data.find(
+                    'Seafoam Ocelot') > -1 or data.find('VERSION="9.') > -1):
+                return 'al-93'
+        else:
+            return -1
+
+    @staticmethod
     def decideCentosVersion():
 
         if open(Upgrade.CentOSPath, 'r').read().find('CentOS Linux release 8') > -1:
@@ -1162,6 +1188,18 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
             except:
                 pass
 
+            query = "CREATE TABLE `IncBackups_oneclickbackups` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `planName` varchar(100) NOT NULL, `months` varchar(100) NOT NULL, `price` varchar(100) NOT NULL, `customer` varchar(300) NOT NULL, `subscription` varchar(300) NOT NULL UNIQUE, `sftpUser` varchar(100) NOT NULL, `config` longtext NOT NULL, `date` datetime(6) NOT NULL, `state` integer NOT NULL, `owner_id` integer NOT NULL);"
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = 'ALTER TABLE `IncBackups_oneclickbackups` ADD CONSTRAINT `IncBackups_oneclickb_owner_id_7b4250a4_fk_loginSyst` FOREIGN KEY (`owner_id`) REFERENCES `loginSystem_administrator` (`id`);'
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
             if Upgrade.FindOperatingSytem() == Ubuntu22:
                 ### If ftp not installed then upgrade will fail so this command should not do exit
 
@@ -1170,6 +1208,17 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
 
                 command = "systemctl restart pure-ftpd-mysql.service"
                 Upgrade.executioner(command, command, 0)
+
+            try:
+                clAPVersion = Upgrade.FetchCloudLinuxAlmaVersionVersion()
+                type = clAPVersion.split('-')[0]
+                version = int(clAPVersion.split('-')[1])
+
+                if type == 'al' and version >= 90:
+                    command = "sed -i 's/MYSQLCrypt md5/MYSQLCrypt crypt/g' /etc/pure-ftpd/pureftpd-mysql.conf"
+                    Upgrade.executioner(command, command, 0)
+            except:
+                pass
 
             try:
                 connection.close()
@@ -1644,6 +1693,11 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
 
             try:
                 cursor.execute('ALTER TABLE dockerManager_containers ADD volumes longtext')
+            except:
+                pass
+
+            try:
+                cursor.execute('ALTER TABLE dockerManager_containers MODIFY COLUMN name VARCHAR(150);')
             except:
                 pass
 
@@ -3202,7 +3256,7 @@ pm.max_spare_servers = 3
 [php74default]
 user = www-data
 group = www-data
-listen ={sockPath}php7.3-fpm.sock
+listen ={sockPath}php7.4-fpm.sock
 listen.owner = www-data
 listen.group = www-data
 pm = dynamic

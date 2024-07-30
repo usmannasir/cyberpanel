@@ -1,0 +1,172 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "One-click Backups" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+
+
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "One-click Backups" %} - <a target="_blank"
+                                                     href="https://youtu.be/mLjMg8Anq70"
+                                                     style="height: 23px;line-height: 21px;"
+                                                     class="btn btn-border btn-alt border-red btn-link font-red"
+                                                     title=""><span>{% trans "One-Click Backup Docs" %}</span></a>
+            </h2>
+            <p>{% trans "On this page you purchase and manage one-click backups." %}</p>
+        </div>
+
+        <div ng-controller="backupPlanNowOneClick" class="panel">
+            <div class="panel-body">
+                <h3 class="title-hero">
+                    {% trans "Set up Backup Destinations." %} <img ng-hide="cyberpanelLoading"
+                                                                   src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
+
+                    {% if status == 1 %}
+                        <div class="alert alert-info">
+                            <p>You have successfully purchased a backup plan.</p>
+                        </div>
+                    {% elif status == 0 %}
+
+                        <div class="alert alert-danger">
+                            <p>Your purchase was not successful.</p> {{ message }}
+                        </div>
+                    {% elif status == 4 %}
+
+                        <div class="alert alert-danger">
+                            {{ message }}
+                        </div>
+                    {% endif %}
+
+                    <form action="/" class="form-horizontal bordered-row">
+
+                        <p style="font-size: 15px;margin: 1%;">With CyberPanel's one-click backups, you can easily back up your website to our secure
+                            servers in just 60 seconds. It's simple, fast, and reliable.</p>
+
+
+                        <!------ List of Purchased backup plans --------------->
+
+                        <div class="form-group">
+
+                            <div class="col-sm-12">
+
+                                <table class="table">
+                                    <thead>
+                                    <tr>
+                                        <th>{% trans "Account" %}</th>
+                                        <th>{% trans "Plan Name" %}</th>
+                                        <th>{% trans "Subscription" %}</th>
+                                        <th>{% trans "Billing Cycle" %}</th>
+                                        <th>{% trans "Purchase Date" %}</th>
+                                        <th>{% trans "Actions" %}</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for plan in bPlans %}
+                                        <tr>
+                                            <td>{{ plan.sftpUser }}</td>
+                                            <td>{{ plan.planName }}</td>
+                                            <td>{{ plan.subscription }}</td>
+                                            {% if plan.months == '1' %}
+                                                <td>${{ plan.price }}/month</td>
+                                            {% else %}
+                                                <td>${{ plan.price }}/year</td>
+                                            {% endif %}
+                                            <td>{{ plan.date }}</td>
+                                            <td>
+                                                {% if plan.state == 1 %}
+                                                    <a
+                                                       href="{% url 'ManageOCBackups' %}?id={{ plan.id }}">
+                                                        <button style="margin-bottom: 1%" type="button"
+                                                                class="btn btn-primary btn-lg btn-block">{% trans "Schedule Backups" %}</button>
+                                                    </a>
+                                                    <a href="{% url 'RestoreOCBackups' %}?id={{ plan.id }}">
+                                                        <button type="button"
+                                                                class="btn btn-primary btn-lg btn-block">{% trans "Restore Backups" %}</button>
+                                                    </a>
+                                                {% else %}
+                                                    <button type="button"
+                                                            ng-click="DeployAccount('{{ plan.id }}')"
+                                                            class="btn btn-primary btn-lg btn-block">{% trans "Deploy Account" %}</button>
+                                                {% endif %}
+
+                                            </td>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+
+                        <!------ List of Purchased backup plans --------------->
+
+
+                        <!------ List of Backup plans --------------->
+
+                        <h3 class="title-hero">
+                            {% trans "Subscribe to one-click backup plans." %} <img ng-hide="cyberpanelLoading"
+                                                                                    src="{% static 'images/loading.gif' %}">
+                        </h3>
+
+                        <div class="form-group">
+
+                            <div class="col-sm-12">
+
+                                <table class="table">
+                                    <thead>
+                                    <tr>
+                                        <th>{% trans "Plan Name" %}</th>
+                                        <th>{% trans "Monthly Price" %}</th>
+                                        <th>{% trans "Yearly Price" %}</th>
+                                        <th>{% trans "Actions" %}</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for plan in plans %}
+                                        <tr>
+                                            <td>{{ plan.name }}</td>
+                                            <td>${{ plan.monthlyPrice }}</td>
+                                            <td>${{ plan.yearlyPrice }}</td>
+                                            <td>
+                                                <button type="button"
+                                                        ng-click="BuyNowBackupP('{{ plan.name }}', '{{ plan.monthlyPrice }}', '{{ plan.yearlyPrice }}', 1)"
+                                                        class="btn btn-primary btn-lg btn-block">{% trans "Buy Monthly" %}</button>
+                                                <button type="button"
+                                                        ng-click="BuyNowBackupP('{{ plan.name }}', '{{ plan.monthlyPrice }}', '{{ plan.yearlyPrice }}', 12)"
+                                                        class="btn btn-primary btn-lg btn-block">{% trans "Buy Yearly" %}</button>
+                                            </td>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+
+                        <!------ List of backup plans --------------->
+
+
+                        <!--- AWS  End --->
+
+
+                    </form>
+
+
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+
+{% endblock %}
