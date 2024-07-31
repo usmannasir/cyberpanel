@@ -34,22 +34,22 @@ Web Hosting Control Panel that uses OpenLiteSpeed as the underlying Web Server.
 # Supported OS Versions
 
 * CyberPanel is supported on x86_64 based
-* Ubuntu 18.04 (will reach end of life (EOL) on 31 May, 2023.)
-* Ubuntu 20.04 (will reach end of life (EOL) on April, 2025.)
-* Ubuntu 20.10 (will reach end of life (EOL) on 22 July, 2021.)
-* Ubuntu 22.04 (will reach end of life (EOL) on Apr 2022 - Apr 2027.)
-* CentOS 7 (will reach end of life (EOL) on 30 June, 2024.)
-* CentOS 8 (will reach end of life (EOL) on 31 December, 2021.)
-* CentOS 9 (will reach end of life (EOL) on 31 May, 2027.)
-* RHEL 8 (will reach end of life (EOL) on 31 May, 2029.)
-* RHEL 9 (will reach end of life (EOL) on 31 May, 2032.)
-* AlmaLinux 8 (will reach end of life (EOL) on 01 May, 2024).)
-* AlmaLinux 9 (will reach end of life (EOL) on 31 May, 2027.)
-* RockyLinux 8 (will reach end of life (EOL) on 31 May, 2029.)
-* CloudLinux 7 (will reach end of life (EOL) on 01 July, 2024.)
-* CloudLinux 8 (will reach end of life (EOL) on 31 May, 2029.)
-* openEuler 20.03 (will reach end of life (EOL) on April, 2022.)
-* openEuler 22.03 (will reach end of life (EOL) on March, 2024.)
+* RHEL 9 (will reach the end of life (EOL) on 31 May 2032)
+* RHEL 8 (will reach the end of life (EOL) on 31 May 2029)
+* RockyLinux 8 (will reach the end of life (EOL) on 31 May 2029)
+* CloudLinux 8 (will reach the end of life (EOL) on 31 May 2029)
+* Ubuntu 22.04 (will reach the end of life (EOL) on Apr 2027)
+* CentOS 9 (will reach the end of life (EOL) on 31 May 2027)
+* AlmaLinux 9 (will reach the end of life (EOL) on 31 May 2027)
+* Ubuntu 20.04 (will reach the end of life (EOL) on Apr 2025)
+* CentOS 7 (will reach the end of life (EOL) on 30 Jun 2024)
+* AlmaLinux 8 (will reach the end of life (EOL) on 1 May 2024)
+* CloudLinux 7 (will reach the end of life (EOL) on 1 Jul 2024)
+* openEuler 22.03 (will reach the end of life (EOL) on Mar 2024)
+* Ubuntu 18.04 (will reach the end of life (EOL) on 31 May 2023)
+* openEuler 20.03 (will reach the end of life (EOL) on Apr 2022)
+* CentOS 8 (will reach the end of life (EOL) on 31 Dec 2021)
+* Ubuntu 20.10 (will reach the end of life (EOL) on 22 Jul 2021)
 
 # Installation Instructions
 
