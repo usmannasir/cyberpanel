@@ -506,8 +506,10 @@ done
 Pre_Upgrade_Required_Components() {
 
 if [ "$Server_OS" = "Ubuntu" ]; then
-  pip3 install --default-timeout=3600 virtualenv==16.7.9
-    Check_Return
+#  pip3 install --default-timeout=3600 virtualenv==16.7.9
+#    Check_Return
+rm -rf /usr/local/CyberPanel
+pip3 install --upgrade virtualenv
 else
   if [ -e /usr/bin/pip3 ]; then
     PIP3="/usr/bin/pip3"
