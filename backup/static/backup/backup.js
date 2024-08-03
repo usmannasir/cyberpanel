@@ -2309,6 +2309,39 @@ app.controller('backupPlanNowOneClick', function ($scope, $http, $window) {
 
     };
 
+    //// paypal
+
+    $scope.PaypalBuyNowBackup = function (planName, monthlyPrice, yearlyPrice, months) {
+
+        const baseURL = 'https://platform.cyberpersons.com/Billing/PaypalCreateOrderforBackupPlans';
+        // Get the current URL
+        var currentURL = window.location.href;
+
+// Find the position of the question mark
+        const queryStringIndex = currentURL.indexOf('?');
+
+// Check if there is a query string
+        currentURL = queryStringIndex !== -1 ? currentURL.substring(0, queryStringIndex) : currentURL;
+
+        // Encode parameters to make them URL-safe
+        const params = new URLSearchParams({
+            planName: planName,
+            monthlyPrice: monthlyPrice,
+            yearlyPrice: yearlyPrice,
+            returnURL: currentURL,  // Add the current URL as a query parameter
+            months: months
+        });
+
+
+        // Build the complete URL with query string
+        const fullURL = `${baseURL}?${params.toString()}`;
+
+        // Redirect to the constructed URL
+
+        window.location.href = fullURL;
+
+    }
+
 
 });
 
