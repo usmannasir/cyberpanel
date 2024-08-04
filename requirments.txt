@@ -48,7 +48,6 @@ josepy==1.14.0
 jsonlines==4.0.0
 jsonpatch==1.33
 jsonpointer==3.0.0
-MarkupSafe==1.1.1
 mock==5.1.0
 mysqlclient==2.0.1
 oauthlib==3.2.2
