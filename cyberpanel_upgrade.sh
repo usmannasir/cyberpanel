@@ -516,7 +516,7 @@ else
   else
     PIP3="pip3.6"
   fi
-  $PIP3 install --default-timeout=3600 virtualenv==16.7.9
+  $PIP3 install --default-timeout=3600 virtualenv
   Check_Return
 fi
 
