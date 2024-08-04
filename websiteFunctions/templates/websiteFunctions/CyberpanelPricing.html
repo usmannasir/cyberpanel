@@ -15,7 +15,7 @@
         }
     </style>
 
-    <div class="container">
+    <div ng-controller="BuyAddons" class="container">
         <div id="page-title" align="center">
             <h2 style="color: black"><strong>Managing Your WordPress sites was never so easy!</strong></h2>
             <p style="font-size: 18px; color: black; margin-top: 1%">43% of all Websites on the Internet are built with
@@ -32,11 +32,149 @@
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowfullscreen></iframe>
         </p>
-        <div style="margin-top: 2%">
-            <stripe-pricing-table pricing-table-id="prctbl_1PhTRPRs6rG0dTDlJZMzTw0k"
-                                  publishable-key="pk_live_51PgodkRs6rG0dTDl3jCUgxjyjI983GmCdHjzuLfZIsssmDLgKgnXnwQghVCctKMNFIC5K4oMcviTFrHf1ytsYZGa00AGySiWlF">
-            </stripe-pricing-table>
+
+        <ul style="margin-top: 2%" class="nav nav-tabs">
+
+            <li class="col-md-2 nav-item active">
+                <a href="#tab-example-1" data-toggle="tab" class="nav-link tab-mod h4">
+                    <i class="fa fa-cog btn-icon mr-10"></i>&nbsp;
+                    <span>{% trans "Stripe" %}</span>
+                </a>
+            </li>
+            <li class="col-md-2 nav-item">
+                <a href="#tab-example-3" data-toggle="tab" class="nav-link tab-mod h4">
+                    <i class="fa fa-cogs btn-icon mr-10"></i>&nbsp;
+                    <span>{% trans "Paypal" %}</span>
+                </a>
+            </li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane fade active in" id="tab-example-1">
+                <div class="example-box-wrapper">
+
+
+                    <div style="margin-top: 2%">
+                        <stripe-pricing-table pricing-table-id="prctbl_1PhTRPRs6rG0dTDlJZMzTw0k"
+                                              publishable-key="pk_live_51PgodkRs6rG0dTDl3jCUgxjyjI983GmCdHjzuLfZIsssmDLgKgnXnwQghVCctKMNFIC5K4oMcviTFrHf1ytsYZGa00AGySiWlF">
+                        </stripe-pricing-table>
+                    </div>
+
+
+                </div>
+            </div>
+
+
+            <div class="tab-pane fade" id="tab-example-3">
+
+                <h1 class="text-center">Comming soon</h1>
+
+{#                <form action="/" class="form-horizontal bordered-row">#}
+{##}
+{#                    <div class="form-group">#}
+{#                        <div class="col-sm-12">#}
+{#                            <table class="table">#}
+{#                                <thead>#}
+{#                                <tr>#}
+{#                                    <th>{% trans "Plan Name" %}</th>#}
+{#                                    <th>{% trans "Monthly Price" %}</th>#}
+{#                                    <th>{% trans "Yearly Price" %}</th>#}
+{#                                    <th>{% trans "One-time price" %}</th>#}
+{#                                    <th>{% trans "Actions" %}</th>#}
+{#                                </tr>#}
+{#                                </thead>#}
+{#                                <tbody>#}
+{#                                <tr>#}
+{#                                    <td>RSPAMD Manager</td>#}
+{#                                    <td>$6.99</td>#}
+{#                                    <td>$54</td>#}
+{#                                    <td>$139</td>#}
+{#                                    <td>#}
+{##}
+{#                                        <button type="button"#}
+{#                                                ng-click="PaypalBuyNowAddons('RSPAMD Manager', '6.99', '54', '139', 1)"#}
+{#                                                class="btn btn-primary btn-lg btn-block">{% trans "Buy Monthly" %}</button>#}
+{##}
+{#                                        <button type="button"#}
+{#                                                ng-click="PaypalBuyNowAddons('RSPAMD Manager', '6.99', '54', '139', 12)"#}
+{#                                                class="btn btn-primary btn-lg btn-block">{% trans "Buy Yearly" %}</button>#}
+{#                                        <button type="button"#}
+{#                                                ng-click="PaypalBuyNowAddons('RSPAMD Manager', '6.99', '54', '139', 0)"#}
+{#                                                class="btn btn-primary btn-lg btn-block">{% trans "One-time Purchase" %}</button>#}
+{#                                    </td>#}
+{#                                    </td>#}
+{#                                </tr>#}
+{#                                <tr>#}
+{#                                    <td>WordPress Manager</td>#}
+{#                                    <td>$6.99</td>#}
+{#                                    <td>$54</td>#}
+{#                                    <td>$139</td>#}
+{#                                    <td>#}
+{##}
+{#                                        <button type="button"#}
+{#                                                ng-click="PaypalBuyNowAddons('WordPress Manager', '6.99', '54', '139', 1)"#}
+{#                                                class="btn btn-primary btn-lg btn-block">{% trans "Buy Monthly" %}</button>#}
+{##}
+{#                                        <button type="button"#}
+{#                                                ng-click="PaypalBuyNowAddons('WordPress Manager', '6.99', '54', '139', 12)"#}
+{#                                                class="btn btn-primary btn-lg btn-block">{% trans "Buy Yearly" %}</button>#}
+{#                                        <button type="button"#}
+{#                                                ng-click="PaypalBuyNowAddons('WordPress Manager', '6.99', '54', '139', 0)"#}
+{#                                                class="btn btn-primary btn-lg btn-block">{% trans "One-time Purchase" %}</button>#}
+{#                                    </td>#}
+{#                                    </td>#}
+{#                                </tr>#}
+{#                                <tr>#}
+{#                                    <td>Root File Manager</td>#}
+{#                                    <td>$6.99</td>#}
+{#                                    <td>$54</td>#}
+{#                                    <td>$139</td>#}
+{#                                    <td>#}
+{##}
+{#                                        <button type="button"#}
+{#                                                ng-click="PaypalBuyNowAddons('Root File Manager', '6.99', '54', '139', 1)"#}
+{#                                                class="btn btn-primary btn-lg btn-block">{% trans "Buy Monthly" %}</button>#}
+{##}
+{#                                        <button type="button"#}
+{#                                                ng-click="PaypalBuyNowAddons('Root File Manager', '6.99', '54', '139', 12)"#}
+{#                                                class="btn btn-primary btn-lg btn-block">{% trans "Buy Yearly" %}</button>#}
+{#                                        <button type="button"#}
+{#                                                ng-click="PaypalBuyNowAddons('Root File Manager', '6.99', '54', '139', 0)"#}
+{#                                                class="btn btn-primary btn-lg btn-block">{% trans "One-time Purchase" %}</button>#}
+{#                                    </td>#}
+{#                                    </td>#}
+{#                                </tr>#}
+{#                                <tr>#}
+{#                                    <td>All Addons</td>#}
+{#                                    <td>$7.99</td>#}
+{#                                    <td>$59</td>#}
+{#                                    <td>$169</td>#}
+{#                                    <td>#}
+{##}
+{#                                        <button type="button"#}
+{#                                                ng-click="PaypalBuyNowAddons('All Addons', '6.99', '54', '139', 1)"#}
+{#                                                class="btn btn-primary btn-lg btn-block">{% trans "Buy Monthly" %}</button>#}
+{#                                        <button type="button"#}
+{#                                                ng-click="PaypalBuyNowAddons('All Addons', '6.99', '54', '139', 12)"#}
+{#                                                class="btn btn-primary btn-lg btn-block">{% trans "Buy Yearly" %}</button>#}
+{#                                        <button type="button"#}
+{#                                                ng-click="PaypalBuyNowAddons('All Addons', '6.99', '54', '139', 0)"#}
+{#                                                class="btn btn-primary btn-lg btn-block">{% trans "One-time Purchase" %}</button>#}
+{#                                    </td>#}
+{##}
+{#                                    </td>#}
+{#                                </tr>#}
+{#                                </tbody>#}
+{#                            </table>#}
+{#                        </div>#}
+{##}
+{#                    </div>#}
+{##}
+{##}
+{#                </form>#}
+
+            </div>
         </div>
+
 
         <div class="col-lg-12"
              style="margin: 1%;  border-radius: 10px; box-shadow: rgba(66, 135, 245, 0.2) 0px 2px 8px 0px;">

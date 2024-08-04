@@ -1,32 +1,32 @@
-from django.conf.urls import url
+from django.urls import re_path
 from . import views
 
 urlpatterns = [
-    url(r'^createWebsite', views.createWebsite, name='createWebsiteAPI'),
-    url(r'^deleteWebsite', views.deleteWebsite, name='deleteWebsiteAPI'),
-    url(r'^submitWebsiteStatus', views.submitWebsiteStatus, name='submitWebsiteStatusAPI'),
-    url(r'^deleteFirewallRule$', views.deleteFirewallRule, name='deleteFirewallRule'),
-    url(r'^addFirewallRule$', views.addFirewallRule, name='addFirewallRule'),
+    re_path(r'^createWebsite$', views.createWebsite, name='createWebsiteAPI'),
+    re_path(r'^deleteWebsite$', views.deleteWebsite, name='deleteWebsiteAPI'),
+    re_path(r'^submitWebsiteStatus$', views.submitWebsiteStatus, name='submitWebsiteStatusAPI'),
+    re_path(r'^deleteFirewallRule$', views.deleteFirewallRule, name='deleteFirewallRule'),
+    re_path(r'^addFirewallRule$', views.addFirewallRule, name='addFirewallRule'),
 
-    url(r'^verifyConn', views.verifyConn, name='verifyConnAPI'),
+    re_path(r'^verifyConn$', views.verifyConn, name='verifyConnAPI'),
 
-    url(r'^loginAPI', views.loginAPI, name='loginAPI'),
+    re_path(r'^loginAPI$', views.loginAPI, name='loginAPI'),
 
-    url(r'^getUserInfo$', views.getUserInfo, name='getUserInfo'),
-    url(r'^changeUserPassAPI', views.changeUserPassAPI, name='changeUserPassAPI'),
-    url(r'^submitUserDeletion$', views.submitUserDeletion, name='submitUserDeletion'),
+    re_path(r'^getUserInfo$', views.getUserInfo, name='getUserInfo'),
+    re_path(r'^changeUserPassAPI$', views.changeUserPassAPI, name='changeUserPassAPI'),
+    re_path(r'^submitUserDeletion$', views.submitUserDeletion, name='submitUserDeletion'),
 
-    url(r'^listPackage',views.getPackagesListAPI,name='getPackagesListAPI'),
-    url(r'^changePackageAPI', views.changePackageAPI, name='changePackageAPI'),
-    url(r'^fetchSSHkey', views.fetchSSHkey, name='fetchSSHkey'),
-    url(r'^remoteTransfer', views.remoteTransfer, name='remoteTransfer'),
-    url(r'^fetchAccountsFromRemoteServer', views.fetchAccountsFromRemoteServer, name='fetchAccountsFromRemoteServer'),
-    url(r'^FetchRemoteTransferStatus', views.FetchRemoteTransferStatus, name='FetchRemoteTransferStatus'),
 
-    url(r'^cancelRemoteTransfer', views.cancelRemoteTransfer, name='cancelRemoteTransfer'),
+    re_path(r'^listPackage$', views.getPackagesListAPI, name='getPackagesListAPI'),
+    re_path(r'^changePackageAPI$', views.changePackageAPI, name='changePackageAPI'),
+    re_path(r'^fetchSSHkey$', views.fetchSSHkey, name='fetchSSHkey'),
+    re_path(r'^remoteTransfer$', views.remoteTransfer, name='remoteTransfer'),
+    re_path(r'^fetchAccountsFromRemoteServer$', views.fetchAccountsFromRemoteServer, name='fetchAccountsFromRemoteServer'),
+    re_path(r'^FetchRemoteTransferStatus$', views.FetchRemoteTransferStatus, name='FetchRemoteTransferStatus'),
 
-    url(r'^cyberPanelVersion', views.cyberPanelVersion, name='cyberPanelVersion'),
-    url(r'^runAWSBackups$', views.runAWSBackups, name='runAWSBackups'),
-    url(r'^submitUserCreation$', views.submitUserCreation, name='submitUserCreation'),
+    re_path(r'^cancelRemoteTransfer$', views.cancelRemoteTransfer, name='cancelRemoteTransfer'),
 
+    re_path(r'^cyberPanelVersion$', views.cyberPanelVersion, name='cyberPanelVersion'),
+    re_path(r'^runAWSBackups$', views.runAWSBackups, name='runAWSBackups'),
+    re_path(r'^submitUserCreation$', views.submitUserCreation, name='submitUserCreation'),
 ]

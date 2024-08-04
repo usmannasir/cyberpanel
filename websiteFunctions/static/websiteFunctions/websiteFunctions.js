@@ -11659,3 +11659,310 @@ app.controller('ListDockersitecontainer', function ($scope, $http) {
 
 
 })
+
+
+app.controller('BuyAddons', function ($scope, $http) {
+
+
+    $scope.cyberpanelLoading = true;
+    $scope.sftpHide = true;
+    $scope.localHide = true;
+
+    $scope.PaypalBuyNowAddons = function (planName, monthlyPrice, yearlyPrice, lifetime, months) {
+
+        const baseURL = 'https://platform.cyberpersons.com/Billing/AddOnOrderPaypal';
+        // Get the current URL
+        var currentURL = window.location.href;
+
+// Find the position of the question mark
+        const queryStringIndex = currentURL.indexOf('?');
+
+// Check if there is a query string
+        currentURL = queryStringIndex !== -1 ? currentURL.substring(0, queryStringIndex) : currentURL;
+
+
+        // Encode parameters to make them URL-safe
+        const params = new URLSearchParams({
+            planName: planName,
+            monthlyPrice: monthlyPrice,
+            yearlyPrice: yearlyPrice,
+            lifetime: lifetime,
+            returnURL: currentURL,  // Add the current URL as a query parameter
+            months: months
+        });
+
+
+        // Build the complete URL with query string
+        const fullURL = `${baseURL}?${params.toString()}`;
+
+        // Redirect to the constructed URL
+
+        window.location.href = fullURL;
+
+    }
+
+
+    $scope.fetchDetails = function () {
+
+        if ($scope.destinationType === 'SFTP') {
+            $scope.sftpHide = false;
+            $scope.localHide = true;
+            $scope.populateCurrentRecords();
+        } else {
+            $scope.sftpHide = true;
+            $scope.localHide = false;
+            $scope.populateCurrentRecords();
+        }
+    };
+
+    $scope.populateCurrentRecords = function () {
+
+        $scope.cyberpanelLoading = false;
+
+        url = "/backup/getCurrentBackupDestinations";
+
+        var type = 'SFTP';
+        if ($scope.destinationType === 'SFTP') {
+            type = 'SFTP';
+        } else {
+            type = 'local';
+        }
+
+        var data = {
+            type: type
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+                $scope.records = JSON.parse(response.data.data);
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+    };
+
+    $scope.addDestination = function (type) {
+        $scope.cyberpanelLoading = false;
+
+        url = "/backup/submitDestinationCreation";
+
+        if (type === 'SFTP') {
+            var data = {
+                type: type,
+                name: $scope.name,
+                IPAddress: $scope.IPAddress,
+                userName: $scope.userName,
+                password: $scope.password,
+                backupSSHPort: $scope.backupSSHPort,
+                path: $scope.path
+            };
+        } else {
+            var data = {
+                type: type,
+                path: $scope.localPath,
+                name: $scope.name
+            };
+        }
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            $scope.populateCurrentRecords();
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Destination successfully added.',
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+    };
+
+    $scope.removeDestination = function (type, nameOrPath) {
+        $scope.cyberpanelLoading = false;
+
+
+        url = "/backup/deleteDestination";
+
+        var data = {
+            type: type,
+            nameOrPath: nameOrPath,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            $scope.populateCurrentRecords();
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Destination successfully removed.',
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+    };
+
+    $scope.DeployAccount = function (id) {
+        $scope.cyberpanelLoading = false;
+
+        url = "/backup/DeployAccount";
+
+        var data = {
+            id:id
+
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Successfully deployed.',
+                    type: 'success'
+                });
+                $window.location.reload();
+
+
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.couldNotConnect = false;
+            restoreBackupButton.disabled = false;
+        }
+
+    };
+
+    //// paypal
+
+    $scope.PaypalBuyNowBackup = function (planName, monthlyPrice, yearlyPrice, months) {
+
+        const baseURL = 'https://platform.cyberpersons.com/Billing/PaypalCreateOrderforBackupPlans';
+        // Get the current URL
+        var currentURL = window.location.href;
+
+// Find the position of the question mark
+        const queryStringIndex = currentURL.indexOf('?');
+
+// Check if there is a query string
+        currentURL = queryStringIndex !== -1 ? currentURL.substring(0, queryStringIndex) : currentURL;
+
+        // Encode parameters to make them URL-safe
+        const params = new URLSearchParams({
+            planName: planName,
+            monthlyPrice: monthlyPrice,
+            yearlyPrice: yearlyPrice,
+            returnURL: currentURL,  // Add the current URL as a query parameter
+            months: months
+        });
+
+
+        // Build the complete URL with query string
+        const fullURL = `${baseURL}?${params.toString()}`;
+
+        // Redirect to the constructed URL
+
+        window.location.href = fullURL;
+
+    }
+
+
+
+
+
+})

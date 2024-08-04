@@ -5,25 +5,25 @@ from django.dispatch import Signal
 
 ## This event is fired before CyberPanel core load the create ftp template, this special event is used
 ## to create a beautiful names official plugin. Actual FTP account creation happens with event named preSubmitFTPCreation and postSubmitFTPCreation.
-preCreateFTPAccount = Signal(providing_args=["request"])
+preCreateFTPAccount = Signal()
 
 ## See preCreateFTPAccount
-postCreateFTPAccount = Signal(providing_args=["request", "response"])
+postCreateFTPAccount = Signal()
 
 ## This event is fired before CyberPanel core start creation of a FTP account.
-preSubmitFTPCreation = Signal(providing_args=["request"])
+preSubmitFTPCreation = Signal()
 
 ## This event is fired after CyberPanel core finished creation of a FTP account.
-postSubmitFTPCreation = Signal(providing_args=["request", "response"])
+postSubmitFTPCreation = Signal()
 
 ## This event is fired before CyberPanel core start deletion of a FTP account.
-preSubmitFTPDelete = Signal(providing_args=["request"])
+preSubmitFTPDelete = Signal()
 
 ## This event is fired after CyberPanel core finished deletion of website
-postSubmitFTPDelete = Signal(providing_args=["request", "response"])
+postSubmitFTPDelete = Signal()
 
 ## This event is fired before CyberPanel core start deletion of child-domain
-preChangePassword = Signal(providing_args=["request"])
+preChangePassword = Signal()
 
 ## This event is fired after CyberPanel core finished deletion of child-domain
-postChangePassword = Signal(providing_args=["request", "response"])
+postChangePassword = Signal()

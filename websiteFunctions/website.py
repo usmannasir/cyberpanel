@@ -94,6 +94,7 @@ class WebsiteManager:
         response = requests.post(url, data=json.dumps(data))
         Status = response.json()['status']
 
+
         if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
             currentACL = ACLManager.loadedACL(userID)
             adminNames = ACLManager.loadAllUsers(userID)

@@ -5,44 +5,44 @@ The `urlpatterns` list routes URLs to views. For more information please see:
 Examples:
 Function views
     1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  url(r'^$', views.home, name='home')
+    2. Add a URL to urlpatterns:  path('', views.home, name='home')
 Class-based views
     1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  url(r'^$', Home.as_view(), name='home')
+    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
 Including another URLconf
-    1. Import the include() function: from django.conf.urls import url, include
-    2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
+    1. Import the include() function: from django.urls import path, include
+    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.conf.urls import url,include
+from django.urls import path, re_path, include
 from django.contrib import admin
 
 urlpatterns = [
-    url(r'^base/',include('baseTemplate.urls')),
-    url(r'^', include('loginSystem.urls')),
-    url(r'^packages/',include('packages.urls')),
-    url(r'^websites/',include('websiteFunctions.urls')),
-    url(r'^tuning/',include('tuning.urls')),
-    url(r'^ftp/',include('ftp.urls')),
-    url(r'^serverstatus/',include('serverStatus.urls')),
-    url(r'^dns/',include('dns.urls')),
-    url(r'^users/',include('userManagment.urls')),
-    url(r'^dataBases/',include('databases.urls')),
-    url(r'^email/',include('mailServer.urls')),
-    url(r'^serverlogs/',include('serverLogs.urls')),
-    url(r'^firewall/',include('firewall.urls')),
-    url(r'^backup/',include('backup.urls')),
-    url(r'^managephp/',include('managePHP.urls')),
-    url(r'^manageSSL/',include('manageSSL.urls')),
-    url(r'^api/',include('api.urls')),
-    url(r'^filemanager/',include('filemanager.urls')),
-    url(r'^emailPremium/',include('emailPremium.urls')),
-    url(r'^manageservices/',include('manageServices.urls')),
-    url(r'^plugins/',include('pluginHolder.urls')),
-    url(r'^emailMarketing/', include('emailMarketing.urls')),
-    url(r'^cloudAPI/', include('cloudAPI.urls')),
-    url(r'^docker/', include('dockerManager.urls')),
-    url(r'^container/', include('containerization.urls')),
-    url(r'^CloudLinux/', include('CLManager.urls')),
-    url(r'^IncrementalBackups/', include('IncBackups.urls')),
-#    url(r'^Terminal/', include('WebTerminal.urls')),
+    path('base/', include('baseTemplate.urls')),
+    path('', include('loginSystem.urls')),
+    path('packages/', include('packages.urls')),
+    path('websites/', include('websiteFunctions.urls')),
+    path('tuning/', include('tuning.urls')),
+    path('ftp/', include('ftp.urls')),
+    path('serverstatus/', include('serverStatus.urls')),
+    path('dns/', include('dns.urls')),
+    path('users/', include('userManagment.urls')),
+    path('dataBases/', include('databases.urls')),
+    path('email/', include('mailServer.urls')),
+    path('serverlogs/', include('serverLogs.urls')),
+    path('firewall/', include('firewall.urls')),
+    path('backup/', include('backup.urls')),
+    path('managephp/', include('managePHP.urls')),
+    path('manageSSL/', include('manageSSL.urls')),
+    path('api/', include('api.urls')),
+    path('filemanager/', include('filemanager.urls')),
+    path('emailPremium/', include('emailPremium.urls')),
+    path('manageservices/', include('manageServices.urls')),
+    path('plugins/', include('pluginHolder.urls')),
+    path('emailMarketing/', include('emailMarketing.urls')),
+    path('cloudAPI/', include('cloudAPI.urls')),
+    path('docker/', include('dockerManager.urls')),
+    path('container/', include('containerization.urls')),
+    path('CloudLinux/', include('CLManager.urls')),
+    path('IncrementalBackups/', include('IncBackups.urls')),
+    # path('Terminal/', include('WebTerminal.urls')),
 ]

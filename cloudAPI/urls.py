@@ -1,7 +1,7 @@
-from django.conf.urls import url
+from django.urls import re_path
 from . import views
 
 urlpatterns = [
-    url(r'^$', views.router, name='router'),
-    url(r'^access$', views.access, name='access'),
+    re_path(r'^$', views.router, name='router'),
+    re_path(r'^access$', views.access, name='access'),
 ]
