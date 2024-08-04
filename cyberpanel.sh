@@ -1085,7 +1085,7 @@ export LC_CTYPE=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 #need to set lang to address some pip module installation issue.
 
-Retry_Command "pip install --default-timeout=3600 virtualenv==16.7.9"
+Retry_Command "pip install --default-timeout=3600 virtualenv"
 
 Download_Requirement
 
