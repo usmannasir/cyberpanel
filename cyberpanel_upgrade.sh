@@ -539,21 +539,21 @@ fi
 Download_Requirement
 
 if [[ "$Server_OS" = "CentOS" ]] ; then
-  $PIP3 install --default-timeout=3600 virtualenv==16.7.9
-    Check_Return
+#  $PIP3 install --default-timeout=3600 virtualenv==16.7.9
+#    Check_Return
   $PIP3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt
     Check_Return
 elif [[ "$Server_OS" = "Ubuntu" ]] ; then
   # shellcheck disable=SC1091
   . /usr/local/CyberPanel/bin/activate
     Check_Return
-  pip3 install --default-timeout=3600 virtualenv==16.7.9
-    Check_Return
+#  pip3 install --default-timeout=3600 virtualenv==16.7.9
+#    Check_Return
   pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt
     Check_Return
 elif [[ "$Server_OS" = "openEuler" ]] ; then
-  pip3 install --default-timeout=3600 virtualenv==16.7.9
-    Check_Return
+#  pip3 install --default-timeout=3600 virtualenv==16.7.9
+#    Check_Return
   pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt
     Check_Return
 fi
