@@ -7,7 +7,6 @@ cloudflare==2.8.13
 cryptography==43.0.0
 Django==4.2.14
 docker==7.1.0
-docker-pycreds==0.4.0
 google-api-core==2.19.1
 google-api-python-client==2.139.0
 google-auth==2.32.0
@@ -26,10 +25,8 @@ pysftp==0.2.9
 PyYAML==6.0.1
 requests==2.32.3
 s3transfer==0.10.2
-soupsieve==2.5
 sqlparse==0.5.1
 tldextract==5.1.2
 tornado==6.4.1
 validators==0.33.0
-wcwidth==0.2.13
 websocket-client==1.8.0
