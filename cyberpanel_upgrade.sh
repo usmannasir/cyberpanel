@@ -489,7 +489,11 @@ fi
 Download_Requirement() {
 for i in {1..50};
   do
-  wget -O /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}/requirments.txt"
+  if [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "9" ]]; then
+   wget -O /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}/requirments.txt"
+  else
+   wget -O /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}/requirments-old.txt"
+  fi
   if grep -q "Django==" /usr/local/requirments.txt ; then
     break
   else
@@ -608,6 +612,11 @@ Pre_Upgrade_Branch_Input() {
 Main_Upgrade() {
 /usr/local/CyberPanel/bin/python upgrade.py "$Branch_Name"
   Check_Return
+
+rm -rf /usr/local/CyberCP/bin
+rm -rf /usr/local/CyberCP/lib
+rm -rf /usr/local/CyberCP/lib64
+rm -rf /usr/local/CyberCP/pyvenv.cfg
 
 if [[ -f /usr/local/CyberCP/bin/python2 ]]; then
   rm -rf /usr/local/CyberCP/bin
