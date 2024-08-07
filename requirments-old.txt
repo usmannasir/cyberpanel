@@ -21,6 +21,7 @@ psutil==5.7.3
 py3dns==3.2.1
 pyOpenSSL==19.1.0
 pysftp
+pyotp
 requests==2.26.0
 s3transfer==0.5.0
 sqlparse==0.4.2
