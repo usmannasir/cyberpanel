@@ -515,6 +515,7 @@ if [ "$Server_OS" = "Ubuntu" ]; then
 rm -rf /usr/local/CyberPanel
 pip3 install --upgrade virtualenv
 else
+  rm -rf /usr/local/CyberPanel
   if [ -e /usr/bin/pip3 ]; then
     PIP3="/usr/bin/pip3"
   else
