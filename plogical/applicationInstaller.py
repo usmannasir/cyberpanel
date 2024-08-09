@@ -832,23 +832,23 @@ class ApplicationInstaller(multi.Thread):
 
             ### install CyberSMTP
 
-            command = f"{FinalPHPPath} -d error_reporting=0 /usr/bin/wp plugin install https://github.com/usmannasir/CyberSMTPs/archive/refs/heads/main.zip --allow-root --path=" + finalPath
-            result = ProcessUtilities.outputExecutioner(command, externalApp)
-
-            if os.path.exists(ProcessUtilities.debugPath):
-                logging.writeToFile(str(result))
-
-            if result.find('Success:') == -1:
-                raise BaseException(result)
-
-            command = f"{FinalPHPPath} -d error_reporting=0 /usr/bin/wp plugin activate CyberSMTPs --allow-root --path=" + finalPath
-            result = ProcessUtilities.outputExecutioner(command, externalApp)
-
-            if os.path.exists(ProcessUtilities.debugPath):
-                logging.writeToFile(str(result))
-
-            if result.find('Success:') == -1:
-                raise BaseException(result)
+            # command = f"{FinalPHPPath} -d error_reporting=0 /usr/bin/wp plugin install https://github.com/usmannasir/CyberSMTPs/archive/refs/heads/main.zip --allow-root --path=" + finalPath
+            # result = ProcessUtilities.outputExecutioner(command, externalApp)
+            #
+            # if os.path.exists(ProcessUtilities.debugPath):
+            #     logging.writeToFile(str(result))
+            #
+            # if result.find('Success:') == -1:
+            #     raise BaseException(result)
+            #
+            # command = f"{FinalPHPPath} -d error_reporting=0 /usr/bin/wp plugin activate CyberSMTPs --allow-root --path=" + finalPath
+            # result = ProcessUtilities.outputExecutioner(command, externalApp)
+            #
+            # if os.path.exists(ProcessUtilities.debugPath):
+            #     logging.writeToFile(str(result))
+            #
+            # if result.find('Success:') == -1:
+            #     raise BaseException(result)
 
 
 
