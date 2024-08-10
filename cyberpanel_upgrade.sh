@@ -451,6 +451,14 @@ elif [[ "$Server_OS" = "Ubuntu" ]] ; then
   DEBIAN_FRONTEND=noninteractive apt install -y build-essential libssl-dev libffi-dev python3-dev
   DEBIAN_FRONTEND=noninteractive apt install -y python3-venv
 
+  ### fix for pip issue on ubuntu 22
+
+  apt-get remove --purge virtualenv -y
+  pip uninstall -y virtualenv
+  rm -rf /usr/lib/python3/dist-packages/virtualenv*
+  pip3 install --upgrade virtualenv
+
+
   if [[ "$Server_OS_Version" = "18" ]] ; then
     :
 #all pre-upgrade operation for Ubuntu 18
