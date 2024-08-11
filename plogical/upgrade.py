@@ -3467,8 +3467,8 @@ pm.max_spare_servers = 3
             except:
                 pass
 
-        command = 'csf -uf'
-        Upgrade.executioner(command, 'fix csf if there', 0)
+        #command = 'csf -uf'
+        #Upgrade.executioner(command, 'fix csf if there', 0)
         command = 'systemctl stop cpssh'
         Upgrade.executioner(command, 'fix csf if there', 0)
         Upgrade.AutoUpgradeAcme()
