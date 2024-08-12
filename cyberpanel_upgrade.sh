@@ -833,7 +833,7 @@ chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib64
 
 
 
-if [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "8" ]] || or [[ "$Server_OS_Version" = "20" ]]; then
+if [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "8" ]] || [[ "$Server_OS_Version" = "20" ]]; then
     echo "PYTHONHOME=/usr" > /usr/local/lscp/conf/pythonenv.conf
   else
     # Uncomment and use the following lines if necessary for other OS versions
