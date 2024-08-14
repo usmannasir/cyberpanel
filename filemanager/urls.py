@@ -9,5 +9,5 @@ urlpatterns = [
     path('RootDownloadFile', views.RootDownloadFile, name='RootDownloadFile'),
     path('editFile', views.editFile, name='editFile'),
     path('Filemanager', views.FileManagerRoot, name='Filemanager'),
-    path('<str:domain>', views.loadFileManagerHome, name='loadFileManagerHome'),
+    path('<domain>', views.loadFileManagerHome, name='loadFileManagerHome'),
 ]
