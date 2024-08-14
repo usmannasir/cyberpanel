@@ -3375,6 +3375,18 @@ pm.max_spare_servers = 3
 
         Upgrade.fixSudoers()
         # Upgrade.mountTemp()
+
+        ### fix a temp issue causing upgrade problem
+
+        fstab = "/etc/fstab"
+
+        if open(fstab, 'r').read().find('/usr/.tempdisk')>-1:
+            command = 'umount -l /tmp'
+            Upgrade.executioner(command, 'tmp adjustment', 0)
+
+            command = 'mount -t tmpfs -o size=2G tmpfs /tmp'
+            Upgrade.executioner(command, 'tmp adjustment', 0)
+
         Upgrade.dockerUsers()
         Upgrade.setupComposer()
 
