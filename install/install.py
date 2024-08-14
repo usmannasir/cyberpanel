@@ -15,7 +15,7 @@ from stat import *
 import stat
 
 VERSION = '2.3'
-BUILD = 5
+BUILD = 6
 
 char_set = {'small': 'abcdefghijklmnopqrstuvwxyz', 'nums': '0123456789', 'big': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'}
 
