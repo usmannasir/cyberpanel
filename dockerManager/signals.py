@@ -4,7 +4,7 @@
 from django.dispatch import Signal
 
 ## This event is fired before CyberPanel core start installation of Docker
-preDockerInstallation = Signal(providing_args=["request"])
+preDockerInstallation = Signal()
 
 ## This event is fired after CyberPanel core finished intallation of Docker.
-postDockerInstallation = Signal(providing_args=["request", "response"])
+postDockerInstallation = Signal()

@@ -55,8 +55,6 @@ class virtualHostUtilities:
 
 
 
-
-
     @staticmethod
     def OnBoardingHostName(Domain, tempStatusPath, skipRDNSCheck):
         import json

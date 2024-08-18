@@ -46,7 +46,8 @@
 
                     <form action="/" class="form-horizontal bordered-row">
 
-                        <p style="font-size: 15px;margin: 1%;">With CyberPanel's one-click backups, you can easily back up your website to our secure
+                        <p style="font-size: 15px;margin: 1%;">With CyberPanel's one-click backups, you can easily back
+                            up your website to our secure
                             servers in just 60 seconds. It's simple, fast, and reliable.</p>
 
 
@@ -82,7 +83,7 @@
                                             <td>
                                                 {% if plan.state == 1 %}
                                                     <a
-                                                       href="{% url 'ManageOCBackups' %}?id={{ plan.id }}">
+                                                            href="{% url 'ManageOCBackups' %}?id={{ plan.id }}">
                                                         <button style="margin-bottom: 1%" type="button"
                                                                 class="btn btn-primary btn-lg btn-block">{% trans "Schedule Backups" %}</button>
                                                     </a>
@@ -117,9 +118,7 @@
                         </h3>
 
                         <div class="form-group">
-
                             <div class="col-sm-12">
-
                                 <table class="table">
                                     <thead>
                                     <tr>
@@ -136,12 +135,22 @@
                                             <td>${{ plan.monthlyPrice }}</td>
                                             <td>${{ plan.yearlyPrice }}</td>
                                             <td>
+                                                {% if plan.name != '100GB' %}
+                                                    <button type="button"
+                                                            ng-click="PaypalBuyNowBackup('{{ plan.name }}', '{{ plan.monthlyPrice }}', '{{ plan.yearlyPrice }}', 1)"
+                                                            class="btn btn-primary btn-lg btn-block">{% trans "Buy Monthly (Paypal)" %}</button>
+                                                {% endif %}
                                                 <button type="button"
-                                                        ng-click="BuyNowBackupP('{{ plan.name }}', '{{ plan.monthlyPrice }}', '{{ plan.yearlyPrice }}', 1)"
-                                                        class="btn btn-primary btn-lg btn-block">{% trans "Buy Monthly" %}</button>
+                                                        ng-click="PaypalBuyNowBackup('{{ plan.name }}', '{{ plan.monthlyPrice }}', '{{ plan.yearlyPrice }}', 12)"
+                                                        class="btn btn-primary btn-lg btn-block">{% trans "Buy Yearly (Paypal)" %}</button>
+                                                {% if plan.name != '100GB' %}
+                                                    <button type="button"
+                                                            ng-click="BuyNowBackupP('{{ plan.name }}', '{{ plan.monthlyPrice }}', '{{ plan.yearlyPrice }}', 1)"
+                                                            class="btn btn-primary btn-lg btn-block">{% trans "Buy Monthly via Card" %}</button>
+                                                {% endif %}
                                                 <button type="button"
                                                         ng-click="BuyNowBackupP('{{ plan.name }}', '{{ plan.monthlyPrice }}', '{{ plan.yearlyPrice }}', 12)"
-                                                        class="btn btn-primary btn-lg btn-block">{% trans "Buy Yearly" %}</button>
+                                                        class="btn btn-primary btn-lg btn-block">{% trans "Buy Yearly via Card" %}</button>
                                             </td>
                                             </td>
                                         </tr>

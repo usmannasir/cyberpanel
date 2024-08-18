@@ -1,15 +1,14 @@
-from django.conf.urls import url
+from django.urls import path
 from . import views
 
 urlpatterns = [
-    url(r'^managePowerDNS$', views.managePowerDNS, name='managePowerDNS'),
-    url(r'^managePostfix$', views.managePostfix, name='managePostfix'),
-    url(r'^managePureFtpd$', views.managePureFtpd, name='managePureFtpd'),
+    path('managePowerDNS', views.managePowerDNS, name='managePowerDNS'),
+    path('managePostfix', views.managePostfix, name='managePostfix'),
+    path('managePureFtpd', views.managePureFtpd, name='managePureFtpd'),
 
+    path('fetchStatus', views.fetchStatus, name='fetchStatus'),
+    path('saveStatus', views.saveStatus, name='saveStatus'),
 
-    url(r'^fetchStatus$', views.fetchStatus, name='fetchStatus'),
-    url(r'^saveStatus$', views.saveStatus, name='saveStatus'),
-
-    url(r'^manageApplications$', views.manageApplications, name='manageApplications'),
-    url(r'^removeInstall$', views.removeInstall, name='removeInstall'),
+    path('manageApplications', views.manageApplications, name='manageApplications'),
+    path('removeInstall', views.removeInstall, name='removeInstall'),
 ]

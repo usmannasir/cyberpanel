@@ -1,18 +1,16 @@
-from django.conf.urls import url
+from django.urls import path
 from . import views
 
 urlpatterns = [
-    url(r'^$', views.loadPHPHome, name='loadPHPHome'),
-    url(r'^installExtensions', views.installExtensions, name='installExtensions'),
-    url(r'^getExtensionsInformation', views.getExtensionsInformation, name='getExtensionsInformation'),
-    url(r'^submitExtensionRequest', views.submitExtensionRequest, name='submitExtensionRequest'),
-    url(r'^getRequestStatus', views.getRequestStatus, name='getRequestStatus'),
-    url(r'^editPHPConfigs', views.editPHPConfigs, name='editPHPConfigs'),
-    url(r'^getCurrentPHPConfig', views.getCurrentPHPConfig, name='getCurrentPHPConfig'),
-    url(r'^savePHPConfigBasic', views.savePHPConfigBasic, name='savePHPConfigBasic'),
-    url(r'^getCurrentAdvancedPHPConfig', views.getCurrentAdvancedPHPConfig, name='getCurrentAdvancedPHPConfig'),
-    url(r'^savePHPConfigAdvance', views.savePHPConfigAdvance, name='savePHPConfigAdvance'),
-    url(r'^restartPHP', views.restartPHP, name='restartPHP'),
-
-
+    path('', views.loadPHPHome, name='loadPHPHome'),
+    path('installExtensions', views.installExtensions, name='installExtensions'),
+    path('getExtensionsInformation', views.getExtensionsInformation, name='getExtensionsInformation'),
+    path('submitExtensionRequest', views.submitExtensionRequest, name='submitExtensionRequest'),
+    path('getRequestStatus', views.getRequestStatus, name='getRequestStatus'),
+    path('editPHPConfigs', views.editPHPConfigs, name='editPHPConfigs'),
+    path('getCurrentPHPConfig', views.getCurrentPHPConfig, name='getCurrentPHPConfig'),
+    path('savePHPConfigBasic', views.savePHPConfigBasic, name='savePHPConfigBasic'),
+    path('getCurrentAdvancedPHPConfig', views.getCurrentAdvancedPHPConfig, name='getCurrentAdvancedPHPConfig'),
+    path('savePHPConfigAdvance', views.savePHPConfigAdvance, name='savePHPConfigAdvance'),
+    path('restartPHP', views.restartPHP, name='restartPHP'),
 ]

@@ -1,41 +1,38 @@
-from django.conf.urls import url
+from django.urls import re_path
 from . import views
 
 urlpatterns = [
-    url(r'^$', views.loadEmailHome, name='loadEmailHome'),
-    url(r'^createEmailAccount', views.createEmailAccount, name='createEmailAccount'),
-    url(r'^listEmails$', views.listEmails, name='listEmails'),
-    url(r'^submitEmailCreation', views.submitEmailCreation, name='submitEmailCreation'),
-    url(r'^fetchEmails$', views.fetchEmails, name='fetchEmails'),
+    re_path(r'^$', views.loadEmailHome, name='loadEmailHome'),
+    re_path(r'^createEmailAccount$', views.createEmailAccount, name='createEmailAccount'),
+    re_path(r'^listEmails$', views.listEmails, name='listEmails'),
+    re_path(r'^submitEmailCreation$', views.submitEmailCreation, name='submitEmailCreation'),
+    re_path(r'^fetchEmails$', views.fetchEmails, name='fetchEmails'),
 
     ## Mail Forwardings
-    url(r'^emailForwarding$', views.emailForwarding, name='emailForwarding'),
-    url(r'^submitEmailForwardingCreation$', views.submitEmailForwardingCreation, name='submitEmailForwardingCreation'),
-    url(r'^fetchCurrentForwardings$', views.fetchCurrentForwardings, name='fetchCurrentForwardings'),
-    url(r'^submitForwardDeletion$', views.submitForwardDeletion, name='submitForwardDeletion'),
+    re_path(r'^emailForwarding$', views.emailForwarding, name='emailForwarding'),
+    re_path(r'^submitEmailForwardingCreation$', views.submitEmailForwardingCreation, name='submitEmailForwardingCreation'),
+    re_path(r'^fetchCurrentForwardings$', views.fetchCurrentForwardings, name='fetchCurrentForwardings'),
+    re_path(r'^submitForwardDeletion$', views.submitForwardDeletion, name='submitForwardDeletion'),
 
     ## Delete email
-    url(r'^deleteEmailAccount', views.deleteEmailAccount, name='deleteEmailAccount'),
-    url(r'^getEmailsForDomain$', views.getEmailsForDomain, name='getEmailsForDomain'),
-    url(r'^submitEmailDeletion', views.submitEmailDeletion, name='submitEmailDeletion'),
-    url(r'^fixMailSSL', views.fixMailSSL, name='fixMailSSL'),
+    re_path(r'^deleteEmailAccount$', views.deleteEmailAccount, name='deleteEmailAccount'),
+    re_path(r'^getEmailsForDomain$', views.getEmailsForDomain, name='getEmailsForDomain'),
+    re_path(r'^submitEmailDeletion$', views.submitEmailDeletion, name='submitEmailDeletion'),
+    re_path(r'^fixMailSSL$', views.fixMailSSL, name='fixMailSSL'),
 
     ## Change email password
-    url(r'^changeEmailAccountPassword', views.changeEmailAccountPassword, name='changeEmailAccountPassword'),
-    url(r'^submitPasswordChange', views.submitPasswordChange, name='submitPasswordChange'),
+    re_path(r'^changeEmailAccountPassword$', views.changeEmailAccountPassword, name='changeEmailAccountPassword'),
+    re_path(r'^submitPasswordChange$', views.submitPasswordChange, name='submitPasswordChange'),
 
     ## DKIM Manager
+    re_path(r'^dkimManager$', views.dkimManager, name='dkimManager'),
+    re_path(r'^fetchDKIMKeys$', views.fetchDKIMKeys, name='fetchDKIMKeys'),
+    re_path(r'^generateDKIMKeys$', views.generateDKIMKeys, name='generateDKIMKeys'),
 
-    url(r'^dkimManager', views.dkimManager, name='dkimManager'),
-    url(r'^fetchDKIMKeys', views.fetchDKIMKeys, name='fetchDKIMKeys'),
-    url(r'^generateDKIMKeys$', views.generateDKIMKeys, name='generateDKIMKeys'),
-
-    url(r'^installOpenDKIM', views.installOpenDKIM, name='installOpenDKIM'),
-    url(r'^installStatusOpenDKIM', views.installStatusOpenDKIM, name='installStatusOpenDKIM'),
+    re_path(r'^installOpenDKIM$', views.installOpenDKIM, name='installOpenDKIM'),
+    re_path(r'^installStatusOpenDKIM$', views.installStatusOpenDKIM, name='installStatusOpenDKIM'),
 
     ### email limits
-
-    url(r'^EmailLimits$', views.EmailLimits, name='EmailLimits'),
-    url(r'^SaveEmailLimitsNew$', views.SaveEmailLimitsNew, name='SaveEmailLimitsNew'),
-
+    re_path(r'^EmailLimits$', views.EmailLimits, name='EmailLimits'),
+    re_path(r'^SaveEmailLimitsNew$', views.SaveEmailLimitsNew, name='SaveEmailLimitsNew'),
 ]

@@ -1,36 +1,30 @@
-from django.conf.urls import url
+from django.urls import path
 from . import views
 
 urlpatterns = [
-
-    url(r'^$', views.loadUserHome, name='loadUsersHome'),
-    url(r'^viewProfile', views.viewProfile, name='viewProfile'),
-    url(r'^createUser', views.createUser, name='createUser'),
-
-
-    url(r'^submitUserCreation', views.submitUserCreation, name='submitUserCreation'),
-    url(r'^modifyUsers', views.modifyUsers, name="modifyUsers"),
-    url(r'^fetchUserDetails', views.fetchUserDetails, name="fetchUserDetails"),
-    url(r'^saveModifications', views.saveModifications, name="saveModifications"),
-
-
-    url(r'^deleteUser', views.deleteUser, name="deleteUser"),
-    url(r'^submitUserDeletion', views.submitUserDeletion, name="submitUserDeletion"),
-
-    url(r'^createNewACL$', views.createNewACL, name="createNewACL"),
-    url(r'^createACLFunc$', views.createACLFunc, name="createACLFunc"),
-    url(r'^deleteACL$', views.deleteACL, name="deleteACL"),
-    url(r'^deleteACLFunc$', views.deleteACLFunc, name="deleteACLFunc"),
-    url(r'^modifyACL$', views.modifyACL, name="modifyACL"),
-    url(r'^fetchACLDetails$', views.fetchACLDetails, name="fetchACLDetails"),
-    url(r'^submitACLModifications$', views.submitACLModifications, name="submitACLModifications"),
-    url(r'^changeUserACL$', views.changeUserACL, name="changeUserACL"),
-    url(r'^changeACLFunc$', views.changeACLFunc, name="changeACLFunc"),
-    url(r'^resellerCenter$', views.resellerCenter, name="resellerCenter"),
-    url(r'^saveResellerChanges$', views.saveResellerChanges, name="saveResellerChanges"),
-    url(r'^apiAccess$', views.apiAccess, name="apiAccess"),
-    url(r'^saveChangesAPIAccess$', views.saveChangesAPIAccess, name="saveChangesAPIAccess"),
-    url(r'^listUsers$', views.listUsers, name="listUsers"),
-    url(r'^fetchTableUsers$', views.fetchTableUsers, name="fetchTableUsers"),
-    url(r'^controlUserState$', views.controlUserState, name="controlUserState"),
+    path('', views.loadUserHome, name='loadUsersHome'),
+    path('viewProfile', views.viewProfile, name='viewProfile'),
+    path('createUser', views.createUser, name='createUser'),
+    path('submitUserCreation', views.submitUserCreation, name='submitUserCreation'),
+    path('modifyUsers', views.modifyUsers, name='modifyUsers'),
+    path('fetchUserDetails', views.fetchUserDetails, name='fetchUserDetails'),
+    path('saveModifications', views.saveModifications, name='saveModifications'),
+    path('deleteUser', views.deleteUser, name='deleteUser'),
+    path('submitUserDeletion', views.submitUserDeletion, name='submitUserDeletion'),
+    path('createNewACL', views.createNewACL, name='createNewACL'),
+    path('createACLFunc', views.createACLFunc, name='createACLFunc'),
+    path('deleteACL', views.deleteACL, name='deleteACL'),
+    path('deleteACLFunc', views.deleteACLFunc, name='deleteACLFunc'),
+    path('modifyACL', views.modifyACL, name='modifyACL'),
+    path('fetchACLDetails', views.fetchACLDetails, name='fetchACLDetails'),
+    path('submitACLModifications', views.submitACLModifications, name='submitACLModifications'),
+    path('changeUserACL', views.changeUserACL, name='changeUserACL'),
+    path('changeACLFunc', views.changeACLFunc, name='changeACLFunc'),
+    path('resellerCenter', views.resellerCenter, name='resellerCenter'),
+    path('saveResellerChanges', views.saveResellerChanges, name='saveResellerChanges'),
+    path('apiAccess', views.apiAccess, name='apiAccess'),
+    path('saveChangesAPIAccess', views.saveChangesAPIAccess, name='saveChangesAPIAccess'),
+    path('listUsers', views.listUsers, name='listUsers'),
+    path('fetchTableUsers', views.fetchTableUsers, name='fetchTableUsers'),
+    path('controlUserState', views.controlUserState, name='controlUserState'),
 ]

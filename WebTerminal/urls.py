@@ -1,7 +1,7 @@
-from django.conf.urls import url
+from django.urls import path
 from . import views
 
 urlpatterns = [
-    url(r'^$', views.terminal, name='terminal'),
-    url(r'^restart$', views.restart, name='restart'),
+    path('', views.terminal, name='terminal'),
+    path('restart', views.restart, name='restart'),
 ]

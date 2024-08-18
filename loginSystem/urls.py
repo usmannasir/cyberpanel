@@ -1,8 +1,8 @@
-from django.conf.urls import url
+from django.urls import path
 from . import views
 
 urlpatterns = [
-    url(r'^$', views.loadLoginPage, name='adminLogin'),
-    url(r'^verifyLogin$', views.verifyLogin, name='verifyLogin'),
-    url(r'^logout$', views.logout, name='logout'),
+    path('', views.loadLoginPage, name='adminLogin'),
+    path('verifyLogin', views.verifyLogin, name='verifyLogin'),
+    path('logout', views.logout, name='logout'),
 ]

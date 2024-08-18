@@ -1,15 +1,13 @@
-from django.conf.urls import url
+from django.urls import path
 from . import views
 
 urlpatterns = [
-    url(r'^upload$',views.upload, name='upload'),
-    url(r'^changePermissions$',views.changePermissions, name='changePermissions'),
-    url(r'^controller$',views.controller, name='controller'),
-    url(r'^downloadFile$',views.downloadFile, name='downloadFile'),
-    url(r'^RootDownloadFile$',views.RootDownloadFile, name='RootDownloadFile'),
-    url(r'^editFile$', views.editFile, name='editFile'),
-    url('^Filemanager', views.FileManagerRoot, name='Filemanager'),
-    url(r'^(?P<domain>(.*))$', views.loadFileManagerHome, name='loadFileManagerHome'),
-
+    path('upload', views.upload, name='upload'),
+    path('changePermissions', views.changePermissions, name='changePermissions'),
+    path('controller', views.controller, name='controller'),
+    path('downloadFile', views.downloadFile, name='downloadFile'),
+    path('RootDownloadFile', views.RootDownloadFile, name='RootDownloadFile'),
+    path('editFile', views.editFile, name='editFile'),
+    path('Filemanager', views.FileManagerRoot, name='Filemanager'),
+    path('<str:domain>', views.loadFileManagerHome, name='loadFileManagerHome'),
 ]
-

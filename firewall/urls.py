@@ -1,72 +1,60 @@
-from django.conf.urls import url
+from django.urls import path
 from . import views
 
 urlpatterns = [
-    url(r'^securityHome', views.securityHome, name='securityHome'),
-    url(r'^$', views.firewallHome, name='firewallHome'),
-    url(r'^getCurrentRules', views.getCurrentRules, name='getCurrentRules'),
-    url(r'^addRule', views.addRule, name='addRule'),
-    url(r'^deleteRule', views.deleteRule, name='deleteRule'),
+    path('securityHome', views.securityHome, name='securityHome'),
+    path('', views.firewallHome, name='firewallHome'),
+    path('getCurrentRules', views.getCurrentRules, name='getCurrentRules'),
+    path('addRule', views.addRule, name='addRule'),
+    path('deleteRule', views.deleteRule, name='deleteRule'),
 
+    path('reloadFirewall', views.reloadFirewall, name='reloadFirewall'),
+    path('stopFirewall', views.stopFirewall, name='stopFirewall'),
+    path('startFirewall', views.startFirewall, name='startFirewall'),
+    path('firewallStatus', views.firewallStatus, name='firewallStatus'),
 
-    url(r'^reloadFirewall', views.reloadFirewall, name='reloadFirewall'),
-    url(r'^stopFirewall', views.stopFirewall, name='stopFirewall'),
-    url(r'^startFirewall', views.startFirewall, name='startFirewall'),
-    url(r'^firewallStatus', views.firewallStatus, name='firewallStatus'),
+    # Secure SSH
+    path('secureSSH', views.secureSSH, name='secureSSH'),
+    path('getSSHConfigs', views.getSSHConfigs, name='getSSHConfigs'),
+    path('saveSSHConfigs', views.saveSSHConfigs, name='saveSSHConfigs'),
+    path('deleteSSHKey', views.deleteSSHKey, name='deleteSSHKey'),
+    path('addSSHKey', views.addSSHKey, name='addSSHKey'),
 
-    ## secure SSH
+    # ModSecurity
+    path('modSecurity', views.loadModSecurityHome, name='modSecurity'),
+    path('installModSec', views.installModSec, name='installModSec'),
+    path('installStatusModSec', views.installStatusModSec, name='installStatusModSec'),
+    path('fetchModSecSettings', views.fetchModSecSettings, name='fetchModSecSettings'),
+    path('saveModSecConfigurations', views.saveModSecConfigurations, name='saveModSecConfigurations'),
+    path('modSecRules', views.modSecRules, name='modSecRules'),
+    path('fetchModSecRules', views.fetchModSecRules, name='fetchModSecRules'),
+    path('saveModSecRules', views.saveModSecRules, name='saveModSecRules'),
+    path('modSecRulesPacks', views.modSecRulesPacks, name='modSecRulesPacks'),
+    path('getOWASPAndComodoStatus', views.getOWASPAndComodoStatus, name='getOWASPAndComodoStatus'),
+    path('installModSecRulesPack', views.installModSecRulesPack, name='installModSecRulesPack'),
+    path('getRulesFiles', views.getRulesFiles, name='getRulesFiles'),
+    path('enableDisableRuleFile', views.enableDisableRuleFile, name='enableDisableRuleFile'),
 
-    url(r'^secureSSH', views.secureSSH, name='secureSSH'),
-    url(r'^getSSHConfigs', views.getSSHConfigs, name='getSSHConfigs'),
-    url(r'^saveSSHConfigs', views.saveSSHConfigs, name='saveSSHConfigs'),
-    url(r'^deleteSSHKey', views.deleteSSHKey, name='deleteSSHKey'),
-    url(r'^addSSHKey', views.addSSHKey, name='addSSHKey'),
+    # CSF
+    path('csf', views.csf, name='csf'),
+    path('installCSF', views.installCSF, name='installCSF'),
+    path('installStatusCSF', views.installStatusCSF, name='installStatusCSF'),
+    path('removeCSF', views.removeCSF, name='removeCSF'),
+    path('fetchCSFSettings', views.fetchCSFSettings, name='fetchCSFSettings'),
+    path('changeStatus', views.changeStatus, name='changeStatus'),
+    path('modifyPorts', views.modifyPorts, name='modifyPorts'),
+    path('modifyIPs', views.modifyIPs, name='modifyIPs'),
 
+    # Imunify
+    path('imunify', views.imunify, name='imunify'),
+    path('submitinstallImunify', views.submitinstallImunify, name='submitinstallImunify'),
 
-    ## ModSecurity
+    # ImunifyAV
+    path('imunifyAV', views.imunifyAV, name='imunifyAV'),
+    path('submitinstallImunifyAV', views.submitinstallImunifyAV, name='submitinstallImunifyAV'),
 
-    url(r'^modSecurity$', views.loadModSecurityHome, name='modSecurity'),
-    url(r'^installModSec$', views.installModSec, name='installModSec'),
-    url(r'^installStatusModSec$', views.installStatusModSec, name='installStatusModSec'),
-    url(r'^fetchModSecSettings$', views.fetchModSecSettings, name='fetchModSecSettings'),
-    url(r'^saveModSecConfigurations$', views.saveModSecConfigurations, name='saveModSecConfigurations'),
-    url(r'^modSecRules$', views.modSecRules, name='modSecRules'),
-    url(r'^fetchModSecRules$', views.fetchModSecRules, name='fetchModSecRules'),
-    url(r'^saveModSecRules$', views.saveModSecRules, name='saveModSecRules'),
-    url(r'^modSecRulesPacks$', views.modSecRulesPacks, name='modSecRulesPacks'),
-    url(r'^getOWASPAndComodoStatus$', views.getOWASPAndComodoStatus, name='getOWASPAndComodoStatus'),
-    url(r'^installModSecRulesPack$', views.installModSecRulesPack, name='installModSecRulesPack'),
-    url(r'^getRulesFiles$', views.getRulesFiles, name='getRulesFiles'),
-    url(r'^enableDisableRuleFile$', views.enableDisableRuleFile, name='enableDisableRuleFile'),
-
-    ## CSF
-
-    url(r'^csf$', views.csf, name='csf'),
-    url(r'^installCSF$', views.installCSF, name='installCSF'),
-    url(r'^installStatusCSF$', views.installStatusCSF, name='installStatusCSF'),
-    url(r'^removeCSF$', views.removeCSF, name='removeCSF'),
-    url(r'^fetchCSFSettings$', views.fetchCSFSettings, name='fetchCSFSettings'),
-
-    url(r'^changeStatus$', views.changeStatus, name='changeStatus'),
-    url(r'^modifyPorts$', views.modifyPorts, name='modifyPorts'),
-    url(r'^modifyIPs$', views.modifyIPs, name='modifyIPs'),
-
-    ## Imunify
-
-    url(r'^imunify$', views.imunify, name='imunify'),
-    url(r'^submitinstallImunify$', views.submitinstallImunify, name='submitinstallImunify'),
-
-    ## ImunifyAV
-
-    url(r'^imunifyAV$', views.imunifyAV, name='imunifyAV'),
-    url(r'^submitinstallImunifyAV$', views.submitinstallImunifyAV, name='submitinstallImunifyAV'),
-
-
-    url(r'^litespeed_ent_conf$', views.litespeed_ent_conf, name='litespeed_ent_conf'),
-    url(r'^fetchlitespeed_conf', views.fetchlitespeed_conf, name='fetchlitespeed_conf'),
-    url(r'^saveLitespeed_conf', views.saveLitespeed_conf, name='saveLitespeed_conf'),
-
-
-
-
+    # Litespeed
+    path('litespeed_ent_conf', views.litespeed_ent_conf, name='litespeed_ent_conf'),
+    path('fetchlitespeed_conf', views.fetchlitespeed_conf, name='fetchlitespeed_conf'),
+    path('saveLitespeed_conf', views.saveLitespeed_conf, name='saveLitespeed_conf'),
 ]

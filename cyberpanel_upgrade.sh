@@ -451,6 +451,14 @@ elif [[ "$Server_OS" = "Ubuntu" ]] ; then
   DEBIAN_FRONTEND=noninteractive apt install -y build-essential libssl-dev libffi-dev python3-dev
   DEBIAN_FRONTEND=noninteractive apt install -y python3-venv
 
+  ### fix for pip issue on ubuntu 22
+
+  apt-get remove --purge virtualenv -y
+  pip uninstall -y virtualenv
+  rm -rf /usr/lib/python3/dist-packages/virtualenv*
+  pip3 install --upgrade virtualenv
+
+
   if [[ "$Server_OS_Version" = "18" ]] ; then
     :
 #all pre-upgrade operation for Ubuntu 18
@@ -489,7 +497,11 @@ fi
 Download_Requirement() {
 for i in {1..50};
   do
-  wget -O /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}/requirments.txt"
+  if [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "9" ]]; then
+   wget -O /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}/requirments.txt"
+  else
+   wget -O /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}/requirments-old.txt"
+  fi
   if grep -q "Django==" /usr/local/requirments.txt ; then
     break
   else
@@ -506,15 +518,18 @@ done
 Pre_Upgrade_Required_Components() {
 
 if [ "$Server_OS" = "Ubuntu" ]; then
-  pip3 install --default-timeout=3600 virtualenv==16.7.9
-    Check_Return
+#  pip3 install --default-timeout=3600 virtualenv==16.7.9
+#    Check_Return
+rm -rf /usr/local/CyberPanel
+pip3 install --upgrade virtualenv
 else
+  rm -rf /usr/local/CyberPanel
   if [ -e /usr/bin/pip3 ]; then
     PIP3="/usr/bin/pip3"
   else
     PIP3="pip3.6"
   fi
-  $PIP3 install --default-timeout=3600 virtualenv==16.7.9
+  $PIP3 install --default-timeout=3600 virtualenv
   Check_Return
 fi
 
@@ -537,21 +552,21 @@ fi
 Download_Requirement
 
 if [[ "$Server_OS" = "CentOS" ]] ; then
-  $PIP3 install --default-timeout=3600 virtualenv==16.7.9
-    Check_Return
+#  $PIP3 install --default-timeout=3600 virtualenv==16.7.9
+#    Check_Return
   $PIP3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt
     Check_Return
 elif [[ "$Server_OS" = "Ubuntu" ]] ; then
   # shellcheck disable=SC1091
   . /usr/local/CyberPanel/bin/activate
     Check_Return
-  pip3 install --default-timeout=3600 virtualenv==16.7.9
-    Check_Return
+#  pip3 install --default-timeout=3600 virtualenv==16.7.9
+#    Check_Return
   pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt
     Check_Return
 elif [[ "$Server_OS" = "openEuler" ]] ; then
-  pip3 install --default-timeout=3600 virtualenv==16.7.9
-    Check_Return
+#  pip3 install --default-timeout=3600 virtualenv==16.7.9
+#    Check_Return
   pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt
     Check_Return
 fi
@@ -605,7 +620,57 @@ Pre_Upgrade_Branch_Input() {
 
 Main_Upgrade() {
 /usr/local/CyberPanel/bin/python upgrade.py "$Branch_Name"
-  Check_Return
+# Capture the return code of the last command executed
+RETURN_CODE=$?
+
+# Check if the command was successful (return code 0)
+if [ $RETURN_CODE -eq 0 ]; then
+    echo "Upgrade successful."
+else
+
+
+    if [ -e /usr/bin/pip3 ]; then
+    PIP3="/usr/bin/pip3"
+  else
+    PIP3="pip3.6"
+  fi
+
+  rm -rf /usr/local/CyberPanelTemp
+  virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanelTemp
+
+# shellcheck disable=SC1091
+. /usr/local/CyberPanelTemp/bin/activate
+
+wget -O /usr/local/requirments-old.txt "${Git_Content_URL}/${Branch_Name}/requirments-old.txt"
+
+    if [[ "$Server_OS" = "CentOS" ]] ; then
+#  $PIP3 install --default-timeout=3600 virtualenv==16.7.9
+#    Check_Return
+  $PIP3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments-old.txt
+    Check_Return
+elif [[ "$Server_OS" = "Ubuntu" ]] ; then
+  # shellcheck disable=SC1091
+  . /usr/local/CyberPanelTemp/bin/activate
+    Check_Return
+  pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments-old.txt
+    Check_Return
+elif [[ "$Server_OS" = "openEuler" ]] ; then
+  pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments-old.txt
+    Check_Return
+fi
+
+/usr/local/CyberPanelTemp/bin/python upgrade.py "$Branch_Name"
+Check_Return
+
+rm -rf /usr/local/CyberPanelTemp
+
+fi
+
+
+rm -rf /usr/local/CyberCP/bin
+rm -rf /usr/local/CyberCP/lib
+rm -rf /usr/local/CyberCP/lib64
+rm -rf /usr/local/CyberCP/pyvenv.cfg
 
 if [[ -f /usr/local/CyberCP/bin/python2 ]]; then
   rm -rf /usr/local/CyberCP/bin
@@ -765,6 +830,17 @@ rm -f /usr/local/requirments.txt
 
 chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib
 chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib64
+
+
+
+if [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "8" ]] || [[ "$Server_OS_Version" = "20" ]]; then
+    echo "PYTHONHOME=/usr" > /usr/local/lscp/conf/pythonenv.conf
+  else
+    # Uncomment and use the following lines if necessary for other OS versions
+    # rsync -av --ignore-existing /usr/lib64/python3.9/ /usr/local/CyberCP/lib64/python3.9/
+    # Check_Return
+    :
+fi
 systemctl restart lscpd
 
 }

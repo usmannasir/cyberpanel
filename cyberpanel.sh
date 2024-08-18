@@ -1006,7 +1006,12 @@ Debug_Log2 "Setting up repositories for CN server...,1"
 Download_Requirement() {
 for i in {1..50} ;
   do
-  wget -O /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}/requirments.txt"
+  if [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "9" ]]; then
+   wget -O /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}/requirments.txt"
+  else
+   wget -O /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}/requirments-old.txt"
+  fi
+
   if grep -q "Django==" /usr/local/requirments.txt ; then
     break
   else
@@ -1085,7 +1090,7 @@ export LC_CTYPE=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 #need to set lang to address some pip module installation issue.
 
-Retry_Command "pip install --default-timeout=3600 virtualenv==16.7.9"
+Retry_Command "pip install --default-timeout=3600 virtualenv"
 
 Download_Requirement
 
@@ -1859,7 +1864,17 @@ Retry_Command "pip install --default-timeout=3600 -r /usr/local/requirments.txt"
 
 if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" = "22" ]] ; then
   cp /usr/bin/python3.10 /usr/local/CyberCP/bin/python3
+else
+  if [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "8" ]]; then
+    echo "PYTHONHOME=/usr" > /usr/local/lscp/conf/pythonenv.conf
+  else
+    # Uncomment and use the following lines if necessary for other OS versions
+    # rsync -av --ignore-existing /usr/lib64/python3.9/ /usr/local/CyberCP/lib64/python3.9/
+    # Check_Return
+    :
+  fi
 fi
+
 
 chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib
 chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib64 || true
