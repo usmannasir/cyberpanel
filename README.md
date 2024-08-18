@@ -8,10 +8,10 @@ Web Hosting Control Panel that uses OpenLiteSpeed as the underlying Web Server.
 * Auto SSL.
 * FTP Server.
 * Light-weight DNS Server (PowerDNS).
-* phpMyAdmin to manage DBs (MariaDB).
+* phpMyAdmin will manage DBs (MariaDB).
 * Email Support (SnappyMail).
 * File Manager.
-* PHP Managment.
+* PHP Management.
 * Firewall (FirewallD & ConfigServer Firewall Integration).
 * One-click Backups and Restores.
 
@@ -21,7 +21,7 @@ Web Hosting Control Panel that uses OpenLiteSpeed as the underlying Web Server.
 * PHP 8.2 (will reach end of life (EOL) on 31 Dec, 2026.)
 * PHP 8.1 (will reach end of life (EOL) on 31 Dec, 2025.)
 * PHP 8.0 (will reach end of life (EOL) on 26 Nov, 2023.)
-* PHP 7.4 (Ubuntu 22.04 and up does not support php below this version.) (will reach end of life (EOL) on 28 Nov, 2022.)
+* PHP 7.4 (Ubuntu 22.04 and Almalinux 9.x and up does not support php below this version.) (will reach end of life (EOL) on 28 Nov 2022.)
 * PHP 7.3 (will reach end of life (EOL) on 6 Dec, 2021.)
 * PHP 7.2 (will reach end of life (EOL) on 30 Nov, 2020.)
 * PHP 7.1 (Almalinux 8.x and up does not support php below this version.),(will reach end of life (EOL) on 1 Dec, 2019.)
