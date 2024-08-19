@@ -6,13 +6,11 @@ from .models import Administrator
 from plogical import hashPassword
 import json
 from packages.models import Package
-from firewall.models import FirewallRules
 from baseTemplate.models import version
 from plogical.getSystemInformation import SystemInformation
 from .models import ACL
 from plogical.acl import ACLManager
 from django.views.decorators.csrf import ensure_csrf_cookie
-from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from django.conf import settings
 from django.http import HttpResponse
 from django.utils import translation
@@ -162,6 +160,7 @@ def loadLoginPage(request):
 
         #return render(request, 'baseTemplate/homePage.html', finaData)
     except KeyError:
+        from firewall.models import FirewallRules
 
         numberOfAdministrator = Administrator.objects.count()
         password = hashPassword.hash_password('1234567')
