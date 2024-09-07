@@ -143,6 +143,50 @@ class preFlightsChecks:
         self.mysqlport = mysqlport
         self.mysqldb = mysqldb
 
+
+    @staticmethod
+    def edit_fstab(mount_point, options_to_add):
+        # Backup the original fstab file
+        fstab_path = '/etc/fstab'
+        backup_path = fstab_path + '.bak'
+
+        if not os.path.exists(backup_path):
+            shutil.copy(fstab_path, backup_path)
+            preFlightsChecks.stdOut(f"Backup of /etc/fstab created at " + backup_path, 0)
+
+        # Read the fstab file
+        with open(fstab_path, 'r') as file:
+            lines = file.readlines()
+
+        # Modify the appropriate line
+        modified = False
+        for i, line in enumerate(lines):
+            parts = line.split()
+
+            # Ensure the line has at least 2 fields and matches the root mount point
+            if len(parts) > 1 and parts[1] == mount_point:
+                # Check that the first field is a UUID or a device (not /proc, etc.)
+                if parts[0].startswith("UUID=") or parts[0].startswith("/dev/"):
+                    # Check if options already exist
+                    if options_to_add in parts[3]:
+                        preFlightsChecks.stdOut(f"{options_to_add} already present in {mount_point} entry", 0)
+                        return
+                    # Append options to the fourth column (mount options)
+                    parts[3] = parts[3] + ',' + options_to_add
+                    lines[i] = ' '.join(parts) + '\n'
+                    modified = True
+                    preFlightsChecks.stdOut(f"Modified the entry for {mount_point}", 0)
+                    break
+
+        # If the mount point was found and modified, write back the file
+        if modified:
+            with open(fstab_path, 'w') as file:
+                file.writelines(lines)
+
+            preFlightsChecks.stdOut("fstab file updated successfully.", 0)
+        else:
+            preFlightsChecks.stdOut(f"No entry found for {mount_point} in /etc/fstab.", 0)
+
     @staticmethod
     def stdOut(message, log=0, do_exit=0, code=os.EX_OK):
         print("\n\n")

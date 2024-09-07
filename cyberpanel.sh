@@ -1040,6 +1040,16 @@ if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "openEuler" ]] ; then
     dnf install -y gpgme-devel
       Check_Return
   elif [[ "$Server_OS_Version" = "9" ]] ; then
+
+    #!/bin/bash
+
+    # Check if architecture is aarch64
+    if uname -m | grep -q 'aarch64' ; then
+      # Run the following commands if architecture is aarch64
+      /usr/bin/crb enable
+      curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
+    fi
+
     dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel MariaDB-server MariaDB-client MariaDB-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils gpgme-devel
       Check_Return
   elif [[ "$Server_OS_Version" = "20" ]] || [[ "$Server_OS_Version" = "22" ]] ; then
