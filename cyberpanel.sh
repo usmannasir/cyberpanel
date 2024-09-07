@@ -846,6 +846,7 @@ if [[ $Server_OS = "CentOS" ]] ; then
       # Run the following commands if architecture is aarch64
       /usr/bin/crb enable
       curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
+      dnf install libxcrypt-compat -y
     fi
 
     subscription-manager repos --enable codeready-builder-for-rhel-9-$(arch)-rpms || yum config-manager --set-enabled crb > /dev/null 2>&1
