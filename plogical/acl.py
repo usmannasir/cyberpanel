@@ -865,7 +865,7 @@ class ACLManager:
     def CheckDomainBlackList(domain):
         import socket
 
-        BlackList = [ socket.gethostname(), 'hotmail.com', 'gmail.com', 'yandex.com', 'yahoo.com', 'localhost', 'aol.com', 'apple.com',
+        BlackList = [ 'hotmail.com', 'gmail.com', 'yandex.com', 'yahoo.com', 'localhost', 'aol.com', 'apple.com',
                      'cloudlinux.com', 'email.com', 'facebook.com', 'gmx.de', 'gmx.com', 'google.com',
                      'hushmail.com', 'icloud.com', 'inbox.com', 'imunify360.com', 'juno.com', 'live.com', 'localhost.localdomain',
                      'localhost4.localdomain4', 'localhost6.localdomain6','mail.com', 'mail.ru', 'me.com',
