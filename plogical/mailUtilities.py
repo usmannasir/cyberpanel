@@ -401,19 +401,13 @@ class mailUtilities:
         try:
             ## Generate DKIM Keys
 
-            command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.6/site-packages/tldextract/.suffix_cache'
-            ProcessUtilities.executioner(command)
-
-            command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.8/site-packages/tldextract/.suffix_cache'
-            ProcessUtilities.executioner(command)
-
-            command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python*/site-packages/tldextract/.suffix_cache'
-            ProcessUtilities.executioner(command, None, True)
 
             import tldextract
 
+            no_cache_extract = tldextract.TLDExtract(cache_dir=None)
+
             actualDomain = virtualHostName
-            extractDomain = tldextract.extract(virtualHostName)
+            extractDomain = no_cache_extract(virtualHostName)
             virtualHostName = extractDomain.domain + '.' + extractDomain.suffix
 
             if not os.path.exists("/etc/opendkim/keys/" + virtualHostName + "/default.txt"):

@@ -693,18 +693,12 @@ class MailServerManager(multi.Thread):
 
             try:
 
-                command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.6/site-packages/tldextract/.suffix_cache'
-                ProcessUtilities.executioner(command)
-
-                command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.8/site-packages/tldextract/.suffix_cache'
-                ProcessUtilities.executioner(command)
-
-                command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python*/site-packages/tldextract/.suffix_cache'
-                ProcessUtilities.executioner(command, None, True)
 
                 import tldextract
 
-                extractDomain = tldextract.extract(domainName)
+                no_cache_extract = tldextract.TLDExtract(cache_dir=None)
+
+                extractDomain = no_cache_extract(domainName)
                 domainName = extractDomain.domain + '.' + extractDomain.suffix
 
                 path = "/etc/opendkim/keys/" + domainName + "/default.txt"
@@ -772,7 +766,9 @@ class MailServerManager(multi.Thread):
 
                 import tldextract
 
-                extractDomain = tldextract.extract(domainName)
+                no_cache_extract = tldextract.TLDExtract(cache_dir=None)
+
+                extractDomain = no_cache_extract(domainName)
                 topLevelDomain = extractDomain.domain + '.' + extractDomain.suffix
 
                 zone = dnsDomains.objects.get(name=topLevelDomain)

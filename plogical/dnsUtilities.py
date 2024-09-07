@@ -115,21 +115,12 @@ class DNS:
             ipData = f.read()
             ipAddress = ipData.split('\n', 1)[0]
 
-            command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.6/site-packages/tldextract/.suffix_cache'
-            ProcessUtilities.executioner(command)
-
-            command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.8/site-packages/tldextract/.suffix_cache'
-            ProcessUtilities.executioner(command)
-
-            command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python*/site-packages/tldextract/.suffix_cache'
-            ProcessUtilities.executioner(command, None, True)
-
-            command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.8/site-packages/tldextract/.suffix_cache'
-            ProcessUtilities.executioner(command)
 
             import tldextract
 
-            extractDomain = tldextract.extract(domain)
+            no_cache_extract = tldextract.TLDExtract(cache_dir=None)
+
+            extractDomain = no_cache_extract(domain)
             topLevelDomain = extractDomain.domain + '.' + extractDomain.suffix
             subDomain = extractDomain.subdomain
 
@@ -582,7 +573,9 @@ class DNS:
 
             import tldextract
 
-            extractDomain = tldextract.extract(domain)
+            no_cache_extract = tldextract.TLDExtract(cache_dir=None)
+
+            extractDomain = no_cache_extract(domain)
             topLevelDomain = extractDomain.domain + '.' + extractDomain.suffix
             subDomain = extractDomain.subdomain
 

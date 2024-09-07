@@ -2859,18 +2859,11 @@ class CloudManager:
 
             zones = cf.zones.get(params = {'per_page':100})
 
-            command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.6/site-packages/tldextract/.suffix_cache'
-            ProcessUtilities.executioner(command)
-
-            command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.8/site-packages/tldextract/.suffix_cache'
-            ProcessUtilities.executioner(command)
-
-            command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python*/site-packages/tldextract/.suffix_cache'
-            ProcessUtilities.executioner(command, None, True)
 
             for website in Websites.objects.all():
                 import tldextract
-                extractDomain = tldextract.extract(website.domain)
+                no_cache_extract = tldextract.TLDExtract(cache_dir=None)
+                extractDomain = no_cache_extract(website.domain)
                 topLevelDomain = extractDomain.domain + '.' + extractDomain.suffix
 
                 for zone in zones:
@@ -2920,7 +2913,8 @@ class CloudManager:
             for website in ChildDomains.objects.all():
 
                 import tldextract
-                extractDomain = tldextract.extract(website.domain)
+                no_cache_extract = tldextract.TLDExtract(cache_dir=None)
+                extractDomain = no_cache_extract(website.domain)
                 topLevelDomain = extractDomain.domain + '.' + extractDomain.suffix
 
                 for zone in zones:

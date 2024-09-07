@@ -339,10 +339,11 @@ class sslUtilities:
             import tldextract
 
             RetStatus, SAVED_CF_Key, SAVED_CF_Email = ACLManager.FetchCloudFlareAPIKeyFromAcme()
+            no_cache_extract = tldextract.TLDExtract(cache_dir=None)
 
             if RetStatus:
 
-                extractDomain = tldextract.extract(virtualHostName)
+                extractDomain = no_cache_extract(virtualHostName)
                 topLevelDomain = extractDomain.domain + '.' + extractDomain.suffix
                 logging.CyberCPLogFileWriter.writeToFile(f'top level domain in cf: {topLevelDomain}')
                 import CloudFlare
@@ -375,7 +376,8 @@ class sslUtilities:
 
             from plogical.dnsUtilities import DNS
             from dns.models import Domains
-            extractDomain = tldextract.extract(virtualHostName)
+            no_cache_extract = tldextract.TLDExtract(cache_dir=None)
+            extractDomain = no_cache_extract(virtualHostName)
             topLevelDomain = extractDomain.domain + '.' + extractDomain.suffix
             zone = Domains.objects.get(name=topLevelDomain)
 

@@ -171,20 +171,9 @@ class DNSManager:
         finalData['domainsList'] = []
         import tldextract
 
-        command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.6/site-packages/tldextract/.suffix_cache'
-        ProcessUtilities.executioner(command)
-
-        command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.8/site-packages/tldextract/.suffix_cache'
-        ProcessUtilities.executioner(command)
-
-        command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python*/site-packages/tldextract/.suffix_cache'
-        ProcessUtilities.executioner(command, None, True)
-
-        command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.8/site-packages/tldextract/.suffix_cache'
-        ProcessUtilities.executioner(command)
-
+        no_cache_extract = tldextract.TLDExtract(cache_dir=None)
         for items in tempList:
-            extractDomain = tldextract.extract(items)
+            extractDomain = no_cache_extract(items)
             subDomain = extractDomain.subdomain
             if len(subDomain) == 0:
                 finalData['domainsList'].append(items)
