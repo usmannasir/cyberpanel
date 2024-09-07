@@ -840,21 +840,29 @@ if [[ $Server_OS = "CentOS" ]] ; then
   rm -f /etc/yum.repos.d/epel.repo.rpmsave
 
   if [[ "$Server_OS_Version" = "9" ]]; then
+
+    # Check if architecture is aarch64
+    if uname -m | grep -q 'aarch64' ; then
+      # Run the following commands if architecture is aarch64
+      /usr/bin/crb enable
+      curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
+    fi
+
     subscription-manager repos --enable codeready-builder-for-rhel-9-$(arch)-rpms || yum config-manager --set-enabled crb > /dev/null 2>&1
     yum install -y https://cyberpanel.sh/dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
       Check_Return "yum repo" "no_exit"
     yum install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm
       Check_Return "yum repo" "no_exit"
-    cat <<EOF >/etc/yum.repos.d/MariaDB.repo
-# MariaDB 10.4 CentOS repository list - created 2021-08-06 02:01 UTC
-# http://downloads.mariadb.org/mariadb/repositories/
-[mariadb]
-name = MariaDB
-baseurl = http://yum.mariadb.org/10.11/rhel9-amd64/
-gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
-enabled=1
-gpgcheck=1
-EOF
+#    cat <<EOF >/etc/yum.repos.d/MariaDB.repo
+## MariaDB 10.4 CentOS repository list - created 2021-08-06 02:01 UTC
+## http://downloads.mariadb.org/mariadb/repositories/
+#[mariadb]
+#name = MariaDB
+#baseurl = http://yum.mariadb.org/10.11/rhel9-amd64/
+#gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+#enabled=1
+#gpgcheck=1
+#EOF
   fi
 
   if [[ "$Server_OS_Version" = "8" ]]; then
@@ -1043,12 +1051,6 @@ if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "openEuler" ]] ; then
 
     #!/bin/bash
 
-    # Check if architecture is aarch64
-    if uname -m | grep -q 'aarch64' ; then
-      # Run the following commands if architecture is aarch64
-      /usr/bin/crb enable
-      curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
-    fi
 
     dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel MariaDB-server MariaDB-client MariaDB-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils gpgme-devel
       Check_Return
