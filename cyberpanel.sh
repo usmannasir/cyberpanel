@@ -869,9 +869,6 @@ enabled=1
 gpgcheck=1
 EOF
   echo "MariaDB repository file created for x86_64 architecture."
-else
-  echo "This script only runs on x86_64 systems."
-  exit 1
 fi
   fi
 
