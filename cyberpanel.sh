@@ -853,16 +853,26 @@ if [[ $Server_OS = "CentOS" ]] ; then
       Check_Return "yum repo" "no_exit"
     yum install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm
       Check_Return "yum repo" "no_exit"
-#    cat <<EOF >/etc/yum.repos.d/MariaDB.repo
-## MariaDB 10.4 CentOS repository list - created 2021-08-06 02:01 UTC
-## http://downloads.mariadb.org/mariadb/repositories/
-#[mariadb]
-#name = MariaDB
-#baseurl = http://yum.mariadb.org/10.11/rhel9-amd64/
-#gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
-#enabled=1
-#gpgcheck=1
-#EOF
+    #!/bin/bash
+
+# Check if architecture is x86_64
+if uname -m | grep -q 'x86_64' ; then
+  # Create the MariaDB repository configuration file for x86_64 architecture
+  cat <<EOF >/etc/yum.repos.d/MariaDB.repo
+# MariaDB 10.11 CentOS repository list - created 2021-08-06 02:01 UTC
+# http://downloads.mariadb.org/mariadb/repositories/
+[mariadb]
+name = MariaDB
+baseurl = http://yum.mariadb.org/10.11/rhel9-amd64/
+gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+enabled=1
+gpgcheck=1
+EOF
+  echo "MariaDB repository file created for x86_64 architecture."
+else
+  echo "This script only runs on x86_64 systems."
+  exit 1
+fi
   fi
 
   if [[ "$Server_OS_Version" = "8" ]]; then
