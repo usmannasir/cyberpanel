@@ -708,7 +708,7 @@ milter_default_action = accept
     def SetupEmailLimits():
         rlFile = '/etc/rspamd/override.d/ratelimit.conf'
         rlContent = '''
-   custom_keywords = "/etc/rspamd/custom_ratelimit.lua";
+custom_keywords = "/etc/rspamd/custom_ratelimit.lua";
 '''
         if not os.path.exists(rlFile):
 
