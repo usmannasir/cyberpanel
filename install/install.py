@@ -181,7 +181,7 @@ class preFlightsChecks:
 
             command = "find /lib/modules/ -type f -name '*quota_v*.ko*' | sed -n 's|/lib/modules/\([^/]*\)/.*|\1|p' | sort -u"
 
-            result = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT).decode("utf-8").rstrip('\n')
+            result = subprocess.check_output(command, shell=True).decode("utf-8").rstrip('\n')
 
             command = f"apt-get install linux-modules-extra-{result}"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
