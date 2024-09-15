@@ -165,7 +165,7 @@ class preFlightsChecks:
 
                 command = "find /lib/modules/ -type f -name '*quota_v*.ko*'"
 
-                if subprocess.check_output(command).decode("utf-8").find("quota/") == -1:
+                if subprocess.check_output(command,shell=True, stderr=subprocess.STDOUT).decode("utf-8").find("quota/") == -1:
                     command = "sudo apt install linux-image-extra-virtual -y"
                     preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
