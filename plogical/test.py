@@ -38,7 +38,8 @@ def edit_fstab(mount_point, options_to_add):
             WriteToFile.write(line)
     WriteToFile.close()
 
-    command = "find /lib/modules/ -type f -name '*quota_v*.ko*' | sed -n 's|/lib/modules/\\([^/]*\\)/.*|\\1|p' | sort -u"
+    command = "find /lib/modules/ -type f -name '*quota_v*.ko*'"
+    print(command)
     try:
         result = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT).decode("utf-8").rstrip('\n')
         print(repr(result))
