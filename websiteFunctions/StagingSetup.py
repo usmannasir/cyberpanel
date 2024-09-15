@@ -173,7 +173,7 @@ class StagingSetup(multi.Thread):
             command = '%s -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "www.%s" "%s"' % (FinalPHPPath, path, domain, domain)
             ProcessUtilities.executioner(command)
 
-            command = '%s -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "https://%s" "http://%s"' % (
+            command = '%s -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "http://%s" "https://%s"' % (
             FinalPHPPath, path, domain, domain)
             ProcessUtilities.executioner(command)
 
