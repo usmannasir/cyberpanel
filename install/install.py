@@ -144,48 +144,97 @@ class preFlightsChecks:
         self.mysqldb = mysqldb
 
 
-    @staticmethod
-    def edit_fstab(mount_point, options_to_add):
+    def installQuota(self,):
+        try:
+
+            if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
+                command = "yum install quota -y"
+                preFlightsChecks.call(command, self.distro, command,
+                                      command,
+                                      1, 0, os.EX_OSERR)
+
+            ##
+
+            if self.distro == ubuntu:
+                self.stdOut("Install Quota on Ubuntu")
+                command = 'apt update -y'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+                command = 'apt install quota -y'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+                command = "find /lib/modules/ -type f -name '*quota_v*.ko*'"
+
+                if subprocess.check_output(command).decode("utf-8").find("quota/") == -1:
+                    command = "sudo apt install linux-image-extra-virtual -y"
+                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+
+            self.edit_fstab('/','/')
+
+            command = 'mount -o remount /'
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+            command = 'quotacheck -ugm /'
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+            command = "find /lib/modules/ -type f -name '*quota_v*.ko*' | sed -n 's|/lib/modules/\([^/]*\)/.*|\1|p' | sort -u"
+
+            result = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT).decode("utf-8").rstrip('\n')
+
+            command = f"apt-get install linux-modules-extra-{result}"
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+
+            command = f'modprobe quota_v1 -S {result}'
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+            command = f'modprobe quota_v2 -S {result}'
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+            command = f'quotacheck -ugm /'
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+            command = f'quotaon -v /'
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+        except BaseException as msg:
+            logging.InstallLog.writeToFile("[ERROR] installQuota. " + str(msg))
+
+    def edit_fstab(self,mount_point, options_to_add):
         # Backup the original fstab file
         fstab_path = '/etc/fstab'
         backup_path = fstab_path + '.bak'
 
         if not os.path.exists(backup_path):
             shutil.copy(fstab_path, backup_path)
-            preFlightsChecks.stdOut(f"Backup of /etc/fstab created at " + backup_path, 0)
 
         # Read the fstab file
         with open(fstab_path, 'r') as file:
             lines = file.readlines()
 
         # Modify the appropriate line
-        modified = False
+        WriteToFile = open(fstab_path, 'w')
         for i, line in enumerate(lines):
-            parts = line.split()
 
-            # Ensure the line has at least 2 fields and matches the root mount point
-            if len(parts) > 1 and parts[1] == mount_point:
-                # Check that the first field is a UUID or a device (not /proc, etc.)
-                if parts[0].startswith("UUID=") or parts[0].startswith("/dev/"):
-                    # Check if options already exist
-                    if options_to_add in parts[3]:
-                        preFlightsChecks.stdOut(f"{options_to_add} already present in {mount_point} entry", 0)
-                        return
-                    # Append options to the fourth column (mount options)
-                    parts[3] = parts[3] + ',' + options_to_add
-                    lines[i] = ' '.join(parts) + '\n'
-                    modified = True
-                    preFlightsChecks.stdOut(f"Modified the entry for {mount_point}", 0)
-                    break
+            if line.find('\t') > -1:
+                parts = line.split('\t')
+            else:
+                parts = line.split(' ')
 
-        # If the mount point was found and modified, write back the file
-        if modified:
-            with open(fstab_path, 'w') as file:
-                file.writelines(lines)
+            print(parts)
+            try:
+                if parts[1] == '/' and parts[3].find('usrquota,grpquota') == -1:
+                    parts[3] = f'{parts[3]},usrquota,grpquota'
+                    finalString = '\t'.join(parts)
+                    print(finalString)
+                    WriteToFile.write(finalString)
+                else:
+                    WriteToFile.write(line)
+            except:
+                WriteToFile.write(line)
 
-            preFlightsChecks.stdOut("fstab file updated successfully.", 0)
-        else:
-            preFlightsChecks.stdOut(f"No entry found for {mount_point} in /etc/fstab.", 0)
+        WriteToFile.close()
 
     @staticmethod
     def stdOut(message, log=0, do_exit=0, code=os.EX_OK):
@@ -2529,6 +2578,7 @@ def main():
     checks = preFlightsChecks("/usr/local/lsws/", args.publicip, "/usr/local", cwd, "/usr/local/CyberCP", distro,
                               remotemysql, mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport)
     checks.mountTemp()
+    checks.installQuota()
 
     if args.port is None:
         port = "8090"
