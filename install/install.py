@@ -193,16 +193,19 @@ class preFlightsChecks:
                 fResult = result.stdout.rstrip('\n')
                 print(repr(result.stdout.rstrip('\n')))
 
-                command = f"apt-get install linux-modules-extra-{fResult}"
+                command  = 'uname -r'
+                ffResult = subprocess.run(command, capture_output=True, text=True, shell=True)
+                ffResult = result.stdout.rstrip('\n')
+
+                command = f"apt-get install linux-modules-extra-{ffResult}"
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             ###
 
-
-                command = f'modprobe quota_v1 -S {fResult}'
+                command = f'modprobe quota_v1 -S {ffResult}'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-                command = f'modprobe quota_v2 -S {fResult}'
+                command = f'modprobe quota_v2 -S {ffResult}'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             command = f'quotacheck -ugm /'
