@@ -530,6 +530,13 @@ class virtualHostUtilities:
 
             ###
 
+            spaceString = f'{selectedPackage.diskSpace}M {selectedPackage.diskSpace}M'
+
+            if selectedPackage.enforceDiskLimits:
+                command = f'setquota -u {virtualHostUser} {spaceString} 0 0 /'
+                ProcessUtilities.executioner(command)
+
+
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Website successfully created. [200]')
 
             return 1, 'None'

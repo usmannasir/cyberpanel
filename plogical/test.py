@@ -38,13 +38,21 @@ def edit_fstab(mount_point, options_to_add):
             WriteToFile.write(line)
     WriteToFile.close()
 
-    command = "find /lib/modules/ -type f -name '*quota_v*.ko*'"
-    print(command)
+
     try:
-        result = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT).decode("utf-8").rstrip('\n')
-        print(repr(result))
+        command = "find /lib/modules/ -type f -name '*quota_v*.ko*'"
+        result = subprocess.run(command, capture_output=True, text=True, shell=True)
+        print(repr(result.stdout))
+
+        # Only if the first command works, run the rest
+        if result.returncode == 0:
+            command = "echo '{}' | sed -n 's|/lib/modules/\\([^/]*\\)/.*|\\1|p' | sort -u".format(result.stdout)
+            result = subprocess.run(command, capture_output=True, text=True, shell=True)
+            print(repr(result.stdout.rstrip('\n')))
+
     except subprocess.CalledProcessError as e:
         print("Error:", e.output.decode())
+
 
 edit_fstab('/', '/')
 
