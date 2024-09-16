@@ -195,7 +195,7 @@ class preFlightsChecks:
 
                 command  = 'uname -r'
                 ffResult = subprocess.run(command, capture_output=True, text=True, shell=True)
-                ffResult = result.stdout.rstrip('\n')
+                ffResult = ffResult.stdout.rstrip('\n')
 
                 command = f"apt-get install linux-modules-extra-{ffResult}"
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
