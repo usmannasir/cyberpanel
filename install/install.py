@@ -199,11 +199,11 @@ class preFlightsChecks:
             ###
 
 
-            command = f'modprobe quota_v1 -S {result}'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                command = f'modprobe quota_v1 -S {fResult}'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            command = f'modprobe quota_v2 -S {result}'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                command = f'modprobe quota_v2 -S {fResult}'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             command = f'quotacheck -ugm /'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
