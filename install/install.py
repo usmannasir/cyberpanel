@@ -245,11 +245,18 @@ class preFlightsChecks:
 
             print(parts)
             try:
-                if parts[1] == '/' and parts[3].find('usrquota,grpquota') == -1:
+                if parts[1] == '/' and parts[3].find('usrquota,grpquota') == -1 and len(parts[3]) > 4:
                     parts[3] = f'{parts[3]},usrquota,grpquota'
                     finalString = '\t'.join(parts)
                     print(finalString)
                     WriteToFile.write(finalString)
+                elif parts[1] == '/':
+                    for ii, p in enumerate(parts):
+                        if p.find('defaults') > -1:
+                            parts[ii] = f'{parts[ii]},usrquota,grpquota'
+                            finalString = '\t'.join(parts)
+                            print(finalString)
+                            WriteToFile.write(finalString)
                 else:
                     WriteToFile.write(line)
             except:
