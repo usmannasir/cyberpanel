@@ -153,7 +153,10 @@ class preFlightsChecks:
                                       command,
                                       1, 0, os.EX_OSERR)
 
-                self.edit_fstab('/', '/')
+                if self.edit_fstab('/', '/') == 0:
+                    preFlightsChecks.stdOut("Quotas will not be abled as we are are failed to modify fstab file.")
+                    return 0
+
 
                 command = 'mount -o remount /'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -175,8 +178,9 @@ class preFlightsChecks:
                     command = "sudo apt install linux-image-extra-virtual -y"
                     preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-
-                self.edit_fstab('/','/')
+                if self.edit_fstab('/', '/') == 0:
+                    preFlightsChecks.stdOut("Quotas will not be abled as we are are failed to modify fstab file.")
+                    return 0
 
                 command = 'mount -o remount /'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -223,46 +227,70 @@ class preFlightsChecks:
             logging.InstallLog.writeToFile("[ERROR] installQuota. " + str(msg))
 
     def edit_fstab(self,mount_point, options_to_add):
-        # Backup the original fstab file
-        fstab_path = '/etc/fstab'
-        backup_path = fstab_path + '.bak'
 
-        if not os.path.exists(backup_path):
-            shutil.copy(fstab_path, backup_path)
+        try:
+            retValue = 1
+            # Backup the original fstab file
+            fstab_path = '/etc/fstab'
+            backup_path = fstab_path + '.bak'
 
-        # Read the fstab file
-        with open(fstab_path, 'r') as file:
-            lines = file.readlines()
+            if not os.path.exists(backup_path):
+                shutil.copy(fstab_path, backup_path)
 
-        # Modify the appropriate line
-        WriteToFile = open(fstab_path, 'w')
-        for i, line in enumerate(lines):
+            # Read the fstab file
+            with open(fstab_path, 'r') as file:
+                lines = file.readlines()
 
-            if line.find('\t') > -1:
-                parts = line.split('\t')
-            else:
-                parts = line.split(' ')
+            # Modify the appropriate line
+            WriteToFile = open(fstab_path, 'w')
+            for i, line in enumerate(lines):
 
-            print(parts)
-            try:
-                if parts[1] == '/' and parts[3].find('usrquota,grpquota') == -1 and len(parts[3]) > 4:
-                    parts[3] = f'{parts[3]},usrquota,grpquota'
-                    finalString = '\t'.join(parts)
-                    print(finalString)
-                    WriteToFile.write(finalString)
-                elif parts[1] == '/':
-                    for ii, p in enumerate(parts):
-                        if p.find('defaults') > -1:
-                            parts[ii] = f'{parts[ii]},usrquota,grpquota'
-                            finalString = '\t'.join(parts)
-                            print(finalString)
-                            WriteToFile.write(finalString)
+                if line.find('\t') > -1:
+                    parts = line.split('\t')
                 else:
-                    WriteToFile.write(line)
-            except:
-                WriteToFile.write(line)
+                    parts = line.split(' ')
 
-        WriteToFile.close()
+                print(parts)
+                try:
+                    if parts[1] == '/' and parts[3].find('usrquota,grpquota') == -1 and len(parts[3]) > 4:
+
+                        ### if xfx dont move forward for now
+                        if line.find('xfs') > -1:
+                            retValue = 0
+                            WriteToFile.write(line)
+                            continue
+                        ###
+
+                        parts[3] = f'{parts[3]},usrquota,grpquota'
+                        finalString = '\t'.join(parts)
+                        print(finalString)
+                        WriteToFile.write(finalString)
+
+                    elif parts[1] == '/':
+
+                        ### if xfx dont move forward for now
+                        if line.find('xfs') > -1:
+                            retValue = 0
+                            WriteToFile.write(line)
+                            continue
+                        ###
+
+                        for ii, p in enumerate(parts):
+                            if p.find('defaults') > -1 or p.find('discard') > -1:
+                                parts[ii] = f'{parts[ii]},usrquota,grpquota'
+                                finalString = '\t'.join(parts)
+                                print(finalString)
+                                WriteToFile.write(finalString)
+                    else:
+                        WriteToFile.write(line)
+                except:
+                    WriteToFile.write(line)
+
+            WriteToFile.close()
+
+            return retValue
+        except:
+            return 0
 
     @staticmethod
     def stdOut(message, log=0, do_exit=0, code=os.EX_OK):
