@@ -154,12 +154,26 @@ class preFlightsChecks:
                                       1, 0, os.EX_OSERR)
 
                 if self.edit_fstab('/', '/') == 0:
-                    preFlightsChecks.stdOut("Quotas will not be abled as we are are failed to modify fstab file.")
+                    preFlightsChecks.stdOut("Quotas will not be abled as we failed to modify fstab file.")
                     return 0
 
 
                 command = 'mount -o remount /'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+                command = 'mount -o remount /'
+                mResult = subprocess.run(command, capture_output=True, text=True, shell=True)
+                if mResult.returncode != 0:
+                    fstab_path = '/etc/fstab'
+                    backup_path = fstab_path + '.bak'
+                    if os.path.exists(fstab_path):
+                        os.remove(fstab_path)
+                    shutil.copy(backup_path, fstab_path)
+
+                    preFlightsChecks.stdOut("Re-mount failed, restoring original FSTab and existing quota setup.")
+                    return 0
+
+
 
             ##
 
@@ -183,7 +197,16 @@ class preFlightsChecks:
                     return 0
 
                 command = 'mount -o remount /'
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                mResult = subprocess.run(command, capture_output=True, text=True, shell=True)
+                if mResult.returncode != 0:
+                    fstab_path = '/etc/fstab'
+                    backup_path = fstab_path + '.bak'
+                    if os.path.exists(fstab_path):
+                        os.remove(fstab_path)
+                    shutil.copy(backup_path, fstab_path)
+
+                    preFlightsChecks.stdOut("Re-mount failed, restoring original FSTab and existing quota setup.")
+                    return 0
 
                 command = 'quotacheck -ugm /'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
