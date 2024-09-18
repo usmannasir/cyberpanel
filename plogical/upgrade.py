@@ -3436,6 +3436,7 @@ pm.max_spare_servers = 3
         Upgrade.setupCLI()
         Upgrade.someDirectories()
         Upgrade.installLSCPD(branch)
+        Upgrade.FixCurrentQuoatasSystem()
 
         ### General migrations are not needed any more
 
