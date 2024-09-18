@@ -1041,28 +1041,28 @@ Automatic backup failed for %s on %s.
                 config['DiskUsage'], config['DiskUsagePercentage'] = virtualHostUtilities.getDiskUsage(
                     "/home/" + website.domain, website.package.diskSpace)
 
-                if website.package.enforceDiskLimits:
-                    spaceString = f'{website.package.diskSpace}M {website.package.diskSpace}M'
-                    command = f'setquota -u {website.externalApp} {spaceString} 0 0 /'
-                    ProcessUtilities.executioner(command)
-                    if config['DiskUsagePercentage'] >= 100:
-                        command = 'chattr -R +i /home/%s/' % (website.domain)
-                        ProcessUtilities.executioner(command)
-
-                        command = 'chattr -R -i /home/%s/logs/' % (website.domain)
-                        ProcessUtilities.executioner(command)
-
-                        command = 'chattr -R -i /home/%s/.trash/' % (website.domain)
-                        ProcessUtilities.executioner(command)
-
-                        command = 'chattr -R -i /home/%s/backup/' % (website.domain)
-                        ProcessUtilities.executioner(command)
-
-                        command = 'chattr -R -i /home/%s/incbackup/' % (website.domain)
-                        ProcessUtilities.executioner(command)
-                    else:
-                        command = 'chattr -R -i /home/%s/' % (website.domain)
-                        ProcessUtilities.executioner(command)
+                # if website.package.enforceDiskLimits:
+                #     spaceString = f'{website.package.diskSpace}M {website.package.diskSpace}M'
+                #     command = f'setquota -u {website.externalApp} {spaceString} 0 0 /'
+                #     ProcessUtilities.executioner(command)
+                #     if config['DiskUsagePercentage'] >= 100:
+                #         command = 'chattr -R +i /home/%s/' % (website.domain)
+                #         ProcessUtilities.executioner(command)
+                #
+                #         command = 'chattr -R -i /home/%s/logs/' % (website.domain)
+                #         ProcessUtilities.executioner(command)
+                #
+                #         command = 'chattr -R -i /home/%s/.trash/' % (website.domain)
+                #         ProcessUtilities.executioner(command)
+                #
+                #         command = 'chattr -R -i /home/%s/backup/' % (website.domain)
+                #         ProcessUtilities.executioner(command)
+                #
+                #         command = 'chattr -R -i /home/%s/incbackup/' % (website.domain)
+                #         ProcessUtilities.executioner(command)
+                #     else:
+                #         command = 'chattr -R -i /home/%s/' % (website.domain)
+                #         ProcessUtilities.executioner(command)
 
                 ## Calculate bw usage
 
