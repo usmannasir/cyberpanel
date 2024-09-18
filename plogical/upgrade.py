@@ -3663,7 +3663,8 @@ pm.max_spare_servers = 3
                     if parts[1] == '/' and parts[3].find(options_to_add) == -1 and len(parts[3]) > 4:
 
                         parts[3] = f'{parts[3]},{options_to_add}'
-                        finalString = '\t'.join(parts)
+                        tempParts = [item for item in parts if item.strip()]
+                        finalString = '\t'.join(tempParts)
                         print(finalString)
                         WriteToFile.write(finalString)
 
@@ -3672,7 +3673,8 @@ pm.max_spare_servers = 3
                         for ii, p in enumerate(parts):
                             if p.find('defaults') > -1 or p.find('discard') > -1:
                                 parts[ii] = f'{parts[ii]},{options_to_add}'
-                                finalString = '\t'.join(parts)
+                                tempParts = [item for item in parts if item.strip()]
+                                finalString = '\t'.join(tempParts)
                                 print(finalString)
                                 WriteToFile.write(finalString)
                     else:

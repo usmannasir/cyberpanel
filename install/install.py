@@ -257,6 +257,13 @@ class preFlightsChecks:
             fstab_path = '/etc/fstab'
             backup_path = fstab_path + '.bak'
 
+            rData = open(fstab_path, 'r').read()
+
+            if rData.find('xfs') > -1:
+                options_to_add = 'uquota'
+            else:
+                options_to_add = 'usrquota,grpquota'
+
             if not os.path.exists(backup_path):
                 shutil.copy(fstab_path, backup_path)
 
@@ -275,10 +282,11 @@ class preFlightsChecks:
 
                 print(parts)
                 try:
-                    if parts[1] == '/' and parts[3].find('usrquota,grpquota') == -1 and len(parts[3]) > 4:
+                    if parts[1] == '/' and parts[3].find(options_to_add) == -1 and len(parts[3]) > 4:
 
-                        parts[3] = f'{parts[3]},usrquota,grpquota'
-                        finalString = '\t'.join(parts)
+                        parts[3] = f'{parts[3]},{options_to_add}'
+                        tempParts = [item for item in parts if item.strip()]
+                        finalString = '\t'.join(tempParts)
                         print(finalString)
                         WriteToFile.write(finalString)
 
@@ -286,8 +294,9 @@ class preFlightsChecks:
 
                         for ii, p in enumerate(parts):
                             if p.find('defaults') > -1 or p.find('discard') > -1:
-                                parts[ii] = f'{parts[ii]},usrquota,grpquota'
-                                finalString = '\t'.join(parts)
+                                parts[ii] = f'{parts[ii]},{options_to_add}'
+                                tempParts = [item for item in parts if item.strip()]
+                                finalString = '\t'.join(tempParts)
                                 print(finalString)
                                 WriteToFile.write(finalString)
                     else:
