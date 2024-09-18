@@ -277,26 +277,12 @@ class preFlightsChecks:
                 try:
                     if parts[1] == '/' and parts[3].find('usrquota,grpquota') == -1 and len(parts[3]) > 4:
 
-                        ### if xfx dont move forward for now
-                        if line.find('xfs') > -1:
-                            retValue = 0
-                            WriteToFile.write(line)
-                            continue
-                        ###
-
                         parts[3] = f'{parts[3]},usrquota,grpquota'
                         finalString = '\t'.join(parts)
                         print(finalString)
                         WriteToFile.write(finalString)
 
                     elif parts[1] == '/':
-
-                        ### if xfx dont move forward for now
-                        if line.find('xfs') > -1:
-                            retValue = 0
-                            WriteToFile.write(line)
-                            continue
-                        ###
 
                         for ii, p in enumerate(parts):
                             if p.find('defaults') > -1 or p.find('discard') > -1:
