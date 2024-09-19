@@ -2533,6 +2533,23 @@ class MailServerManagerUtils(multi.Thread):
             command = 'touch /home/cyberpanel/postfix'
             ProcessUtilities.executioner(command)
 
+            ###
+
+            etcResolve = '/etc/resolv.conf'
+
+            dataEtcResolv = open(etcResolve, 'r').read()
+
+            if len(dataEtcResolv) < 4:
+                writeToFile = open(etcResolve, 'w')
+                writeToFile.write('nameserver 8.8.8.8\n')
+                writeToFile.close()
+
+                command = 'systemctl restart postfix'
+                ProcessUtilities.executioner(command)
+
+                command = 'systemctl restart dovecot'
+                ProcessUtilities.executioner(command)
+
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Completed [200].')
 
         except BaseException as msg:
