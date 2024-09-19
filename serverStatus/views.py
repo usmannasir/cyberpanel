@@ -26,7 +26,7 @@ EXPIRE = 3
 ### Version
 
 VERSION = '2.3'
-BUILD = 6
+BUILD = 7
 
 
 def serverStatusHome(request):
