@@ -182,15 +182,15 @@ class preFlightsChecks:
                 command = 'apt update -y'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-                command = 'apt install quota -y'
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                command = 'DEBIAN_FRONTEND=noninteractive apt install quota -y'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR, True)
 
                 command = "find /lib/modules/ -type f -name '*quota_v*.ko*'"
 
 
                 if subprocess.check_output(command,shell=True).decode("utf-8").find("quota/") == -1:
-                    command = "sudo apt install linux-image-extra-virtual -y"
-                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                    command = "DEBIAN_FRONTEND=noninteractive apt install linux-image-extra-virtual -y"
+                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR, True)
 
                 if self.edit_fstab('/', '/') == 0:
                     preFlightsChecks.stdOut("Quotas will not be abled as we are are failed to modify fstab file.")
@@ -229,8 +229,8 @@ class preFlightsChecks:
                     ffResult = subprocess.run(command, capture_output=True, text=True, shell=True)
                     ffResult = ffResult.stdout.rstrip('\n')
 
-                    command = f"apt-get install linux-modules-extra-{ffResult}"
-                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                    command = f"DEBIAN_FRONTEND=noninteractive  apt-get install linux-modules-extra-{ffResult}"
+                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR, True)
 
                 ###
 
