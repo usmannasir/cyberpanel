@@ -2537,7 +2537,11 @@ class MailServerManagerUtils(multi.Thread):
 
             etcResolve = '/etc/resolv.conf'
 
-            dataEtcResolv = open(etcResolve, 'r').read()
+            if os.path.exists(etcResolve):
+                dataEtcResolv = open(etcResolve, 'r').read()
+            else:
+                dataEtcResolv = ''
+
 
             if len(dataEtcResolv) < 4:
                 writeToFile = open(etcResolve, 'w')
