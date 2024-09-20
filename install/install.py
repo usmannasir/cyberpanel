@@ -293,7 +293,7 @@ class preFlightsChecks:
                     elif parts[1] == '/':
 
                         for ii, p in enumerate(parts):
-                            if p.find('defaults') > -1 or p.find('discard') > -1:
+                            if p.find('defaults') > -1 or p.find('discard') > -1 or p.find('errors=') > -1:
                                 parts[ii] = f'{parts[ii]},{options_to_add}'
                                 tempParts = [item for item in parts if item.strip()]
                                 finalString = '\t'.join(tempParts)
