@@ -3533,9 +3533,6 @@ pm.max_spare_servers = 3
 
 
                 command = 'mount -o remount /'
-                Upgrade.executioner(command, command, 0, True)
-
-                command = 'mount -o remount /'
                 mResult = subprocess.run(command, capture_output=True, text=True, shell=True)
                 if mResult.returncode != 0:
                     fstab_path = '/etc/fstab'
@@ -3546,7 +3543,6 @@ pm.max_spare_servers = 3
 
                     print("Re-mount failed, restoring original FSTab and existing quota setup.")
                     return 0
-
 
 
             ##
