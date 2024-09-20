@@ -3544,11 +3544,11 @@ pm.max_spare_servers = 3
                     print("Re-mount failed, restoring original FSTab and existing quota setup.")
                     return 0
 
-
             ##
 
             if Upgrade.FindOperatingSytem() == Ubuntu22 or Upgrade.FindOperatingSytem() == Ubuntu18 \
                     or Upgrade.FindOperatingSytem() == Ubuntu20:
+
                 print("Install Quota on Ubuntu")
                 command = 'apt update -y'
                 Upgrade.executioner(command, command, 0, True)
@@ -3580,7 +3580,16 @@ pm.max_spare_servers = 3
                     return 0
 
                 command = 'quotacheck -ugm /'
-                Upgrade.executioner(command, command, 0, True)
+                mResult = subprocess.run(command, capture_output=True, text=True, shell=True)
+                if mResult.returncode != 0:
+                    fstab_path = '/etc/fstab'
+                    backup_path = fstab_path + '.bak'
+                    if os.path.exists(fstab_path):
+                        os.remove(fstab_path)
+                    shutil.copy(backup_path, fstab_path)
+
+                    print("Re-mount failed, restoring original FSTab and existing quota setup.")
+                    return 0
 
                 ####
 
@@ -3606,16 +3615,52 @@ pm.max_spare_servers = 3
                 ###
 
                     command = f'modprobe quota_v1 -S {ffResult}'
-                    Upgrade.executioner(command, command, 0, True)
+                    mResult = subprocess.run(command, capture_output=True, text=True, shell=True)
+                    if mResult.returncode != 0:
+                        fstab_path = '/etc/fstab'
+                        backup_path = fstab_path + '.bak'
+                        if os.path.exists(fstab_path):
+                            os.remove(fstab_path)
+                        shutil.copy(backup_path, fstab_path)
+
+                        print("Re-mount failed, restoring original FSTab and existing quota setup.")
+                        return 0
 
                     command = f'modprobe quota_v2 -S {ffResult}'
-                    Upgrade.executioner(command, command, 0, True)
+                    mResult = subprocess.run(command, capture_output=True, text=True, shell=True)
+                    if mResult.returncode != 0:
+                        fstab_path = '/etc/fstab'
+                        backup_path = fstab_path + '.bak'
+                        if os.path.exists(fstab_path):
+                            os.remove(fstab_path)
+                        shutil.copy(backup_path, fstab_path)
+
+                        print("Re-mount failed, restoring original FSTab and existing quota setup.")
+                        return 0
 
             command = f'quotacheck -ugm /'
-            Upgrade.executioner(command, command, 0, True)
+            mResult = subprocess.run(command, capture_output=True, text=True, shell=True)
+            if mResult.returncode != 0:
+                fstab_path = '/etc/fstab'
+                backup_path = fstab_path + '.bak'
+                if os.path.exists(fstab_path):
+                    os.remove(fstab_path)
+                shutil.copy(backup_path, fstab_path)
+
+                print("Re-mount failed, restoring original FSTab and existing quota setup.")
+                return 0
 
             command = f'quotaon -v /'
-            Upgrade.executioner(command, command, 0, True)
+            mResult = subprocess.run(command, capture_output=True, text=True, shell=True)
+            if mResult.returncode != 0:
+                fstab_path = '/etc/fstab'
+                backup_path = fstab_path + '.bak'
+                if os.path.exists(fstab_path):
+                    os.remove(fstab_path)
+                shutil.copy(backup_path, fstab_path)
+
+                print("Re-mount failed, restoring original FSTab and existing quota setup.")
+                return 0
 
             return 1
 
