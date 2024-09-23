@@ -327,6 +327,16 @@ class preFlightsChecks:
 
     def mountTemp(self):
         try:
+
+            result = subprocess.run('systemd-detect-virt', capture_output=True, text=True, shell=True)
+
+            if result.stdout.find('openvz') == -1:
+                if self.distro == ubuntu:
+                    command = 'DEBIAN_FRONTEND=noninteractive apt install inetutils-inetd -y'
+                    preFlightsChecks.call(command, self.distro, command,
+                                          command,
+                                          1, 0, os.EX_OSERR)
+
             # ## On OpenVZ there is an issue using .tempdisk for /tmp as it breaks network on container after reboot.
             #
             # if subprocess.check_output('systemd-detect-virt').decode("utf-8").find("openvz") > -1:
