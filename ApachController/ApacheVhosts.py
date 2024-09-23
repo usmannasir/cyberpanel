@@ -52,6 +52,8 @@ class ApacheVhost:
         php80Path = '/etc/php/8.0/fpm/pool.d/'
         php81Path = '/etc/php/8.1/fpm/pool.d/'
         php82Path = '/etc/php/8.2/fpm/pool.d/'
+        php83Path = '/etc/php/8.3/fpm/pool.d/'
+        php84Path = '/etc/php/8.4/fpm/pool.d/'
 
         serviceName = 'apache2'
 
@@ -89,6 +91,10 @@ class ApacheVhost:
             finalConfPath = ApacheVhost.php81Path + virtualHostName
         elif php == '82':
             finalConfPath = ApacheVhost.php82Path + virtualHostName
+        elif php == '83':
+            finalConfPath = ApacheVhost.php83Path + virtualHostName
+        elif php == '84':
+            finalConfPath = ApacheVhost.php84Path + virtualHostName
 
         return finalConfPath + '.conf'
 
@@ -129,6 +135,11 @@ class ApacheVhost:
 
         if os.path.exists(ApacheVhost.php82Path + virtualHostName):
             return ApacheVhost.php82Path + virtualHostName
+
+        if os.path.exists(ApacheVhost.php83Path + virtualHostName):
+            return ApacheVhost.php83Path + virtualHostName
+
+
 
     @staticmethod
     def GenerateSelfSignedSSL(virtualHostName):

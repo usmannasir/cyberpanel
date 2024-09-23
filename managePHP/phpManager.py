@@ -72,6 +72,7 @@ class PHPManager:
         elif phpVersion == "PHP 7.3":
             return "/etc/opt/remi/php73/php.ini"
 
+
     @staticmethod
     def getCurrentPHPConfig(phpVersion):
         allow_url_fopen = "0"
