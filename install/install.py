@@ -330,7 +330,7 @@ class preFlightsChecks:
 
             result = subprocess.run('systemd-detect-virt', capture_output=True, text=True, shell=True)
 
-            if result.stdout.find('openvz') == -1:
+            if result.stdout.find('openvz') > -1:
                 if self.distro == ubuntu:
                     command = 'DEBIAN_FRONTEND=noninteractive apt install inetutils-inetd -y'
                     preFlightsChecks.call(command, self.distro, command,
