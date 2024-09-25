@@ -618,8 +618,11 @@ Automatic backup failed for %s on %s.
                                                     domain, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
 
                     jobConfig = json.loads(backupjob.config)
-                    if jobConfig['pid']:
-                        del jobConfig['pid']
+                    try:
+                        if jobConfig['pid']:
+                            del jobConfig['pid']
+                    except:
+                        pass
                     jobConfig[IncScheduler.currentStatus] = 'Not running'
                     backupjob.config = json.dumps(jobConfig)
                     backupjob.save()

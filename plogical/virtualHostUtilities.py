@@ -1316,7 +1316,7 @@ class virtualHostUtilities:
 
                 if vhost.checkIfAliasExists(virtualHostName) == 1:
                     logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This domain exists as Alias. [404]')
-                    return 0, "This domain exists as Alias."
+                    #return 0, "This domain exists as Alias."
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'DKIM Setup..,30')
 
