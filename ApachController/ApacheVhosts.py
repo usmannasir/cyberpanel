@@ -33,6 +33,9 @@ class ApacheVhost:
         php80Path = '/etc/opt/remi/php80/php-fpm.d/'
         php81Path = '/etc/opt/remi/php81/php-fpm.d/'
         php82Path = '/etc/opt/remi/php82/php-fpm.d/'
+        php83Path = '/etc/opt/remi/php83/php-fpm.d/'
+        php84Path = '/etc/opt/remi/php84/php-fpm.d/'
+        php85Path = '/etc/opt/remi/php85/php-fpm.d/'
 
         serviceName = 'httpd'
 
@@ -54,6 +57,7 @@ class ApacheVhost:
         php82Path = '/etc/php/8.2/fpm/pool.d/'
         php83Path = '/etc/php/8.3/fpm/pool.d/'
         php84Path = '/etc/php/8.4/fpm/pool.d/'
+        php85Path = '/etc/php/8.5/fpm/pool.d/'
 
         serviceName = 'apache2'
 
@@ -528,6 +532,7 @@ class ApacheVhost:
     @staticmethod
     def changePHP(phpVersion, vhFile):
         try:
+            logging.writeToFile(f"PHP version passed to Apache function: {phpVersion}")
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 sockPath = '/var/run/php-fpm/'
@@ -568,6 +573,14 @@ class ApacheVhost:
             currentConf = currentConf.replace('{group}', group)
 
             confFile.write(currentConf)
+
+            ### minor bug fix of updating default php conf user in selected fpm
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                defaultConfPath = finalConfPath.replace(virtualHostName, 'www')
+
+                command = f"sed -i 's/www-data/apache/g' {defaultConfPath}"
+                ProcessUtilities.executioner(command)
 
             phpService = ApacheVhost.DecideFPMServiceName(phpVersion)
 

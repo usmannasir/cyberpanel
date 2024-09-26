@@ -629,6 +629,8 @@ class vhost:
         #HomePath = website.externalApp
         virtualHostUser = externalApp
 
+        logging.CyberCPLogFileWriter.writeToFile(f"PHP version before making sure its available or not: {phpVersion} and vhFile: {vhFile}")
+
         from plogical.phpUtilities import phpUtilities
 
         phpVersion = phpUtilities.FindIfSaidPHPIsAvaiableOtherwiseMaketheNextOneAvailableToUse(vhFile, phpVersion)
@@ -648,6 +650,8 @@ class vhost:
                     writeDataToFile = open(vhFile, "w")
 
                     path = "  path                    /usr/local/lsws/lsphp" + str(php) + "/bin/lsphp\n"
+
+                    logging.CyberCPLogFileWriter.writeToFile(f"PHP String to be written {path}")
 
                     for items in data:
                         if items.find("/usr/local/lsws/lsphp") > -1 and items.find("path") > -1:

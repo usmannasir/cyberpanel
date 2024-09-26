@@ -163,7 +163,7 @@ class virtualHostUtilities:
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, message)
                 logging.CyberCPLogFileWriter.writeToFile(message)
 
-            command = 'systemctl restart postfix && systemctl restart dovecot && postmap -F hash:/etc/postfix/vmail_ssl.map'
+            command = 'postmap -F hash:/etc/postfix/vmail_ssl.map && systemctl restart postfix && systemctl restart dovecot'
             ProcessUtilities.executioner(command, 'root', True)
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Completed. [200]')
         else:
@@ -324,11 +324,17 @@ class virtualHostUtilities:
                     content = """\nlocal_name %s {
         ssl_cert = </etc/letsencrypt/live/%s/fullchain.pem
         ssl_key = </etc/letsencrypt/live/%s/privkey.pem
-}\n""" % (childDomain, childDomain, childDomain)
+}
+local_name %s {
+        ssl_cert = </etc/letsencrypt/live/%s/fullchain.pem
+        ssl_key = </etc/letsencrypt/live/%s/privkey.pem
+}
+\n""" % (childDomain, childDomain, childDomain, virtualHostName, virtualHostName, virtualHostName)
 
                     writeToFile = open(dovecotPath, 'a')
                     writeToFile.write(content)
                     writeToFile.close()
+
 
                 command = 'systemctl restart dovecot'
                 ProcessUtilities.executioner(command)
@@ -351,7 +357,7 @@ class virtualHostUtilities:
                     postfixMapFileContent = ''
 
                 if postfixMapFileContent.find('/live/%s/' % (childDomain)) == -1:
-                    mapContent = '%s /etc/letsencrypt/live/%s/privkey.pem /etc/letsencrypt/live/%s/fullchain.pem\n' % (
+                    mapContent = f'%s /etc/letsencrypt/live/%s/privkey.pem /etc/letsencrypt/live/%s/fullchain.pem\n{virtualHostName} /etc/letsencrypt/live/{virtualHostName}/privkey.pem /etc/letsencrypt/live/{virtualHostName}/fullchain.pem\n' % (
                         childDomain, childDomain, childDomain)
 
                     writeToFile = open(postfixMapFile, 'a')

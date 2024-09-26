@@ -273,7 +273,8 @@ class phpUtilities:
     @staticmethod
     def FindIfSaidPHPIsAvaiableOtherwiseMaketheNextOneAvailableToUse(vhFile, phpVersion):
         if vhFile != None:
-            result = phpUtilities.GetPHPVersionFromFile(vhFile)
+            virtualHostName = vhFile.split('/')[6]
+            result = phpUtilities.GetPHPVersionFromFile(vhFile, virtualHostName)
 
             if os.path.exists(result):
                 return phpVersion

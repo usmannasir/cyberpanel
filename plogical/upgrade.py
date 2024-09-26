@@ -3098,8 +3098,13 @@ vmail
             php81Path = '/etc/opt/remi/php81/php-fpm.d/'
             php82Path = '/etc/opt/remi/php82/php-fpm.d/'
 
+            php83Path = '/etc/opt/remi/php83/php-fpm.d/'
+            php84Path = '/etc/opt/remi/php84/php-fpm.d/'
+            php85Path = '/etc/opt/remi/php85/php-fpm.d/'
+
             serviceName = 'httpd'
             sockPath = '/var/run/php-fpm/'
+            runAsUser = 'apache'
         else:
             serverRootPath = '/etc/apache2'
             configBasePath = '/etc/apache2/sites-enabled/'
@@ -3116,9 +3121,13 @@ vmail
             php80Path = '/etc/php/8.0/fpm/pool.d/'
             php81Path = '/etc/php/8.1/fpm/pool.d/'
             php82Path = '/etc/php/8.2/fpm/pool.d/'
+            php83Path = '/etc/php/8.3/fpm/pool.d/'
+            php84Path = '/etc/php/8.4/fpm/pool.d/'
+            php85Path = '/etc/php/8.5/fpm/pool.d/'
 
             serviceName = 'apache2'
             sockPath = '/var/run/php/'
+            runAsUser = 'www-data'
 
         #####
 
@@ -3128,11 +3137,11 @@ vmail
         if os.path.exists(php54Path):
             content = f"""
 [php54default]
-user = www-data
-group = www-data
+user = {runAsUser}
+group = {runAsUser}
 listen ={sockPath}php5.4-fpm.sock
-listen.owner = www-data
-listen.group = www-data
+listen.owner = {runAsUser}
+listen.group = {runAsUser}
 pm = dynamic
 pm.max_children = 5
 pm.start_servers = 2
@@ -3146,11 +3155,11 @@ pm.max_spare_servers = 3
         if os.path.exists(php55Path):
             content = f'''
 [php55default]
-user = www-data
-group = www-data
+user = {runAsUser}
+group = {runAsUser}
 listen ={sockPath}php5.5-fpm.sock
-listen.owner = www-data
-listen.group = www-data
+listen.owner = {runAsUser}
+listen.group = {runAsUser}
 pm = dynamic
 pm.max_children = 5
 pm.start_servers = 2
@@ -3164,11 +3173,11 @@ pm.max_spare_servers = 3
         if os.path.exists(php56Path):
             content = f'''
 [php56default]
-user = www-data
-group = www-data
+user = {runAsUser}
+group = {runAsUser}
 listen ={sockPath}php5.6-fpm.sock
-listen.owner = www-data
-listen.group = www-data
+listen.owner = {runAsUser}
+listen.group = {runAsUser}
 pm = dynamic
 pm.max_children = 5
 pm.start_servers = 2
@@ -3182,11 +3191,11 @@ pm.max_spare_servers = 3
         if os.path.exists(php70Path):
             content = f'''
 [php70default]
-user = www-data
-group = www-data
+user = {runAsUser}
+group = {runAsUser}
 listen ={sockPath}php7.0-fpm.sock
-listen.owner = www-data
-listen.group = www-data
+listen.owner = {runAsUser}
+listen.group = {runAsUser}
 pm = dynamic
 pm.max_children = 5
 pm.start_servers = 2
@@ -3200,11 +3209,11 @@ pm.max_spare_servers = 3
         if os.path.exists(php71Path):
             content = f'''
 [php71default]
-user = www-data
-group = www-data
+user = {runAsUser}
+group = {runAsUser}
 listen ={sockPath}php7.1-fpm.sock
-listen.owner = www-data
-listen.group = www-data
+listen.owner = {runAsUser}
+listen.group = {runAsUser}
 pm = dynamic
 pm.max_children = 5
 pm.start_servers = 2
@@ -3218,11 +3227,11 @@ pm.max_spare_servers = 3
         if os.path.exists(php72Path):
             content = f'''
 [php72default]
-user = www-data
-group = www-data
+user = {runAsUser}
+group = {runAsUser}
 listen ={sockPath}php7.2-fpm.sock
-listen.owner = www-data
-listen.group = www-data
+listen.owner = {runAsUser}
+listen.group = {runAsUser}
 pm = dynamic
 pm.max_children = 5
 pm.start_servers = 2
@@ -3236,11 +3245,11 @@ pm.max_spare_servers = 3
         if os.path.exists(php73Path):
             content = f'''
 [php73default]
-user = www-data
-group = www-data
+user = {runAsUser}
+group = {runAsUser}
 listen ={sockPath}php7.3-fpm.sock
-listen.owner = www-data
-listen.group = www-data
+listen.owner = {runAsUser}
+listen.group = {runAsUser}
 pm = dynamic
 pm.max_children = 5
 pm.start_servers = 2
@@ -3254,11 +3263,11 @@ pm.max_spare_servers = 3
         if os.path.exists(php74Path):
             content = f'''
 [php74default]
-user = www-data
-group = www-data
+user = {runAsUser}
+group = {runAsUser}
 listen ={sockPath}php7.4-fpm.sock
-listen.owner = www-data
-listen.group = www-data
+listen.owner = {runAsUser}
+listen.group = {runAsUser}
 pm = dynamic
 pm.max_children = 5
 pm.start_servers = 2
@@ -3272,11 +3281,11 @@ pm.max_spare_servers = 3
         if os.path.exists(php80Path):
             content = f'''
 [php80default]
-user = www-data
-group = www-data
+user = {runAsUser}
+group = {runAsUser}
 listen ={sockPath}php8.0-fpm.sock
-listen.owner = www-data
-listen.group = www-data
+listen.owner = {runAsUser}
+listen.group = {runAsUser}
 pm = dynamic
 pm.max_children = 5
 pm.start_servers = 2
@@ -3291,11 +3300,11 @@ pm.max_spare_servers = 3
         if os.path.exists(php81Path):
             content = f'''
 [php81default]
-user = www-data
-group = www-data
+user = {runAsUser}
+group = {runAsUser}
 listen ={sockPath}php8.1-fpm.sock
-listen.owner = www-data
-listen.group = www-data
+listen.owner = {runAsUser}
+listen.group = {runAsUser}
 pm = dynamic
 pm.max_children = 5
 pm.start_servers = 2
@@ -3309,11 +3318,11 @@ pm.max_spare_servers = 3
         if os.path.exists(php82Path):
             content = f'''
 [php82default]
-user = www-data
-group = www-data
+user = {runAsUser}
+group = {runAsUser}
 listen ={sockPath}php8.2-fpm.sock
-listen.owner = www-data
-listen.group = www-data
+listen.owner = {runAsUser}
+listen.group = {runAsUser}
 pm = dynamic
 pm.max_children = 5
 pm.start_servers = 2
@@ -3322,6 +3331,60 @@ pm.max_spare_servers = 3
             
 '''
             WriteToFile = open(f'{php82Path}www.conf', 'w')
+            WriteToFile.write(content)
+            WriteToFile.close()
+
+        if os.path.exists(php83Path):
+            content = f'''
+[php83default]
+user = {runAsUser}
+group = {runAsUser}
+listen ={sockPath}php8.3-fpm.sock
+listen.owner = {runAsUser}
+listen.group = {runAsUser}
+pm = dynamic
+pm.max_children = 5
+pm.start_servers = 2
+pm.min_spare_servers = 1
+pm.max_spare_servers = 3
+'''
+            WriteToFile = open(f'{php83Path}www.conf', 'w')
+            WriteToFile.write(content)
+            WriteToFile.close()
+
+        if os.path.exists(php84Path):
+            content = f'''
+[php84default]
+user = {runAsUser}
+group = {runAsUser}
+listen ={sockPath}php8.4-fpm.sock
+listen.owner = {runAsUser}
+listen.group = {runAsUser}
+pm = dynamic
+pm.max_children = 5
+pm.start_servers = 2
+pm.min_spare_servers = 1
+pm.max_spare_servers = 3
+'''
+            WriteToFile = open(f'{php84Path}www.conf', 'w')
+            WriteToFile.write(content)
+            WriteToFile.close()
+
+        if os.path.exists(php85Path):
+            content = f'''
+[php85default]
+user = {runAsUser}
+group = {runAsUser}
+listen ={sockPath}php8.5-fpm.sock
+listen.owner = {runAsUser}
+listen.group = {runAsUser}
+pm = dynamic
+pm.max_children = 5
+pm.start_servers = 2
+pm.min_spare_servers = 1
+pm.max_spare_servers = 3
+'''
+            WriteToFile = open(f'{php85Path}www.conf', 'w')
             WriteToFile.write(content)
             WriteToFile.close()
 

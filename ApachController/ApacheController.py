@@ -12,6 +12,7 @@ class ApacheController:
 
     if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
 
+
         serverRootPath = '/etc/httpd'
         configBasePath = '/etc/httpd/conf.d/'
         php54Path = '/opt/remi/php54/root/etc/php-fpm.d/'
@@ -28,6 +29,7 @@ class ApacheController:
         php82Path = '/etc/opt/remi/php82/php-fpm.d/'
         php83Path = '/etc/opt/remi/php83/php-fpm.d/'
         php84Path = '/etc/opt/remi/php84/php-fpm.d/'
+        php85Path = '/etc/opt/remi/php85/php-fpm.d/'
 
         serviceName = 'httpd'
 
@@ -47,6 +49,10 @@ class ApacheController:
         php80Path = '/etc/php/8.0/fpm/pool.d/'
         php81Path = '/etc/php/8.1/fpm/pool.d/'
         php82Path = '/etc/php/8.2/fpm/pool.d/'
+
+        php83Path = '/etc/php/8.3/fpm/pool.d/'
+        php84Path = '/etc/php/8.4/fpm/pool.d/'
+        php85Path = '/etc/php/8.5/fpm/pool.d/'
 
         serviceName = 'apache2'
 
