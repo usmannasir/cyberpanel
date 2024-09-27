@@ -2218,7 +2218,7 @@ class WebsiteManager:
             execPath = execPath + " createVirtualHost --virtualHostName " + domain + \
                        " --administratorEmail " + adminEmail + " --phpVersion '" + phpSelection + \
                        "' --virtualHostUser " + externalApp + " --ssl " + str(data['ssl']) + " --dkimCheck " \
-                       + str(data['dkimCheck']) + " --openBasedir " + str(data['openBasedir']) + \
+                       + str(1) + " --openBasedir " + str(data['openBasedir']) + \
                        ' --websiteOwner "' + websiteOwner + '" --package "' + packageName + '" --tempStatusPath ' + tempStatusPath + " --apache " + apacheBackend + " --mailDomain %s" % (
                            mailDomain)
 
@@ -2319,8 +2319,7 @@ class WebsiteManager:
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
             execPath = execPath + " createDomain --masterDomain " + masterDomain + " --virtualHostName " + domain + \
-                       " --phpVersion '" + phpSelection + "' --ssl " + str(data['ssl']) + " --dkimCheck " + str(
-                data['dkimCheck']) \
+                       " --phpVersion '" + phpSelection + "' --ssl " + str(data['ssl']) + " --dkimCheck " + str(1) \
                        + " --openBasedir " + str(data['openBasedir']) + ' --path ' + path + ' --websiteOwner ' \
                        + admin.userName + ' --tempStatusPath ' + tempStatusPath + " --apache " + apacheBackend + f' --aliasDomain {str(alias)}'
 
@@ -4541,7 +4540,7 @@ StrictHostKeyChecking no
             websiteOwner = data['websiteOwner']
             ownerPassword = data['ownerPassword']
             data['ssl'] = 1
-            data['dkimCheck'] = 0
+            data['dkimCheck'] = 1
             data['openBasedir'] = 1
             data['adminEmail'] = data['ownerEmail']
             data['phpSelection'] = "PHP 7.4"
