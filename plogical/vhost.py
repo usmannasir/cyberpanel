@@ -633,7 +633,7 @@ class vhost:
 
         from plogical.phpUtilities import phpUtilities
 
-        phpVersion = phpUtilities.FindIfSaidPHPIsAvaiableOtherwiseMaketheNextOneAvailableToUse(vhFile, phpVersion)
+        phpVersion = phpUtilities.FindIfSaidPHPIsAvaiableOtherwiseMaketheNextOneAvailableToUse(None, phpVersion)
 
         phpDetachUpdatePath = '/home/%s/.lsphp_restart.txt' % (vhFile.split('/')[-2])
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:

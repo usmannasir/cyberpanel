@@ -99,6 +99,11 @@ class ApacheVhost:
             finalConfPath = ApacheVhost.php83Path + virtualHostName
         elif php == '84':
             finalConfPath = ApacheVhost.php84Path + virtualHostName
+        elif php == '85':
+            finalConfPath = ApacheVhost.php85Path + virtualHostName
+
+        if os.path.exists(ProcessUtilities.debugPath):
+            logging.writeToFile(f'Decided path in DecidePHPPath {finalConfPath}.conf')
 
         return finalConfPath + '.conf'
 
@@ -535,6 +540,39 @@ class ApacheVhost:
             command = f"systemctl restart {phpService}"
             ProcessUtilities.normalExecutioner(command)
 
+        phpPath = ApacheVhost.DecidePHPPath('83', virtualHostName)
+        if os.path.exists(phpPath):
+            os.remove(phpPath)
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                phpService = f'php83-php-fpm'
+            else:
+                phpService = f"php8.3-fpm"
+
+            command = f"systemctl restart {phpService}"
+            ProcessUtilities.normalExecutioner(command)
+
+        phpPath = ApacheVhost.DecidePHPPath('84', virtualHostName)
+        if os.path.exists(phpPath):
+            os.remove(phpPath)
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                phpService = f'php84-php-fpm'
+            else:
+                phpService = f"php8.4-fpm"
+
+            command = f"systemctl restart {phpService}"
+            ProcessUtilities.normalExecutioner(command)
+
+        phpPath = ApacheVhost.DecidePHPPath('85', virtualHostName)
+        if os.path.exists(phpPath):
+            os.remove(phpPath)
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                phpService = f'php85-php-fpm'
+            else:
+                phpService = f"php8.5-fpm"
+
+            command = f"systemctl restart {phpService}"
+            ProcessUtilities.normalExecutioner(command)
+
     @staticmethod
     def changePHP(phpVersion, vhFile):
         try:
@@ -563,6 +601,9 @@ class ApacheVhost:
             except:
                 child = ChildDomains.objects.get(domain=virtualHostName)
                 externalApp = child.master.externalApp
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(f"PHP version before getPHPString: {phpVersion}")
 
             php = PHPManager.getPHPString(phpVersion)
 
