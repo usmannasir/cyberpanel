@@ -6677,6 +6677,7 @@ StrictHostKeyChecking no
             return ACLManager.loadError()
 
         phps = PHPManager.findPHPVersions()
+        apachePHPs = PHPManager.findApachePHPVersions()
 
         if ACLManager.CheckForPremFeature('all'):
             apachemanager = 1
@@ -6684,7 +6685,7 @@ StrictHostKeyChecking no
             apachemanager = 0
 
         proc = httpProc(request, 'websiteFunctions/ApacheManager.html',
-                        {'domainName': self.domain, 'phps': phps, 'apachemanager': apachemanager})
+                        {'domainName': self.domain, 'phps': phps, 'apachemanager': apachemanager, 'apachePHPs': apachePHPs})
         return proc.render()
 
     def saveApacheConfigsToFile(self, userID=None, data=None):

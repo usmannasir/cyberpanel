@@ -1269,11 +1269,18 @@ def installExtensions(request):
         except:
             pass
 
-        # apache = ApacheController.checkIfApacheInstalled()
-        apache = 1
-        
+        apache = ApacheController.checkIfApacheInstalled()
+
+        if apache:
+            if request.GET.get('apache', None) == None:
+                phps = PHPManager.findPHPVersions()
+            else:
+                phps = PHPManager.findApachePHPVersions()
+        else:
+            phps = PHPManager.findPHPVersions()
+
         proc = httpProc(request, 'managePHP/installExtensions.html',
-                        {'phps': PHPManager.findPHPVersions(), 'apache': apache}, 'admin')
+                        {'phps': phps, 'apache': apache}, 'admin')
         return proc.render()
 
     except KeyError:
@@ -1674,10 +1681,18 @@ def getRequestStatusApache(request):
 
 def editPHPConfigs(request):
     try:
-        #apache = ApacheController.checkIfApacheInstalled()
-        apache = 1
+        apache = ApacheController.checkIfApacheInstalled()
+
+        if apache:
+            if request.GET.get('apache', None) == None:
+                phps = PHPManager.findPHPVersions()
+            else:
+                phps = PHPManager.findApachePHPVersions()
+        else:
+            phps = PHPManager.findPHPVersions()
+
         proc = httpProc(request, 'managePHP/editPHPConfig.html',
-                        {'phps': PHPManager.findPHPVersions(), 'apache': apache}, 'admin')
+                        {'phps': phps, 'apache': apache}, 'admin')
         return proc.render()
 
     except KeyError:

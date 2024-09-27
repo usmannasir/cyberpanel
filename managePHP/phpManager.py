@@ -31,12 +31,72 @@ class PHPManager:
             lsphp_lines = [line for line in result.split('\n') if 'lsphp' in line]
 
 
+            if os.path.exists(ProcessUtilities.debugPath):
+                from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+                logging.writeToFile(f'Found PHP lines in findPHPVersions: {lsphp_lines}')
+
+
             # Extract the version from the lines and format it as 'PHP x.y'
             php_versions = ['PHP ' + line.split()[8][5] + '.' + line.split()[8][6:] for line in lsphp_lines]
 
+            finalPHPVersions = []
+            for php in php_versions:
+                phpString = PHPManager.getPHPString(php)
+
+                if os.path.exists("/usr/local/lsws/lsphp" + str(phpString) + "/bin/lsphp"):
+                    finalPHPVersions.append(php)
+
             if os.path.exists(ProcessUtilities.debugPath):
                 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
-                logging.writeToFile(f'Found PHP versions in findPHPVersions: {php_versions}')
+                logging.writeToFile(f'Found PHP versions in findPHPVersions: {finalPHPVersions}')
+
+            # Now php_versions contains the formatted PHP versions
+            return finalPHPVersions
+        except BaseException as msg:
+            from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+            logging.writeToFile(f'Error while finding php versions on system: {str(msg)}')
+            return ['PHP 7.0', 'PHP 7.1', 'PHP 7.2', 'PHP 7.3', 'PHP 7.4', 'PHP 8.0', 'PHP 8.1']
+
+    @staticmethod
+    def findApachePHPVersions():
+        # distro = ProcessUtilities.decideDistro()
+        # if distro == ProcessUtilities.centos:
+        #     return ['PHP 5.3', 'PHP 5.4', 'PHP 5.5', 'PHP 5.6', 'PHP 7.0', 'PHP 7.1', 'PHP 7.2', 'PHP 7.3', 'PHP 7.4', 'PHP 8.0', 'PHP 8.1']
+        # elif distro == ProcessUtilities.cent8:
+        #     return ['PHP 7.1','PHP 7.2', 'PHP 7.3', 'PHP 7.4', 'PHP 8.0', 'PHP 8.1']
+        # elif distro == ProcessUtilities.ubuntu20:
+        #     return ['PHP 7.2', 'PHP 7.3', 'PHP 7.4', 'PHP 8.0', 'PHP 8.1']
+        # else:
+        #     return ['PHP 7.0', 'PHP 7.1', 'PHP 7.2', 'PHP 7.3', 'PHP 7.4', 'PHP 8.0', 'PHP 8.1']
+
+        try:
+
+            # Run the shell command and capture the output
+            from ApachController.ApacheController import ApacheController as ApachController
+            result = ProcessUtilities.outputExecutioner(f'ls -la {ApachController.phpBasepath}')
+
+            # Get the lines containing 'lsphp' in the output
+            lsphp_lines = [line for line in result.split('\n') if 'php' in line]
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+                logging.writeToFile(f'Found PHP lines in findApachePHPVersions: {lsphp_lines}')
+
+            # Extract the version from the lines and format it as 'PHP x.y'
+            # Extract and format PHP versions
+            php_versions = []
+            for entry in lsphp_lines:
+                # Find substring starting with 'php' and extract the version part
+                version = entry.split('php')[1]
+                # Format version as PHP X.Y
+                formatted_version = f"PHP {version[0]}.{version[1]}"
+                php_versions.append(formatted_version)
+
+
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+                logging.writeToFile(f'Found PHP versions in findApachePHPVersions: {php_versions}')
 
             # Now php_versions contains the formatted PHP versions
             return php_versions

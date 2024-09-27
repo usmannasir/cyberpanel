@@ -143,6 +143,12 @@ class ApacheVhost:
         if os.path.exists(ApacheVhost.php83Path + virtualHostName):
             return ApacheVhost.php83Path + virtualHostName
 
+        if os.path.exists(ApacheVhost.php84Path + virtualHostName):
+            return ApacheVhost.php84Path + virtualHostName
+
+        if os.path.exists(ApacheVhost.php85Path + virtualHostName):
+            return ApacheVhost.php85Path + virtualHostName
+
 
 
     @staticmethod

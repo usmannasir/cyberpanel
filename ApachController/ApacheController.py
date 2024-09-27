@@ -15,6 +15,7 @@ class ApacheController:
 
         serverRootPath = '/etc/httpd'
         configBasePath = '/etc/httpd/conf.d/'
+        phpBasepath = '/etc/opt/remi'
         php54Path = '/opt/remi/php54/root/etc/php-fpm.d/'
         php55Path = '/opt/remi/php55/root/etc/php-fpm.d/'
         php56Path = '/etc/opt/remi/php56/php-fpm.d/'
@@ -36,6 +37,8 @@ class ApacheController:
     else:
         serverRootPath = '/etc/apache2'
         configBasePath = '/etc/apache2/sites-enabled/'
+
+        phpBasepath = '/etc/php'
 
         php54Path = '/etc/php/5.4/fpm/pool.d/'
         php55Path = '/etc/php/5.5/fpm/pool.d/'
