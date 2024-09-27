@@ -75,22 +75,46 @@ class PHPManager:
             from ApachController.ApacheController import ApacheController as ApachController
             result = ProcessUtilities.outputExecutioner(f'ls -la {ApachController.phpBasepath}')
 
-            # Get the lines containing 'lsphp' in the output
-            lsphp_lines = [line for line in result.split('\n') if 'php' in line]
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
 
-            if os.path.exists(ProcessUtilities.debugPath):
-                from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
-                logging.writeToFile(f'Found PHP lines in findApachePHPVersions: {lsphp_lines}')
+                # Get the lines containing 'lsphp' in the output
+                lsphp_lines = [line for line in result.split('\n') if 'php' in line]
 
-            # Extract the version from the lines and format it as 'PHP x.y'
-            # Extract and format PHP versions
-            php_versions = []
-            for entry in lsphp_lines:
-                # Find substring starting with 'php' and extract the version part
-                version = entry.split('php')[1]
-                # Format version as PHP X.Y
-                formatted_version = f"PHP {version[0]}.{version[1]}"
-                php_versions.append(formatted_version)
+                if os.path.exists(ProcessUtilities.debugPath):
+                    from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+                    logging.writeToFile(f'Found PHP lines in findApachePHPVersions: {lsphp_lines}')
+
+                # Extract the version from the lines and format it as 'PHP x.y'
+                # Extract and format PHP versions
+                php_versions = []
+                for entry in lsphp_lines:
+                    # Find substring starting with 'php' and extract the version part
+                    version = entry.split('php')[1]
+                    # Format version as PHP X.Y
+                    formatted_version = f"PHP {version[0]}.{version[1]}"
+                    php_versions.append(formatted_version)
+            else:
+
+                lsphp_lines = [line for line in result.split('\n')]
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+                    logging.writeToFile(f'Found PHP lines in findApachePHPVersions: {lsphp_lines}')
+
+                # Extract the version from the lines and format it as 'PHP x.y'
+                # Extract and format PHP versions
+                php_versions = []
+                for entry in lsphp_lines:
+                    # Find substring starting with 'php' and extract the version part
+                    try:
+                        version = entry.split('.')
+                        # Format version as PHP X.Y
+                        formatted_version = f"PHP {version[-2][-1]}.{version[-1]}"
+                        if formatted_version != 'PHP  .':
+                            php_versions.append(formatted_version)
+                    except:
+                        pass
+
 
 
 
