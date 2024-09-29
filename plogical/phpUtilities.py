@@ -237,8 +237,18 @@ class phpUtilities:
         if os.path.exists(finalConfPath):
             command = f'grep -Eo -m 1 "php[0-9]+" {finalConfPath} | sed -n "1p"'
             result = ProcessUtilities.outputExecutioner(command, None, True).rstrip('\n')
-            result = f'/usr/local/lsws/ls{result}/bin/lsphp'
-            result = result.rsplit("lsphp", 1)[0] + "php"
+
+            # Input string
+            php_version = "php73"
+
+            # Insert a period between '7' and '3' to convert it to 'php7.3'
+            converted_version = php_version[:4] + '.' + php_version[4:]
+
+            # Output the result
+            print(converted_version)
+
+            result = f'/usr/bin/{converted_version}'
+            #result = result.rsplit("lsphp", 1)[0] + "php"
             return result
 
         if os.path.exists('/usr/local/CyberCP/debug'):
