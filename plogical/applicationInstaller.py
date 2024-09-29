@@ -2795,7 +2795,7 @@ class ApplicationInstaller(multi.Thread):
                 ###only backup of data base
                 logging.statusWriter(self.tempStatusPath, 'Getting database...,20')
 
-                command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path={WPsitepath}'
+                command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path={WPsitepath}'
                 retStatus, stdoutput = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                 if stdoutput.find('Error:') == -1:
@@ -2806,7 +2806,7 @@ class ApplicationInstaller(multi.Thread):
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(f'DB Name: {DataBaseName}')
 
-                command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_USER  --skip-plugins --skip-themes --path={WPsitepath}'
+                command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_USER  --skip-plugins --skip-themes --path={WPsitepath}'
                 retStatus, stdoutput = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                 if stdoutput.find('Error:') == -1:
@@ -5294,42 +5294,46 @@ class ApplicationInstaller(multi.Thread):
                     newWPpath = wpsite.path
                     newurl = wpsite.FinalURL
 
+
                     ## get WPsite Database name and usr
-                    php = PHPManager.getPHPString(PhpVersion)
-                    FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+                    from plogical.phpUtilities import phpUtilities
 
-                    #####Get DBname
-                    command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path=%s' % (
-                        VHuser, FinalPHPPath, newWPpath)
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                    vhFile = f'/usr/local/lsws/conf/vhosts/{wpsite.owner.domain}/vhost.conf'
+                    FinalPHPPath = phpUtilities.GetPHPVersionFromFile(vhFile, wpsite.owner.domain)
 
-                    if stdout.find('Error:') == -1:
-                        Finaldbname = stdout.rstrip("\n")
-                    else:
-                        raise BaseException(stdout)
-
-                    #####Get DBuser
-                    command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_USER  --skip-plugins --skip-themes --path=%s' % (
-                        VHuser, FinalPHPPath, newWPpath)
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                    if stdout.find('Error:') == -1:
-                        Finaldbuser = stdout.rstrip("\n")
-                    else:
-                        raise BaseException(stdout)
-
-                    #####Get DBpsswd
-                    command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_PASSWORD  --skip-plugins --skip-themes --path=%s' % (
-                        VHuser, FinalPHPPath, newWPpath)
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                    if stdout.find('Error:') == -1:
-                        Finaldbpasswd = stdout.rstrip("\n")
-                    else:
-                        raise BaseException(stdout)
+                    # #####Get DBname
+                    # command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path=%s' % (
+                    #     VHuser, FinalPHPPath, newWPpath)
+                    # result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                    #
+                    # if stdout.find('Error:') == -1:
+                    #     Finaldbname = stdout.rstrip("\n")
+                    # else:
+                    #     raise BaseException(stdout)
+                    #
+                    # #####Get DBuser
+                    # command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_USER  --skip-plugins --skip-themes --path=%s' % (
+                    #     VHuser, FinalPHPPath, newWPpath)
+                    # result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                    #
+                    # if stdout.find('Error:') == -1:
+                    #     Finaldbuser = stdout.rstrip("\n")
+                    # else:
+                    #     raise BaseException(stdout)
+                    #
+                    # #####Get DBpsswd
+                    # command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_PASSWORD  --skip-plugins --skip-themes --path=%s' % (
+                    #     VHuser, FinalPHPPath, newWPpath)
+                    # result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                    #
+                    # if stdout.find('Error:') == -1:
+                    #     Finaldbpasswd = stdout.rstrip("\n")
+                    # else:
+                    #     raise BaseException(stdout)
 
 
                     # dump Mysql file in unzippath path
+
                     unzippathdb = "%s/ab/usr/local/CyberCP/tmp/%s/%s" % (self.tempPath, oldtemppath, DumpFileName)
                     # command = "mysql -u root %s < %s" % (Finaldbname, unzippathdb)
                     command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s --quiet db import %s' % (
@@ -5341,31 +5345,31 @@ class ApplicationInstaller(multi.Thread):
                         raise BaseException(stdout)
 
                     logging.statusWriter(self.tempStatusPath, 'Restoreing Data Base...,70')
-                    #####SetUp DataBase Settings
-                    ##set DBName
-                    command = "sudo -u %s %s /usr/bin/wp config set DB_NAME %s --skip-plugins --skip-themes --path=%s" % (
-                        VHuser, FinalPHPPath, Finaldbname, newWPpath)
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                    if stdout.find('Error:') > -1:
-                        raise BaseException(stdout)
-
-                    ##set DBuser
-                    command = "sudo -u %s %s /usr/bin/wp config set DB_USER %s --skip-plugins --skip-themes --path=%s" % (
-                        VHuser, FinalPHPPath, Finaldbuser, newWPpath)
-
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                    if stdout.find('Error:') > -1:
-                        raise BaseException(stdout)
-
-                    ##set DBpasswd
-                    command = "sudo -u %s %s /usr/bin/wp config set DB_PASSWORD %s --skip-plugins --skip-themes --path=%s" % (
-                        VHuser, FinalPHPPath, Finaldbpasswd, newWPpath)
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                    if stdout.find('Error:') > -1:
-                        raise BaseException(stdout)
+                    # #####SetUp DataBase Settings
+                    # ##set DBName
+                    # command = "sudo -u %s %s /usr/bin/wp config set DB_NAME %s --skip-plugins --skip-themes --path=%s" % (
+                    #     VHuser, FinalPHPPath, Finaldbname, newWPpath)
+                    # result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                    #
+                    # if stdout.find('Error:') > -1:
+                    #     raise BaseException(stdout)
+                    #
+                    # ##set DBuser
+                    # command = "sudo -u %s %s /usr/bin/wp config set DB_USER %s --skip-plugins --skip-themes --path=%s" % (
+                    #     VHuser, FinalPHPPath, Finaldbuser, newWPpath)
+                    #
+                    # result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                    #
+                    # if stdout.find('Error:') > -1:
+                    #     raise BaseException(stdout)
+                    #
+                    # ##set DBpasswd
+                    # command = "sudo -u %s %s /usr/bin/wp config set DB_PASSWORD %s --skip-plugins --skip-themes --path=%s" % (
+                    #     VHuser, FinalPHPPath, Finaldbpasswd, newWPpath)
+                    # result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                    #
+                    # if stdout.find('Error:') > -1:
+                    #     raise BaseException(stdout)
 
                     logging.statusWriter(self.tempStatusPath, 'Replacing URLs...,90')
                     ########Now Replace URL's
@@ -5421,57 +5425,59 @@ class ApplicationInstaller(multi.Thread):
                             VHuser = wpsite.owner.externalApp
                             PhpVersion = WPobj.owner.phpSelection
                             newWPpath = WPobj.path
+                            WPpath = newWPpath
                             php = PHPManager.getPHPString(PhpVersion)
                             FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+                            Newurl = finalurl
 
 
-                            unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/" % (self.tempPath, oldtemppath)
-
-                            command = "sudo -u %s cp -R %s* %s" % (VHuser, unzippath, newWPpath)
-                            result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                            if result == 0:
-                                raise BaseException(stdout)
-
-                            command = "sudo -u %s cp -R %s.[^.]* %s" % (VHuser, unzippath, newWPpath)
-                            result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                            if result == 0:
-                                raise BaseException(stdout)
-
-                            logging.statusWriter(self.tempStatusPath, 'Replacing URLs...,90')
-                            ########Now Replace URL's
-                            command = 'sudo -u %s /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --path=%s "%s" "%s"' % (
-                                VHuser, newWPpath, oldurl, finalurl)
-                            result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                            if stdout.find('Error:') > -1:
-                                raise BaseException(stdout)
-
-                            command = 'sudo -u %s /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --path=https://%s "http://%s" "%s"' % (
-                                VHuser, newWPpath, finalurl, finalurl)
-                            result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                            if stdout.find('Error:') > -1:
-                                raise BaseException(stdout)
-
-
-                            command = 'sudo -u %s /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "https://www.%s" "http://%s"' % (
-                                VHuser, newWPpath, finalurl, finalurl)
-                            result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                            if stdout.find('Error:') > -1:
-                                raise BaseException(stdout)
-
-                            command = f'sudo -u {VHuser} /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp litespeed-purge all --path={newWPpath}'
-                            ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                            # ##Remove temppath
-                            command = f'rm -rf {self.tempPath}'
-                            result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                            if result == 0:
-                                raise BaseException(stdout)
+                            # unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/" % (self.tempPath, oldtemppath)
+                            #
+                            # command = "sudo -u %s cp -R %s* %s" % (VHuser, unzippath, newWPpath)
+                            # result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                            #
+                            # if result == 0:
+                            #     raise BaseException(stdout)
+                            #
+                            # command = "sudo -u %s cp -R %s.[^.]* %s" % (VHuser, unzippath, newWPpath)
+                            # result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                            #
+                            # if result == 0:
+                            #     raise BaseException(stdout)
+                            #
+                            # logging.statusWriter(self.tempStatusPath, 'Replacing URLs...,90')
+                            # ########Now Replace URL's
+                            # command = 'sudo -u %s /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --path=%s "%s" "%s"' % (
+                            #     VHuser, newWPpath, oldurl, finalurl)
+                            # result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                            #
+                            # if stdout.find('Error:') > -1:
+                            #     raise BaseException(stdout)
+                            #
+                            # command = 'sudo -u %s /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --path=https://%s "http://%s" "%s"' % (
+                            #     VHuser, newWPpath, finalurl, finalurl)
+                            # result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                            #
+                            # if stdout.find('Error:') > -1:
+                            #     raise BaseException(stdout)
+                            #
+                            #
+                            # command = 'sudo -u %s /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "https://www.%s" "http://%s"' % (
+                            #     VHuser, newWPpath, finalurl, finalurl)
+                            # result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                            #
+                            # if stdout.find('Error:') > -1:
+                            #     raise BaseException(stdout)
+                            #
+                            # command = f'sudo -u {VHuser} /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp litespeed-purge all --path={newWPpath}'
+                            # ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                            #
+                            # # ##Remove temppath
+                            # command = f'rm -rf {self.tempPath}'
+                            # result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                            #
+                            # if result == 0:
+                            #     raise BaseException(stdout)
 
                         except:
                             ####Website found --> WPsite Found --> Final URL Not Match
@@ -5483,100 +5489,57 @@ class ApplicationInstaller(multi.Thread):
                             php = PHPManager.getPHPString(PhpVersion)
                             FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
 
-                            ### Create secure folder
+                        ### Create secure folder
 
-                            ACLManager.CreateSecureDir()
-                            RandomPath = str(randint(1000, 9999))
-                            self.tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', RandomPath)
 
-                            command = f'mkdir -p {self.tempPath}'
-                            result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                        unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/" % (self.tempPath, oldtemppath)
 
-                            if result == 0:
-                                raise BaseException(stdout)
+                        command = "sudo -u %s cp -R %s* %s" % (VHuser, unzippath, WPpath)
+                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
-                            command = f'chown -R {wpsite.owner.externalApp}:{wpsite.owner.externalApp} {self.tempPath}'
-                            result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                        if result == 0:
+                            raise BaseException(stdout)
 
-                            if result == 0:
-                                raise BaseException(stdout)
+                        command = "sudo -u %s cp -R %s.[^.]* %s" % (VHuser, unzippath, WPpath)
+                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
-                            logging.statusWriter(self.tempStatusPath, 'Extracting Backup File...,30')
+                        if result == 0:
+                            raise BaseException(stdout)
 
-                            ###First copy backup file to temp and then Unzip
-                            command = "sudo -u %s cp -R /home/backup/%s* %s" % (
-                                VHuser, BackUpFileName, self.tempPath)
-                            result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                        ### why replace urls in only website data restore???
 
-                            if result == 0:
-                                raise BaseException(stdout)
+                        # logging.statusWriter(self.tempStatusPath, 'Replacing URLs...,90')
+                        # ########Now Replace URL's
+                        # command = 'sudo -u %s /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --path=%s "%s" "%s"' % (
+                        #     VHuser, WPpath, oldurl, Newurl)
+                        # result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                        #
+                        # if stdout.find('Error:') > -1:
+                        #     raise BaseException(stdout)
+                        #
+                        # command = 'sudo -u %s /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --path=%s "http://%s" "https://%s"' % (
+                        #     VHuser, WPpath, Newurl, Newurl)
+                        # result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                        #
+                        # if stdout.find('Error:') > -1:
+                        #     raise BaseException(stdout)
+                        #
+                        # command = 'sudo -u %s /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "https://www.%s" "http://%s"' % (
+                        #     VHuser, WPpath, Newurl, Newurl)
+                        # result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                        #
+                        # if stdout.find('Error:') > -1:
+                        #     raise BaseException(stdout)
 
-                            #### Make temp dir ab for unzip
-                            command = "sudo -u %s mkdir %s/ab" % (VHuser, self.tempPath)
-                            result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                        command = f'sudo -u {VHuser} /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp litespeed-purge all --path={WPpath}'
+                        ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
-                            if result == 0:
-                                raise BaseException(stdout)
+                        # ##Remove temppath
+                        command = f'rm -rf {self.tempPath}'
+                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
-                            command = f'chown {VHuser}:{VHuser} {self.tempPath}/{BackUpFileName}.tar.gz'
-                            result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                            if result == 0:
-                                raise BaseException(stdout)
-
-                            command = "sudo -u %s tar -xvf  %s/%s.tar.gz -C %s/ab" % (
-                            VHuser, self.tempPath, BackUpFileName, self.tempPath)
-                            result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                            if result == 0:
-                                raise BaseException(stdout)
-
-                            unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/" % (self.tempPath, oldtemppath)
-
-                            command = "sudo -u %s cp -R %s* %s" % (VHuser, unzippath, WPpath)
-                            result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                            if result == 0:
-                                raise BaseException(stdout)
-
-                            command = "sudo -u %s cp -R %s.[^.]* %s" % (VHuser, unzippath, WPpath)
-                            result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                            if result == 0:
-                                raise BaseException(stdout)
-
-                            logging.statusWriter(self.tempStatusPath, 'Replacing URLs...,90')
-                            ########Now Replace URL's
-                            command = 'sudo -u %s /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --path=%s "%s" "%s"' % (
-                                VHuser, WPpath, oldurl, Newurl)
-                            result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                            if stdout.find('Error:') > -1:
-                                raise BaseException(stdout)
-
-                            command = 'sudo -u %s /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --path=%s "http://%s" "https://%s"' % (
-                                VHuser, WPpath, Newurl, Newurl)
-                            result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                            if stdout.find('Error:') > -1:
-                                raise BaseException(stdout)
-
-                            command = 'sudo -u %s /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "https://www.%s" "http://%s"' % (
-                                VHuser, WPpath, Newurl, Newurl)
-                            result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                            if stdout.find('Error:') > -1:
-                                raise BaseException(stdout)
-
-                            command = f'sudo -u {VHuser} /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp litespeed-purge all --path={WPpath}'
-                            ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                            # ##Remove temppath
-                            command = f'rm -rf {self.tempPath}'
-                            result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                            if result == 0:
-                                raise BaseException(stdout)
+                        if result == 0:
+                            raise BaseException(stdout)
                 elif (DomainName != "" and int(self.extraArgs['DesSiteID']) == -1):
                     DataToPass = {}
 
@@ -6365,7 +6328,6 @@ class ApplicationInstaller(multi.Thread):
 
             logging.statusWriter(self.tempStatusPath, f'{str(msg)}. [404]')
             return 0, str(msg)
-        
 
     def UpdateDownloadStatus(self, transferred, total):
         percentage = (transferred / total) * 100

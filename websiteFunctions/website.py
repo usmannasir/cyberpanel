@@ -231,9 +231,16 @@ class WebsiteManager:
             Data['FileName'] = config['name']
             try:
                 Data['Backuptype'] = config['Backuptype']
+
+                if Data['Backuptype'] == 'DataBase Backup' or Data['Backuptype'] == 'Website Backup':
+                    Data['WPsites'] = [WPSites.objects.get(pk=Data['backupobj'].WPSiteID)]
+                else:
+                    Data['WPsites'] = ACLManager.GetALLWPObjects(currentACL, userID)
+
             except:
                 Data['Backuptype'] = None
-            Data['WPsites'] = ACLManager.GetALLWPObjects(currentACL, userID)
+                Data['WPsites'] = ACLManager.GetALLWPObjects(currentACL, userID)
+
             proc = httpProc(request, 'websiteFunctions/WPRestoreHome.html',
                             Data, 'createWebsite')
             return proc.render()
