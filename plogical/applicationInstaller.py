@@ -2463,8 +2463,13 @@ class ApplicationInstaller(multi.Thread):
                 BackupDestination = 'Local'
                 SFTP_ID = None
 
+            from plogical.phpUtilities import phpUtilities
+            vhFile = f'/usr/local/lsws/conf/vhosts/{wpsite.owner.domain}/vhost.conf'
+
+
+
             website = wpsite.owner
-            PhpVersion = website.phpSelection
+            PhpVersion = phpUtilities.WrapGetPHPVersionFromFileToGetVersionWithPHP(vhFile)
             VHuser = website.externalApp
             WPsitepath = wpsite.path
             websitedomain = website.domain
@@ -6142,6 +6147,7 @@ class ApplicationInstaller(multi.Thread):
                     DataToPass['Themes'] = config['WPThemeUpdates']
                     DataToPass['websiteOwner'] = WebOwner
                     DataToPass['package'] = packegs
+                    DataToPass['apacheBackend'] = 0
                     try:
                         oldpath = config['WPsitepath']
                         abc = oldpath.split("/")
@@ -6177,17 +6183,30 @@ class ApplicationInstaller(multi.Thread):
                             logging.statusWriter(self.tempStatusPath, 'Creating WordPress....,20')
                             time.sleep(2)
 
+
+
+
                     logging.statusWriter(self.tempStatusPath, 'Restoring site ....,30')
                     NewWPsite = WPSites.objects.get(FinalURL=newurl)
                     VHuser = NewWPsite.owner.externalApp
                     PhpVersion = NewWPsite.owner.phpSelection
                     newWPpath = NewWPsite.path
 
+                    #### change PHP version of newly created site to the one found in the config
+
+                    from plogical.vhost import vhost
+                    vhFile = f'/usr/local/lsws/conf/vhosts/{NewWPsite.owner.domain}/vhost.conf'
+                    execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/virtualHostUtilities.py"
+                    execPath = execPath + f" changePHP --phpVersion '{config['WebphpSelection']}'  --path " + vhFile
+                    ProcessUtilities.popenExecutioner(execPath)
+
                     ###### Same code already used in Existing site
 
                     ### get WPsite Database name and usr
-                    php = PHPManager.getPHPString(PhpVersion)
-                    FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+                    from plogical.phpUtilities import phpUtilities
+
+                    vhFile = f'/usr/local/lsws/conf/vhosts/{NewWPsite.owner.domain}/vhost.conf'
+                    FinalPHPPath = phpUtilities.GetPHPVersionFromFile(vhFile, NewWPsite.owner.domain)
 
                     ######Get DBname
                     command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path=%s' % (
