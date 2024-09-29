@@ -165,6 +165,7 @@ class sslUtilities:
 
         except BaseException as msg:
             return [0, "347 " + str(msg) + " [issueSSLForDomain]"]
+
     @staticmethod
     def PatchVhostConf(virtualHostName):
         try:

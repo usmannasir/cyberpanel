@@ -2960,6 +2960,7 @@ class ApplicationInstaller(multi.Thread):
             import pysftp
             import pysftp as sftp
             import boto3
+
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.writeToFile("Restore WP backup Now ....... start:%s" % self.extraArgs['Domain'])
 
@@ -2979,7 +2980,11 @@ class ApplicationInstaller(multi.Thread):
             DatabaseNameold = config['DatabaseName']
             DumpFileName = DatabaseNameold + ".sql"
             oldurl = config['WPFinalURL']
-            packgobj = Package.objects.get(pk=config['Webpackage_id'])
+            try:
+                packgobj = Package.objects.get(pk=config['Webpackage_id'])
+            except:
+                packgobj = Package.objects.get(packageName='Default')
+
             packegs = packgobj.packageName
             WebOwnerobj = Administrator.objects.get(pk=config['Webadmin_id'])
             WebOwner = WebOwnerobj.userName
@@ -6182,8 +6187,6 @@ class ApplicationInstaller(multi.Thread):
                         else:
                             logging.statusWriter(self.tempStatusPath, 'Creating WordPress....,20')
                             time.sleep(2)
-
-
 
 
                     logging.statusWriter(self.tempStatusPath, 'Restoring site ....,30')
