@@ -1967,7 +1967,7 @@ app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
 
 
         function ListInitialDatas(response) {
-            $('#wordpresshomeloading').hide();
+            //$('#wordpresshomeloading').hide();
 
             if (response.data.abort === 1) {
 
@@ -2023,7 +2023,7 @@ app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
         }
 
         function cantLoadInitialDatas(response) {
-            $('#wordpresshomeloading').hide();
+            //$('#wordpresshomeloading').hide();
             $scope.wordpresshomeloading = true;
             $scope.stagingDetailsForm = true;
             $scope.installationProgress = false;

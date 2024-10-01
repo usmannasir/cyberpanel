@@ -2643,7 +2643,7 @@ class ApplicationInstaller(multi.Thread):
                 backupobj.save()
 
                 command = f'rm -rf {self.tempPath}'
-                result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                #result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                 if result == 0:
                     raise BaseException(stdout)
@@ -2948,6 +2948,7 @@ class ApplicationInstaller(multi.Thread):
                 ProcessUtilities.executioner(command)
             except:
                 pass
+
             logging.statusWriter(self.tempStatusPath, f'{str(msg)}. [404]')
             return 0, str(msg), None
 
@@ -3002,18 +3003,44 @@ class ApplicationInstaller(multi.Thread):
                 Username = RemoteBackupconf['Username']
                 Password = RemoteBackupconf['Password']
                 Path = RemoteBackupconf['Path']
-                cnopts = sftp.CnOpts()
-                cnopts.hostkeys = None
 
-                with pysftp.Connection(HostName, username=Username, password=Password, cnopts=cnopts) as sftp:
-                    logging.statusWriter(self.tempStatusPath, 'Downloading Backups...,15')
-                    loaclpath = "/home/cyberpanel/%s.tar.gz" % BackUpFileName
-                    remotepath = "%s/%s.tar.gz" % (Path, BackUpFileName)
-                    logging.writeToFile("Downloading start")
-                    sftp.get(str(remotepath), str(loaclpath))
 
-                    command = "mv %s /home/backup/" % loaclpath
-                    ProcessUtilities.executioner(command)
+                ####
+
+                # Connect to the remote server using the private key
+                ssh = paramiko.SSHClient()
+                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+                # Connect to the server using the private key
+                ssh.connect(HostName, username=Username, password=Password)
+                sftp = ssh.open_sftp()
+
+                logging.statusWriter(self.tempStatusPath, 'Downloading Backups...,15')
+                loaclpath = "/home/cyberpanel/%s.tar.gz" % BackUpFileName
+                remotepath = "%s/%s.tar.gz" % (Path, BackUpFileName)
+                logging.writeToFile("Downloading start")
+
+                sftp.get(str(remotepath), str(loaclpath),
+                         callback=self.UpdateDownloadStatus)
+
+                command = "mv %s /home/backup/" % loaclpath
+                ProcessUtilities.executioner(command)
+
+                ##
+
+
+                # cnopts = sftp.CnOpts()
+                # cnopts.hostkeys = None
+                #
+                # with pysftp.Connection(HostName, username=Username, password=Password, cnopts=cnopts) as sftp:
+                #     logging.statusWriter(self.tempStatusPath, 'Downloading Backups...,15')
+                #     loaclpath = "/home/cyberpanel/%s.tar.gz" % BackUpFileName
+                #     remotepath = "%s/%s.tar.gz" % (Path, BackUpFileName)
+                #     logging.writeToFile("Downloading start")
+                #     sftp.get(str(remotepath), str(loaclpath))
+                #
+                #     command = "mv %s /home/backup/" % loaclpath
+                #     ProcessUtilities.executioner(command)
 
                     # ##### CHeck if Backup type is Only Database
                     # if BackupType == 'DataBase Backup':
@@ -5280,6 +5307,14 @@ class ApplicationInstaller(multi.Thread):
                 raise BaseException(stdout)
 
 
+            if os.path.exists(ProcessUtilities.debugPath):
+
+                if os.path.exists(f'/home/backup/{BackUpFileName}'):
+                    logging.writeToFile(f'Backup file is present and downloaded {str(stdout)}')
+                    logging.writeToFile(f'Extracting to  {str(self.tempPath)}')
+
+
+
             logging.statusWriter(self.tempStatusPath, 'Extracting Backup File...,30')
 
             #### Make temp dir ab for unzip
@@ -5294,6 +5329,15 @@ class ApplicationInstaller(multi.Thread):
 
             if result == 0:
                 raise BaseException(stdout)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+
+                logging.writeToFile(f'Output of archive {str(stdout)}')
+
+                command = f"ls -lh {self.tempPath}/ab"
+                result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                logging.writeToFile(f'Listing files {str(stdout)}')
+
 
             ##### Check if Backup type is Only Database
             if BackupType == 'DataBase Backup':
@@ -5870,10 +5914,10 @@ class ApplicationInstaller(multi.Thread):
 
                         ### Remove temppath
                         command = f'rm -rf {self.tempPath}'
-                        # result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-                        #
-                        # if result == 0:
-                        #     raise BaseException(stdout)
+                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+
+                        if result == 0:
+                            raise BaseException(stdout)
 
                         # try:
                         #     WPobj = WPSites.objects.get(FinalURL=finalurl, owner=webobj)
@@ -6308,21 +6352,21 @@ class ApplicationInstaller(multi.Thread):
 
                     logging.statusWriter(self.tempStatusPath, 'Replacing URLs...,90')
                     ########Now Replace URL's
-                    command = 'sudo -u %s /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --path=%s "%s" "%s"' % (
+                    command = f'sudo -u %s {FinalPHPPath} -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --path=%s "%s" "%s"' % (
                         VHuser, newWPpath, oldurl, newurl)
                     result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                     if stdout.find('Error:') > -1:
                         raise BaseException(stdout)
 
-                    command = 'sudo -u %s /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "https://www.%s" "http://%s"' % (
+                    command = f'sudo -u %s {FinalPHPPath} -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "https://www.%s" "http://%s"' % (
                         VHuser, newWPpath, newurl, newurl)
                     result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                     if stdout.find('Error:') > -1:
                         raise BaseException(stdout)
 
-                    command = f'sudo -u {VHuser} /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp litespeed-purge all --path={newWPpath}'
+                    command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 /usr/bin/wp litespeed-purge all --path={newWPpath}'
                     ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                     ##Remove temppath
@@ -6343,7 +6387,7 @@ class ApplicationInstaller(multi.Thread):
             logging.writeToFile("Error RestoreWPbackupNow ....... %s" % str(msg))
             try:
                 command = f'rm -rf {self.tempPath}'
-                #ProcessUtilities.executioner(command)
+                ProcessUtilities.executioner(command)
 
             except:
                 pass
