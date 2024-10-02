@@ -2607,7 +2607,7 @@ class ApplicationInstaller(multi.Thread):
 
                 # command = "mysqldump %s --result-file %s/%s.sql" % (DataBaseName, self.tempPath, DataBaseName)
 
-                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s db export %s/%s.sql' % (
+                command = 'sudo -u %s %s -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s db export %s/%s.sql' % (
                     VHuser, FinalPHPPath, WPsitepath, self.tempPath, DataBaseName)
 
                 if os.path.exists(ProcessUtilities.debugPath):
@@ -2800,7 +2800,7 @@ class ApplicationInstaller(multi.Thread):
                 ###only backup of data base
                 logging.statusWriter(self.tempStatusPath, 'Getting database...,20')
 
-                command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path={WPsitepath}'
+                command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path={WPsitepath}'
                 retStatus, stdoutput = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                 if stdoutput.find('Error:') == -1:
@@ -2811,7 +2811,7 @@ class ApplicationInstaller(multi.Thread):
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(f'DB Name: {DataBaseName}')
 
-                command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_USER  --skip-plugins --skip-themes --path={WPsitepath}'
+                command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp config get DB_USER  --skip-plugins --skip-themes --path={WPsitepath}'
                 retStatus, stdoutput = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                 if stdoutput.find('Error:') == -1:
@@ -2891,7 +2891,7 @@ class ApplicationInstaller(multi.Thread):
                 ##### SQLDUMP database into new directory
 
                 # command = "mysqldump %s --result-file %s/%s.sql" % (DataBaseName, self.tempPath, DataBaseName)
-                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s db export %s/%s.sql' % (
+                command = 'sudo -u %s %s -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s db export %s/%s.sql' % (
                     VHuser, FinalPHPPath, WPsitepath, self.tempPath, DataBaseName)
 
                 if os.path.exists(ProcessUtilities.debugPath):
@@ -2995,6 +2995,9 @@ class ApplicationInstaller(multi.Thread):
             BackupDestination = config['BackupDestination']
             RemoteBackupID = config['SFTP_ID']
 
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(f"Starting sftp download {str(config)}")
+
             # SFTPBackups
             if BackupDestination == 'SFTP':
                 RemoteBackupOBJ = RemoteBackupConfig.objects.get(pk=RemoteBackupID)
@@ -3004,15 +3007,71 @@ class ApplicationInstaller(multi.Thread):
                 Password = RemoteBackupconf['Password']
                 Path = RemoteBackupconf['Path']
 
+                ####
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(f"Making sftp connection to {str(RemoteBackupconf)}")
+
+                import paramiko
+
+                # SSH connection to the remote server
+                ssh = paramiko.SSHClient()
+                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                ssh.connect(HostName, username=Username, password=Password)
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(f"SFTP Connected successfully..")
+
+
+
+                # 1. Generate SSH keys on the remote server with the name 'cyberpanelbackup'
+                ssh_keygen_command = "ssh-keygen -t rsa -b 2048 -f ~/.ssh/cyberpanelbackup -q -N ''"
+                stdin, stdout, stderr = ssh.exec_command(ssh_keygen_command)
+
+                # # Check for errors in SSH key generation
+                # error = stderr.read().decode()
+                # if error:
+                #     if os.path.exists(ProcessUtilities.debugPath):
+                #         logging.writeToFile(f"Error generating SSH key: {error}")
+                # else:
+                #     if os.path.exists(ProcessUtilities.debugPath):
+                #         logging.writeToFile("SSH key 'cyberpanelbackup' generated successfully.")
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(f"SSH key generated..")
+
+
+                # 2. Download the SSH keys from the remote server to the local server
+
+                ### put generated key in local server
+
+                remote_private_key = "~/.ssh/cyberpanelbackup"
+                remote_public_key = "~/.ssh/cyberpanelbackup.pub"
+
+                ssh_keygen_command = f"cat {remote_public_key}"
+                stdin, stdout, stderr = ssh.exec_command(ssh_keygen_command)
+
+                # Read the output (stdout) into a variable
+                public_key_content = stdout.read().decode().strip()
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(f'Key from remote server {public_key_content}')
+
+                command = f'echo "{public_key_content}" >> ~/.ssh/authorized_keys'
+                ProcessUtilities.executioner(command, 'root', True)
+
+                command = f"awk '!seen[$0]++' ~/.ssh/authorized_keys > temp && mv temp ~/.ssh/authorized_keys"
+                ProcessUtilities.executioner(command, 'root', True)
+
+                command = f'cat ~/.ssh/authorized_keys'
+                updatedAuth = ProcessUtilities.outputExecutioner(command, 'root', True)
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(f'Updated content of authorized key file {updatedAuth}')
+
 
                 ####
 
-                # Connect to the remote server using the private key
-                ssh = paramiko.SSHClient()
-                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
-                # Connect to the server using the private key
-                ssh.connect(HostName, username=Username, password=Password)
                 sftp = ssh.open_sftp()
 
                 logging.statusWriter(self.tempStatusPath, 'Downloading Backups...,15')
@@ -3020,8 +3079,32 @@ class ApplicationInstaller(multi.Thread):
                 remotepath = "%s/%s.tar.gz" % (Path, BackUpFileName)
                 logging.writeToFile("Downloading start")
 
-                sftp.get(str(remotepath), str(loaclpath),
-                         callback=self.UpdateDownloadStatus)
+                from WebTerminal.CPWebSocket import SSHServer
+                SSHServer.findSSHPort()
+
+                command = f"sudo scp -o StrictHostKeyChecking=no -i {remote_private_key} -P {str(SSHServer.DEFAULT_PORT)} {remotepath} root@{ACLManager.fetchIP()}:{loaclpath}"
+
+                stdin, stdout, stderr = ssh.exec_command(command)
+
+                # Read the output (stdout) into a variable
+                successRet = stdout.read().decode().strip()
+                errorRet = stderr.read().decode().strip()
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(f"Command used to retrieve backup {command}")
+                    if errorRet:
+                        logging.writeToFile(f"Error in scp command to retrieve backup {errorRet}")
+                    else:
+                        logging.writeToFile(f"Success in scp command to retrieve backup {successRet}")
+
+                # sftp.get(str(remotepath), str(loaclpath),
+                #          callback=self.UpdateDownloadStatus)
+
+                # Ensure both SFTP and SSH connections are closed
+                if sftp:
+                    sftp.close()  # Close the SFTP session
+                if ssh:
+                    ssh.close()  # Close the SSH connection
 
                 command = "mv %s /home/backup/" % loaclpath
                 ProcessUtilities.executioner(command)
@@ -5314,7 +5397,6 @@ class ApplicationInstaller(multi.Thread):
                     logging.writeToFile(f'Extracting to  {str(self.tempPath)}')
 
 
-
             logging.statusWriter(self.tempStatusPath, 'Extracting Backup File...,30')
 
             #### Make temp dir ab for unzip
@@ -5390,7 +5472,7 @@ class ApplicationInstaller(multi.Thread):
 
                     unzippathdb = "%s/ab/usr/local/CyberCP/tmp/%s/%s" % (self.tempPath, oldtemppath, DumpFileName)
                     # command = "mysql -u root %s < %s" % (Finaldbname, unzippathdb)
-                    command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s --quiet db import %s' % (
+                    command = 'sudo -u %s %s -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s --quiet db import %s' % (
                         VHuser, FinalPHPPath, newWPpath, unzippathdb)
 
                     result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
@@ -5427,28 +5509,28 @@ class ApplicationInstaller(multi.Thread):
 
                     logging.statusWriter(self.tempStatusPath, 'Replacing URLs...,90')
                     ########Now Replace URL's
-                    command = 'sudo -u %s /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --path=%s "%s" "%s"' % (
+                    command = F'sudo -u %s {FinalPHPPath} -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp search-replace --skip-plugins --skip-themes --path=%s "%s" "%s"' % (
                         VHuser, newWPpath, oldurl, newurl)
                     result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                     if stdout.find('Error:') > -1:
                         raise BaseException(stdout)
 
-                    command = 'sudo -u %s /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --path=%s "https://%s" "http://%s"' % (
+                    command = f'sudo -u %s {FinalPHPPath} -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp search-replace --skip-plugins --skip-themes --path=%s "https://%s" "http://%s"' % (
                         VHuser, newWPpath, newurl, newurl)
                     result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                     if stdout.find('Error:') > -1:
                         raise BaseException(stdout)
 
-                    command = 'sudo -u %s /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "https://www.%s" "http://%s"' % (
+                    command = f'sudo -u %s {FinalPHPPath} -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "https://www.%s" "http://%s"' % (
                         VHuser, newWPpath, newurl, newurl)
                     result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                     if stdout.find('Error:') > -1:
                         raise BaseException(stdout)
 
-                    command = f'sudo -u {VHuser} /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp litespeed-purge all --path={newWPpath}'
+                    command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp litespeed-purge all --path={newWPpath}'
                     ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                     # ##Remove temppath
@@ -5480,8 +5562,11 @@ class ApplicationInstaller(multi.Thread):
                             PhpVersion = WPobj.owner.phpSelection
                             newWPpath = WPobj.path
                             WPpath = newWPpath
-                            php = PHPManager.getPHPString(PhpVersion)
-                            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+                            ## get WPsite Database name and usr
+                            from plogical.phpUtilities import phpUtilities
+
+                            vhFile = f'/usr/local/lsws/conf/vhosts/{wpsite.owner.domain}/vhost.conf'
+                            FinalPHPPath = phpUtilities.GetPHPVersionFromFile(vhFile, wpsite.owner.domain)
                             Newurl = finalurl
 
 
@@ -5539,9 +5624,13 @@ class ApplicationInstaller(multi.Thread):
                             Newurl = wpsite.FinalURL
                             WPpath = wpsite.path
                             VHuser = wpsite.owner.externalApp
-                            PhpVersion = wpsite.owner.phpSelection
-                            php = PHPManager.getPHPString(PhpVersion)
-                            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+
+                            ## get WPsite Database name and usr
+                            from plogical.phpUtilities import phpUtilities
+
+                            vhFile = f'/usr/local/lsws/conf/vhosts/{wpsite.owner.domain}/vhost.conf'
+                            FinalPHPPath = phpUtilities.GetPHPVersionFromFile(vhFile, wpsite.owner.domain)
 
                         ### Create secure folder
 
@@ -5585,7 +5674,7 @@ class ApplicationInstaller(multi.Thread):
                         # if stdout.find('Error:') > -1:
                         #     raise BaseException(stdout)
 
-                        command = f'sudo -u {VHuser} /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp litespeed-purge all --path={WPpath}'
+                        command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp litespeed-purge all --path={WPpath}'
                         ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                         # ##Remove temppath
@@ -5594,7 +5683,11 @@ class ApplicationInstaller(multi.Thread):
 
                         if result == 0:
                             raise BaseException(stdout)
+
+                ### need to check, this code should not run
                 elif (DomainName != "" and int(self.extraArgs['DesSiteID']) == -1):
+
+
                     DataToPass = {}
 
                     DataToPass['title'] = config['WPtitle']
@@ -5797,7 +5890,7 @@ class ApplicationInstaller(multi.Thread):
 
 
                         ######Get DBname
-                        command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path=%s' % (
+                        command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path=%s' % (
                              newWPpath)
 
                         result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
@@ -5808,7 +5901,7 @@ class ApplicationInstaller(multi.Thread):
                             Finaldbname = stdout.rstrip("\n")
 
                         ######Get DBuser
-                        command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_USER  --skip-plugins --skip-themes --path=%s' % (
+                        command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp config get DB_USER  --skip-plugins --skip-themes --path=%s' % (
                          newWPpath)
 
                         result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
@@ -5819,7 +5912,7 @@ class ApplicationInstaller(multi.Thread):
                             Finaldbuser = stdout.rstrip("\n")
 
                         #####Get DBpsswd
-                        command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_PASSWORD  --skip-plugins --skip-themes --path=%s' % (
+                        command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp config get DB_PASSWORD  --skip-plugins --skip-themes --path=%s' % (
                               newWPpath)
 
                         result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
@@ -5879,7 +5972,7 @@ class ApplicationInstaller(multi.Thread):
                         unzippath2 = "%s/ab/usr/local/CyberCP/tmp/%s/%s" % (
                                 self.tempPath, oldtemppath, DumpFileName)
                         # command = "mysql -u root %s < %s" % (Finaldbname, unzippath2)
-                        command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 /usr/bin/wp --allow-root ' \
+                        command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp --allow-root ' \
                                       f'--skip-plugins --skip-themes --path=%s --quiet db import %s' % (
                                       newWPpath, unzippath2)
                         result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
@@ -5901,7 +5994,7 @@ class ApplicationInstaller(multi.Thread):
                         if stdout.find('Error:') > -1:
                             raise BaseException(stdout)
 
-                        command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 /usr/bin/wp search-replace ' \
+                        command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp search-replace ' \
                                   f'--skip-plugins --skip-themes --allow-root --path=%s "https://www.%s" "http://%s"' % (
                                       WPpath, Newurl, Newurl)
                         result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
@@ -5909,15 +6002,17 @@ class ApplicationInstaller(multi.Thread):
                         if stdout.find('Error:') > -1:
                             raise BaseException(stdout)
 
-                        command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 /usr/bin/wp litespeed-purge all --path={WPpath}'
+                        command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp litespeed-purge all --path={WPpath}'
                         ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
-                        ### Remove temppath
-                        command = f'rm -rf {self.tempPath}'
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                        if not os.path.exists(ProcessUtilities.debugPath):
 
-                        if result == 0:
-                            raise BaseException(stdout)
+                            ### Remove temppath
+                            command = f'rm -rf {self.tempPath}'
+                            result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+
+                            if result == 0:
+                                raise BaseException(stdout)
 
                         # try:
                         #     WPobj = WPSites.objects.get(FinalURL=finalurl, owner=webobj)
@@ -6256,7 +6351,7 @@ class ApplicationInstaller(multi.Thread):
                     FinalPHPPath = phpUtilities.GetPHPVersionFromFile(vhFile, NewWPsite.owner.domain)
 
                     ######Get DBname
-                    command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path=%s' % (
+                    command = 'sudo -u %s %s -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path=%s' % (
                         VHuser, FinalPHPPath, newWPpath)
 
                     result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
@@ -6267,7 +6362,7 @@ class ApplicationInstaller(multi.Thread):
                         Finaldbname = stdout.rstrip("\n")
 
                     ######Get DBuser
-                    command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_USER  --skip-plugins --skip-themes --path=%s' % (
+                    command = 'sudo -u %s %s -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp config get DB_USER  --skip-plugins --skip-themes --path=%s' % (
                         VHuser, FinalPHPPath, newWPpath)
 
                     result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
@@ -6278,7 +6373,7 @@ class ApplicationInstaller(multi.Thread):
                         Finaldbuser = stdout.rstrip("\n")
 
                     #####Get DBpsswd
-                    command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_PASSWORD  --skip-plugins --skip-themes --path=%s' % (
+                    command = 'sudo -u %s %s -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp config get DB_PASSWORD  --skip-plugins --skip-themes --path=%s' % (
                         VHuser, FinalPHPPath, newWPpath)
 
                     result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
@@ -6311,7 +6406,7 @@ class ApplicationInstaller(multi.Thread):
                         raise BaseException(stdout)
 
                     # set DBName
-                    command = "sudo -u %s %s /usr/bin/wp config set DB_NAME %s --skip-plugins --skip-themes --path=%s" % (
+                    command = "sudo -u %s %s -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp config set DB_NAME %s --skip-plugins --skip-themes --path=%s" % (
                         VHuser, FinalPHPPath, Finaldbname, newWPpath)
                     result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
@@ -6319,7 +6414,7 @@ class ApplicationInstaller(multi.Thread):
                         raise BaseException(stdout)
 
                     ##set DBuser
-                    command = "sudo -u %s %s /usr/bin/wp config set DB_USER %s --skip-plugins --skip-themes --path=%s" % (
+                    command = "sudo -u %s %s -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp config set DB_USER %s --skip-plugins --skip-themes --path=%s" % (
                         VHuser, FinalPHPPath, Finaldbuser, newWPpath)
                     result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
@@ -6327,7 +6422,7 @@ class ApplicationInstaller(multi.Thread):
                         raise BaseException(stdout)
 
                     # set DBpasswd
-                    command = "sudo -u %s %s /usr/bin/wp config set DB_PASSWORD %s --skip-plugins --skip-themes --path=%s" % (
+                    command = "sudo -u %s %s -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp config set DB_PASSWORD %s --skip-plugins --skip-themes --path=%s" % (
                         VHuser, FinalPHPPath, Finaldbpasswd, newWPpath)
                     result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
@@ -6340,54 +6435,65 @@ class ApplicationInstaller(multi.Thread):
 
                     # command = "mysql -u root %s < %s" % (Finaldbname, unzippath2)
 
-                    command = 'sudo -u %s %s /usr/bin/wp --skip-plugins --skip-themes --path=%s db import %s' % (
+                    logging.statusWriter(self.tempStatusPath, 'Restoring Data Base...,80')
+
+                    command = 'sudo -u %s %s -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp --skip-plugins --skip-themes --path=%s db import %s' % (
                         VHuser, FinalPHPPath, newWPpath, unzippath2)
                     result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                     if stdout.find('Error:') > -1:
                         raise BaseException(stdout)
 
-                    logging.statusWriter(self.tempStatusPath, 'Restoreing Data Base...,80')
+
                     ####SetUp DataBase Settings
 
                     logging.statusWriter(self.tempStatusPath, 'Replacing URLs...,90')
                     ########Now Replace URL's
-                    command = f'sudo -u %s {FinalPHPPath} -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --path=%s "%s" "%s"' % (
+                    command = f'sudo -u %s {FinalPHPPath} -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp search-replace --skip-plugins --skip-themes --path=%s "%s" "%s"' % (
                         VHuser, newWPpath, oldurl, newurl)
                     result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                     if stdout.find('Error:') > -1:
                         raise BaseException(stdout)
 
-                    command = f'sudo -u %s {FinalPHPPath} -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "https://www.%s" "http://%s"' % (
+                    command = f'sudo -u %s {FinalPHPPath} -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "https://www.%s" "http://%s"' % (
                         VHuser, newWPpath, newurl, newurl)
                     result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                     if stdout.find('Error:') > -1:
                         raise BaseException(stdout)
 
-                    command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 /usr/bin/wp litespeed-purge all --path={newWPpath}'
+                    command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp litespeed-purge all --path={newWPpath}'
                     ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
-                    ##Remove temppath
-                    command = f'rm -rf {self.tempPath}'
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                    if not os.path.exists(ProcessUtilities.debugPath):
 
-                    if stdout.find('Error:') > -1:
-                        raise BaseException(stdout)
+                        ##Remove temppath
+                        command = f'rm -rf {self.tempPath}'
+                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+
+                        if stdout.find('Error:') > -1:
+                            raise BaseException(stdout)
 
                     ###Restart Server
 
                     from plogical.installUtilities import installUtilities
                     installUtilities.reStartLiteSpeed()
 
+            if not os.path.exists(ProcessUtilities.debugPath):
+                if BackupDestination == 'SFTP' or BackupDestination == 'S3':
+                    command = f'rm -rf /home/backup/{loaclpath}'
+                    ProcessUtilities.executioner(command)
+
+
             logging.statusWriter(self.tempStatusPath, 'Completed.[200]')
 
         except BaseException as msg:
             logging.writeToFile("Error RestoreWPbackupNow ....... %s" % str(msg))
             try:
-                command = f'rm -rf {self.tempPath}'
-                ProcessUtilities.executioner(command)
+                if not os.path.exists(ProcessUtilities.debugPath):
+                    command = f'rm -rf {self.tempPath}'
+                    ProcessUtilities.executioner(command)
 
             except:
                 pass

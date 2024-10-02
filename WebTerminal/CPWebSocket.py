@@ -28,7 +28,7 @@ class SSHServer(multi.Thread):
             sshData = ProcessUtilities.outputExecutioner('cat /etc/ssh/sshd_config').split('\n')
 
             for items in sshData:
-                if items.find('Port') > -1:
+                if items.find('Port') > -1 and items[0] != '#':
                     if items[0] == 0:
                         pass
                     else:
