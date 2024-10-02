@@ -3543,9 +3543,23 @@ pm.max_spare_servers = 3
             except:
                 pass
 
-        #command = 'csf -uf'
-        command = '/etc/csf/uninstall.sh'
+        command = 'csf -uf'
         Upgrade.executioner(command, 'fix csf if there', 0)
+
+        sed_commands = [
+            'sed -i "s/url(r\'^configservercsf/path(\'configservercsf/g" /usr/local/CyberCP/CyberCP/urls.py',
+            'sed -i "s/from django.conf.urls import url/from django.urls import path/g" /usr/local/CyberCP/configservercsf/urls.py',
+            'sed -i "s/import signals/import configservercsf.signals/g" /usr/local/CyberCP/configservercsf/apps.py',
+            'sed -i "s/url(r\'^$\'/path(\'\'/g" /usr/local/CyberCP/configservercsf/urls.py',
+            'sed -i "s|url(r\'^iframe/$\'|path(\'iframe/\'|g" /usr/local/CyberCP/configservercsf/urls.py',
+            'killall lswsgi'
+        ]
+
+        for cmd in sed_commands:
+            Upgrade.executioner(command, 'fix csf if there', 0)
+
+
+
         command = 'systemctl stop cpssh'
         Upgrade.executioner(command, 'fix csf if there', 0)
         Upgrade.AutoUpgradeAcme()
