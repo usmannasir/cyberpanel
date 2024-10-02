@@ -1313,9 +1313,6 @@ class FirewallManager:
             userID = self.request.session['userID']
             currentACL = ACLManager.loadedACL(userID)
 
-            final_dic = {'installStatus': 0, 'error_message': 'CSF install is currently disabled.'}
-            final_json = json.dumps(final_dic)
-            return HttpResponse(final_json)
 
             if currentACL['admin'] == 1:
                 pass

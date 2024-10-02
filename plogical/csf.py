@@ -429,6 +429,18 @@ def configservercsfiframe(request):
             except:
                 pass
 
+            sed_commands = [
+                'sed -i "s/url(r\'^configservercsf/path(\'configservercsf/g" /usr/local/CyberCP/CyberCP/urls.py',
+                'sed -i "s/from django.conf.urls import url/from django.urls import path/g" /usr/local/CyberCP/configservercsf/urls.py',
+                'sed -i "s/import signals/import configservercsf.signals/g" /usr/local/CyberCP/configservercsf/apps.py',
+                'sed -i "s/url(r\'^$\'/path(\'\'/g" /usr/local/CyberCP/configservercsf/urls.py',
+                'sed -i "s|url(r\'^iframe/$\'|path(\'iframe/\'|g" /usr/local/CyberCP/configservercsf/urls.py',
+                'killall lswsgi'
+            ]
+
+            for cmd in sed_commands:
+                ProcessUtilities.executioner(cmd)
+
             return 1
         except BaseException as msg:
             try:
