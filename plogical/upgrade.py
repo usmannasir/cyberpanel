@@ -3556,7 +3556,7 @@ pm.max_spare_servers = 3
         ]
 
         for cmd in sed_commands:
-            Upgrade.executioner(command, 'fix csf if there', 0)
+            Upgrade.executioner(cmd, 'fix csf if there', 0)
 
 
 
