@@ -432,8 +432,8 @@ class CSF(multi.Thread):
                 'sed -i "s/import signals/import configservercsf.signals/g" /usr/local/CyberCP/configservercsf/apps.py',
                 'sed -i "s/url(r\'^$\'/path(\'\'/g" /usr/local/CyberCP/configservercsf/urls.py',
                 'sed -i "s|url(r\'^iframe/$\'|path(\'iframe/\'|g" /usr/local/CyberCP/configservercsf/urls.py',
-                'sed -i -E "s/from.*, response/from plogical.httpProc import httpProc/g" /usr/local/CyberCP/configservercsf/views.py'
-                '''sed -i -E "s#^(\s*)return render.*index\.html.*#\1proc = httpProc(request, 'configservercsf/index.html', None, 'admin')\n\1return proc.render()#g" /usr/local/CyberCP/configservercsf/views.py'''
+                # 'sed -i -E "s/from.*, response/from plogical.httpProc import httpProc/g" /usr/local/CyberCP/configservercsf/views.py'
+                # '''sed -i -E "s#^(\s*)return render.*index\.html.*#\1proc = httpProc(request, 'configservercsf/index.html', None, 'admin')\n\1return proc.render()#g" /usr/local/CyberCP/configservercsf/views.py'''
                 'killall lswsgi'
             ]
 
