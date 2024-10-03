@@ -1098,7 +1098,6 @@ class ContainerManager(multi.Thread):
             da = Docker_Sites(None, passdata)
             retdata = da.ListContainers()
 
-
             data_ret = {'status': 1, 'error_message': 'None', 'data':retdata}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)

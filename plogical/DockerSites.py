@@ -98,8 +98,6 @@ class Docker_Sites(multi.Thread):
                 ProcessUtilities.executioner(execPath)
 
 
-
-
     def run(self):
         try:
             if self.function_run == 'DeployWPContainer':
@@ -233,9 +231,16 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
 
             command = 'docker --help'
             result = ProcessUtilities.outputExecutioner(command)
-            print(f'return code of docker install {result}')
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(f'return code of docker install {result}')
+
             if result.find("not found") > -1:
-                DockerInstall.submitInstallDocker(1)
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(f'About to run docker install function...')
+
+                execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/dockerManager/dockerInstall.py"
+                ProcessUtilities.executioner(execPath)
 
             logging.statusWriter(self.JobID, 'Docker is ready to use..,10')
 
@@ -316,7 +321,12 @@ services:
 
             ####
 
-            command = f"docker-compose -f {self.data['ComposePath']} -p '{self.data['SiteName']}' up -d"
+            if ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                dockerCommand = 'docker compose'
+            else:
+                dockerCommand = 'docker-compose'
+
+            command = f"{dockerCommand} -f {self.data['ComposePath']} -p '{self.data['SiteName']}' up -d"
             result, message = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
             if os.path.exists(ProcessUtilities.debugPath):
@@ -329,6 +339,25 @@ services:
             logging.statusWriter(self.JobID, 'Bringing containers online..,50')
 
             time.sleep(25)
+
+            ### checking if everything ran properly
+
+            passdata = {}
+            passdata["JobID"] = None
+            passdata['name'] = self.data['ServiceName']
+            da = Docker_Sites(None, passdata)
+            retdata, containers = da.ListContainers()
+
+            containers = json.loads(containers)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(str(containers))
+
+            ### it means less then two containers which means something went wrong
+            if len(containers) < 2:
+                logging.writeToFile(f'Unkonwn error, containers not running. [DeployWPContainer]')
+                logging.statusWriter(self.JobID, f'Unkonwn error, containers not running. [DeployWPContainer]')
+                return 0
 
             ### Set up Proxy
 
@@ -572,6 +601,10 @@ services:
                 command = f'docker rm {container.short_id}'
                 ProcessUtilities.executioner(command)
 
+
+            command = f"rm -rf /home/{self.data['domain']}/public_html/.htaccess'"
+            ProcessUtilities.executioner(command)
+
             from plogical.installUtilities import installUtilities
             installUtilities.reStartLiteSpeed()
 
@@ -718,9 +751,16 @@ services:
 
             command = 'docker --help'
             result = ProcessUtilities.outputExecutioner(command)
-            print(f'return code of docker install {result}')
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(f'return code of docker install {result}')
+
             if result.find("not found") > -1:
-                DockerInstall.submitInstallDocker()
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(f'About to run docker install function...')
+
+                execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/dockerManager/dockerInstall.py"
+                ProcessUtilities.executioner(execPath)
 
             logging.statusWriter(self.JobID, 'Docker is ready to use..,10')
 
@@ -799,8 +839,14 @@ services:
 
             ####
 
-            command = f"docker-compose -f {self.data['ComposePath']} -p '{self.data['SiteName']}' up -d"
+            if ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                dockerCommand = 'docker compose'
+            else:
+                dockerCommand = 'docker-compose'
+
+            command = f"{dockerCommand} -f {self.data['ComposePath']} -p '{self.data['SiteName']}' up -d"
             result, message = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+
 
             if result == 0:
                 logging.statusWriter(self.JobID, f'Error {str(message)} . [404]')
@@ -809,6 +855,26 @@ services:
             logging.statusWriter(self.JobID, 'Bringing containers online..,50')
 
             time.sleep(25)
+
+
+            ### checking if everything ran properly
+
+            passdata = {}
+            passdata["JobID"] = None
+            passdata['name'] = self.data['ServiceName']
+            da = Docker_Sites(None, passdata)
+            retdata, containers = da.ListContainers()
+
+            containers = json.loads(containers)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(str(containers))
+
+            ### it means less then two containers which means something went wrong
+            if len(containers) < 2:
+                logging.writeToFile(f'Unkonwn error, containers not running. [DeployN8NContainer]')
+                logging.statusWriter(self.JobID, f'Unkonwn error, containers not running. [DeployN8NContainer]')
+                return 0
 
             ### Set up Proxy
 

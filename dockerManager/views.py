@@ -421,6 +421,7 @@ def removeImage(request):
         return coreResult
     except KeyError:
         return redirect(loadLoginPage)
+
 @preDockerRun
 def getDockersiteList(request):
     import json

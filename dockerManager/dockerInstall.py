@@ -1,4 +1,5 @@
 #!/usr/local/CyberCP/bin/python
+import os
 import sys
 sys.path.append('/usr/local/CyberCP')
 import plogical.CyberCPLogFileWriter as logging
@@ -19,6 +20,12 @@ class DockerInstall:
                                                       "Starting Docker Installation..\n", 1)
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.CyberCPLogFileWriter.writeToFile(f'Docker installation started for cent8/9')
+
+                command = 'sudo yum install -y yum-utils'
+                ServerStatusUtil.executioner(command, statusFile)
 
                 command = 'yum install yum-utils -y'
                 ServerStatusUtil.executioner(command, statusFile)

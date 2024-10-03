@@ -34,6 +34,9 @@ class ServerStatusUtil(multi.Thread):
     @staticmethod
     def executioner(command, statusFile):
         try:
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(command)
+
             res = subprocess.call(command, stdout=statusFile, stderr=statusFile, shell=True)
             if res == 1:
                 return 0
