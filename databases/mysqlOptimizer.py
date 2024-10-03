@@ -101,9 +101,9 @@ innodb-file-per-table          = 1
 innodb-buffer-pool-size        = {innodb_buffer_pool_size}
 
 # LOGGING #
-log-error                      = {log_error}
+#log-error                      = {log_error}
 slow-query-log                 = 1
-slow-query-log-file            = {slow_query_log_file}
+#slow-query-log-file            = {slow_query_log_file}
 log-queries-not-using-indexes  = OFF
 long_query_time                = 30
 

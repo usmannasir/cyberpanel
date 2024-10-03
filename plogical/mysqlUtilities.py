@@ -1,5 +1,6 @@
 import os,sys
 import shutil
+import urllib
 from urllib.parse import unquote
 
 sys.path.append('/usr/local/CyberCP')
@@ -584,9 +585,12 @@ password=%s
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 command = 'sudo mv /etc/my.cnf /etc/my.cnf.bak'
+                decoded_content = urllib.parse.unquote(data['suggestedContent'])
+                data['suggestedContent'] = decoded_content.replace('/var/lib/mysql/mysql.sock',
+                                                                   '/var/run/mysqld/mysqld.sock')
             else:
                 command = 'sudo mv /etc/mysql/my.cnf /etc/mysql/my.cnf.bak'
-                decoded_content = unquote(data['suggestedContent'])
+                decoded_content = urllib.parse.unquote(data['suggestedContent'])
                 data['suggestedContent'] = decoded_content.replace('/var/lib/mysql/mysql.sock', '/var/run/mysqld/mysqld.sock')
 
 

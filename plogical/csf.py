@@ -154,7 +154,7 @@ def configservercsfiframe(request):
             # Some initial configurations
 
             try:
-                cpPort = open(ProcessUtilities.portPath, 'r').read().split(':')[1].rstrip('\n')
+                cPort = open(ProcessUtilities.portPath, 'r').read().split(':')[1].rstrip('\n')
             except:
                 cPort = '8090'
 
