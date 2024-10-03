@@ -1,5 +1,6 @@
 #!/usr/local/CyberCP/bin/python
 import sys
+
 sys.path.append('/usr/local/CyberCP')
 from plogical import CyberCPLogFileWriter as logging
 import subprocess
@@ -51,9 +52,7 @@ class CSF(multi.Thread):
 
             os.chdir('csf')
 
-
             ### manually update csf views.py because it does not load CyberPanel properly in default configurations
-
 
             content = '''
 # -*- coding: utf-8 -*-
@@ -417,9 +416,7 @@ def configservercsfiframe(request):
             command = 'csf -ra'
             ProcessUtilities.normalExecutioner(command)
 
-
             ##### update csf views file
-
 
             logging.CyberCPLogFileWriter.statusWriter(CSF.installLogPath, 'CSF successfully Installed.[200]\n', 1)
 
@@ -435,6 +432,8 @@ def configservercsfiframe(request):
                 'sed -i "s/import signals/import configservercsf.signals/g" /usr/local/CyberCP/configservercsf/apps.py',
                 'sed -i "s/url(r\'^$\'/path(\'\'/g" /usr/local/CyberCP/configservercsf/urls.py',
                 'sed -i "s|url(r\'^iframe/$\'|path(\'iframe/\'|g" /usr/local/CyberCP/configservercsf/urls.py',
+                'sed -i -E "s/from.*, response/from plogical.httpProc import httpProc/g" /usr/local/CyberCP/configservercsf/views.py'
+                '''sed -i -E "s#^(\s*)return render.*index\.html.*#\1proc = httpProc(request, 'configservercsf/index.html', None, 'admin')\n\1return proc.render()#g" /usr/local/CyberCP/configservercsf/views.py'''
                 'killall lswsgi'
             ]
 
