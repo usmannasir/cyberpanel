@@ -123,45 +123,38 @@ class ApplicationInstaller(multi.Thread):
         if result.find('npm <command>') > -1:
             return 1
 
-        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-            nodeV = ProcessUtilities.fetch_latest_lts_version_for_node()
+        nodeV = ProcessUtilities.fetch_latest_lts_version_for_node()
 
-            if ACLManager.ISARM():
-                command = f'wget https://nodejs.org/dist/{nodeV}/node-{nodeV}-linux-arm64.tar.xz'
-                ProcessUtilities.executioner(command, 'root', True)
+        if ACLManager.ISARM():
+            command = f'wget https://nodejs.org/dist/{nodeV}/node-{nodeV}-linux-arm64.tar.xz'
+            ProcessUtilities.executioner(command, 'root', True)
 
-                command = f'tar -xf node-{nodeV}-linux-arm64.tar.xz '
-                ProcessUtilities.executioner(command, 'root', True)
+            command = f'tar -xf node-{nodeV}-linux-arm64.tar.xz '
+            ProcessUtilities.executioner(command, 'root', True)
 
-                command = f'cp node-{nodeV}-linux-arm64/bin/node /usr/bin/node'
-                ProcessUtilities.executioner(command, 'root', True)
+            command = f'cp node-{nodeV}-linux-arm64/bin/node /usr/bin/node'
+            ProcessUtilities.executioner(command, 'root', True)
 
-                command = 'curl -qL https://www.npmjs.com/install.sh | sh'
-                ProcessUtilities.executioner(command, 'root', True)
+            command = 'curl -qL https://www.npmjs.com/install.sh | sh'
+            ProcessUtilities.executioner(command, 'root', True)
 
-                command = f'rm -rf node-{nodeV}-linux-arm64*'
-                ProcessUtilities.executioner(command, 'root', True)
-            else:
-
-                command = f'wget https://nodejs.org/dist/{nodeV}/node-{nodeV}-linux-x64.tar.xz'
-                ProcessUtilities.executioner(command, 'root', True)
-
-                command = f'tar -xf node-{nodeV}-linux-x64.tar.xz'
-                ProcessUtilities.executioner(command, 'root', True)
-
-                command = f'cp node-{nodeV}-linux-x64/bin/node /usr/bin/node'
-                ProcessUtilities.executioner(command, 'root', True)
-
-                command = 'curl -qL https://www.npmjs.com/install.sh | sh'
-                ProcessUtilities.executioner(command, 'root', True)
-
-                command = f'rm -rf node-{nodeV}-linux-x64*'
-                ProcessUtilities.executioner(command, 'root', True)
+            command = f'rm -rf node-{nodeV}-linux-arm64*'
+            ProcessUtilities.executioner(command, 'root', True)
         else:
-            #command = 'curl -fsSL <https://deb.nodesource.com/setup_20.x> | sudo -E bash -'
-            #ProcessUtilities.executioner(command, 'root', True)
 
-            command = 'DEBIAN_FRONTEND=noninteractive apt-get install nodejs npm -y'
+            command = f'wget https://nodejs.org/dist/{nodeV}/node-{nodeV}-linux-x64.tar.xz'
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = f'tar -xf node-{nodeV}-linux-x64.tar.xz'
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = f'cp node-{nodeV}-linux-x64/bin/node /usr/bin/node'
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = 'curl -qL https://www.npmjs.com/install.sh | sh'
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = f'rm -rf node-{nodeV}-linux-x64*'
             ProcessUtilities.executioner(command, 'root', True)
 
         return 1
@@ -198,13 +191,25 @@ class ApplicationInstaller(multi.Thread):
 
             phpPath = phpUtilities.GetPHPVersionFromFile(vhFile, domainName)
 
-            ### basically for now php 8.0 is being checked
+            ### basically for now php 8.1 is being checked
 
             if not os.path.exists(phpPath):
                 statusFile = open(tempStatusPath, 'w')
                 statusFile.writelines('PHP 8.1 missing installing now..,20')
                 statusFile.close()
                 phpUtilities.InstallSaidPHP('81')
+
+            ### if web is using apache then some missing extensions are required to install
+
+            finalConfPath = ApacheVhost.configBasePath + domainName + '.conf'
+            if os.path.exists(finalConfPath):
+
+                if ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                    command = 'dnf install php7.?-bcmath php7.?-imap php8.?-bcmath php8.?-imap -y'
+                else:
+                    command = 'DEBIAN_FRONTEND=noninteractive apt-get install php7.?-bcmath php7.?-imap php8.?-bcmath php8.?-imap -y'
+
+                ProcessUtilities.executioner(command)
 
 
             FNULL = open(os.devnull, 'w')
@@ -362,9 +367,14 @@ class ApplicationInstaller(multi.Thread):
 
             #os.remove(localDB)
             command = f"systemctl restart {ApacheVhost.serviceName}"
-            ProcessUtilities.normalExecutioner(command)
+            ProcessUtilities.executioner(command)
 
             installUtilities.reStartLiteSpeedSocket()
+
+            time.sleep(3)
+
+            command = f"systemctl restart {ApacheVhost.serviceName}"
+            ProcessUtilities.executioner(command)
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines("Successfully Installed. [200]")
