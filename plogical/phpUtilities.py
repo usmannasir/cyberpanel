@@ -222,7 +222,7 @@ class phpUtilities:
 
         if domainName == None:
             # Your file path
-            file_path = "/usr/local/lsws/conf/vhosts/mautic.wpmautic.net/vhost.conf"
+            file_path = vhFile
 
             # Split the path by '/'
             path_parts = file_path.split('/')
@@ -234,19 +234,117 @@ class phpUtilities:
             domainName = path_parts[vhosts_index + 1]
 
         finalConfPath = ApacheVhost.configBasePath + domainName + '.conf'
+
+        if os.path.exists('/usr/local/CyberCP/debug'):
+            logging.CyberCPLogFileWriter.writeToFile(f'Apache conf file in GetPHPVersionFromFile {finalConfPath}')
+
+        virtualHostName = domainName
         if os.path.exists(finalConfPath):
-            command = f'grep -Eo -m 1 "php[0-9]+" {finalConfPath} | sed -n "1p"'
-            php_version = ProcessUtilities.outputExecutioner(command, None, True).rstrip('\n')
+
+
+            ######
+
+            phpPath = ApacheVhost.DecidePHPPath('54', virtualHostName)
+            if os.path.exists(phpPath):
+                centOSPHP = 'php54'
+                ubuntuPHP = 'php5.4'
+
+
+            phpPath = ApacheVhost.DecidePHPPath('55', virtualHostName)
+            if os.path.exists(phpPath):
+                centOSPHP = 'php55'
+                ubuntuPHP = 'php5.5'
+
+
+
+            phpPath = ApacheVhost.DecidePHPPath('56', virtualHostName)
+            if os.path.exists(phpPath):
+                centOSPHP = 'php56'
+                ubuntuPHP = 'php5.6'
+
+
+            phpPath = ApacheVhost.DecidePHPPath('70', virtualHostName)
+            if os.path.exists(phpPath):
+                centOSPHP = 'php70'
+                ubuntuPHP = 'php7.0'
+
+
+            phpPath = ApacheVhost.DecidePHPPath('71', virtualHostName)
+            if os.path.exists(phpPath):
+                centOSPHP = 'php71'
+                ubuntuPHP = 'php7.1'
+
+
+            phpPath = ApacheVhost.DecidePHPPath('72', virtualHostName)
+            if os.path.exists(phpPath):
+                centOSPHP = 'php72'
+                ubuntuPHP = 'php7.2'
+
+
+            phpPath = ApacheVhost.DecidePHPPath('73', virtualHostName)
+            if os.path.exists(phpPath):
+                centOSPHP = 'php73'
+                ubuntuPHP = 'php7.3'
+
+
+            phpPath = ApacheVhost.DecidePHPPath('74', virtualHostName)
+            if os.path.exists(phpPath):
+                centOSPHP = 'php74'
+                ubuntuPHP = 'php7.4'
+
+
+            phpPath = ApacheVhost.DecidePHPPath('80', virtualHostName)
+            if os.path.exists(phpPath):
+                centOSPHP = 'php80'
+                ubuntuPHP = 'php8.0'
+
+
+            phpPath = ApacheVhost.DecidePHPPath('81', virtualHostName)
+            if os.path.exists(phpPath):
+                centOSPHP = 'php81'
+                ubuntuPHP = 'php8.1'
+
+
+            phpPath = ApacheVhost.DecidePHPPath('82', virtualHostName)
+            if os.path.exists(phpPath):
+                centOSPHP = 'php82'
+                ubuntuPHP = 'php8.2'
+
+
+            phpPath = ApacheVhost.DecidePHPPath('83', virtualHostName)
+            if os.path.exists(phpPath):
+                centOSPHP = 'php83'
+                ubuntuPHP = 'php8.3'
+
+
+            phpPath = ApacheVhost.DecidePHPPath('84', virtualHostName)
+            if os.path.exists(phpPath):
+                centOSPHP = 'php84'
+                ubuntuPHP = 'php8.4'
+
+
+            phpPath = ApacheVhost.DecidePHPPath('85', virtualHostName)
+            if os.path.exists(phpPath):
+                centOSPHP = 'php85'
+                ubuntuPHP = 'php8.5'
+
+
+
+            ######
+
+            ### not using below 2 lines in favor of code above
+            #command = f'grep -Eo -m 1 "php[0-9]+" {finalConfPath} | sed -n "1p"'
+            #php_version = ProcessUtilities.outputExecutioner(command, None, True).rstrip('\n')
 
             # Input string
             #php_version = "php73"
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                command = f'/opt/remi/{php_version}/root/bin/php'
+                command = f'/opt/remi/{centOSPHP}/root/bin/php'
                 return command
             else:
                 # Insert a period between '7' and '3' to convert it to 'php7.3'
-                converted_version = php_version[:4] + '.' + php_version[4:]
+                converted_version = ubuntuPHP
 
                 # Output the result
                 print(converted_version)
