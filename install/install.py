@@ -2583,6 +2583,16 @@ vmail
             writeToFile.close()
 
 
+    def installDNS_CyberPanelACMEFile(self):
+
+        os.chdir(self.cwd)
+
+        filePath = '/root/.acme.sh/dns_cyberpanel.sh'
+        shutil.copy('dns_cyberpanel.sh', filePath)
+
+        command = f'chmod +x {filePath}'
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
 def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
     parser.add_argument('publicip', help='Please enter public IP for your VPS or dedicated server.')
@@ -2734,6 +2744,7 @@ def main():
     checks.setupPort()
     checks.setupPythonWSGI()
     checks.setupLSCPDDaemon()
+    checks.installDNS_CyberPanelACMEFile()
 
     if args.redis is not None:
         checks.installRedis()

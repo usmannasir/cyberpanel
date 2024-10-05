@@ -220,7 +220,6 @@ context /.well-known/acme-challenge {
         except BaseException as msg:
             return 0, str(msg)
 
-
     @staticmethod
     def installSSLForDomain(virtualHostName, adminEmail='example@example.org'):
 

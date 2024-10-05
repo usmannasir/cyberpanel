@@ -361,6 +361,8 @@ class sslUtilities:
                     if zone['name'] == topLevelDomain:
                         if zone['status'] == 'active':
                             return 1, None
+                        else:
+                            logging.CyberCPLogFileWriter.writeToFile(f'zone is not active in cf: {zone["name"]}')
 
                 return 0, 'Zone not found in Cloudflare'
 
@@ -386,6 +388,8 @@ class sslUtilities:
             time.sleep(2)
 
             result = socket.getaddrinfo(f'cptest.{topLevelDomain}', None, socket.AF_INET)[0]
+
+            logging.CyberCPLogFileWriter.writeToFile(f'PDNS Result: {str(result)}.')
 
             # Return the IP address as a string
             if result[4][0] == ACLManager.GetServerIP():
@@ -426,7 +430,7 @@ class sslUtilities:
             CyberPanel_Check, message = sslUtilities.FindIfDomainInPowerDNS(virtualHostName)
 
             if CyberPanel_Check:
-                DNS_TO_USE = 'dns_pdns'
+                DNS_TO_USE = 'dns_cyberpanel'
             else:
                 return 0, 'Domain is not active in any of the configured DNS provider.'
 

@@ -3594,6 +3594,8 @@ pm.max_spare_servers = 3
             command = 'chmod +x /usr/local/CyberCP/public/imunifyav/bin/execute.py'
             Upgrade.executioner(command, command, 1)
 
+        Upgrade.installDNS_CyberPanelACMEFile()
+
         Upgrade.stdOut("Upgrade Completed.")
 
         ### remove log file path incase its there
@@ -3841,6 +3843,17 @@ pm.max_spare_servers = 3
 
         else:
             print("Quotas can not be enabled continue to use chhtr.")
+
+    @staticmethod
+    def installDNS_CyberPanelACMEFile():
+        filePath = '/root/.acme.sh/dns_cyberpanel.sh'
+        if os.path.exists(filePath):
+            os.remove(filePath)
+        shutil.copy('/usr/local/CyberCP/install/dns_cyberpanel.sh', filePath)
+
+        command = f'chmod +x {filePath}'
+        Upgrade.executioner(command, command, 0, True)
+
 
 
 def main():

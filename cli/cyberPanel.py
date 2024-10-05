@@ -313,7 +313,13 @@ class cyberPanel:
 
     def createDNSRecord(self, virtualHostName, name, recordType, value, priority, ttl):
         try:
-            zone = DNS.getZoneObject(virtualHostName)
+            import tldextract
+
+            no_cache_extract = tldextract.TLDExtract(cache_dir=None)
+            extractDomain = no_cache_extract(virtualHostName)
+            topLevelDomain = extractDomain.domain + '.' + extractDomain.suffix
+
+            zone = DNS.getZoneObject(topLevelDomain)
             DNS.createDNSRecord(zone, name, recordType, value, int(priority), int(ttl))
             self.printStatus(1, 'None')
         except BaseException as msg:

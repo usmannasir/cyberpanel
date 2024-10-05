@@ -710,7 +710,7 @@ class DNSManager:
 
             try:
                 zones = cf.zones.get(params=params)
-            except CloudFlare.CloudFlareAPIError as e:
+            except BaseException as e:
                 final_json = json.dumps({'status': 0, 'fetchStatus': 0, 'error_message': str(e), "data": '[]'})
                 return HttpResponse(final_json)
 
@@ -749,7 +749,7 @@ class DNSManager:
 
                 try:
                     dns_records = cf.zones.dns_records.get(zone_id, params={'per_page':50, 'type':fetchType})
-                except CloudFlare.exceptions.CloudFlareAPIError as e:
+                except BaseException as e:
                     final_json = json.dumps({'status': 0, 'fetchStatus': 0, 'error_message': str(e), "data": '[]'})
                     return HttpResponse(final_json)
 
@@ -816,7 +816,7 @@ class DNSManager:
 
             try:
                 zones = cf.zones.get(params=params)
-            except CloudFlare.CloudFlareAPIError as e:
+            except BaseException as e:
                 final_json = json.dumps({'status': 0, 'delete_status': 0, 'error_message': str(e), "data": '[]'})
                 return HttpResponse(final_json)
 
@@ -868,7 +868,7 @@ class DNSManager:
 
             try:
                 zones = cf.zones.get(params=params)
-            except CloudFlare.CloudFlareAPIError as e:
+            except BaseException as e:
                 final_json = json.dumps({'status': 0, 'delete_status': 0, 'error_message': str(e), "data": '[]'})
                 return HttpResponse(final_json)
 
