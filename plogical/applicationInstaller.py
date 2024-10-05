@@ -671,7 +671,6 @@ class ApplicationInstaller(multi.Thread):
             vhFile = f'/usr/local/lsws/conf/vhosts/{domainName}/vhost.conf'
 
             try:
-
                 phpPath = phpUtilities.GetPHPVersionFromFile(vhFile)
             except:
                 phpPath = '/usr/local/lsws/lsphp80/bin/php'
@@ -741,6 +740,9 @@ class ApplicationInstaller(multi.Thread):
 
                 dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website)
                 self.permPath = '/home/%s/public_html' % (website.domain)
+
+            command = "rm -rf " + finalPath + "index.html"
+            ProcessUtilities.executioner(command, externalApp)
 
             #php = PHPManager.getPHPString(website.phpSelection)
             FinalPHPPath = phpPath
@@ -1058,6 +1060,11 @@ class ApplicationInstaller(multi.Thread):
 
             if self.dataLossCheck(finalPath, tempStatusPath, externalApp) == 0:
                 raise BaseException('Directory is not empty.')
+
+            ### remove index.html
+
+            command = "rm -rf " + finalPath + "index.html"
+            ProcessUtilities.executioner(command, externalApp)
 
             ### lets first find php path
 
