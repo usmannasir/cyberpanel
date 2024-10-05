@@ -24,7 +24,7 @@ Author: Neil Pang <usman@cyberpersons.com>
 dns_cyberpanel_add() {
   fulldomain=$1
   txtvalue=$2
-  _info "Using myapi"
+  _info "Using CyberPanel ACME API"
   _debug fulldomain "$fulldomain"
   _debug txtvalue "$txtvalue"
   _info "cyberpanel createDNSRecord --domainName $fulldomain --name $fulldomain --recordType TXT --value $txtvalue --priority 0 --ttl 3600"
