@@ -764,24 +764,6 @@
                         </li>
 
                         <li id="sidebar-menu-item-ssl">
-                            <a href="{% url 'v2ManageSSL' %}" title="{% trans 'SSL v2' %}">
-                                <i class="glyph-icon tooltip-button icon-lock" title="{% trans 'SSL v2' %}"></i>
-                                <span>{% trans "SSL v2" %}</span>
-                            </a>
-                            <div class="sidebar-submenu">
-
-                                <ul>
-                                    {% if admin or manageSSL %}
-                                        <li class="manageSSL"><a href="{% url 'v2ManageSSL' %}"
-                                                                 title="{% trans 'Manage SSL v2' %}"><span>{% trans "Manage SSL v2" %}</span></a>
-                                        </li>
-                                    {% endif %}
-                                </ul>
-
-                            </div>
-                        </li>
-
-                        <li id="sidebar-menu-item-ssl">
                             <a href="{% url 'loadSSLHome' %}" title="{% trans 'SSL' %}">
                                 <i class="glyph-icon tooltip-button icon-lock" title="{% trans 'SSL' %}"></i>
                                 <span>{% trans "SSL" %}</span>
@@ -790,6 +772,9 @@
 
                                 <ul>
                                     {% if admin or manageSSL %}
+                                        <li class="manageSSL"><a href="{% url 'v2ManageSSL' %}"
+                                                                 title="{% trans 'Manage SSLv2' %}"><span>{% trans "Manage SSL v2" %}</span></a>
+                                        </li>
                                         <li class="manageSSL"><a href="{% url 'manageSSL' %}"
                                                                  title="{% trans 'Manage SSL' %}"><span>{% trans "Manage SSL" %}</span></a>
                                         </li>
