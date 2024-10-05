@@ -1059,18 +1059,42 @@ class ApplicationInstaller(multi.Thread):
             if self.dataLossCheck(finalPath, tempStatusPath, externalApp) == 0:
                 raise BaseException('Directory is not empty.')
 
+            ### lets first find php path
+
+            from plogical.phpUtilities import phpUtilities
+
+            vhFile = f'/usr/local/lsws/conf/vhosts/{domainName}/vhost.conf'
+
+            phpPath = phpUtilities.GetPHPVersionFromFile(vhFile, domainName)
+
+            ### basically for now php 8.3 is being checked
+
+            if not os.path.exists(phpPath):
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines('PHP 8.3 missing installing now..,20')
+                statusFile.close()
+                phpUtilities.InstallSaidPHP('83')
+
             ####
+
+            finalConfPath = ApacheVhost.configBasePath + domainName + '.conf'
+            if not os.path.exists(finalConfPath) and ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                statusFile = open(self.tempStatusPath, 'w')
+                statusFile.writelines('Your server is currently using OpenLiteSpeed, please switch your website to use Apache otherwise Prestashop installation will not work.' + " [404]")
+                statusFile.close()
+                return 0
+
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines('Downloading and extracting PrestaShop Core..,30')
             statusFile.close()
 
-            command = "wget https://download.prestashop.com/download/releases/prestashop_%s.zip -P %s" % (
-            ApplicationInstaller.PrestaVersion,
-            finalPath)
+            pVersion = ProcessUtilities.fetch_latest_prestashop_version()
+
+            command = f"wget https://github.com/PrestaShop/PrestaShop/releases/download/{pVersion}/prestashop_{pVersion}.zip -P {finalPath}"
             ProcessUtilities.executioner(command, externalApp)
 
-            command = "unzip -o %sprestashop_%s.zip -d " % (finalPath, ApplicationInstaller.PrestaVersion) + finalPath
+            command = "unzip -o %sprestashop_%s.zip -d " % (finalPath, pVersion) + finalPath
             ProcessUtilities.executioner(command, externalApp)
 
             command = "unzip -o %sprestashop.zip -d " % (finalPath) + finalPath
@@ -1093,7 +1117,7 @@ class ApplicationInstaller(multi.Thread):
             statusFile.writelines('Installing and configuring PrestaShop..,60')
             statusFile.close()
 
-            command = "php " + finalPath + "install/index_cli.php --domain=" + finalURL + \
+            command = f"{phpPath} " + finalPath + "install/index_cli.php --domain=" + finalURL + \
                       " --db_server=localhost --db_name=" + dbName + " --db_user=" + dbUser + " --db_password=" + dbPassword \
                       + " --name='" + shopName + "' --firstname=" + firstName + " --lastname=" + lastName + \
                       " --email=" + email + " --password=" + password

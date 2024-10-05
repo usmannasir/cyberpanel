@@ -4521,6 +4521,14 @@ StrictHostKeyChecking no
             if data['home'] == '0':
                 extraArgs['path'] = data['path']
 
+            #### Before installing Prestashop change php to 8.3
+
+            completePathToConfigFile = f'/usr/local/lsws/conf/vhosts/{self.domain}/vhost.conf'
+
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = execPath + " changePHP --phpVersion 'PHP 8.3' --path " + completePathToConfigFile
+            ProcessUtilities.executioner(execPath)
+
             background = ApplicationInstaller('prestashop', extraArgs)
             background.start()
 
@@ -4550,7 +4558,12 @@ StrictHostKeyChecking no
             data['dkimCheck'] = 1
             data['openBasedir'] = 1
             data['adminEmail'] = data['ownerEmail']
-            data['phpSelection'] = "PHP 7.4"
+
+            try:
+                data['phpSelection'] = data['phpSelection']
+            except:
+                data['phpSelection'] = "PHP 7.4"
+
             data['package'] = data['packageName']
             try:
                 websitesLimit = data['websitesLimit']

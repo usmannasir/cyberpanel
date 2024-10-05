@@ -403,5 +403,22 @@ class ProcessUtilities(multi.Thread):
             print("An error occurred:", e)
         return None
 
+    @staticmethod
+    def fetch_latest_prestashop_version():
+        import requests
+        url = "https://api.github.com/repos/PrestaShop/PrestaShop/releases"
+        try:
+            response = requests.get(url)
+            if response.status_code == 200:
+                releases = response.json()
+                return releases[0].get('tag_name')
+            else:
+                logging.writeToFile(f"Failed to fetch releases. Status code: {response.status_code}"  )
+                print("[fetch_latest_prestashop_version] Failed to fetch releases. Status code:", response.status_code)
+        except Exception as e:
+            print("An error occurred:", e)
+            logging.writeToFile(f"[fetch_latest_prestashop_version] An error occurred: {str(e)}")
+        return None
+
 
 
