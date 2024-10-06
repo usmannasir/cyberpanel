@@ -58,9 +58,14 @@ class sslUtilities:
             x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, open(filePath, 'r').read())
             SSLProvider = x509.get_issuer().get_components()[1][1].decode('utf-8')
 
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(f'SSL provider for {virtualHostName} is {SSLProvider}.')
 
 
             #### totally seprate check to see if both non-www and www are covered
+
+            if SSLProvider == "(STAGING) Let's Encrypt":
+                return sslUtilities.ISSUE_SSL
 
             if SSLProvider == "Let's Encrypt":
                 status, domains = sslUtilities.getDomainsCovered(filePath)
@@ -556,6 +561,9 @@ context /.well-known/acme-challenge {
             # if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
             #     acmePath = '/home/cyberpanel/.acme.sh/acme.sh'
 
+            command = '%s --set-default-ca --server letsencrypt' % (acmePath)
+            subprocess.call(shlex.split(command))
+
             if aliasDomain is None:
 
                 existingCertPath = '/etc/letsencrypt/live/' + virtualHostName
@@ -566,7 +574,7 @@ context /.well-known/acme-challenge {
                 try:
                     command = acmePath + " --issue -d " + virtualHostName + " -d www." + virtualHostName \
                               + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
-                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w /usr/local/lsws/Example/html -k ec-256 --force --server letsencrypt'
+                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w /usr/local/lsws/Example/html -k ec-256 --force --staging'
                     #ResultText = open(logging.CyberCPLogFileWriter.fileName, 'r').read()
                     #CurrentMessage = "Trying to obtain SSL for: " + virtualHostName + " and: www." + virtualHostName
                     if (WWWStatus and NONWWWStatus):
@@ -575,10 +583,51 @@ context /.well-known/acme-challenge {
 
                         logging.CyberCPLogFileWriter.writeToFile(command, 0)
 
-                        output = subprocess.check_output(shlex.split(command)).decode("utf-8")
-                        logging.CyberCPLogFileWriter.writeToFile("Successfully obtained SSL for: " + virtualHostName + " and: www." + virtualHostName, 0)
+                        #output = subprocess.check_output(shlex.split(command)).decode("utf-8")
 
-                        logging.CyberCPLogFileWriter.SendEmail(sender_email, adminEmail, output, 'SSL Notification for %s.' % (virtualHostName))
+                        result = subprocess.run(command, capture_output=True, text=True,
+                                                    shell=True)
+
+
+                        stdout = result.stdout
+                        stderr = result.stderr
+
+
+
+                        if result.returncode == 0:
+
+                            if os.path.exists(ProcessUtilities.debugPath):
+                                logging.CyberCPLogFileWriter.writeToFile(stdout + stderr)
+
+                            command = acmePath + " --issue -d " + virtualHostName + " -d www." + virtualHostName \
+                                      + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
+                                      + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w /usr/local/lsws/Example/html -k ec-256 --force --server letsencrypt'
+
+                            logging.CyberCPLogFileWriter.writeToFile(command, 0)
+
+                            result = subprocess.run(command, capture_output=True, text=True,
+                                                    shell=True)
+
+                            stdout = result.stdout
+                            stderr = result.stderr
+
+                            if result.returncode == 0:
+
+                                if os.path.exists(ProcessUtilities.debugPath):
+                                    logging.CyberCPLogFileWriter.writeToFile(stdout + stderr)
+
+                                logging.CyberCPLogFileWriter.writeToFile(
+                                    "Successfully obtained SSL for: " + virtualHostName + " and: www." + virtualHostName, 0)
+                                logging.CyberCPLogFileWriter.SendEmail(sender_email, adminEmail, stdout,
+                                                                       'SSL Notification for %s.' % (virtualHostName))
+                                return 1
+                            else:
+                                logging.CyberCPLogFileWriter.writeToFile(stdout + stderr)
+                                raise subprocess.CalledProcessError(0, '', '')
+
+                        else:
+                            logging.CyberCPLogFileWriter.writeToFile(stdout + stderr)
+                            raise subprocess.CalledProcessError(0, '', '')
                     else:
                         logging.CyberCPLogFileWriter.writeToFile(command, 0)
                         raise subprocess.CalledProcessError(0, '', '')
@@ -592,7 +641,8 @@ context /.well-known/acme-challenge {
                     try:
                         command = acmePath + " --issue -d " + virtualHostName + ' --cert-file ' + existingCertPath \
                                   + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
-                                  + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w /usr/local/lsws/Example/html -k ec-256 --force --server letsencrypt'
+                                  + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w /usr/local/lsws/Example/html -k ec-256 --force --staging'
+
 
                         #ResultText = open(logging.CyberCPLogFileWriter.fileName, 'r').read()
                         CurrentMessage = '%s\nTrying to obtain SSL for: %s' % (finalText, virtualHostName)
@@ -601,16 +651,51 @@ context /.well-known/acme-challenge {
                             finalText = '%s\nTrying to obtain SSL for: %s' % (finalText, virtualHostName)
                             logging.CyberCPLogFileWriter.writeToFile("Trying to obtain SSL for: " + virtualHostName, 0)
                             logging.CyberCPLogFileWriter.writeToFile(command)
-                            output = subprocess.check_output(shlex.split(command)).decode("utf-8")
-                            logging.CyberCPLogFileWriter.writeToFile(
-                                "Successfully obtained SSL for: " + virtualHostName, 0)
-                            finalText = '%s\nSuccessfully obtained SSL for: %s.' % (finalText, virtualHostName)
-                            logging.CyberCPLogFileWriter.SendEmail(sender_email, adminEmail, finalText,
-                                                                   'SSL Notification for %s.' % (virtualHostName))
+                            #output = subprocess.check_output(shlex.split(command)).decode("utf-8")
+
+                            result = subprocess.run(command, capture_output=True, text=True,
+                                                    shell=True)
+
+                            stdout = result.stdout
+                            stderr = result.stderr
+
+                            if result.returncode == 0:
+
+                                if os.path.exists(ProcessUtilities.debugPath):
+                                    logging.CyberCPLogFileWriter.writeToFile(stdout + stderr)
+
+                                command = acmePath + " --issue -d " + virtualHostName + ' --cert-file ' + existingCertPath \
+                                          + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
+                                          + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w /usr/local/lsws/Example/html -k ec-256 --force --server letsencrypt'
+
+                                result = subprocess.run(command, capture_output=True, text=True,
+                                                        shell=True)
+
+                                stdout = result.stdout
+                                stderr = result.stderr
+
+                                if result.returncode == 0:
+
+                                    if os.path.exists(ProcessUtilities.debugPath):
+                                        logging.CyberCPLogFileWriter.writeToFile(stdout + stderr)
+
+                                    logging.CyberCPLogFileWriter.writeToFile(
+                                        "Successfully obtained SSL for: " + virtualHostName, 0)
+                                    finalText = '%s\nSuccessfully obtained SSL for: %s.' % (finalText, virtualHostName)
+                                    logging.CyberCPLogFileWriter.SendEmail(sender_email, adminEmail, finalText,
+                                                                           'SSL Notification for %s.' % (virtualHostName))
+                                    return 1
+                                else:
+                                    logging.CyberCPLogFileWriter.writeToFile(command, 0)
+                                    logging.CyberCPLogFileWriter.writeToFile(stdout + stderr)
+                                    return 0
+                            else:
+                                logging.CyberCPLogFileWriter.writeToFile(stdout + stderr)
+                                return 0
 
                         else:
                             logging.CyberCPLogFileWriter.writeToFile(command, 0)
-                            raise subprocess.CalledProcessError(0, '', '')
+                            return 0
 
                     except subprocess.CalledProcessError:
                         logging.CyberCPLogFileWriter.writeToFile('Failed to obtain SSL, issuing self-signed SSL for: ' + virtualHostName, 0)
@@ -644,10 +729,7 @@ context /.well-known/acme-challenge {
 
             ##
 
-            if output.find('Cert success') > -1:
-                return 1
-            else:
-                return 0
+            return 0
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Failed to obtain SSL. [obtainSSLForADomain]]")
