@@ -624,8 +624,6 @@ class DNSManager:
 
             no_cache_extract = tldextract.TLDExtract(cache_dir=None)
 
-
-
             nsData = open(DNSManager.defaultNameServersPath, 'r').readlines()
 
             for ns in nsData:
@@ -635,8 +633,6 @@ class DNSManager:
                 zone = Domains.objects.get(name=topLevelDomain)
 
                 DNS.createDNSRecord(zone, ns, 'A', ACLManager.fetchIP(), 0, 1400)
-
-
 
             final_dic = {'status': 1, 'error_message': "None"}
             final_json = json.dumps(final_dic)
