@@ -455,7 +455,7 @@ class CSF(multi.Thread):
             command = 'sed -i "/configservercsf/d" /usr/local/CyberCP/CyberCP/urls.py'
             ProcessUtilities.normalExecutioner(command)
 
-            if os.path.exists('/etc/cxs/cxs.pl'):
+            if not os.path.exists('/etc/cxs/cxs.pl'):
 
                 command = 'sed -i "/configserver/d" /usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html'
                 ProcessUtilities.normalExecutioner(command)
