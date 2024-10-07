@@ -65,7 +65,6 @@ INSTALLED_APPS = [
     'containerization',
     'CLManager',
     'IncBackups',
-    'configservercsf'
     #    'WebTerminal'
 ]
 
