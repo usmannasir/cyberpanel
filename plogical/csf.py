@@ -460,7 +460,8 @@ class CSF(multi.Thread):
                 command = 'sed -i "/configserver/d" /usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html'
                 ProcessUtilities.normalExecutioner(command)
 
-
+            command = 'killall lswsgi'
+            ProcessUtilities.normalExecutioner(command)
 
 
             return 1
