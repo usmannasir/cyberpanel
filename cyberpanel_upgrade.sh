@@ -858,7 +858,7 @@ sed -i "/configservercsf/d" /usr/local/CyberCP/CyberCP/urls.py
 if [ ! -e /etc/cxs/cxs.pl ]; then
     sed -i "/configserver/d" /usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html
 fi
-
+systemctl restart lscpd
 ### this is temp code for csf
 
 

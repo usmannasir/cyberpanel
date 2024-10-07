@@ -34,7 +34,6 @@ class CSF(multi.Thread):
         try:
             ##
 
-
             logging.CyberCPLogFileWriter.statusWriter(CSF.installLogPath, 'Downloading CSF..\n', 1)
 
             command = 'wget ' + CSF.csfURL
@@ -50,7 +49,7 @@ class CSF(multi.Thread):
             ##
 
             logging.CyberCPLogFileWriter.statusWriter(CSF.installLogPath, 'Installing CSF..\n', 1)
-            import os
+
             os.chdir('csf')
 
             ### manually update csf views.py because it does not load CyberPanel properly in default configurations
@@ -420,7 +419,6 @@ class CSF(multi.Thread):
             ##### update csf views file
 
             logging.CyberCPLogFileWriter.statusWriter(CSF.installLogPath, 'CSF successfully Installed.[200]\n', 1)
-            import os
 
             try:
                 os.remove('csf.tgz')
@@ -442,55 +440,32 @@ class CSF(multi.Thread):
             # for cmd in sed_commands:
             #     ProcessUtilities.executioner(cmd)
 
-            import os
-            import shutil
+            command = 'rm -Rfv /usr/local/CyberCP/configservercsf'
+            ProcessUtilities.normalExecutioner(command)
 
-            #### this is temp code for csf
+            command = 'rm -fv /home/cyberpanel/plugins/configservercsf'
+            ProcessUtilities.normalExecutioner(command)
 
-            # Function to remove a directory and its contents
-            def remove_directory(path):
-                if os.path.exists(path) and os.path.isdir(path):
-                    shutil.rmtree(path, ignore_errors=True)
-                    print(f"Removed directory: {path}")
+            command = 'rm -Rfv /usr/local/CyberCP/public/static/configservercsf'
+            ProcessUtilities.normalExecutioner(command)
 
-            # Function to remove a file
-            def remove_file(path):
-                if os.path.exists(path):
-                    os.remove(path)
-                    print(f"Removed file: {path}")
+            command = 'sed -i "/configservercsf/d" /usr/local/CyberCP/CyberCP/settings.py'
+            ProcessUtilities.normalExecutioner(command)
 
-            # Function to remove lines containing a specific string from a file
-            def remove_line_from_file(file_path, target_string):
-                if os.path.exists(file_path):
-                    with open(file_path, 'r') as file:
-                        lines = file.readlines()
+            command = 'sed -i "/configservercsf/d" /usr/local/CyberCP/CyberCP/urls.py'
+            ProcessUtilities.normalExecutioner(command)
 
-                    with open(file_path, 'w') as file:
-                        for line in lines:
-                            if target_string not in line:
-                                file.write(line)
-                    print(f"Removed lines containing '{target_string}' from {file_path}")
+            if os.path.exists('/etc/cxs/cxs.pl'):
 
-            # Remove directories and files
-            remove_directory('/usr/local/CyberCP/configservercsf')
-            remove_file('/home/cyberpanel/plugins/configservercsf')
-            remove_directory('/usr/local/CyberCP/public/static/configservercsf')
+                command = 'sed -i "/configserver/d" /usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html'
+                ProcessUtilities.normalExecutioner(command)
 
-            # Remove 'configservercsf' from specified files
-            remove_line_from_file('/usr/local/CyberCP/CyberCP/settings.py', 'configservercsf')
-            remove_line_from_file('/usr/local/CyberCP/CyberCP/urls.py', 'configservercsf')
 
-            # Check if /etc/cxs/cxs.pl exists and remove 'configserver' from index.html if it doesn't
-            if not os.path.exists('/etc/cxs/cxs.pl'):
-                remove_line_from_file('/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html',
-                                      'configserver')
 
-            #### this is temp code for csf
 
             return 1
         except BaseException as msg:
             try:
-                import os
                 os.remove('csf.tgz')
                 os.removedirs('csf')
             except:
