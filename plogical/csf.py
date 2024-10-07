@@ -490,6 +490,7 @@ class CSF(multi.Thread):
             return 1
         except BaseException as msg:
             try:
+                import os
                 os.remove('csf.tgz')
                 os.removedirs('csf')
             except:
