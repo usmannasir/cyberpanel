@@ -43,7 +43,7 @@ class FirewallManager:
         csfPath = '/etc/csf'
 
         if os.path.exists(csfPath):
-            return redirect('/configservercsf/')
+            return redirect('/firewall/csf')
         else:
             proc = httpProc(request, 'firewall/firewall.html',
                             None, 'admin')
