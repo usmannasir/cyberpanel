@@ -1,0 +1,25 @@
+                        <a href="#" title="ConfigServer Services">
+                            <i class="glyph-icon icon-bug"></i>
+                            <span>ConfigServer Services</span>
+                        </a>
+                        <div class="sidebar-submenu">
+
+                            <ul>
+							{% url 'configservercsf' as the_url %}
+							{% if the_url %}
+                                <li><a href="{% url 'configservercsf' %}"
+                                       title="ConfigServer Security &amp; Firewall"><span>ConfigServer Security &amp; Firewall</span></a>
+                                </li>
+							{% endif %}
+							{% url 'configservercxs' as the_url %}
+							{% if the_url %}
+                                <li><a href="{% url 'configservercxs' %}"
+                                       title="ConfigServer Exploit Scanner"><span>ConfigServer Exploit Scanner</span></a>
+                                </li>
+							{% endif %}
+                            </ul>
+
+                        </div><!-- .sidebar-submenu -->
+                    </li>
+
+                    <li class="serverACL">

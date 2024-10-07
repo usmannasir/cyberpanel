@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cyberpanelPluginConfig>
+  <name>ConfigServer Security and Firewall</name>
+  <type>plugin</type>
+  <description>ConfigServer Security and Firewall</description>
+  <version>1.0</version>
+</cyberpanelPluginConfig>
