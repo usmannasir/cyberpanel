@@ -680,14 +680,14 @@ if ! cat /usr/local/CyberCP/CyberCP/settings.py | grep -q configservercsf; then
     sed -i "/pluginHolder/ i \ \ \ \ 'configservercsf'," /usr/local/CyberCP/CyberCP/settings.py
 fi
 if ! cat /usr/local/CyberCP/CyberCP/urls.py | grep -q configservercsf; then
-    sed -i "/pluginHolder/ i \ \ \ \ path(r'configservercsf/',include('configservercsf.urls'))," /usr/local/CyberCP/CyberCP/urls.py
+    sed -i "/pluginHolder/ i \ \ \ \ path('configservercsf/',include('configservercsf.urls'))," /usr/local/CyberCP/CyberCP/urls.py
 fi
 #if ! cat /usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html | grep -q configservercsf; then
 #    sed -i "/url 'csf'/ i <li><a href='/configservercsf/' title='ConfigServer Security and Firewall'><span>ConfigServer Security \&amp; Firewall</span></a></li>" /usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html
 #fi
-if ! cat /usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html | grep -q configserver; then
-    sed -i "/trans 'Plugins'/ i \{\% include \"/usr/local/CyberCP/configservercsf/templates/configservercsf/menu.html\" \%\}" /usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html
-fi
+#if ! cat /usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html | grep -q configserver; then
+#    sed -i "/trans 'Plugins'/ i \{\% include \"/usr/local/CyberCP/configservercsf/templates/configservercsf/menu.html\" \%\}" /usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html
+#fi
 
 service lscpd restart
 
@@ -1008,43 +1008,6 @@ echo
                 os.removedirs('csf')
             except:
                 pass
-
-            # sed_commands = [
-            #     'sed -i "s/url(r\'^configservercsf/path(\'configservercsf/g" /usr/local/CyberCP/CyberCP/urls.py',
-            #     'sed -i "s/from django.conf.urls import url/from django.urls import path/g" /usr/local/CyberCP/configservercsf/urls.py',
-            #     'sed -i "s/import signals/import configservercsf.signals/g" /usr/local/CyberCP/configservercsf/apps.py',
-            #     'sed -i "s/url(r\'^$\'/path(\'\'/g" /usr/local/CyberCP/configservercsf/urls.py',
-            #     'sed -i "s|url(r\'^iframe/$\'|path(\'iframe/\'|g" /usr/local/CyberCP/configservercsf/urls.py',
-            #     # 'sed -i -E "s/from.*, response/from plogical.httpProc import httpProc/g" /usr/local/CyberCP/configservercsf/views.py'
-            #     # '''sed -i -E "s#^(\s*)return render.*index\.html.*#\1proc = httpProc(request, 'configservercsf/index.html', None, 'admin')\n\1return proc.render()#g" /usr/local/CyberCP/configservercsf/views.py'''
-            #     'killall lswsgi'
-            # ]
-            #
-            # for cmd in sed_commands:
-            #     ProcessUtilities.executioner(cmd)
-
-            # command = 'rm -Rfv /usr/local/CyberCP/configservercsf'
-            # ProcessUtilities.normalExecutioner(command)
-            #
-            # command = 'rm -fv /home/cyberpanel/plugins/configservercsf'
-            # ProcessUtilities.normalExecutioner(command)
-            #
-            # command = 'rm -Rfv /usr/local/CyberCP/public/static/configservercsf'
-            # ProcessUtilities.normalExecutioner(command)
-            #
-            # command = 'sed -i "/configservercsf/d" /usr/local/CyberCP/CyberCP/settings.py'
-            # ProcessUtilities.normalExecutioner(command)
-            #
-            # command = 'sed -i "/configservercsf/d" /usr/local/CyberCP/CyberCP/urls.py'
-            # ProcessUtilities.normalExecutioner(command)
-            #
-            # if not os.path.exists('/etc/cxs/cxs.pl'):
-            #
-            #     command = 'sed -i "/configserver/d" /usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html'
-            #     ProcessUtilities.normalExecutioner(command)
-            #
-            # command = 'killall lswsgi'
-            # ProcessUtilities.normalExecutioner(command)
 
             return 1
         except BaseException as msg:
