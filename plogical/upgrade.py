@@ -3553,7 +3553,7 @@ pm.max_spare_servers = 3
         Upgrade.executioner(command, 'fix csf if there', 0)
 
         if os.path.exists('/usr/local/CyberCP/configservercsf'):
-            command = 'cat /dev/null > /usr/local/CyberCP/configservercsf/signals.py'
+            command = 'rm -f /usr/local/CyberCP/configservercsf/signals.py'
             Upgrade.executioner(command, 'Start LSCPD', 1)
 
 
