@@ -34,6 +34,7 @@ class CSF(multi.Thread):
         try:
             ##
 
+
             logging.CyberCPLogFileWriter.statusWriter(CSF.installLogPath, 'Downloading CSF..\n', 1)
 
             command = 'wget ' + CSF.csfURL
@@ -49,7 +50,7 @@ class CSF(multi.Thread):
             ##
 
             logging.CyberCPLogFileWriter.statusWriter(CSF.installLogPath, 'Installing CSF..\n', 1)
-
+            import os
             os.chdir('csf')
 
             ### manually update csf views.py because it does not load CyberPanel properly in default configurations
