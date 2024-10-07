@@ -44,6 +44,5 @@ urlpatterns = [
     path('container/', include('containerization.urls')),
     path('CloudLinux/', include('CLManager.urls')),
     path('IncrementalBackups/', include('IncBackups.urls')),
-#   path(r'configservercsf/',include('configservercsf.urls')),
     # path('Terminal/', include('WebTerminal.urls')),
 ]
