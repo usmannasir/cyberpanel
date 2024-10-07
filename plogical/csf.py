@@ -155,6 +155,7 @@ urlpatterns = [
             WriteToFile.write(content)
             WriteToFile.close()
 
+
             command = "chmod +x install.sh"
             ProcessUtilities.normalExecutioner(command)
 
@@ -475,29 +476,42 @@ urlpatterns = [
             # for cmd in sed_commands:
             #     ProcessUtilities.executioner(cmd)
 
-            command = 'rm -Rfv /usr/local/CyberCP/configservercsf'
-            ProcessUtilities.normalExecutioner(command)
+            # command = 'rm -Rfv /usr/local/CyberCP/configservercsf'
+            # ProcessUtilities.normalExecutioner(command)
+            #
+            # command = 'rm -fv /home/cyberpanel/plugins/configservercsf'
+            # ProcessUtilities.normalExecutioner(command)
+            #
+            # command = 'rm -Rfv /usr/local/CyberCP/public/static/configservercsf'
+            # ProcessUtilities.normalExecutioner(command)
+            #
+            # command = 'sed -i "/configservercsf/d" /usr/local/CyberCP/CyberCP/settings.py'
+            # ProcessUtilities.normalExecutioner(command)
+            #
+            # command = 'sed -i "/configservercsf/d" /usr/local/CyberCP/CyberCP/urls.py'
+            # ProcessUtilities.normalExecutioner(command)
+            #
+            # if not os.path.exists('/etc/cxs/cxs.pl'):
+            #
+            #     command = 'sed -i "/configserver/d" /usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html'
+            #     ProcessUtilities.normalExecutioner(command)
+            #
+            # command = 'killall lswsgi'
+            # ProcessUtilities.normalExecutioner(command)
 
-            command = 'rm -fv /home/cyberpanel/plugins/configservercsf'
-            ProcessUtilities.normalExecutioner(command)
+            data = open('/usr/local/CyberCP/CyberCP/urls.py', 'r').readlines()
 
-            command = 'rm -Rfv /usr/local/CyberCP/public/static/configservercsf'
-            ProcessUtilities.normalExecutioner(command)
+            WriteToFile = open('/usr/local/CyberCP/CyberCP/urls.py', 'w')
 
-            command = 'sed -i "/configservercsf/d" /usr/local/CyberCP/CyberCP/settings.py'
-            ProcessUtilities.normalExecutioner(command)
-
-            command = 'sed -i "/configservercsf/d" /usr/local/CyberCP/CyberCP/urls.py'
-            ProcessUtilities.normalExecutioner(command)
-
-            if not os.path.exists('/etc/cxs/cxs.pl'):
-
-                command = 'sed -i "/configserver/d" /usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html'
-                ProcessUtilities.normalExecutioner(command)
+            for line in data:
+                if line[0] == '#' and line.find('configservercsf') > -1:
+                    WriteToFile.write("    path(r'configservercsf/',include('configservercsf.urls')),\n")
+                else:
+                    WriteToFile.write(line)
+            WriteToFile.close()
 
             command = 'killall lswsgi'
             ProcessUtilities.normalExecutioner(command)
-
 
             return 1
         except BaseException as msg:
