@@ -174,6 +174,24 @@ urlpatterns = [
             command = 'ln -s /usr/local/lscp/conf/key.pem /etc/csf/ui/server.key'
             ProcessUtilities.normalExecutioner(command)
 
+            ##
+
+            data = open('/usr/local/CyberCP/CyberCP/urls.py', 'r').readlines()
+
+            WriteToFile = open('/usr/local/CyberCP/CyberCP/urls.py', 'w')
+
+            for line in data:
+                if line[0] == '#' and line.find('configservercsf') > -1:
+                    WriteToFile.write("    path(r'configservercsf/',include('configservercsf.urls')),\n")
+                else:
+                    WriteToFile.write(line)
+            WriteToFile.close()
+
+            command = 'killall lswsgi'
+            ProcessUtilities.normalExecutioner(command)
+
+            ###
+
             # install required packages for CSF perl and /usr/bin/host
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 command = 'yum install bind-utils net-tools perl-libwww-perl.noarch perl-LWP-Protocol-https.noarch perl-GDGraph ipset -y'
