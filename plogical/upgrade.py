@@ -3552,24 +3552,24 @@ pm.max_spare_servers = 3
         command = 'csf -uf'
         Upgrade.executioner(command, 'fix csf if there', 0)
 
-        if os.path.exists('/usr/local/CyberCP/configservercsf'):
-            command = 'rm -f /usr/local/CyberCP/configservercsf/signals.py'
-            Upgrade.executioner(command, 'Start LSCPD', 1)
-
-
-        sed_commands = [
-            'sed -i "s/url(r\'^configservercsf/path(\'configservercsf/g" /usr/local/CyberCP/CyberCP/urls.py',
-            'sed -i "s/from django.conf.urls import url/from django.urls import path/g" /usr/local/CyberCP/configservercsf/urls.py',
-            'sed -i "s/import signals/import configservercsf.signals/g" /usr/local/CyberCP/configservercsf/apps.py',
-            'sed -i "s/url(r\'^$\'/path(\'\'/g" /usr/local/CyberCP/configservercsf/urls.py',
-            'sed -i "s|url(r\'^iframe/$\'|path(\'iframe/\'|g" /usr/local/CyberCP/configservercsf/urls.py',
-            'sed -i -E "s/from.*, response/from plogical.httpProc import httpProc/g" /usr/local/CyberCP/configservercsf/views.py'
-            '''sed -i -E "s#^(\s*)return render.*index\.html.*#\1proc = httpProc(request, 'configservercsf/index.html', None, 'admin')\n\1return proc.render()#g" /usr/local/CyberCP/configservercsf/views.py'''
-            'killall lswsgi'
-        ]
-
-        for cmd in sed_commands:
-            Upgrade.executioner(cmd, 'fix csf if there', 0)
+        # if os.path.exists('/usr/local/CyberCP/configservercsf'):
+        #     command = 'rm -f /usr/local/CyberCP/configservercsf/signals.py'
+        #     Upgrade.executioner(command, 'remove /usr/local/CyberCP/configservercsf/signals.py', 1)
+        #
+        #
+        # sed_commands = [
+        #     'sed -i "s/url(r\'^configservercsf/path(\'configservercsf/g" /usr/local/CyberCP/CyberCP/urls.py',
+        #     'sed -i "s/from django.conf.urls import url/from django.urls import path/g" /usr/local/CyberCP/configservercsf/urls.py',
+        #     'sed -i "s/import signals/import configservercsf.signals/g" /usr/local/CyberCP/configservercsf/apps.py',
+        #     'sed -i "s/url(r\'^$\'/path(\'\'/g" /usr/local/CyberCP/configservercsf/urls.py',
+        #     'sed -i "s|url(r\'^iframe/$\'|path(\'iframe/\'|g" /usr/local/CyberCP/configservercsf/urls.py',
+        #     'sed -i -E "s/from.*, response/from plogical.httpProc import httpProc/g" /usr/local/CyberCP/configservercsf/views.py'
+        #     '''sed -i -E "s#^(\s*)return render.*index\.html.*#\1proc = httpProc(request, 'configservercsf/index.html', None, 'admin')\n\1return proc.render()#g" /usr/local/CyberCP/configservercsf/views.py'''
+        #     'killall lswsgi'
+        # ]
+        #
+        # for cmd in sed_commands:
+        #     Upgrade.executioner(cmd, 'fix csf if there', 1)
 
 
 

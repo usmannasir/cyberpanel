@@ -419,6 +419,7 @@ class CSF(multi.Thread):
             ##### update csf views file
 
             logging.CyberCPLogFileWriter.statusWriter(CSF.installLogPath, 'CSF successfully Installed.[200]\n', 1)
+            import os
 
             try:
                 os.remove('csf.tgz')
@@ -426,19 +427,64 @@ class CSF(multi.Thread):
             except:
                 pass
 
-            sed_commands = [
-                'sed -i "s/url(r\'^configservercsf/path(\'configservercsf/g" /usr/local/CyberCP/CyberCP/urls.py',
-                'sed -i "s/from django.conf.urls import url/from django.urls import path/g" /usr/local/CyberCP/configservercsf/urls.py',
-                'sed -i "s/import signals/import configservercsf.signals/g" /usr/local/CyberCP/configservercsf/apps.py',
-                'sed -i "s/url(r\'^$\'/path(\'\'/g" /usr/local/CyberCP/configservercsf/urls.py',
-                'sed -i "s|url(r\'^iframe/$\'|path(\'iframe/\'|g" /usr/local/CyberCP/configservercsf/urls.py',
-                # 'sed -i -E "s/from.*, response/from plogical.httpProc import httpProc/g" /usr/local/CyberCP/configservercsf/views.py'
-                # '''sed -i -E "s#^(\s*)return render.*index\.html.*#\1proc = httpProc(request, 'configservercsf/index.html', None, 'admin')\n\1return proc.render()#g" /usr/local/CyberCP/configservercsf/views.py'''
-                'killall lswsgi'
-            ]
+            # sed_commands = [
+            #     'sed -i "s/url(r\'^configservercsf/path(\'configservercsf/g" /usr/local/CyberCP/CyberCP/urls.py',
+            #     'sed -i "s/from django.conf.urls import url/from django.urls import path/g" /usr/local/CyberCP/configservercsf/urls.py',
+            #     'sed -i "s/import signals/import configservercsf.signals/g" /usr/local/CyberCP/configservercsf/apps.py',
+            #     'sed -i "s/url(r\'^$\'/path(\'\'/g" /usr/local/CyberCP/configservercsf/urls.py',
+            #     'sed -i "s|url(r\'^iframe/$\'|path(\'iframe/\'|g" /usr/local/CyberCP/configservercsf/urls.py',
+            #     # 'sed -i -E "s/from.*, response/from plogical.httpProc import httpProc/g" /usr/local/CyberCP/configservercsf/views.py'
+            #     # '''sed -i -E "s#^(\s*)return render.*index\.html.*#\1proc = httpProc(request, 'configservercsf/index.html', None, 'admin')\n\1return proc.render()#g" /usr/local/CyberCP/configservercsf/views.py'''
+            #     'killall lswsgi'
+            # ]
+            #
+            # for cmd in sed_commands:
+            #     ProcessUtilities.executioner(cmd)
 
-            for cmd in sed_commands:
-                ProcessUtilities.executioner(cmd)
+            import os
+            import shutil
+
+            #### this is temp code for csf
+
+            # Function to remove a directory and its contents
+            def remove_directory(path):
+                if os.path.exists(path) and os.path.isdir(path):
+                    shutil.rmtree(path, ignore_errors=True)
+                    print(f"Removed directory: {path}")
+
+            # Function to remove a file
+            def remove_file(path):
+                if os.path.exists(path):
+                    os.remove(path)
+                    print(f"Removed file: {path}")
+
+            # Function to remove lines containing a specific string from a file
+            def remove_line_from_file(file_path, target_string):
+                if os.path.exists(file_path):
+                    with open(file_path, 'r') as file:
+                        lines = file.readlines()
+
+                    with open(file_path, 'w') as file:
+                        for line in lines:
+                            if target_string not in line:
+                                file.write(line)
+                    print(f"Removed lines containing '{target_string}' from {file_path}")
+
+            # Remove directories and files
+            remove_directory('/usr/local/CyberCP/configservercsf')
+            remove_file('/home/cyberpanel/plugins/configservercsf')
+            remove_directory('/usr/local/CyberCP/public/static/configservercsf')
+
+            # Remove 'configservercsf' from specified files
+            remove_line_from_file('/usr/local/CyberCP/CyberCP/settings.py', 'configservercsf')
+            remove_line_from_file('/usr/local/CyberCP/CyberCP/urls.py', 'configservercsf')
+
+            # Check if /etc/cxs/cxs.pl exists and remove 'configserver' from index.html if it doesn't
+            if not os.path.exists('/etc/cxs/cxs.pl'):
+                remove_line_from_file('/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html',
+                                      'configserver')
+
+            #### this is temp code for csf
 
             return 1
         except BaseException as msg:
