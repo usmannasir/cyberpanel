@@ -2,13 +2,11 @@
 import os
 import os.path
 import sys
-try:
-    import django
-    sys.path.append('/usr/local/CyberCP')
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
-    django.setup()
-except:
-    pass
+
+import django
+sys.path.append('/usr/local/CyberCP')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
+django.setup()
 
 import plogical.CyberCPLogFileWriter as logging
 import argparse

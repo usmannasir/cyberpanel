@@ -3552,6 +3552,11 @@ pm.max_spare_servers = 3
         command = 'csf -uf'
         Upgrade.executioner(command, 'fix csf if there', 0)
 
+        if os.path.exists('/usr/local/CyberCP/configservercsf'):
+            command = 'cat /dev/null > /usr/local/CyberCP/configservercsf/signals.py'
+            Upgrade.executioner(command, 'Start LSCPD', 1)
+
+
         sed_commands = [
             'sed -i "s/url(r\'^configservercsf/path(\'configservercsf/g" /usr/local/CyberCP/CyberCP/urls.py',
             'sed -i "s/from django.conf.urls import url/from django.urls import path/g" /usr/local/CyberCP/configservercsf/urls.py',
