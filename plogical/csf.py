@@ -1046,20 +1046,6 @@ echo
             # command = 'killall lswsgi'
             # ProcessUtilities.normalExecutioner(command)
 
-            data = open('/usr/local/CyberCP/CyberCP/urls.py', 'r').readlines()
-
-            WriteToFile = open('/usr/local/CyberCP/CyberCP/urls.py', 'w')
-
-            for line in data:
-                if line[0] == '#' and line.find('configservercsf') > -1:
-                    WriteToFile.write("    path(r'configservercsf/',include('configservercsf.urls')),\n")
-                else:
-                    WriteToFile.write(line)
-            WriteToFile.close()
-
-            command = 'killall lswsgi'
-            ProcessUtilities.normalExecutioner(command)
-
             return 1
         except BaseException as msg:
             try:
