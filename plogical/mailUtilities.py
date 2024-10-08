@@ -1590,12 +1590,51 @@ LogFile /var/log/clamav/clamav.log
     @staticmethod
     def reverse_dns_lookup(ip_address):
         try:
-            import socket
-            host_name, _, _ = socket.gethostbyaddr(ip_address)
-            return host_name
-        except socket.herror as e:
+            import requests
+
+            fetchURLs = requests.get('https://cyberpanel.net/dnsServers.txt')
+
+            if fetchURLs.status_code == 200:
+
+                urls = fetchURLs.json()['urls']
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.CyberCPLogFileWriter.writeToFile(f'DNS urls {urls}.')
+
+                results = []
+
+                ###
+
+                for url in urls:
+                    try:
+                        response = requests.get(f'{url}/index.php?ip={ip_address}', timeout=5)
+
+                        if os.path.exists(ProcessUtilities.debugPath):
+                            logging.CyberCPLogFileWriter.writeToFile(f'url to call {ip_address} is {url}')
+
+                        if response.status_code == 200:
+                            data = response.json()
+
+                            if os.path.exists(ProcessUtilities.debugPath):
+                                logging.CyberCPLogFileWriter.writeToFile(f'response from dns system {str(data)}')
+
+                            if data['status'] == 1:
+                                results.append(data['results']['8.8.8.8'])
+                                results.append(data['results']['1.1.1.1'])
+                                results.append(data['results']['9.9.9.9'])
+                    except:
+                        pass
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.CyberCPLogFileWriter.writeToFile(f'rDNS result of {ip_address} is {str(results)}')
+
+                ###
+
+                return results
+        except BaseException as e:
+            logging.CyberCPLogFileWriter.writeToFile(f'Error in fetch rDNS {str(msg)}')
             # Handle errors, e.g., if reverse DNS lookup fails
-            return None
+            return []
 
     @staticmethod
     def SaveEmailLimitsNew(tempPath):

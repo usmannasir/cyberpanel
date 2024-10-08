@@ -94,20 +94,20 @@ class virtualHostUtilities:
         ### if skipRDNSCheck == 1, it means we need to skip checking for rDNS
         if skipRDNSCheck:
             ### so if skipRDNSCheck is 1 means we need to skip checking for rDNS so lets set current as rDNS because no checking is required
-            rDNS = CurrentHostName
+            rDNS = [CurrentHostName]
         else:
             rDNS = mailUtilities.reverse_dns_lookup(serverIP)
 
         time.sleep(3)
 
         if os.path.exists(ProcessUtilities.debugPath):
-            print(f'Postfix Hostname: {PostFixHostname}. Server IP {serverIP}. rDNS: {rDNS}')
-            logging.CyberCPLogFileWriter.writeToFile(f'Postfix Hostname: {PostFixHostname}. Server IP {serverIP}. rDNS: {rDNS}, rDNS check {skipRDNSCheck}')
+            print(f'Postfix Hostname: {PostFixHostname}. Server IP {serverIP}. rDNS: {str(rDNS)}')
+            logging.CyberCPLogFileWriter.writeToFile(f'Postfix Hostname: {PostFixHostname}. Server IP {serverIP}. rDNS: {str(rDNS)}, rDNS check {skipRDNSCheck}')
 
         ### Case 1 if hostname already exists check if same hostname in postfix and rdns
         filePath = '/etc/letsencrypt/live/%s/fullchain.pem' % (PostFixHostname)
 
-        if (CurrentHostName == PostFixHostname and CurrentHostName == rDNS) and os.path.exists(filePath):
+        if (CurrentHostName == PostFixHostname and CurrentHostName in rDNS) and os.path.exists(filePath):
 
             # expireData = x509.get_notAfter().decode('ascii')
             # finalDate = datetime.strptime(expireData, '%Y%m%d%H%M%SZ')
@@ -222,16 +222,16 @@ class virtualHostUtilities:
             ### if skipRDNSCheck == 1, it means we need to skip checking for rDNS
             if skipRDNSCheck:
                 ### so if skipRDNSCheck is 1 means we need to skip checking for rDNS so lets set current domain as rDNS because no checking is required
-                rDNS = Domain
+                rDNS = [Domain]
 
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.CyberCPLogFileWriter.writeToFile(
-                    f'Second if: Postfix Hostname: {PostFixHostname}. Server IP {serverIP}. rDNS: {rDNS}, rDNS check {skipRDNSCheck}')
+                    f'Second if: Postfix Hostname: {PostFixHostname}. Server IP {serverIP}. rDNS: {str(rDNS)}, rDNS check {skipRDNSCheck}')
 
             #first check if hostname is already configured as rDNS, if not return error
 
 
-            if Domain != rDNS:
+            if Domain not in rDNS:
                 message = 'Domain that you have provided is not configured as rDNS for your server IP. [404]'
                 print(message)
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, message)
