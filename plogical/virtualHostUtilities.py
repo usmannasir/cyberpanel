@@ -371,6 +371,58 @@ local_name %s {
                 command = 'systemctl restart postfix'
                 ProcessUtilities.executioner(command)
 
+        ### even if mail domain creation is not set, we will have to set up auto discover for main domain
+
+        dovecotPath = '/etc/dovecot/dovecot.conf'
+
+        if os.path.exists(dovecotPath):
+            dovecotContent = open(dovecotPath, 'r').read()
+
+            if dovecotContent.find('/live/%s/' % (virtualHostName)) == -1:
+                content = """
+local_name %s {
+        ssl_cert = </etc/letsencrypt/live/%s/fullchain.pem
+        ssl_key = </etc/letsencrypt/live/%s/privkey.pem
+}
+""" % (virtualHostName, virtualHostName, virtualHostName)
+
+                writeToFile = open(dovecotPath, 'a')
+                writeToFile.write(content)
+                writeToFile.close()
+
+            command = 'systemctl restart dovecot'
+            ProcessUtilities.executioner(command)
+
+            ### Update postfix configurations
+
+            postFixPath = '/etc/postfix/main.cf'
+
+            postFixContent = open(postFixPath, 'r').read()
+
+            if postFixContent.find('tls_server_sni_maps') == -1:
+                writeToFile = open(postFixPath, 'a')
+                writeToFile.write('\ntls_server_sni_maps = hash:/etc/postfix/vmail_ssl.map\n')
+                writeToFile.close()
+
+            postfixMapFile = '/etc/postfix/vmail_ssl.map'
+            try:
+                postfixMapFileContent = open(postfixMapFile, 'r').read()
+            except:
+                postfixMapFileContent = ''
+
+            if postfixMapFileContent.find('/live/%s/' % (virtualHostName)) == -1:
+                mapContent = f'{virtualHostName} /etc/letsencrypt/live/{virtualHostName}/privkey.pem /etc/letsencrypt/live/{virtualHostName}/fullchain.pem\n'
+                writeToFile = open(postfixMapFile, 'a')
+                writeToFile.write(mapContent)
+                writeToFile.close()
+
+            command = 'postmap -F hash:/etc/postfix/vmail_ssl.map'
+
+            ProcessUtilities.executioner(command)
+
+            command = 'systemctl restart postfix'
+            ProcessUtilities.executioner(command)
+
     @staticmethod
     def createVirtualHost(virtualHostName, administratorEmail, phpVersion, virtualHostUser, ssl,
                           dkimCheck, openBasedir, websiteOwner, packageName, apache,
