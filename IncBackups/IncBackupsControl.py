@@ -138,7 +138,7 @@ class IncJobs(multi.Thread):
                 backupExcludesFile = '/home/%s/backup-exclude.conf' % (self.website.domain)
                 resticBackupExcludeCMD = ' --exclude-file=%s' % (backupExcludesFile)
 
-                command = 'AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s restic -r s3:s3.amazonaws.com/%s backup %s --password-file %s --exclude /home/%s/backup --exclude /home/%s/incbackup' % (
+                command = f'AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s restic -r s3:s3.amazonaws.com/%s backup %s --password-file %s --exclude /home/{self.website.domain}/logs --exclude /home/%s/backup --exclude /home/%s/incbackup' % (
                     key, secret, self.website.domain, backupPath, self.passwordFile, self.website.domain, self.website.domain)
 
                 # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
@@ -151,6 +151,11 @@ class IncJobs(multi.Thread):
                     return 0
 
                 snapShotid = result.split(' ')[-2]
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(f'Snapshot id {snapShotid} from result {result}.')
+
+
 
                 if bType == 'database':
                     newSnapshot = JobSnapshots(job=self.jobid,

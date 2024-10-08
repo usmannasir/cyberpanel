@@ -448,6 +448,7 @@ class IncScheduler(multi.Thread):
                                             logging.writeToFile(f'Retention time {timerrtention}')
                                         except:
                                             print(f'Retention time not defined.')
+                                            timerrtention = '6m'
 
                                         if (timerrtention == '1d'):
                                             new = CUrrenttimestamp - float(86400)
