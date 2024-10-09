@@ -3069,18 +3069,8 @@ class ApplicationInstaller(multi.Thread):
                 ssh_keygen_command = "ssh-keygen -t rsa -b 2048 -f ~/.ssh/cyberpanelbackup -q -N ''"
                 stdin, stdout, stderr = ssh.exec_command(ssh_keygen_command)
 
-                # # Check for errors in SSH key generation
-                # error = stderr.read().decode()
-                # if error:
-                #     if os.path.exists(ProcessUtilities.debugPath):
-                #         logging.writeToFile(f"Error generating SSH key: {error}")
-                # else:
-                #     if os.path.exists(ProcessUtilities.debugPath):
-                #         logging.writeToFile("SSH key 'cyberpanelbackup' generated successfully.")
-
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(f"SSH key generated..")
-
 
                 # 2. Download the SSH keys from the remote server to the local server
 
@@ -3123,7 +3113,7 @@ class ApplicationInstaller(multi.Thread):
                 from WebTerminal.CPWebSocket import SSHServer
                 SSHServer.findSSHPort()
 
-                command = f"sudo scp -o StrictHostKeyChecking=no -i {remote_private_key} -P {str(SSHServer.DEFAULT_PORT)} {remotepath} root@{ACLManager.fetchIP()}:{loaclpath}"
+                command = f"scp -o StrictHostKeyChecking=no -i {remote_private_key} -P {str(SSHServer.DEFAULT_PORT)} {remotepath} root@{ACLManager.fetchIP()}:{loaclpath}"
 
                 stdin, stdout, stderr = ssh.exec_command(command)
 
@@ -6573,7 +6563,9 @@ class ApplicationInstaller(multi.Thread):
             nbd = NormalBackupDests.objects.get(name=ocb.sftpUser)
             ip = json.loads(nbd.config)['ip']
 
-            # Connect to the remote server using the private key
+
+            #######################
+
             ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             # Read the private key content
@@ -6585,9 +6577,104 @@ class ApplicationInstaller(multi.Thread):
             key = paramiko.RSAKey.from_private_key(key_file)
             # Connect to the server using the private key
             ssh.connect(ip, username=ocb.sftpUser, pkey=key)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(f"SFTP Connected successfully..")
+
+            # 1. Generate SSH keys on the remote server with the name 'cyberpanelbackup'
+            ssh_keygen_command = "ssh-keygen -t rsa -b 2048 -f ~/.ssh/cyberpanelbackup -q -N ''"
+            stdin, stdout, stderr = ssh.exec_command(ssh_keygen_command)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(f"SSH key generated..")
+
+            # 2. Download the SSH keys from the remote server to the local server
+
+            ### put generated key in local server
+
+            remote_private_key = "~/.ssh/cyberpanelbackup"
+            remote_public_key = "~/.ssh/cyberpanelbackup.pub"
+
+            ssh_keygen_command = f"cat {remote_public_key}"
+            stdin, stdout, stderr = ssh.exec_command(ssh_keygen_command)
+
+            # Read the output (stdout) into a variable
+            public_key_content = stdout.read().decode().strip()
+
+            if len(public_key_content) < 10:
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines(f"Failed to get content of public key. [404]")
+                statusFile.close()
+                return 0
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(f'Key from remote server {public_key_content}')
+
+            command = f'echo "{public_key_content}" >> ~/.ssh/authorized_keys'
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = f"awk '!seen[$0]++' ~/.ssh/authorized_keys > temp && mv temp ~/.ssh/authorized_keys"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = f'cat ~/.ssh/authorized_keys'
+            updatedAuth = ProcessUtilities.outputExecutioner(command, 'root', True)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(f'Updated content of authorized key file {updatedAuth}')
+
+            ####
+
             sftp = ssh.open_sftp()
 
-            sftp.get(f'cpbackups/{folder}/{backupfile}', f'/home/cyberpanel/{backupfile}', callback=self.UpdateDownloadStatus)
+            logging.statusWriter(self.tempStatusPath, 'Downloading Backups...,15')
+            loaclpath = f'/home/cyberpanel/{backupfile}'
+            remotepath = f'cpbackups/{folder}/{backupfile}'
+            logging.writeToFile("Downloading start")
+
+            from WebTerminal.CPWebSocket import SSHServer
+            SSHServer.findSSHPort()
+
+            command = f"scp -o StrictHostKeyChecking=no -i {remote_private_key} -P {str(SSHServer.DEFAULT_PORT)} {remotepath} root@{ACLManager.fetchIP()}:{loaclpath}"
+
+            stdin, stdout, stderr = ssh.exec_command(command)
+
+            # Read the output (stdout) into a variable
+            successRet = stdout.read().decode().strip()
+            errorRet = stderr.read().decode().strip()
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(f"Command used to retrieve backup {command}")
+                if errorRet:
+                    logging.writeToFile(f"Error in scp command to retrieve backup {errorRet}")
+                    statusFile = open(tempStatusPath, 'w')
+                    statusFile.writelines(f"Error in scp command to retrieve backup {errorRet} [404]")
+                    statusFile.close()
+                    return 0
+                else:
+                    logging.writeToFile(f"Success in scp command to retrieve backup {successRet}")
+
+            if sftp:
+                sftp.close()  # Close the SFTP session
+            if ssh:
+                ssh.close()  # Close the SSH connection
+
+            #######################
+
+            # # Connect to the remote server using the private key
+            # ssh = paramiko.SSHClient()
+            # ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            # # Read the private key content
+            # private_key_path = '/root/.ssh/cyberpanel'
+            # key_content = ProcessUtilities.outputExecutioner(f'cat {private_key_path}').rstrip('\n')
+            #
+            # # Load the private key from the content
+            # key_file = StringIO(key_content)
+            # key = paramiko.RSAKey.from_private_key(key_file)
+            # # Connect to the server using the private key
+            # ssh.connect(ip, username=ocb.sftpUser, pkey=key)
+            # sftp = ssh.open_sftp()
+            #
+            # sftp.get(f'cpbackups/{folder}/{backupfile}', f'/home/cyberpanel/{backupfile}', callback=self.UpdateDownloadStatus)
 
             if not os.path.exists('/home/backup'):
                 command = 'mkdir /home/backup'

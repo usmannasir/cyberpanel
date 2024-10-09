@@ -656,31 +656,31 @@
 
                         {% endif %}
 
-                        <li id="sidebar-menu-item-backupV2">
-                            <a href="{% url 'loadBackupHome' %}" title="{% trans 'BackupV2' %}">
-                                <i class="glyph-icon tooltip-button icon-copy" title=".icon-folder"></i>
-                                <span>{% trans "Backup V2" %}</span>
-                            </a>
-                            <div class="sidebar-submenu">
-
-                                <ul>
-                                    <li><a href="{% url 'CreateV2Backup' %}"
-                                           title="{% trans "Create V2 Backup" %}"><span>{% trans "Create/Restore V2 Backup" %}</span></a>
-                                    </li>
-                                    <li><a href="{% url 'ConfigureV2Backup' %}"
-                                           title="{% trans "Configure Backends" %}"><span>{% trans "Configure Backends" %}</span></a>
-                                    </li>
-                                    <li><a href="{% url 'schedulev2Backups' %}"
-                                           title="{% trans "Schedule V2 Backup" %}"><span>{% trans "Schedule V2 Backup" %}</span></a>
-                                    </li>
-                                    <li><a href="{% url 'DeleteRepoV2' %}"
-                                           title="{% trans "Delete V2 Backup Repo" %}"><span>{% trans "Delete V2 Backup Repo" %}</span></a>
-                                    </li>
-
-                                </ul>
-
-                            </div><!-- .sidebar-submenu -->
-                        </li>
+{#                        <li id="sidebar-menu-item-backupV2">#}
+{#                            <a href="{% url 'loadBackupHome' %}" title="{% trans 'BackupV2' %}">#}
+{#                                <i class="glyph-icon tooltip-button icon-copy" title=".icon-folder"></i>#}
+{#                                <span>{% trans "Backup V2" %}</span>#}
+{#                            </a>#}
+{#                            <div class="sidebar-submenu">#}
+{##}
+{#                                <ul>#}
+{#                                    <li><a href="{% url 'CreateV2Backup' %}"#}
+{#                                           title="{% trans "Create V2 Backup" %}"><span>{% trans "Create/Restore V2 Backup" %}</span></a>#}
+{#                                    </li>#}
+{#                                    <li><a href="{% url 'ConfigureV2Backup' %}"#}
+{#                                           title="{% trans "Configure Backends" %}"><span>{% trans "Configure Backends" %}</span></a>#}
+{#                                    </li>#}
+{#                                    <li><a href="{% url 'schedulev2Backups' %}"#}
+{#                                           title="{% trans "Schedule V2 Backup" %}"><span>{% trans "Schedule V2 Backup" %}</span></a>#}
+{#                                    </li>#}
+{#                                    <li><a href="{% url 'DeleteRepoV2' %}"#}
+{#                                           title="{% trans "Delete V2 Backup Repo" %}"><span>{% trans "Delete V2 Backup Repo" %}</span></a>#}
+{#                                    </li>#}
+{##}
+{#                                </ul>#}
+{##}
+{#                            </div><!-- .sidebar-submenu -->#}
+{#                        </li>#}
 
                         <li id="sidebar-menu-item-backup">
                             <a href="{% url 'loadBackupHome' %}" title="{% trans 'Backup' %}">
@@ -690,7 +690,7 @@
                             <div class="sidebar-submenu">
 
                                 <ul>
-                                {% if admin or createBackup %}
+                                    {% if admin or createBackup %}
                                         <li><a href="{% url 'OneClickBackups' %}"
                                                title="{% trans 'One-Click Backups' %}"><span>{% trans "One-Click Backups" %}</span></a>
                                         </li>
@@ -731,33 +731,72 @@
                         </li>
 
                         <li id="sidebar-menu-item-incremental-backup">
-                            <a href="{% url 'loadBackupHome' %}" title="{% trans 'Incremental Backup - Beta' %}">
+                            <a href="{% url 'loadBackupHome' %}" title="{% trans 'Incremental Backups' %}">
                                 <i class="glyph-icon tooltip-button icon-save" title="Incremental Backup"></i>
                                 <span>{% trans "Incremental Backup" %}</span>
                             </a>
                             <div class="sidebar-submenu">
-
                                 <ul>
                                     {% if admin or createBackup %}
-                                        <li><a href="{% url 'createBackupInc' %}"
-                                               title="{% trans 'Create Backup' %}"><span>{% trans "Create/Restore Backup" %}</span></a>
-                                        </li>
-                                    {% endif %}
-                                    {% if admin or restoreBackup %}
+
                                         <li><a href="{% url 'backupDestinationsInc' %}"
-                                               title="{% trans 'Restore Backup' %}"><span>{% trans "Add/Remove Destinations" %}</span></a>
+                                               title="{% trans 'Restore Backup' %}"><span>{% trans "Backups v2" %}</span></a>
+
+                                            <div class="sidebar-submenu">
+
+                                                <ul>
+                                                    <li><a href="{% url 'CreateV2Backup' %}"
+                                                           title="{% trans "Create V2 Backup" %}"><span>{% trans "Create/Restore V2 Backup" %}</span></a>
+                                                    </li>
+                                                    <li><a href="{% url 'ConfigureV2Backup' %}"
+                                                           title="{% trans "Configure Backends" %}"><span>{% trans "Configure Backends" %}</span></a>
+                                                    </li>
+                                                    <li><a href="{% url 'schedulev2Backups' %}"
+                                                           title="{% trans "Schedule V2 Backup" %}"><span>{% trans "Schedule V2 Backup" %}</span></a>
+                                                    </li>
+                                                    <li><a href="{% url 'DeleteRepoV2' %}"
+                                                           title="{% trans "Delete V2 Backup Repo" %}"><span>{% trans "Delete V2 Backup Repo" %}</span></a>
+                                                    </li>
+
+                                                </ul>
+
+                                            </div><!-- .sidebar-submenu -->
+
+                                        </li>
+
+                                        <li><a href="{% url 'createBackupInc' %}"
+                                               title="{% trans 'Create Backup' %}"><span>{% trans "v1 (Deprecated)" %}</span></a>
+
+                                            <div class="sidebar-submenu">
+                                                <ul>
+                                                    {% if admin or createBackup %}
+                                                        <li><a href="{% url 'createBackupInc' %}"
+                                                               title="{% trans 'Create Backup' %}"><span>{% trans "Create/Restore Backup" %}</span></a>
+
+                                                        </li>
+                                                    {% endif %}
+                                                    {% if admin or restoreBackup %}
+                                                        <li><a href="{% url 'backupDestinationsInc' %}"
+                                                               title="{% trans 'Restore Backup' %}"><span>{% trans "Add/Remove Destinations" %}</span></a>
+                                                        </li>
+                                                    {% endif %}
+                                                    {% if admin or restoreBackup %}
+                                                        <li><a href="{% url 'scheduleBackupsInc' %}"
+                                                               title="{% trans 'Schedule Backups' %}"><span>{% trans "Schedule Backups" %}</span></a>
+                                                        </li>
+                                                    {% endif %}
+                                                    {% if admin or remoteBackups %}
+                                                        <li><a href="{% url 'restoreRemoteBackupsInc' %}"
+                                                               title="{% trans 'Restore from Remote Server' %}"><span>{% trans "Restore from Remote" %}</span></a>
+                                                        </li>
+                                                    {% endif %}
+                                                </ul>
+
+                                            </div>
+
                                         </li>
                                     {% endif %}
-                                    {% if admin or restoreBackup %}
-                                        <li><a href="{% url 'scheduleBackupsInc' %}"
-                                               title="{% trans 'Schedule Backups' %}"><span>{% trans "Schedule Backups" %}</span></a>
-                                        </li>
-                                    {% endif %}
-                                    {% if admin or remoteBackups %}
-                                        <li><a href="{% url 'restoreRemoteBackupsInc' %}"
-                                               title="{% trans 'Restore from Remote Server' %}"><span>{% trans "Restore from Remote" %}</span></a>
-                                        </li>
-                                    {% endif %}
+
                                 </ul>
 
                             </div>
