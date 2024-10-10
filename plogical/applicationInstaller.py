@@ -6647,12 +6647,10 @@ class ApplicationInstaller(multi.Thread):
                 if errorRet:
                     logging.writeToFile(f"Error in scp command to retrieve backup {errorRet}")
                     statusFile = open(tempStatusPath, 'w')
-                    statusFile.writelines(f"Error in scp command to retrieve backup {errorRet} [404]")
+                    statusFile.writelines(f"Error in scp command to retrieve backup {errorRet}.")
                     statusFile.close()
-                    return 0
-                else:
+
                     try:
-                        logging.writeToFile(f"Success in scp command to retrieve backup {successRet}")
                         sftp.get(f'cpbackups/{folder}/{backupfile}', f'/home/cyberpanel/{backupfile}',
                                  callback=self.UpdateDownloadStatus)
                     except BaseException as msg:
@@ -6661,6 +6659,9 @@ class ApplicationInstaller(multi.Thread):
                         statusFile.writelines(f"Failed to download file {str(msg)} [404]")
                         statusFile.close()
                         return 0
+
+                else:
+                    logging.writeToFile(f"Success in scp command to retrieve backup {successRet}")
 
 
 
