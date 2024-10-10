@@ -6651,7 +6651,18 @@ class ApplicationInstaller(multi.Thread):
                     statusFile.close()
                     return 0
                 else:
-                    logging.writeToFile(f"Success in scp command to retrieve backup {successRet}")
+                    try:
+                        logging.writeToFile(f"Success in scp command to retrieve backup {successRet}")
+                        sftp.get(f'cpbackups/{folder}/{backupfile}', f'/home/cyberpanel/{backupfile}',
+                                 callback=self.UpdateDownloadStatus)
+                    except BaseException as msg:
+                        logging.writeToFile(f"Failed to download file {str(msg)} [404]")
+                        statusFile = open(tempStatusPath, 'w')
+                        statusFile.writelines(f"Failed to download file {str(msg)} [404]")
+                        statusFile.close()
+                        return 0
+
+
 
             if sftp:
                 sftp.close()  # Close the SFTP session
