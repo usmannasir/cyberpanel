@@ -71,9 +71,16 @@ class cPanelImporter:
                     self.MainSite = value
                     self.PHPVersion = value[9]
                     self.InheritPHP = self.PHPDecider(None)
+
+                    if os.path.exists(ProcessUtilities.debugPath):
+                        print(f'Main domain: {self.MainSite}, MainSite php version or version to be used for sites with no PHP {self.InheritPHP}')
+
                 else:
                     self.OtherDomainNames.append(key)
                     self.OtherDomains.append(value)
+
+                    if os.path.exists(ProcessUtilities.debugPath):
+                        print(f'Other domains: {key}, Value {str(value)}')
 
         except BaseException as msg:
             print(str(msg))
@@ -773,9 +780,18 @@ class cPanelImporter:
 
             ####
 
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.statusWriter(self.logFile, f'Content of user data before starting to restore emails {str(UserData)}')
+
 
             for items in os.listdir(UserData):
+
                 FinalMailDomainPath = '%s/%s' % (UserData, items)
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.statusWriter(self.logFile,
+                                         f'Final email path for {items} is {str(FinalMailDomainPath)}')
+
                 if os.path.isdir(FinalMailDomainPath):
                     if items[0] == '.':
                         continue
@@ -804,6 +820,10 @@ class cPanelImporter:
 
                                     MailPathInBackup = '%s/%s' % (FinalMailDomainPath, it)
 
+                                    if os.path.exists(ProcessUtilities.debugPath):
+                                        logging.statusWriter(self.logFile,
+                                                             f'Mail path in backup for {items} is {str(MailPathInBackup)}')
+
                                     command = 'mv %s %s/Maildir' % (MailPathInBackup, MailPath)
                                     subprocess.call(command, shell=True)
 
@@ -818,6 +838,10 @@ class cPanelImporter:
                                     ProcessUtilities.normalExecutioner(command)
 
                                     MailPathInBackup = '%s/%s' % (FinalMailDomainPath, it)
+
+                                    if os.path.exists(ProcessUtilities.debugPath):
+                                        logging.statusWriter(self.logFile,
+                                                             f'Mail path in backup for {items} is {str(MailPathInBackup)}')
 
                                     command = 'mv %s %s/Mdbox' % (MailPathInBackup, MailPath)
                                     subprocess.call(command, shell=True)
