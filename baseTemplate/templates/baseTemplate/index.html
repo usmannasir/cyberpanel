@@ -255,7 +255,7 @@
                                 <i class="glyph-icon icon-dashboard"></i>
                                 <span>{% trans "Dashboard" %}</span>
                             </a>
-                            {% if admin or versionManagement %}
+                            {% if admin %}
                                 <a id="sidebar-menu-item-version-management" href="{% url 'versionManagment' %}"
                                    title="{% trans 'Version Management' %}">
                                     <i class="glyph-icon tooltip-button icon-info"
@@ -270,25 +270,25 @@
                                        aria-describedby="tooltip896208"></i>
                                     <span>{% trans "Design" %}</span>
                                 </a>
-                                <a id="sidebar-menu-item-connect" href="https://platform.cyberpersons.com/"
-                                   title="{% trans 'Connect' %}">
-                                    <i class="glyph-icon tooltip-button icon-link" title="{% trans 'Connect' %}"
-                                       data-original-title=".icon-cloud-upload" aria-describedby="tooltip896208"></i>
-                                    <span>{% trans "Connect" %}</span>
-                                </a>
-                                <a id="sidebar-menu-item-community" target="_blank"
-                                   href="https://go.cyberpanel.net/community"
-                                   title="{% trans 'Connect' %}">
-                                    <i class="glyph-icon tooltip-button icon-comments-o" title="{% trans 'Community' %}"
-                                       data-original-title=".icon-comments-alt" aria-describedby="tooltip896208"></i>
-                                    <span>{% trans "Community" %}</span>
-                                </a>
+
 
                             {% endif %}
+                            <a id="sidebar-menu-item-connect" href="https://platform.cyberpersons.com/"
+                               title="{% trans 'Connect' %}">
+                                <i class="glyph-icon tooltip-button icon-link" title="{% trans 'Connect' %}"
+                                   data-original-title=".icon-cloud-upload" aria-describedby="tooltip896208"></i>
+                                <span>{% trans "Connect" %}</span>
+                            </a>
+                            <a id="sidebar-menu-item-community" target="_blank"
+                               href="https://go.cyberpanel.net/community"
+                               title="{% trans 'Connect' %}">
+                                <i class="glyph-icon tooltip-button icon-comments-o" title="{% trans 'Community' %}"
+                                   data-original-title=".icon-comments-alt" aria-describedby="tooltip896208"></i>
+                                <span>{% trans "Community" %}</span>
+                            </a>
                         </li>
                         <li class="divider"></li>
                         <li class="header"><span>{% trans "Main" %}</span></li>
-
                         <li id="sidebar-menu-item-users">
                             <a href="{% url 'loadUsersHome' %}" title="{% trans 'Users' %}">
                                 <i class="glyph-icon icon-users" title="{% trans 'Users' %}"></i>
@@ -656,31 +656,31 @@
 
                         {% endif %}
 
-{#                        <li id="sidebar-menu-item-backupV2">#}
-{#                            <a href="{% url 'loadBackupHome' %}" title="{% trans 'BackupV2' %}">#}
-{#                                <i class="glyph-icon tooltip-button icon-copy" title=".icon-folder"></i>#}
-{#                                <span>{% trans "Backup V2" %}</span>#}
-{#                            </a>#}
-{#                            <div class="sidebar-submenu">#}
-{##}
-{#                                <ul>#}
-{#                                    <li><a href="{% url 'CreateV2Backup' %}"#}
-{#                                           title="{% trans "Create V2 Backup" %}"><span>{% trans "Create/Restore V2 Backup" %}</span></a>#}
-{#                                    </li>#}
-{#                                    <li><a href="{% url 'ConfigureV2Backup' %}"#}
-{#                                           title="{% trans "Configure Backends" %}"><span>{% trans "Configure Backends" %}</span></a>#}
-{#                                    </li>#}
-{#                                    <li><a href="{% url 'schedulev2Backups' %}"#}
-{#                                           title="{% trans "Schedule V2 Backup" %}"><span>{% trans "Schedule V2 Backup" %}</span></a>#}
-{#                                    </li>#}
-{#                                    <li><a href="{% url 'DeleteRepoV2' %}"#}
-{#                                           title="{% trans "Delete V2 Backup Repo" %}"><span>{% trans "Delete V2 Backup Repo" %}</span></a>#}
-{#                                    </li>#}
-{##}
-{#                                </ul>#}
-{##}
-{#                            </div><!-- .sidebar-submenu -->#}
-{#                        </li>#}
+                        {#                        <li id="sidebar-menu-item-backupV2">#}
+                        {#                            <a href="{% url 'loadBackupHome' %}" title="{% trans 'BackupV2' %}">#}
+                        {#                                <i class="glyph-icon tooltip-button icon-copy" title=".icon-folder"></i>#}
+                        {#                                <span>{% trans "Backup V2" %}</span>#}
+                        {#                            </a>#}
+                        {#                            <div class="sidebar-submenu">#}
+                        {##}
+                        {#                                <ul>#}
+                        {#                                    <li><a href="{% url 'CreateV2Backup' %}"#}
+                        {#                                           title="{% trans "Create V2 Backup" %}"><span>{% trans "Create/Restore V2 Backup" %}</span></a>#}
+                        {#                                    </li>#}
+                        {#                                    <li><a href="{% url 'ConfigureV2Backup' %}"#}
+                        {#                                           title="{% trans "Configure Backends" %}"><span>{% trans "Configure Backends" %}</span></a>#}
+                        {#                                    </li>#}
+                        {#                                    <li><a href="{% url 'schedulev2Backups' %}"#}
+                        {#                                           title="{% trans "Schedule V2 Backup" %}"><span>{% trans "Schedule V2 Backup" %}</span></a>#}
+                        {#                                    </li>#}
+                        {#                                    <li><a href="{% url 'DeleteRepoV2' %}"#}
+                        {#                                           title="{% trans "Delete V2 Backup Repo" %}"><span>{% trans "Delete V2 Backup Repo" %}</span></a>#}
+                        {#                                    </li>#}
+                        {##}
+                        {#                                </ul>#}
+                        {##}
+                        {#                            </div><!-- .sidebar-submenu -->#}
+                        {#                        </li>#}
 
                         <li id="sidebar-menu-item-backup">
                             <a href="{% url 'loadBackupHome' %}" title="{% trans 'Backup' %}">
