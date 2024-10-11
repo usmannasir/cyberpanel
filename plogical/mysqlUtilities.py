@@ -292,27 +292,52 @@ password=%s
 
             if rustic == 0:
 
+                command = 'rm -f ' + tempStoragePath + "/" + databaseName + '.sql'
+                ProcessUtilities.executioner(command)
+
                 command = 'mysqldump --defaults-file=/home/cyberpanel/.my.cnf -u %s --host=%s --port %s %s' % (mysqluser, mysqlhost, mysqlport, databaseName)
 
-                if os.path.exists(ProcessUtilities.debugPath):
-                    logging.CyberCPLogFileWriter.writeToFile(command)
+                # if os.path.exists(ProcessUtilities.debugPath):
+                #     logging.CyberCPLogFileWriter.writeToFile(command)
+                #
+                #     logging.CyberCPLogFileWriter.writeToFile(f'Get current executing uid {os.getuid()}')
+                #
+                # cmd = shlex.split(command)
+                #
+                # try:
+                #     errorPath = '/home/cyberpanel/error-logs.txt'
+                #     errorLog = open(errorPath, 'a')
+                #     with open(tempStoragePath + "/" + databaseName + '.sql', 'w') as f:
+                #         res = subprocess.call(cmd, stdout=f, stderr=errorLog, shell=SHELL)
+                #         if res != 0:
+                #             logging.CyberCPLogFileWriter.writeToFile(
+                #                 "Database: " + databaseName + "could not be backed! [createDatabaseBackup]")
+                #             return 0
+                # except subprocess.CalledProcessError as msg:
+                #     logging.CyberCPLogFileWriter.writeToFile(
+                #         "Database: " + databaseName + "could not be backed! Error: %s. [createDatabaseBackup]" % (
+                #             str(msg)))
+                #     return 0
 
                 cmd = shlex.split(command)
 
-                try:
-                    errorPath = '/home/cyberpanel/error-logs.txt'
-                    errorLog = open(errorPath, 'a')
-                    with open(tempStoragePath + "/" + databaseName + '.sql', 'w') as f:
-                        res = subprocess.call(cmd, stdout=f, stderr=errorLog, shell=SHELL)
-                        if res != 0:
-                            logging.CyberCPLogFileWriter.writeToFile(
-                                "Database: " + databaseName + "could not be backed! [createDatabaseBackup]")
-                            return 0
-                except subprocess.CalledProcessError as msg:
-                    logging.CyberCPLogFileWriter.writeToFile(
-                        "Database: " + databaseName + "could not be backed! Error: %s. [createDatabaseBackup]" % (
-                            str(msg)))
-                    return 0
+                with open(tempStoragePath + "/" + databaseName + '.sql', 'w') as f:
+                    # Using subprocess.run to capture stdout and stderr
+                    result = subprocess.run(
+                        cmd,
+                        stdout=f,
+                        stderr=subprocess.PIPE,
+                        shell=SHELL
+                    )
+
+                    # Check if the command was successful
+                    if result.returncode != 0:
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            "Database: " + databaseName + " could not be backed up! [createDatabaseBackup]"
+                        )
+                        # Log stderr
+                        logging.CyberCPLogFileWriter.writeToFile(result.stderr.decode('utf-8'))
+                        return 0
 
             else:
                 SHELL = True

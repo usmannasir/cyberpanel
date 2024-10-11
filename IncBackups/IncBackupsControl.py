@@ -665,6 +665,9 @@ class IncJobs(multi.Thread):
                 if mysqlUtilities.mysqlUtilities.createDatabaseBackup(items.dbName, UploadPath) == 0:
                     return 0
 
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(f'Backup created for DB Incscheduler.backupDatabases')
+
                 dbPath = '%s/%s.sql' % (UploadPath, items.dbName)
                 dbPathNew = '/home/%s/%s.sql' % (self.website.domain, items.dbName)
 
