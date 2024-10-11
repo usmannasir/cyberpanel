@@ -2291,7 +2291,7 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
                     os.remove(lscpdPath)
 
                 try:
-                    result = subprocess.run('uname -a', capture_output=True, text=True, shell=True)
+                    result = subprocess.run('uname -a', capture_output=True, universal_newlines=True, shell=True)
 
                     if result.stdout.find('aarch64') == -1:
                         lscpdSelection = 'lscpd-0.3.1'
@@ -3625,7 +3625,7 @@ pm.max_spare_servers = 3
 
 
                 command = 'mount -o remount /'
-                mResult = subprocess.run(command, capture_output=True, text=True, shell=True)
+                mResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
                 if mResult.returncode != 0:
                     fstab_path = '/etc/fstab'
                     backup_path = fstab_path + '.bak'
@@ -3660,7 +3660,7 @@ pm.max_spare_servers = 3
                     return 0
 
                 command = 'mount -o remount /'
-                mResult = subprocess.run(command, capture_output=True, text=True, shell=True)
+                mResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
                 if mResult.returncode != 0:
                     fstab_path = '/etc/fstab'
                     backup_path = fstab_path + '.bak'
@@ -3672,7 +3672,7 @@ pm.max_spare_servers = 3
                     return 0
 
                 command = 'quotacheck -ugm /'
-                mResult = subprocess.run(command, capture_output=True, text=True, shell=True)
+                mResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
                 if mResult.returncode != 0:
                     fstab_path = '/etc/fstab'
                     backup_path = fstab_path + '.bak'
@@ -3686,19 +3686,19 @@ pm.max_spare_servers = 3
                 ####
 
                 command = "find /lib/modules/ -type f -name '*quota_v*.ko*'"
-                iResult = subprocess.run(command, capture_output=True, text=True, shell=True)
+                iResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
                 print(repr(iResult.stdout))
 
                 # Only if the first command works, run the rest
 
                 if iResult.returncode == 0:
                     command = "echo '{}' | sed -n 's|/lib/modules/\\([^/]*\\)/.*|\\1|p' | sort -u".format(iResult.stdout)
-                    result = subprocess.run(command, capture_output=True, text=True, shell=True)
+                    result = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
                     fResult = result.stdout.rstrip('\n')
                     print(repr(result.stdout.rstrip('\n')))
 
                     command  = 'uname -r'
-                    ffResult = subprocess.run(command, capture_output=True, text=True, shell=True)
+                    ffResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
                     ffResult = ffResult.stdout.rstrip('\n')
 
                     command = f"apt-get install linux-modules-extra-{ffResult}"
@@ -3707,7 +3707,7 @@ pm.max_spare_servers = 3
                 ###
 
                     command = f'modprobe quota_v1 -S {ffResult}'
-                    mResult = subprocess.run(command, capture_output=True, text=True, shell=True)
+                    mResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
                     if mResult.returncode != 0:
                         fstab_path = '/etc/fstab'
                         backup_path = fstab_path + '.bak'
@@ -3719,7 +3719,7 @@ pm.max_spare_servers = 3
                         return 0
 
                     command = f'modprobe quota_v2 -S {ffResult}'
-                    mResult = subprocess.run(command, capture_output=True, text=True, shell=True)
+                    mResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
                     if mResult.returncode != 0:
                         fstab_path = '/etc/fstab'
                         backup_path = fstab_path + '.bak'
@@ -3731,7 +3731,7 @@ pm.max_spare_servers = 3
                         return 0
 
             command = f'quotacheck -ugm /'
-            mResult = subprocess.run(command, capture_output=True, text=True, shell=True)
+            mResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
             if mResult.returncode != 0:
                 fstab_path = '/etc/fstab'
                 backup_path = fstab_path + '.bak'
@@ -3743,7 +3743,7 @@ pm.max_spare_servers = 3
                 return 0
 
             command = f'quotaon -v /'
-            mResult = subprocess.run(command, capture_output=True, text=True, shell=True)
+            mResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
             if mResult.returncode != 0:
                 fstab_path = '/etc/fstab'
                 backup_path = fstab_path + '.bak'

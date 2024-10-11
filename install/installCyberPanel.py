@@ -65,7 +65,7 @@ class InstallCyberPanel:
 
         try:
             command = 'uname -a'
-            result = subprocess.run(command, capture_output=True, text=True, shell=True)
+            result = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
 
             if 'aarch64' in result.stdout:
                 return True

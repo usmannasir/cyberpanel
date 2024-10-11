@@ -73,7 +73,7 @@ def upgrade_cyberpanel(request):
         try:
             upgrade_command = 'sh <(curl https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgrade.sh)'
             result = subprocess.run(upgrade_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                    text=True)
+                                    universal_newlines=True)
 
             if result.returncode == 0:
                 response_data = {'success': True, 'message': 'CyberPanel upgrade completed successfully.'}

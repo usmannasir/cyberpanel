@@ -304,6 +304,9 @@ class cPanelImporter:
             movePath = '%s/homedir/%s' % (
             CompletPathToExtractedArchive, self.homeDir)
 
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.statusWriter(self.logFile, f'Directory from where docRoot of main site data will be moved {movePath}')
+
             shutil.copytree(movePath, nowPath, symlinks=True)
 
             message = 'Main site %s created from archive file: %s' % (DomainName, self.backupFile)
@@ -591,6 +594,41 @@ class cPanelImporter:
             ##
             passFile = "/etc/cyberpanel/mysqlPassword"
 
+            try:
+                import json
+                jsonData = json.loads(open(passFile, 'r').read())
+
+                mysqluser = jsonData['mysqluser']
+                mysqlpassword = jsonData['mysqlpassword']
+                mysqlport = jsonData['mysqlport']
+                mysqlhost = jsonData['mysqlhost']
+                password = mysqlpassword
+            except:
+                passFile = "/etc/cyberpanel/mysqlPassword"
+                f = open(passFile)
+                data = f.read()
+                password = data.split('\n', 1)[0]
+                mysqlhost = 'localhost'
+                mysqlport = '3306'
+                mysqluser = 'root'
+
+            cnfPath = '/home/cyberpanel/.my.cnf'
+
+            if not os.path.exists(cnfPath):
+                cnfContent = """[mysqldump]
+user=root
+password=%s
+max_allowed_packet=1024M
+[mysql]
+user=root
+password=%s
+""" % (password, password)
+                writeToFile = open(cnfPath, 'w')
+                writeToFile.write(cnfContent)
+                writeToFile.close()
+
+                os.chmod(cnfPath, 0o600)
+
             f = open(passFile)
             data = f.read()
             password = data.split('\n', 1)[0]
@@ -616,14 +654,40 @@ class cPanelImporter:
                         message = 'Failed while restoring database %s from backup file %s, error message: %s' % (items.replace('.sql', ''), self.backupFile, str(msg))
                         logging.statusWriter(self.logFile, message, 1)
 
-                    command = 'sudo mysql -u root -p' + password + ' ' + items.replace('.sql', '')
+                    command =  f'mysql --defaults-file=/home/cyberpanel/.my.cnf -u {mysqluser} --host={mysqlhost} --port {mysqlport} ' + items.replace('.sql', '')
+
+                    message = f'Full command to restore DB {command}'
+                    logging.statusWriter(self.logFile, message, 1)
 
                     cmd = shlex.split(command)
 
                     DBPath = "%s/%s" % (DatabasesPath, items)
 
+                    # with open(DBPath, 'r') as f:
+                    #     message = f'Full command to restore DB {cmd}'
+                    #     logging.statusWriter(self.logFile, message, 1)
+                    #
+                    #     res = subprocess.call(cmd, stdin=f)
+
                     with open(DBPath, 'r') as f:
-                        res = subprocess.call(cmd, stdin=f)
+
+
+                        try:
+                            # Run the command using subprocess.run, capturing stdout and stderr
+                            result = subprocess.run(cmd, stdin=f, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                                    universal_newlines=True)
+
+                            # Log stdout and stderr
+                            logging.statusWriter(self.logFile, f'STDOUT: {result.stdout}', 1)
+                            logging.statusWriter(self.logFile, f'STDERR: {result.stderr}', 1)
+
+                            # Check if the command failed
+                            if result.returncode != 0:
+                                logging.statusWriter(self.logFile,
+                                                     f'Command failed with return code {result.returncode}', 2)
+                        except Exception as e:
+                            # Log any exception that occurs
+                            logging.statusWriter(self.logFile, f'Exception occurred: {str(e)}', 2)
 
                     website = Websites.objects.get(domain=self.mainDomain)
 
@@ -633,21 +697,33 @@ class cPanelImporter:
 
                     data = open(CommandsPath, 'r').readlines()
 
-                    for inItems in data:
-                        if inItems.find('GRANT ALL PRIVILEGES') > -1 and inItems.find('localhost') > -1 and inItems.find('_test') == -1:
-                            cDBName = inItems.split('`')[1].replace('\\', '')
-                            logging.statusWriter(self.logFile, inItems, 1)
-                            if cDBName == items.replace('.sql', ''):
-                                cDBUser = inItems.replace("`","'").replace("\\","").split("'")[1]
-                                message = 'Database user for %s is %s.' % (cDBName, cDBUser)
-                                logging.statusWriter(self.logFile, message, 1)
-                                if Databases.objects.filter(dbUser=cDBUser).count() > 0:
-                                    continue
-                                break
+                    ### temp disable if user not added, need to remove this try,catch and to ensure user gets added
 
+                    try:
 
-                    db = Databases(website=website, dbName=items.replace('.sql', ''), dbUser=cDBUser)
-                    db.save()
+                        for inItems in data:
+                            if (inItems.find('GRANT ALL PRIVILEGES') > -1 or inItems.find('GRANT USAGE') > -1) and inItems.find('localhost') > -1 and inItems.find('_test') == -1:
+                                cDBName = inItems.split('`')[1].replace('\\', '')
+                                logging.statusWriter(self.logFile, inItems, 1)
+                                if cDBName == items.replace('.sql', ''):
+                                    cDBUser = inItems.replace("`","'").replace("\\","").split("'")[1]
+                                    message = 'Database user for %s is %s.' % (cDBName, cDBUser)
+                                    logging.statusWriter(self.logFile, message, 1)
+                                    if Databases.objects.filter(dbUser=cDBUser).count() > 0:
+                                        continue
+                                    break
+                    except:
+                        pass
+
+                    ### temp disable if user not added, need to remove this try,catch and to ensure user gets added
+
+                    try:
+                        db = Databases(website=website, dbName=items.replace('.sql', ''), dbUser=cDBUser)
+                        db.save()
+                    except:
+                        db = Databases(website=website, dbName=items.replace('.sql', ''), dbUser='root')
+                        db.save()
+                        pass
 
                     message = 'MySQL dump successfully restored for %s.' % (items.replace('.sql', ''))
                     logging.statusWriter(self.logFile, message, 1)
@@ -663,6 +739,9 @@ class cPanelImporter:
                 if items.find("--") > -1 or items.find("'cyberpanel'@") > -1:
                     continue
                 try:
+                    if os.path.exists(ProcessUtilities.debugPath):
+                        message = f'Currently executing MySQL command {items}'
+                        logging.statusWriter(self.logFile, message, 1)
                     cursor.execute(items)
                 except BaseException as msg:
                     message = 'Failed while restoring database %s from backup file %s, error message: %s' % (

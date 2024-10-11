@@ -27,7 +27,7 @@ class rebuildQuotas:
             if rData.find('xfs') > -1:
                 command  = "mount | grep ' / '"
 
-                qResult = subprocess.run(command, capture_output=True, text=True, shell=True)
+                qResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
 
                 if qResult.stdout.find('usrquota') > -1:
                     print("Looks like Quotas are enabled in filesystem, moving on..")
@@ -37,7 +37,7 @@ class rebuildQuotas:
                     exit(1)
             else:
                 command  = "mount | grep quota"
-                qResult = subprocess.run(command, capture_output=True, text=True, shell=True)
+                qResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
                 if qResult.stdout.find('usrquota') > -1:
                     print("Looks like Quotas are enabled in filesystem, moving on..")
                 else:
@@ -49,13 +49,13 @@ class rebuildQuotas:
             for website in Websites.objects.all():
                 print(f"Rebuilding quotas for {website.domain}...")
                 command = 'chattr -R -i /home/%s/' % (website.domain)
-                subprocess.run(command, capture_output=True, text=True, shell=True)
+                subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
 
                 if website.package.enforceDiskLimits:
                     spaceString = f'{website.package.diskSpace}M {website.package.diskSpace}M'
                     command = f'setquota -u {website.externalApp} {spaceString} 0 0 /'
                     print(command)
-                    qResult = subprocess.run(command, capture_output=True, text=True, shell=True)
+                    qResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
                 else:
                     print(f"Ignored {website.domain} because the selected package does not enforce disk limits.")
         except:
