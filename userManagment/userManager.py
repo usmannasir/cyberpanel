@@ -28,6 +28,14 @@ class UserManager(multi.Thread):
         try:
             websites = ACLManager.findAllSites(self.extraArgs['currentACL'], self.extraArgs['user'].pk)
             from websiteFunctions.website import WebsiteManager
+            from loginSystem.models import Administrator
+            admin = Administrator.objects.get(pk=self.extraArgs['user'].pk)
+
+            ## ref https://github.com/usmannasir/cyberpanel/issues/1336
+            ## if current user is admin but not the main admin user then don't suspend all sites only suspend the sites owned by the user
+
+            if self.extraArgs['currentACL']['admin'] and admin.userName != 'admin':
+                websites = ACLManager.findAllSites({'admin': 0}, self.extraArgs['user'].pk)
 
             wm = WebsiteManager()
 
