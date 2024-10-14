@@ -585,8 +585,10 @@ context /.well-known/acme-challenge {
 
                         #output = subprocess.check_output(shlex.split(command)).decode("utf-8")
 
-                        result = subprocess.run(command, capture_output=True, universal_newlines=True,
-                                                    shell=True)
+                        try:
+                            result = subprocess.run(command, capture_output=True, universal_newlines=True,shell=True)
+                        except:
+                            result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
 
 
                         stdout = result.stdout
@@ -605,8 +607,12 @@ context /.well-known/acme-challenge {
 
                             logging.CyberCPLogFileWriter.writeToFile(command, 0)
 
-                            result = subprocess.run(command, capture_output=True, universal_newlines=True,
-                                                    shell=True)
+                            try:
+                                result = subprocess.run(command, capture_output=True, universal_newlines=True,
+                                                        shell=True)
+                            except:
+                                result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                                        universal_newlines=True, shell=True)
 
                             stdout = result.stdout
                             stderr = result.stderr
@@ -653,8 +659,12 @@ context /.well-known/acme-challenge {
                             logging.CyberCPLogFileWriter.writeToFile(command)
                             #output = subprocess.check_output(shlex.split(command)).decode("utf-8")
 
-                            result = subprocess.run(command, capture_output=True, universal_newlines=True,
-                                                    shell=True)
+                            try:
+                                result = subprocess.run(command, capture_output=True, universal_newlines=True,
+                                                        shell=True)
+                            except:
+                                result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                                        universal_newlines=True, shell=True)
 
                             stdout = result.stdout
                             stderr = result.stderr
@@ -668,8 +678,12 @@ context /.well-known/acme-challenge {
                                           + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
                                           + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w /usr/local/lsws/Example/html -k ec-256 --force --server letsencrypt'
 
-                                result = subprocess.run(command, capture_output=True, universal_newlines=True,
-                                                        shell=True)
+                                try:
+                                    result = subprocess.run(command, capture_output=True, universal_newlines=True,
+                                                            shell=True)
+                                except:
+                                    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                                            universal_newlines=True, shell=True)
 
                                 stdout = result.stdout
                                 stderr = result.stderr

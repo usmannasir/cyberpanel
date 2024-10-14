@@ -162,7 +162,11 @@ class preFlightsChecks:
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
                 command = 'mount -o remount /'
-                mResult = subprocess.run(command, capture_output=True,universal_newlines=True, shell=True)
+                try:
+                    mResult = subprocess.run(command, capture_output=True,universal_newlines=True, shell=True)
+                except:
+                    mResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
+
                 if mResult.returncode != 0:
                     fstab_path = '/etc/fstab'
                     backup_path = fstab_path + '.bak'
@@ -197,7 +201,12 @@ class preFlightsChecks:
                     return 0
 
                 command = 'mount -o remount /'
-                mResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                try:
+                    mResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                except:
+                    mResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                             universal_newlines=True, shell=True)
+
                 if mResult.returncode != 0:
                     fstab_path = '/etc/fstab'
                     backup_path = fstab_path + '.bak'
@@ -214,19 +223,31 @@ class preFlightsChecks:
                 ####
 
                 command = "find /lib/modules/ -type f -name '*quota_v*.ko*'"
-                iResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                try:
+                    iResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                except:
+                    iResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                             universal_newlines=True, shell=True)
+
                 print(repr(iResult.stdout))
 
                 # Only if the first command works, run the rest
 
                 if iResult.returncode == 0:
                     command = "echo '{}' | sed -n 's|/lib/modules/\\([^/]*\\)/.*|\\1|p' | sort -u".format(iResult.stdout)
-                    result = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                    try:
+                        result = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                    except:
+                        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
                     fResult = result.stdout.rstrip('\n')
                     print(repr(result.stdout.rstrip('\n')))
 
                     command  = 'uname -r'
-                    ffResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                    try:
+                        ffResult = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                    except:
+                        ffResult = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
+
                     ffResult = ffResult.stdout.rstrip('\n')
 
                     command = f"DEBIAN_FRONTEND=noninteractive  apt-get install linux-modules-extra-{ffResult}"
@@ -328,7 +349,10 @@ class preFlightsChecks:
     def mountTemp(self):
         try:
 
-            result = subprocess.run('systemd-detect-virt', capture_output=True, universal_newlines=True, shell=True)
+            try:
+                result = subprocess.run('systemd-detect-virt', capture_output=True, universal_newlines=True, shell=True)
+            except:
+                result = subprocess.run('systemd-detect-virt', stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
 
             if result.stdout.find('openvz') > -1:
                 if self.distro == ubuntu:
@@ -1775,7 +1799,10 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             #     lscpdSelection = 'lscpd.aarch64'
 
             try:
-                result = subprocess.run('uname -a', capture_output=True, universal_newlines=True, shell=True)
+                try:
+                    result = subprocess.run('uname -a', capture_output=True, universal_newlines=True, shell=True)
+                except:
+                    result = subprocess.run('uname -a', stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
 
                 if result.stdout.find('aarch64') == -1:
                     lscpdSelection = 'lscpd-0.3.1'
