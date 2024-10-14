@@ -348,11 +348,9 @@
                             <div class="sidebar-submenu">
 
                                 <ul>
-                                    {% if admin or createWebsite %}
-                                        <li><a href="{% url 'createWordpress' %}"
-                                               title="{% trans 'Deploy WordPress' %}"><span>{% trans "Deploy WordPress" %}</span></a>
-                                        </li>
-                                    {% endif %}
+                                    <li><a href="{% url 'createWordpress' %}"
+                                           title="{% trans 'Deploy WordPress' %}"><span>{% trans "Deploy WordPress" %}</span></a>
+                                    </li>
                                     <li><a href="{% url 'ListWPSites' %}"
                                            title="{% trans 'List WordPress' %}"><span>{% trans "List WordPress" %}</span></a>
                                     </li>
@@ -372,33 +370,36 @@
 
 
                         <!-------------Docker Sites--------------------------->
-                        <li id="sidebar-menu-item-dockersite">
-                            <a href="#" title="{% trans 'Dockersite' %}">
-                                <div class="glyph-icon icon-globe" title="{% trans 'Docker Apps' %}"></div>
-                                <span>{% trans "Docker Apps" %}</span>
-                                <span class="bs-label badge-yellow">{% trans "Beta" %}</span>
-                            </a>
-                            <div class="sidebar-submenu">
 
-                                <ul>
-                                    <li><a href="{% url 'CreateDockersite' %}"
-                                    ><span>{% trans "Create Docker Apps" %}</span></a>
-                                    </li>
-                                    <li><a href="{% url 'ListDockerSites' %}"
-                                    ><span>{% trans "List Docker Apps" %}</span></a>
-                                    </li>
-                                    {#                                    {% if admin or createWebsite %}#}
-                                    <li><a href="{% url 'CreateDockerPackage' %}"
-                                    ><span>{% trans "Docker Packages" %}</span></a>
-                                    </li>
-                                    {#                                    {% endif %}#}
-                                    <li><a href="{% url 'AssignPackage' %}"
-                                    ><span>{% trans "Assign Package" %}</span></a>
-                                    </li>
-                                </ul>
+                        {% if admin %}
+                            <li id="sidebar-menu-item-dockersite">
+                                <a href="#" title="{% trans 'Dockersite' %}">
+                                    <div class="glyph-icon icon-globe" title="{% trans 'Docker Apps' %}"></div>
+                                    <span>{% trans "Docker Apps" %}</span>
+                                    <span class="bs-label badge-yellow">{% trans "Beta" %}</span>
+                                </a>
+                                <div class="sidebar-submenu">
 
-                            </div><!-- .sidebar-submenu -->
-                        </li>
+                                    <ul>
+                                        <li><a href="{% url 'CreateDockersite' %}"
+                                        ><span>{% trans "Create Docker Apps" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'ListDockerSites' %}"
+                                        ><span>{% trans "List Docker Apps" %}</span></a>
+                                        </li>
+                                        {#                                    {% if admin or createWebsite %}#}
+                                        <li><a href="{% url 'CreateDockerPackage' %}"
+                                        ><span>{% trans "Docker Packages" %}</span></a>
+                                        </li>
+                                        {#                                    {% endif %}#}
+                                        <li><a href="{% url 'AssignPackage' %}"
+                                        ><span>{% trans "Assign Package" %}</span></a>
+                                        </li>
+                                    </ul>
+
+                                </div><!-- .sidebar-submenu -->
+                            </li>
+                        {% endif %}
 
 
                         <li id="sidebar-menu-item-websites">

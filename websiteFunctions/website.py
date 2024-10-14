@@ -126,7 +126,7 @@ class WebsiteManager:
             Data = {'packageList': packagesName, "owernList": adminNames, 'WPVersions': FinalVersions,
                     'Plugins': Plugins, 'Randam_String': rnpss.lower(), 'test_domain_data': test_domain_status}
             proc = httpProc(request, 'websiteFunctions/WPCreate.html',
-                            Data, 'createWebsite')
+                            Data, 'createDatabase')
             return proc.render()
         else:
             from django.shortcuts import reverse
