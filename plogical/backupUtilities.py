@@ -1,18 +1,20 @@
 import json
 import os
 import sys
-
 import paramiko
-
 sys.path.append('/usr/local/CyberCP')
 import django
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 try:
     django.setup()
+    from ApachController.ApacheVhosts import ApacheVhost
+    from plogical.acl import ACLManager
 except:
     pass
-import pysftp
+
+
+
 from plogical.randomPassword import generate_pass
 import pexpect
 from plogical import CyberCPLogFileWriter as logging
@@ -466,6 +468,14 @@ class backupUtilities:
 
                 copy(completPathToConf, f'{CPHomeStorage}/vhost.conf')
 
+        #### also backup apache conf if available
+        from ApachController.ApacheVhosts import ApacheVhost
+
+        finalConfPathApache = ApacheVhost.configBasePath + domainName + '.conf'
+
+        if os.path.exists(finalConfPathApache):
+            copy(finalConfPathApache, f'{CPHomeStorage}/apache.conf')
+
         childDomains = backupMetaData.findall('ChildDomains/domain')
 
         try:
@@ -488,6 +498,14 @@ class backupUtilities:
                         #copy(completPathToConf, f'{tempStoragePath}/{actualChildDomain}.vhost.conf')
                         copy(completPathToConf, f'{CPHomeStorage}/{actualChildDomain}.vhost.conf')
 
+                ### also backup apache conf if available
+
+                finalConfPathApacheChild = ApacheVhost.configBasePath + actualChildDomain + '.conf'
+
+                if os.path.exists(finalConfPathApacheChild):
+                    copy(finalConfPathApacheChild, f'{CPHomeStorage}/{actualChildDomain}.apache.conf')
+
+                ##
 
                 ### Storing SSL for child domainsa
 
@@ -817,6 +835,7 @@ class backupUtilities:
             try:
                 version = backupMetaData.find('VERSION').text
                 build = backupMetaData.find('BUILD').text
+                phpSelectionGlobalMainSite = backupMetaData.find('phpSelection').text
                 twoPointO = 1
             except:
                 twoPointO = 0
@@ -900,13 +919,63 @@ class backupUtilities:
                             rmtree(websiteHome)
 
                         ## Let us try to restore SSL for Child Domains.
+                        from ApachController.ApacheController import ApacheController
 
                         try:
 
                             if os.path.exists(completPath + '/' + domain + '.vhost.conf'):
-                                completPathToConf = backupUtilities.Server_root + '/conf/vhosts/' + domain + '/vhost.conf'
+
                                 if CurrentServer == ProcessUtilities.decideServer():
-                                    copy(completPath + '/' + domain + '.vhost.conf', completPathToConf)
+
+                                    completPathToConf = backupUtilities.Server_root + '/conf/vhosts/' + domain + '/vhost.conf'
+                                    childConfPathinBKUP = completPath + '/' + domain + '.vhost.conf'
+                                    copy(childConfPathinBKUP, completPathToConf)
+
+                                    ### take care of apache conf
+
+                                    url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
+                                    data = {
+                                        "name": "all",
+                                        "IP": ACLManager.GetServerIP()
+                                    }
+
+                                    import requests
+                                    response = requests.post(url, data=json.dumps(data))
+                                    Status = response.json()['status']
+
+                                    if (Status == 1):
+
+                                        childConfPathinBKUPApache = completPath + '/' + domain + '.apache.conf'
+                                        tempStatusPath = '/home/cyberpanel/fakePath'
+
+                                        if os.path.exists(ProcessUtilities.debugPath):
+                                            logging.CyberCPLogFileWriter.writeToFile(f'Conf path of apache for child domain {domain} in backup is {childConfPathinBKUPApache}')
+
+                                        childData = open(childConfPathinBKUP, 'r').read()
+
+                                        if childData.find('proxyApacheBackendSSL') > -1 and os.path.exists(childConfPathinBKUPApache):
+
+                                            if os.path.exists(ProcessUtilities.debugPath):
+                                                logging.CyberCPLogFileWriter.writeToFile(
+                                                    f'It seems child domain {domain} is using apache conf and {childConfPathinBKUPApache} also exists in backup file')
+
+                                            virtualHostUtilities.switchServer(domain, phpSelection, virtualHostUtilities.apache, tempStatusPath)
+
+                                            finalConfPathApache = ApacheVhost.configBasePath + domain + '.conf'
+
+
+                                            if os.path.exists(finalConfPathApache):
+
+                                                if os.path.exists(ProcessUtilities.debugPath):
+                                                    logging.CyberCPLogFileWriter.writeToFile(
+                                                        f'CyberPanel was able to successfully convert {domain} to apache conf as {finalConfPathApache} exists..')
+
+                                                copy(childConfPathinBKUPApache, finalConfPathApache)
+
+                                    ### apache ends
+
+
+
 
                             sslStoragePath = completPath + "/" + domain + ".cert.pem"
 
@@ -1123,7 +1192,51 @@ class backupUtilities:
             completPathToConf = backupUtilities.Server_root + '/conf/vhosts/' + masterDomain + '/vhost.conf'
             if os.path.exists(completPath + '/vhost.conf'):
                 if CurrentServer == ProcessUtilities.decideServer():
-                    copy(completPath + '/vhost.conf', completPathToConf)
+                    confPathMainSite = completPath + '/vhost.conf'
+                    copy(confPathMainSite, completPathToConf)
+
+
+                    ### apache starts here
+
+                    url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
+                    data = {
+                        "name": "all",
+                        "IP": ACLManager.GetServerIP()
+                    }
+
+                    import requests
+                    response = requests.post(url, data=json.dumps(data))
+                    Status = response.json()['status']
+
+                    if (Status == 1):
+                        confPathApache = completPath + '/apache.conf'
+
+                        if os.path.exists(ProcessUtilities.debugPath):
+                            logging.CyberCPLogFileWriter.writeToFile(f'Conf path of apache for main site {masterDomain} in backup is {confPathApache}')
+
+                        tempStatusPath = '/home/cyberpanel/fakePath'
+
+                        childData = open(confPathMainSite, 'r').read()
+
+                        if childData.find('proxyApacheBackendSSL') > -1 and os.path.exists(confPathApache):
+
+                            if os.path.exists(ProcessUtilities.debugPath):
+                                logging.CyberCPLogFileWriter.writeToFile(
+                                    f'It seems main site {masterDomain} is using apache conf.')
+
+                            virtualHostUtilities.switchServer(masterDomain, phpSelectionGlobalMainSite, virtualHostUtilities.apache,
+                                                              tempStatusPath)
+
+                            finalConfPathApache = ApacheVhost.configBasePath + masterDomain + '.conf'
+
+                            if os.path.exists(ProcessUtilities.debugPath):
+                                logging.CyberCPLogFileWriter.writeToFile(
+                                    f'Apache conf path of main domain exists which means CyberPanel successfully converted site to Apache for {masterDomain}')
+
+                            if os.path.exists(confPathApache):
+                                copy(confPathApache, finalConfPathApache)
+
+                    ### apache ends here
 
             logging.CyberCPLogFileWriter.statusWriter(status, "Done")
 
