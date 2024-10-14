@@ -1914,6 +1914,9 @@ class ApplicationInstaller(multi.Thread):
             DataToPass['apacheBackend'] = self.extraArgs['apacheBackend']
             UserID = self.data['adminID']
 
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(f'Data passed to wordpressInstallNew is {str(DataToPass)}')
+
             try:
                 website = Websites.objects.get(domain=DataToPass['domainName'])
 
@@ -1926,7 +1929,11 @@ class ApplicationInstaller(multi.Thread):
                     statusFile = open(tempStatusPath, 'w')
                     statusFile.writelines('You dont own this site.[404]')
                     statusFile.close()
-            except:
+                    return 0
+            except BaseException as msg:
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(f'Error in finding existing site in wordpressInstallNew is {str(msg)}')
 
                 ab = WebsiteManager()
                 coreResult = ab.submitWebsiteCreation(UserID, DataToPass)
