@@ -1924,7 +1924,9 @@ class ApplicationInstaller(multi.Thread):
                     website.phpSelection = 'PHP 8.0'
                     website.save()
 
-                if ACLManager.checkOwnership(website.domain, self.extraArgs['adminID'],
+                admin = Administrator.objects.get(pk=self.extraArgs['adminID'])
+
+                if ACLManager.checkOwnership(website.domain, admin,
                                              self.extraArgs['currentACL']) == 0:
                     statusFile = open(tempStatusPath, 'w')
                     statusFile.writelines('You dont own this site.[404]')
