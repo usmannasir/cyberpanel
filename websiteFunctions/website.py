@@ -99,6 +99,10 @@ class WebsiteManager:
             currentACL = ACLManager.loadedACL(userID)
             adminNames = ACLManager.loadAllUsers(userID)
             packagesName = ACLManager.loadPackages(userID, currentACL)
+
+            if len(packagesName) == 0:
+                packagesName = ['Default']
+
             FinalVersions = []
             userobj = Administrator.objects.get(pk=userID)
             counter = 0
