@@ -1931,6 +1931,13 @@ class ApplicationInstaller(multi.Thread):
                 ab = WebsiteManager()
                 coreResult = ab.submitWebsiteCreation(UserID, DataToPass)
                 coreResult1 = json.loads((coreResult).content)
+
+                if coreResult1['status'] == 0:
+                    statusFile = open(currentTemp, 'w')
+                    statusFile.writelines('Failed to Create Website: error: %s. [404]' % coreResult1['errorMessage'])
+                    statusFile.close()
+                    return 0
+
                 logging.writeToFile("Creating website result....%s" % coreResult1)
                 reutrntempath = coreResult1['tempStatusPath']
                 while (1):
