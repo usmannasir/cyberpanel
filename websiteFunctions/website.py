@@ -396,10 +396,10 @@ class WebsiteManager:
 
             backobj = WPSitesBackup.objects.filter(owner=admin).order_by('-id')
 
-            if ACLManager.CheckIPBackupObjectOwner(currentACL, backobj, admin) == 1:
-                pass
-            else:
-                return ACLManager.loadError()
+            # if ACLManager.CheckIPBackupObjectOwner(currentACL, backobj, admin) == 1:
+            #     pass
+            # else:
+            #     return ACLManager.loadError()
 
             try:
                 if DeleteID != None:
