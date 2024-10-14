@@ -714,7 +714,7 @@ class ACLManager:
             elif childDomain.master.admin == admin:
                 return 1
             else:
-                if childDomain.master.admin.owner == admin.pk:
+                if childDomain.master.admin.owner.pk == admin:
                     return 1
 
         except:
@@ -722,10 +722,10 @@ class ACLManager:
 
             if currentACL['admin'] == 1:
                 return 1
-            elif  domainName.admin == admin:
+            elif  domainName.admin.pk == admin:
                 return 1
             else:
-                if domainName.admin.owner == admin.pk:
+                if domainName.admin.owner.pk == admin:
                     return 1
                 else:
                     return 0
