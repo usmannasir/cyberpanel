@@ -176,9 +176,11 @@ class Docker_Sites(multi.Thread):
 
     @staticmethod
     def SetupProxy(port):
-        ConfPath = '/usr/local/lsws/conf/httpd_config.conf'
-        data = open(ConfPath, 'r').read()
+        import xml.etree.ElementTree as ET
+
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+            ConfPath = '/usr/local/lsws/conf/httpd_config.conf'
+            data = open(ConfPath, 'r').read()
             StringCheck = f"127.0.0.1:{port}"
             if data.find(StringCheck) == -1:
                 ProxyContent = f"""
@@ -196,6 +198,40 @@ extprocessor docker{port} {{
                 WriteToFile = open(ConfPath, 'a')
                 WriteToFile.write(ProxyContent)
                 WriteToFile.close()
+
+        else:
+            ConfPath = '/usr/local/lsws/conf/httpd_config.xml'
+            data = open(ConfPath, 'r').read()
+
+            # Parse the XML
+            root = ET.fromstring(data)
+
+            # Find the <extProcessorList> node
+            ext_processor_list = root.find('extProcessorList')
+
+            # Create the new <extProcessor> node
+            new_ext_processor = ET.Element('extProcessor')
+
+            # Add child elements to the new <extProcessor>
+            ET.SubElement(new_ext_processor, 'type').text = 'proxy'
+            ET.SubElement(new_ext_processor, 'name').text = f'docker{port}'
+            ET.SubElement(new_ext_processor, 'address').text = f'127.0.0.1:{port}'
+            ET.SubElement(new_ext_processor, 'maxConns').text = '35'
+            ET.SubElement(new_ext_processor, 'pcKeepAliveTimeout').text = '60'
+            ET.SubElement(new_ext_processor, 'initTimeout').text = '60'
+            ET.SubElement(new_ext_processor, 'retryTimeout').text = '60'
+            ET.SubElement(new_ext_processor, 'respBuffer').text = '0'
+
+            # Append the new <extProcessor> to the <extProcessorList>
+            ext_processor_list.append(new_ext_processor)
+
+            # Write the updated XML content to a new file or print it out
+            tree = ET.ElementTree(root)
+            tree.write(ConfPath, encoding='UTF-8', xml_declaration=True)
+
+            # Optionally, print the updated XML
+            ET.dump(root)
+
 
     @staticmethod
     def SetupHTAccess(port, htaccess):
