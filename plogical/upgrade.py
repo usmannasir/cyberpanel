@@ -3555,6 +3555,17 @@ pm.max_spare_servers = 3
         #command = 'csf -uf'
         #Upgrade.executioner(command, 'fix csf if there', 0)
 
+        if os.path.exists('/etc/csf'):
+            execPath = "sudo /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/csf.py"
+            execPath = execPath + " removeCSF"
+            Upgrade.executioner(execPath, 'fix csf if there', 0)
+
+            execPath = "sudo /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/csf.py"
+            execPath = execPath + " installCSF"
+            Upgrade.executioner(execPath, 'fix csf if there', 0)
+
+
+
         # if os.path.exists('/usr/local/CyberCP/configservercsf'):
         #     command = 'rm -f /usr/local/CyberCP/configservercsf/signals.py'
         #     Upgrade.executioner(command, 'remove /usr/local/CyberCP/configservercsf/signals.py', 1)
