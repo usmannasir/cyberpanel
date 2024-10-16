@@ -156,7 +156,6 @@ class IncJobs(multi.Thread):
                     logging.writeToFile(f'Snapshot id {snapShotid} from result {result}.')
 
 
-
                 if bType == 'database':
                     newSnapshot = JobSnapshots(job=self.jobid,
                                                type='%s:%s' % (bType, backupPath.split('/')[-1].rstrip('.sql')),

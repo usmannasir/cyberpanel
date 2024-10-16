@@ -3,6 +3,8 @@ import json
 import os
 import sys
 import time
+
+import paramiko
 import requests
 import json
 import configparser
@@ -140,6 +142,11 @@ class CPBackupsV2(multi.Thread):
         if os.path.exists(self.StatusFile):
             os.remove(self.StatusFile)
 
+
+        #### i want to keep a merge flag, if not delete all snapshots in case of backup fail
+
+        self.MergeSnapshotFlag = 1
+
         # ### delete repo function
         # try:
         #     self.repo = data['BackendName']
@@ -176,6 +183,25 @@ class CPBackupsV2(multi.Thread):
 
             if type == CPBackupsV2.SFTP:
                 ## config = {"name":, "host":, "user":, "port":, "path":, "password":,}
+
+
+                ### first check sftp credentails details
+
+                # Connect to the remote server using the private key
+                ssh = paramiko.SSHClient()
+                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+                try:
+                    # Connect to the server using the private key
+                    ssh.connect(config["host"], username=config["user"], password=config["password"], port=config["sshPort"])
+                    ssh.close()
+                    if os.path.exists(ProcessUtilities.debugPath):
+                        logging.CyberCPLogFileWriter.writeToFile(f'Successfully connected to {config["host"]} through user {config["user"]}')
+                except BaseException as msg:
+                    return 0, str(msg)
+
+
+
                 command = f'rclone obscure {config["password"]}'
                 ObsecurePassword = ProcessUtilities.outputExecutioner(command).rstrip('\n')
 
@@ -194,7 +220,7 @@ port = {config["sshPort"]}
 
                 command = f"chmod 600 {self.ConfigFilePath}"
                 ProcessUtilities.executioner(command, self.website.externalApp)
-                return 1
+                return 1, None
             elif type == CPBackupsV2.GDrive:
                 token = """{"access_token":"%s","token_type":"Bearer","refresh_token":"%s", "expiry":"2024-04-08T21:53:00.123456789Z"}""" % (
                 config["token"], config["refresh_token"])
@@ -217,8 +243,10 @@ team_drive =
 
                 command = f"chmod 600 {self.ConfigFilePath}"
                 ProcessUtilities.executioner(command, self.website.externalApp)
+                return 1, None
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [Configure.run]')
+            return 0, str(msg)
 
     @staticmethod
     def FetchCurrentTimeStamp():
@@ -282,34 +310,45 @@ team_drive =
         ProcessUtilities.executioner(command)
 
         command = f'rustic -r {self.repo} backup {self.FinalPathRuctic}/config.json --json --password "" 2>/dev/null'
-        result = json.loads(ProcessUtilities.outputExecutioner(command, self.website.externalApp, True).rstrip('\n'))
+        status, result = ProcessUtilities.outputExecutioner(command, self.website.externalApp, True, None, True)
 
-        try:
-            SnapShotID = result['id']  ## snapshot id that we need to store in db
-            files_new = result['summary']['files_new']  ## basically new files in backup
-            total_duration = result['summary']['total_duration']  ## time taken
+        if os.path.exists(ProcessUtilities.debugPath):
+            logging.CyberCPLogFileWriter.writeToFile(f'Status {str(status)}')
 
-            self.snapshots.append(SnapShotID)
+        if status:
 
-        except BaseException as msg:
-            self.UpdateStatus(f'Backup failed as no snapshot id found, error: {str(msg)}', CPBackupsV2.FAILED)
+            status, result = json.loads(result.rstrip('\n'))
+
+            try:
+                SnapShotID = result['id']  ## snapshot id that we need to store in db
+                files_new = result['summary']['files_new']  ## basically new files in backup
+                total_duration = result['summary']['total_duration']  ## time taken
+
+                self.snapshots.append(SnapShotID)
+
+            except BaseException as msg:
+                self.UpdateStatus(f'Backup failed as no snapshot id found, error: {str(msg)}', CPBackupsV2.FAILED)
+                return 0
+
+            command = f'chown cyberpanel:cyberpanel {self.FinalPathRuctic}/config.json'
+            ProcessUtilities.executioner(command)
+
+            return 1
+        else:
+            self.UpdateStatus(f'Backup failed , error: {str(result)}', CPBackupsV2.FAILED)
             return 0
-
-        command = f'chown cyberpanel:cyberpanel {self.FinalPathRuctic}/config.json'
-        ProcessUtilities.executioner(command)
-
-        return 1
 
     def MergeSnapshots(self):
         snapshots = ''
         for snapshot in self.snapshots:
             snapshots = f'{snapshots} {snapshot}'
 
-        command = f'rustic -r {self.repo} merge {snapshots}  --password "" --json'
-        result = ProcessUtilities.outputExecutioner(command, self.website.externalApp, True)
+        if self.MergeSnapshotFlag:
+            command = f'rustic -r {self.repo} merge {snapshots}  --password "" --json'
+            result = ProcessUtilities.outputExecutioner(command, self.website.externalApp, True)
 
-        if os.path.exists(ProcessUtilities.debugPath):
-            logging.CyberCPLogFileWriter.writeToFile(result)
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(result)
 
         command = f'rustic -r {self.repo} forget {snapshots}  --password ""'
         result = ProcessUtilities.outputExecutioner(command, self.website.externalApp, True)
@@ -513,7 +552,6 @@ team_drive =
                         return 0
 
                     self.UpdateStatus('Backup config created,5', CPBackupsV2.RUNNING)
-
                 except BaseException as msg:
                     self.UpdateStatus(f'Failed during config generation, Error: {str(msg)}', CPBackupsV2.FAILED)
                     return 0
@@ -523,26 +561,35 @@ team_drive =
                         self.UpdateStatus('Backing up databases..,10', CPBackupsV2.RUNNING)
                         if self.BackupDataBasesRustic() == 0:
                             self.UpdateStatus(f'Failed to create backup for databases.', CPBackupsV2.FAILED)
-                            return 0
+                            self.MergeSnapshotFlag = 0
+                            #return 0
+                        else:
+                            self.UpdateStatus('Database backups completed successfully..,25', CPBackupsV2.RUNNING)
 
-                        self.UpdateStatus('Database backups completed successfully..,25', CPBackupsV2.RUNNING)
-
-                    if self.data['BackupData']:
+                    if self.data['BackupData'] and self.MergeSnapshotFlag:
                         self.UpdateStatus('Backing up website data..,30', CPBackupsV2.RUNNING)
                         if self.BackupRustic() == 0:
-                            return 0
-                        self.UpdateStatus('Website data backup completed successfully..,70', CPBackupsV2.RUNNING)
+                            self.UpdateStatus(f'Failed to create backup for data..', CPBackupsV2.FAILED)
+                            self.MergeSnapshotFlag = 0
+                            # return 0
+                        else:
+                            self.UpdateStatus('Website data backup completed successfully..,70', CPBackupsV2.RUNNING)
 
-                    if self.data['BackupEmails']:
+                    if self.data['BackupEmails'] and self.MergeSnapshotFlag:
                         self.UpdateStatus('Backing up emails..,75', CPBackupsV2.RUNNING)
                         if self.BackupEmailsRustic() == 0:
-                            return 0
-                        self.UpdateStatus('Emails backup completed successfully..,85', CPBackupsV2.RUNNING)
+                            self.UpdateStatus(f'Failed to create backup for emails..', CPBackupsV2.FAILED)
+                            self.MergeSnapshotFlag = 0
+                        else:
+                            self.UpdateStatus('Emails backup completed successfully..,85', CPBackupsV2.RUNNING)
 
                     ### Finally change the backup rustic folder to the website user owner
 
                     command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}'
                     ProcessUtilities.executioner(command)
+
+                    if os.path.exists(ProcessUtilities.debugPath):
+                        logging.CyberCPLogFileWriter.writeToFile(f'Snapshots to be merged {str(self.snapshots)}')
 
                     self.MergeSnapshots()
 
@@ -664,26 +711,34 @@ team_drive =
         exclude = f' --glob !{source}/logs '
 
         command = f'rustic -r {self.repo} backup {source} --password "" {exclude} --json 2>/dev/null'
-        result = json.loads(ProcessUtilities.outputExecutioner(command, self.website.externalApp, True).rstrip('\n'))
+        status, result = ProcessUtilities.outputExecutioner(command, self.website.externalApp, True, None, True)
 
-        try:
-            SnapShotID = result['id']  ## snapshot id that we need to store in db
-            files_new = result['summary']['files_new']  ## basically new files in backup
-            total_duration = result['summary']['total_duration']  ## time taken
+        if os.path.exists(ProcessUtilities.debugPath):
+            logging.CyberCPLogFileWriter.writeToFile(f'Status code {status}')
 
-            self.snapshots.append(SnapShotID)
+        if status:
+            result = json.loads(result.rstrip('\n'))
 
-            ### Config is saved with each backup, snapshot of config is attached to data snapshot with parent
+            try:
+                SnapShotID = result['id']  ## snapshot id that we need to store in db
+                files_new = result['summary']['files_new']  ## basically new files in backup
+                total_duration = result['summary']['total_duration']  ## time taken
 
-            # self.BackupConfig(SnapShotID)
+                self.snapshots.append(SnapShotID)
 
-        except BaseException as msg:
-            self.UpdateStatus(f'Backup failed as no snapshot id found, error: {str(msg)}', CPBackupsV2.FAILED)
+                ### Config is saved with each backup, snapshot of config is attached to data snapshot with parent
+
+                # self.BackupConfig(SnapShotID)
+            except BaseException as msg:
+                self.UpdateStatus(f'Backup failed as no snapshot id found, error: {str(msg)}', CPBackupsV2.FAILED)
+                return 0
+
+            # self.UpdateStatus(f'Rustic command result id: {SnapShotID}, files new {files_new}, total_duration {total_duration}', CPBackupsV2.RUNNING)
+
+            return 1
+        else:
+            self.UpdateStatus(f'Backup failed, error: {str(result)}', CPBackupsV2.FAILED)
             return 0
-
-        # self.UpdateStatus(f'Rustic command result id: {SnapShotID}, files new {files_new}, total_duration {total_duration}', CPBackupsV2.RUNNING)
-
-        return 1
 
     def BackupEmailsRustic(self):
 

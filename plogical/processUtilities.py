@@ -336,6 +336,10 @@ class ProcessUtilities(multi.Thread):
                 ret = ProcessUtilities.sendCommand(command, user)
 
                 exitCode = ret[len(ret) - 1]
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(f'Status of command in outputExecutioner is {str(exitCode)}')
+
                 exitCode = int(codecs.encode(exitCode.encode(), 'hex'))
 
                 if exitCode == 0:

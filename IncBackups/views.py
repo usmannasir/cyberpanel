@@ -766,7 +766,17 @@ def ConfigureV2BackupSetup(request):
             {'domain': website, 'BasePath': '/home/backup', 'BackupDatabase': 1, 'BackupData': 1,
              'BackupEmails': 1, 'BackendName': 'testremote'})
 
-        cpbuv2.SetupRcloneBackend(CPBackupsV2.GDrive, req_data)
+        status, message = cpbuv2.SetupRcloneBackend(CPBackupsV2.GDrive, req_data)
+        from plogical.processUtilities import ProcessUtilities
+
+        if os.path.exists(ProcessUtilities.debugPath):
+            logging.writeToFile(f'Response from SetupRcloneBackend is {str(status)} and message {str(message)}')
+
+        if status == 0:
+            data_ret = {'status': 0, 'error_message': message}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
 
         return ConfigureV2Backup(request)
 
@@ -1016,7 +1026,17 @@ def ConfigureSftpV2Backup(request):
             {'domain': Selectedwebsite, 'BasePath': '/home/backup', 'BackupDatabase': 1, 'BackupData': 1,
              'BackupEmails': 1, 'BackendName': 'SFTP', 'function': None})
 
-        cpbuv2.SetupRcloneBackend(CPBackupsV2.SFTP, req_data)
+        status, message = cpbuv2.SetupRcloneBackend(CPBackupsV2.SFTP, req_data)
+
+        from plogical.processUtilities import ProcessUtilities
+
+        if os.path.exists(ProcessUtilities.debugPath):
+            logging.writeToFile(f'Response from SetupRcloneBackend is {str(status)} and message {str(message)}')
+
+        if status == 0:
+            data_ret = {'status': 0, 'error_message': message}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
 
         # return ConfigureV2Backup(request)
 
