@@ -317,7 +317,7 @@ team_drive =
 
         if status:
 
-            status, result = json.loads(result.rstrip('\n'))
+            result = json.loads(result.rstrip('\n'))
 
             try:
                 SnapShotID = result['id']  ## snapshot id that we need to store in db

@@ -254,7 +254,7 @@ class DNS:
 
                     ## MX Record.
 
-                    mxValue = "mail." + topLevelDomain
+                    mxValue = topLevelDomain
 
                     # record = Records(domainOwner=zone,
                     #                  domain_id=zone.id,
@@ -399,7 +399,7 @@ class DNS:
 
                     ## MX Record.
 
-                    mxValue = "mail." + topLevelDomain
+                    mxValue = topLevelDomain
 
                     # record = Records(domainOwner=zone,
                     #                  domain_id=zone.id,
@@ -491,7 +491,7 @@ class DNS:
 
                 ## MX Records
 
-                mxValue = "mail." + actualSubDomain
+                mxValue = actualSubDomain
 
                 # record = Records(domainOwner=zone,
                 #                  domain_id=zone.id,
