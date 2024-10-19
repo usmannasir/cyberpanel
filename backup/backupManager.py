@@ -1942,6 +1942,16 @@ class BackupManager:
 
                 try:
 
+                    userName = user.userName.lower()
+
+                    not_allowed_characters = [
+                        ' ', '/', '\\', '@', '!', '#', '$', '%', '^', '&', '*', '(', ')', '+', '=',
+                        '{', '}', '[', ']', ':', ';', '"', "'", '<', '>', ',', '?', '|', '`', '~'
+                    ]
+
+                    for items in not_allowed_characters:
+                        userName = userName.replace(items, '')
+
                     backup_plan = OneClickBackups(
                         owner=user,
                         planName=plan_name,
@@ -1949,7 +1959,7 @@ class BackupManager:
                         price=price,
                         customer=customer,
                         subscription=subscription,
-                        sftpUser=f'{user.userName}{str(randint(1000, 9999))}',
+                        sftpUser=f'{userName}{str(randint(1000, 9999))}',
                     )
                     backup_plan.save()
 
