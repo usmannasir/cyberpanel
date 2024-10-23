@@ -503,6 +503,16 @@ def upgrademysqlnow(request):
 
 def upgrademysqlstatus(request):
     try:
+
+        userID = request.session['userID']
+
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('FilemanagerAdmin', 0)
+
         data = json.loads(request.body)
         statusfile = data['statusfile']
         installStatus = ProcessUtilities.outputExecutioner("sudo cat " + statusfile)
