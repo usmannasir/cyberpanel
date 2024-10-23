@@ -680,11 +680,16 @@ class DNS:
                 return
 
             if zone.type == 'MASTER':
-                getSOA = Records.objects.get(domainOwner=zone, type='SOA')
-                soaContent = getSOA.content.split(' ')
-                soaContent[2] = str(int(soaContent[2]) + 1)
-                getSOA.content = " ".join(soaContent)
-                getSOA.save()
+                try:
+                    for getSOA in Records.objects.filter(domainOwner=zone, type='SOA'):
+                    #getSOA = Records.objects.get(domainOwner=zone, type='SOA')
+                        soaContent = getSOA.content.split(' ')
+                        soaContent[2] = str(int(soaContent[2]) + 1)
+                        getSOA.content = " ".join(soaContent)
+                        getSOA.save()
+                except:
+                    pass
+
 
             if type == 'NS':
                 if Records.objects.filter(name=name, type=type, content=value).count() == 0:
