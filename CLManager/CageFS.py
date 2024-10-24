@@ -104,6 +104,9 @@ class CageFS:
             command = 'yum reinstall -y lvemanager lve-utils cagefs'
             ServerStatusUtil.executioner(command, statusFile)
 
+            command = 'yum reinstall -y cloudlinux-venv'
+            ServerStatusUtil.executioner(command, statusFile)
+
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
                                                       "Important components reinstalled..\n", 1)
 
