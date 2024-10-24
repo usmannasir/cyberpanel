@@ -1132,7 +1132,7 @@ fi
 
 Debug_Log2 "Installing requirments..,3"
 
-Retry_Command "pip install --default-timeout=3600 -r /usr/local/requirments.txt"
+Retry_Command "/usr/local/CyberCP/bin/pip3 install --default-timeout=3600 -r /usr/local/requirments.txt"
   Check_Return "requirments" "no_exit"
 
 if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" = "22" ]] ; then
