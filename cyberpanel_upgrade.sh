@@ -697,7 +697,7 @@ else
   # shellcheck disable=SC1091
   source /usr/local/CyberCP/bin/activate
     Check_Return
-  $PIP3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt
+  /usr/local/CyberCP/bin/pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt
     Check_Return
 fi
 
