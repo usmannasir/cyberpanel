@@ -98,6 +98,9 @@ class CageFS:
             command = 'yum install -y alt-python37-devel'
             ServerStatusUtil.executioner(command, statusFile)
 
+            command = 'yum reinstall -y cloudlinux-venv'
+            ServerStatusUtil.executioner(command, statusFile)
+
             command = 'yum reinstall -y lvemanager lve-utils cagefs'
             ServerStatusUtil.executioner(command, statusFile)
 
