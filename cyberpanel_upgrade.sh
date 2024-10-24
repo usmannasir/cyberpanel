@@ -679,7 +679,7 @@ if [[ -f /usr/local/CyberCP/bin/python2 ]]; then
 elif [[ -d /usr/local/CyberCP/bin/ ]]; then
   echo -e "\nNo need to re-setup virtualenv at /usr/local/CyberCP...\n"
 else
-  virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberCP
+  virtualenv -p /usr/bin/python3 /usr/local/CyberCP
     Check_Return
 fi
 
