@@ -98,7 +98,7 @@ Some PHP versions can be added to operating systems as third-party packages usin
 - ✨ **PHP 8.3** - EOL: 31 Dec 2027.
 - ✨ **PHP 8.2** - EOL: 31 Dec 2026.
 - ✨ **PHP 8.1** - EOL: 31 Dec 2025.
-- ✨ **PHP 8.0** - EOL: 26 Nov 2023.
+- 🛑 **PHP 8.0** - EOL: 26 Nov 2023.
 - 🛑 **PHP 7.4** - EOL: 28 Nov 2022.
 - 🛑 **PHP 7.3** - EOL: 6 Dec 2021.
 - 🛑 **PHP 7.2** - EOL: 30 Nov 2020.
