@@ -2077,7 +2077,7 @@ class ApplicationInstaller(multi.Thread):
             path = self.data['path']
 
             if self.data['plugin'] == 'all':
-                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp theme update --all --skip-plugins --skip-themes --path=%s' % (
+                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin update --all --skip-plugins --skip-themes --path=%s' % (
                     Vhuser, FinalPHPPath, path)
                 stdoutput = ProcessUtilities.outputExecutioner(command)
 
@@ -2095,7 +2095,7 @@ class ApplicationInstaller(multi.Thread):
 
 
             else:
-                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp theme update %s --skip-plugins --skip-themes --path=%s' % (
+                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin update %s --skip-plugins --skip-themes --path=%s' % (
                     Vhuser, FinalPHPPath, self.data['plugin'], path)
                 stdoutput = ProcessUtilities.outputExecutioner(command)
 
