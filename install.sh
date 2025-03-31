@@ -9,6 +9,9 @@ yum update curl wget ca-certificates -y 1> /dev/null
 elif echo $OUTPUT | grep -q "CentOS Linux 8" ; then
         echo -e "\nDetecting Centos 8...\n"
         SERVER_OS="CentOS8"
+elif echo $OUTPUT | grep -q "CentOS Stream 9" ; then
+        echo -e "\nDetecting Centos Stream 9...\n"
+        SERVER_OS="CentOS8"
 yum install curl wget -y 1> /dev/null
 yum update curl wget ca-certificates -y 1> /dev/null
 elif echo $OUTPUT | grep -q "AlmaLinux 8" ; then
