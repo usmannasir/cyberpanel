@@ -27,6 +27,7 @@ import requests
 import socket
 from websiteFunctions.models import NormalBackupJobs, NormalBackupJobLogs
 from boto3.s3.transfer import TransferConfig
+import traceback
 
 try:
     from s3Backups.models import BackupPlan, BackupLogs
@@ -1396,6 +1397,7 @@ Automatic backup failed for %s on %s.
             RemoteBackupOBJ = RemoteBackupConfig.objects.get(pk=RemoteBackupID)
             config = json.loads(RemoteBackupOBJ.config)
             HostName = config['Hostname']
+            Port = config.get('Port', 22)
             Username = config['Username']
             Password = config['Password']
             Path = config['Path']
@@ -1405,14 +1407,28 @@ Automatic backup failed for %s on %s.
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
             # Connect to the server using the private key
-            ssh.connect(HostName, username=Username, password=Password)
+            ssh.connect(HostName, port=Port, username=Username, password=Password)
+            
+            # Create directory and wait for the command to complete
+            stdin, stdout, stderr = ssh.exec_command(f'mkdir -p {Path}')
+            stdout.read()  # Wait for command completion
+            
             sftp = ssh.open_sftp()
-            ssh.exec_command(f'mkdir -p {Path}')
 
             if os.path.exists(ProcessUtilities.debugPath):
-                logging.writeToFile(f"Filename: {FileName}, Path {Path}/{FileName.split('/')[-1]}. [SendTORemote]")
+                logging.writeToFile(f"Filename: {FileName}, Path {Path}/{FileName.split('/')[-1]} [SendTORemote]")
 
-            sftp.put(FileName, f"{Path}/{FileName.split('/')[-1]}")
+            try:
+                sftp.put(FileName, f"{Path}/{FileName.split('/')[-1]}")
+            except FileNotFoundError:
+                # Double check if directory exists by explicitly creating it via SFTP
+                try:
+                    sftp.mkdir(Path)
+                except IOError:
+                    # Directory may already exist, which would cause an error
+                    pass
+                # Try the transfer again
+                sftp.put(FileName, f"{Path}/{FileName.split('/')[-1]}")
 
             # sftp.get(str(remotepath), str(loaclpath),
             #          callback=self.UpdateDownloadStatus)
@@ -1432,11 +1448,13 @@ Automatic backup failed for %s on %s.
             #         with sftp.cd(Path):
             #             sftp.put(FileName)
 
-
+            # Close connections
+            sftp.close()
+            ssh.close()
 
         except BaseException as msg:
-            print('%s. [SendTORemote]' % (str(msg)))
-            logging.writeToFile('%s. [SendTORemote]' % (str(msg)))
+            print('%s. [SendTORemote]' % (traceback.format_exc()))
+            logging.writeToFile('%s. [SendTORemote]' % (traceback.format_exc()))
 
     @staticmethod
     def SendToS3Cloud(FileName, RemoteBackupCofigID, backupID, scheduleID):

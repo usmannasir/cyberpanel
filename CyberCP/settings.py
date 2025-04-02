@@ -28,8 +28,11 @@ DEBUG = False
 ALLOWED_HOSTS = ['*']
 
 # Application definition
+STATICFILES_STORAGE = "django.core.files.storage.FileSystemStorage"
+COLLECTFAST_STRATEGY = "collectfast.strategies.filesystem.FileSystemStrategy"
 
 INSTALLED_APPS = [
+    'collectfast',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

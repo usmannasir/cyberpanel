@@ -196,6 +196,37 @@ class WebsiteManager:
                 Data['wpsite'] = WPobj
                 Data['test_domain_data'] = 1
 
+                allcon = RemoteBackupConfig.objects.all()
+                Data['backupconfigs'] = []
+                for i in allcon:
+                    configr = json.loads(i.config)
+                    if i.configtype == "SFTP":
+                        Data['backupconfigs'].append({
+                            'id': i.pk,
+                            'Type': i.configtype,
+                            'HostName': configr['Hostname'],
+                            'Port': configr['Port'],
+                            'Path': configr['Path']
+                        })
+                    elif i.configtype == "S3":
+                        Provider = configr['Provider']
+                        if Provider == "Backblaze":
+                            Data['backupconfigs'].append({
+                                'id': i.pk,
+                                'Type': i.configtype,
+                                'HostName': Provider,
+                                'Port': "",
+                                'Path': configr['S3keyname']
+                            })
+                        else:
+                            Data['backupconfigs'].append({
+                                'id': i.pk,
+                                'Type': i.configtype,
+                                'HostName': Provider,
+                                'Port': "",
+                                'Path': configr['S3keyname']
+                            })
+
                 try:
                     DeleteID = request.GET.get('DeleteID', None)
 
@@ -275,6 +306,7 @@ class WebsiteManager:
                         'id': i.pk,
                         'Type': i.configtype,
                         'HostName': configr['Hostname'],
+                        'Port': configr['Port'],
                         'Path': configr['Path']
                     })
                 elif i.configtype == "S3":
@@ -284,6 +316,7 @@ class WebsiteManager:
                             'id': i.pk,
                             'Type': i.configtype,
                             'HostName': Provider,
+                            'Port': "",
                             'Path': configr['S3keyname']
                         })
                     else:
@@ -291,6 +324,7 @@ class WebsiteManager:
                             'id': i.pk,
                             'Type': i.configtype,
                             'HostName': Provider,
+                            'Port': "",
                             'Path': configr['S3keyname']
                         })
 
@@ -1276,11 +1310,13 @@ class WebsiteManager:
             ConfigType = data['type']
             if ConfigType == 'SFTP':
                 Hname = data['Hname']
+                Port = data['Port']
                 Uname = data['Uname']
                 Passwd = data['Passwd']
                 path = data['path']
                 config = {
                     "Hostname": Hname,
+                    "Port": Port,
                     "Username": Uname,
                     "Password": Passwd,
                     "Path": path

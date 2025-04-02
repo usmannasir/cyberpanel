@@ -715,6 +715,7 @@ elif [[ "$Server_OS" = "Ubuntu" ]] ; then
   # shellcheck disable=SC1091
   . /usr/local/CyberPanelTemp/bin/activate
     Check_Return
+  pip3 install packaging>=22 --root-user-action=ignore --break-system-packages -U --force-reinstall -I
   pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments-old.txt
     Check_Return
 elif [[ "$Server_OS" = "openEuler" ]] ; then

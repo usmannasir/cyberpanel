@@ -2520,16 +2520,26 @@ class ApplicationInstaller(multi.Thread):
             Adminobj = Administrator.objects.get(pk=self.extraArgs['adminID'])
             Backuptype = self.extraArgs['Backuptype']
             try:
-                BackupDestination = self.extraArgs['BackupDestination']
-                SFTP_ID = self.extraArgs['SFTPID']
+                config = self.extraArgs['remoteBackupConfig']
+                if config == "-1":
+                    BackupDestination = 'Local'
+                    SFTP_ID = None
+                else:
+                    BackupDestination = config.split(":")[1]
+                    SFTP_ID = int(config.split(":")[0])
             except:
-                BackupDestination = 'Local'
-                SFTP_ID = None
+                try:
+                    BackupDestination = self.extraArgs['BackupDestination']
+                    SFTP_ID = self.extraArgs['SFTPID']
+                    if os.path.exists(ProcessUtilities.debugPath):
+                        logging.writeToFile(f'BackupDestination: {BackupDestination}, SFTP_ID: {SFTP_ID}')
+                except:
+                    BackupDestination = 'Local'
+                    SFTP_ID = None
+
 
             from plogical.phpUtilities import phpUtilities
             vhFile = f'/usr/local/lsws/conf/vhosts/{wpsite.owner.domain}/vhost.conf'
-
-
 
             website = wpsite.owner
             PhpVersion = phpUtilities.WrapGetPHPVersionFromFileToGetVersionWithPHP(vhFile)
@@ -3066,6 +3076,7 @@ class ApplicationInstaller(multi.Thread):
                 RemoteBackupOBJ = RemoteBackupConfig.objects.get(pk=RemoteBackupID)
                 RemoteBackupconf = json.loads(RemoteBackupOBJ.config)
                 HostName = RemoteBackupconf['Hostname']
+                Port = RemoteBackupconf['Port']
                 Username = RemoteBackupconf['Username']
                 Password = RemoteBackupconf['Password']
                 Path = RemoteBackupconf['Path']
@@ -3080,7 +3091,7 @@ class ApplicationInstaller(multi.Thread):
                 # SSH connection to the remote server
                 ssh = paramiko.SSHClient()
                 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                ssh.connect(HostName, username=Username, password=Password)
+                ssh.connect(HostName, port=Port, username=Username, password=Password)
 
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(f"SFTP Connected successfully..")

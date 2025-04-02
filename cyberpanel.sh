@@ -1120,6 +1120,13 @@ export LC_CTYPE=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 #need to set lang to address some pip module installation issue.
 
+### @micfogas - code added to force updating of python3 package 'packaging' to version 22 or higher to avoid fatal error
+###
+Debug_Log2 "Force updating pip package 'packaging' to \>\=22...,40"
+pip install packaging>=22 --root-user-action=ignore --break-system-packages -U --force-reinstall -I
+###
+### @micfogas end code addition
+
 Retry_Command "pip install --default-timeout=3600 virtualenv"
 
 Download_Requirement
