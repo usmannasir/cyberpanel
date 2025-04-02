@@ -5,6 +5,7 @@ import os, sys
 import shutil
 import time
 from io import StringIO
+import traceback
 
 import paramiko
 
@@ -771,8 +772,13 @@ class ApplicationInstaller(multi.Thread):
             statusFile.close()
 
             try:
-                command = f"{FinalPHPPath} -d error_reporting=0 /usr/bin/wp core download --allow-root --path={finalPath} --version={self.extraArgs['WPVersion']}"
-            except:
+                if "WPVersion" in self.extraArgs.keys():
+                    command = f"{FinalPHPPath} -d error_reporting=0 /usr/bin/wp core download --allow-root --path={finalPath} --version={self.extraArgs['WPVersion']}"
+                else:
+                    command = f"{FinalPHPPath} -d error_reporting=0 /usr/bin/wp core download --allow-root --path={finalPath}"
+            except Exception as e:
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile("[installWordPress] " + str(traceback.format_exc()))
                 command = "wp core download --allow-root --path=" + finalPath
 
             result = ProcessUtilities.outputExecutioner(command, externalApp)
