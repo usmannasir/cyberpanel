@@ -2278,8 +2278,11 @@ class WebsiteManager:
 
             tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
+            if not domain.endswith(masterDomain):
+                domain = domain + "." + masterDomain
+
             if not validators.domain(domain):
-                data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': "Invalid domain."}
+                data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': f"Invalid domain. {masterDomain}, {domain}"}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
@@ -3877,7 +3880,7 @@ class WebsiteManager:
             ssl = data['ssl']
 
             if not validators.domain(aliasDomain):
-                data_ret = {'status': 0, 'createAliasStatus': 0, 'error_message': "Invalid domain."}
+                data_ret = {'status': 0, 'createAliasStatus': 0, 'error_message': "Invalid alias domain."}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
