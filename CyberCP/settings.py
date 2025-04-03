@@ -19,20 +19,46 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'xr%j*p!*$0d%(-(e%@-*hyoz4$f%y77coq0u)6pwmjg4)q&19f'
+# Import secret key and database settings from cyberpanel_secrets.py
+try:
+    from CyberCP.cyberpanel_secrets import SECRET_KEY, DATABASES
+except ImportError:
+    # For development/testing without cyberpanel_secrets.py
+    SECRET_KEY = 'default-key-for-development-only-not-for-production'
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        }
+    }
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
+
+import logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'DEBUG'),
+        },
+    },
+}
 
 # Application definition
 STATICFILES_STORAGE = "django.core.files.storage.FileSystemStorage"
 COLLECTFAST_STRATEGY = "collectfast.strategies.filesystem.FileSystemStrategy"
 
 INSTALLED_APPS = [
-    'collectfast',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -93,10 +119,10 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
-                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.debug',
             ],
         },
     },
@@ -107,24 +133,7 @@ WSGI_APPLICATION = 'CyberCP.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'cyberpanel',
-        'USER': 'cyberpanel',
-        'PASSWORD': 'JjWbFBFDxMI8D8',
-        'HOST': 'localhost',
-        'PORT': ''
-    },
-    'rootdb': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'mysql',
-        'USER': 'root',
-        'PASSWORD': 'JjWbFBFDxMI8D8',
-        'HOST': 'localhost',
-        'PORT': '',
-    },
-}
+# DATABASES is imported from cyberpanel_secrets.py at the top
 
 DATABASE_ROUTERS = ['backup.backupRouter.backupRouter']
 
