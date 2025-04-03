@@ -589,7 +589,7 @@
                                                     <select id="remoteBackupConfig" class="form-control">
                                                         <option value="-1" selected>None (Local Backup Only)</option>
                                                         {% for config in backupconfigs %}
-                                                            <option value="{{ config.id }}:{{ config.Type }}">{{ config.Type }} - {{ config.HostName }}:{{ config.Port }} / {{ config.Path }}</option>
+                                                            <option value="{{ config.id }},{{ config.Type }}">{{ config.Type }} - {{ config.HostName }}:{{ config.Port }} / {{ config.Path }}</option>
                                                         {% endfor %}
                                                     </select>
                                                 </div>

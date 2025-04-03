@@ -2509,6 +2509,78 @@ class ApplicationInstaller(multi.Thread):
             mesg = '%s. [404]' % (str(msg))
             logging.statusWriter(self.tempStatusPath, mesg)
 
+    def SendTORemote(self, FileName, RemoteBackupID):
+        import json
+        from websiteFunctions.models import RemoteBackupConfig
+
+        logging.statusWriter(self.tempStatusPath, 'Uploading backup files.....,80')
+
+        try:
+            RemoteBackupOBJ = RemoteBackupConfig.objects.get(pk=RemoteBackupID)
+            config = json.loads(RemoteBackupOBJ.config)
+            HostName = config['Hostname']
+            Port = config.get('Port', 22)
+            Username = config['Username']
+            Password = config['Password']
+            Path = config['Path']
+
+            # Connect to the remote server using the private key
+            ssh = paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+            # Connect to the server using the private key
+            ssh.connect(HostName, port=Port, username=Username, password=Password)
+
+            # Create directory and wait for the command to complete
+            stdin, stdout, stderr = ssh.exec_command(f'mkdir -p {Path}')
+            stdout.read()  # Wait for command completion
+
+            sftp = ssh.open_sftp()
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(f"Filename: {FileName}, Path {Path}/{FileName.split('/')[-1]} [SendTORemote]")
+
+            try:
+                sftp.put(FileName, f"{Path}/{FileName.split('/')[-1]}")
+            except FileNotFoundError:
+                # Double check if directory exists by explicitly creating it via SFTP
+                try:
+                    sftp.mkdir(Path)
+                except IOError:
+                    # Directory may already exist, which would cause an error
+                    pass
+                # Try the transfer again
+                sftp.put(FileName, f"{Path}/{FileName.split('/')[-1]}")
+
+            # sftp.get(str(remotepath), str(localpath),
+            #          callback=self.UpdateDownloadStatus)
+            #
+            # cnopts = sftp.CnOpts()
+            # cnopts.hostkeys = None
+            #
+            # with pysftp.Connection(HostName, username=Username, password=Password, cnopts=cnopts) as sftp:
+            #     print("Connection succesfully stablished ... ")
+            #
+            #     try:
+            #         with sftp.cd(Path):
+            #             sftp.put(FileName)
+            #     except BaseException as msg:
+            #         print(f'Error on {str(msg)}')
+            #         sftp.mkdir(Path)
+            #         with sftp.cd(Path):
+            #             sftp.put(FileName)
+
+            # Close connections
+            sftp.close()
+            ssh.close()
+
+            command = f"rm -r {FileName}"
+            ProcessUtilities.executioner(command)
+
+        except BaseException as msg:
+            print('%s. [SendTORemote]' % (traceback.format_exc()))
+            logging.writeToFile('%s. [SendTORemote]' % (traceback.format_exc()))
+
     def WPCreateBackup(self):
         try:
             from managePHP.phpManager import PHPManager
@@ -2519,24 +2591,44 @@ class ApplicationInstaller(multi.Thread):
             wpsite = WPSites.objects.get(pk=self.extraArgs['WPid'])
             Adminobj = Administrator.objects.get(pk=self.extraArgs['adminID'])
             Backuptype = self.extraArgs['Backuptype']
+
             try:
                 config = self.extraArgs['remoteBackupConfig']
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(f'remoteBackupConfig raw value: {config}')
+                
                 if config == "-1":
                     BackupDestination = 'Local'
                     SFTP_ID = None
                 else:
-                    BackupDestination = config.split(":")[1]
-                    SFTP_ID = int(config.split(":")[0])
-            except:
+                    try:
+                        parts = config.split(",")
+                        if os.path.exists(ProcessUtilities.debugPath):
+                            logging.writeToFile(f'Split parts: {parts}')
+                        
+                        BackupDestination = parts[1]
+                        SFTP_ID = int(parts[0])
+                        
+                        if os.path.exists(ProcessUtilities.debugPath):
+                            logging.writeToFile(f'After processing: BackupDestination={BackupDestination}, SFTP_ID={SFTP_ID}')
+                    except Exception as e:
+                        if os.path.exists(ProcessUtilities.debugPath):
+                            logging.writeToFile(f'Error processing remoteBackupConfig: {str(e)}')
+                        BackupDestination = 'Local'
+                        SFTP_ID = None
+            except Exception as e:
+                import traceback
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(f'Exception in remoteBackupConfig section: {traceback.format_exc()}')
                 try:
                     BackupDestination = self.extraArgs['BackupDestination']
                     SFTP_ID = self.extraArgs['SFTPID']
-                    if os.path.exists(ProcessUtilities.debugPath):
-                        logging.writeToFile(f'BackupDestination: {BackupDestination}, SFTP_ID: {SFTP_ID}')
                 except:
                     BackupDestination = 'Local'
                     SFTP_ID = None
 
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(f'BackupDestination: {BackupDestination}, SFTP_ID: {SFTP_ID}')
 
             from plogical.phpUtilities import phpUtilities
             vhFile = f'/usr/local/lsws/conf/vhosts/{wpsite.owner.domain}/vhost.conf'
@@ -2672,7 +2764,7 @@ class ApplicationInstaller(multi.Thread):
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(result)
 
-                logging.statusWriter(self.tempStatusPath, 'Copying database.....,70')
+                logging.statusWriter(self.tempStatusPath, 'Copying database.....,60')
 
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(f'DB Name Dump: {DataBaseName}')
@@ -2695,7 +2787,7 @@ class ApplicationInstaller(multi.Thread):
                     logging.writeToFile(result)
 
                 ######## Zip backup directory
-                logging.statusWriter(self.tempStatusPath, 'Compressing backup files.....,80')
+                logging.statusWriter(self.tempStatusPath, 'Compressing backup files.....,70')
 
                 command = 'mkdir -p /home/backup/'
                 result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
@@ -2721,14 +2813,20 @@ class ApplicationInstaller(multi.Thread):
                 if result == 0:
                     raise BaseException(stdout)
 
-                command = f"chmod 600 /home/backup/{config['name']}.tar.gz"
+                command = f"chmod 644 /home/backup/{config['name']}.tar.gz"
                 result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                 if result == 0:
                     raise BaseException(stdout)
 
+                filename = f"/home/backup/{config['name']}.tar.gz"
+
+                if "remoteBackupConfig" in self.extraArgs.keys():
+                    if BackupDestination == "SFTP":
+                        self.SendTORemote(filename, SFTP_ID)
+
                 logging.statusWriter(self.tempStatusPath, 'Completed.[200]')
-                return 1, f"/home/backup/{config['name']}.tar.gz", backupobj.id
+                return 1, filename, backupobj.id
 
             #### Only Website Data === 2
             elif Backuptype == "2":
@@ -2831,7 +2929,7 @@ class ApplicationInstaller(multi.Thread):
                     logging.writeToFile(result)
 
                 ######## Zip backup directory
-                logging.statusWriter(self.tempStatusPath, 'Compressing backup files.....,80')
+                logging.statusWriter(self.tempStatusPath, 'Compressing backup files.....,70')
 
                 websitepath = "/home/%s" % websitedomain
 
@@ -2859,14 +2957,20 @@ class ApplicationInstaller(multi.Thread):
                 if result == 0:
                     raise BaseException(stdout)
 
-                command = f"chmod 600 /home/backup/{config['name']}.tar.gz"
+                command = f"chmod 644 /home/backup/{config['name']}.tar.gz"
                 result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                 if result == 0:
                     raise BaseException(stdout)
 
+                filename = f"/home/backup/{config['name']}.tar.gz"
+
+                if "remoteBackupConfig" in self.extraArgs.keys():
+                    if BackupDestination == "SFTP":
+                        self.SendTORemote(filename, SFTP_ID)
+
                 logging.statusWriter(self.tempStatusPath, 'Completed.[200]')
-                return 1, f"/home/backup/{config['name']}.tar.gz", backupobj.id
+                return 1, filename, backupobj.id
 
             #### Only Database === 3
             else:
@@ -2956,7 +3060,7 @@ class ApplicationInstaller(multi.Thread):
                 if ProcessUtilities.executioner(command) == 0:
                     raise BaseException('Failed to remove config temp file.')
 
-                logging.statusWriter(self.tempStatusPath, 'Copying DataBase.....,70')
+                logging.statusWriter(self.tempStatusPath, 'Copying DataBase.....,50')
 
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(f'DB Name MySQL Dump: {DataBaseName}')
@@ -2979,7 +3083,7 @@ class ApplicationInstaller(multi.Thread):
                     logging.writeToFile(result)
 
                 ######## Zip backup directory
-                logging.statusWriter(self.tempStatusPath, 'Compressing backup files.....,80')
+                logging.statusWriter(self.tempStatusPath, 'Compressing backup files.....,65')
 
                 command = 'mkdir -p /home/backup/'
                 result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
@@ -3005,14 +3109,20 @@ class ApplicationInstaller(multi.Thread):
                 if result == 0:
                     raise BaseException(stdout)
 
-                command = f"chmod 600 /home/backup/{config['name']}.tar.gz"
+                command = f"chmod 644 /home/backup/{config['name']}.tar.gz"
                 result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                 if result == 0:
                     raise BaseException(stdout)
 
+                filename = f"/home/backup/{config['name']}.tar.gz"
+
+                if "remoteBackupConfig" in self.extraArgs.keys():
+                    if BackupDestination == "SFTP":
+                        self.SendTORemote(filename, SFTP_ID)
+
                 logging.statusWriter(self.tempStatusPath, 'Completed.[200]')
-                return 1, f"/home/backup/{config['name']}.tar.gz", backupobj.id
+                return 1, filename, backupobj.id
 
         except BaseException as msg:
             logging.writeToFile("Error WPCreateBackup ....... %s" % str(msg))
@@ -3096,72 +3206,74 @@ class ApplicationInstaller(multi.Thread):
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(f"SFTP Connected successfully..")
 
-
-
-                # 1. Generate SSH keys on the remote server with the name 'cyberpanelbackup'
-                ssh_keygen_command = "ssh-keygen -t rsa -b 2048 -f ~/.ssh/cyberpanelbackup -q -N ''"
-                stdin, stdout, stderr = ssh.exec_command(ssh_keygen_command)
-
-                if os.path.exists(ProcessUtilities.debugPath):
-                    logging.writeToFile(f"SSH key generated..")
-
-                # 2. Download the SSH keys from the remote server to the local server
-
-                ### put generated key in local server
-
-                remote_private_key = "~/.ssh/cyberpanelbackup"
-                remote_public_key = "~/.ssh/cyberpanelbackup.pub"
-
-                ssh_keygen_command = f"cat {remote_public_key}"
-                stdin, stdout, stderr = ssh.exec_command(ssh_keygen_command)
-
-                # Read the output (stdout) into a variable
-                public_key_content = stdout.read().decode().strip()
-
-                if os.path.exists(ProcessUtilities.debugPath):
-                    logging.writeToFile(f'Key from remote server {public_key_content}')
-
-                command = f'echo "{public_key_content}" >> ~/.ssh/authorized_keys'
-                ProcessUtilities.executioner(command, 'root', True)
-
-                command = f"awk '!seen[$0]++' ~/.ssh/authorized_keys > temp && mv temp ~/.ssh/authorized_keys"
-                ProcessUtilities.executioner(command, 'root', True)
-
-                command = f'cat ~/.ssh/authorized_keys'
-                updatedAuth = ProcessUtilities.outputExecutioner(command, 'root', True)
-
-                if os.path.exists(ProcessUtilities.debugPath):
-                    logging.writeToFile(f'Updated content of authorized key file {updatedAuth}')
-
-
                 ####
 
                 sftp = ssh.open_sftp()
 
                 logging.statusWriter(self.tempStatusPath, 'Downloading Backups...,15')
-                loaclpath = "/home/cyberpanel/%s.tar.gz" % BackUpFileName
+                localpath = "/home/cyberpanel/%s.tar.gz" % BackUpFileName
                 remotepath = "%s/%s.tar.gz" % (Path, BackUpFileName)
                 logging.writeToFile("Downloading start")
+                
+                try:
+                    sftp.get(remotepath, localpath)
+                    if os.path.exists(ProcessUtilities.debugPath):
+                        logging.writeToFile(f"Downloaded backup using sftp!")
+                except:
+                    # 1. Generate SSH keys on the remote server with the name 'cyberpanelbackup'
+                    ssh_keygen_command = "ssh-keygen -t rsa -b 2048 -f ~/.ssh/cyberpanelbackup -q -N ''"
+                    stdin, stdout, stderr = ssh.exec_command(ssh_keygen_command)
 
-                from WebTerminal.CPWebSocket import SSHServer
-                SSHServer.findSSHPort()
+                    if os.path.exists(ProcessUtilities.debugPath):
+                        logging.writeToFile(f"SSH key generated..")
 
-                command = f"scp -o StrictHostKeyChecking=no -i {remote_private_key} -P {str(SSHServer.DEFAULT_PORT)} {remotepath} root@{ACLManager.fetchIP()}:{loaclpath}"
+                    # 2. Download the SSH keys from the remote server to the local server
 
-                stdin, stdout, stderr = ssh.exec_command(command)
+                    ### put generated key in local server
 
-                # Read the output (stdout) into a variable
-                successRet = stdout.read().decode().strip()
-                errorRet = stderr.read().decode().strip()
+                    remote_private_key = "~/.ssh/cyberpanelbackup"
+                    remote_public_key = "~/.ssh/cyberpanelbackup.pub"
 
-                if os.path.exists(ProcessUtilities.debugPath):
-                    logging.writeToFile(f"Command used to retrieve backup {command}")
-                    if errorRet:
-                        logging.writeToFile(f"Error in scp command to retrieve backup {errorRet}")
-                    else:
-                        logging.writeToFile(f"Success in scp command to retrieve backup {successRet}")
+                    ssh_keygen_command = f"cat {remote_public_key}"
+                    stdin, stdout, stderr = ssh.exec_command(ssh_keygen_command)
 
-                # sftp.get(str(remotepath), str(loaclpath),
+                    # Read the output (stdout) into a variable
+                    public_key_content = stdout.read().decode().strip()
+
+                    if os.path.exists(ProcessUtilities.debugPath):
+                        logging.writeToFile(f'Key from remote server {public_key_content}')
+
+                    command = f'echo "{public_key_content}" >> ~/.ssh/authorized_keys'
+                    ProcessUtilities.executioner(command, 'root', True)
+
+                    command = f"awk '!seen[$0]++' ~/.ssh/authorized_keys > temp && mv temp ~/.ssh/authorized_keys"
+                    ProcessUtilities.executioner(command, 'root', True)
+
+                    command = f'cat ~/.ssh/authorized_keys'
+                    updatedAuth = ProcessUtilities.outputExecutioner(command, 'root', True)
+
+                    if os.path.exists(ProcessUtilities.debugPath):
+                        logging.writeToFile(f'Updated content of authorized key file {updatedAuth}')
+
+                    from WebTerminal.CPWebSocket import SSHServer
+                    SSHServer.findSSHPort()
+    
+                    command = f"scp -o StrictHostKeyChecking=no -i {remote_private_key} -P {str(SSHServer.DEFAULT_PORT)} {remotepath} root@{ACLManager.fetchIP()}:{localpath}"
+    
+                    stdin, stdout, stderr = ssh.exec_command(command)
+    
+                    # Read the output (stdout) into a variable
+                    successRet = stdout.read().decode().strip()
+                    errorRet = stderr.read().decode().strip()
+    
+                    if os.path.exists(ProcessUtilities.debugPath):
+                        logging.writeToFile(f"Command used to retrieve backup {command}")
+                        if errorRet:
+                            logging.writeToFile(f"Error in scp command to retrieve backup {errorRet}")
+                        else:
+                            logging.writeToFile(f"Success in scp command to retrieve backup {successRet}")
+
+                # sftp.get(str(remotepath), str(localpath),
                 #          callback=self.UpdateDownloadStatus)
 
                 # Ensure both SFTP and SSH connections are closed
@@ -3170,7 +3282,7 @@ class ApplicationInstaller(multi.Thread):
                 if ssh:
                     ssh.close()  # Close the SSH connection
 
-                command = "mv %s /home/backup/" % loaclpath
+                command = "mv %s /home/backup/" % localpath
                 ProcessUtilities.executioner(command)
 
                 ##
@@ -3181,12 +3293,12 @@ class ApplicationInstaller(multi.Thread):
                 #
                 # with pysftp.Connection(HostName, username=Username, password=Password, cnopts=cnopts) as sftp:
                 #     logging.statusWriter(self.tempStatusPath, 'Downloading Backups...,15')
-                #     loaclpath = "/home/cyberpanel/%s.tar.gz" % BackUpFileName
+                #     localpath = "/home/cyberpanel/%s.tar.gz" % BackUpFileName
                 #     remotepath = "%s/%s.tar.gz" % (Path, BackUpFileName)
                 #     logging.writeToFile("Downloading start")
-                #     sftp.get(str(remotepath), str(loaclpath))
+                #     sftp.get(str(remotepath), str(localpath))
                 #
-                #     command = "mv %s /home/backup/" % loaclpath
+                #     command = "mv %s /home/backup/" % localpath
                 #     ProcessUtilities.executioner(command)
 
                     # ##### CHeck if Backup type is Only Database
@@ -6548,9 +6660,10 @@ class ApplicationInstaller(multi.Thread):
 
             if not os.path.exists(ProcessUtilities.debugPath):
                 if BackupDestination == 'SFTP' or BackupDestination == 'S3':
-                    command = f'rm -rf /home/backup/{loaclpath}'
+                    command = f'rm -rf /home/backup/{localpath}'
                     ProcessUtilities.executioner(command)
-
+            else:
+                logging.writeToFile(f"Keeping backup file for debug /home/backup/{localpath}")
 
             logging.statusWriter(self.tempStatusPath, 'Completed.[200]')
 
@@ -6662,14 +6775,14 @@ class ApplicationInstaller(multi.Thread):
             sftp = ssh.open_sftp()
 
             logging.statusWriter(self.tempStatusPath, 'Downloading Backups...,15')
-            loaclpath = f'/home/cyberpanel/{backupfile}'
+            localpath = f'/home/cyberpanel/{backupfile}'
             remotepath = f'cpbackups/{folder}/{backupfile}'
             logging.writeToFile("Downloading start")
 
             from WebTerminal.CPWebSocket import SSHServer
             SSHServer.findSSHPort()
 
-            command = f"scp -o StrictHostKeyChecking=no -i {remote_private_key} -P {str(SSHServer.DEFAULT_PORT)} {remotepath} root@{ACLManager.fetchIP()}:{loaclpath}"
+            command = f"scp -o StrictHostKeyChecking=no -i {remote_private_key} -P {str(SSHServer.DEFAULT_PORT)} {remotepath} root@{ACLManager.fetchIP()}:{localpath}"
 
             stdin, stdout, stderr = ssh.exec_command(command)
 

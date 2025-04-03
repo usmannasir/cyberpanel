@@ -1232,6 +1232,10 @@ class WebsiteManager:
             extraArgs['adminID'] = admin.pk
             extraArgs['WPid'] = WPManagerID
             extraArgs['Backuptype'] = Backuptype
+
+            if 'remoteBackupConfig' in data:
+                extraArgs['remoteBackupConfig'] = data['remoteBackupConfig']
+
             extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
 
             background = ApplicationInstaller('WPCreateBackup', extraArgs)
