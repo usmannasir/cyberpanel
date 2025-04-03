@@ -55,8 +55,6 @@ LOGGING = {
 }
 
 # Application definition
-STATICFILES_STORAGE = "django.core.files.storage.FileSystemStorage"
-COLLECTFAST_STRATEGY = "collectfast.strategies.filesystem.FileSystemStrategy"
 
 INSTALLED_APPS = [
     'django.contrib.admin',
