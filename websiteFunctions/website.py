@@ -443,6 +443,45 @@ class WebsiteManager:
                         config = DeleteIDobj.config
                         conf = json.loads(config)
                         FileName = conf['name']
+                        try:
+                            if conf['SFTP_ID']:
+                                RemoteBackupOBJ = RemoteBackupConfig.objects.get(pk=conf['SFTP_ID'])
+                                RemoteBackupconf = json.loads(RemoteBackupOBJ.config)
+                                HostName = RemoteBackupconf['Hostname']
+                                Port = RemoteBackupconf['Port']
+                                Username = RemoteBackupconf['Username']
+                                Password = RemoteBackupconf['Password']
+                                Path = RemoteBackupconf['Path']
+
+                                ####
+
+                                if os.path.exists(ProcessUtilities.debugPath):
+                                    logging.CyberCPLogFileWriter.writeToFile(f"Making sftp connection to {str(RemoteBackupconf)}")
+
+                                import paramiko
+
+                                # SSH connection to the remote server
+                                ssh = paramiko.SSHClient()
+                                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                                ssh.connect(HostName, port=Port, username=Username, password=Password)
+
+                                if os.path.exists(ProcessUtilities.debugPath):
+                                    logging.CyberCPLogFileWriter.writeToFile(f"SFTP Connected successfully..")
+
+                                ####
+
+                                sftp = ssh.open_sftp()
+
+                                remotepath = "%s/%s.tar.gz" % (Path, FileName)
+                                sftp.remove(remotepath)
+
+                                sftp.close()
+                                ssh.close()
+                        except:
+                            import traceback
+                            if os.path.exists(ProcessUtilities.debugPath):
+                                logging.CyberCPLogFileWriter.writeToFile(f"Failed to delete remote backup: {traceback.format_exc()}")
+
                         command = "rm -r /home/backup/%s.tar.gz" % FileName
                         ProcessUtilities.executioner(command)
                         DeleteIDobj.delete()
@@ -465,6 +504,7 @@ class WebsiteManager:
                     BackupDestination = conf['BackupDestination']
                 except:
                     Backuptype = "Backup type not exists"
+                    BackupDestination = ""
 
                 Data['job'].append({
                     'id': sub.id,
