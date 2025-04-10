@@ -29,6 +29,7 @@ from random import randint
 import time
 import re
 import boto3
+import datetime
 from plogical.childDomain import ChildDomainManager
 from math import ceil
 from plogical.alias import AliasManager
@@ -549,16 +550,33 @@ class WebsiteManager:
 
         if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
 
-            ## Get title
+            # list existing administrators
+
+            command = f'sudo -u %s {FinalPHPPath} /usr/bin/wp user list --role=administrator --format=json --path=%s --skip-plugins --skip-themes' % (
+                WPobj.owner.externalApp, WPobj.path)
+            result = ProcessUtilities.outputExecutioner(command)
+            existing_admins = json.loads(result)
+            
+            # Extract username and registration date
+            for admin in existing_admins:
+                username = admin['user_login']
+                if 'autologin' in username:
+                    reg_date = admin['user_registered']
+                    # if user was registered more than 2 days ago, delete it
+                    if (datetime.datetime.now() - datetime.datetime.strptime(reg_date, '%Y-%m-%d %H:%M:%S')).days > 2:
+                        command = f'sudo -u %s {FinalPHPPath} /usr/bin/wp user delete %s --path=%s --skip-plugins --skip-themes' % (
+                            WPobj.owner.externalApp, username, WPobj.path)
+                        ProcessUtilities.executioner(command)
 
             password = randomPassword.generate_pass(10)
+            username = 'autologin' + str(randint(10000, 99999))
 
-            command = f'sudo -u %s {FinalPHPPath} /usr/bin/wp user create autologin %s --role=administrator --user_pass="%s" --path=%s --skip-plugins --skip-themes' % (
-                WPobj.owner.externalApp, 'autologin@cloudpages.cloud', password, WPobj.path)
+            command = f'sudo -u %s {FinalPHPPath} /usr/bin/wp user create %s %s@a.local --role=administrator --user_pass="%s" --path=%s --skip-plugins --skip-themes' % (
+                WPobj.owner.externalApp, username, username, password, WPobj.path)
             ProcessUtilities.executioner(command)
 
-            command = f'sudo -u %s {FinalPHPPath} /usr/bin/wp user update autologin --user_pass="%s" --path=%s --skip-plugins --skip-themes' % (
-                WPobj.owner.externalApp, password, WPobj.path)
+            command = f'sudo -u %s {FinalPHPPath} /usr/bin/wp user update %s --user_pass="%s" --path=%s --skip-plugins --skip-themes' % (
+                WPobj.owner.externalApp, username, password, WPobj.path)
             ProcessUtilities.executioner(command)
 
             data = {}
@@ -569,7 +587,7 @@ class WebsiteManager:
                 FinalURL = WPobj.FinalURL
 
             data['url'] = 'https://%s' % (FinalURL)
-            data['userName'] = 'autologin'
+            data['userName'] = username
             data['password'] = password
 
             proc = httpProc(request, 'websiteFunctions/AutoLogin.html',
