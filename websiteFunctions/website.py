@@ -556,19 +556,51 @@ class WebsiteManager:
                 WPobj.owner.externalApp, WPobj.path)
             result = ProcessUtilities.outputExecutioner(command)
             existing_admins = json.loads(result)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile("Wordpress userlist result: %s" % result)
+
+            autologin_exists = any([user['user_login'] == "autologin" for user in existing_admins])
+
+            if not autologin_exists:
+                username = "autologin"
+                password = randomPassword.generate_pass(16)
+                command = f'sudo -u %s {FinalPHPPath} /usr/bin/wp user create %s %s@a.local --role=administrator --user_pass="%s" --path=%s --skip-plugins --skip-themes' % (
+                    WPobj.owner.externalApp, username, username, password, WPobj.path)
+                ProcessUtilities.executioner(command)
+
+                command = f'sudo -u %s {FinalPHPPath} /usr/bin/wp user list --role=administrator --format=json --path=%s --skip-plugins --skip-themes' % (
+                    WPobj.owner.externalApp, WPobj.path)
+                result = ProcessUtilities.outputExecutioner(command)
+                existing_admins = json.loads(result)
+
+            autologin_id = ""
+            for user in existing_admins:
+                if user['user_login'] == "autologin":
+                    autologin_id = user['ID']
             
             # Extract username and registration date
             for admin in existing_admins:
                 username = admin['user_login']
-                if 'autologin' in username:
+                if 'autologin' in username and username != 'autologin':
                     reg_date = admin['user_registered']
-                    # if user was registered more than 2 days ago, delete it
-                    if (datetime.datetime.now() - datetime.datetime.strptime(reg_date, '%Y-%m-%d %H:%M:%S')).days > 2:
-                        command = f'sudo -u %s {FinalPHPPath} /usr/bin/wp user delete %s --path=%s --skip-plugins --skip-themes' % (
-                            WPobj.owner.externalApp, username, WPobj.path)
-                        ProcessUtilities.executioner(command)
 
-            password = randomPassword.generate_pass(10)
+                    if os.path.exists(ProcessUtilities.debugPath):
+                        logging.CyberCPLogFileWriter.writeToFile(f"User: {username}, registered: {reg_date}")
+
+                    # if user was registered more than 2 days ago, delete it
+                    if (datetime.datetime.now() - datetime.datetime.strptime(reg_date, '%Y-%m-%d %H:%M:%S')).days >= 2:
+                        if os.path.exists(ProcessUtilities.debugPath):
+                            logging.CyberCPLogFileWriter.writeToFile(f"Deleting user: {username}")
+
+                        command = f'sudo -u %s {FinalPHPPath} /usr/bin/wp user delete %s --path=%s --skip-plugins --skip-themes --reassign=%s' % (
+                            WPobj.owner.externalApp, username, WPobj.path, autologin_id)
+                        result = ProcessUtilities.outputExecutioner(command)
+
+                        if os.path.exists(ProcessUtilities.debugPath):
+                            logging.CyberCPLogFileWriter.writeToFile(f"Deleted user: {username}, {result}")
+
+            password = randomPassword.generate_pass(16)
             username = 'autologin' + str(randint(10000, 99999))
 
             command = f'sudo -u %s {FinalPHPPath} /usr/bin/wp user create %s %s@a.local --role=administrator --user_pass="%s" --path=%s --skip-plugins --skip-themes' % (
