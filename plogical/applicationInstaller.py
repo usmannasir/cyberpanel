@@ -239,7 +239,7 @@ class ApplicationInstaller(multi.Thread):
                 statusFile.writelines('Setting up Database,20')
                 statusFile.close()
 
-                dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master)
+                dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master, website)
                 self.permPath = website.path
 
             except:
@@ -577,7 +577,7 @@ class ApplicationInstaller(multi.Thread):
         except BaseException as msg:
             logging.writeToFile(str(msg) + ' [ApplicationInstaller.installGit]')
 
-    def dbCreation(self, tempStatusPath, website):
+    def dbCreation(self, tempStatusPath, website, childWebsite=None):
         passFile = "/etc/cyberpanel/mysqlPassword"
 
         try:
@@ -591,7 +591,18 @@ class ApplicationInstaller(multi.Thread):
             pass
 
         try:
-            dbName = randomPassword.generate_pass()
+            try:
+                if childWebsite is not None:
+                    raw_domain = childWebsite.domain.replace(".", "_")
+                    dbName = f"{raw_domain}_{randomPassword.generate_pass(10)}"
+                elif website.domain != '':
+                    raw_domain = website.domain.replace(".", "_")
+                    dbName = f"{raw_domain}_{randomPassword.generate_pass(10)}"
+                else:
+                    dbName = f"{randomPassword.generate_pass()}"
+            except:
+                dbName = f"{randomPassword.generate_pass()}"
+
             dbUser = dbName
             dbPassword = randomPassword.generate_pass()
 
@@ -709,7 +720,7 @@ class ApplicationInstaller(multi.Thread):
                 statusFile.writelines('Setting up Database,20')
                 statusFile.close()
 
-                dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master)
+                dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master, website)
                 self.permPath = website.path
             except BaseException as msg:
 
@@ -1024,7 +1035,7 @@ class ApplicationInstaller(multi.Thread):
                 statusFile.writelines('Setting up Database,20')
                 statusFile.close()
 
-                dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master)
+                dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master, website)
                 self.permPath = website.path
 
             except:
@@ -1212,7 +1223,7 @@ class ApplicationInstaller(multi.Thread):
                 statusFile.writelines('Setting up Database,20')
                 statusFile.close()
 
-                dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master)
+                dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master, website)
                 self.permPath = website.path
 
             except:
@@ -1441,7 +1452,7 @@ class ApplicationInstaller(multi.Thread):
     #             statusFile.writelines('Setting up Database,20')
     #             statusFile.close()
     #
-    #             dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master)
+    #             dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master, website)
     #             self.permPath = website.path
     #
     #         except:
@@ -1707,7 +1718,7 @@ class ApplicationInstaller(multi.Thread):
                 statusFile.writelines('Setting up Database,20')
                 statusFile.close()
 
-                dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master)
+                dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master, website)
                 self.permPath = website.path
 
             except:

@@ -3164,6 +3164,9 @@ app.controller('listChildDomainsMain', function ($scope, $http, $timeout) {
     };
 
     $scope.deleteChildDomain = function () {
+
+        if (!confirm("Are you sure you want to delete: " + DeleteDomain)) {return;}
+
         $scope.cyberPanelLoading = false;
         url = "/websites/submitDomainDeletion";
 
@@ -4989,6 +4992,9 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
     }
 
     $scope.deleteChildDomain = function (childDomain) {
+
+        if (!confirm("Are you sure you want to delete: " + childDomain)) {return;}
+
         $scope.domainLoading = false;
 
         // notifcations
@@ -6487,6 +6493,9 @@ app.controller('manageAliasController', function ($scope, $http, $timeout, $wind
     }
 
     $scope.deleteChildDomain = function (childDomain) {
+
+        if (!confirm("Are you sure you want to delete: " + childDomain)) {return;}
+
         $scope.domainLoading = false;
 
         // notifcations
