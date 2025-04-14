@@ -45,6 +45,14 @@
 
                         </div>
                         <div ng-hide="SFTPBackUpdiv" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Port" %}</label>
+                            <div class="col-sm-6">
+                                <input name="Port" type="text" class="form-control" ng-model="Port"
+                                       required>
+                            </div>
+
+                        </div>
+                        <div ng-hide="SFTPBackUpdiv" class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Username" %}</label>
                             <div class="col-sm-6">
                                 <input name="Username" type="text" class="form-control" ng-model="Username"
@@ -131,6 +139,7 @@
                     <tr>
                         <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">Backup Type</th>
                         <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">HostName</th>
+                        <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">Port</th>
                         <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">Path / Key Name</th>
                         <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">Action</th>
                     </tr>
@@ -141,6 +150,7 @@
                         <tr>
                             <td style="padding: 13px;">{{ sub.Type }}</td>
                             <td style="padding: 13px;">{{ sub.HostName }}</td>
+                            <td style="padding: 13px;">{{ sub.Port }}</td>
                             <td style="padding: 13px;">{{ sub.Path }}</td>
                             <td style="padding: 13px;">
                                 <button

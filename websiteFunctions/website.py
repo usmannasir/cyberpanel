@@ -29,6 +29,7 @@ from random import randint
 import time
 import re
 import boto3
+import datetime
 from plogical.childDomain import ChildDomainManager
 from math import ceil
 from plogical.alias import AliasManager
@@ -196,6 +197,37 @@ class WebsiteManager:
                 Data['wpsite'] = WPobj
                 Data['test_domain_data'] = 1
 
+                allcon = RemoteBackupConfig.objects.all()
+                Data['backupconfigs'] = []
+                for i in allcon:
+                    configr = json.loads(i.config)
+                    if i.configtype == "SFTP":
+                        Data['backupconfigs'].append({
+                            'id': i.pk,
+                            'Type': i.configtype,
+                            'HostName': configr['Hostname'],
+                            'Port': configr['Port'],
+                            'Path': configr['Path']
+                        })
+                    elif i.configtype == "S3":
+                        Provider = configr['Provider']
+                        if Provider == "Backblaze":
+                            Data['backupconfigs'].append({
+                                'id': i.pk,
+                                'Type': i.configtype,
+                                'HostName': Provider,
+                                'Port': "",
+                                'Path': configr['S3keyname']
+                            })
+                        else:
+                            Data['backupconfigs'].append({
+                                'id': i.pk,
+                                'Type': i.configtype,
+                                'HostName': Provider,
+                                'Port': "",
+                                'Path': configr['S3keyname']
+                            })
+
                 try:
                     DeleteID = request.GET.get('DeleteID', None)
 
@@ -275,6 +307,7 @@ class WebsiteManager:
                         'id': i.pk,
                         'Type': i.configtype,
                         'HostName': configr['Hostname'],
+                        'Port': configr['Port'],
                         'Path': configr['Path']
                     })
                 elif i.configtype == "S3":
@@ -284,6 +317,7 @@ class WebsiteManager:
                             'id': i.pk,
                             'Type': i.configtype,
                             'HostName': Provider,
+                            'Port': "",
                             'Path': configr['S3keyname']
                         })
                     else:
@@ -291,6 +325,7 @@ class WebsiteManager:
                             'id': i.pk,
                             'Type': i.configtype,
                             'HostName': Provider,
+                            'Port': "",
                             'Path': configr['S3keyname']
                         })
 
@@ -409,6 +444,45 @@ class WebsiteManager:
                         config = DeleteIDobj.config
                         conf = json.loads(config)
                         FileName = conf['name']
+                        try:
+                            if conf['SFTP_ID']:
+                                RemoteBackupOBJ = RemoteBackupConfig.objects.get(pk=conf['SFTP_ID'])
+                                RemoteBackupconf = json.loads(RemoteBackupOBJ.config)
+                                HostName = RemoteBackupconf['Hostname']
+                                Port = RemoteBackupconf['Port']
+                                Username = RemoteBackupconf['Username']
+                                Password = RemoteBackupconf['Password']
+                                Path = RemoteBackupconf['Path']
+
+                                ####
+
+                                if os.path.exists(ProcessUtilities.debugPath):
+                                    logging.CyberCPLogFileWriter.writeToFile(f"Making sftp connection to {str(RemoteBackupconf)}")
+
+                                import paramiko
+
+                                # SSH connection to the remote server
+                                ssh = paramiko.SSHClient()
+                                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                                ssh.connect(HostName, port=Port, username=Username, password=Password)
+
+                                if os.path.exists(ProcessUtilities.debugPath):
+                                    logging.CyberCPLogFileWriter.writeToFile(f"SFTP Connected successfully..")
+
+                                ####
+
+                                sftp = ssh.open_sftp()
+
+                                remotepath = "%s/%s.tar.gz" % (Path, FileName)
+                                sftp.remove(remotepath)
+
+                                sftp.close()
+                                ssh.close()
+                        except:
+                            import traceback
+                            if os.path.exists(ProcessUtilities.debugPath):
+                                logging.CyberCPLogFileWriter.writeToFile(f"Failed to delete remote backup: {traceback.format_exc()}")
+
                         command = "rm -r /home/backup/%s.tar.gz" % FileName
                         ProcessUtilities.executioner(command)
                         DeleteIDobj.delete()
@@ -431,6 +505,7 @@ class WebsiteManager:
                     BackupDestination = conf['BackupDestination']
                 except:
                     Backuptype = "Backup type not exists"
+                    BackupDestination = ""
 
                 Data['job'].append({
                     'id': sub.id,
@@ -475,16 +550,65 @@ class WebsiteManager:
 
         if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
 
-            ## Get title
+            # list existing administrators
 
-            password = randomPassword.generate_pass(10)
+            command = f'sudo -u %s {FinalPHPPath} /usr/bin/wp user list --role=administrator --format=json --path=%s --skip-plugins --skip-themes' % (
+                WPobj.owner.externalApp, WPobj.path)
+            result = ProcessUtilities.outputExecutioner(command)
+            existing_admins = json.loads(result)
 
-            command = f'sudo -u %s {FinalPHPPath} /usr/bin/wp user create autologin %s --role=administrator --user_pass="%s" --path=%s --skip-plugins --skip-themes' % (
-                WPobj.owner.externalApp, 'autologin@cloudpages.cloud', password, WPobj.path)
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile("Wordpress userlist result: %s" % result)
+
+            autologin_exists = any([user['user_login'] == "autologin" for user in existing_admins])
+
+            if not autologin_exists:
+                username = "autologin"
+                password = randomPassword.generate_pass(16)
+                command = f'sudo -u %s {FinalPHPPath} /usr/bin/wp user create %s %s@a.local --role=administrator --user_pass="%s" --path=%s --skip-plugins --skip-themes' % (
+                    WPobj.owner.externalApp, username, username, password, WPobj.path)
+                ProcessUtilities.executioner(command)
+
+                command = f'sudo -u %s {FinalPHPPath} /usr/bin/wp user list --role=administrator --format=json --path=%s --skip-plugins --skip-themes' % (
+                    WPobj.owner.externalApp, WPobj.path)
+                result = ProcessUtilities.outputExecutioner(command)
+                existing_admins = json.loads(result)
+
+            autologin_id = ""
+            for user in existing_admins:
+                if user['user_login'] == "autologin":
+                    autologin_id = user['ID']
+            
+            # Extract username and registration date
+            for admin in existing_admins:
+                username = admin['user_login']
+                if 'autologin' in username and username != 'autologin':
+                    reg_date = admin['user_registered']
+
+                    if os.path.exists(ProcessUtilities.debugPath):
+                        logging.CyberCPLogFileWriter.writeToFile(f"User: {username}, registered: {reg_date}")
+
+                    # if user was registered more than 2 days ago, delete it
+                    if (datetime.datetime.now() - datetime.datetime.strptime(reg_date, '%Y-%m-%d %H:%M:%S')).days >= 2:
+                        if os.path.exists(ProcessUtilities.debugPath):
+                            logging.CyberCPLogFileWriter.writeToFile(f"Deleting user: {username}")
+
+                        command = f'sudo -u %s {FinalPHPPath} /usr/bin/wp user delete %s --path=%s --skip-plugins --skip-themes --reassign=%s' % (
+                            WPobj.owner.externalApp, username, WPobj.path, autologin_id)
+                        result = ProcessUtilities.outputExecutioner(command)
+
+                        if os.path.exists(ProcessUtilities.debugPath):
+                            logging.CyberCPLogFileWriter.writeToFile(f"Deleted user: {username}, {result}")
+
+            password = randomPassword.generate_pass(16)
+            username = 'autologin' + str(randint(10000, 99999))
+
+            command = f'sudo -u %s {FinalPHPPath} /usr/bin/wp user create %s %s@a.local --role=administrator --user_pass="%s" --path=%s --skip-plugins --skip-themes' % (
+                WPobj.owner.externalApp, username, username, password, WPobj.path)
             ProcessUtilities.executioner(command)
 
-            command = f'sudo -u %s {FinalPHPPath} /usr/bin/wp user update autologin --user_pass="%s" --path=%s --skip-plugins --skip-themes' % (
-                WPobj.owner.externalApp, password, WPobj.path)
+            command = f'sudo -u %s {FinalPHPPath} /usr/bin/wp user update %s --user_pass="%s" --path=%s --skip-plugins --skip-themes' % (
+                WPobj.owner.externalApp, username, password, WPobj.path)
             ProcessUtilities.executioner(command)
 
             data = {}
@@ -495,7 +619,7 @@ class WebsiteManager:
                 FinalURL = WPobj.FinalURL
 
             data['url'] = 'https://%s' % (FinalURL)
-            data['userName'] = 'autologin'
+            data['userName'] = username
             data['password'] = password
 
             proc = httpProc(request, 'websiteFunctions/AutoLogin.html',
@@ -1198,6 +1322,10 @@ class WebsiteManager:
             extraArgs['adminID'] = admin.pk
             extraArgs['WPid'] = WPManagerID
             extraArgs['Backuptype'] = Backuptype
+
+            if 'remoteBackupConfig' in data:
+                extraArgs['remoteBackupConfig'] = data['remoteBackupConfig']
+
             extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
 
             background = ApplicationInstaller('WPCreateBackup', extraArgs)
@@ -1276,11 +1404,13 @@ class WebsiteManager:
             ConfigType = data['type']
             if ConfigType == 'SFTP':
                 Hname = data['Hname']
+                Port = data['Port']
                 Uname = data['Uname']
                 Passwd = data['Passwd']
                 path = data['path']
                 config = {
                     "Hostname": Hname,
+                    "Port": Port,
                     "Username": Uname,
                     "Password": Passwd,
                     "Path": path
@@ -2278,8 +2408,11 @@ class WebsiteManager:
 
             tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
+            if not domain.endswith(masterDomain):
+                domain = domain + "." + masterDomain
+
             if not validators.domain(domain):
-                data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': "Invalid domain."}
+                data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': f"Invalid domain. {masterDomain}, {domain}"}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
@@ -3877,7 +4010,7 @@ class WebsiteManager:
             ssl = data['ssl']
 
             if not validators.domain(aliasDomain):
-                data_ret = {'status': 0, 'createAliasStatus': 0, 'error_message': "Invalid domain."}
+                data_ret = {'status': 0, 'createAliasStatus': 0, 'error_message': "Invalid alias domain."}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 

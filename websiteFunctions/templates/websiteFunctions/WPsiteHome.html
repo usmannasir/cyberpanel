@@ -584,6 +584,17 @@
                                                 </div>
                                             </div>
                                             <div ng-hide="installationDetailsForm" class="form-group">
+                                                <label class="col-sm-3 control-label">{% trans "Remote Backup Destination" %}</label>
+                                                <div class="col-sm-6">
+                                                    <select id="remoteBackupConfig" class="form-control">
+                                                        <option value="-1" selected>None (Local Backup Only)</option>
+                                                        {% for config in backupconfigs %}
+                                                            <option value="{{ config.id }},{{ config.Type }}">{{ config.Type }} - {{ config.HostName }}:{{ config.Port }} / {{ config.Path }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div ng-hide="installationDetailsForm" class="form-group">
                                                 <label class="col-sm-3 control-label"></label>
                                                 <div class="col-sm-4">
                                                     <button type="button" id="createbackupbutton"

@@ -5,3 +5,7 @@
 .idea
 venv
 /.venv/
+/imapSyncPlugin/
+/CyberCP/cyberpanel_secrets.py
+cp_backup.sh
+cp_restore.sh

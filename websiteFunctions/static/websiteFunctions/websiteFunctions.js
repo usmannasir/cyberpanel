@@ -1620,7 +1620,8 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         $scope.currentStatus = "Starting creation Backups..";
         var data = {
             WPid: $('#WPid').html(),
-            Backuptype: $('#backuptype').val()
+            Backuptype: $('#backuptype').val(),
+            remoteBackupConfig: $('#remoteBackupConfig').val()
         }
         var url = "/websites/WPCreateBackup";
 
@@ -2118,6 +2119,7 @@ app.controller('RemoteBackupConfig', function ($scope, $http, $timeout, $window)
     $scope.SaveBackupConfig = function () {
         $scope.RemoteBackupLoading = false;
         var Hname = $scope.Hostname;
+        var Port = $scope.Port;
         var Uname = $scope.Username;
         var Passwd = $scope.Password;
         var path = $scope.path;
@@ -2128,6 +2130,7 @@ app.controller('RemoteBackupConfig', function ($scope, $http, $timeout, $window)
 
             data = {
                 Hname: Hname,
+                Port: Port,
                 Uname: Uname,
                 Passwd: Passwd,
                 path: path,
@@ -3161,6 +3164,9 @@ app.controller('listChildDomainsMain', function ($scope, $http, $timeout) {
     };
 
     $scope.deleteChildDomain = function () {
+
+        if (!confirm("Are you sure you want to delete: " + DeleteDomain)) {return;}
+
         $scope.cyberPanelLoading = false;
         url = "/websites/submitDomainDeletion";
 
@@ -4986,6 +4992,9 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
     }
 
     $scope.deleteChildDomain = function (childDomain) {
+
+        if (!confirm("Are you sure you want to delete: " + childDomain)) {return;}
+
         $scope.domainLoading = false;
 
         // notifcations
@@ -6484,6 +6493,9 @@ app.controller('manageAliasController', function ($scope, $http, $timeout, $wind
     }
 
     $scope.deleteChildDomain = function (childDomain) {
+
+        if (!confirm("Are you sure you want to delete: " + childDomain)) {return;}
+
         $scope.domainLoading = false;
 
         // notifcations
