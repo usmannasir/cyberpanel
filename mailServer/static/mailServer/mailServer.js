@@ -211,6 +211,10 @@ app.controller('deleteEmailAccount', function ($scope, $http) {
 
     $scope.deleteEmailAccountFinal = function () {
 
+        if (!confirm('Are you sure you want to delete this email account? This action cannot be undone.')) {
+            return;
+        }
+        
         $scope.emailLoading = false;
 
 
