@@ -131,7 +131,7 @@ class ACLManager:
     @staticmethod
     def validateInput(value, regex = None):
         if regex == None:
-            verifier = compile(r'[\sa-zA-Z0-9_-]+')
+            verifier = compile(r'[a-zA-Z0-9_.-]+')
         else:
             verifier = regex
 
