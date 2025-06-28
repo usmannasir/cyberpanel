@@ -224,7 +224,7 @@ context /.well-known/acme-challenge {
         <Proxy "unix:{sockPath}{virtualHostName}.sock|fcgi://php-fpm-{externalApp}">
         ProxySet disablereuse=off
         </proxy>
-        <FilesMatch \.php$>
+        <FilesMatch \\.php$>
                     SetHandler proxy:fcgi://php-fpm-{externalApp}
         </FilesMatch>
         #CustomLog /home/{virtualHostName}/logs/{virtualHostName}.access_log combined
@@ -249,7 +249,7 @@ context /.well-known/acme-challenge {
          <Proxy "unix:{sockPath}{virtualHostName}.sock|fcgi://php-fpm-{externalApp}">
             ProxySet disablereuse=off
          </proxy>
-         <FilesMatch \.php$>
+         <FilesMatch \\.php$>
             SetHandler proxy:fcgi://php-fpm-{externalApp}
          </FilesMatch>
          #CustomLog /home/{virtualHostName}/logs/{virtualHostName}.access_log combined
@@ -279,7 +279,7 @@ context /.well-known/acme-challenge {
         <Proxy "unix:{sockPath}{virtualHostName}.sock|fcgi://php-fpm-{externalApp}">
         ProxySet disablereuse=off
         </proxy>
-        <FilesMatch \.php$>
+        <FilesMatch \\.php$>
                     SetHandler proxy:fcgi://php-fpm-{externalApp}
         </FilesMatch>
         #CustomLog /home/{virtualHostName}/logs/{virtualHostName}.access_log combined
@@ -304,7 +304,7 @@ context /.well-known/acme-challenge {
         <Proxy "unix:{sockPath}{virtualHostName}.sock|fcgi://php-fpm-{externalApp}">
             ProxySet disablereuse=off
         </proxy>
-        <FilesMatch \.php$>
+        <FilesMatch \\.php$>
                     SetHandler proxy:fcgi://php-fpm-{externalApp}
         </FilesMatch>
         #CustomLog /home/{virtualHostName}/logs/{virtualHostName}.access_log combined

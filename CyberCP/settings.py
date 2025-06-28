@@ -10,25 +10,6 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
-# Fix for botocore.vendored.six.moves import error
-import sys
-try:
-    import six
-except ImportError:
-    pass
-else:
-    # Create a compatibility shim for botocore.vendored
-    if 'botocore' not in sys.modules:
-        import botocore
-    if not hasattr(sys.modules.get('botocore', None), 'vendored'):
-        import types
-        vendored = types.ModuleType('vendored')
-        vendored.six = six
-        sys.modules['botocore'].vendored = vendored
-        sys.modules['botocore.vendored'] = vendored
-        sys.modules['botocore.vendored.six'] = six
-        sys.modules['botocore.vendored.six.moves'] = six.moves
-
 import os
 from django.utils.translation import gettext_lazy as _
 

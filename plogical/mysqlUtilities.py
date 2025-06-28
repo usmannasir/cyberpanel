@@ -950,7 +950,7 @@ password=%s
             connection, cursor = mysqlUtilities.setupConnection()
             cursor.execute("use mysql")
             database = Databases.objects.get(dbName=databaseName)
-            databaseName = databaseName.replace('_', '\_')
+            databaseName = databaseName.replace('_', '\\_')
             query = "select user from db where db = '%s'" % (databaseName)
 
             if connection == 0:

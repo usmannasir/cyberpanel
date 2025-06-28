@@ -1086,10 +1086,10 @@ class ACLManager:
 
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
                 #command = f"sed -i 's/docRoot\s\s*.*/docRoot                   {NewDocRoot}/g " + vhostConf
-                command = f"sed -i 's#docRoot\s\s*.*#docRoot                   {NewDocRoot}#g' " + vhostConf
+                command = f"sed -i 's#docRoot\\s\\s*.*#docRoot                   {NewDocRoot}#g' " + vhostConf
                 ProcessUtilities.executioner(command, 'root', True)
             else:
-                command = f"sed -i 's#DocumentRoot\s\s*[^[:space:]]*#DocumentRoot {NewDocRoot}#g' " + vhostConf
+                command = f"sed -i 's#DocumentRoot\\s\\s*[^[:space:]]*#DocumentRoot {NewDocRoot}#g' " + vhostConf
                 ProcessUtilities.executioner(command, 'root', True)
                 
         except:
@@ -1120,7 +1120,7 @@ class ACLManager:
             finalConfPath = ApacheVhost.configBasePath + domainName + '.conf'
 
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-                command = f"sed -i 's#DocumentRoot\s\s*[^[:space:]]*#DocumentRoot {NewDocRoot}#g' " + finalConfPath
+                command = f"sed -i 's#DocumentRoot\\s\\s*[^[:space:]]*#DocumentRoot {NewDocRoot}#g' " + finalConfPath
                 ProcessUtilities.executioner(command, 'root', True)
         except:
             pass
@@ -1152,7 +1152,7 @@ class ACLManager:
 $_ENV['snappymail_INCLUDE_AS_API'] = true;
 include '/usr/local/CyberCP/public/snappymail/index.php';
 
-$oConfig = \snappymail\Api::Config();
+$oConfig = \\snappymail\\Api::Config();
 $oConfig->SetPassword('%s');
 echo $oConfig->Save() ? 'Done' : 'Error';
 
@@ -1177,10 +1177,10 @@ echo $oConfig->Save() ? 'Done' : 'Error';
 
             ###### fix Core CyberPanel permissions
 
-            command = "find /usr/local/CyberCP -type d -exec chmod 0755 {} \;"
+            command = "find /usr/local/CyberCP -type d -exec chmod 0755 {} \\;"
             ProcessUtilities.executioner(command, 'root', True)
 
-            command = "find /usr/local/CyberCP -type f -exec chmod 0644 {} \;"
+            command = "find /usr/local/CyberCP -type f -exec chmod 0644 {} \\;"
             ProcessUtilities.executioner(command, 'root', True)
 
             command = "chmod -R 755 /usr/local/CyberCP/bin"
@@ -1193,10 +1193,10 @@ echo $oConfig->Save() ? 'Done' : 'Error';
 
             ########### Fix LSCPD
 
-            command = "find /usr/local/lscp -type d -exec chmod 0755 {} \;"
+            command = "find /usr/local/lscp -type d -exec chmod 0755 {} \\;"
             ProcessUtilities.executioner(command, 'root', True)
 
-            command = "find /usr/local/lscp -type f -exec chmod 0644 {} \;"
+            command = "find /usr/local/lscp -type f -exec chmod 0644 {} \\;"
             ProcessUtilities.executioner(command, 'root', True)
 
             command = "chmod -R 755 /usr/local/lscp/bin"
