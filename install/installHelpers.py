@@ -1,8 +1,14 @@
 import os
 import subprocess
 import shutil
-import install
-import logging
+try:
+    import installLog as logging
+except ImportError:
+    # Fallback if installLog is not available
+    class logging:
+        @staticmethod
+        def writeToFile(message):
+            print(message)
 
 
 class PackageManager:
@@ -22,10 +28,12 @@ class PackageManager:
     def install_packages(packages, distro, ubuntu=1, centos=0, cent8=2, openeuler=3, use_shell=False):
         """Install packages with proper error handling"""
         command = PackageManager.get_install_command(packages, distro, ubuntu, centos, cent8, openeuler)
-        if use_shell:
-            install.preFlightsChecks.call(command, distro, command, command, 1, 1, os.EX_OSERR, True)
-        else:
-            install.preFlightsChecks.call(command, distro, command, command, 1, 1, os.EX_OSERR)
+        # Use subprocess directly to avoid circular import
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        if result.returncode != 0:
+            logging.writeToFile(f'[ERROR] Package installation failed: {command}')
+            raise Exception(f'Package installation failed: {result.stderr}')
+        return result.returncode
 
 
 class ServiceManager:
@@ -35,8 +43,11 @@ class ServiceManager:
     def manage_service(service_name, action, distro, exit_on_error=True):
         """Manage systemd services (start, stop, enable, disable, restart)"""
         command = f"systemctl {action} {service_name}"
-        error_code = 1 if exit_on_error else 0
-        install.preFlightsChecks.call(command, distro, command, command, 1, error_code, os.EX_OSERR)
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        if result.returncode != 0 and exit_on_error:
+            logging.writeToFile(f'[ERROR] Service management failed: {command}')
+            raise Exception(f'Service management failed: {result.stderr}')
+        return result.returncode
     
     @staticmethod
     def start_service(service_name, distro):
@@ -94,7 +105,11 @@ class ConfigFileHandler:
     def sed_replace(file_path, search, replace, distro):
         """Use sed command for replacements"""
         command = f"sed -i 's|{search}|{replace}|g' {file_path}"
-        install.preFlightsChecks.call(command, distro, command, command, 1, 1, os.EX_OSERR)
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        if result.returncode != 0:
+            logging.writeToFile(f'[ERROR] sed command failed: {command}')
+            raise Exception(f'sed command failed: {result.stderr}')
+        return result.returncode
     
     @staticmethod
     def copy_config_file(source, destination, remove_existing=True):
@@ -117,8 +132,14 @@ class CommandExecutor:
         """Execute a command with standard error handling"""
         if description is None:
             description = command
-        error_flag = 1 if exit_on_error else 0
-        install.preFlightsChecks.call(command, distro, description, command, 1, error_flag, exit_code)
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        if result.returncode != 0:
+            if exit_on_error:
+                logging.writeToFile(f'[ERROR] Command failed: {command}')
+                raise Exception(f'Command failed: {result.stderr}')
+            else:
+                logging.writeToFile(f'[WARNING] Command failed but continuing: {command}')
+        return result.returncode
     
     @staticmethod
     def execute_with_output(command, shell=True):
@@ -157,7 +178,7 @@ class PHPInstaller:
         if distro == centos:
             # First install the group
             command = 'yum -y groupinstall lsphp-all'
-            install.preFlightsChecks.call(command, distro, command, command, 1, 1, os.EX_OSERR)
+            subprocess.run(command, shell=True, check=True)
             
             # Then install individual versions
             versions = ['71', '72', '73', '74', '80', '81', '82', '83']

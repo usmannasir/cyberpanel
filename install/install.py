@@ -758,8 +758,8 @@ password="%s"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         # Set permissions for CyberCP directories and files
-        CommandExecutor.execute("find /usr/local/CyberCP -type d -exec chmod 0755 {} \;", self.distro)
-        CommandExecutor.execute("find /usr/local/CyberCP -type f -exec chmod 0644 {} \;", self.distro)
+        CommandExecutor.execute("find /usr/local/CyberCP -type d -exec chmod 0755 {} \\;", self.distro)
+        CommandExecutor.execute("find /usr/local/CyberCP -type f -exec chmod 0644 {} \\;", self.distro)
         PermissionManager.set_permissions('/usr/local/CyberCP/bin', '755', self.distro, owner='root', group='root')
 
         ## change owner
@@ -767,8 +767,8 @@ password="%s"
 
         ########### Fix LSCPD
         # Set permissions for LSCP directories and files
-        CommandExecutor.execute("find /usr/local/lscp -type d -exec chmod 0755 {} \;", self.distro)
-        CommandExecutor.execute("find /usr/local/lscp -type f -exec chmod 0644 {} \;", self.distro)
+        CommandExecutor.execute("find /usr/local/lscp -type d -exec chmod 0755 {} \\;", self.distro)
+        CommandExecutor.execute("find /usr/local/lscp -type f -exec chmod 0644 {} \\;", self.distro)
         
         # Set specific directory permissions
         permission_list = [
@@ -1492,12 +1492,12 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             os.chdir("/usr/local/CyberCP/public/snappymail")
 
-            command = 'find . -type d -exec chmod 755 {} \;'
+            command = 'find . -type d -exec chmod 755 {} \\;'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             #############
 
-            command = 'find . -type f -exec chmod 644 {} \;'
+            command = 'find . -type f -exec chmod 644 {} \\;'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             ######
@@ -2773,7 +2773,7 @@ admin_password = "12345"
 
         import randomPassword
 
-        content = """<?php
+        content = r"""<?php
 
 $_ENV['snappymail_INCLUDE_AS_API'] = true;
 include '/usr/local/CyberCP/public/snappymail/index.php';
