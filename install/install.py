@@ -720,6 +720,17 @@ password="%s"
 
         os.chdir("/usr/local/CyberCP")
 
+        # Clear Python cache to avoid botocore vendored six import errors
+        command = "find /usr/local/CyberCP -name '*.pyc' -delete"
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        
+        command = "find /usr/local/CyberCP -name '__pycache__' -type d -exec rm -rf {} +"
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        
+        # Ensure six module is installed to fix botocore compatibility
+        command = "/usr/local/CyberPanel/bin/python -m pip install six==1.16.0"
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        
         command = "/usr/local/CyberPanel/bin/python manage.py makemigrations"
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
