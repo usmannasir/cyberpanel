@@ -1086,8 +1086,12 @@ else
     apt install -y --allow-downgrades libgnutls30=3.6.13-2ubuntu1.3
   fi
 
-  if [[ "$Server_OS_Version" = "22" || "$Server_OS_Version" = "24" ]] ; then
-    # Ubuntu 22.04 and 24.04 use different MariaDB package names
+  if [[ "$Server_OS_Version" = "24" ]] ; then
+    # Ubuntu 24.04 needs python3-venv instead of virtualenv due to PEP 668
+    DEBIAN_FRONTEND=noninteractive apt install -y dnsutils net-tools htop telnet libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev python3-venv git socat vim unzip zip libmariadb-dev-compat libmariadb-dev
+     Check_Return
+  elif [[ "$Server_OS_Version" = "22" ]] ; then
+    # Ubuntu 22.04 continues to use virtualenv
     DEBIAN_FRONTEND=noninteractive apt install -y dnsutils net-tools htop telnet libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev virtualenv git socat vim unzip zip libmariadb-dev-compat libmariadb-dev
      Check_Return
   else
@@ -1121,7 +1125,14 @@ export LC_CTYPE=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 #need to set lang to address some pip module installation issue.
 
-Retry_Command "pip install --default-timeout=3600 virtualenv"
+# Ubuntu 24.04 has PEP 668 which prevents pip system-wide installations
+if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" = "24" ]] ; then
+  # For Ubuntu 24.04, skip pip install virtualenv as we'll use python3 -m venv
+  Debug_Log2 "Using python3 -m venv for Ubuntu 24.04 (PEP 668 compliant)"
+else
+  # For other systems including Ubuntu 22.04, install virtualenv via pip as before
+  Retry_Command "pip install --default-timeout=3600 virtualenv"
+fi
 
 Download_Requirement
 
