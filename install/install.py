@@ -14,6 +14,10 @@ from os.path import *
 from stat import *
 import stat
 import secrets
+from installHelpers import (PackageManager, ServiceManager, ConfigFileHandler, 
+                           CommandExecutor, PHPInstaller, FileSystemHelper,
+                           DistroHandler, PermissionManager, DownloadHelper,
+                           SSLCertificateHelper)
 
 VERSION = '2.4'
 BUILD = 2
@@ -251,8 +255,10 @@ class preFlightsChecks:
 
                     ffResult = ffResult.stdout.rstrip('\n')
 
-                    command = f"DEBIAN_FRONTEND=noninteractive  apt-get install linux-modules-extra-{ffResult}"
-                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR, True)
+                    # Install kernel modules extra package for quota support
+                    # This is needed for Ubuntu 20.04+ including 24.04
+                    command = f"DEBIAN_FRONTEND=noninteractive  apt-get install -y linux-modules-extra-{ffResult}"
+                    CommandExecutor.execute(command, self.distro, exit_on_error=False)
 
                 ###
 
@@ -497,7 +503,12 @@ class preFlightsChecks:
 
     def checkPythonVersion(self):
         if sys.version_info[0] == 3:
-            return 1
+            # Ubuntu 24.04 uses Python 3.12, ensure we support it
+            if sys.version_info[0] == 3 and sys.version_info[1] >= 6:
+                return 1
+            else:
+                preFlightsChecks.stdOut("Python 3.6 or higher is required")
+                os._exit(0)
         else:
             preFlightsChecks.stdOut("You are running Unsupported python version, please install python 3.x")
             os._exit(0)
@@ -555,6 +566,7 @@ class preFlightsChecks:
 
         if self.distro == ubuntu:
             try:
+                # This script automatically detects Ubuntu version including 24.04
                 filename = "enable_lst_debain_repo.sh"
                 command = "wget http://rpms.litespeedtech.com/debian/" + filename
                 preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
@@ -595,13 +607,7 @@ class preFlightsChecks:
 
     def install_psmisc(self):
         self.stdOut("Install psmisc")
-
-        if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
-            command = "yum -y install psmisc"
-        else:
-            command = "DEBIAN_FRONTEND=noninteractive apt-get -y install psmisc"
-
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR, True)
+        PackageManager.install_packages('psmisc', self.distro, ubuntu, centos, cent8, openeuler, use_shell=True)
 
     def download_install_CyberPanel(self, mysqlPassword, mysql):
         ##
@@ -751,59 +757,41 @@ password="%s"
         command = "usermod -G lscpd,lsadm,nogroup lscpd"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        command = "find /usr/local/CyberCP -type d -exec chmod 0755 {} \;"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = "find /usr/local/CyberCP -type f -exec chmod 0644 {} \;"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = "chmod -R 755 /usr/local/CyberCP/bin"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        # Set permissions for CyberCP directories and files
+        CommandExecutor.execute("find /usr/local/CyberCP -type d -exec chmod 0755 {} \;", self.distro)
+        CommandExecutor.execute("find /usr/local/CyberCP -type f -exec chmod 0644 {} \;", self.distro)
+        PermissionManager.set_permissions('/usr/local/CyberCP/bin', '755', self.distro, owner='root', group='root')
 
         ## change owner
-
-        command = "chown -R root:root /usr/local/CyberCP"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        CommandExecutor.execute("chown -R root:root /usr/local/CyberCP", self.distro)
 
         ########### Fix LSCPD
+        # Set permissions for LSCP directories and files
+        CommandExecutor.execute("find /usr/local/lscp -type d -exec chmod 0755 {} \;", self.distro)
+        CommandExecutor.execute("find /usr/local/lscp -type f -exec chmod 0644 {} \;", self.distro)
+        
+        # Set specific directory permissions
+        permission_list = [
+            {'path': '/usr/local/lscp/bin', 'mode': '755'},
+            {'path': '/usr/local/lscp/fcgi-bin', 'mode': '755'}
+        ]
+        PermissionManager.batch_set_permissions(permission_list, self.distro)
+        
+        # Set ownership
+        PermissionManager.set_permissions('/usr/local/CyberCP/public/phpmyadmin/tmp', '755', self.distro, 
+                                        owner='lscpd', group='lscpd')
+        CommandExecutor.execute("chown -R root:root /usr/local/lscp", self.distro)
+        PermissionManager.set_permissions('/usr/local/lscp/cyberpanel/rainloop', '755', self.distro, 
+                                        owner='lscpd', group='lscpd')
 
-        command = "find /usr/local/lscp -type d -exec chmod 0755 {} \;"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = "find /usr/local/lscp -type f -exec chmod 0644 {} \;"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = "chmod -R 755 /usr/local/lscp/bin"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = "chmod -R 755 /usr/local/lscp/fcgi-bin"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin/tmp"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        ## change owner
-
-        command = "chown -R root:root /usr/local/lscp"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = "chmod 700 /usr/local/CyberCP/cli/cyberPanel.py"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = "chmod 700 /usr/local/CyberCP/plogical/upgradeCritical.py"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = "chmod 755 /usr/local/CyberCP/postfixSenderPolicy/client.py"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = "chmod 640 /usr/local/CyberCP/CyberCP/settings.py"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = "chown root:cyberpanel /usr/local/CyberCP/CyberCP/settings.py"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        # Set specific file permissions
+        specific_permissions = [
+            {'path': '/usr/local/CyberCP/cli/cyberPanel.py', 'mode': '700'},
+            {'path': '/usr/local/CyberCP/plogical/upgradeCritical.py', 'mode': '700'},
+            {'path': '/usr/local/CyberCP/postfixSenderPolicy/client.py', 'mode': '755'},
+            {'path': '/usr/local/CyberCP/CyberCP/settings.py', 'mode': '640', 'owner': 'root', 'group': 'cyberpanel'}
+        ]
+        PermissionManager.batch_set_permissions(specific_permissions, self.distro)
 
         files = ['/etc/yum.repos.d/MariaDB.repo', '/etc/pdns/pdns.conf', '/etc/systemd/system/lscpd.service',
                  '/etc/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pureftpd-pgsql.conf',
@@ -1428,45 +1416,30 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             ##
 
-            command = 'chmod o= /etc/dovecot/dovecot-sql.conf.ext'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            PermissionManager.set_permissions('/etc/dovecot/dovecot-sql.conf.ext', 'o=', self.distro)
 
             ################################### Restart dovecot
-
-            command = 'systemctl enable dovecot.service'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            ##
-
-            command = 'systemctl start dovecot.service'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            ##
-
-            command = 'systemctl restart  postfix.service'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            ServiceManager.enable_service('dovecot.service', self.distro)
+            ServiceManager.start_service('dovecot.service', self.distro)
+            ServiceManager.restart_service('postfix.service', self.distro)
 
             ## chaging permissions for main.cf
-
-            command = "chmod 755 " + main
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            PermissionManager.set_permissions(main, '755', self.distro)
 
             if self.distro == ubuntu:
-                command = "mkdir -p /etc/pki/dovecot/private/"
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                # Create required directories
+                for directory in ['/etc/pki/dovecot/private/', '/etc/pki/dovecot/certs/', '/etc/opendkim/keys/']:
+                    CommandExecutor.execute(f"mkdir -p {directory}", self.distro)
 
-                command = "mkdir -p /etc/pki/dovecot/certs/"
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                ConfigFileHandler.sed_replace('/etc/dovecot/conf.d/10-auth.conf', 
+                                            'auth_mechanisms = plain', 
+                                            '#auth_mechanisms = plain', 
+                                            self.distro)
 
-                command = "mkdir -p /etc/opendkim/keys/"
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-                command = "sed -i 's/auth_mechanisms = plain/#auth_mechanisms = plain/g' /etc/dovecot/conf.d/10-auth.conf"
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-                ## Ubuntu 18.10 ssl_dh for dovecot 2.3.2.1
-
-                if get_Ubuntu_release() == 18.10:
+                ## Ubuntu version-specific ssl_dh for dovecot
+                ubuntu_version = get_Ubuntu_release()
+                
+                if ubuntu_version == 18.10:
                     dovecotConf = '/etc/dovecot/dovecot.conf'
 
                     data = open(dovecotConf, 'r').readlines()
@@ -1705,19 +1678,11 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             ######
             if self.distro == centos:
                 # Not available in ubuntu
-                command = 'systemctl restart dbus'
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                ServiceManager.restart_service('dbus', self.distro)
 
-            command = 'systemctl restart systemd-logind'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = 'systemctl start firewalld'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            ##########
-
-            command = 'systemctl enable firewalld'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            ServiceManager.restart_service('systemd-logind', self.distro)
+            ServiceManager.start_service('firewalld', self.distro)
+            ServiceManager.enable_service('firewalld', self.distro)
 
             FirewallUtilities.addRule("tcp", "8090")
             FirewallUtilities.addRule("tcp", "7080")
@@ -2074,27 +2039,20 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
         try:
             ## first install crontab
-
-            if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
-                command = 'yum install cronie -y'
+            # Determine package and service names based on distribution
+            if DistroHandler.is_rhel_based(self.distro):
+                cron_package = 'cronie'
+                cron_service = 'crond'
             else:
-                command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install cron'
-
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR, True)
-
-            if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
-                command = 'systemctl enable crond'
-            else:
-                command = 'systemctl enable cron'
-
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
-                command = 'systemctl start crond'
-            else:
-                command = 'systemctl start cron'
-
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                cron_package = 'cron'
+                cron_service = 'cron'
+            
+            # Install cron package
+            PackageManager.install_packages(cron_package, self.distro, ubuntu, centos, cent8, openeuler, use_shell=True)
+            
+            # Enable and start cron service
+            ServiceManager.enable_service(cron_service, self.distro)
+            ServiceManager.start_service(cron_service, self.distro)
 
             ##
 
@@ -2149,15 +2107,11 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 writeToFile.close()
 
             if not os.path.exists(CentOSPath) or not os.path.exists(openEulerPath):
-                command = 'chmod 600 %s' % (cronPath)
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                PermissionManager.set_permissions(cronPath, '600', self.distro)
 
-            if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
-                command = 'systemctl restart crond.service'
-            else:
-                command = 'systemctl restart cron.service'
-
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            # Restart cron service
+            cron_service = 'crond.service' if DistroHandler.is_rhel_based(self.distro) else 'cron.service'
+            ServiceManager.restart_service(cron_service, self.distro)
 
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [setup_cron]")
@@ -2166,12 +2120,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
     def install_default_keys(self):
         try:
             path = "/root/.ssh"
+            FileSystemHelper.create_directory(path)
 
-            if not os.path.exists(path):
-                os.mkdir(path)
-
-            command = "ssh-keygen -f /root/.ssh/cyberpanel -t rsa -N ''"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            CommandExecutor.execute("ssh-keygen -f /root/.ssh/cyberpanel -t rsa -N ''", self.distro)
 
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [install_default_keys]")
@@ -2179,13 +2130,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
     def install_rsync(self):
         try:
-            if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
-                command = 'yum -y install rsync'
-            else:
-                command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install rsync'
-
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR, True)
-
+            PackageManager.install_packages('rsync', self.distro, ubuntu, centos, cent8, openeuler, use_shell=True)
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [install_rsync]")
             return 0
@@ -2306,17 +2251,9 @@ milter_default_action = accept
                 writeToFile.close()
 
             #### Restarting Postfix and OpenDKIM
-
-            command = "systemctl start opendkim"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = "systemctl enable opendkim"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            ##
-
-            command = "systemctl start postfix"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            ServiceManager.start_service('opendkim', self.distro)
+            ServiceManager.enable_service('opendkim', self.distro)
+            ServiceManager.start_service('postfix', self.distro)
 
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [configureOpenDKIM]")
@@ -2380,12 +2317,12 @@ milter_default_action = accept
 
     @staticmethod
     def installOne(package):
-        res = subprocess.call(shlex.split('DEBIAN_FRONTEND=noninteractive apt-get -y install ' + package))
+        # This method is only used for Ubuntu/Debian systems
+        command = f'DEBIAN_FRONTEND=noninteractive apt-get -y install {package}'
+        res = subprocess.call(shlex.split(command))
         if res != 0:
-            preFlightsChecks.stdOut("Error #" + str(res) + ' installing:' + package + '.  This may not be an issue ' \
-                                                                                      'but may affect installation of something later',
-                                    1)
-
+            preFlightsChecks.stdOut(f"Error #{res} installing: {package}. This may not be an issue "
+                                   "but may affect installation of something later", 1)
         return res  # Though probably not used
 
     @staticmethod
@@ -2583,40 +2520,27 @@ vmail
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
     def installRedis(self):
-        if self.distro == ubuntu:
-            command = 'apt install redis-server -y'
-        elif self.distro == centos:
-            command = 'yum install redis -y'
-        else:
-            command = 'dnf install redis -y'
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        # Install Redis package (different name on Ubuntu)
+        redis_package = 'redis-server' if self.distro == ubuntu else 'redis'
+        PackageManager.install_packages(redis_package, self.distro, ubuntu, centos, cent8, openeuler)
 
         ## install redis conf
-
         redisConf = '/usr/local/lsws/conf/dvhost_redis.conf'
+        with open(redisConf, 'w') as writeToFile:
+            writeToFile.write('127.0.0.1,6379,<auth_password>\n')
 
-        writeToFile = open(redisConf, 'w')
-        writeToFile.write('127.0.0.1,6379,<auth_password>\n')
-        writeToFile.close()
-
-        ##
-
+        ## Copy configuration
         os.chdir(self.cwd)
-
         confPath = '/usr/local/lsws/conf/'
-
-        if os.path.exists('%shttpd.conf' % (confPath)):
-            os.remove('%shttpd.conf' % (confPath))
-
-        shutil.copy('litespeed/httpd-redis.conf', '%shttpd.conf' % (confPath))
+        httpd_conf = f'{confPath}httpd.conf'
+        
+        if os.path.exists(httpd_conf):
+            os.remove(httpd_conf)
+        shutil.copy('litespeed/httpd-redis.conf', httpd_conf)
 
         ## start and enable
-
-        command = 'systemctl start redis'
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = 'systemctl enable redis'
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        ServiceManager.start_service('redis', self.distro)
+        ServiceManager.enable_service('redis', self.distro)
 
     def disablePackegeUpdates(self):
         if self.distro == centos:
