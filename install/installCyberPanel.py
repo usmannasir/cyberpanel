@@ -21,6 +21,21 @@ def get_Ubuntu_release():
     return install_utils.get_Ubuntu_release(use_print=True, exit_on_error=True)
 
 
+def get_Ubuntu_code_name():
+    """Get Ubuntu codename based on version"""
+    release = get_Ubuntu_release()
+    if release >= 24.04:
+        return "noble"
+    elif release >= 22.04:
+        return "jammy"
+    elif release >= 20.04:
+        return "focal"
+    elif release >= 18.04:
+        return "bionic"
+    else:
+        return "xenial"
+
+
 # Using shared function from install_utils
 FetchCloudLinuxAlmaVersionVersion = install_utils.FetchCloudLinuxAlmaVersionVersion
 
@@ -353,17 +368,32 @@ Signed-By: /etc/apt/keyrings/mariadb-keyring.pgp
                 # If the download fails, use manual repo configuration as fallback
                 if result != 1:
                     install_utils.writeToFile("MariaDB repo setup script failed, using manual configuration...")
-                    RepoPath = '/etc/apt/sources.list.d/mariadb.list'
-                    RepoContent = f"""# MariaDB 10.11 repository list - manual fallback
-deb [arch=amd64,arm64,ppc64el,s390x signed-by=/usr/share/keyrings/mariadb-keyring.pgp] https://mirror.mariadb.org/repo/10.11/ubuntu {get_Ubuntu_code_name()} main
-"""
-                    # Download and add MariaDB signing key
-                    command = 'mkdir -p /usr/share/keyrings && curl -fsSL https://mariadb.org/mariadb_release_signing_key.pgp | gpg --dearmor -o /usr/share/keyrings/mariadb-keyring.pgp'
+                    
+                    # First, ensure directories exist
+                    command = 'mkdir -p /usr/share/keyrings /etc/apt/sources.list.d'
                     install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+                    
+                    # Download and add MariaDB signing key
+                    command = 'curl -fsSL https://mariadb.org/mariadb_release_signing_key.pgp | gpg --dearmor -o /usr/share/keyrings/mariadb-keyring.pgp'
+                    install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+                    
+                    # Use multiple mirror options for better reliability
+                    RepoPath = '/etc/apt/sources.list.d/mariadb.list'
+                    codename = get_Ubuntu_code_name()
+                    RepoContent = f"""# MariaDB 10.11 repository list - manual fallback
+# Primary mirror
+deb [arch=amd64,arm64,ppc64el,s390x signed-by=/usr/share/keyrings/mariadb-keyring.pgp] https://mirror.mariadb.org/repo/10.11/ubuntu {codename} main
+
+# Alternative mirrors (uncomment if primary fails)
+# deb [arch=amd64,arm64,ppc64el,s390x signed-by=/usr/share/keyrings/mariadb-keyring.pgp] https://mirrors.gigenet.com/mariadb/repo/10.11/ubuntu {codename} main
+# deb [arch=amd64,arm64,ppc64el,s390x signed-by=/usr/share/keyrings/mariadb-keyring.pgp] https://ftp.osuosl.org/pub/mariadb/repo/10.11/ubuntu {codename} main
+"""
                     
                     WriteToFile = open(RepoPath, 'w')
                     WriteToFile.write(RepoContent)
                     WriteToFile.close()
+                    
+                    install_utils.writeToFile("Manual MariaDB repository configuration completed.")
 
 
 

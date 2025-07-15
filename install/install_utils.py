@@ -382,3 +382,20 @@ def generate_random_string(length=32, include_special=False):
     if include_special:
         alphabet += string.punctuation
     return ''.join(secrets.choice(alphabet) for _ in range(length))
+
+
+def writeToFile(message):
+    """
+    Write a message to the installation log file
+    
+    Args:
+        message: Message to write to the log file
+    """
+    # Import logging module if available
+    try:
+        import installLog as logging
+        if hasattr(logging, 'InstallLog') and hasattr(logging.InstallLog, 'writeToFile'):
+            logging.InstallLog.writeToFile(message)
+    except ImportError:
+        # If installLog module is not available, just print the message
+        print(f"[LOG] {message}")
