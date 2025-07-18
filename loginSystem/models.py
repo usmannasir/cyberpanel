@@ -77,8 +77,8 @@ class ACL(models.Model):
 class Administrator(models.Model):
     userName = models.CharField(unique=True, max_length=50)
     password = models.CharField(max_length=200)
-    firstName = models.CharField(max_length=20, default="None")
-    lastName = models.CharField(max_length=20, default="None")
+    firstName = models.CharField(max_length=200, default="None")
+    lastName = models.CharField(max_length=200, default="None")
     email = models.CharField(max_length=50)
     type = models.IntegerField()
     owner = models.IntegerField(default=1)
