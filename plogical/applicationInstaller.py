@@ -6,18 +6,17 @@ import shutil
 import time
 from io import StringIO
 
-import paramiko
+sys.path.append('/usr/local/CyberCP')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 
+import django
+django.setup()
+
+import paramiko
 from ApachController.ApacheVhosts import ApacheVhost
 from loginSystem.models import Administrator
 from managePHP.phpManager import PHPManager
 from plogical.acl import ACLManager
-
-sys.path.append('/usr/local/CyberCP')
-import django
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
-django.setup()
 import threading as multi
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import subprocess
@@ -625,6 +624,8 @@ class ApplicationInstaller(multi.Thread):
 
     def installWordPress(self):
         try:
+            logging.writeToFile(f"installWordPress started with extraArgs: {self.extraArgs}")
+            
             domainName = self.extraArgs['domainName']
             home = self.extraArgs['home']
             tempStatusPath = self.extraArgs['tempStatusPath']
@@ -633,6 +634,8 @@ class ApplicationInstaller(multi.Thread):
             adminUser = self.extraArgs['adminUser']
             adminPassword = self.extraArgs['adminPassword']
             adminEmail = self.extraArgs['adminEmail']
+            
+            logging.writeToFile(f"installWordPress - domain: {domainName}, home: {home}, status: {tempStatusPath}")
 
             FNULL = open(os.devnull, 'w')
 
@@ -1573,6 +1576,9 @@ class ApplicationInstaller(multi.Thread):
 
     def DeployWordPress(self):
         try:
+            # Debug logging
+            logging.writeToFile(f"DeployWordPress started with args: {self.extraArgs}")
+            logging.statusWriter(self.extraArgs['tempStatusPath'], 'DeployWordPress function started..,5')
 
             if self.extraArgs['createSite']:
                 logging.statusWriter(self.extraArgs['tempStatusPath'], 'Creating this application..,10')
@@ -1597,6 +1603,7 @@ class ApplicationInstaller(multi.Thread):
             ## Install WordPress
 
             logging.statusWriter(self.extraArgs['tempStatusPath'], 'Installing WordPress.,50')
+            logging.writeToFile("About to call installWordPress function")
 
             currentTemp = self.extraArgs['tempStatusPath']
             self.extraArgs['domainName'] = self.extraArgs['domain']
@@ -1605,8 +1612,13 @@ class ApplicationInstaller(multi.Thread):
             self.extraArgs['adminUser'] = self.extraArgs['userName']
             self.extraArgs['adminPassword'] = self.extraArgs['password']
             self.extraArgs['adminEmail'] = self.extraArgs['email']
+            
+            logging.writeToFile(f"Calling installWordPress with domainName: {self.extraArgs['domainName']}")
+            logging.writeToFile(f"Admin user: {self.extraArgs['adminUser']}, email: {self.extraArgs['adminEmail']}")
 
             self.installWordPress()
+            
+            logging.writeToFile("installWordPress call completed")
 
             result = open(self.extraArgs['tempStatusPath'], 'r').read()
             if result.find('[404]') > -1:
