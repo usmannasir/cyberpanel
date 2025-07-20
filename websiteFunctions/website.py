@@ -2819,8 +2819,23 @@ Require valid-user
 </body>
 </html>"""
                     try:
-                        with open(suspensionPagePath, 'w') as f:
-                            f.write(defaultSuspensionHTML)
+                        # Create directory if it doesn't exist
+                        dirPath = os.path.dirname(suspensionPagePath)
+                        if not os.path.exists(dirPath):
+                            command = f"mkdir -p {dirPath}"
+                            ProcessUtilities.executioner(command)
+                        
+                        # Write the HTML content to a temporary file first
+                        tempFile = "/tmp/suspension_temp.html"
+                        # Use cat with heredoc to create the file
+                        command = f'''cat > {tempFile} << 'EOF'
+{defaultSuspensionHTML}
+EOF'''
+                        ProcessUtilities.executioner(command, shell=True)
+                        
+                        # Move the temporary file to the final location
+                        command = f"mv {tempFile} {suspensionPagePath}"
+                        ProcessUtilities.executioner(command)
                     except:
                         pass
                 
