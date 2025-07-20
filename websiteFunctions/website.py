@@ -2825,15 +2825,14 @@ Require valid-user
                             command = f"mkdir -p {dirPath}"
                             ProcessUtilities.executioner(command)
                         
-                        # Write the HTML content to a temporary file first
-                        tempFile = "/tmp/suspension_temp.html"
-                        # Use cat with heredoc to create the file
-                        command = f'''cat > {tempFile} << 'EOF'
-{defaultSuspensionHTML}
-EOF'''
-                        ProcessUtilities.executioner(command, shell=True)
+                        # Write the HTML content to a temporary file in /home/cyberpanel
+                        tempFile = "/home/cyberpanel/suspension_temp.html"
                         
-                        # Move the temporary file to the final location
+                        # Create the file using normal Python file operations
+                        with open(tempFile, 'w') as f:
+                            f.write(defaultSuspensionHTML)
+                        
+                        # Use ProcessUtilities to move the file to the final location
                         command = f"mv {tempFile} {suspensionPagePath}"
                         ProcessUtilities.executioner(command)
                     except:
