@@ -2762,38 +2762,142 @@ Require valid-user
 
             if state == "Suspend":
                 confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + websiteName
-                command = "mv " + confPath + " " + confPath + "-suspended"
-                ProcessUtilities.popenExecutioner(command)
+                vhostConfPath = confPath + "/vhconf.conf"
+                
+                # Read the current vhost configuration
+                with open(vhostConfPath, 'r') as f:
+                    vhostContent = f.read()
+                
+                # Add suspension error document configuration
+                suspensionConf = """
+# Website Suspension Configuration
+errorPage 403{
+  url /cyberpanel_suspension_page.html
+}
 
+errorPage 404{
+  url /cyberpanel_suspension_page.html
+}
+
+context /{
+  accessible                      0
+}
+
+context /cyberpanel_suspension_page.html{
+  location                        /usr/local/CyberCP/static/suspension/suspension.html
+  accessible                      1
+  extraHeaders                    X-Frame-Options: DENY
+}
+"""
+                
+                # Check if suspension configuration already exists
+                if "# Website Suspension Configuration" not in vhostContent:
+                    # Add suspension configuration at the beginning of the file
+                    modifiedContent = suspensionConf + "\n" + vhostContent
+                    
+                    # Write the modified configuration
+                    with open(vhostConfPath, 'w') as f:
+                        f.write(modifiedContent)
+                
+                # Apply same suspension configuration to child domains
                 childDomains = website.childdomains_set.all()
-
+                
                 for items in childDomains:
-                    confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + items.domain
-                    command = "mv " + confPath + " " + confPath + "-suspended"
-                    ProcessUtilities.executioner(command)
-
+                    childConfPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + items.domain
+                    childVhostConfPath = childConfPath + "/vhconf.conf"
+                    
+                    try:
+                        with open(childVhostConfPath, 'r') as f:
+                            childVhostContent = f.read()
+                        
+                        if "# Website Suspension Configuration" not in childVhostContent:
+                            childModifiedContent = suspensionConf + "\n" + childVhostContent
+                            
+                            with open(childVhostConfPath, 'w') as f:
+                                f.write(childModifiedContent)
+                    except:
+                        pass
+                
                 installUtilities.reStartLiteSpeedSocket()
                 website.state = 0
             else:
                 confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + websiteName
-
-                command = "mv " + confPath + "-suspended" + " " + confPath
-                ProcessUtilities.executioner(command)
-
-                command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + confPath
-                ProcessUtilities.popenExecutioner(command)
-
+                vhostConfPath = confPath + "/vhconf.conf"
+                
+                # Read the current vhost configuration
+                try:
+                    with open(vhostConfPath, 'r') as f:
+                        vhostContent = f.read()
+                    
+                    # Remove suspension configuration
+                    if "# Website Suspension Configuration" in vhostContent:
+                        # Find the start and end of suspension configuration
+                        start_marker = "# Website Suspension Configuration"
+                        end_marker = "}\n"  # End of last context block
+                        
+                        start_index = vhostContent.find(start_marker)
+                        if start_index != -1:
+                            # Find the end of the suspension configuration
+                            temp_content = vhostContent[start_index:]
+                            # Count the number of closing braces we need to find (4 total: 2 errorPage + 2 context)
+                            brace_count = 0
+                            end_index = start_index
+                            
+                            for i, char in enumerate(temp_content):
+                                if char == '}':
+                                    brace_count += 1
+                                    if brace_count == 4:
+                                        end_index = start_index + i + 1
+                                        # Skip any trailing newlines
+                                        while end_index < len(vhostContent) and vhostContent[end_index] == '\n':
+                                            end_index += 1
+                                        break
+                            
+                            # Remove the suspension configuration
+                            modifiedContent = vhostContent[:start_index] + vhostContent[end_index:]
+                            
+                            # Write the cleaned configuration
+                            with open(vhostConfPath, 'w') as f:
+                                f.write(modifiedContent)
+                except:
+                    pass
+                
+                # Remove suspension configuration from child domains
                 childDomains = website.childdomains_set.all()
-
+                
                 for items in childDomains:
-                    confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + items.domain
-
-                    command = "mv " + confPath + "-suspended" + " " + confPath
-                    ProcessUtilities.executioner(command)
-
-                    command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + confPath
-                    ProcessUtilities.popenExecutioner(command)
-
+                    childConfPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + items.domain
+                    childVhostConfPath = childConfPath + "/vhconf.conf"
+                    
+                    try:
+                        with open(childVhostConfPath, 'r') as f:
+                            childVhostContent = f.read()
+                        
+                        if "# Website Suspension Configuration" in childVhostContent:
+                            # Find and remove suspension configuration
+                            start_marker = "# Website Suspension Configuration"
+                            start_index = childVhostContent.find(start_marker)
+                            if start_index != -1:
+                                temp_content = childVhostContent[start_index:]
+                                brace_count = 0
+                                end_index = start_index
+                                
+                                for i, char in enumerate(temp_content):
+                                    if char == '}':
+                                        brace_count += 1
+                                        if brace_count == 4:
+                                            end_index = start_index + i + 1
+                                            while end_index < len(childVhostContent) and childVhostContent[end_index] == '\n':
+                                                end_index += 1
+                                            break
+                                
+                                childModifiedContent = childVhostContent[:start_index] + childVhostContent[end_index:]
+                                
+                                with open(childVhostConfPath, 'w') as f:
+                                    f.write(childModifiedContent)
+                    except:
+                        pass
+                
                 installUtilities.reStartLiteSpeedSocket()
                 website.state = 1
 
