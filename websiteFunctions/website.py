@@ -2792,11 +2792,11 @@ context /cyberpanel_suspension_page.html{
                 
                 # Read current vhost configuration
                 command = f"cat {vhostConfPath}"
-                result = ProcessUtilities.outputExecutioner(command)
+                vhostContent = ProcessUtilities.outputExecutioner(command)
                 
-                if result[0] == 1 and "# Website Suspension Configuration" not in result[1]:
+                if "# Website Suspension Configuration" not in vhostContent:
                     # Add suspension configuration at the beginning
-                    modifiedContent = suspensionConf + "\n" + result[1]
+                    modifiedContent = suspensionConf + "\n" + vhostContent
                     
                     # Write to temporary file
                     with open(tempFile, 'w') as f:
@@ -2823,12 +2823,12 @@ context /cyberpanel_suspension_page.html{
                     try:
                         # Read child vhost configuration
                         command = f"cat {childVhostConfPath}"
-                        result = ProcessUtilities.outputExecutioner(command)
+                        childVhostContent = ProcessUtilities.outputExecutioner(command)
                         
-                        if result[0] == 1 and "# Website Suspension Configuration" not in result[1]:
+                        if "# Website Suspension Configuration" not in childVhostContent:
                             # Create temporary file for child domain
                             childTempFile = "/home/cyberpanel/" + str(randint(100000, 999999))
-                            childModifiedContent = suspensionConf + "\n" + result[1]
+                            childModifiedContent = suspensionConf + "\n" + childVhostContent
                             
                             with open(childTempFile, 'w') as f:
                                 f.write(childModifiedContent)
@@ -2854,54 +2854,51 @@ context /cyberpanel_suspension_page.html{
                 
                 # Read the current vhost configuration
                 command = f"cat {vhostConfPath}"
-                result = ProcessUtilities.outputExecutioner(command)
+                vhostContent = ProcessUtilities.outputExecutioner(command)
                 
-                if result[0] == 1:
-                    vhostContent = result[1]
+                # Remove suspension configuration
+                if "# Website Suspension Configuration" in vhostContent:
+                    # Find the start and end of suspension configuration
+                    start_marker = "# Website Suspension Configuration"
                     
-                    # Remove suspension configuration
-                    if "# Website Suspension Configuration" in vhostContent:
-                        # Find the start and end of suspension configuration
-                        start_marker = "# Website Suspension Configuration"
+                    start_index = vhostContent.find(start_marker)
+                    if start_index != -1:
+                        # Find the end of the suspension configuration
+                        temp_content = vhostContent[start_index:]
+                        # Count the number of closing braces we need to find (4 total: 2 errorPage + 2 context)
+                        brace_count = 0
+                        end_index = start_index
                         
-                        start_index = vhostContent.find(start_marker)
-                        if start_index != -1:
-                            # Find the end of the suspension configuration
-                            temp_content = vhostContent[start_index:]
-                            # Count the number of closing braces we need to find (4 total: 2 errorPage + 2 context)
-                            brace_count = 0
-                            end_index = start_index
-                            
-                            for i, char in enumerate(temp_content):
-                                if char == '}':
-                                    brace_count += 1
-                                    if brace_count == 4:
-                                        end_index = start_index + i + 1
-                                        # Skip any trailing newlines
-                                        while end_index < len(vhostContent) and vhostContent[end_index] == '\n':
-                                            end_index += 1
-                                        break
-                            
-                            # Remove the suspension configuration
-                            modifiedContent = vhostContent[:start_index] + vhostContent[end_index:]
-                            
-                            # Create temporary file and write cleaned configuration
-                            from random import randint
-                            tempFile = "/home/cyberpanel/" + str(randint(100000, 999999))
-                            
-                            with open(tempFile, 'w') as f:
-                                f.write(modifiedContent)
-                            
-                            # Copy back with proper permissions
-                            command = f"cp {tempFile} {vhostConfPath}"
-                            ProcessUtilities.executioner(command)
-                            
-                            # Set proper ownership
-                            command = f"chown lsadm:lsadm {vhostConfPath}"
-                            ProcessUtilities.executioner(command)
-                            
-                            # Remove temporary file
-                            os.remove(tempFile)
+                        for i, char in enumerate(temp_content):
+                            if char == '}':
+                                brace_count += 1
+                                if brace_count == 4:
+                                    end_index = start_index + i + 1
+                                    # Skip any trailing newlines
+                                    while end_index < len(vhostContent) and vhostContent[end_index] == '\n':
+                                        end_index += 1
+                                    break
+                        
+                        # Remove the suspension configuration
+                        modifiedContent = vhostContent[:start_index] + vhostContent[end_index:]
+                        
+                        # Create temporary file and write cleaned configuration
+                        from random import randint
+                        tempFile = "/home/cyberpanel/" + str(randint(100000, 999999))
+                        
+                        with open(tempFile, 'w') as f:
+                            f.write(modifiedContent)
+                        
+                        # Copy back with proper permissions
+                        command = f"cp {tempFile} {vhostConfPath}"
+                        ProcessUtilities.executioner(command)
+                        
+                        # Set proper ownership
+                        command = f"chown lsadm:lsadm {vhostConfPath}"
+                        ProcessUtilities.executioner(command)
+                        
+                        # Remove temporary file
+                        os.remove(tempFile)
                 
                 # Remove suspension configuration from child domains
                 childDomains = website.childdomains_set.all()
@@ -2913,47 +2910,44 @@ context /cyberpanel_suspension_page.html{
                     try:
                         # Read child vhost configuration
                         command = f"cat {childVhostConfPath}"
-                        result = ProcessUtilities.outputExecutioner(command)
+                        childVhostContent = ProcessUtilities.outputExecutioner(command)
                         
-                        if result[0] == 1:
-                            childVhostContent = result[1]
-                            
-                            if "# Website Suspension Configuration" in childVhostContent:
-                                # Find and remove suspension configuration
-                                start_marker = "# Website Suspension Configuration"
-                                start_index = childVhostContent.find(start_marker)
-                                if start_index != -1:
-                                    temp_content = childVhostContent[start_index:]
-                                    brace_count = 0
-                                    end_index = start_index
-                                    
-                                    for i, char in enumerate(temp_content):
-                                        if char == '}':
-                                            brace_count += 1
-                                            if brace_count == 4:
-                                                end_index = start_index + i + 1
-                                                while end_index < len(childVhostContent) and childVhostContent[end_index] == '\n':
-                                                    end_index += 1
-                                                break
-                                    
-                                    childModifiedContent = childVhostContent[:start_index] + childVhostContent[end_index:]
-                                    
-                                    # Create temporary file for child domain
-                                    childTempFile = "/home/cyberpanel/" + str(randint(100000, 999999))
-                                    
-                                    with open(childTempFile, 'w') as f:
-                                        f.write(childModifiedContent)
-                                    
-                                    # Copy back with proper permissions
-                                    command = f"cp {childTempFile} {childVhostConfPath}"
-                                    ProcessUtilities.executioner(command)
-                                    
-                                    # Set proper ownership
-                                    command = f"chown lsadm:lsadm {childVhostConfPath}"
-                                    ProcessUtilities.executioner(command)
-                                    
-                                    # Remove temporary file
-                                    os.remove(childTempFile)
+                        if "# Website Suspension Configuration" in childVhostContent:
+                            # Find and remove suspension configuration
+                            start_marker = "# Website Suspension Configuration"
+                            start_index = childVhostContent.find(start_marker)
+                            if start_index != -1:
+                                temp_content = childVhostContent[start_index:]
+                                brace_count = 0
+                                end_index = start_index
+                                
+                                for i, char in enumerate(temp_content):
+                                    if char == '}':
+                                        brace_count += 1
+                                        if brace_count == 4:
+                                            end_index = start_index + i + 1
+                                            while end_index < len(childVhostContent) and childVhostContent[end_index] == '\n':
+                                                end_index += 1
+                                            break
+                                
+                                childModifiedContent = childVhostContent[:start_index] + childVhostContent[end_index:]
+                                
+                                # Create temporary file for child domain
+                                childTempFile = "/home/cyberpanel/" + str(randint(100000, 999999))
+                                
+                                with open(childTempFile, 'w') as f:
+                                    f.write(childModifiedContent)
+                                
+                                # Copy back with proper permissions
+                                command = f"cp {childTempFile} {childVhostConfPath}"
+                                ProcessUtilities.executioner(command)
+                                
+                                # Set proper ownership
+                                command = f"chown lsadm:lsadm {childVhostConfPath}"
+                                ProcessUtilities.executioner(command)
+                                
+                                # Remove temporary file
+                                os.remove(childTempFile)
                     except:
                         pass
                 
