@@ -24,7 +24,11 @@ class sslUtilities:
         try:
             # Use dig command to check DNS records from authoritative servers
             command = f"dig +short {domain} A @8.8.8.8"
-            result = subprocess.run(command, shell=True, capture_output=True, text=True)
+            try:
+                result = subprocess.run(command, shell=True, capture_output=True, text=True)
+            except TypeError:
+                # Fallback for Python < 3.7
+                result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
             
             # If there's any output, the domain has A records
             if result.stdout.strip():
@@ -32,7 +36,11 @@ class sslUtilities:
             
             # Also check AAAA records
             command = f"dig +short {domain} AAAA @8.8.8.8"
-            result = subprocess.run(command, shell=True, capture_output=True, text=True)
+            try:
+                result = subprocess.run(command, shell=True, capture_output=True, text=True)
+            except TypeError:
+                # Fallback for Python < 3.7
+                result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
             
             if result.stdout.strip():
                 return True
@@ -704,9 +712,10 @@ context /.well-known/acme-challenge {
                               + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w /usr/local/lsws/Example/html -k ec-256 --force --staging' \
                               + ' --webroot-path /usr/local/lsws/Example/html'
                     
-                    if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                    try:
                         result = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
-                    else:
+                    except TypeError:
+                        # Fallback for Python < 3.7
                         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
 
                     if result.returncode == 0:
@@ -715,7 +724,11 @@ context /.well-known/acme-challenge {
                                   + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w /usr/local/lsws/Example/html -k ec-256 --force --server letsencrypt' \
                                   + ' --webroot-path /usr/local/lsws/Example/html'
                         
-                        result = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                        try:
+                            result = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                        except TypeError:
+                            # Fallback for Python < 3.7
+                            result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
                         
                         if result.returncode == 0:
                             logging.CyberCPLogFileWriter.writeToFile(
@@ -752,7 +765,11 @@ context /.well-known/acme-challenge {
                               + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
                               + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w /usr/local/lsws/Example/html -k ec-256 --force --server letsencrypt'
 
-                    result = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                    try:
+                        result = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+                    except TypeError:
+                        # Fallback for Python < 3.7
+                        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
                     
                     if result.returncode == 0:
                         return 1
@@ -786,7 +803,11 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
                 
                 # Try to renew with explicit webroot
                 command = f'{acmePath} --renew {renewal_domains} --webroot /usr/local/lsws/Example/html --force'
-                result = subprocess.run(command, capture_output=True, text=True, shell=True)
+                try:
+                    result = subprocess.run(command, capture_output=True, text=True, shell=True)
+                except TypeError:
+                    # Fallback for Python < 3.7
+                    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
                 
                 if result.returncode == 0:
                     logging.CyberCPLogFileWriter.writeToFile(f"Successfully renewed SSL for {domain}")
