@@ -66,7 +66,7 @@ class secMiddleware:
         try:
             uID = request.session['userID']
             admin = Administrator.objects.get(pk=uID)
-            ipAddr = secMiddleware.get_client_ip(request)
+            ipAddr = request.META.get('True-Client-IP')
 
             if ipAddr.find('.') > -1:
                 if request.session['ipAddr'] == ipAddr or admin.securityLevel == secMiddleware.LOW:
