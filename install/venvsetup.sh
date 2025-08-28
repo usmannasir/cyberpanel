@@ -2,10 +2,10 @@
 
 #CyberPanel installer script for Ubuntu 18.04 and CentOS 7.X
 DEV="OFF"
-BRANCH="stable"
-POSTFIX_VARIABLE="ON"
-POWERDNS_VARIABLE="ON"
-PUREFTPD_VARIABLE="ON"
+#BRANCH="stable"
+#POSTFIX_VARIABLE="ON"
+#POWERDNS_VARIABLE="ON"
+#PUREFTPD_VARIABLE="ON"
 PROVIDER="undefined"
 SERIAL_NO=""
 DIR=$(pwd)
@@ -35,7 +35,7 @@ tar xzvf "lsws-$LSWS_STABLE_VER-ent-x86_64-linux.tar.gz" > /dev/null
 cd "/root/cyberpanel-tmp/lsws-$LSWS_STABLE_VER/conf" || exit || exit
 if [[ $LICENSE_KEY == "TRIAL" ]] ; then
 wget -q http://license.litespeedtech.com/reseller/trial.key
-sed -i "s|writeSerial = open('lsws-5.4.2/serial.no', 'w')|command = 'wget -q --output-document=./lsws-$LSWS_STABLE_VER/trial.key http://license.litespeedtech.com/reseller/trial.key'|g" "$CURRENT_DIR/installCyberPanel.py"
+sed -i 's|writeSerial = open('\''lsws-5.4.2/serial.no'\'', '\''w'\'')|command = '\''wget -q --output-document=./lsws-'"$LSWS_STABLE_VER"'/trial.key http://license.litespeedtech.com/reseller/trial.key'\''|g' "$CURRENT_DIR/installCyberPanel.py"
 sed -i 's|writeSerial.writelines(self.serial)|subprocess.call(command, shell=True)|g' "$CURRENT_DIR/installCyberPanel.py"
 sed -i 's|writeSerial.close()||g' "$CURRENT_DIR/installCyberPanel.py"
 else
@@ -74,7 +74,7 @@ sed -i 's|http://|https://|g' install.py
 LATEST_URL="https://update.litespeedtech.com/ws/latest.php"
 #LATEST_URL="https://cyberpanel.sh/latest.php"
 curl --silent -o /tmp/lsws_latest "$LATEST_URL" 2>/dev/null
-LSWS_STABLE_LINE=$(cat /tmp/lsws_latest | grep LSWS_STABLE)
+LSWS_STABLE_LINE=$(grep LSWS_STABLE /tmp/lsws_latest)
 LSWS_STABLE_VER=$(expr "$LSWS_STABLE_LINE" : '.*LSWS_STABLE=\(.*\) BUILD .*')
 
 if [[ $SERVER_COUNTRY == "CN" ]] ; then
@@ -91,14 +91,14 @@ sed -i 's|https://snappymail.eu/repository/latest.tar.gz|https://'"$DOWNLOAD_SER
 sed -i 's|rpm -ivh https://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el7.noarch.rpm|curl -o /etc/yum.repos.d/litespeed.repo https://'"$DOWNLOAD_SERVER"'/litespeed/litespeed.repo|g' install.py
 
 
-sed -i 's|https://copr.fedorainfracloud.org/coprs/copart/restic/repo/epel-7/copart-restic-epel-7.repo|https://'$DOWNLOAD_SERVER'/restic/restic.repo|g' install.py
+sed -i 's|https://copr.fedorainfracloud.org/coprs/copart/restic/repo/epel-7/copart-restic-epel-7.repo|https://'"$DOWNLOAD_SERVER"'/restic/restic.repo|g' install.py
 
-sed -i 's|yum -y install https://cyberpanel.sh/gf-release-latest.gf.el7.noarch.rpm|wget -O /etc/yum.repos.d/gf.repo https://'"$DOWNLOAD_SERVER"'/gf-plus/gf.repo|g' install.py
+sed -i 's|yum -y install https://cyberpanel.sh/gf-release-latest.gf.el7.noarch.rpm|wget -O /etc/yum.repos.d/gf.repo https://'"${DOWNLOAD_SERVER}"'/gf-plus/gf.repo|g' install.py
 sed -i 's|dovecot-2.3-latest|dovecot-2.3-latest-mirror|g' install.py
 sed -i 's|git clone https://github.com/usmannasir/cyberpanel|wget https://cyberpanel.sh/cyberpanel-git.tar.gz \&\& tar xzvf cyberpanel-git.tar.gz|g' install.py
-sed -i 's|https://repo.dovecot.org/ce-2.3-latest/centos/$releasever/RPMS/$basearch|https://'"$DOWNLOAD_SERVER"'/dovecot/|g' install.py
-sed -i 's|'$DOWNLOAD_SERVER'|cyberpanel.sh|g' install.py
-sed -i 's|https://www.litespeedtech.com/packages/5.0/lsws-5.4.2-ent-x86_64-linux.tar.gz|https://'"$DOWNLOAD_SERVER"'/litespeed/lsws-'"$LSWS_STABLE_VER"'-ent-x86_64-linux.tar.gz|g' installCyberPanel.py
+sed -i "s|https://repo.dovecot.org/ce-2.3-latest/centos/\$releasever/RPMS/\$basearch|https://${DOWNLOAD_SERVER}/dovecot/|g" install.py
+sed -i 's|'"${DOWNLOAD_SERVER}"'|cyberpanel.sh|g' install.py
+sed -i 's|https://www.litespeedtech.com/packages/5.0/lsws-5.4.2-ent-x86_64-linux.tar.gz|https://'"${DOWNLOAD_SERVER}"'/litespeed/lsws-'"${LSWS_STABLE_VER}"'-ent-x86_64-linux.tar.gz|g' installCyberPanel.py
 # global change for CN , regardless provider and system
 
 	if [[ $SERVER_OS == "CentOS" ]] ; then
@@ -464,7 +464,7 @@ else
 	PROVIDER='undefined'
 fi
 
-if [ "$(cat /sys/devices/virtual/dmi/id/product_uuid | cut -c 1-3)" = 'EC2' ] && [ -d /home/ubuntu ]; then 
+if [ "$(cut -c 1-3 /sys/devices/virtual/dmi/id/product_uuid)" = 'EC2' ] && [ -d /home/ubuntu ]; then 
 	PROVIDER='Amazon Web Service'
 fi
 
@@ -473,7 +473,7 @@ fi
 
 check_OS() {
 echo -e "\nChecking OS..."
-OUTPUT=$(cat /etc/*release)
+OUTPUT=$(</etc/*release)
 if  echo "$OUTPUT" | grep -q "CentOS Linux 7" ; then
 	echo -e "\nDetecting CentOS 7.X...\n"
 	SERVER_OS="CentOS"
@@ -493,7 +493,7 @@ fi
 
 check_root() {
 echo -e "Checking root privileges...\n"
-if [[ $(id -u) != 0 ]]  > /dev/null; then
+if [[ $(id -u) != 0 ]]; then
 	echo -e "You must use root account to do this"
 	echo -e "or run following command: (do NOT miss the quotes)"
 	echo -e "\e[31msudo su -c \"sh <(curl https://cyberpanel.sh || wget -O - https://cyberpanel.sh)\"\e[39m"
@@ -604,7 +604,7 @@ echo -e "		CyberPanel Installer v$CP_VER1$CP_VER2
   3. Exit.
   
   "
-read -p "  Please enter the number[1-3]: " num
+read -r -p "  Please enter the number[1-3]: " num
 echo ""
 case "$num" in
 	1)
@@ -640,7 +640,7 @@ echo -e "		CyberPanel Addons v$CP_VER1$CP_VER2
   4. Exit
   "
  
-echo && read -p "Please enter the number[1-4]: " num
+echo && read -r -p "Please enter the number[1-4]: " num
 case "$num" in
 	1)
 	memcached_installation
@@ -657,7 +657,7 @@ case "$num" in
 	exit
 	;;
 	*)
-	echo -e "${Error} please enter the right number [1-4]"
+	echo -e "please enter the right number [1-4]"
 	;;
 esac
 }
@@ -679,7 +679,7 @@ echo -e "		CyberPanel Installer v$CP_VER1$CP_VER2
   3. Exit.
   
   "
-read -p "  Please enter the number[1-3]: " num
+read -r -p "  Please enter the number[1-3]: " num
 echo ""
 case "$num" in
 	1)
@@ -697,39 +697,6 @@ case "$num" in
 	;;
 esac
 
-<<COMMENT
-echo -e "\nInstall minimal service for CyberPanel? This will skip PowerDNS, Postfix and Pure-FTPd."
-printf "%s" "Minimal installation [y/N]: "
-read TMP_YN
-if [ `expr "x$TMP_YN" : 'x[Yy]'` -gt 1 ]; then
-		echo -e "\nMinimal installation selected..."
-		POSTFIX_VARIABLE="OFF"
-		POWERDNS_VARIABLE="OFF"
-		PUREFTPD_VARIABLE="OFF"
-else
-		printf "%s" "Install Postfix? [Y/n]: "
-		read TMP_YN
-		if [[ $TMP_YN =~ ^(no|n|N) ]] ; then
-		POSTFIX_VARIABLE="OFF"
-		else
-		POSTFIX_VARIABLE="ON"
-		fi
-		printf "%s" "Install PowerDNS? [Y/n]: "
-		read TMP_YN
-		if [[ $TMP_YN =~ ^(no|n|N) ]] ; then
-		POWERDNS_VARIABLE="OFF"
-		else
-		POWERDNS_VARIABLE="ON"
-		fi
-		printf "%s" "Install PureFTPd? [Y/n]: "
-		read TMP_YN
-		if [[ $TMP_YN =~ ^(no|n|N) ]] ; then
-		PUREFTPD_VARIABLE="OFF"
-		else
-		PUREFTPD_VARIABLE="ON"
-		fi
-fi
-COMMENT
 #above comment for future use
 
 if [[ $DEV_ARG == "ON" ]] ; then
@@ -897,6 +864,7 @@ else
     virtualenv --system-site-packages /usr/local/CyberPanel
 fi
 
+# shellcheck disable=SC1091
 source /usr/local/CyberPanel/bin/activate
 rm -rf requirements.txt
 wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/1.8.0/requirments.txt
@@ -906,8 +874,9 @@ fi
 if [[ $DEV == "ON" ]] ; then
 	#install dev branch 
 	#wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
-	cd /usr/local/
+	cd /usr/local/ || exit
 	python3.6 -m venv CyberPanel
+	# shellcheck disable=SC1091
 	source /usr/local/CyberPanel/bin/activate
 	wget -O requirements.txt "https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt"
 	pip3.6 install --ignore-installed -r requirements.txt
@@ -922,7 +891,7 @@ if [[ $SERVER_COUNTRY == "CN" ]] ; then
 	wget https://cyberpanel.sh/cyberpanel-git.tar.gz
 	tar xzvf cyberpanel-git.tar.gz > /dev/null
 	cp -r cyberpanel /usr/local/cyberpanel
-	cd cyberpanel/install
+	cd cyberpanel/install || exit
 else
 	if [[ $DEV == "ON" ]] ; then
 	git clone https://github.com/usmannasir/cyberpanel
@@ -932,7 +901,7 @@ else
 	cd cyberpanel/install || exit
 	else
 	git clone https://github.com/usmannasir/cyberpanel
-	cd cyberpanel/install
+	cd cyberpanel/install || exit
 	fi
 fi
 curl https://cyberpanel.sh/?version
@@ -962,6 +931,7 @@ if grep "CyberPanel installation successfully completed" /var/log/installLogs.tx
 
 if [[ $DEV == "ON" ]] ; then
 python3.6 -m venv /usr/local/CyberCP
+# shellcheck disable=SC1091
 source /usr/local/CyberCP/bin/activate
 	wget -O requirements.txt "https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt"
 pip3.6 install --ignore-installed -r requirements.txt
@@ -998,10 +968,10 @@ for version in /usr/local/lsws/lsphp*;
 				systemctl restart pure-ftpd-mysql
 				DEBIAN_FRONTEND=noninteractive apt install libmagickwand-dev pkg-config build-essential -y
 				mkdir /usr/local/lsws/cyberpanel-tmp
-				cd /usr/local/lsws/cyberpanel-tmp
+				cd /usr/local/lsws/cyberpanel-tmp || exit
 				wget https://pecl.php.net/get/timezonedb-2019.3.tgz
 				tar xzvf timezonedb-2019.3.tgz
-				cd timezonedb-2019.3
+				cd timezonedb-2019.3 || exit
 			fi
 		/usr/local/lsws/"${version}"/bin/phpize
 		./configure --with-php-config=/usr/local/lsws/"${version}"/bin/php-config"${version2}"
@@ -1017,8 +987,8 @@ curl --silent -o /etc/profile.d/cyberpanel.sh https://cyberpanel.sh/?banner 2>/d
 chmod +x /etc/profile.d/cyberpanel.sh
 RAM2=$(free -m | awk 'NR==2{printf "%s/%sMB (%.2f%%)\n", $3,$2,$3*100/$2 }')
 DISK2=$(df -h | awk '$NF=="/"{printf "%d/%dGB (%s)\n", $3,$2,$5}')
-ELAPSED="$(($SECONDS / 3600)) hrs $((($SECONDS / 60) % 60)) min $(($SECONDS % 60)) sec"
-MYSQLPASSWD=$(cat /etc/cyberpanel/mysqlPassword)
+ELAPSED="$((SECONDS / 3600)) hrs $(((SECONDS / 60) % 60)) min $((SECONDS % 60)) sec"
+#MYSQLPASSWD=$(cat /etc/cyberpanel/mysqlPassword)
 echo "$ADMIN_PASS" > /etc/cyberpanel/adminPass
 /usr/local/CyberPanel/bin/python2 /usr/local/CyberCP/plogical/adminPass.py --password "$ADMIN_PASS"
 systemctl restart lscpd
@@ -1047,8 +1017,7 @@ if [[ $VERSION = "ENT" ]] ; then
 	fi
 fi
 
-systemctl status lsws > /dev/null 2>&1
-if [[ $? == "0" ]] ; then
+if systemctl status lsws > /dev/null 2>&1; then
 	echo "LSWS service is running..."
 else
 	systemctl stop lsws
@@ -1102,10 +1071,10 @@ if [[ $SERVER_COUNTRY = CN ]] ; then
 		if [[ $SERVER_OS == "Ubuntu" ]] ; then
 			rm -f /etc/apt/sources.list 
 			mv /etc/apt/sources.list-backup /etc/apt/sources.list
-echo > "nameserver 127.0.0.53
-options edns0" /run/systemd/resolve/stub-resolv.conf
-echo > "nameserver 127.0.0.53
-options edns0" /etc/resolv.conf
+			echo "nameserver 127.0.0.53
+options edns0" > /run/systemd/resolve/stub-resolv.conf
+			echo "nameserver 127.0.0.53
+options edns0" > /etc/resolv.conf
 			apt update
 #revert the previous change on tencent cloud repo.
 		fi
@@ -1195,15 +1164,12 @@ else
 	elif [[ $1 == "default" ]] ; then
 	echo -e "\nThis will start default installation...\n"
 	SILENT="ON"
-	POSTFIX_VARIABLE="ON"
-	POWERDNS_VARIABLE="ON"
-	PUREFTPD_VARIABLE="ON"
 	VERSION="OLS"
 	ADMIN_PASS="1234567"
 	MEMCACHED="ON"
 	REDIS="ON"
 	else
-		while [ ! -z "${1}" ]; do
+		while [ -n "${1}" ]; do
 			case $1 in
 				-v | --version) shift
 						if [ "${1}" = '' ]; then
