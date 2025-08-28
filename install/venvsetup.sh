@@ -1,25 +1,92 @@
 #!/bin/bash
 
 #CyberPanel installer script for Ubuntu 18.04 and CentOS 7.X
+
+# Constants
+readonly DEFAULT_ADMIN_PASS="1234567"
+readonly MIN_PASSWORD_LENGTH=8
+readonly DEFAULT_TIMEOUT=10
+readonly CYBERPANEL_PORT=8090
+readonly DEFAULT_SWAP_SIZE_MB=2048
+readonly PID_MAX=1000000
+readonly KSM_RUN=1
+readonly FILE_MAX=65535
+readonly NOFILE_LIMIT=65535
+readonly NPROC_LIMIT=65535
+
+# URLs and endpoints
+readonly CYBERPANEL_VERSION_URL="https://cyberpanel.net/version.txt"
+readonly LITESPEED_UPDATE_URL="https://update.litespeedtech.com/ws/latest.php"
+readonly CYBERPANEL_SH_URL="https://cyberpanel.sh"
+readonly CYBERPANEL_CDN_URL="https://cdn.cyberpanel.sh"
+readonly GITHUB_REPO_URL="https://github.com/usmannasir/cyberpanel"
+readonly GITHUB_RAW_URL="https://raw.githubusercontent.com/usmannasir/cyberpanel"
+
+# Default values
 DEV="OFF"
-#BRANCH="stable"
-#POSTFIX_VARIABLE="ON"
-#POWERDNS_VARIABLE="ON"
-#PUREFTPD_VARIABLE="ON"
+
 PROVIDER="undefined"
 SERIAL_NO=""
 DIR=$(pwd)
-TEMP=$(curl --silent https://cyberpanel.net/version.txt)
+TOTAL_RAM=$(free -m | awk '/Mem\:/ { print $2 }')
+
+# Version information
+TEMP=$(curl --silent --max-time "$DEFAULT_TIMEOUT" "$CYBERPANEL_VERSION_URL")
 CP_VER1=${TEMP:12:3}
 CP_VER2=${TEMP:25:1}
 SERVER_OS="CentOS"
 VERSION="OLS"
 LICENSE_KEY=""
-KEY_SIZE=""
-ADMIN_PASS="1234567"
+ADMIN_PASS="$DEFAULT_ADMIN_PASS"
 MEMCACHED="ON"
 REDIS="ON"
-TOTAL_RAM=$(free -m | awk '/Mem\:/ { print $2 }')
+
+# Function to perform common sed replacements
+perform_sed_replacements() {
+	local file="$1"
+	
+	# Replace cyberpanel.sh with DOWNLOAD_SERVER
+	sed -i 's|cyberpanel.sh|'"$DOWNLOAD_SERVER"'|g' "$file"
+	
+	# Replace mirror.cyberpanel.net with DOWNLOAD_SERVER
+	sed -i 's|mirror.cyberpanel.net|'"$DOWNLOAD_SERVER"'|g' "$file"
+	
+	# Replace git clone with echo downloaded
+	sed -i 's|git clone https://github.com/usmannasir/cyberpanel|echo downloaded|g' "$file"
+	
+	# Replace http with https
+	sed -i 's|http://|https://|g' "$file"
+	
+	# Replace wget rpms.litespeedtech.com with --no-check-certificate
+	sed -i 's|wget https://rpms.litespeedtech.com/debian/|wget --no-check-certificate https://rpms.litespeedtech.com/debian/|g' "$file"
+	
+	# Replace powerdns repo URL
+	sed -i 's|https://repo.powerdns.com/repo-files/centos-auth-42.repo|https://'"$DOWNLOAD_SERVER"'/powerdns/powerdns.repo|g' "$file"
+	
+	# Replace snappymail URL
+	sed -i 's|https://snappymail.eu/repository/latest.tar.gz|https://'"$DOWNLOAD_SERVER"'/repository/latest.tar.gz|g' "$file"
+	
+	# Replace litespeed repo RPM
+	sed -i 's|rpm -ivh https://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el7.noarch.rpm|curl -o /etc/yum.repos.d/litespeed.repo https://'"$DOWNLOAD_SERVER"'/litespeed/litespeed.repo|g' "$file"
+	
+	# Replace restic repo URL
+	sed -i 's|https://copr.fedorainfracloud.org/coprs/copart/restic/repo/epel-7/copart-restic-epel-7.repo|https://'"$DOWNLOAD_SERVER"'/restic/restic.repo|g' "$file"
+	
+	# Replace gf-release RPM
+	sed -i 's|yum -y install https://cyberpanel.sh/gf-release-latest.gf.el7.noarch.rpm|wget -O /etc/yum.repos.d/gf.repo https://'"${DOWNLOAD_SERVER}"'/gf-plus/gf.repo|g' "$file"
+	
+	# Replace dovecot repo
+	sed -i 's|dovecot-2.3-latest|dovecot-2.3-latest-mirror|g' "$file"
+	
+	# Replace git clone with wget for CN
+	sed -i 's|git clone https://github.com/usmannasir/cyberpanel|wget https://cyberpanel.sh/cyberpanel-git.tar.gz \&\& tar xzvf cyberpanel-git.tar.gz|g' "$file"
+	
+	# Replace dovecot repo URL
+	sed -i "s|https://repo.dovecot.org/ce-2.3-latest/centos/\$releasever/RPMS/\$basearch|https://${DOWNLOAD_SERVER}/dovecot/|g" "$file"
+	
+	# Replace DOWNLOAD_SERVER back to cyberpanel.sh for specific cases
+	sed -i 's|'"${DOWNLOAD_SERVER}"'|cyberpanel.sh|g' "$file"
+}
 
 license_validation() {
 CURRENT_DIR=$(pwd)
@@ -46,14 +113,14 @@ cd "/root/cyberpanel-tmp/lsws-$LSWS_STABLE_VER/bin" || exit
 
 if [[ $LICENSE_KEY == "TRIAL" ]] ; then
 	if ./lshttpd -V 2>&1 | grep  "ERROR" ; then
-	echo -e "\n\nIt apeears to have some issue with license , please check above result..."
+	echo -e "\n\nIt appears to have some issue with license , please check above result..."
 	exit
 	fi
 	LICENSE_KEY="1111-2222-3333-4444"
 else
 	if ./lshttpd -r 2>&1 | grep "ERROR" ; then
 	./lshttpd -r
-	echo -e "\n\nIt apeears to have some issue with license , please check above result..."
+	echo -e "\n\nIt appears to have some issue with license , please check above result..."
 	exit
 	fi
 fi
@@ -65,42 +132,20 @@ rm -rf /root/cyberpanel-tmp
 }
 
 special_change(){
-sed -i 's|cyberpanel.sh|'"$DOWNLOAD_SERVER"'|g' install.py
-sed -i 's|mirror.cyberpanel.net|'"$DOWNLOAD_SERVER"'|g' install.py
-sed -i 's|git clone https://github.com/usmannasir/cyberpanel|echo downloaded|g' install.py
-#change to CDN first, regardless country
-sed -i 's|http://|https://|g' install.py
+# Use consolidated function for common sed replacements
+perform_sed_replacements "install.py"
+perform_sed_replacements "installCyberPanel.py"
 
-LATEST_URL="https://update.litespeedtech.com/ws/latest.php"
+LATEST_URL="$LITESPEED_UPDATE_URL"
 #LATEST_URL="https://cyberpanel.sh/latest.php"
 curl --silent -o /tmp/lsws_latest "$LATEST_URL" 2>/dev/null
 LSWS_STABLE_LINE=$(grep LSWS_STABLE /tmp/lsws_latest)
 LSWS_STABLE_VER=$(expr "$LSWS_STABLE_LINE" : '.*LSWS_STABLE=\(.*\) BUILD .*')
 
 if [[ $SERVER_COUNTRY == "CN" ]] ; then
-#line1="$(grep -n "github.com/usmannasir/cyberpanel" install.py | head -n 1 | cut -d: -f1)"
-#line2=$((line1 - 1))
-#sed -i "${line2}i\ \ \ \ \ \ \ \ subprocess.call(command, shell=True)" install.py
-#sed -i "${line2}i\ \ \ \ \ \ \ \ command = 'tar xzvf cyberpanel-git.tar.gz'" install.py
-#sed -i "${line2}i\ \ \ \ \ \ \ \ subprocess.call(command, shell=True)" install.py
-#sed -i "${line2}i\ \ \ \ \ \ \ \ command = 'wget cyberpanel.sh/cyberpanel-git.tar.gz'" install.py
-sed -i 's|wget https://rpms.litespeedtech.com/debian/|wget --no-check-certificate https://rpms.litespeedtech.com/debian/|g' install.py
-sed -i 's|https://repo.powerdns.com/repo-files/centos-auth-42.repo|https://'"$DOWNLOAD_SERVER"'/powerdns/powerdns.repo|g' installCyberPanel.py
-sed -i 's|https://snappymail.eu/repository/latest.tar.gz|https://'"$DOWNLOAD_SERVER"'/repository/latest.tar.gz|g' install.py
-
-sed -i 's|rpm -ivh https://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el7.noarch.rpm|curl -o /etc/yum.repos.d/litespeed.repo https://'"$DOWNLOAD_SERVER"'/litespeed/litespeed.repo|g' install.py
-
-
-sed -i 's|https://copr.fedorainfracloud.org/coprs/copart/restic/repo/epel-7/copart-restic-epel-7.repo|https://'"$DOWNLOAD_SERVER"'/restic/restic.repo|g' install.py
-
-sed -i 's|yum -y install https://cyberpanel.sh/gf-release-latest.gf.el7.noarch.rpm|wget -O /etc/yum.repos.d/gf.repo https://'"${DOWNLOAD_SERVER}"'/gf-plus/gf.repo|g' install.py
-sed -i 's|dovecot-2.3-latest|dovecot-2.3-latest-mirror|g' install.py
-sed -i 's|git clone https://github.com/usmannasir/cyberpanel|wget https://cyberpanel.sh/cyberpanel-git.tar.gz \&\& tar xzvf cyberpanel-git.tar.gz|g' install.py
-sed -i "s|https://repo.dovecot.org/ce-2.3-latest/centos/\$releasever/RPMS/\$basearch|https://${DOWNLOAD_SERVER}/dovecot/|g" install.py
-sed -i 's|'"${DOWNLOAD_SERVER}"'|cyberpanel.sh|g' install.py
-sed -i 's|https://www.litespeedtech.com/packages/5.0/lsws-5.4.2-ent-x86_64-linux.tar.gz|https://'"${DOWNLOAD_SERVER}"'/litespeed/lsws-'"${LSWS_STABLE_VER}"'-ent-x86_64-linux.tar.gz|g' installCyberPanel.py
-# global change for CN , regardless provider and system
-
+	# Additional CN-specific replacements
+	sed -i 's|https://www.litespeedtech.com/packages/5.0/lsws-5.4.2-ent-x86_64-linux.tar.gz|https://'"${DOWNLOAD_SERVER}"'/litespeed/lsws-'"${LSWS_STABLE_VER}"'-ent-x86_64-linux.tar.gz|g' installCyberPanel.py
+	
 	if [[ $SERVER_OS == "CentOS" ]] ; then
 		DIR=$(pwd)
 		cd "$DIR/mysql" || exit
@@ -272,24 +317,24 @@ fi
 
 if ! grep -q "pid_max" /etc/rc.local; then
 		if [[ $SERVER_OS == "CentOS" ]] ; then
-		echo "echo 1000000 > /proc/sys/kernel/pid_max
-echo 1 > /sys/kernel/mm/ksm/run" >> /etc/rc.d/rc.local
+		echo "echo $PID_MAX > /proc/sys/kernel/pid_max
+echo $KSM_RUN > /sys/kernel/mm/ksm/run" >> /etc/rc.d/rc.local
 		chmod +x /etc/rc.d/rc.local
 		else
-		echo "echo 1000000 > /proc/sys/kernel/pid_max
-echo 1 > /sys/kernel/mm/ksm/run" >> /etc/rc.local
+		echo "echo $PID_MAX > /proc/sys/kernel/pid_max
+echo $KSM_RUN > /sys/kernel/mm/ksm/run" >> /etc/rc.local
 		chmod +x /etc/rc.local
 		fi
-	echo "fs.file-max = 65535" >> /etc/sysctl.conf
+	echo "fs.file-max = $FILE_MAX" >> /etc/sysctl.conf
 	sysctl -p > /dev/null
-	echo "*                soft    nofile          65535
-*                hard    nofile          65535
-root             soft    nofile          65535
-root             hard    nofile          65535
-*                soft    nproc           65535
-*                hard    nproc           65535
-root             soft    nproc           65535
-root             hard    nproc           65535" >> /etc/security/limits.conf
+	echo "*                soft    nofile          $NOFILE_LIMIT
+*                hard    nofile          $NOFILE_LIMIT
+root             soft    nofile          $NOFILE_LIMIT
+root             hard    nofile          $NOFILE_LIMIT
+*                soft    nproc           $NPROC_LIMIT
+*                hard    nproc           $NPROC_LIMIT
+root             soft    nproc           $NPROC_LIMIT
+root             hard    nproc           $NPROC_LIMIT" >> /etc/security/limits.conf
 fi
 
 #sed -i 's|#DefaultLimitNOFILE=|DefaultLimitNOFILE=65535|g' /etc/systemd/system.conf
@@ -303,8 +348,8 @@ if [ ! -f $SWAP_FILE ] ; then
 	if [[ $TOTAL_SWAP -gt $TOTAL_RAM ]] || [[ $TOTAL_SWAP -eq $TOTAL_RAM ]] ; then
 		echo "SWAP check..."
 	else
-		if [[ $SET_SWAP -gt "2049" ]] ; then
-			SET_SWAP="2048"
+		if [[ $SET_SWAP -gt "$DEFAULT_SWAP_SIZE_MB" ]] ; then
+			SET_SWAP="$DEFAULT_SWAP_SIZE_MB"
 		else
 			echo "Checking SWAP..."
 		fi
@@ -494,12 +539,12 @@ fi
 check_root() {
 echo -e "Checking root privileges...\n"
 if [[ $(id -u) != 0 ]]; then
-	echo -e "You must use root account to do this"
+	echo -e "You must use a root account to do this"
 	echo -e "or run following command: (do NOT miss the quotes)"
-	echo -e "\e[31msudo su -c \"sh <(curl https://cyberpanel.sh || wget -O - https://cyberpanel.sh)\"\e[39m"
+	echo -e "\e[31msudo su -c \"sh <(curl $CYBERPANEL_SH_URL || wget -O - $CYBERPANEL_SH_URL)\"\e[39m"
 	exit 1
 else
-	echo -e "You are runing as root...\n"
+	echo -e "You are running as root...\n"
 fi
 }
 
@@ -539,7 +584,7 @@ fi
 
 show_help() {
 echo -e "\nCyberPanel Installer Script Help\n"
-echo -e "\nUsage: wget https://cyberpanel.sh/cyberpanel.sh"
+echo -e "\nUsage: wget $CYBERPANEL_SH_URL/cyberpanel.sh"
 echo -e "\nchmod +x cyberpanel.sh"
 echo -e "\n./cyberpanel.sh -v ols/SERIAL_NUMBER -c 1 -a 1"
 echo -e "\n -v or --version: choose to install CyberPanel OpenLiteSpeed or CyberPanel Enterprise, available options are \e[31mols\e[39m and \e[31mSERIAL_NUMBER\e[39m, default ols"
@@ -725,7 +770,7 @@ printf "%s" "Choose [d]fault, [r]andom or [s]et password: [d/r/s] "
 read -r TMP_YN
 
 if [[ $TMP_YN =~ ^(d|D| ) ]] || [[ -z $TMP_YN ]]; then
-	ADMIN_PASS="1234567"
+	ADMIN_PASS="$DEFAULT_ADMIN_PASS"
 	echo -e "\nAdmin password will be set to $ADMIN_PASS\n"
 elif [[ $TMP_YN =~ ^(r|R) ]] ; then
 	ADMIN_PASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16 ; echo '')
@@ -736,11 +781,11 @@ elif [[ $TMP_YN =~ ^(s|S) ]] ; then
 	read -r TMP_YN
 		if [ -z "$TMP_YN" ] ; then
   		echo -e "\nPlease do not use empty string...\n"
-			exit
+			exit 1
 		fi
-		if [ ${#TMP_YN} -lt 8 ] ; then
-			echo -e "\nPassword lenth less than 8 digital, please choose a more complicated password.\n"
-			exit
+		if [ ${#TMP_YN} -lt $MIN_PASSWORD_LENGTH ] ; then
+			echo -e "\nPassword length less than $MIN_PASSWORD_LENGTH characters, please choose a more complicated password.\n"
+			exit 1
 		fi
 	TMP_YN1=$TMP_YN
 	echo -e "\nPlease confirm  your password:\n"
@@ -748,17 +793,17 @@ elif [[ $TMP_YN =~ ^(s|S) ]] ; then
 	read -r TMP_YN
 	if [ -z "$TMP_YN" ] ; then
   	echo -e "\nPlease do not use empty string...\n"
-		exit
+		exit 1
 	fi
 	TMP_YN2=$TMP_YN
 	if [ "$TMP_YN1" = "$TMP_YN2" ] ; then
 		ADMIN_PASS=$TMP_YN1
 	else
 		echo -e "\nRepeated password didn't match , please check...\n"
-		exit
+		exit 1
 	fi
 else
-	ADMIN_PASS="1234567"
+	ADMIN_PASS="$DEFAULT_ADMIN_PASS"
 	echo -e "\nAdmin password will be set to $ADMIN_PASS\n"
 fi
 
@@ -867,7 +912,7 @@ fi
 # shellcheck disable=SC1091
 source /usr/local/CyberPanel/bin/activate
 rm -rf requirements.txt
-wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/1.8.0/requirments.txt
+wget -O requirements.txt "$GITHUB_RAW_URL/1.8.0/requirements.txt"
 pip install --ignore-installed -r requirements.txt
 fi
 
@@ -878,7 +923,7 @@ if [[ $DEV == "ON" ]] ; then
 	python3.6 -m venv CyberPanel
 	# shellcheck disable=SC1091
 	source /usr/local/CyberPanel/bin/activate
-	wget -O requirements.txt "https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt"
+	wget -O requirements.txt "$GITHUB_RAW_URL/$BRANCH_NAME/requirements.txt"
 	pip3.6 install --ignore-installed -r requirements.txt
 fi
 
@@ -888,23 +933,23 @@ if [ -f requirements.txt ] && [ -d cyberpanel ] ; then
 fi
 
 if [[ $SERVER_COUNTRY == "CN" ]] ; then
-	wget https://cyberpanel.sh/cyberpanel-git.tar.gz
+	wget $CYBERPANEL_SH_URL/cyberpanel-git.tar.gz
 	tar xzvf cyberpanel-git.tar.gz > /dev/null
 	cp -r cyberpanel /usr/local/cyberpanel
 	cd cyberpanel/install || exit
 else
 	if [[ $DEV == "ON" ]] ; then
-	git clone https://github.com/usmannasir/cyberpanel
+	git clone "$GITHUB_REPO_URL"
 	cd cyberpanel || exit
 	git checkout "$BRANCH_NAME"
 	cd - || exit
 	cd cyberpanel/install || exit
 	else
-	git clone https://github.com/usmannasir/cyberpanel
+	git clone "$GITHUB_REPO_URL"
 	cd cyberpanel/install || exit
 	fi
 fi
-curl https://cyberpanel.sh/?version
+curl $CYBERPANEL_SH_URL/?version
 }
 
 after_install() {
@@ -933,7 +978,7 @@ if [[ $DEV == "ON" ]] ; then
 python3.6 -m venv /usr/local/CyberCP
 # shellcheck disable=SC1091
 source /usr/local/CyberCP/bin/activate
-	wget -O requirements.txt "https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt"
+	wget -O requirements.txt "$GITHUB_RAW_URL/$BRANCH_NAME/requirements.txt"
 pip3.6 install --ignore-installed -r requirements.txt
 systemctl restart lscpd
 fi
@@ -1034,7 +1079,7 @@ echo "                Current RAM  usage : $RAM2                         "
 echo "                                                                   "
 echo "                Installation time  : $ELAPSED                      "
 echo "                                                                   "
-echo "                Visit: https://$SERVER_IP:8090                     "
+echo "                Visit: https://$SERVER_IP:$CYBERPANEL_PORT                     "
 echo "                Panel username: admin                              "
 echo "                Panel password: $ADMIN_PASS                            "
 #echo "                Mysql username: root                               "
@@ -1061,7 +1106,7 @@ else
 	echo -e "If your provider has a \e[31mnetwork-level firewall\033[39m"
 fi
 	echo -e "Please make sure you have opened following port for both in/out:"
-	echo -e "\033[0;32mTCP: 8090\033[39m for CyberPanel"
+	echo -e "\033[0;32mTCP: $CYBERPANEL_PORT\033[39m for CyberPanel"
 	echo -e "\033[0;32mTCP: 80\033[39m, \033[0;32mTCP: 443\033[39m and \033[0;32mUDP: 443\033[39m for webserver"
 	echo -e "\033[0;32mTCP: 21\033[39m and \033[0;32mTCP: 40110-40210\033[39m for FTP"
 	echo -e "\033[0;32mTCP: 25\033[39m, \033[0;32mTCP: 587\033[39m, \033[0;32mTCP: 465\033[39m, \033[0;32mTCP: 110\033[39m, \033[0;32mTCP: 143\033[39m and \033[0;32mTCP: 993\033[39m for mail service"
@@ -1238,7 +1283,7 @@ fi
 if [[ $SERVER_COUNTRY == "CN" ]] ; then
 DOWNLOAD_SERVER="cyberpanel.sh"
 else
-DOWNLOAD_SERVER="cdn.cyberpanel.sh"
+DOWNLOAD_SERVER="$CYBERPANEL_CDN_URL"
 fi
 
 check_OS
