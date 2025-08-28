@@ -104,29 +104,25 @@ class ACLManager:
     @staticmethod
     def FindIfChild():
         try:
-            ipFile = "/etc/cyberpanel/machineIP"
-            f = open(ipFile)
-            ipData = f.read()
-            ipAddress = ipData.split('\n', 1)[0]
+            from plogical.machineIP import get_machine_ip
+            ipAddress = get_machine_ip()
 
             config = json.loads(open('/home/cyberpanel/cluster', 'r').read())
             if config['failoverServerIP'] == ipAddress:
                 return 1
             else:
                 return 0
-        except:
+        except Exception:
             return 0
 
 
     @staticmethod
     def fetchIP():
         try:
-            ipFile = "/etc/cyberpanel/machineIP"
-            f = open(ipFile)
-            ipData = f.read()
-            return ipData.split('\n', 1)[0]
-        except BaseException:
-            return "192.168.100.1"
+            from plogical.machineIP import get_machine_ip
+            return get_machine_ip()
+        except Exception:
+            return "127.0.0.1"
 
     @staticmethod
     def validateInput(value, regex = None):
@@ -163,11 +159,9 @@ class ACLManager:
         finalResponse['lastName'] = admin.lastName
 
         try:
-            ipFile = "/etc/cyberpanel/machineIP"
-            f = open(ipFile)
-            ipData = f.read()
-            serverIPAddress = ipData.split('\n', 1)[0]
-        except BaseException as msg:
+            from plogical.machineIP import get_machine_ip
+            serverIPAddress = get_machine_ip()
+        except Exception:
             serverIPAddress = "192.168.100.1"
 
         finalResponse['serverIPAddress'] = serverIPAddress
@@ -999,10 +993,8 @@ class ACLManager:
 
     @staticmethod
     def GetServerIP():
-        ipFile = "/etc/cyberpanel/machineIP"
-        f = open(ipFile)
-        ipData = f.read()
-        return ipData.split('\n', 1)[0]
+        from plogical.machineIP import get_machine_ip
+        return get_machine_ip()
 
     @staticmethod
     def CheckForPremFeature(feature):

@@ -58,10 +58,8 @@ Please launch the <a href="/base/onboarding">set-up wizard</a> to get maximum ou
 
                     self.data['onboarding'] = 2
 
-                ipFile = "/etc/cyberpanel/machineIP"
-                f = open(ipFile)
-                ipData = f.read()
-                ipAddress = ipData.split('\n', 1)[0]
+                from plogical.machineIP import get_machine_ip
+                ipAddress = get_machine_ip()
                 self.data['ipAddress'] = ipAddress
                 self.data['fullName'] = '%s %s' % (admin.firstName, admin.lastName)
                 # self.data['serverCheck'] = 1

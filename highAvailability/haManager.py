@@ -87,10 +87,8 @@ class HAManager(multi.Thread):
             if currentACL['admin'] == 0:
                 return proc.ajax(0, 'Only administrators can create clusters.')
 
-            ipFile = "/etc/cyberpanel/machineIP"
-            f = open(ipFile)
-            ipData = f.read()
-            ipAddress = ipData.split('\n', 1)[0]
+            from plogical.machineIP import get_machine_ip
+            ipAddress = get_machine_ip()
 
             command = 'sudo docker swarm init --advertise-addr ' + ipAddress
             ProcessUtilities.executioner(command)

@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  cyberpanel:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - /app/__pycache__
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DEBUG=True
+      - DJANGO_SETTINGS_MODULE=CyberCP.settings_dev
+      - MYSQL_DATABASE=cyberpanel
+      - MYSQL_USER=cyberpanel
+      - MYSQL_PASSWORD=SLTUIUxqhulwsh
+      - MYSQL_HOST=db
+      - MYSQL_PORT=3306
+      - MYSQL_ROOT_PASSWORD=SLTUIUxqhulwsh
+      - PYTHONUNBUFFERED=1
+      - DJANGO_SUPERUSER_USERNAME=admin
+      - DJANGO_SUPERUSER_PASSWORD=admin123
+      - DJANGO_SUPERUSER_EMAIL=admin@cyberpanel.local
+    command: >
+      sh -c "
+        python manage.py wait_for_db &&
+        python manage.py migrate &&
+        python manage.py collectstatic --noinput &&
+        python manage.py runserver 0.0.0.0:8000
+      "
+    networks:
+      - cyberpanel_network
+
+  db:
+    image: mariadb:10.11
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: SLTUIUxqhulwsh
+      MYSQL_DATABASE: cyberpanel
+      MYSQL_USER: cyberpanel
+      MYSQL_PASSWORD: SLTUIUxqhulwsh
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      timeout: 20s
+      retries: 10
+      interval: 10s
+      start_period: 10s
+    networks:
+      - cyberpanel_network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: cyberpanel
+      PMA_PASSWORD: SLTUIUxqhulwsh
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cyberpanel_network
+
+volumes:
+  mysql_data:
+
+networks:
+  cyberpanel_network:
+    driver: bridge

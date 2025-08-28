@@ -1,0 +1,126 @@
+/* Dashboard panels */
+
+.dashboard-box {
+    text-align: center;
+}
+.dashboard-box .content-wrapper {
+    overflow: hidden;
+    margin: 0 15px 15px;
+    padding: 15px 0 0;
+}
+.dashboard-box canvas {
+    display: block !important;
+    margin: 0 auto;
+}
+.dashboard-box .header {
+    font-size: 14px;
+    line-height: 1.3em;
+    padding: 0 0 15px;
+    text-align: right;
+    display: block;
+}
+.dashboard-box .header .btn {
+    display: inline-block;
+}
+.dashboard-box .header > .glyph-icon {
+    display: block;
+    float: left;
+    width: 20px;
+}
+.dashboard-box .header > span {
+    font-size: 12px;
+    font-weight: bold;
+    display: block;
+    opacity: .80;
+    -moz-opacity: .80;
+    filter: alpha(opacity: 80);
+}
+.dashboard-box .button-pane {
+    border-top: 0;
+    color: #fff;
+    background: rgba(0, 0, 0, .08);
+}
+.bg-white.dashboard-box .button-pane {
+    border-top-style: solid;
+    border-top-width: 1px;
+}
+.dashboard-box .heading {
+    font-size: 15px;
+    font-weight: bold;
+    float: left;
+}
+.dashboard-box .center-div {
+    margin: 5px auto -15px;
+}
+.dashboard-heading {
+    font-size: 14px;
+    padding: 0 0 10px;
+}
+.dashboard-heading span {
+    font-size: 12px;
+    display: block;
+}
+body .button-pane.button-pane-alt {
+    background: transparent !important;
+}
+.dashboard-panel .chosen-container-single .chosen-single span {
+    padding-right: 40px;
+}
+.dashboard-panel .chosen-container {
+    margin-top: -3px;
+    text-align: left;
+}
+a.dashboard-box,
+a.dashboard-box > span {
+    display: block;
+}
+a.dashboard-box .button-pane {
+    text-align: center;
+    text-transform: uppercase;
+}
+a.dashboard-box .button-pane .heading {
+    font-weight: normal;
+}
+.dashboard-box-chart .bs-label {
+    position: absolute;
+    right: 15px;
+    top: 15px;
+}
+.dashboard-box-chart .header {
+    text-align: left;
+    font-size: 28px;
+    font-weight: 100;
+    letter-spacing: 1px;
+    line-height: 1;
+}
+.dashboard-box-chart .header span {
+    text-transform: uppercase;
+    letter-spacing: 0;
+    padding: 10px 0 0;
+    line-height: 1.8em;
+    text-align: center;
+    opacity: .80;
+    -moz-opacity: .80;
+    filter: alpha(opacity: 80);
+}
+.dashboard-box-chart .header span b {
+    opacity: .65;
+    -moz-opacity: .65;
+    filter: alpha(opacity: 65);
+}
+.dashboard-box-chart .list-grade {
+    opacity: .50;
+    -moz-opacity: .50;
+    filter: alpha(opacity: 50);
+    margin-top: 25px;
+}
+.dashboard-box-chart .button-pane {
+    padding: 10px 10px 10px 15px;
+}
+.dashboard-box-chart .button-pane .btn .glyph-icon {
+    min-width: 11px;
+    display: block;
+}
+.dashboard-box-chart .button-pane .size-md {
+    font-size: 16px;
+}

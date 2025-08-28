@@ -1,0 +1,27 @@
+	/* justGage */
+	
+	.xs-gauge {
+	    width: 90px;
+	    height: 70px;
+	    margin: 0 auto;
+	}
+	.sm-gauge {
+	    width: 130px;
+	    height: 100px;
+	    margin: 0 auto;
+	}
+	.md-gauge {
+	    width: 170px;
+	    height: 120px;
+	    margin: 0 auto;
+	}
+	.lg-gauge {
+	    width: 240px;
+	    height: 150px;
+	    margin: 0 auto;
+	}
+	.xl-gauge {
+	    width: 340px;
+	    height: 180px;
+	    margin: 0 auto;
+	}

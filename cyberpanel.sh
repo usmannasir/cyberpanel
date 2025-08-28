@@ -21,31 +21,36 @@ mkdir -p "$LOG_DIR" 2>/dev/null || {
 # Logging functions
 log_info() {
     local message="$1"
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    local timestamp
+    timestamp=$(date '+%Y-%m-%d %H:%M:%S')
     echo "[$timestamp] [INFO] $message" | tee -a "$LOG_FILE"
 }
 
 log_error() {
     local message="$1"
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    local timestamp
+    timestamp=$(date '+%Y-%m-%d %H:%M:%S')
     echo "[$timestamp] [ERROR] $message" | tee -a "$LOG_FILE" >&2
 }
 
 log_warning() {
     local message="$1"
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    local timestamp
+    timestamp=$(date '+%Y-%m-%d %H:%M:%S')
     echo "[$timestamp] [WARNING] $message" | tee -a "$LOG_FILE"
 }
 
 log_debug() {
     local message="$1"
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    local timestamp
+    timestamp=$(date '+%Y-%m-%d %H:%M:%S')
     echo "[$timestamp] [DEBUG] $message" >> "$DEBUG_LOG_FILE"
 }
 
 log_command() {
     local command="$1"
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    local timestamp
+    timestamp=$(date '+%Y-%m-%d %H:%M:%S')
     echo "[$timestamp] [COMMAND] Executing: $command" >> "$DEBUG_LOG_FILE"
 
     # Execute command and capture output
@@ -67,7 +72,8 @@ log_command() {
 
 log_function_start() {
     local function_name="$1"
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    local timestamp
+    timestamp=$(date '+%Y-%m-%d %H:%M:%S')
     echo "[$timestamp] [FUNCTION] Starting: $function_name" | tee -a "$LOG_FILE"
     echo "[$timestamp] [FUNCTION] Starting: $function_name with args: ${@:2}" >> "$DEBUG_LOG_FILE"
 }
@@ -75,8 +81,9 @@ log_function_start() {
 log_function_end() {
     local function_name="$1"
     local exit_code="${2:-0}"
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    if [ $exit_code -eq 0 ]; then
+    local timestamp
+    timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    if [ "$exit_code" -eq 0 ]; then
         echo "[$timestamp] [FUNCTION] Completed: $function_name" >> "$DEBUG_LOG_FILE"
     else
         echo "[$timestamp] [FUNCTION] Failed: $function_name (exit code: $exit_code)" | tee -a "$LOG_FILE"
@@ -420,7 +427,7 @@ do
       log_warning "Command failed, retry $i/50: $1"
       # Exponential backoff: 1s, 2s, 4s, 8s, then cap at 10s
       if [[ $i -le 4 ]]; then
-        sleep $((2**($i-1)))
+        sleep $((2**(i-1)))
       else
         sleep 10
       fi
@@ -706,6 +713,9 @@ echo -e "\nThis will install LiteSpeed Enterise , replace LICENSE_KEY to actual 
 
 Check_Argument() {
 log_function_start "Check_Argument" "$@"
+# Store original arguments before processing
+original_args=("$@")
+
 if  [[ "$#" = "0" ]] || [[ "$#" = "1" && "$1" = "--debug" ]] || [[ "$#" = "1" && "$1" = "--mirror" ]]; then
   echo -e "\nInitialized...\n"
 else
@@ -819,7 +829,7 @@ else
 fi
 
 if [[ "$Debug" = "On" ]] ; then
-  Debug_Log "Arguments" "${@}"
+  Debug_Log "Arguments" "${original_args[*]}"
 fi
 
 Debug_Log2 "Initialization completed..,2"
@@ -1573,7 +1583,7 @@ if ! grep -q "pid_max" /etc/rc.local 2>/dev/null ; then
 
   systemctl restart systemd-networkd >/dev/null 2>&1
   # Wait for network to come up, but check more frequently
-  for j in {1..6}; do
+  for _ in {1..6}; do
     sleep 0.5
     # Check if network is ready by trying to resolve DNS
     if ping -c 1 -W 1 8.8.8.8 >/dev/null 2>&1 || nslookup cyberpanel.sh >/dev/null 2>&1; then
@@ -1625,7 +1635,7 @@ if [ -f /root/cyberpanel-tmp ]; then
 fi
 
 mkdir /root/cyberpanel-tmp
-cd /root/cyberpanel-tmp || exit
+cd /root/cyberpanel-tmp || { echo "Failed to cd to /root/cyberpanel-tmp"; exit 1; }
 
 Retry_Command "wget https://cyberpanel.sh/www.litespeedtech.com/packages/${LSWS_Stable_Version:0:1}.0/lsws-$LSWS_Stable_Version-ent-x86_64-linux.tar.gz"
 tar xzvf "lsws-$LSWS_Stable_Version-ent-x86_64-linux.tar.gz" >/dev/null
@@ -1974,13 +1984,13 @@ if [[ "$Watchdog" = "On" ]]; then
   chmod 700 /etc/cyberpanel/watchdog.sh
   ln -s /etc/cyberpanel/watchdog.sh /usr/local/bin/watchdog
   #shellcheck disable=SC2009
-  pid=$(ps aux | grep "watchdog lsws" | grep -v grep | awk '{print $2}')
+  pid=$(pgrep -f "watchdog lsws")
   if [[ $pid = "" ]]; then
     nohup watchdog lsws >/dev/null 2>&1 &
   fi
   echo -e "Checking MariaDB ..."
   #shellcheck disable=SC2009
-  pid=$(ps aux | grep "watchdog mariadb" | grep -v grep | awk '{print $2}')
+  pid=$(pgrep -f "watchdog mariadb")
   if [[ $pid = "" ]]; then
     nohup watchdog mariadb >/dev/null 2>&1 &
   fi
@@ -2006,7 +2016,6 @@ fi
 Post_Install_Display_Final_Info() {
 log_function_start "Post_Install_Display_Final_Info"
 log_info "Preparing final installation information"
-snappymailAdminPass=$(grep SetPassword /usr/local/CyberCP/public/snappymail.php| sed -e 's|$oConfig->SetPassword(||g' -e "s|');||g" -e "s|'||g")
 Elapsed_Time="$((Time_Count / 3600)) hrs $(((SECONDS / 60) % 60)) min $((Time_Count % 60)) sec"
 echo "###################################################################"
 echo "                CyberPanel Successfully Installed                  "
@@ -2331,7 +2340,7 @@ Post_Install_CN_Replacement
 fi
 
 # If valid hostname is set that resolves externally we can issue an ssl. This will create the hostname as a website so we can issue the SSL and do our first login without SSL warnings or exceptions needed.
-HostName=$(hostname --fqdn); [ -n "$(dig @1.1.1.1 +short "$HostName")" ]  &&  echo "$HostName resolves to valid IP. Setting up hostname SSL" && cyberpanel createWebsite --package Default --owner admin --domainName $(hostname --fqdn) --email root@localhost --php 7.4 && cyberpanel hostNameSSL --domainName $(hostname --fqdn)
+HostName=$(hostname --fqdn); [ -n "$(dig @1.1.1.1 +short "$HostName")" ]  &&  echo "$HostName resolves to valid IP. Setting up hostname SSL" && cyberpanel createWebsite --package Default --owner admin --domainName "$(hostname --fqdn)" --email root@localhost --php 7.4 && cyberpanel hostNameSSL --domainName "$(hostname --fqdn)"
 
 
 }

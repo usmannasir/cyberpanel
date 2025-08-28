@@ -1377,10 +1377,8 @@ setuid=pdns
 
                 ## Also set localhost to this server
 
-                ipFile = "/etc/cyberpanel/machineIP"
-                f = open(ipFile)
-                ipData = f.read()
-                ipAddressLocal = ipData.split('\n', 1)[0]
+                from plogical.machineIP import get_machine_ip
+                ipAddressLocal = get_machine_ip()
 
                 self.LOCALHOST = ipAddressLocal
             except BaseException as msg:

@@ -1,0 +1,271 @@
+/* === Mobile devices - Portrait (320px wide) === */
+
+@media only screen and (min-width: 20em) {
+    .hero-box,
+    .hero-box-smaller {
+        padding: 3em 0;
+    }
+    .hero-heading {
+        font-size: 23px;
+    }
+    .hero-text {
+        font-size: 18px;
+    }
+    .hero-btn {
+        height: 40px;
+        line-height: 36px;
+        min-width: 200px;
+        font-size: 16px;
+        padding: 0 20px;
+        margin: 20px auto 0;
+    }
+    .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    .bg-holder {
+        display: none;
+    }
+    .features-tour-box .bg-holder {
+        display: none;
+    }
+}
+/* === Mobile devices - Landscape (480px wide) === */
+
+@media only screen and (min-width: 30em) {
+    .hero-box {
+        padding: 3em 0;
+    }
+    .hero-box-smaller {
+        padding: 2em 0;
+    }
+    .hero-heading {
+        font-size: 24px;
+    }
+    .hero-text {
+        font-size: 19px;
+    }
+    .hero-btn {
+        margin-bottom: 5px;
+    }
+}
+/* === Tablet devices - Portrait (768px wide) === */
+
+@media only screen and (min-width: 48em) {
+    .hero-box {
+        padding: 6em 0;
+    }
+    .hero-box-smaller {
+        padding: 4em 0;
+    }
+    .hero-heading {
+        font-size: 38px;
+    }
+    .hero-text {
+        font-size: 24px;
+    }
+    .hero-btn {
+        font-size: 23px;
+        height: 80px;
+        line-height: 77px;
+        padding: 0 30px;
+        min-width: 300px;
+        margin: 20px auto 0;
+    }
+
+    body .top-bar .user-account-btn {
+        display: block;
+    }
+}
+/* === Tablet devices - Landscape (900px wide) === */
+
+@media only screen and (min-width: 56.25em) {
+    .hero-box {
+        padding: 9em 0;
+    }
+    .hero-box-smaller {
+        padding: 6em 0;
+    }
+    .hero-heading {
+        font-size: 38px;
+    }
+    .hero-text {
+        font-size: 24px;
+    }
+
+    .container {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    body .main-header .header-nav.collapse {
+        display: block;
+    }
+    body .right-header-btn .search-btn {
+        display: block;
+    }
+    body #mobile-navigation {
+        display: none;
+    }
+
+    .bg-holder {
+        display: block;
+    }
+
+}
+/* === Netbook devices (1100px wide) === */
+
+@media only screen and (min-width: 68.75em) {
+    .hero-box {
+        padding: 13em 0;
+    }
+    .hero-box-smaller {
+        padding: 6em 0;
+    }
+    .hero-heading {
+        font-size: 42px;
+    }
+    .hero-text {
+        font-size: 26px;
+    }
+
+    body .main-header .header-logo {
+        width: 258px;
+    }
+    .features-tour-box .bg-holder {
+        display: block;
+    }
+}
+/* === Desktop devices (1300px wide) === */
+
+@media only screen and (min-width: 81.25em) {
+    .hero-box {
+        padding: 14em 0;
+    }
+    .hero-box-smaller {
+        padding: 6em 0;
+    }
+    .hero-heading {
+        font-size: 42px;
+    }
+    .hero-text {
+        font-size: 26px;
+    }
+
+}
+/* === Desktop devices (1600px wide) === */
+
+@media only screen and (min-width: 81.25em) {
+    .hero-box {
+        padding: 14em 0;
+    }
+    .hero-box-smaller {
+        padding: 6em 0;
+    }
+    .hero-heading {
+        font-size: 42px;
+    }
+    .hero-text {
+        font-size: 26px;
+    }
+}
+
+@media only screen and (max-width: 460px) {
+
+    .box-sm {
+        width: auto;
+    }
+
+    #page-content {
+        padding: 10px;
+    }
+
+    #page-title {
+        padding: 10px 0 15px;
+        text-align: center;
+    }
+
+    .col-xs-1, .col-xs-2, .col-xs-3, .col-xs-4, .col-xs-5, .col-xs-6, .col-xs-7, .col-xs-8, .col-xs-9, .col-xs-10, .col-xs-11, .col-xs-12, .col-sm-1, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9, .col-sm-10, .col-sm-11, .col-sm-12, .col-md-1, .col-md-2, .col-md-3, .col-md-4, .col-md-5, .col-md-6, .col-md-7, .col-md-8, .col-md-9, .col-md-10, .col-md-11, .col-md-12, .col-lg-1, .col-lg-2, .col-lg-3, .col-lg-4, .col-lg-5, .col-lg-6, .col-lg-7, .col-lg-8, .col-lg-9, .col-lg-10, .col-lg-11, .col-lg-12 {
+        margin-bottom: 20px;
+    }
+
+    .content-box {
+        margin-top: 0 !important;
+    }
+
+    .row.mrg20B {
+        margin-bottom: 0 !important;
+    }
+
+    .timeline-box .popover {
+        width: auto;
+    }
+
+    .header-buttons-separator,
+    #progress-btn,
+    #page-title p,
+    .dashboard-box .list-grade,
+    .tooltip .tooltip-arrow,
+    .todo-box .btn,
+    .todo-box .bs-label {
+        display: none;
+    }
+
+    .cta-box-btn a {
+        display: block;
+    }
+
+    .cta-box-btn a span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .testimonial-box-big .testimonial-content {
+        margin: 0;
+        padding: 10px;
+    }
+
+    .testimonial-box-big .testimonial-content p {
+        font-size: 14px;
+    }
+
+    .testimonial-box-big .testimonial-content .glyph-icon {
+        font-size: 25px;
+    }
+
+    .feature-box .feature-img {
+        display: none;
+    }
+
+    .feature-box .feature-content {
+        padding: 0;
+    }
+
+    .features-tour-box,
+    .xlarge-padding,
+    .large-padding {
+        padding: 25px 0;
+    }
+
+    .clients-title {
+        font-size: 25px;
+        padding: 0 10px;
+    }
+
+    .clients-desc {
+        font-size: 22px;
+        padding: 10px;
+    }
+
+    .tick-feature {
+        display: block;
+        text-align: left;
+    }
+
+    .tabs-nav li {
+        display: block;
+        margin: 5px;
+    }
+
+}

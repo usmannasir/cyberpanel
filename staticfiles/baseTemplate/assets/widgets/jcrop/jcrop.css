@@ -1,0 +1,202 @@
+/* jquery.Jcrop.css v0.9.12 - MIT License */
+/*
+  The outer-most container in a typical Jcrop instance
+  If you are having difficulty with formatting related to styles
+  on a parent element, place any fixes here or in a like selector
+
+  You can also style this element if you want to add a border, etc
+  A better method for styling can be seen below with .jcrop-light
+  (Add a class to the holder and style elements for that extended class)
+*/
+
+.jcrop-holder {
+    text-align: left;
+    direction: ltr;
+}
+/* Selection Border */
+
+.jcrop-vline,
+.jcrop-hline {
+    font-size: 0;
+    position: absolute;
+    background: #fff url('../../images/jcrop.gif');
+}
+.jcrop-vline {
+    width: 1px !important;
+    height: 100%;
+}
+.jcrop-vline.right {
+    right: 0;
+}
+.jcrop-hline {
+    width: 100%;
+    height: 1px !important;
+}
+.jcrop-hline.bottom {
+    bottom: 0;
+}
+/* Invisible click targets */
+
+.jcrop-tracker {
+    width: 100%;
+    height: 100%;
+    /* disable cut copy paste */
+    
+    -webkit-user-select: none;
+    /* "turn off" link highlight */
+    
+    -webkit-tap-highlight-color: transparent;
+    /* disable callout, image save panel */
+    
+    -webkit-touch-callout: none;
+}
+/* Selection Handles */
+
+.jcrop-handle {
+    font-size: 1px;
+    width: 7px;
+    height: 7px;
+    border: 1px #eee solid;
+    background-color: #333;
+}
+.jcrop-handle.ord-n {
+    top: 0;
+    left: 50%;
+    margin-top: -4px;
+    margin-left: -4px;
+}
+.jcrop-handle.ord-s {
+    bottom: 0;
+    left: 50%;
+    margin-bottom: -4px;
+    margin-left: -4px;
+}
+.jcrop-handle.ord-e {
+    top: 50%;
+    right: 0;
+    margin-top: -4px;
+    margin-right: -4px;
+}
+.jcrop-handle.ord-w {
+    top: 50%;
+    left: 0;
+    margin-top: -4px;
+    margin-left: -4px;
+}
+.jcrop-handle.ord-nw {
+    top: 0;
+    left: 0;
+    margin-top: -4px;
+    margin-left: -4px;
+}
+.jcrop-handle.ord-ne {
+    top: 0;
+    right: 0;
+    margin-top: -4px;
+    margin-right: -4px;
+}
+.jcrop-handle.ord-se {
+    right: 0;
+    bottom: 0;
+    margin-right: -4px;
+    margin-bottom: -4px;
+}
+.jcrop-handle.ord-sw {
+    bottom: 0;
+    left: 0;
+    margin-bottom: -4px;
+    margin-left: -4px;
+}
+/* Dragbars */
+
+.jcrop-dragbar.ord-n,
+.jcrop-dragbar.ord-s {
+    width: 100%;
+    height: 7px;
+}
+.jcrop-dragbar.ord-e,
+.jcrop-dragbar.ord-w {
+    width: 7px;
+    height: 100%;
+}
+.jcrop-dragbar.ord-n {
+    margin-top: -4px;
+}
+.jcrop-dragbar.ord-s {
+    bottom: 0;
+    margin-bottom: -4px;
+}
+.jcrop-dragbar.ord-e {
+    right: 0;
+    margin-right: -4px;
+}
+.jcrop-dragbar.ord-w {
+    margin-left: -4px;
+}
+/* The "jcrop-light" class/extension */
+
+.jcrop-light .jcrop-vline,
+.jcrop-light .jcrop-hline {
+    opacity: .70!important;
+    background: #fff;
+    filter: alpha(opacity=70) !important;
+}
+.jcrop-light .jcrop-handle {
+    border-color: #fff;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+    background-color: #000;
+}
+/* The "jcrop-dark" class/extension */
+
+.jcrop-dark .jcrop-vline,
+.jcrop-dark .jcrop-hline {
+    opacity: .7 !important;
+    background: #000;
+    filter: alpha(opacity=70) !important;
+}
+.jcrop-dark .jcrop-handle {
+    border-color: #000;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+    background-color: #fff;
+}
+/* Simple macro to turn off the antlines */
+
+.solid-line .jcrop-vline,
+.solid-line .jcrop-hline {
+    background: #fff;
+}
+/* Fix for twitter bootstrap et al. */
+
+.jcrop-holder img,
+img.jcrop-preview {
+    max-width: none;
+}
+/* Apply these styles only when #preview-pane has
+   been placed within the Jcrop widget */
+
+.jcrop-holder #preview-pane {
+    position: absolute;
+    z-index: 2000;
+    top: 10px;
+    right: -280px;
+    display: block;
+    padding: 6px;
+    border: 1px rgba(0, 0, 0, .4) solid;
+    -webkit-border-radius: 6px;
+    -moz-border-radius: 6px;
+    border-radius: 6px;
+    background-color: white;
+}
+/* The Javascript code will set the aspect ratio of the crop
+   area based on the size of the thumbnail preview,
+   specified here */
+
+#preview-pane .preview-container {
+    overflow: hidden;
+    width: 250px;
+    height: 170px;
+}

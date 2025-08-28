@@ -1,0 +1,74 @@
+    /* Info Buttons */
+    
+    .info-box {
+        position: relative;
+        display: block;
+        min-height: 57px;
+        padding: 10px;
+        border-width: 3px 0 0;
+        border-style: solid;
+    }
+    .info-box .stats {
+        display: block;
+        padding: 5px 0 0;
+    }
+    .info-box b {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        display: block;
+        white-space: nowrap;
+    }
+    .info-box .stats {
+        font-size: 30px;
+        line-height: 35px;
+        position: absolute;
+        right: 10px;
+        bottom: 10px;
+        height: 35px;
+        white-space: nowrap;
+    }
+    .info-box .stats span {
+        font-size: 70%;
+    }
+    .info-box.icon-wrapper {
+        overflow: hidden;
+        padding-left: 95px;
+    }
+    .info-box.icon-wrapper .icon-large {
+        font-size: 125px;
+        line-height: 50px;
+        position: absolute;
+        top: 50%;
+        left: -20px;
+        width: 50px;
+        height: 50px;
+        margin-top: -25px;
+    }
+    .chart-icon {
+        float: left;
+        margin-right: 20px;
+    }
+    .info-box-alt {
+        padding: 10px;
+        border-width: 0;
+    }
+    .info-box-alt .chart-icon {
+        margin-left: 5px;
+    }
+    .info-box-alt .stats {
+        float: right;
+        margin-right: 5px;
+    }
+    .info-box-alt .chart-icon {
+        margin-top: 3px;
+    }
+    .info-box-alt h3 {
+        font-size: 13px;
+        margin: 0;
+        margin: 0 0 10px;
+        padding: 0 0 10px;
+        text-transform: uppercase;
+        color: rgba(0, 0, 0, .5);
+        border-bottom: rgba(0, 0, 0, .3) solid 1px;
+    }

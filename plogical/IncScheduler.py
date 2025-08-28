@@ -243,10 +243,8 @@ class IncScheduler(multi.Thread):
     @staticmethod
     def runGoogleDriveBackups(type):
 
-        ipFile = "/etc/cyberpanel/machineIP"
-        f = open(ipFile)
-        ipData = f.read()
-        ipAddress = ipData.split('\n', 1)[0]
+        from plogical.machineIP import get_machine_ip
+        ipAddress = get_machine_ip()
 
         backupRunTime = time.strftime("%m.%d.%Y_%H-%M-%S")
         backupLogPath = "/usr/local/lscp/logs/local_backup_log." + backupRunTime

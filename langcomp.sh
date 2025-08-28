@@ -1,3 +1,4 @@
+#!/bin/bash
 # Create message files for all the languages
 django-admin makemessages -l zh-Hans
 django-admin makemessages -l bg

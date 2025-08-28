@@ -1,0 +1,53 @@
+    /* Login Box */
+    
+    .login-box {
+        padding: 10px 15px;
+    }
+    .login-box .user-img {
+        position: relative;
+        float: left;
+        width: 80px;
+        height: 80px;
+        margin-right: 15px;
+    }
+    .login-box .user-img a.change-img {
+        font-size: 8px;
+        line-height: 20px;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        display: none;
+        width: 100%;
+        height: 20px;
+        text-align: center;
+        text-transform: uppercase;
+        color: #fdfdfd;
+        background: rgba(0, 0, 0, .7);
+    }
+    .login-box .user-img:hover a.change-img {
+        display: block;
+    }
+    .login-box .user-img img {
+        width: 100%;
+        height: 100%;
+    }
+    .login-box .user-info span {
+        font-size: 17px;
+        display: block;
+        padding: 0 0 10px;
+    }
+    .login-box .user-info span i {
+        font-size: 80%;
+        font-style: normal;
+        display: block;
+        opacity: .70;
+        -moz-opacity: .70;
+        filter: alpha(opacity: 70);
+    }
+    .login-box .user-info a {
+        line-height: 16px;
+        display: inline-block;
+        height: 16px;
+        margin-right: 5px;
+        padding-right: 5px;
+    }

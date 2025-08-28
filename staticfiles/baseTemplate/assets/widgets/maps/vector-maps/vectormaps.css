@@ -1,0 +1,31 @@
+.jvectormap-label {
+    position: absolute;
+    display: none;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 3px;
+    font-size: 12px;
+    padding: 5px;
+    z-index: 1200;
+}
+
+.jvectormap-zoomin, 
+.jvectormap-zoomout {
+    position: absolute;
+    left: 10px;
+    border-radius: 3px;
+    padding: 5px;
+    cursor: pointer;
+    line-height: 10px;
+    border-width: 1px;
+    border-style: solid;
+    text-align: center;
+}
+
+.jvectormap-zoomin {
+    top: 10px;
+}
+
+.jvectormap-zoomout {
+    top: 35px;
+}

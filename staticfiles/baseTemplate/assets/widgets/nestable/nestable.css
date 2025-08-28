@@ -1,0 +1,203 @@
+/**
+ * Nestable
+ */
+
+.dd {
+    font-size: 13px;
+    line-height: 20px;
+    position: relative;
+    display: block;
+    margin: 15px 0 0;
+    padding: 0;
+    list-style: none;
+}
+.dd-list {
+    position: relative;
+    display: block;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.dd-list .dd-list {
+    padding-left: 30px;
+}
+.dd-collapsed .dd-list {
+    display: none;
+}
+.dd-item,
+.dd-empty,
+.dd-placeholder {
+    font-size: 13px;
+    line-height: 20px;
+    position: relative;
+    display: block;
+    min-height: 20px;
+    margin: 0;
+    padding: 0;
+}
+.dd-handle {
+    display: block;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    height: 30px;
+    margin: 5px 0;
+    padding: 5px 10px;
+    text-decoration: none;
+    color: #333;
+    border: 1px solid #ccc;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+    background: #fafafa;
+}
+.dd-handle:hover {
+    background: #fff;
+}
+.dd-item > button {
+    font-size: 12px;
+    line-height: 1;
+    position: relative;
+    display: block;
+    float: left;
+    overflow: hidden;
+    width: 25px;
+    height: 20px;
+    margin: 5px 0;
+    padding: 0;
+    cursor: pointer;
+    text-align: center;
+    white-space: nowrap;
+    text-indent: 100%;
+    border: 0;
+    background: transparent;
+}
+.dd-item > button:before {
+    position: absolute;
+    display: block;
+    width: 100%;
+    content: '+';
+    text-align: center;
+    text-indent: 0;
+}
+.dd-item > button[data-action='collapse']:before {
+    content: '-';
+}
+.dd-placeholder,
+.dd-empty {
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    min-height: 30px;
+    margin: 5px 0;
+    padding: 0;
+    border: 1px dashed #b6bcbf;
+    background: #f2fbff;
+}
+.dd-empty {
+    min-height: 100px;
+    border: 1px dashed #bbb;
+    background-color: #dfe8f1;
+    background-image: -webkit-linear-gradient(45deg, #fff 25%, transparent 25%, transparent 75%, #fff 75%, #fff), -webkit-linear-gradient(45deg, #fff 25%, transparent 25%, transparent 75%, #fff 75%, #fff);
+    background-image: -moz-linear-gradient(45deg, #fff 25%, transparent 25%, transparent 75%, #fff 75%, #fff), -moz-linear-gradient(45deg, #fff 25%, transparent 25%, transparent 75%, #fff 75%, #fff);
+    background-image: linear-gradient(45deg, #fff 25%, transparent 25%, transparent 75%, #fff 75%, #fff), linear-gradient(45deg, #fff 25%, transparent 25%, transparent 75%, #fff 75%, #fff);
+    background-position: 0 0, 30px 30px;
+    background-size: 60px 60px;
+}
+.dd-dragel {
+    position: absolute;
+    z-index: 9999;
+    pointer-events: none;
+}
+.dd-dragel > .dd-item .dd-handle {
+    margin-top: 0;
+}
+.dd-dragel .dd-handle {
+    -webkit-box-shadow: 2px 4px 6px 0 rgba(0, 0, 0, .1);
+    box-shadow: 2px 4px 6px 0 rgba(0, 0, 0, .1);
+}
+/**
+ * Nestable Extras
+ */
+
+#nestable-menu {
+    margin: 0 0 15px;
+    padding: 0;
+}
+#nestable-output,
+#nestable2-output {
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    width: 100%;
+    height: 7em;
+}
+#nestable2 .dd-handle {
+    color: #fff;
+    border: 1px solid #999;
+    background: #bbb;
+}
+#nestable2 .dd-handle:hover {
+    background: #bbb;
+}
+#nestable2 .dd-item > button:before {
+    color: #fff;
+}
+.dd-hover > .dd-handle {
+    background: #2ea8e5 !important;
+}
+/**
+ * Nestable Draggable Handles
+ */
+
+.dd3-content {
+    display: block;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    height: 30px;
+    margin: 5px 0;
+    padding: 5px 10px 5px 40px;
+    text-decoration: none;
+    color: #333;
+    border: 1px solid #ccc;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+    background: #fafafa;
+}
+.dd3-content:hover {
+    color: #2ea8e5;
+    background: #fff;
+}
+.dd-dragel > .dd3-item > .dd3-content {
+    margin: 0;
+}
+.dd3-item > button {
+    margin-left: 30px;
+}
+.dd3-handle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+    width: 30px;
+    margin: 0;
+    cursor: pointer;
+    white-space: nowrap;
+    text-indent: 100%;
+    border: 1px solid #aaa;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    background: #ddd;
+}
+.dd3-handle:before {
+    font-size: 20px;
+    font-weight: normal;
+    position: absolute;
+    top: 3px;
+    left: 0;
+    display: block;
+    width: 100%;
+    content: '≡';
+    text-align: center;
+    text-indent: 0;
+    color: #fff;
+}
+.dd3-handle:hover {
+    background: #ddd;
+}

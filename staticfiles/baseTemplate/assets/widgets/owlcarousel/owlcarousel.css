@@ -1,0 +1,471 @@
+/*
+ *  Core Owl Carousel CSS File
+ */
+
+.slider-wrapper .owl-wrapper:after {
+    line-height: 0;
+    display: block;
+    visibility: hidden;
+    clear: both;
+    height: 0;
+    content: '.';
+}
+.slider-wrapper {
+    position: relative;
+    display: none;
+    -ms-touch-action: pan-y;
+}
+.slider-wrapper .owl-wrapper {
+    position: relative;
+    display: none;
+    -webkit-transform: translate3d(0px, 0px, 0px);
+}
+.slider-wrapper .owl-wrapper-outer {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+}
+.slider-wrapper .owl-wrapper-outer.autoHeight {
+    -webkit-transition: height 500ms ease-in-out;
+    -moz-transition: height 500ms ease-in-out;
+    -ms-transition: height 500ms ease-in-out;
+    -o-transition: height 500ms ease-in-out;
+    transition: height 500ms ease-in-out;
+}
+.slider-wrapper .owl-item {
+    float: left;
+}
+.owl-controls .owl-page,
+.owl-controls .owl-buttons div {
+    cursor: pointer;
+}
+.owl-controls {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -khtml-user-select: none;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+/* mouse grab icon */
+
+.grabbing {
+    cursor: url('../../images/grabbing.png') 8 8, move;
+}
+/* fix */
+
+.slider-wrapper .owl-wrapper,
+.slider-wrapper .owl-item {
+    -webkit-transform: translate3d(0, 0, 0);
+    -moz-transform: translate3d(0, 0, 0);
+    -ms-transform: translate3d(0, 0, 0);
+    -webkit-backface-visibility: hidden;
+    -moz-backface-visibility: hidden;
+    -ms-backface-visibility: hidden;
+}
+/* CSS3 Transitions */
+
+.owl-origin {
+    -webkit-perspective: 1200px;
+    -webkit-perspective-origin-x: 50%;
+    -webkit-perspective-origin-y: 50%;
+    -moz-perspective: 1200px;
+    -moz-perspective-origin-x: 50%;
+    -moz-perspective-origin-y: 50%;
+    perspective: 1200px;
+}
+/* fade */
+
+.owl-fade-out {
+    z-index: 10;
+    -webkit-animation: fadeOut .7s both ease;
+    -moz-animation: fadeOut .7s both ease;
+    animation: fadeOut .7s both ease;
+}
+.owl-fade-in {
+    -webkit-animation: fadeIn .7s both ease;
+    -moz-animation: fadeIn .7s both ease;
+    animation: fadeIn .7s both ease;
+}
+/* backSlide */
+
+.owl-backSlide-out {
+    -webkit-animation: backSlideOut 1s both ease;
+    -moz-animation: backSlideOut 1s both ease;
+    animation: backSlideOut 1s both ease;
+}
+.owl-backSlide-in {
+    -webkit-animation: backSlideIn 1s both ease;
+    -moz-animation: backSlideIn 1s both ease;
+    animation: backSlideIn 1s both ease;
+}
+/* goDown */
+
+.owl-goDown-out {
+    -webkit-animation: scaleToFade .7s ease both;
+    -moz-animation: scaleToFade .7s ease both;
+    animation: scaleToFade .7s ease both;
+}
+.owl-goDown-in {
+    -webkit-animation: goDown .6s ease both;
+    -moz-animation: goDown .6s ease both;
+    animation: goDown .6s ease both;
+}
+/* scaleUp */
+
+.owl-fadeUp-in {
+    -webkit-animation: scaleUpFrom .5s ease both;
+    -moz-animation: scaleUpFrom .5s ease both;
+    animation: scaleUpFrom .5s ease both;
+}
+.owl-fadeUp-out {
+    -webkit-animation: scaleUpTo .5s ease both;
+    -moz-animation: scaleUpTo .5s ease both;
+    animation: scaleUpTo .5s ease both;
+}
+/* Keyframes */
+/*empty*/
+
+@-webkit-keyframes empty {
+    0% {
+        opacity: 1;
+    }
+}
+@-moz-keyframes empty {
+    0% {
+        opacity: 1;
+    }
+}
+@keyframes empty {
+    0% {
+        opacity: 1;
+    }
+}
+@-webkit-keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+@-moz-keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+@-webkit-keyframes fadeOut {
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+@-moz-keyframes fadeOut {
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+@keyframes fadeOut {
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+@-webkit-keyframes backSlideOut {
+    25% {
+        -webkit-transform: translateZ(-500px);
+        opacity: .5;
+    }
+    75% {
+        -webkit-transform: translateZ(-500px) translateX(-200%);
+        opacity: .5;
+    }
+    100% {
+        -webkit-transform: translateZ(-500px) translateX(-200%);
+        opacity: .5;
+    }
+}
+@-moz-keyframes backSlideOut {
+    25% {
+        -moz-transform: translateZ(-500px);
+        opacity: .5;
+    }
+    75% {
+        -moz-transform: translateZ(-500px) translateX(-200%);
+        opacity: .5;
+    }
+    100% {
+        -moz-transform: translateZ(-500px) translateX(-200%);
+        opacity: .5;
+    }
+}
+@keyframes backSlideOut {
+    25% {
+        transform: translateZ(-500px);
+        opacity: .5;
+    }
+    75% {
+        transform: translateZ(-500px) translateX(-200%);
+        opacity: .5;
+    }
+    100% {
+        transform: translateZ(-500px) translateX(-200%);
+        opacity: .5;
+    }
+}
+@-webkit-keyframes backSlideIn {
+    0%, 25% {
+        -webkit-transform: translateZ(-500px) translateX(200%);
+        opacity: .5;
+    }
+    75% {
+        -webkit-transform: translateZ(-500px);
+        opacity: .5;
+    }
+    100% {
+        -webkit-transform: translateZ(0) translateX(0);
+        opacity: 1;
+    }
+}
+@-moz-keyframes backSlideIn {
+    0%, 25% {
+        -moz-transform: translateZ(-500px) translateX(200%);
+        opacity: .5;
+    }
+    75% {
+        -moz-transform: translateZ(-500px);
+        opacity: .5;
+    }
+    100% {
+        -moz-transform: translateZ(0) translateX(0);
+        opacity: 1;
+    }
+}
+@keyframes backSlideIn {
+    0%, 25% {
+        transform: translateZ(-500px) translateX(200%);
+        opacity: .5;
+    }
+    75% {
+        transform: translateZ(-500px);
+        opacity: .5;
+    }
+    100% {
+        transform: translateZ(0) translateX(0);
+        opacity: 1;
+    }
+}
+@-webkit-keyframes scaleToFade {
+    to {
+        -webkit-transform: scale(.8);
+        opacity: 0;
+    }
+}
+@-moz-keyframes scaleToFade {
+    to {
+        -moz-transform: scale(.8);
+        opacity: 0;
+    }
+}
+@keyframes scaleToFade {
+    to {
+        transform: scale(.8);
+        opacity: 0;
+    }
+}
+@-webkit-keyframes goDown {
+    from {
+        -webkit-transform: translateY(-100%);
+    }
+}
+@-moz-keyframes goDown {
+    from {
+        -moz-transform: translateY(-100%);
+    }
+}
+@keyframes goDown {
+    from {
+        transform: translateY(-100%);
+    }
+}
+@-webkit-keyframes scaleUpFrom {
+    from {
+        -webkit-transform: scale(1.5);
+        opacity: 0;
+    }
+}
+@-moz-keyframes scaleUpFrom {
+    from {
+        -moz-transform: scale(1.5);
+        opacity: 0;
+    }
+}
+@keyframes scaleUpFrom {
+    from {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+@-webkit-keyframes scaleUpTo {
+    to {
+        -webkit-transform: scale(1.5);
+        opacity: 0;
+    }
+}
+@-moz-keyframes scaleUpTo {
+    to {
+        -moz-transform: scale(1.5);
+        opacity: 0;
+    }
+}
+@keyframes scaleUpTo {
+    to {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+.slider-wrapper .item {
+    float: left;
+}
+
+.owl-controls {
+    text-align: center;
+    color: #fff;
+}
+
+.owl-controls .owl-buttons .owl-prev {
+    left: 20px;
+    right: auto;
+}
+
+.owl-controls .owl-buttons .owl-next {
+    right: 20px;
+    left: auto;
+}
+
+.slider-wrapper .owl-pagination {
+    position: absolute;
+    bottom: -35px;
+    width: 100%;
+}
+
+.slider-wrapper .owl-pagination .owl-page span { background:#ccc; }
+
+.carousel-wrapper .owl-pagination {
+    position: relative;
+    bottom: -10px;
+}
+
+.owl-slider-np .owl-pagination { display:none; }
+
+.owl-controls .owl-buttons div {
+    display: block;
+    font-size: 55px;
+    height: 40px;
+    line-height: 40px;
+    width: 30px;
+    position: absolute;
+    top: 50%;
+    margin-top: -20px;
+    text-align: center;
+    -moz-opacity:0.60;
+    filter:alpha(opacity:60);
+    opacity:0.60;
+}
+
+.owl-controls .owl-buttons div:hover {
+    -moz-opacity:0.80;
+    filter:alpha(opacity:80);
+    opacity:0.80;
+}
+
+.owl-controls .owl-buttons div i {
+    height: 40px;
+    line-height: 40px;
+    display: block;
+    width: 30px;
+}
+
+.carousel-wrapper .owl-controls .owl-buttons div {
+    margin-top: -30px;
+}
+
+.carousel-wrapper-alt .owl-controls .owl-buttons div {
+    margin-top: -45px;
+}
+
+.carousel-container .owl-controls .owl-buttons .owl-next {
+    right: -30px;
+}
+
+.carousel-container .owl-controls .owl-buttons .owl-prev {
+    left: -30px;
+}
+
+.carousel-wrapper-alt .owl-controls .owl-pagination {
+    display: none;
+}
+
+.arrows-outside.carousel-wrapper .owl-controls .owl-buttons .owl-next {
+    right: -40px;
+}
+
+.arrows-outside.carousel-wrapper .owl-controls .owl-buttons .owl-prev {
+    left: -40px;
+}
+
+.owl-controls .owl-page {
+    display: inline-block;
+    zoom: 1;
+    *display: inline;
+}
+
+.owl-controls .owl-page span{
+    display: block;
+    width: 12px;
+    height: 12px;
+    margin: 0 3px;
+    filter: Alpha(Opacity=30);
+    opacity: 0.3;
+    border-radius: 20px;
+    background: #fff;
+}
+
+.owl-controls .owl-page.active span,
+.slider-wrapper .owl-controls.clickable .owl-page:hover span{
+    filter: Alpha(Opacity=100);
+    opacity: 1;
+}
+
+.owl-controls .owl-page span.owl-numbers{
+    height: auto;
+    width: auto;
+    color: #FFF;
+    padding: 2px 10px;
+    font-size: 12px;
+    border-radius: 30px;
+}
+
+.owl-item.loading {
+    min-height: 150px;
+    background: url('../../assets/dummy-images/loader.gif') no-repeat center center
+}

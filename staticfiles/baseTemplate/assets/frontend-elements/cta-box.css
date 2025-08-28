@@ -1,0 +1,67 @@
+/* CTA Boxes */
+
+.cta-box {
+    text-align: center;
+}
+.cta-box .cta-title {
+    font-size: 26px;
+    font-weight: normal;
+    display: inline-block;
+    margin: 0 15px 0 0;
+    padding: 0;
+    vertical-align: middle;
+}
+.cta-box .cta-text {
+    font-size: 17px;
+    display: inline-block;
+    margin: 0 15px 0 0;
+    vertical-align: middle;
+}
+.cta-box .cta-btn {
+    margin-left: 5px;
+}
+
+/* CTA Button */
+
+.cta-box-btn {
+    text-align: center;
+    position: relative;
+    z-index: 25;
+}
+.cta-box-btn a {
+    margin: -10px 0;
+    height: auto;
+    line-height: 1.3em;
+    text-transform: capitalize;
+    padding: 15px 35px;
+    font-size: 23px;
+    display: inline-block;
+}
+.cta-box-btn a span {
+    display: block;
+    font-size: 13px;
+    color: rgba(255,255,255,.7);
+    text-transform: uppercase!important;
+}
+
+/* CTA vertical */
+
+.cta-box-vertical {
+    text-align: center;
+}
+.cta-box-vertical h3 {
+    color: #464646;
+    font-size: 24px;
+    margin: 0;
+}
+.cta-box-vertical p {
+    color: #8b8b8b;
+    font-size: 19px;
+    margin: 0 0 25px;
+}
+.cta-box-vertical .hero-btn {
+    height: 60px;
+    line-height: 59px;
+    margin: 0 auto;
+    min-width: 260px;
+}

@@ -79,10 +79,8 @@ class mysqlUtilities:
 
                 ## Also set localhost to this server
 
-                ipFile = "/etc/cyberpanel/machineIP"
-                f = open(ipFile)
-                ipData = f.read()
-                ipAddressLocal = ipData.split('\n', 1)[0]
+                from plogical.machineIP import get_machine_ip
+                ipAddressLocal = get_machine_ip()
 
                 mysqlUtilities.LOCALHOST = ipAddressLocal
 
@@ -1011,10 +1009,8 @@ password=%s
                 print('1,None')
                 return 1
             else:
-                ipFile = "/etc/cyberpanel/machineIP"
-                f = open(ipFile)
-                ipData = f.read()
-                ipAddressLocal = ipData.split('\n', 1)[0]
+                from plogical.machineIP import get_machine_ip
+                ipAddressLocal = get_machine_ip()
 
                 mysqldContent = '''
 [mysqld] 

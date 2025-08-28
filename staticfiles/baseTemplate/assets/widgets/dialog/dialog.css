@@ -1,0 +1,162 @@
+    /* jQuery UI Dialog */
+    
+    .ui-dialog {
+        z-index: 1100;
+        padding: 0;
+    }
+    .ui-dialog .ui-dialog-titlebar {
+        position: relative;
+        padding: 10px;
+        border-bottom: 1px solid transparent;
+    }
+    .ui-dialog .ui-dialog-title {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .ui-dialog .ui-dialog-titlebar-close {
+        line-height: 20px;
+        position: absolute;
+        top: 50%;
+        right: 10px;
+        width: 20px;
+        height: 20px;
+        margin: -10px 0 0 0;
+        border: #ccc solid 1px;
+        background: #fff;
+    }
+    .ui-dialog .ui-dialog-titlebar-close:before {
+        line-height: 18px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 18px;
+        height: 18px;
+        opacity: .60;
+        -moz-opacity: .60;
+        filter: alpha(opacity: 60);
+    }
+    .ui-dialog .ui-dialog-titlebar-close:hover:before {
+        opacity: .90;
+        -moz-opacity: .90;
+        filter: alpha(opacity: 90);
+    }
+    .ui-dialog .ui-dialog-titlebar-close .ui-button-text {
+        display: none;
+    }
+    .ui-dialog .ui-dialog-content {
+        position: relative;
+        overflow: auto;
+        padding: 0;
+        border: 0;
+        background: none;
+    }
+    .ui-dialog-buttonset button {
+        padding: 8px 15px;
+        border-width: 1px;
+        border-style: solid;
+    }
+    .ui-dialog .ui-dialog-buttonpane {
+        border-width: 1px 0 0 0 !important;
+    }
+    .ui-dialog .ui-dialog-buttonpane .ui-button {
+        line-height: 28px;
+        float: right;
+        height: 28px;
+        padding: 0 15px;
+    }
+    .ui-draggable .ui-dialog-titlebar {
+        cursor: move;
+    }
+    .ui-dialog .ui-tabs,
+    .ui-dialog .infobox {
+        margin-bottom: 0;
+    }
+    .ui-dialog .ui-tabs .ui-tabs-panel {
+        padding: 10px;
+    }
+    /* Overlays */
+    
+    .ui-widget-overlay {
+        position: fixed;
+        z-index: 1049;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+    .ui-widget-overlay img {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        margin: -27px 0 0 -27px;
+    }
+    /* Resizable Core */
+    
+    .ui-resizable {
+        position: relative;
+    }
+    .ui-resizable-handle {
+        font-size: .1px;
+        position: absolute;
+        display: block;
+    }
+    .ui-resizable-disabled .ui-resizable-handle,
+    .ui-resizable-autohide .ui-resizable-handle {
+        display: none;
+    }
+    .ui-resizable-n {
+        top: -5px;
+        left: 0;
+        width: 100%;
+        height: 7px;
+        cursor: n-resize;
+    }
+    .ui-resizable-s {
+        bottom: -5px;
+        left: 0;
+        width: 100%;
+        height: 7px;
+        cursor: s-resize;
+    }
+    .ui-resizable-e {
+        top: 0;
+        right: -5px;
+        width: 7px;
+        height: 100%;
+        cursor: e-resize;
+    }
+    .ui-resizable-w {
+        top: 0;
+        left: -5px;
+        width: 7px;
+        height: 100%;
+        cursor: w-resize;
+    }
+    .ui-resizable-se {
+        right: 1px;
+        bottom: 1px;
+        width: 12px;
+        height: 12px;
+        cursor: se-resize;
+    }
+    .ui-resizable-sw {
+        bottom: -5px;
+        left: -5px;
+        width: 9px;
+        height: 9px;
+        cursor: sw-resize;
+    }
+    .ui-resizable-nw {
+        top: -5px;
+        left: -5px;
+        width: 9px;
+        height: 9px;
+        cursor: nw-resize;
+    }
+    .ui-resizable-ne {
+        top: -5px;
+        right: -5px;
+        width: 9px;
+        height: 9px;
+        cursor: ne-resize;
+    }

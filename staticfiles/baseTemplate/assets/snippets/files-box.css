@@ -1,0 +1,38 @@
+/* Files box */
+
+ul.files-box {
+    margin: 0;
+    padding: 0 0 15px;
+    list-style: none;
+}
+.files-box li {
+    position: relative;
+    margin: 0 15px;
+    padding: 5px;
+}
+.files-box li.divider {
+    padding: 2px;
+}
+.files-box .files-icon {
+    font-size: 20px;
+    line-height: 32px;
+    display: block;
+    float: left;
+    width: 30px;
+    height: 32px;
+}
+.files-box .files-content {
+    font-size: 11px;
+    float: left;
+}
+.files-box .files-content .files-date {
+    font-size: 10px;
+    display: block;
+    padding: 3px 0 0;
+    opacity: .6;
+}
+.files-box .files-buttons {
+    position: absolute;
+    top: 3px;
+    right: 0;
+}

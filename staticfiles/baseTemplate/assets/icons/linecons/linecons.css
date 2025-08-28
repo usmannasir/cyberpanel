@@ -1,0 +1,64 @@
+@font-face {
+  font-family: 'linecons';
+  src: url('linecons.eot?28801370');
+  src: url('linecons.eot?28801370#iefix') format('embedded-opentype'),
+       url('linecons.woff?28801370') format('woff'),
+       url('linecons.ttf?28801370') format('truetype'),
+       url('linecons.svg?28801370#linecons') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+[class^='icon-linecons-']:before,
+[class*=' icon-linecons-']:before {
+    font-family: 'linecons';
+}
+
+.icon-linecons-music:before { content: '\e800'; }
+.icon-linecons-search:before { content: '\e801'; }
+.icon-linecons-mail:before { content: '\e802'; }
+.icon-linecons-heart:before { content: '\e803'; }
+.icon-linecons-star:before { content: '\e804'; }
+.icon-linecons-user:before { content: '\e805'; }
+.icon-linecons-videocam:before { content: '\e806'; }
+.icon-linecons-camera:before { content: '\e807'; }
+.icon-linecons-photo:before { content: '\e808'; }
+.icon-linecons-attach:before { content: '\e809'; }
+.icon-linecons-lock:before { content: '\e80a'; }
+.icon-linecons-eye:before { content: '\e80b'; }
+.icon-linecons-tag:before { content: '\e80c'; }
+.icon-linecons-thumbs-up:before { content: '\e80d'; }
+.icon-linecons-pencil:before { content: '\e80e'; }
+.icon-linecons-comment:before { content: '\e80f'; }
+.icon-linecons-location:before { content: '\e810'; }
+.icon-linecons-cup:before { content: '\e811'; }
+.icon-linecons-trash:before { content: '\e812'; }
+.icon-linecons-doc:before { content: '\e813'; }
+.icon-linecons-note:before { content: '\e814'; }
+.icon-linecons-cog:before { content: '\e815'; }
+.icon-linecons-params:before { content: '\e816'; }
+.icon-linecons-calendar:before { content: '\e817'; }
+.icon-linecons-sound:before { content: '\e818'; }
+.icon-linecons-clock:before { content: '\e819'; }
+.icon-linecons-lightbulb:before { content: '\e81a'; }
+.icon-linecons-tv:before { content: '\e81b'; }
+.icon-linecons-desktop:before { content: '\e81c'; }
+.icon-linecons-mobile:before { content: '\e81d'; }
+.icon-linecons-cd:before { content: '\e81e'; }
+.icon-linecons-inbox:before { content: '\e81f'; }
+.icon-linecons-globe:before { content: '\e820'; }
+.icon-linecons-cloud:before { content: '\e821'; }
+.icon-linecons-paper-plane:before { content: '\e822'; }
+.icon-linecons-fire:before { content: '\e823'; }
+.icon-linecons-graduation-cap:before { content: '\e824'; }
+.icon-linecons-megaphone:before { content: '\e825'; }
+.icon-linecons-database:before { content: '\e826'; }
+.icon-linecons-key:before { content: '\e827'; }
+.icon-linecons-beaker:before { content: '\e828'; }
+.icon-linecons-truck:before { content: '\e829'; }
+.icon-linecons-money:before { content: '\e82a'; }
+.icon-linecons-food:before { content: '\e82b'; }
+.icon-linecons-shop:before { content: '\e82c'; }
+.icon-linecons-diamond:before { content: '\e82d'; }
+.icon-linecons-t-shirt:before { content: '\e82e'; }
+.icon-linecons-wallet:before { content: '\e82f'; }

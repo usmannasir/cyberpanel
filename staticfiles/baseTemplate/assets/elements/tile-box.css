@@ -1,0 +1,146 @@
+.tile-box {
+    line-height: inherit;
+    display: block;
+    position: relative;
+    height: auto;
+    padding: 0;
+    text-align: center;
+    border-width: 1px;
+    border-style: solid;
+}
+
+
+
+.tile-header {
+    font-size: 14px;
+    padding: 5px 10px;
+    text-align: left;
+    text-transform: uppercase;
+    border: 0 !important;
+    background: rgba(255, 255, 255, .2);
+}
+.tile-header .float-right {
+    opacity: .60;
+    -moz-opacity: .60;
+    filter: alpha(opacity: 60);
+}
+.tile-content-wrapper {
+    position: relative;
+    overflow: hidden;
+    padding: 10px;
+}
+.tile-content {
+    font-size: 35px;
+    text-align: right;
+}
+.tile-content span {
+    font-size: 25px;
+    opacity: .70;
+    -moz-opacity: .70;
+    filter: alpha(opacity: 70);
+}
+.tile-content-wrapper small {
+    font-size: 14px;
+    display: block;
+    text-align: right;
+    opacity: .70;
+    -moz-opacity: .70;
+    filter: alpha(opacity: 70);
+}
+.tile-content-wrapper > .glyph-icon {
+    font-size: 35px;
+    line-height: 70px;
+    position: absolute;
+    top: 50%;
+    left: 15px;
+    height: 70px;
+    margin-top: -36px;
+    opacity: .30;
+    -moz-opacity: .30;
+    filter: alpha(opacity: 30);
+}
+.tile-footer {
+    display: block;
+    margin: 0;
+    padding: 5px 10px;
+    text-align: left;
+    color: inherit;
+    background: rgba(0, 0, 0, .1);
+}
+.bg-white .tile-footer {
+    border-top-style: solid;
+    border-top-width: 1px;
+}
+.tile-footer:hover {
+    opacity: .80;
+    color: inherit;
+    -moz-opacity: .80;
+    filter: alpha(opacity: 80);
+}
+.tile-footer .glyph-icon {
+    float: right;
+}
+.tile-box-alt .tile-header {
+    padding: 10px;
+    text-align: center;
+}
+.tile-box-alt .tile-content-wrapper > .glyph-icon {
+    font-size: 65px;
+    margin-top: -32px;
+}
+.tile-box-shortcut:hover .tile-content-wrapper > .glyph-icon,
+a.tile-box.btn .tile-header .float-right,
+a.tile-box.btn .tile-content-wrapper > .glyph-icon {
+    -webkit-transition: all .2s ease-in-out;
+    -moz-transition: all .2s ease-in-out;
+    -ms-transition: all .2s ease-in-out;
+    -o-transition: all .2s ease-in-out;
+}
+a.tile-box.btn:hover .tile-content-wrapper > .glyph-icon {
+    opacity: .70;
+    -moz-opacity: .70;
+    filter: alpha(opacity: 70);
+}
+a.tile-box.btn:hover .tile-header .float-right {
+    opacity: .90;
+    -moz-opacity: .90;
+    filter: alpha(opacity: 90);
+}
+.tile-content-wrapper .easyPieChart {
+    margin-top: -5px;
+    margin-bottom: -5px;
+    font-size: 19px;
+    font-weight: 100;
+}
+.tile-box-shortcut .tile-header {
+    background: none;
+    padding: 0;
+    position: absolute;
+    right: 10px;
+    bottom: 6px;
+    font-size: 13px;
+    font-weight: 400;
+}
+.tile-box-shortcut .bs-badge {
+    left: auto;
+    right: 10px;
+    top: 10px;
+    background: rgba(0, 0, 0, 0.5);
+}
+.tile-box-shortcut .tile-content-wrapper {
+    padding: 0;
+    min-height: 80px;
+}
+.tile-box-shortcut .tile-content-wrapper > .glyph-icon {
+    position: absolute;
+    left: 15px;
+    top: 30px;
+}
+
+.tile-box-shortcut:hover .tile-content-wrapper > .glyph-icon {
+    opacity: .80;
+    -moz-opacity: .80;
+    filter: alpha(opacity: 80);
+}
+
+.tile-box:hover { text-decoration:none; }

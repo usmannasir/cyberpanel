@@ -1,0 +1,118 @@
+/* Hero sections */
+
+.hero-box {
+    background-repeat: no-repeat;
+    background-position: center center;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+    text-align: center;
+    position: relative;
+}
+.hero-box * {
+    position: relative;
+    z-index: 13;
+}
+.hero-heading {
+    font-weight: 300;
+    padding: 0 50px;
+    text-transform: uppercase;
+    margin: 0 auto;
+}
+.hero-text {
+    font-weight: 100;
+    padding: 10px 50px 0;
+    margin: 0 auto;
+    opacity: 0.6;
+}
+
+/* Hero overlays */
+
+.hero-video,
+.hero-pattern,
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+}
+.hero-pattern,
+.hero-overlay {
+    opacity: 0.5;
+    -moz-opacity: .50;
+    filter: alpha(opacity: 50);
+}
+.hero-dark {
+    background: #000;
+}
+.hero-light {
+    background: #fff;
+}
+/* Hero patterns */
+
+.hero-pattern {
+    opacity: 0.05;
+    -moz-opacity: .05;
+    filter: alpha(opacity: .05);
+    z-index: 12;
+}
+.hero-video {
+    z-index: 9;
+}
+/* Hero alignments */
+
+.hero-left {
+    text-align: left;
+}
+.hero-left .hero-btn {
+    margin-left: 50px;
+}
+.hero-right {
+    text-align: right;
+}
+.hero-right .hero-btn {
+    margin-right: 50px;
+}
+/* Image holder in hero sections */
+
+.bg-holder {
+    position: absolute;
+    top: 0;
+    width: 100%;
+}
+.bg-holder.float-right img {
+    right: auto;
+    left: 0;
+}
+.bg-holder img {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+/* Hero elements */
+
+.hero-box .img-holder img {
+    width: 100%;
+}
+
+/* Page title */
+
+.hero-box.page-title {
+    padding: 15px 0;
+}
+
+/* Contact widget */
+
+.contact-list li {
+    padding: 5px;
+    font-size: 14px;
+}
+.contact-list li .glyph-icon {
+    margin-right: 5px;
+}

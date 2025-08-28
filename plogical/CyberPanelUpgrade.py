@@ -12,10 +12,8 @@ class UpgradeCyberPanel:
     LogURL = "https://platform.cyberpersons.com/settings/RecvData"
 
     def __init__(self, branch, mail, dns, ftp):
-        ipFile = "/etc/cyberpanel/machineIP"
-        f = open(ipFile)
-        ipData = f.read()
-        self.ipAddress = ipData.split('\n', 1)[0]
+        from plogical.machineIP import get_machine_ip
+        self.ipAddress = get_machine_ip()
         self.branch = branch
         self.mail = mail
         self.ftp = ftp

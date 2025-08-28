@@ -24,10 +24,8 @@ class ClusterManager:
 
     def __init__(self, type):
         ##
-        ipFile = "/etc/cyberpanel/machineIP"
-        f = open(ipFile)
-        ipData = f.read()
-        self.ipAddress = ipData.split('\n', 1)[0]
+        from plogical.machineIP import get_machine_ip
+        self.ipAddress = get_machine_ip()
         ##
         if os.path.exists(ClusterManager.ClusterFile):
             self.config = json.loads(open(ClusterManager.ClusterFile, 'r').read())

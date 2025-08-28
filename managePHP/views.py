@@ -1077,9 +1077,9 @@ def installExtensions(request):
             phpPath = ''
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                phpPath = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'php70.xml')
+                phpPath = os.path.join('/app', 'managePHP', 'php70.xml')
             else:
-                phpPath = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp70.xml')
+                phpPath = os.path.join('/app', 'managePHP', 'ubuntuphp70.xml')
 
             php = ElementTree.parse(phpPath)
 
@@ -1108,9 +1108,9 @@ def installExtensions(request):
             phpPath = ''
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                phpPath = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'php71.xml')
+                phpPath = os.path.join('/app', 'managePHP', 'php71.xml')
             else:
-                phpPath = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp71.xml')
+                phpPath = os.path.join('/app', 'managePHP', 'ubuntuphp71.xml')
 
             php = ElementTree.parse(phpPath)
 
@@ -1136,9 +1136,9 @@ def installExtensions(request):
             php72Path = ''
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                php72Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'php72.xml')
+                php72Path = os.path.join('/app', 'managePHP', 'php72.xml')
             else:
-                php72Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp72.xml')
+                php72Path = os.path.join('/app', 'managePHP', 'ubuntuphp72.xml')
 
             php72 = ElementTree.parse(php72Path)
 
@@ -1164,9 +1164,9 @@ def installExtensions(request):
             php73Path = ''
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                php73Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'php73.xml')
+                php73Path = os.path.join('/app', 'managePHP', 'php73.xml')
             else:
-                php73Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp73.xml')
+                php73Path = os.path.join('/app', 'managePHP', 'ubuntuphp73.xml')
 
             php73 = ElementTree.parse(php73Path)
 
@@ -1192,9 +1192,9 @@ def installExtensions(request):
             php74Path = ''
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                php74Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'php74.xml')
+                php74Path = os.path.join('/app', 'managePHP', 'php74.xml')
             else:
-                php74Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp74.xml')
+                php74Path = os.path.join('/app', 'managePHP', 'ubuntuphp74.xml')
 
             php74 = ElementTree.parse(php74Path)
 
@@ -1218,9 +1218,9 @@ def installExtensions(request):
             php80Path = ''
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                php80Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'php80.xml')
+                php80Path = os.path.join('/app', 'managePHP', 'php80.xml')
             else:
-                php80Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp80.xml')
+                php80Path = os.path.join('/app', 'managePHP', 'ubuntuphp80.xml')
 
             php80 = ElementTree.parse(php80Path)
 
@@ -1247,9 +1247,9 @@ def installExtensions(request):
             php81Path = ''
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                php81Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'php81.xml')
+                php81Path = os.path.join('/app', 'managePHP', 'php81.xml')
             else:
-                php81Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp81.xml')
+                php81Path = os.path.join('/app', 'managePHP', 'ubuntuphp81.xml')
 
             php81 = ElementTree.parse(php81Path)
 

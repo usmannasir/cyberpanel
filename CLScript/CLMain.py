@@ -7,10 +7,8 @@ class CLMain():
         self.version = '2.4'
         self.build = '3'
 
-        ipFile = "/etc/cyberpanel/machineIP"
-        f = open(ipFile)
-        ipData = f.read()
-        self.ipAddress = ipData.split('\n', 1)[0]
+        from plogical.machineIP import get_machine_ip
+        self.ipAddress = get_machine_ip()
 
         self.initialMeta = {
             "result": "ok"

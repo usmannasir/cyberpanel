@@ -110,10 +110,8 @@ class DNS:
     def dnsTemplate(domain, admin):
         try:
 
-            ipFile = "/etc/cyberpanel/machineIP"
-            f = open(ipFile)
-            ipData = f.read()
-            ipAddress = ipData.split('\n', 1)[0]
+            from plogical.machineIP import get_machine_ip
+            ipAddress = get_machine_ip()
 
 
             import tldextract

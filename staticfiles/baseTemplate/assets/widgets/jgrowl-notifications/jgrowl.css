@@ -1,0 +1,74 @@
+.jGrowl {
+    z-index: 9999;
+}
+.jGrowl {
+    position: absolute;
+}
+body > .jGrowl {
+    position: fixed;
+}
+.jGrowl.top-left {
+    top: 0;
+    left: 0;
+}
+.jGrowl.top-right {
+    top: 0;
+    right: 0;
+}
+.jGrowl.bottom-left {
+    bottom: 0;
+    left: 0;
+}
+.jGrowl.bottom-right {
+    right: 0;
+    bottom: 0;
+}
+.jGrowl.center {
+    top: 50%;
+    left: 50%;
+    width: 0;
+    margin-left: -170px;
+}
+.center .jGrowl-notification,
+.center .jGrowl-closer {
+    margin-right: auto;
+    margin-left: auto;
+}
+.jGrowl .jGrowl-notification,
+.jGrowl .jGrowl-closer {
+    font-size: 12px;
+    display: none;
+    zoom: 1;
+    width: 300px;
+    margin: 10px 0;
+    padding: 10px 15px;
+    white-space: normal;
+    opacity: .95;
+    filter: progid: DXImageTransform.Microsoft.Alpha(Opacity=95);
+}
+.jGrowl .jGrowl-notification:hover {
+    opacity: 1;
+    filter: progid: DXImageTransform.Microsoft.Alpha(Opacity=100);
+}
+.jGrowl .jGrowl-notification {
+    min-height: 20px;
+}
+.jGrowl .jGrowl-notification,
+.jGrowl .jGrowl-closer {
+    margin: 10px;
+}
+.jGrowl .jGrowl-notification .jGrowl-header {
+    font-size: .85em;
+    font-weight: bold;
+}
+.jGrowl .jGrowl-notification .jGrowl-close {
+    font-weight: bold;
+    z-index: 99;
+    float: right;
+    cursor: pointer;
+}
+.jGrowl .jGrowl-closer {
+    font-weight: bold;
+    cursor: pointer;
+    text-align: center;
+}

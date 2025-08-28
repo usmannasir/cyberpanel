@@ -29,53 +29,53 @@ rm -rf /root/cyberpanel-tmp
 fi
 
 mkdir /root/cyberpanel-tmp
-cd /root/cyberpanel-tmp
-wget -q https://$DOWNLOAD_SERVER/litespeed/lsws-$LSWS_STABLE_VER-ent-x86_64-linux.tar.gz
-tar xzvf lsws-$LSWS_STABLE_VER-ent-x86_64-linux.tar.gz > /dev/null
-cd  /root/cyberpanel-tmp/lsws-$LSWS_STABLE_VER/conf
+cd /root/cyberpanel-tmp || exit
+wget -q "https://$DOWNLOAD_SERVER/litespeed/lsws-$LSWS_STABLE_VER-ent-x86_64-linux.tar.gz"
+tar xzvf "lsws-$LSWS_STABLE_VER-ent-x86_64-linux.tar.gz" > /dev/null
+cd "/root/cyberpanel-tmp/lsws-$LSWS_STABLE_VER/conf" || exit || exit
 if [[ $LICENSE_KEY == "TRIAL" ]] ; then
 wget -q http://license.litespeedtech.com/reseller/trial.key
-sed -i "s|writeSerial = open('lsws-5.4.2/serial.no', 'w')|command = 'wget -q --output-document=./lsws-$LSWS_STABLE_VER/trial.key http://license.litespeedtech.com/reseller/trial.key'|g" $CURRENT_DIR/installCyberPanel.py
-sed -i 's|writeSerial.writelines(self.serial)|subprocess.call(command, shell=True)|g' $CURRENT_DIR/installCyberPanel.py
-sed -i 's|writeSerial.close()||g' $CURRENT_DIR/installCyberPanel.py
+sed -i "s|writeSerial = open('lsws-5.4.2/serial.no', 'w')|command = 'wget -q --output-document=./lsws-$LSWS_STABLE_VER/trial.key http://license.litespeedtech.com/reseller/trial.key'|g" "$CURRENT_DIR/installCyberPanel.py"
+sed -i 's|writeSerial.writelines(self.serial)|subprocess.call(command, shell=True)|g' "$CURRENT_DIR/installCyberPanel.py"
+sed -i 's|writeSerial.close()||g' "$CURRENT_DIR/installCyberPanel.py"
 else
-echo $LICENSE_KEY > serial.no
+echo "$LICENSE_KEY" > serial.no
 fi
 
-cd /root/cyberpanel-tmp/lsws-$LSWS_STABLE_VER/bin
+cd "/root/cyberpanel-tmp/lsws-$LSWS_STABLE_VER/bin" || exit
 
 if [[ $LICENSE_KEY == "TRIAL" ]] ; then
-	if ./lshttpd -V |& grep  "ERROR" ; then
+	if ./lshttpd -V 2>&1 | grep  "ERROR" ; then
 	echo -e "\n\nIt apeears to have some issue with license , please check above result..."
 	exit
 	fi
 	LICENSE_KEY="1111-2222-3333-4444"
 else
-	if ./lshttpd -r |& grep "ERROR" ; then
+	if ./lshttpd -r 2>&1 | grep "ERROR" ; then
 	./lshttpd -r
 	echo -e "\n\nIt apeears to have some issue with license , please check above result..."
 	exit
 	fi
 fi
 echo -e "License seems valid..."
-cd /root/cyberpanel-tmp
-rm -rf lsws-$LSWS_STABLE_VER*
-cd $CURRENT_DIR
+cd /root/cyberpanel-tmp || exit
+rm -rf "lsws-$LSWS_STABLE_VER*"
+cd "$CURRENT_DIR" || exit
 rm -rf /root/cyberpanel-tmp
 }
 
 special_change(){
-sed -i 's|cyberpanel.sh|'$DOWNLOAD_SERVER'|g' install.py
-sed -i 's|mirror.cyberpanel.net|'$DOWNLOAD_SERVER'|g' install.py
+sed -i 's|cyberpanel.sh|'"$DOWNLOAD_SERVER"'|g' install.py
+sed -i 's|mirror.cyberpanel.net|'"$DOWNLOAD_SERVER"'|g' install.py
 sed -i 's|git clone https://github.com/usmannasir/cyberpanel|echo downloaded|g' install.py
 #change to CDN first, regardless country
 sed -i 's|http://|https://|g' install.py
 
 LATEST_URL="https://update.litespeedtech.com/ws/latest.php"
 #LATEST_URL="https://cyberpanel.sh/latest.php"
-curl --silent -o /tmp/lsws_latest $LATEST_URL 2>/dev/null
-LSWS_STABLE_LINE=`cat /tmp/lsws_latest | grep LSWS_STABLE`
-LSWS_STABLE_VER=`expr "$LSWS_STABLE_LINE" : '.*LSWS_STABLE=\(.*\) BUILD .*'`
+curl --silent -o /tmp/lsws_latest "$LATEST_URL" 2>/dev/null
+LSWS_STABLE_LINE=$(cat /tmp/lsws_latest | grep LSWS_STABLE)
+LSWS_STABLE_VER=$(expr "$LSWS_STABLE_LINE" : '.*LSWS_STABLE=\(.*\) BUILD .*')
 
 if [[ $SERVER_COUNTRY == "CN" ]] ; then
 #line1="$(grep -n "github.com/usmannasir/cyberpanel" install.py | head -n 1 | cut -d: -f1)"
@@ -85,32 +85,32 @@ if [[ $SERVER_COUNTRY == "CN" ]] ; then
 #sed -i "${line2}i\ \ \ \ \ \ \ \ subprocess.call(command, shell=True)" install.py
 #sed -i "${line2}i\ \ \ \ \ \ \ \ command = 'wget cyberpanel.sh/cyberpanel-git.tar.gz'" install.py
 sed -i 's|wget https://rpms.litespeedtech.com/debian/|wget --no-check-certificate https://rpms.litespeedtech.com/debian/|g' install.py
-sed -i 's|https://repo.powerdns.com/repo-files/centos-auth-42.repo|https://'$DOWNLOAD_SERVER'/powerdns/powerdns.repo|g' installCyberPanel.py
-sed -i 's|https://snappymail.eu/repository/latest.tar.gz|https://'$DOWNLOAD_SERVER'/repository/latest.tar.gz|g' install.py
+sed -i 's|https://repo.powerdns.com/repo-files/centos-auth-42.repo|https://'"$DOWNLOAD_SERVER"'/powerdns/powerdns.repo|g' installCyberPanel.py
+sed -i 's|https://snappymail.eu/repository/latest.tar.gz|https://'"$DOWNLOAD_SERVER"'/repository/latest.tar.gz|g' install.py
 
-sed -i 's|rpm -ivh https://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el7.noarch.rpm|curl -o /etc/yum.repos.d/litespeed.repo https://'$DOWNLOAD_SERVER'/litespeed/litespeed.repo|g' install.py
+sed -i 's|rpm -ivh https://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el7.noarch.rpm|curl -o /etc/yum.repos.d/litespeed.repo https://'"$DOWNLOAD_SERVER"'/litespeed/litespeed.repo|g' install.py
 
 
 sed -i 's|https://copr.fedorainfracloud.org/coprs/copart/restic/repo/epel-7/copart-restic-epel-7.repo|https://'$DOWNLOAD_SERVER'/restic/restic.repo|g' install.py
 
-sed -i 's|yum -y install https://cyberpanel.sh/gf-release-latest.gf.el7.noarch.rpm|wget -O /etc/yum.repos.d/gf.repo https://'$DOWNLOAD_SERVER'/gf-plus/gf.repo|g' install.py
+sed -i 's|yum -y install https://cyberpanel.sh/gf-release-latest.gf.el7.noarch.rpm|wget -O /etc/yum.repos.d/gf.repo https://'"$DOWNLOAD_SERVER"'/gf-plus/gf.repo|g' install.py
 sed -i 's|dovecot-2.3-latest|dovecot-2.3-latest-mirror|g' install.py
 sed -i 's|git clone https://github.com/usmannasir/cyberpanel|wget https://cyberpanel.sh/cyberpanel-git.tar.gz \&\& tar xzvf cyberpanel-git.tar.gz|g' install.py
-sed -i 's|https://repo.dovecot.org/ce-2.3-latest/centos/$releasever/RPMS/$basearch|https://'$DOWNLOAD_SERVER'/dovecot/|g' install.py
+sed -i 's|https://repo.dovecot.org/ce-2.3-latest/centos/$releasever/RPMS/$basearch|https://'"$DOWNLOAD_SERVER"'/dovecot/|g' install.py
 sed -i 's|'$DOWNLOAD_SERVER'|cyberpanel.sh|g' install.py
-sed -i 's|https://www.litespeedtech.com/packages/5.0/lsws-5.4.2-ent-x86_64-linux.tar.gz|https://'$DOWNLOAD_SERVER'/litespeed/lsws-'$LSWS_STABLE_VER'-ent-x86_64-linux.tar.gz|g' installCyberPanel.py
+sed -i 's|https://www.litespeedtech.com/packages/5.0/lsws-5.4.2-ent-x86_64-linux.tar.gz|https://'"$DOWNLOAD_SERVER"'/litespeed/lsws-'"$LSWS_STABLE_VER"'-ent-x86_64-linux.tar.gz|g' installCyberPanel.py
 # global change for CN , regardless provider and system
 
 	if [[ $SERVER_OS == "CentOS" ]] ; then
 		DIR=$(pwd)
-		cd $DIR/mysql
+		cd "$DIR/mysql" || exit
 		echo "[mariadb-tsinghua]
 name = MariaDB
 baseurl = https://mirrors.tuna.tsinghua.edu.cn/mariadb/yum/10.1/centos7-amd64
 gpgkey = https://mirrors.tuna.tsinghua.edu.cn/mariadb/yum//RPM-GPG-KEY-MariaDB
 gpgcheck = 1" > MariaDB.repo
 #above to set mariadb db to Tsinghua repo
-		cd $DIR
+		cd "$DIR" || exit
 		sed -i 's|https://www.litespeedtech.com/packages/5.0/lsws-5.3.5-ent-x86_64-linux.tar.gz|https://cyberpanel.sh/packages/5.0/lsws-5.3.5-ent-x86_64-linux.tar.gz|g' installCyberPanel.py
 		mkdir /root/.pip
 		cat << EOF > /root/.pip/pip.conf
@@ -324,13 +324,13 @@ fi
 install_required() {
 echo -e "\nInstalling necessary components..."
 if [[ $SERVER_OS == "CentOS" ]] ; then
-	rpm --import https://$DOWNLOAD_SERVER/mariadb/RPM-GPG-KEY-MariaDB
-	rpm --import https://$DOWNLOAD_SERVER/litespeed/RPM-GPG-KEY-litespeed
-	rpm --import https://$DOWNLOAD_SERVER/powerdns/FD380FBB-pub.asc
+	rpm --import "https://$DOWNLOAD_SERVER/mariadb/RPM-GPG-KEY-MariaDB"
+	rpm --import "https://$DOWNLOAD_SERVER/litespeed/RPM-GPG-KEY-litespeed"
+	rpm --import "https://$DOWNLOAD_SERVER/powerdns/FD380FBB-pub.asc"
 	rpm --import http://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7
-	rpm --import https://$DOWNLOAD_SERVER/gf-plus/RPM-GPG-KEY-gf.el7
-	rpm --import https://repo.dovecot.org/DOVECOT-REPO-GPG
-	rpm --import https://copr-be.cloud.fedoraproject.org/results/copart/restic/pubkey.gpg
+	rpm --import "https://$DOWNLOAD_SERVER/gf-plus/RPM-GPG-KEY-gf.el7"
+	rpm --import "https://repo.dovecot.org/DOVECOT-REPO-GPG"
+	rpm --import "https://copr-be.cloud.fedoraproject.org/results/copart/restic/pubkey.gpg"
 	yum autoremove epel-release -y
 	rm -f /etc/yum.repos.d/epel.repo
 	rm -f /etc/yum.repos.d/epel.repo.rpmsave
@@ -364,17 +364,17 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 		if [[ $TOTAL_RAM -eq "2048" ]] || [[ $TOTAL_RAM -gt "2048" ]] ; then
 			yum groupinstall "Development Tools" -y
 			yum install autoconf automake zlib-devel openssl-devel expat-devel pcre-devel libmemcached-devel cyrus-sasl* -y
-			wget https://$DOWNLOAD_SERVER/litespeed/lsmcd.tar.gz
+			wget "https://$DOWNLOAD_SERVER/litespeed/lsmcd.tar.gz"
 			tar xzvf lsmcd.tar.gz
 			DIR=$(pwd)
-			cd $DIR/lsmcd
+			cd "$DIR/lsmcd" || exit
 			./fixtimestamp.sh
 			./configure CFLAGS=" -O3" CXXFLAGS=" -O3"
 			make
 			make install
 			systemctl enable lsmcd
 			systemctl start lsmcd
-			cd $DIR
+			cd "$DIR" || exit
 		else
 			yum install -y memcached
 			sed -i 's|OPTIONS=""|OPTIONS="-l 127.0.0.1 -U 0"|g' /etc/sysconfig/memcached
@@ -386,15 +386,15 @@ if [[ $SERVER_OS == "Ubuntu" ]] ; then
 	DEBIAN_FRONTEND=noninteractive apt install -y lsphp73-memcached lsphp72-memcached lsphp71-memcached lsphp70-memcached
 		if [[ $TOTAL_RAM -eq "2048" ]] || [[ $TOTAL_RAM -gt "2048" ]] ; then
 			DEBIAN_FRONTEND=noninteractive apt install build-essential zlib1g-dev libexpat1-dev openssl libssl-dev libsasl2-dev libpcre3-dev git -y
-			wget https://$DOWNLOAD/litespeed/lsmcd.tar.gz
+			wget "https://$DOWNLOAD_SERVER/litespeed/lsmcd.tar.gz"
 			tar xzvf lsmcd.tar.gz
 			DIR=$(pwd)
-			cd $DIR/lsmcd
+			cd "$DIR/lsmcd" || exit
 			./fixtimestamp.sh
 			./configure CFLAGS=" -O3" CXXFLAGS=" -O3"
 			make
 			make install
-			cd $DIR
+			cd "$DIR" || exit
 			systemctl enable lsmcd
 			systemctl start lsmcd
 		else
@@ -474,13 +474,13 @@ fi
 check_OS() {
 echo -e "\nChecking OS..."
 OUTPUT=$(cat /etc/*release)
-if  echo $OUTPUT | grep -q "CentOS Linux 7" ; then
+if  echo "$OUTPUT" | grep -q "CentOS Linux 7" ; then
 	echo -e "\nDetecting CentOS 7.X...\n"
 	SERVER_OS="CentOS"
-elif echo $OUTPUT | grep -q "CloudLinux 7" ; then
+elif echo "$OUTPUT" | grep -q "CloudLinux 7" ; then
 	echo -e "\nDetecting CloudLinux 7.X...\n"
 	SERVER_OS="CentOS"
-elif echo $OUTPUT | grep -q "Ubuntu 18.04" ; then
+elif echo "$OUTPUT" | grep -q "Ubuntu 18.04" ; then
 	echo -e "\nDetecting Ubuntu 18.04...\n"
 	SERVER_OS="Ubuntu"
 else
@@ -578,9 +578,9 @@ if [ -z "$TMP_YN" ] ; then
 fi
 
 KEY_SIZE=${#LICENSE_KEY}
-TMP=$(echo $LICENSE_KEY | cut -c5)
-TMP2=$(echo $LICENSE_KEY | cut -c10)
-TMP3=$(echo $LICENSE_KEY | cut -c15)
+TMP=$(echo "$LICENSE_KEY" | cut -c5)
+TMP2=$(echo "$LICENSE_KEY" | cut -c10)
+TMP3=$(echo "$LICENSE_KEY" | cut -c15)
 
 if [[ $TMP == "-" ]] && [[ $TMP2 == "-" ]] && [[ $TMP3 == "-" ]] && [[ $KEY_SIZE == "19" ]] ; then
 	echo -e "\nLicense key set..."
@@ -784,7 +784,7 @@ elif [[ $TMP_YN =~ ^(s|S) ]] ; then
 		exit
 	fi
 	TMP_YN2=$TMP_YN
-	if [ $TMP_YN1 = $TMP_YN2 ] ; then
+	if [ "$TMP_YN1" = "$TMP_YN2" ] ; then
 		ADMIN_PASS=$TMP_YN1
 	else
 		echo -e "\nRepeated password didn't match , please check...\n"
@@ -831,8 +831,8 @@ if [[ $VERSION == "ENT" ]] ; then
 	SERIAL_NO="--ent ent --serial "
 fi
 
-sed -i 's|lsws-5.4.2|lsws-'$LSWS_STABLE_VER'|g' installCyberPanel.py
-sed -i 's|lsws-5.3.5|lsws-'$LSWS_STABLE_VER'|g' installCyberPanel.py
+sed -i 's|lsws-5.4.2|lsws-'"$LSWS_STABLE_VER"'|g' installCyberPanel.py
+sed -i 's|lsws-5.3.5|lsws-'"$LSWS_STABLE_VER"'|g' installCyberPanel.py
 #this sed must be done after license validation
 	
 echo -e "Preparing..."
@@ -846,9 +846,9 @@ fi
 
 if [[ $debug == "1" ]] ; then
 	if [[ $DEV == "ON" ]] ; then
-	/usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY
+	/usr/local/CyberPanel/bin/python install.py "$SERVER_IP" "$SERIAL_NO" "$LICENSE_KEY"
 	else
-	/usr/local/CyberPanel/bin/python2 install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY
+	/usr/local/CyberPanel/bin/python2 install.py "$SERVER_IP" "$SERIAL_NO" "$LICENSE_KEY"
 	fi
 	
 	if grep "CyberPanel installation successfully completed" /var/log/installLogs.txt > /dev/null; then 
@@ -909,7 +909,7 @@ if [[ $DEV == "ON" ]] ; then
 	cd /usr/local/
 	python3.6 -m venv CyberPanel
 	source /usr/local/CyberPanel/bin/activate
-	wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
+	wget -O requirements.txt "https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt"
 	pip3.6 install --ignore-installed -r requirements.txt
 fi
 
@@ -926,10 +926,10 @@ if [[ $SERVER_COUNTRY == "CN" ]] ; then
 else
 	if [[ $DEV == "ON" ]] ; then
 	git clone https://github.com/usmannasir/cyberpanel
-	cd cyberpanel
-	git checkout $BRANCH_NAME
-	cd -
-	cd cyberpanel/install
+	cd cyberpanel || exit
+	git checkout "$BRANCH_NAME"
+	cd - || exit
+	cd cyberpanel/install || exit
 	else
 	git clone https://github.com/usmannasir/cyberpanel
 	cd cyberpanel/install
@@ -950,7 +950,7 @@ fi
 chmod 1733 /var/lib/php/session
 
 if grep "\[ERROR\] We are not able to run ./install.sh return code: 1.  Fatal error, see /var/log/installLogs.txt for full details" /var/log/installLogs.txt > /dev/null; then 
-	cd ${DIR}/cyberpanel/install/lsws-*
+	cd "${DIR}/cyberpanel/install/lsws-*" || exit
 	./install.sh
 	echo -e "\n\n\nIt seems LiteSpeed Enterprise has failed to install, please check your license key is valid"
 	echo -e "\nIf this license key has been used before, you may need to go to store to release it first."
@@ -963,33 +963,33 @@ if grep "CyberPanel installation successfully completed" /var/log/installLogs.tx
 if [[ $DEV == "ON" ]] ; then
 python3.6 -m venv /usr/local/CyberCP
 source /usr/local/CyberCP/bin/activate
-wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
+	wget -O requirements.txt "https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt"
 pip3.6 install --ignore-installed -r requirements.txt
 systemctl restart lscpd
 fi
 
-for version in $(ls /usr/local/lsws | grep lsphp); 
+for version in /usr/local/lsws/lsphp*;
 	do
-		php_ini=$(find /usr/local/lsws/$version/ -name php.ini)
+		php_ini=$(find "/usr/local/lsws/$version/" -name php.ini)
 		version2=${version:5:2}
-		version2=$(awk "BEGIN { print "${version2}/10" }")
+		version2=$(awk "BEGIN { print \"${version2}/10\" }")
 				if [[ $version2 = "7" ]] ; then
 					version2="7.0"
 				fi
 		if [[ $SERVER_OS == "CentOS" ]] ; then
-		yum remove -y $version-mysql
-		yum install -y $version-mysqlnd
-		yum install -y $version-devel make gcc glibc-devel libmemcached-devel zlib-devel
+		yum remove -y "$version-mysql"
+		yum install -y "$version-mysqlnd"
+		yum install -y "$version-devel" make gcc glibc-devel libmemcached-devel zlib-devel
 			if [[ ! -d /usr/local/lsws/$version/tmp ]] ; then
-				mkdir /usr/local/lsws/$version/tmp
+				mkdir "/usr/local/lsws/$version/tmp"
 			fi
-		/usr/local/lsws/${version}/bin/pecl channel-update pecl.php.net; 
-		/usr/local/lsws/${version}/bin/pear config-set temp_dir /usr/local/lsws/${version}/tmp
-		/usr/local/lsws/${version}/bin/pecl install timezonedb
-		echo "extension=timezonedb.so" > /usr/local/lsws/${version}/etc/php.d/20-timezone.ini
-		sed -i 's|expose_php = On|expose_php = Off|g' $php_ini
-		sed -i 's|mail.add_x_header = On|mail.add_x_header = Off|g' $php_ini
-		sed -i 's|;session.save_path = "/tmp"|session.save_path = "/var/lib/php/session"|g' $php_ini
+		/usr/local/lsws/"${version}"/bin/pecl channel-update pecl.php.net; 
+		/usr/local/lsws/"${version}"/bin/pear config-set temp_dir /usr/local/lsws/"${version}"/tmp
+		/usr/local/lsws/"${version}"/bin/pecl install timezonedb
+		echo "extension=timezonedb.so" > /usr/local/lsws/"${version}"/etc/php.d/20-timezone.ini
+		sed -i 's|expose_php = On|expose_php = Off|g' "$php_ini"
+		sed -i 's|mail.add_x_header = On|mail.add_x_header = Off|g' "$php_ini"
+		sed -i 's|;session.save_path = "/tmp"|session.save_path = "/var/lib/php/session"|g' "$php_ini"
 		fi
 		
 		if [[ $SERVER_OS == "Ubuntu" ]] ; then
@@ -1003,11 +1003,11 @@ for version in $(ls /usr/local/lsws | grep lsphp);
 				tar xzvf timezonedb-2019.3.tgz
 				cd timezonedb-2019.3
 			fi
-		/usr/local/lsws/${version}/bin/phpize
-		./configure --with-php-config=/usr/local/lsws/${version}/bin/php-config${version2}
+		/usr/local/lsws/"${version}"/bin/phpize
+		./configure --with-php-config=/usr/local/lsws/"${version}"/bin/php-config"${version2}"
 		make
 		make install
-		echo "extension=timezonedb.so" > /usr/local/lsws/${version}/etc/php/${version2}/mods-available/20-timezone.ini
+		echo "extension=timezonedb.so" > /usr/local/lsws/"${version}"/etc/php/"${version2}"/mods-available/20-timezone.ini
 		make clean
 	fi
 done
@@ -1020,7 +1020,7 @@ DISK2=$(df -h | awk '$NF=="/"{printf "%d/%dGB (%s)\n", $3,$2,$5}')
 ELAPSED="$(($SECONDS / 3600)) hrs $((($SECONDS / 60) % 60)) min $(($SECONDS % 60)) sec"
 MYSQLPASSWD=$(cat /etc/cyberpanel/mysqlPassword)
 echo "$ADMIN_PASS" > /etc/cyberpanel/adminPass
-/usr/local/CyberPanel/bin/python2 /usr/local/CyberCP/plogical/adminPass.py --password $ADMIN_PASS
+/usr/local/CyberPanel/bin/python2 /usr/local/CyberCP/plogical/adminPass.py --password "$ADMIN_PASS"
 systemctl restart lscpd
 systemctl restart lsws
 echo "/usr/local/CyberPanel/bin/python2 /usr/local/CyberCP/plogical/adminPass.py --password \$@" > /usr/bin/adminPass
@@ -1043,11 +1043,11 @@ fi
 if [[ $VERSION = "ENT" ]] ; then
 	WORD="LiteSpeed Enterprise"
 	if [[ $SERVER_COUNTRY != "CN" ]] ; then
-		/usr/local/lsws/admin/misc/lsup.sh -f -v $LSWS_STABLE_VER
+		/usr/local/lsws/admin/misc/lsup.sh -f -v "$LSWS_STABLE_VER"
 	fi
 fi
 
-systemctl status lsws 2>&1>/dev/null
+systemctl status lsws > /dev/null 2>&1
 if [[ $? == "0" ]] ; then
 	echo "LSWS service is running..."
 else
@@ -1113,14 +1113,14 @@ options edns0" /etc/resolv.conf
 	if [[ $VERSION = "ENT" ]] ; then
 		sed -i 's|https://www.litespeedtech.com/packages/5.0/lsws-5.3.5-ent-x86_64-linux.tar.gz|https://cyberpanel.sh/packages/5.0/lsws-5.3.5-ent-x86_64-linux.tar.gz|g' /usr/local/CyberCP/install/installCyberPanel.py
 		sed -i 's|https://www.litespeedtech.com/packages/5.0/lsws-5.3.8-ent-x86_64-linux.tar.gz|https://cyberpanel.sh/packages/5.0/lsws-5.3.8-ent-x86_64-linux.tar.gz|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
-		sed -i 's|https://www.litespeedtech.com/packages/5.0/lsws-5.3.8-ent-x86_64-linux.tar.gz|https://'$DOWNLOAD_SERVER'/litespeed/lsws-'$LSWS_STABLE_VER'-ent-x86_64-linux.tar.gz|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
+		sed -i 's|https://www.litespeedtech.com/packages/5.0/lsws-5.3.8-ent-x86_64-linux.tar.gz|https://'"$DOWNLOAD_SERVER"'/litespeed/lsws-'"$LSWS_STABLE_VER"'-ent-x86_64-linux.tar.gz|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
 		echo -e "If you have install LiteSpeed Enterprise, please run \e[31m/usr/local/lsws/admin/misc/lsup.sh\033[39m to update it to latest."
 	fi
 fi
 
-sed -i 's|lsws-5.3.8|lsws-'$LSWS_STABLE_VER'|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
-sed -i 's|lsws-5.4.2|lsws-'$LSWS_STABLE_VER'|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
-sed -i 's|lsws-5.3.5|lsws-'$LSWS_STABLE_VER'|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
+sed -i 's|lsws-5.3.8|lsws-'"$LSWS_STABLE_VER"'|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
+sed -i 's|lsws-5.4.2|lsws-'"$LSWS_STABLE_VER"'|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
+sed -i 's|lsws-5.3.5|lsws-'"$LSWS_STABLE_VER"'|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
 
 if [[ $SILENT != "ON" ]] ; then
 printf "%s" "Would you like to restart your server now? [y/N]: "
@@ -1147,9 +1147,9 @@ fi
 
 argument_mode() {
 KEY_SIZE=${#VERSION}
-TMP=$(echo $VERSION | cut -c5)
-TMP2=$(echo $VERSION | cut -c10)
-TMP3=$(echo $VERSION | cut -c15)
+TMP=$(echo "$VERSION" | cut -c5)
+TMP2=$(echo "$VERSION" | cut -c10)
+TMP3=$(echo "$VERSION" | cut -c15)
 if [[ $VERSION == "OLS" || $VERSION == "ols" ]] ; then
 	VERSION="OLS"
 	echo -e "\nSet to OpenLiteSpeed..."
@@ -1176,7 +1176,7 @@ elif [[ $ADMIN_PASS == "r" ]] ; then
 	ADMIN_PASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16 ; echo '')
 	echo -e "\nSet to random-generated password..."
 	echo -e "\nAdmin password will be set to \e[31m$ADMIN_PASS\e[39m"
-	echo $ADMIN_PASS
+	echo "$ADMIN_PASS"
 else
 	echo -e "\nAdmin password will be set to \e[31m$ADMIN_PASS\e[39m"
 fi
@@ -1217,10 +1217,10 @@ else
 				-p | --password) shift
 						if [[ "${1}" == '' ]]; then
 							ADMIN_PASS="1234567"
-						elif [[ "${1}" == 'r' ]] || [[ $1 == 'random' ]] ; then
+						elif [[ "${1}" == 'r' ]] || [[ "$1" == 'random' ]] ; then
 							ADMIN_PASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16 ; echo '')
 						else
-							if [ ${1} -lt 8 ] ; then
+							if [ "${#1}" -lt 8 ] ; then
 								echo -e "\nPassword lenth less than 8 digital, please choose a more complicated password.\n"
 								exit
 							fi

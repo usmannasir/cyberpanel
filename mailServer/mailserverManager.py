@@ -895,10 +895,8 @@ class MailServerManager(multi.Thread):
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile('%s. [checkIfMailServerSSLIssued:864]' % (str(msg)))
 
-            ipFile = "/etc/cyberpanel/machineIP"
-            f = open(ipFile)
-            ipData = f.read()
-            ipAddress = ipData.split('\n', 1)[0]
+            from plogical.machineIP import get_machine_ip
+            ipAddress = get_machine_ip()
 
             command = 'openssl s_client -connect %s:465' % (ipAddress)
             result = ProcessUtilities.outputExecutioner(command)
@@ -1678,10 +1676,8 @@ milter_default_action = accept
 
                 ## Also set localhost to this server
 
-                ipFile = "/etc/cyberpanel/machineIP"
-                f = open(ipFile)
-                ipData = f.read()
-                ipAddressLocal = ipData.split('\n', 1)[0]
+                from plogical.machineIP import get_machine_ip
+                ipAddressLocal = get_machine_ip()
 
                 self.LOCALHOST = ipAddressLocal
             except BaseException as msg:
@@ -1756,10 +1752,8 @@ milter_default_action = accept
 
     def debugEmailForSite(self, websiteName):
 
-        ipFile = "/etc/cyberpanel/machineIP"
-        f = open(ipFile)
-        ipData = f.read()
-        ipAddress = ipData.split('\n', 1)[0]
+        from plogical.machineIP import get_machine_ip
+        ipAddress = get_machine_ip()
 
         try:
             import socket

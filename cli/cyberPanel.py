@@ -119,10 +119,8 @@ class cyberPanel:
         try:
 
             websites = Websites.objects.all()
-            ipFile = "/etc/cyberpanel/machineIP"
-            with open(ipFile, 'r') as f:
-                ipData = f.read()
-            ipAddress = ipData.split('\n', 1)[0]
+            from plogical.machineIP import get_machine_ip
+            ipAddress = get_machine_ip()
 
             json_data = []
 
@@ -147,10 +145,8 @@ class cyberPanel:
             from prettytable import PrettyTable
 
             websites = Websites.objects.all()
-            ipFile = "/etc/cyberpanel/machineIP"
-            f = open(ipFile)
-            ipData = f.read()
-            ipAddress = ipData.split('\n', 1)[0]
+            from plogical.machineIP import get_machine_ip
+            ipAddress = get_machine_ip()
 
             table = PrettyTable(['ID', 'Domain', 'IP Address', 'Package', 'Owner', 'State', 'Email'])
 

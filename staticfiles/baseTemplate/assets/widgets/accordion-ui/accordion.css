@@ -1,0 +1,22 @@
+/* Accordion */
+
+.ui-accordion .ui-accordion-header {
+    font-size: 15px;
+    font-weight: bold;
+    position: relative;
+    display: block;
+    min-height: 0;
+    margin-top: 2px;
+    padding: 10px;
+    cursor: pointer;
+    border-width: 1px;
+    border-style: solid;
+}
+.ui-accordion .ui-accordion-header .ui-accordion-header-icon {
+    margin-right: 10px;
+}
+.ui-accordion .ui-accordion-content {
+    overflow: hidden;
+    padding: 15px 0;
+    border-top: 0;
+}

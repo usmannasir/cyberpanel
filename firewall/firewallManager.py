@@ -1539,10 +1539,8 @@ class FirewallManager:
             return HttpResponse(final_json)
 
     def imunify(self):
-        ipFile = "/etc/cyberpanel/machineIP"
-        f = open(ipFile)
-        ipData = f.read()
-        ipAddress = ipData.split('\n', 1)[0]
+        from plogical.machineIP import get_machine_ip
+        ipAddress = get_machine_ip()
 
         fullAddress = '%s:%s' % (ipAddress, ProcessUtilities.fetchCurrentPort())
 
@@ -1596,10 +1594,8 @@ class FirewallManager:
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, str(msg) + ' [404].', 1)
 
     def imunifyAV(self):
-        ipFile = "/etc/cyberpanel/machineIP"
-        f = open(ipFile)
-        ipData = f.read()
-        ipAddress = ipData.split('\n', 1)[0]
+        from plogical.machineIP import get_machine_ip
+        ipAddress = get_machine_ip()
 
         fullAddress = '%s:%s' % (ipAddress, ProcessUtilities.fetchCurrentPort())
 

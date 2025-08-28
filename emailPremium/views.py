@@ -1123,10 +1123,8 @@ def delete(request):
 def MailScanner(request):
     checkIfMailScannerInstalled = 0
 
-    ipFile = "/etc/cyberpanel/machineIP"
-    f = open(ipFile)
-    ipData = f.read()
-    ipAddress = ipData.split('\n', 1)[0]
+    from plogical.machineIP import get_machine_ip
+    ipAddress = get_machine_ip()
 
     if mailUtilities.checkIfMailScannerInstalled() == 1:
         checkIfMailScannerInstalled = 1
@@ -1246,10 +1244,8 @@ def Rspamd(request):
     if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
         checkIfRspamdInstalled = 0
 
-        ipFile = "/etc/cyberpanel/machineIP"
-        f = open(ipFile)
-        ipData = f.read()
-        ipAddress = ipData.split('\n', 1)[0]
+        from plogical.machineIP import get_machine_ip
+        ipAddress = get_machine_ip()
 
         if mailUtilities.checkIfRspamdInstalled() == 1:
             checkIfRspamdInstalled = 1

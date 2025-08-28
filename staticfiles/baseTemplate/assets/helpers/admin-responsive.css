@@ -1,0 +1,184 @@
+/* === Mobile devices - Portrait (320px wide) === */
+
+@media only screen and (min-width: 20em) {
+    #theme-options,
+    #header-logo {
+        display: none;
+    }
+    #page-sidebar {
+        transform: translateX(0px);
+        -ms-transform: translateX(0px);
+        -o-transform: translateX(0px);
+        -webkit-transform: translateX(0px);
+        visibility: hidden;
+    }
+    #page-content {
+        margin-left: 0;
+    }
+}
+/* === Mobile devices - Landscape (480px wide) === */
+
+@media only screen and (min-width: 30em) {
+
+}
+/* === Tablet devices - Portrait (768px wide) === */
+
+@media only screen and (min-width: 48em) {
+
+}
+/* === Tablet devices - Landscape (900px wide) === */
+
+@media only screen and (min-width: 56.25em) {
+    #theme-options,
+    #header-logo {
+        display: block;
+    }
+    #mobile-navigation {
+        display: none;
+    }
+    #page-sidebar {
+        transform: translateX(0px);
+        -ms-transform: translateX(0px);
+        -o-transform: translateX(0px);
+        -webkit-transform: translateX(0px);
+        visibility: visible;
+    }
+    #page-content {
+        margin-left: 260px;
+    }
+    #page-sidebar.collapse {
+        display: block;
+    }
+}
+/* === Netbook devices (1100px wide) === */
+
+@media only screen and (min-width: 68.75em) {
+
+}
+/* === Desktop devices (1300px wide) === */
+
+@media only screen and (min-width: 81.25em) {
+
+
+}
+/* === Desktop devices (1600px wide) === */
+
+@media only screen and (min-width: 81.25em) {
+
+}
+
+/* Custom */
+@media only screen and (max-width: 760px) {
+
+    #header-nav-right #fullscreen-btn,
+    #cloud-btn {
+        display: none;
+    }
+
+}
+
+@media only screen and (max-width: 630px) {
+
+    #page-header .user-account-btn > a.user-profile span {
+        display: none;
+    }
+    #page-header .user-account-btn .dropdown-menu:after,
+    #page-header .user-account-btn .dropdown-menu:before {
+        left: 56px;
+    }
+
+}
+@media only screen and (max-width: 545px) {
+
+    #header-nav-right #chatbox-btn {
+        display: none;
+    }
+
+}
+@media only screen and (max-width: 520px) {
+
+    #dashnav-btn,
+    #page-header .user-account-btn > a.user-profile span {
+        display: none;
+    }
+    .popover {
+        width: 100%;
+        border-radius: 0;
+    }
+    .box-md {
+        width: auto;
+    }
+
+}
+@media only screen and (max-width: 460px) {
+
+    .box-sm {
+        width: auto;
+    }
+
+    #page-content {
+        padding: 10px;
+    }
+
+    #page-title {
+        padding: 10px 0 15px;
+        text-align: center;
+    }
+
+    .col-xs-1, .col-xs-2, .col-xs-3, .col-xs-4, .col-xs-5, .col-xs-6, .col-xs-7, .col-xs-8, .col-xs-9, .col-xs-10, .col-xs-11, .col-xs-12, .col-sm-1, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9, .col-sm-10, .col-sm-11, .col-sm-12, .col-md-1, .col-md-2, .col-md-3, .col-md-4, .col-md-5, .col-md-6, .col-md-7, .col-md-8, .col-md-9, .col-md-10, .col-md-11, .col-md-12, .col-lg-1, .col-lg-2, .col-lg-3, .col-lg-4, .col-lg-5, .col-lg-6, .col-lg-7, .col-lg-8, .col-lg-9, .col-lg-10, .col-lg-11, .col-lg-12 {
+        margin-bottom: 20px;
+    }
+
+    .content-box {
+        margin-top: 0 !important;
+    }
+
+    .row.mrg20B {
+        margin-bottom: 0 !important;
+    }
+
+    .timeline-box .popover {
+        width: auto;
+    }
+
+    .header-buttons-separator,
+    #progress-btn,
+    #page-title p,
+    .dashboard-box .list-grade,
+    .tooltip .tooltip-arrow,
+    .todo-box .btn,
+    .todo-box .bs-label {
+        display: none;
+    }
+
+}
+@media only screen and (max-width: 410px) {
+
+    #header-nav-right #logout-btn,
+    #notifications-btn {
+        display: none;
+    }
+    #header-nav-left {
+        float: right;
+    }
+    #header-nav-right {
+        margin-right: 0;
+        margin-left: 15px;
+        float: left;
+    }
+    .dropdown-menu {
+        position: fixed;
+        left: 0 !important;
+        width: 100%;
+        border-radius: 0;
+    }
+    #page-header .user-account-btn .dropdown-menu {
+        top: 65px;
+    }
+    #page-header .user-account-btn .dropdown-menu:after,
+    #page-header .user-account-btn .dropdown-menu:before {
+        left: auto;
+        right: 24px;
+    }
+
+}

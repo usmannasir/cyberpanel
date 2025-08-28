@@ -463,10 +463,8 @@ class cPanelImporter:
             message = 'We are going to create DNS records now, please note we will not create DKIM records. Make sure to create them from CyberPanel interface using our DKIM manager.'
             logging.statusWriter(self.logFile, message, 1)
 
-            ipFile = "/etc/cyberpanel/machineIP"
-            f = open(ipFile)
-            ipData = f.read()
-            ipAddress = ipData.split('\n', 1)[0]
+            from plogical.machineIP import get_machine_ip
+            ipAddress = get_machine_ip()
             admin = Administrator.objects.get(userName='admin')
 
             CompletPathToExtractedArchive = cPanelImporter.mainBackupPath + self.fileName

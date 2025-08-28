@@ -1,0 +1,88 @@
+    /* Info Boxes */
+    
+    .alert {
+        position: relative;
+        padding: 10px;
+        text-align: left;
+        border-width: 0;
+        border-style: solid;
+    }
+    .alert-close {
+        padding-right: 36px;
+    }
+    .alert a {
+        font-weight: bold;
+        background: none;
+    }
+    .alert a:hover {
+        text-decoration: underline;
+    }
+    .alert .alert-icon {
+        line-height: 34px;
+        float: left;
+        width: 34px;
+        height: 34px;
+        margin: 5px 10px 0 0;
+        text-align: center;
+    }
+    .alert .alert-title {
+        font-size: 12px;
+        font-weight: bold;
+        margin: 4px 0 3px;
+        padding: 0;
+        text-transform: uppercase;
+    }
+    .alert .alert-content {
+        overflow: hidden;
+    }
+    .alert p {
+        padding: 0;
+        opacity: .85;
+        -moz-opacity: .85;
+        filter: alpha(opacity: 85);
+    }
+    .alert p:last-child {
+        margin: 0;
+    }
+    .alert .alert-close-btn {
+        font-size: 12px;
+        line-height: 16px;
+        position: absolute;
+        z-index: 2;
+        top: 50%;
+        right: 10px;
+        display: block;
+        width: 16px;
+        height: 16px;
+        margin-top: -10px;
+        text-align: center;
+        opacity: .50;
+        color: #000;
+        filter: alpha(opacity=50);
+    }
+    .alert .alert-close-btn:hover {
+        opacity: 1;
+        filter: alpha(opacity=100);
+    }
+    /* Server response */
+    
+    .server-message {
+        text-align: center;
+        color: #888;
+    }
+    .server-message h1 {
+        font-size: 85px;
+        margin: 0;
+    }
+    .server-message h2 {
+        font-size: 40px;
+        margin: 0 0 25px;
+        text-transform: uppercase;
+    }
+    .server-message p {
+        font-size: 20px;
+        line-height: 1.8em;
+    }
+    .server-message.inverse {
+        color: rgba(255, 255, 255, .8);
+    }

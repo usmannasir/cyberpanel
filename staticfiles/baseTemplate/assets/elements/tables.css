@@ -1,0 +1,127 @@
+  /* Default */
+  
+  .table {
+      font-size: 14px;
+      width: 100%;
+      border-spacing: 0;
+      border-collapse: separate;
+  }
+  .table > caption + thead > tr:first-child > th,
+  .table > colgroup + thead > tr:first-child > th,
+  .table > thead:first-child > tr:first-child > th,
+  .table > caption + thead > tr:first-child > td,
+  .table > colgroup + thead > tr:first-child > td,
+  .table > thead:first-child > tr:first-child > td {
+      border-top: 0;
+  }
+  .table > thead > tr > th,
+  .table > tbody > tr > th,
+  .table > tfoot > tr > th,
+  .table > thead > tr > td,
+  .table > tbody > tr > td,
+  .table > tfoot > tr > td {
+      padding: 10px;
+      border-top-width: 1px;
+      border-top-style: solid;
+      text-align: left;
+  }
+  .table th,
+  .table td {
+      font-weight: normal;
+      vertical-align: middle;
+  }
+  .table > thead > tr > th {
+      font-weight: bold;
+      vertical-align: bottom;
+      border-bottom-width: 2px;
+      border-bottom-style: solid;
+  }
+  /* Condensed */
+  
+  .table-condensed > thead > tr > th,
+  .table-condensed > tbody > tr > th,
+  .table-condensed > tfoot > tr > th,
+  .table-condensed > thead > tr > td,
+  .table-condensed > tbody > tr > td,
+  .table-condensed > tfoot > tr > td {
+      padding: 5px;
+  }
+  /* Striped */
+  
+  .table-striped tr:nth-child(even) > td {
+      background: #fefeff;
+  }
+  /* Hover */
+  
+  .table-hover tr:hover td {
+      color: #000;
+      background: #fffdf4;
+  }
+  /* Bordered */
+  
+  .table-bordered {
+      border-width: 1px;
+      border-style: solid;
+      border-width: 1px 0 1px 1px;
+  }
+  .table-bordered > thead > tr > th,
+  .table-bordered > tbody > tr > th,
+  .table-bordered > tfoot > tr > th,
+  .table-bordered > thead > tr > td,
+  .table-bordered > tbody > tr > td,
+  .table-bordered > tfoot > tr > td {
+      border-width: 1px;
+      border-style: solid;
+      border-width: 1px 1px 0 0;
+  }
+  .table-bordered > thead > tr > th,
+  .table-bordered > thead > tr > td {
+      border-bottom-width: 1px;
+  }
+  /* Responsive Tables */
+  
+  @media (max-width: 767px) {
+      .table-responsive {
+          overflow-x: scroll;
+          overflow-y: hidden;
+          width: 100%;
+          -ms-overflow-style: -ms-autohiding-scrollbar;
+          -webkit-overflow-scrolling: touch;
+      }
+      .table-responsive > .table {
+          margin-bottom: 0;
+      }
+      .table-responsive > .table > thead > tr > th,
+      .table-responsive > .table > tbody > tr > th,
+      .table-responsive > .table > tfoot > tr > th,
+      .table-responsive > .table > thead > tr > td,
+      .table-responsive > .table > tbody > tr > td,
+      .table-responsive > .table > tfoot > tr > td {
+          white-space: nowrap;
+      }
+      .table-responsive > .table-bordered {
+          border: 0;
+      }
+      .table-responsive > .table-bordered > thead > tr > th:first-child,
+      .table-responsive > .table-bordered > tbody > tr > th:first-child,
+      .table-responsive > .table-bordered > tfoot > tr > th:first-child,
+      .table-responsive > .table-bordered > thead > tr > td:first-child,
+      .table-responsive > .table-bordered > tbody > tr > td:first-child,
+      .table-responsive > .table-bordered > tfoot > tr > td:first-child {
+          border-left: 0;
+      }
+      .table-responsive > .table-bordered > thead > tr > th:last-child,
+      .table-responsive > .table-bordered > tbody > tr > th:last-child,
+      .table-responsive > .table-bordered > tfoot > tr > th:last-child,
+      .table-responsive > .table-bordered > thead > tr > td:last-child,
+      .table-responsive > .table-bordered > tbody > tr > td:last-child,
+      .table-responsive > .table-bordered > tfoot > tr > td:last-child {
+          border-right: 0;
+      }
+      .table-responsive > .table-bordered > tbody > tr:last-child > th,
+      .table-responsive > .table-bordered > tfoot > tr:last-child > th,
+      .table-responsive > .table-bordered > tbody > tr:last-child > td,
+      .table-responsive > .table-bordered > tfoot > tr:last-child > td {
+          border-bottom: 0;
+      }
+  }

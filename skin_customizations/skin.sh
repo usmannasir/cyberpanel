@@ -1,4 +1,5 @@
-# CUSTOM PANEL CYBERPANEL 
+#!/bin/bash
+# CUSTOM PANEL CYBERPANEL
 # Author: Patrick Oliveira | patricknasci@cenathost.com
 # CenatHost © 2019 | support@cenathost.com
 # English Version
@@ -68,29 +69,29 @@ table_launch_panelnew=#293a4a
 #========================================================================
 #LOGIN PAGE CHANGE
 echo 'Updating Login Page Background...'
-sed -i 's|        background: '$BACKGROUND_OLD';|        background: '$BACKGROUND_NEW';|g' /usr/local/CyberCP/loginSystem/templates/loginSystem/login.html
+sed -i 's|        background: '"$BACKGROUND_OLD"';|        background: '"$BACKGROUND_NEW"';|g' /usr/local/CyberCP/loginSystem/templates/loginSystem/login.html
 
 echo 'Updating Colors Header Flag...'
 # COLOR HEADER
-sed -i 's|'$flag_oldprimary'|'$flag_newprimary'|g' /usr/local/lscp/cyberpanel/static/baseTemplate/assets/finalBase/finalBase.css
-sed -i 's|'$flag_oldsecondary'|'$flag_newsecondary'|g' /usr/local/lscp/cyberpanel/static/baseTemplate/assets/finalBase/finalBase.css
+sed -i "s|$flag_oldprimary|$flag_newprimary|g" /usr/local/lscp/cyberpanel/static/baseTemplate/assets/finalBase/finalBase.css
+sed -i "s|$flag_oldsecondary|$flag_newsecondary|g" /usr/local/lscp/cyberpanel/static/baseTemplate/assets/finalBase/finalBase.css
 
 echo 'Updating button colors..'
 #COLORS BUTTONS
-sed -i 's|'$border_tileold_color'|'$border_tilenew_color'|g' /usr/local/lscp/cyberpanel/static/baseTemplate/assets/finalBase/finalBaseTheme.css
-sed -i 's|'$background_tileold_color'|'$background_tilenew_color'|g' /usr/local/lscp/cyberpanel/static/baseTemplate/assets/finalBase/finalBaseTheme.css
-sed -i 's|'$border_tileoldselected_color'|'$border_tilenewselected_color'|g' /usr/local/lscp/cyberpanel/static/baseTemplate/assets/finalBase/finalBaseTheme.css
-sed -i 's|'$background_tileoldselected_color'|'$background_tilenewselected_color'|g' /usr/local/lscp/cyberpanel/static/baseTemplate/assets/finalBase/finalBaseTheme.css
+sed -i 's|'"$border_tileold_color"'|'"$border_tilenew_color"'|g' /usr/local/lscp/cyberpanel/static/baseTemplate/assets/finalBase/finalBaseTheme.css
+sed -i 's|'"$background_tileold_color"'|'"$background_tilenew_color"'|g' /usr/local/lscp/cyberpanel/static/baseTemplate/assets/finalBase/finalBaseTheme.css
+sed -i 's|'"$border_tileoldselected_color"'|'"$border_tilenewselected_color"'|g' /usr/local/lscp/cyberpanel/static/baseTemplate/assets/finalBase/finalBaseTheme.css
+sed -i 's|'"$background_tileoldselected_color"'|'"$background_tilenewselected_color"'|g' /usr/local/lscp/cyberpanel/static/baseTemplate/assets/finalBase/finalBaseTheme.css
 
 #Table
 echo 'Updating Table Colors...'
-sed -i 's|.table>thead>tr>th{color:'$header_tableold_color';background-color:'$background_tableold_color'}|.table>thead>tr>th{color:'$header_tablenew_color';background-color:'$background_tablenew_color'}|g' /usr/local/lscp/cyberpanel/static/baseTemplate/assets/finalBase/finalBaseTheme.css
-sed -i 's|'$div_selector_color_old'|'$div_selector_color'|g' /usr/local/lscp/cyberpanel/static/baseTemplate/assets/finalBase/finalBaseTheme.css
-sed -i 's|'$table_launch_panelold'|'$table_launch_panelnew'|g' /usr/local/lscp/cyberpanel/static/baseTemplate/assets/finalBase/finalBase.css
+sed -i 's|.table>thead>tr>th{color:'"$header_tableold_color"';background-color:'"$background_tableold_color"'}|.table>thead>tr>th{color:'"$header_tablenew_color"';background-color:'"$background_tablenew_color"'}|g' /usr/local/lscp/cyberpanel/static/baseTemplate/assets/finalBase/finalBaseTheme.css
+sed -i 's|'"$div_selector_color_old"'|'"$div_selector_color"'|g' /usr/local/lscp/cyberpanel/static/baseTemplate/assets/finalBase/finalBaseTheme.css
+sed -i 's|'"$table_launch_panelold"'|'"$table_launch_panelnew"'|g' /usr/local/lscp/cyberpanel/static/baseTemplate/assets/finalBase/finalBase.css
 
 #Header launch
 echo 'Upgrading Header launch...'
-sed -i 's|span.checked{color:'$textheader_launchold_color';border-color:#308dcc;background:'$header_launchold_color'}|span.checked{color:'$textheader_launchnew_color';border-color:#308dcc;background:'$header_launchnew_color'}|g' /usr/local/lscp/cyberpanel/static/baseTemplate/assets/finalBase/finalBase.css
+sed -i 's|span.checked{color:'"$textheader_launchold_color"';border-color:#308dcc;background:'"$header_launchold_color"'}|span.checked{color:'"$textheader_launchnew_color"';border-color:#308dcc;background:'"$header_launchnew_color"'}|g' /usr/local/lscp/cyberpanel/static/baseTemplate/assets/finalBase/finalBase.css
 
 echo 'Menu counter removed...'
 #HIDE BADGE
@@ -98,8 +99,8 @@ sed -i 's|.bs-badge.badge-absolute{position:absolute;z-index:5;top:-10px;left:-1
 
 
 #CHANGE NAME
-sed -i 's|Cyber <i>Panel</i>|'$CUSTOM_NAME'|g' /usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html
-sed -i 's:Login - CyberPanel:'$SERVER_NAME' | PANEL - LOGIN:g' /usr/local/CyberCP/loginSystem/templates/loginSystem/login.html
+sed -i "s|Cyber <i>Panel</i>|$CUSTOM_NAME|g" /usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html
+sed -i "s:Login - CyberPanel:$SERVER_NAME | PANEL - LOGIN:g" /usr/local/CyberCP/loginSystem/templates/loginSystem/login.html
 
 #LOGIN MODIFY CENTER
 sed -i '69,89d' /usr/local/CyberCP/loginSystem/templates/loginSystem/login.html

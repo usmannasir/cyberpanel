@@ -1,0 +1,74 @@
+/* Portfolio Nav */
+
+.portfolio-controls {
+    margin: 15px 0;
+    padding: 15px 0;
+}
+.dropdown.controls {
+    margin: 30px 0;
+}
+.portfolio-controls ul {
+    float: right;
+    margin: 0 -5px 0 0;
+    padding: 0;
+    list-style: none;
+}
+.portfolio-category {
+    float: left;
+    margin: 0;
+    padding: 0 10px 0 0;
+}
+.portfolio-category-alt {
+    margin-top: 36px;
+}
+.portfolio-controls ul .filter {
+    line-height: 32px;
+    display: block;
+    float: left;
+    height: 32px;
+    margin: 0 5px;
+    padding: 0 10px;
+}
+.portfolio-nav-alt .portfolio-category {
+    color: rgba(255, 255, 255, .8);
+}
+.portfolio-nav-alt.inverse .portfolio-category {
+    color: rgba(0, 0, 0, .8);
+}
+.portfolio-controls.portfolio-nav-alt.inverse ul .filter {
+    color: rgba(0, 0, 0, .6);
+}
+.portfolio-controls.portfolio-nav-alt.inverse ul .filter:hover,
+.portfolio-controls.portfolio-nav-alt.inverse ul .filter.active {
+    color: #000;
+}
+.portfolio-controls ul .filter:hover,
+.portfolio-controls ul .filter.active {
+    cursor: pointer;
+    color: #fff;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, .05);
+}
+.portfolio-nav-alt {
+    margin: 0 0 20px;
+    padding: 20px 0;
+}
+.portfolio-controls.portfolio-nav-alt ul .filter {
+    color: rgba(255, 255, 255, .6);
+}
+.portfolio-controls.portfolio-nav-alt ul .filter:hover,
+.portfolio-controls.portfolio-nav-alt ul .filter.active {
+    color: #fff;
+}
+.isotope {
+    margin-top: 20px;
+}
+/*.isotope .thumbnail-box, 
+.isotope .thumb-box, */
+
+.portfolio-fullwidth .thumbnail-box,
+.portfolio-fullwidth ul li .thumb-box,
+.portfolio-fullwidth ul li.mix_all {
+    margin: 0;
+    padding: 0;
+}

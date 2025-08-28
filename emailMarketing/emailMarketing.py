@@ -313,10 +313,8 @@ class emailMarketing(multi.Thread):
             sent = 0
             failed = 0
 
-            ipFile = "/etc/cyberpanel/machineIP"
-            f = open(ipFile)
-            ipData = f.read()
-            ipAddress = ipData.split('\n', 1)[0]
+            from plogical.machineIP import get_machine_ip
+            ipAddress = get_machine_ip()
 
             ## Compose Message
             from email.mime.multipart import MIMEMultipart
