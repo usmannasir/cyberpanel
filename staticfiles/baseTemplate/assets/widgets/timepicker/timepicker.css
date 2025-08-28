@@ -1,0 +1,42 @@
+  /* Timepicker */
+  
+  .bootstrap-timepicker {
+      position: relative;
+  }
+  .dropdown.bootstrap-timepicker {
+      float: none;
+  }
+  .bootstrap-timepicker-widget.dropdown-menu.open {
+      display: inline-block;
+      padding: 10px;
+  }
+  .bootstrap-timepicker-widget table {
+      width: 100%;
+      margin: 0;
+  }
+  .bootstrap-timepicker-widget table td {
+      line-height: 32px;
+      width: 42px;
+      height: 32px;
+  }
+  .bootstrap-timepicker-widget table td.separator {
+      width: auto;
+      padding: 0 5px;
+  }
+  .bootstrap-timepicker-widget table td a {
+      display: block;
+      text-align: center;
+  }
+  .bootstrap-timepicker-widget table td a i {
+      margin: 0 auto;
+  }
+  .bootstrap-timepicker-widget table td input {
+      width: 100%;
+      min-width: 32px;
+      margin: 0;
+      padding: 0 5px;
+      text-align: center;
+  }
+  .bootstrap-timepicker-widget table td input.bootstrap-timepicker-meridian {
+      font-weight: bold;
+  }

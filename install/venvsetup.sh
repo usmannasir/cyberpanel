@@ -404,11 +404,11 @@ if [[ $SERVER_OS == "Ubuntu" ]] ; then
 		fi
 fi
 
-if ps -aux | grep "lsmcd" | grep -v grep ; then
+if pgrep -f "lsmcd" > /dev/null; then
 	echo -e "\n\nLiteSpeed Memcached installed and running..."
 fi
 
-if ps -aux | grep "memcached" | grep -v grep ; then
+if pgrep -f "memcached" > /dev/null; then
 	echo -e "\n\nMemcached installed and running..."
 fi
 
@@ -439,7 +439,7 @@ if [[ $SERVER_OS == "Ubuntu" ]] ; then
 	systemctl start redis-server
 fi
 
-if ps -aux | grep "redis" | grep -v grep ; then
+if pgrep -f "redis" > /dev/null; then
 	echo -e "\n\nRedis installed and running..."
 fi
 }
@@ -563,7 +563,7 @@ echo -e "If you are using \e[31mFree Start\e[39m license, It will not start due 
 echo -e "If you do not have any license, you can also use trial license (if server has not used trial license before), type \e[31mTRIAL\e[39m\n"
 
 printf "%s" "Please input your serial number for LiteSpeed WebServer Enterprise:"
-read LICENSE_KEY
+read -r LICENSE_KEY
 if [ -z "$LICENSE_KEY" ] ; then
 	echo -e "\nPlease provide license key\n"
 	exit
@@ -571,7 +571,7 @@ fi
 
 echo -e "The serial number you input is: \e[31m$LICENSE_KEY\e[39m"
 printf "%s"  "Please verify it is correct. [y/N]"
-read TMP_YN
+read -r TMP_YN
 if [ -z "$TMP_YN" ] ; then
 	echo -e "\nPlease type \e[31my\e[39m\n"
 	exit
@@ -745,7 +745,7 @@ echo -e "\nonly use this feature if you are a \e[31mdeveloper\e[39m"
 	DEV="ON"
 	echo -e "\nPlease specify branch name"
 	printf "%s" ""
-	read TMP_YN
+	read -r TMP_YN
 	BRANCH_NAME=$TMP_YN
 	echo -e "Branch name set to $BRANCH_NAME"
 #else
@@ -755,7 +755,7 @@ fi
 
 echo -e "\nPlease choose to use default admin password \e[31m1234567\e[39m, randomly generate one \e[31m(recommended)\e[39m or specify the admin password?"
 printf "%s" "Choose [d]fault, [r]andom or [s]et password: [d/r/s] "
-read TMP_YN
+read -r TMP_YN
 
 if [[ $TMP_YN =~ ^(d|D| ) ]] || [[ -z $TMP_YN ]]; then
 	ADMIN_PASS="1234567"
@@ -766,7 +766,7 @@ elif [[ $TMP_YN =~ ^(r|R) ]] ; then
 elif [[ $TMP_YN =~ ^(s|S) ]] ; then
 	echo -e "\nPlease enter your password:"
 	printf "%s" ""
-	read TMP_YN
+	read -r TMP_YN
 		if [ -z "$TMP_YN" ] ; then
   		echo -e "\nPlease do not use empty string...\n"
 			exit
@@ -778,7 +778,7 @@ elif [[ $TMP_YN =~ ^(s|S) ]] ; then
 	TMP_YN1=$TMP_YN
 	echo -e "\nPlease confirm  your password:\n"
 	printf "%s" ""
-	read TMP_YN
+	read -r TMP_YN
 	if [ -z "$TMP_YN" ] ; then
   	echo -e "\nPlease do not use empty string...\n"
 		exit
@@ -797,7 +797,7 @@ fi
 
 echo -e "\nDo you wish to install Memcached extension and backend?"
 printf "%s" "Please select [Y/n]: "
-read TMP_YN
+read -r TMP_YN
 if [[ $TMP_YN =~ ^(no|n|N) ]] ; then
 	MEMCACHED="OFF"
 else
@@ -806,7 +806,7 @@ fi
 
 echo -e "\nDo you wish to install Redis extension and backend?"
 printf "%s" "Please select [Y/n]: "
-read TMP_YN
+read -r TMP_YN
 if [[ $TMP_YN =~ ^(no|n|N) ]] ; then
 	REDIS="OFF"
 else
@@ -1124,7 +1124,7 @@ sed -i 's|lsws-5.3.5|lsws-'"$LSWS_STABLE_VER"'|g' /usr/local/CyberCP/serverStatu
 
 if [[ $SILENT != "ON" ]] ; then
 printf "%s" "Would you like to restart your server now? [y/N]: "
-read TMP_YN
+read -r TMP_YN
 
 if [[ "$TMP_YN" = "N" ]] || [[ "$TMP_YN" = "n" ]] || [[ -z "$TMP_YN" ]]; then
 :

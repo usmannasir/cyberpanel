@@ -1,0 +1,329 @@
+/* -----------------------------------
+ * Slidebars
+ * Version 0..10
+ * http://plugins.adchsm.me/slidebars/
+ *
+ * Written by Adam Smith
+ * http://www.adchsm.me/
+ *
+ * Released under MIT License
+ * http://plugins.adchsm.me/slidebars/license.txt
+ *
+ * -------------------
+ * Slidebars CSS Index
+ *
+ * 001 - Box Model, Html & Body
+ * 002 - Site
+ * 003 - Slidebars
+ * 004 - Animation
+ * 005 - Helper Classes
+ *
+ * ----------------------------
+ * 001 - Box Model, Html & Body
+ */
+
+html,
+body,
+#sb-site,
+.sb-site-container,
+.sb-slidebar {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    /* Set box model to prevent any user added margins or paddings from altering the widths or heights. */
+
+    margin: 0;
+    padding: 0;
+}
+html.sb-scroll-lock.sb-active:not(.sb-static) {
+    overflow: hidden;
+    /* Prevent site from scrolling when a Slidebar is open, except when static Slidebars are only available. */
+}
+#sb-site .sb-overlay {
+    display: none;
+}
+.sb-active #sb-site .sb-overlay {
+    display: block;
+}
+/* ----------
+ * 002 - Site
+ */
+
+#sb-site,
+.sb-site-container {
+    position: relative;
+    /* You may now use class .sb-site-container instead of #sb-site and use your own id. However please make sure you don't set any of the following styles any differently on your id. */
+
+    width: 100%;
+}
+/* ---------------
+ * 003 - Slidebars
+ */
+
+.sb-slidebar {
+    position: fixed;
+    z-index: 0;
+    /* Slidebars sit behind sb-site. */
+
+    top: 0;
+    display: none;
+    /* Initially hide the Slidebars. Changed from visibility to display to allow -webkit-overflow-scrolling. */
+
+    overflow-y: auto;
+    /* Enable vertical scrolling on Slidebars when needed. */
+
+    height: 100%;
+    overflow-x: hidden;
+    -webkit-transform: translate(0px);
+    /* Fixes issues with translated and z-indexed elements on iOS 7. */
+}
+.sb-slidebar.sb-right.sb-active {
+    right: -3px;
+}
+.sb-left {
+    left: 0;
+    /* Set Slidebar to the left. */
+}
+.sb-right {
+    right: 0;
+    /* Set Slidebar to the right. */
+}
+.sb-slidebar .scrollable-content {
+    height: 100%;
+}
+html.sb-static .sb-slidebar,
+.sb-slidebar.sb-static {
+    position: absolute;
+    /* Makes Slidebars scroll naturally with the site, and unfixes them for Android Browser < 3 and iOS < 5. */
+}
+.sb-slidebar.sb-active {
+    display: block;
+    /* Makes Slidebars visibile when open. Changed from visibility to display to allow -webkit-overflow-scrolling. */
+}
+.sb-style-overlay {
+    z-index: 9999;
+    /* Set z-index high to ensure it overlays any other site elements. */
+}
+.sb-momentum-scrolling {
+    -webkit-overflow-scrolling: touch;
+    /* Adds native momentum scrolling for iOS & Android devices. */
+}
+/* Slidebar widths for browsers/devices that don't support media queries. */
+
+.sb-slidebar {
+    width: 30%;
+}
+.sb-width-thin {
+    width: 15%;
+}
+.sb-width-wide {
+    width: 45%;
+}
+@media (max-width: 480px) {
+    /* Slidebar widths on extra small screens. */
+
+    .sb-slidebar {
+        width: 70%;
+    }
+    .sb-width-thin {
+        width: 55%;
+    }
+    .sb-width-wide {
+        width: 85%;
+    }
+}
+@media (min-width: 481px) {
+    /* Slidebar widths on small screens. */
+
+    .sb-slidebar {
+        width: 55%;
+    }
+    .sb-width-thin {
+        width: 40%;
+    }
+    .sb-width-wide {
+        width: 70%;
+    }
+}
+@media (min-width: 768px) {
+    /* Slidebar widths on medium screens. */
+
+    .sb-slidebar {
+        width: 40%;
+    }
+    .sb-width-thin {
+        width: 25%;
+    }
+    .sb-width-wide {
+        width: 55%;
+    }
+}
+@media (min-width: 992px) {
+    /* Slidebar widths on large screens. */
+
+    .sb-slidebar {
+        width: 30%;
+    }
+    .sb-width-thin {
+        width: 15%;
+    }
+    .sb-width-wide {
+        width: 45%;
+    }
+}
+@media (min-width: 1200px) {
+    /* Slidebar widths on extra large screens. */
+
+    .sb-slidebar {
+        width: 350px;
+    }
+    .sb-width-thin {
+        width: 5%;
+    }
+    .sb-width-wide {
+        width: 35%;
+    }
+}
+/* ---------------
+ * 004 - Animation
+ */
+
+.sb-slide,
+#sb-site,
+.sb-site-container,
+.sb-slidebar {
+    -webkit-transition: -webkit-transform 400ms ease;
+    -moz-transition: -moz-transform 400ms ease;
+    -o-transition: -o-transform 400ms ease;
+    transition: transform 400ms ease;
+    -webkit-transition-property: -webkit-transform, left, right;
+    /* Add left/right for Android < 4.4. */
+
+    -webkit-backface-visibility: hidden;
+    /* Prevents flickering. This is non essential, and you may remove it if your having problems with fixed background images in Chrome. */
+}
+/* --------------------
+ * 005 - Helper Classes
+ */
+
+.sb-hide {
+    display: none;
+    /* Optionally applied to control classes when Slidebars is disabled over a certain width. */
+}
+
+/* Right menu */
+
+.sb-slidebar .popover-title
+{
+    font-size: 13px;
+    font-size: 11px;
+    line-height: 36px;
+
+    display: block;
+
+    height: 36px;
+    margin: 2px 0;
+    padding: 0 15px;
+
+    border-width: 0;
+}
+
+.sb-slidebar .divider
+{
+    background: rgba(255,255,255,.1);
+}
+
+.sb-slidebar.sb-left .divider-header
+{
+    font-size: 14px;
+
+    opacity: .4;
+}
+
+.sb-slidebar .popover-title .caret
+{
+    float: right;
+
+    margin-top: 17px;
+}
+
+.sb-slidebar .progress-box li a
+{
+    display: block;
+
+    padding: 0;
+}
+
+.sb-slidebar .files-box
+{
+    padding: 10px 0;
+}
+
+.sb-slidebar .files-box li.divider
+{
+    margin: 5px 0;
+    padding: 0;
+}
+
+.sb-slidebar .notifications-box li,
+.sb-slidebar .progress-box li
+{
+    padding: 15px;
+
+    border-color: rgba(255,255,255,.1);
+}
+
+.sb-slidebar .notifications-box li:last-child,
+.sb-slidebar .progress-box li:last-child
+{
+    padding-bottom: 20px;
+}
+
+.sb-slidebar .notifications-box-alt li:first-child {
+    padding-top: 15px;
+}
+
+/* Chat box */
+
+.sb-slidebar  ul.chat-box {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.sb-slidebar .chat-box li {
+    position: relative;
+    margin: 15px;
+    padding: 0;
+}
+.sb-slidebar .chat-box li a.chat-wrapper {
+    display: block;
+    padding: 10px;
+}
+.sb-slidebar .chat-box li a.btn-md {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    margin-top: -17px;
+    padding: 0 10px;
+}
+.sb-slidebar .chat-box li a.btn-md .glyph-icon {
+    opacity: .5;
+}
+.sb-slidebar .chat-box li a.chat-wrapper:hover {
+    color: #fff;
+}
+.sb-slidebar .chat-box li .status-badge {
+    float: left;
+    margin: 0 10px 0 0;
+}
+.sb-slidebar .chat-box li b {
+    font-size: 12px;
+    display: block;
+    padding: 4px 0 0;
+}
+.sb-slidebar .chat-box li p {
+    font-size: 11px;
+    opacity: .6;
+}
+
+.popover-title:hover { text-decoration:none; }

@@ -1,0 +1,88 @@
+/* jQuery UI Slider */
+
+.ui-slider {
+    position: relative;
+    text-align: left;
+}
+.ui-slider .ui-slider-handle,
+.ui-slider .ui-slider-range,
+.ui-slider-horizontal,
+.ui-slider-vertical {
+    -webkit-border-radius: 100px;
+    -moz-border-radius: 100px;
+    border-radius: 100px;
+}
+.ui-slider .ui-slider-handle {
+    position: absolute;
+    z-index: 2;
+    width: 8px;
+    height: 8px;
+    border: #FFF solid 6px;
+    box-sizing: initial;
+    cursor: pointer;
+    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+}
+.ui-slider .ui-slider-handle:active,
+.ui-slider .ui-slider-handle:hover {
+    border-color: #fff;
+}
+.ui-slider .ui-slider-range {
+    position: absolute;
+    z-index: 1;
+    display: block;
+    border: 0;
+}
+.ui-slider.ui-state-disabled .ui-slider-handle,
+.ui-slider.ui-state-disabled .ui-slider-range {
+    filter: inherit;
+}
+.ui-slider-horizontal {
+    height: 7px;
+    background: #ddd;
+    -webkit-box-shadow: inset 0 1px 6px #717171;
+    -moz-box-shadow: inset 0 1px 6px #717171;
+    box-shadow: inset 0 1px 6px #717171;
+}
+.ui-slider-horizontal .ui-slider-handle {
+    top: -7px;
+    margin-left: -7px;
+}
+.ui-slider-horizontal .ui-slider-range {
+    top: 0;
+    height: 100%;
+    opacity: .60;
+    -moz-opacity: .60;
+    filter: alpha(opacity: 60);
+}
+.ui-slider-horizontal .ui-slider-range-min {
+    left: 0;
+}
+.ui-slider-horizontal .ui-slider-range-max {
+    right: 0;
+}
+.ui-slider-vertical {
+    width: 7px;
+    height: 100px;
+    background: #ddd;
+    -webkit-box-shadow: inset 1px 0 6px #717171;
+    -moz-box-shadow: inset 1px 0 6px #717171;
+    box-shadow: inset 1px 0 6px #717171;
+}
+.ui-slider-vertical .ui-slider-handle {
+    left: -7px;
+    margin-bottom: -8px;
+    margin-left: 0;
+}
+.ui-slider-vertical .ui-slider-range {
+    left: 0;
+    width: 100%;
+    opacity: .60;
+    -moz-opacity: .60;
+    filter: alpha(opacity: 60);
+}
+.ui-slider-vertical .ui-slider-range-min {
+    bottom: 0;
+}
+.ui-slider-vertical .ui-slider-range-max {
+    top: 0;
+}
