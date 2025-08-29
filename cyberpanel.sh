@@ -1295,12 +1295,12 @@ Download_Requirement() {
 for i in {1..50} ;
   do
   if [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "9" ]]; then
-   wget -O /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}/requirments.txt"
+   wget -O /usr/local/requirements.txt "${Git_Content_URL}/${Branch_Name}/requirements.txt"
   else
-   wget -O /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}/requirments-old.txt"
+   wget -O /usr/local/requirements.txt "${Git_Content_URL}/${Branch_Name}/requirements-old.txt"
   fi
 
-  if grep -q "Django==" /usr/local/requirments.txt ; then
+  if grep -q "Django==" /usr/local/requirements.txt ; then
     break
   else
     echo -e "\n Requirement list has failed to download for $i times..."
@@ -1413,10 +1413,10 @@ else
   source /usr/local/CyberPanel/bin/activate
 fi
 
-Debug_Log2 "Installing requirments..,3"
+Debug_Log2 "Installing requirements..,3"
 
-Retry_Command "pip install --default-timeout=3600 -r /usr/local/requirments.txt"
-  Check_Return "requirments" "no_exit"
+Retry_Command "pip install --default-timeout=3600 -r /usr/local/requirements.txt"
+  Check_Return "requirements" "no_exit"
 
 rm -rf cyberpanel
 echo -e "\nFetching files from ${Git_Clone_URL}...\n"
@@ -2172,15 +2172,15 @@ else
 
 fi
 
-Retry_Command "pip install --default-timeout=3600 -r /usr/local/requirments.txt"
- Check_Return "requirments.txt" "no_exit"
+Retry_Command "pip install --default-timeout=3600 -r /usr/local/requirements.txt"
+ Check_Return "requirements.txt" "no_exit"
 
 # Verify Django installation
 echo -e "Verifying Django installation..."
 if ! /usr/local/CyberCP/bin/python -c "import django" 2>/dev/null; then
   echo -e "WARNING: Django not found, reinstalling requirements..."
   pip install --upgrade pip setuptools wheel packaging
-  pip install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt
+  pip install --default-timeout=3600 --ignore-installed -r /usr/local/requirements.txt
 else
   echo -e "Django is properly installed"
 fi

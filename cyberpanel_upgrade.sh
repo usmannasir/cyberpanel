@@ -554,12 +554,12 @@ for i in {1..50};
   do
   if [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "9" ]]; then
    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Downloading requirements.txt for OS version $Server_OS_Version" | tee -a /var/log/cyberpanel_upgrade_debug.log
-   wget -O /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}/requirments.txt" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+   wget -O /usr/local/requirements.txt "${Git_Content_URL}/${Branch_Name}/requirements.txt" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
   else
    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Downloading requirements-old.txt for OS version $Server_OS_Version" | tee -a /var/log/cyberpanel_upgrade_debug.log
-   wget -O /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}/requirments-old.txt" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+   wget -O /usr/local/requirements.txt "${Git_Content_URL}/${Branch_Name}/requirements-old.txt" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
   fi
-  if grep -q "Django==" /usr/local/requirments.txt ; then
+  if grep -q "Django==" /usr/local/requirements.txt ; then
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Requirements file downloaded successfully" | tee -a /var/log/cyberpanel_upgrade_debug.log
     break
   else
@@ -683,7 +683,7 @@ Download_Requirement
 if [[ "$Server_OS" = "CentOS" ]] ; then
 #  $PIP3 install --default-timeout=3600 virtualenv==16.7.9
 #    Check_Return
-  $PIP3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt
+  $PIP3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirements.txt
     Check_Return
 elif [[ "$Server_OS" = "Ubuntu" ]] ; then
   # shellcheck disable=SC1091
@@ -691,12 +691,12 @@ elif [[ "$Server_OS" = "Ubuntu" ]] ; then
     Check_Return
 #  pip3 install --default-timeout=3600 virtualenv==16.7.9
 #    Check_Return
-  pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt
+  pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirements.txt
     Check_Return
 elif [[ "$Server_OS" = "openEuler" ]] ; then
 #  pip3 install --default-timeout=3600 virtualenv==16.7.9
 #    Check_Return
-  pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt
+  pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirements.txt
     Check_Return
 fi
 
@@ -798,21 +798,21 @@ else
 # shellcheck disable=SC1091
 . /usr/local/CyberPanelTemp/bin/activate
 
-wget -O /usr/local/requirments-old.txt "${Git_Content_URL}/${Branch_Name}/requirments-old.txt"
+wget -O /usr/local/requirements-old.txt "${Git_Content_URL}/${Branch_Name}/requirements-old.txt"
 
     if [[ "$Server_OS" = "CentOS" ]] ; then
 #  $PIP3 install --default-timeout=3600 virtualenv==16.7.9
 #    Check_Return
-  $PIP3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments-old.txt
+  $PIP3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirements-old.txt
     Check_Return
 elif [[ "$Server_OS" = "Ubuntu" ]] ; then
   # shellcheck disable=SC1091
   . /usr/local/CyberPanelTemp/bin/activate
     Check_Return
-  pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments-old.txt
+  pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirements-old.txt
     Check_Return
 elif [[ "$Server_OS" = "openEuler" ]] ; then
-  pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments-old.txt
+  pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirements-old.txt
     Check_Return
 fi
 
@@ -921,7 +921,7 @@ else
 fi
 
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Removing old requirements file..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-rm -f /usr/local/requirments.txt
+rm -f /usr/local/requirements.txt
 
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Downloading new requirements..." | tee -a /var/log/cyberpanel_upgrade_debug.log
 Download_Requirement
@@ -937,7 +937,7 @@ if [ "$Server_OS" = "Ubuntu" ]; then
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Upgrading setuptools and packaging..." | tee -a /var/log/cyberpanel_upgrade_debug.log
   pip install --upgrade setuptools packaging 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing requirements..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-  pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+  pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirements.txt 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
   PIP_CODE=$?
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Pip install returned code: $PIP_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log
   Check_Return
@@ -949,7 +949,7 @@ else
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Activate returned code: $ACTIVATE_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log
   Check_Return
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing requirements..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-  /usr/local/CyberCP/bin/pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+  /usr/local/CyberCP/bin/pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirements.txt 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
   PIP_CODE=$?
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Pip install returned code: $PIP_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log
   Check_Return
@@ -966,7 +966,7 @@ if ! /usr/local/CyberCP/bin/python -c "import django" 2>/dev/null; then
   # Re-install requirements
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Re-installing Python requirements..." | tee -a /var/log/cyberpanel_upgrade_debug.log
   pip install --upgrade pip setuptools wheel packaging 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
-  pip install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+  pip install --default-timeout=3600 --ignore-installed -r /usr/local/requirements.txt 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
 else
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Django is properly installed" | tee -a /var/log/cyberpanel_upgrade_debug.log
 fi
@@ -992,7 +992,7 @@ rm -f /usr/local/CyberCP/bin/lswsgi
 cp lswsgi /usr/local/CyberCP/bin/
 
 # Return to original directory
-cd "$UPGRADE_CWD" || cd /root
+cd "$UPGRADE_CWD" || exit
 
 # Final verification
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running final verification..." | tee -a /var/log/cyberpanel_upgrade_debug.log
@@ -1119,7 +1119,7 @@ fi
 
 
 rm -f /usr/local/composer.sh
-rm -f /usr/local/requirments.txt
+rm -f /usr/local/requirements.txt
 
 chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib
 chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib64

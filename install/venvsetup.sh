@@ -8,8 +8,12 @@ readonly MIN_PASSWORD_LENGTH=8
 readonly DEFAULT_TIMEOUT=10
 readonly CYBERPANEL_PORT=8090
 readonly DEFAULT_SWAP_SIZE_MB=2048
+readonly RANDOM_PASSWORD_LENGTH=16
 readonly PID_MAX=1000000
 readonly KSM_RUN=1
+readonly VM_SWAPPINESS=10
+readonly INSTALLATION_DELAY_SECONDS=10
+readonly MIN_DISK_SPACE_GB=10
 readonly FILE_MAX=65535
 readonly NOFILE_LIMIT=65535
 readonly NPROC_LIMIT=65535
@@ -358,8 +362,8 @@ if [ ! -f $SWAP_FILE ] ; then
 	mkswap $SWAP_FILE
 	swapon $SWAP_FILE
 	echo "${SWAP_FILE} swap swap sw 0 0" | sudo tee -a /etc/fstab
-	sysctl vm.swappiness=10
-	echo "vm.swappiness = 10" >> /etc/sysctl.conf
+	sysctl vm.swappiness=$VM_SWAPPINESS
+	echo "vm.swappiness = $VM_SWAPPINESS" >> /etc/sysctl.conf
 	echo "SWAP set..."
 	fi
 fi
@@ -406,7 +410,7 @@ fi
 memcached_installation() {
 if [[ $SERVER_OS == "CentOS" ]] ; then
 	yum install -y lsphp73-memcached lsphp72-memcached lsphp71-memcached lsphp70-memcached lsphp56-pecl-memcached lsphp55-pecl-memcached lsphp54-pecl-memcached 
-		if [[ $TOTAL_RAM -eq "2048" ]] || [[ $TOTAL_RAM -gt "2048" ]] ; then
+		if [[ $TOTAL_RAM -eq "$DEFAULT_SWAP_SIZE_MB" ]] || [[ $TOTAL_RAM -gt "$DEFAULT_SWAP_SIZE_MB" ]] ; then
 			yum groupinstall "Development Tools" -y
 			yum install autoconf automake zlib-devel openssl-devel expat-devel pcre-devel libmemcached-devel cyrus-sasl* -y
 			wget "https://$DOWNLOAD_SERVER/litespeed/lsmcd.tar.gz"
@@ -429,7 +433,7 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 fi
 if [[ $SERVER_OS == "Ubuntu" ]] ; then
 	DEBIAN_FRONTEND=noninteractive apt install -y lsphp73-memcached lsphp72-memcached lsphp71-memcached lsphp70-memcached
-		if [[ $TOTAL_RAM -eq "2048" ]] || [[ $TOTAL_RAM -gt "2048" ]] ; then
+		if [[ $TOTAL_RAM -eq "$DEFAULT_SWAP_SIZE_MB" ]] || [[ $TOTAL_RAM -gt "$DEFAULT_SWAP_SIZE_MB" ]] ; then
 			DEBIAN_FRONTEND=noninteractive apt install build-essential zlib1g-dev libexpat1-dev openssl libssl-dev libsasl2-dev libpcre3-dev git -y
 			wget "https://$DOWNLOAD_SERVER/litespeed/lsmcd.tar.gz"
 			tar xzvf lsmcd.tar.gz
@@ -715,7 +719,7 @@ echo -e "		CyberPanel Installer v$CP_VER1$CP_VER2
 
   RAM check : $RAM 
   
-  Disk check : $DISK (Minimal \e[31m10GB\e[39m free space)
+  Disk check : $DISK (Minimal \e[31m${MIN_DISK_SPACE_GB}GB\e[39m free space)
 
   1. Install CyberPanel with \e[31mOpenLiteSpeed\e[39m.
   
@@ -773,7 +777,7 @@ if [[ $TMP_YN =~ ^(d|D| ) ]] || [[ -z $TMP_YN ]]; then
 	ADMIN_PASS="$DEFAULT_ADMIN_PASS"
 	echo -e "\nAdmin password will be set to $ADMIN_PASS\n"
 elif [[ $TMP_YN =~ ^(r|R) ]] ; then
-	ADMIN_PASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16 ; echo '')
+	ADMIN_PASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c $RANDOM_PASSWORD_LENGTH ; echo '')
 	echo -e "\nAdmin password will be provided once installation is completed...\n"
 elif [[ $TMP_YN =~ ^(s|S) ]] ; then
 	echo -e "\nPlease enter your password:"
@@ -848,8 +852,8 @@ sed -i 's|lsws-5.3.5|lsws-'"$LSWS_STABLE_VER"'|g' installCyberPanel.py
 #this sed must be done after license validation
 	
 echo -e "Preparing..."
-echo -e "Installation will start in 10 seconds, if you wish to stop please press CTRL + C"
-sleep 10
+echo -e "Installation will start in $INSTALLATION_DELAY_SECONDS seconds, if you wish to stop please press CTRL + C"
+sleep $INSTALLATION_DELAY_SECONDS
 debug="1"
 if [[ $debug == "0" ]] ; then
 	echo "/usr/local/CyberPanel/bin/python2 install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY"
@@ -918,7 +922,7 @@ fi
 
 if [[ $DEV == "ON" ]] ; then
 	#install dev branch 
-	#wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
+	#wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirements.txt
 	cd /usr/local/ || exit
 	python3.6 -m venv CyberPanel
 	# shellcheck disable=SC1091
@@ -1187,7 +1191,7 @@ if [[ $ADMIN_PASS == "d" ]] ; then
 	echo -e "\nSet to default password..."
 	echo -e "\nAdmin password will be set to \e[31m$ADMIN_PASS\e[39m"
 elif [[ $ADMIN_PASS == "r" ]] ; then
-	ADMIN_PASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16 ; echo '')
+	ADMIN_PASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c $RANDOM_PASSWORD_LENGTH ; echo '')
 	echo -e "\nSet to random-generated password..."
 	echo -e "\nAdmin password will be set to \e[31m$ADMIN_PASS\e[39m"
 	echo "$ADMIN_PASS"
@@ -1229,7 +1233,7 @@ else
 						if [[ "${1}" == '' ]]; then
 							ADMIN_PASS="1234567"
 						elif [[ "${1}" == 'r' ]] || [[ "$1" == 'random' ]] ; then
-							ADMIN_PASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16 ; echo '')
+							ADMIN_PASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c $RANDOM_PASSWORD_LENGTH ; echo '')
 						else
 							if [ "${#1}" -lt 8 ] ; then
 								echo -e "\nPassword lenth less than 8 digital, please choose a more complicated password.\n"

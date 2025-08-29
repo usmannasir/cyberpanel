@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# Add any services to be watched by the watchdog to the SERVICE_LIST
-# Format of the service list: "Display Name" "Service Name" "semicolon delimited list of watchdog arguments"
+# Add any services to be watched by the watchdog
 SERVICE_LIST=(
 	"LiteSpeed" "lsws" "lsws;web;litespeed;openlitespeed"
 	"MariaDB" "mariadb" "mariadb;database;mysql"
@@ -42,27 +41,22 @@ for ((x=0; x<SERVICE_COUNT; x++)) ; do
 	pid=$(ps aux | grep "watchdog ${SERVICE_ARG}" | grep -v grep | awk '{print $2}')
 	if [[ "$pid" == "" ]] ; then
 		echo -e "\nWatchDog for ${DISPLAY_NAME} is gone , restarting..."
-		nohup watchdog ${SERVICE_ARG} > /dev/null 2>&1 &
+		nohup watchdog "${SERVICE_ARG}" > /dev/null 2>&1 &
 		echo -e "\nWatchDog for ${DISPLAY_NAME} has been started..."
 	else
 		echo -e "\nWatchDog for ${DISPLAY_NAME} is running...\n"
-		echo $(ps aux | grep "watchdog ${SERVICE_ARG}" | grep -v grep)
+		ps aux | grep "watchdog ${SERVICE_ARG}" | grep -v grep
 	fi
 done
 }
 
 check_service() {
-	systemctl status $NAME 2>&1>/dev/null
-		if [[ $? == "0" ]] ; then
+	if systemctl status "$NAME" >/dev/null 2>&1; then
 			if [[ $NAME == "mariadb" ]] ; then
 				pid=$(ps aux | grep "/usr/sbin/mysqld"  | grep -v grep | awk '{print $2}')
-					if [[ $pid != "" ]] ; then
-						echo "-1000" > /proc/$pid/oom_score_adj
-					fi 
-				pid=$(ps aux | grep "/usr/sbin/mysqld"  | grep -v grep | awk '{print $2}')
-					if [[ $pid != "" ]] ; then
-						echo "-1000" > /proc/$pid/oom_score_adj
-					fi
+				if [[ $pid != "" ]] ; then
+					echo "-1000" > /proc/"$pid"/oom_score_adj
+				fi
 			fi
 			echo "$NAME service is running..."
 		else
@@ -72,16 +66,12 @@ check_service() {
 			fi
 			if [[ $NAME == "mariadb" ]] ; then
 				pid=$(ps aux | grep "/usr/sbin/mysqld"  | grep -v grep | awk '{print $2}')
-					if [[ $pid != "" ]] ; then
-						echo "-1000" > /proc/$pid/oom_score_adj
-					fi 
-				pid=$(ps aux | grep "/usr/sbin/mysqld"  | grep -v grep | awk '{print $2}')
-					if [[ $pid != "" ]] ; then
-						echo "-1000" > /proc/$pid/oom_score_adj
-					fi
+				if [[ $pid != "" ]] ; then
+					echo "-1000" > /proc/"$pid"/oom_score_adj
+				fi
 			fi
-			systemctl stop $NAME
-			systemctl start $NAME
+			systemctl stop "$NAME"
+			systemctl start "$NAME"
 			if [ -f /etc/cyberpanel/watchdog.flag ] ; then
 			flag="/etc/cyberpanel/watchdog.flag"
 			LINE3=$(awk 'NR==3' $flag)
@@ -91,7 +81,7 @@ check_service() {
 			FROM=${LINE3#*=}
 			SENDER=${LINE2#*=}
 			TO=${LINE1#*=}
-			sendmail -F $SENDER -f $FROM -i $TO <<MAIL_END
+			sendmail -F "$SENDER" -f "$FROM" -i "$TO" <<MAIL_END
 Subject: $NAME is down...
 To: $TO
 $NAME is down , watchdog attempted to restarting it...
@@ -115,7 +105,7 @@ elif [[ $1 == "kill" ]] ; then
 		
 		pid=$(ps aux | grep "watchdog ${SERVICE_ARG}" | grep -v grep | awk '{print $2}')
 		if [[ "$pid" != "" ]] ; then
-			kill -15 $pid
+			kill -15 "$pid"
 		fi
 	done
 	echo "watchdog has been killed..."
@@ -148,7 +138,7 @@ fi
 
 
 
-while [ true = true ]
+while true
 	do
 		if [[ $NAME == "pdns" ]] ; then
 			if [ -f /home/cyberpanel/powerdns ] ; then
@@ -158,7 +148,7 @@ while [ true = true ]
 			if  [ -f /home/cyberpanel/postfix ] ; then
 				check_service
 			fi
-		elif [[ $name == "pure-ftpd" ]] || [[ $name == "pure-ftpd-mysql" ]] ; then
+		elif [[ $NAME == "pure-ftpd" ]] || [[ $NAME == "pure-ftpd-mysql" ]] ; then
 			if [ -f /home/cyberpanel/pureftpd ] ; then
 				if [ -f /etc/lsb-release ] ; then
 					NAME="pure-ftpd-mysql"

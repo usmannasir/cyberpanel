@@ -7,8 +7,8 @@
 
 # Create the session path directories and chmod it for security to 1733 like the existing one is.
 
-for version in $(ls /usr/local/lsws|grep lsphp); 
-  do
+for version in /usr/local/lsws/lsphp*; do
+    version=$(basename "$version")
     mkdir -p "/var/lib/lsphp/session/$version"
     chmod -R 1733 "/var/lib/lsphp/session/$version"
 done
@@ -19,13 +19,28 @@ APT_GET_CMD=$(which apt-get 2> /dev/null)
 
 if [[ -n $YUM_CMD ]]; then
 	# Centos
-	for version in $(ls /usr/local/lsws|grep lsphp); do echo ""; echo "PHP $version"; sed -i -e "s|^;session.save_path.*|session.save_path = '/var/lib/lsphp/session/${version}'|g" -e "s|^session.save_path.*|session.save_path = '/var/lib/lsphp/session/${version}'|g" /usr/local/lsws/${version}/etc/php.ini; /usr/local/lsws/${version}/bin/php -i |grep -Ei 'session.save_path' && echo "" ; done; service lsws restart; killall lsphp;
+	for version in /usr/local/lsws/lsphp*; do 
+	    version=$(basename "$version")
+	    echo ""; echo "PHP $version"; 
+	    sed -i -e "s|^;session.save_path.*|session.save_path = '/var/lib/lsphp/session/${version}'|g" -e "s|^session.save_path.*|session.save_path = '/var/lib/lsphp/session/${version}'|g" "/usr/local/lsws/${version}/etc/php.ini"; 
+	    "/usr/local/lsws/${version}/bin/php" -i | grep -Ei 'session.save_path' && echo "" ; 
+	done; 
+	service lsws restart; 
+	killall lsphp;
 
 
 
 elif [[ -n $APT_GET_CMD ]]; then
 	# Ubuntu
-	for phpver in $(ls -1 /usr/local/lsws/ |grep lsphp | sed 's/lsphp//g') ; do echo ""; echo "LSPHP $phpver" ; lsphpver=$(echo $phpver | sed 's/^\(.\{1\}\)/\1./'); sed -i -e "s|^;session.save_path.*|session.save_path = '/var/lib/lsphp/session/lsphp${phpver}'|g" -e "s|^session.save_path.*|session.save_path = '/var/lib/lsphp/session/lsphp${phpver}'|g" /usr/local/lsws/lsphp${phpver}/etc/php/${lsphpver}/litespeed/php.ini ; /usr/local/lsws/lsphp${phpver}/bin/php -i |grep -Ei 'session.save_path' && echo "" ; done; service lsws restart; killall lsphp;
+	for phpver in /usr/local/lsws/lsphp*; do 
+	    phpver=$(basename "$phpver" | sed 's/lsphp//g'); 
+	    echo ""; echo "LSPHP $phpver"; 
+	    lsphpver="${phpver:0:1}.${phpver:1}"; 
+	    sed -i -e "s|^;session.save_path.*|session.save_path = '/var/lib/lsphp/session/lsphp${phpver}'|g" -e "s|^session.save_path.*|session.save_path = '/var/lib/lsphp/session/lsphp${phpver}'|g" "/usr/local/lsws/lsphp${phpver}/etc/php/${lsphpver}/litespeed/php.ini"; 
+	    "/usr/local/lsws/lsphp${phpver}/bin/php" -i | grep -Ei 'session.save_path' && echo "" ; 
+	done; 
+	service lsws restart; 
+	killall lsphp;
 
 else
    echo "error can't install required packages. Unsupported OS"
@@ -41,7 +56,12 @@ if [[ ! -e /usr/local/CyberCP/bin/cleansessions ]]; then
 	chmod +x /usr/local/CyberCP/bin/cleansessions
 	cat >> /usr/local/CyberCP/bin/cleansessions <<"EOL"
 #!/bin/bash
-for version in $(ls /usr/local/lsws|grep lsphp); do echo ""; echo "PHP $version"; session_time=$(/usr/local/lsws/${version}/bin/php -i |grep -Ei 'session.gc_maxlifetime'| grep -Eo "[[:digit:]]+"|sort -u); find -O3 "/var/lib/lsphp/session/${version}" -ignore_readdir_race -depth -mindepth 1 -name 'sess_*' -type f -cmin 120 -delete; done
+for version in /usr/local/lsws/lsphp*; do 
+    version=$(basename "$version")
+    echo ""; echo "PHP $version"; 
+    session_time=$("/usr/local/lsws/${version}/bin/php" -i | grep -Ei 'session.gc_maxlifetime' | grep -Eo "[[:digit:]]+" | sort -u); 
+    find -O3 "/var/lib/lsphp/session/${version}" -ignore_readdir_race -depth -mindepth 1 -name 'sess_*' -type f -cmin 120 -delete; 
+done
 EOL
 
 fi

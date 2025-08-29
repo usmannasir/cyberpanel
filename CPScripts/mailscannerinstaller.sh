@@ -1,5 +1,15 @@
 #!/bin/bash
-#systemctl stop firewalld
+#scp cpecho ccccp /etc/dovecot/dovecot-sql.conf.ext "/etc/dovecot/dovecot-sql.conf.ext-bak_$(date '+%Y-%m-%d_%H_%M_%S')" /etc/postfix/main.cf "/etc/postfix/main.cf-bak_$(date '+%Y-%m-%d_%H_%M_%S')" /etc/postfix/master.cf "/etc/postfix/master.cf-bak_$(date '+%Y-%m-%d_%H_%M_%S')" /etc/dovecot/dovecot.conf "/etc/dovecot/dovecot.conf-bak_$(date '+%Y-%m-%d_%H_%M_%S')"backup configs'
+cp /etc/dovecot/dovecot.conf "/etc/dovecot/dovecot.conf-bak_$(date '+%Y-%m-%d_%H_%M_%S')"
+cp /etc/postfix/master.cf "/etc/postfix/master.cf-bak_$(date '+%Y-%m-%d_%H_%M_%S')"
+cp /etc/postfix/main.cf "/etc/postfix/main.cf-bak_$(date '+%Y-%m-%d_%H_%M_%S')"
+cp /etc/dovecot/dovecot-sql.conf.ext "/etc/dovecot/dovecot-sql.conf.ext-bak_$(date '+%Y-%m-%d_%H_%M_%S')"/dovecot/dovecot.conf "/etc/dovecot/dovecot.conf-bak_$(date '+%Y-%m-%d_%H_%M_%S')"
+cp /etc/postfix/master.cf "/etc/postfix/master.cf-bak_$(date '+%Y-%m-%d_%H_%M_%S')"
+cp /etc/postfix/main.cf "/etc/postfix/main.cf-bak_$(date '+%Y-%m-%d_%H_%M_%S')"
+cp /etc/dovecot/dovecot-sql.conf.ext "/etc/dovecot/dovecot-sql.conf.ext-bak_$(date '+%Y-%m-%d_%H_%M_%S')"etc/dovecot/dovecot.conf "/etc/dovecot/dovecot.conf-bak_$(date '+%Y-%m-%d_%H_%M_%S')"cccp /etc/dovecot/dovecot-sql.conf.ext "/etc/dovecot/dovecot-sql.conf.ext-bak_$(date '+%Y-%m-%d_%H_%M_%S')" /etc/postfix/main.cf "/etc/postfix/main.cf-bak_$(date '+%Y-%m-%d_%H_%M_%S')" /etc/postfix/master.cf "/etc/postfix/master.cf-bak_$(date '+%Y-%m-%d_%H_%M_%S')" /etc/dovecot/dovecot.conf "/etc/dovecot/dovecot.conf-bak_$(date '+%Y-%m-%d_%H_%M_%S')"etc/dovecot/dovecot.conf "/etc/dovecot/dovecot.conf-bak_$(date '+%Y-%m-%d_%H_%M_%S')"
+cp /etc/postfix/master.cf "/etc/postfix/master.cf-bak_$(date '+%Y-%m-%d_%H_%M_%S')"
+cp /etc/postfix/main.cf "/etc/postfix/main.cf-bak_$(date '+%Y-%m-%d_%H_%M_%S')"
+cp /etc/dovecot/dovecot-sql.conf.ext "/etc/dovecot/dovecot-sql.conf.ext-bak_$(date '+%Y-%m-%d_%H_%M_%S')"mctl stop firewalld
 
 check_return() {
   #check previous command result , 0 = ok ,  non-0 = something wrong.
@@ -12,13 +22,13 @@ check_return() {
 }
 
 echo 'backup configs'
-cp /etc/dovecot/dovecot.conf /etc/dovecot/dovecot.conf-bak_$(date '+%Y-%m-%d_%H_%M:%S')
-cp /etc/postfix/master.cf /etc/postfix/master.cf-bak_$(date '+%Y-%m-%d_%H_%M:%S')
-cp /etc/postfix/main.cf /etc/postfix/main.cf-bak_$(date '+%Y-%m-%d_%H_%M:%S')
-cp /etc/dovecot/dovecot-sql.conf.ext /etc/dovecot/dovecot-sql.conf.ext-bak_$(date '+%Y-%m-%d_%H_%M:%S')
+cp /etc/dovecot/dovecot.conf "/etc/dovecot/dovecot.conf-bak_$(date '+%Y-%m-%d_%H_%M:%S')"
+cp /etc/postfix/master.cf "/etc/postfix/master.cf-bak_$(date '+%Y-%m-%d_%H_%M:%S')"
+cp /etc/postfix/main.cf "/etc/postfix/main.cf-bak_$(date '+%Y-%m-%d_%H_%M:%S')"
+cp /etc/dovecot/dovecot-sql.conf.ext "/etc/dovecot/dovecot-sql.conf.ext-bak_$(date '+%Y-%m-%d_%H_%M:%S')"
 
 ZONE=$(firewall-cmd --get-default-zone)
-firewall-cmd --zone=$ZONE --add-port=4190/tcp --permanent
+firewall-cmd --zone="$ZONE" --add-port=4190/tcp --permanent
 systemctl stop firewalld
 
 echo 'Stop CSF'
@@ -159,7 +169,7 @@ systemctl restart postfix
 
 if [[ $Server_OS = "Ubuntu" ]]; then
   wget https://github.com/MailScanner/v5/releases/download/5.4.4-1/MailScanner-5.4.4-1.noarch.deb
-  dpkg -i *.noarch.deb
+  dpkg -i ./*.noarch.deb
 
   mkdir /var/run/MailScanner
   mkdir /var/lock/subsys
@@ -170,10 +180,10 @@ if [[ $Server_OS = "Ubuntu" ]]; then
 
 elif [[ $Server_OS = "CentOS" ]]; then
   wget https://github.com/MailScanner/v5/releases/download/5.4.4-1/MailScanner-5.4.4-1.rhel.noarch.rpm
-  rpm -Uvh *.rhel.noarch.rpm
+  rpm -Uvh ./*.rhel.noarch.rpm
 elif [ "$OS" = "NAME=\"CloudLinux\"" ]; then
   wget https://github.com/MailScanner/v5/releases/download/5.3.3-1/MailScanner-5.3.3-1.rhel.noarch.rpm
-  rpm -Uvh *.rhel.noarch.rpm
+  rpm -Uvh ./*.rhel.noarch.rpm
 fi
 
 mkdir /var/spool/MailScanner/spamassassin
@@ -210,16 +220,16 @@ sed -i 's/^Sign Clean Messages =.*/Sign Clean Messages = no/' /etc/MailScanner/M
 
 mkdir /usr/local/CyberCP/public/mailwatch
 
-cd /usr/local/CyberCP/public/mailwatch
+cd /usr/local/CyberCP/public/mailwatch || exit
 
 git clone --depth=1 https://github.com/mailwatch/MailWatch.git --branch 1.2 --single-branch
 
 mv /usr/local/CyberCP/public/mailwatch/MailWatch/* /usr/local/CyberCP/public/mailwatch/
 
-PASSWORD=$(cat /etc/cyberpanel/mysqlPassword)
+PASSWORD="$(cat /etc/cyberpanel/mysqlPassword)"
 USER=root
 DATABASE=mailscanner
-ADMINPASS=$(cat /etc/cyberpanel/adminPass)
+ADMINPASS="$(cat /etc/cyberpanel/adminPass)"
 
 ### Fix a bug in MailWatch SQL File
 
@@ -227,11 +237,11 @@ sed -i 's/char(512)/char(255)/g' /usr/local/CyberCP/public/mailwatch/create.sql
 
 ##
 
-mysql -u${USER} -p${PASSWORD} <"/usr/local/CyberCP/public/mailwatch/create.sql"
-mysql -u${USER} -p${PASSWORD} -e "use mailscanner"
-mysql -u${USER} -D${DATABASE} -p${PASSWORD} -e "GRANT ALL ON mailscanner.* TO root@localhost IDENTIFIED BY '${PASSWORD}';"
-mysql -u${USER} -D${DATABASE} -p${PASSWORD} -e "FLUSH PRIVILEGES;"
-mysql -u${USER} -D${DATABASE} -p${PASSWORD} -e "INSERT INTO mailscanner.users SET username = 'admin', password = MD5('${ADMINPASS}'), fullname = 'admin', type = 'A';"
+mysql -u"${USER}" -p"${PASSWORD}" <"/usr/local/CyberCP/public/mailwatch/create.sql"
+mysql -u"${USER}" -p"${PASSWORD}" -e "use mailscanner"
+mysql -u"${USER}" -D"${DATABASE}" -p"${PASSWORD}" -e "GRANT ALL ON mailscanner.* TO root@localhost IDENTIFIED BY '${PASSWORD}';"
+mysql -u"${USER}" -D"${DATABASE}" -p"${PASSWORD}" -e "FLUSH PRIVILEGES;"
+mysql -u"${USER}" -D"${DATABASE}" -p"${PASSWORD}" -e "INSERT INTO mailscanner.users SET username = 'admin', password = MD5('${ADMINPASS}'), fullname = 'admin', type = 'A';"
 
 cp /usr/local/CyberCP/public/mailwatch/mailscanner/conf.php.example /usr/local/CyberCP/public/mailwatch/mailscanner/conf.php
 
@@ -248,8 +258,8 @@ elif [ ! -f "$MSDEFAULT" ]; then
 fi
 
 cp /usr/local/CyberCP/public/mailwatch/MailScanner_perl_scripts/MailWatchConf.pm /usr/share/MailScanner/perl/custom/
-sed -i 's/^my (\$db_user) = .*/my (\$db_user) = \x27'${USER}'\x27;/' /usr/share/MailScanner/perl/custom/MailWatchConf.pm
-sed -i 's/^my (\$db_pass) = .*/my (\$db_pass) = \x27'${PASSWORD}'\x27;/' /usr/share/MailScanner/perl/custom/MailWatchConf.pm
+sed -i "s/^my (\$db_user) = .*/my (\$db_user) = '${USER}';/" /usr/share/MailScanner/perl/custom/MailWatchConf.pm
+sed -i "s/^my (\$db_pass) = .*/my (\$db_pass) = '${PASSWORD}';/" /usr/share/MailScanner/perl/custom/MailWatchConf.pm
 ln -s /usr/local/CyberCP/public/mailwatch/MailScanner_perl_scripts/MailWatch.pm /usr/share/MailScanner/perl/custom
 ln -s /usr/local/CyberCP/public/mailwatch/MailScanner_perl_scripts/SQLBlackWhiteList.pm /usr/share/MailScanner/perl/custom
 ln -s /usr/local/CyberCP/public/mailwatch/MailScanner_perl_scripts/SQLSpamSettings.pm /usr/share/MailScanner/perl/custom

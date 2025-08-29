@@ -101,13 +101,16 @@ elif [ -f /etc/debian_version ]; then
     VER=$(cat /etc/debian_version)
 elif [ -f /etc/SuSe-release ]; then
     # Older SuSE/etc.
-    ...
+    OS=SuSE
+    VER=$(head -1 /etc/SuSe-release | awk '{print $2}')
 elif [ -f /etc/redhat-release ]; then
     # Older Red Hat, CentOS, etc.
-    ...
+    OS=RedHat
+    VER=$(awk '{print $3}' /etc/redhat-release)
 else
     # Fall back to uname, e.g. "Linux <version>", also works for BSD, etc.
     OS=$(uname -s)
+    # shellcheck disable=SC2034
     VER=$(uname -r)
 fi
 

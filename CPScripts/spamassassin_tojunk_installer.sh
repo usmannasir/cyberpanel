@@ -2,10 +2,10 @@
 # SpamAssassin Setup Spam to Junk folder. Should be called after the main SpamAssassin install part completes or mapped to an optional button to install. Personally think this should be a default part of the SpamAssassin installation.
 
 echo 'backup configs';
-cp /etc/dovecot/dovecot.conf /etc/dovecot/dovecot.conf-bak_$(date '+%Y-%m-%d_%H_%M:%S');
-cp /etc/postfix/master.cf /etc/postfix/master.cf-bak_$(date '+%Y-%m-%d_%H_%M:%S');
-cp /etc/postfix/main.cf /etc/postfix/main.cf-bak_$(date '+%Y-%m-%d_%H_%M:%S');
-cp /etc/dovecot/dovecot-sql.conf.ext /etc/dovecot/dovecot-sql.conf.ext-bak_$(date '+%Y-%m-%d_%H_%M:%S')
+cp /etc/dovecot/dovecot.conf "/etc/dovecot/dovecot.conf-bak_$(date '+%Y-%m-%d_%H_%M_%S')"
+cp /etc/postfix/master.cf "/etc/postfix/master.cf-bak_$(date '+%Y-%m-%d_%H_%M_%S')"
+cp /etc/postfix/main.cf "/etc/postfix/main.cf-bak_$(date '+%Y-%m-%d_%H_%M_%S')"
+cp /etc/dovecot/dovecot-sql.conf.ext "/etc/dovecot/dovecot-sql.conf.ext-bak_$(date '+%Y-%m-%d_%H_%M_%S')"
 
 
 echo 'Setting up spamassassin and sieve to deliver spam to Junk folder by default'
@@ -81,6 +81,7 @@ sieve_dir = /home/vmail/%d/%n/sieve
 sieve_global_dir = /etc/dovecot/sieve/global/
 }
 protocol lda {
+    # mail_plugins is a Dovecot configuration variable that may be set externally
     mail_plugins = $mail_plugins sieve quota
     postmaster_address = postmaster@example.com
     hostname = server.example.com
@@ -89,6 +90,7 @@ protocol lda {
     info_log_path = /var/log/dovecot-lda.log
 }
 protocol lmtp {
+    # mail_plugins is a Dovecot configuration variable that may be set externally
     mail_plugins = $mail_plugins sieve quota
     log_path = /var/log/dovecot-lmtp-errors.log
     info_log_path = /var/log/dovecot-lmtp.log
@@ -111,13 +113,13 @@ sievec /etc/dovecot/sieve/default.sieve
 sievec /etc/dovecot/sieve/default.sieve
 
 if [ "$OS" = "NAME=\"Ubuntu\"" ];then
-	sed -i 's|^spamassassin.*|spamassassin unix -     n   n   -   -   pipe flags=DROhu user=vmail:vmail argv=/usr/bin/spamc -f -e  /usr/lib/dovecot/deliver -f ${sender} -d ${user}@${nexthop}|g' /etc/postfix/master.cf
+	sed -i "s|^spamassassin.*|spamassassin unix -     n   n   -   -   pipe flags=DROhu user=vmail:vmail argv=/usr/bin/spamc -f -e  /usr/lib/dovecot/deliver -f \${sender} -d \${user}@\${nexthop}|g" /etc/postfix/master.cf
 
 elif [ "$OS" = "NAME=\"CentOS Linux\"" ];then
-	sed -i 's|^spamassassin.*|spamassassin unix -     n   n   -   -   pipe flags=DROhu user=vmail:vmail argv=/usr/bin/spamc -f -e  /usr/libexec/dovecot/deliver -f ${sender} -d ${user}@${nexthop}|g' /etc/postfix/master.cf
+	sed -i "s|^spamassassin.*|spamassassin unix -     n   n   -   -   pipe flags=DROhu user=vmail:vmail argv=/usr/bin/spamc -f -e  /usr/libexec/dovecot/deliver -f \${sender} -d \${user}@\${nexthop}|g" /etc/postfix/master.cf
 
 elif [ "$OS" = "NAME=\"CloudLinux\"" ];then
-        sed -i 's|^spamassassin.*|spamassassin unix -     n   n   -   -   pipe flags=DROhu user=vmail:vmail argv=/usr/bin/spamc -f -e  /usr/libexec/dovecot/deliver -f ${sender} -d ${user}@${nexthop}|g' /etc/postfix/master.cf
+        sed -i "s|^spamassassin.*|spamassassin unix -     n   n   -   -   pipe flags=DROhu user=vmail:vmail argv=/usr/bin/spamc -f -e  /usr/libexec/dovecot/deliver -f \${sender} -d \${user}@\${nexthop}|g" /etc/postfix/master.cf
 
 fi
 
