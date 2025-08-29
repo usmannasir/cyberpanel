@@ -47,7 +47,7 @@ touch /var/log/{dovecot-lda-errors.log,dovecot-lda.log}
 touch /var/log/{dovecot-sieve-errors.log,dovecot-sieve.log}
 touch /var/log/{dovecot-lmtp-errors.log,dovecot-lmtp.log}
 touch /etc/dovecot/sieve/default.sieve
-chown vmail: -R /etc/dovecot/sieve
+chown -R vmail: /etc/dovecot/sieve
 chown vmail:mail /var/log/dovecot-*
 
 echo 'Create Sieve Default spam to Junk rule'
@@ -81,8 +81,8 @@ sieve_dir = /home/vmail/%d/%n/sieve
 sieve_global_dir = /etc/dovecot/sieve/global/
 }
 protocol lda {
-    # mail_plugins is a Dovecot configuration variable that may be set externally
-    mail_plugins = $mail_plugins sieve quota
+  # mail_plugins is a Dovecot configuration variable that may be set externally
+  mail_plugins = \$mail_plugins sieve quota
     postmaster_address = postmaster@example.com
     hostname = server.example.com
     auth_socket_path = /var/run/dovecot/auth-master
@@ -90,8 +90,8 @@ protocol lda {
     info_log_path = /var/log/dovecot-lda.log
 }
 protocol lmtp {
-    # mail_plugins is a Dovecot configuration variable that may be set externally
-    mail_plugins = $mail_plugins sieve quota
+  # mail_plugins is a Dovecot configuration variable that may be set externally
+  mail_plugins = \$mail_plugins sieve quota
     log_path = /var/log/dovecot-lmtp-errors.log
     info_log_path = /var/log/dovecot-lmtp.log
 }

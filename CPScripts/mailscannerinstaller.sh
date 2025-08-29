@@ -1,23 +1,12 @@
 #!/bin/bash
-#scp cpecho ccccp /etc/dovecot/dovecot-sql.conf.ext "/etc/dovecot/dovecot-sql.conf.ext-bak_$(date '+%Y-%m-%d_%H_%M_%S')" /etc/postfix/main.cf "/etc/postfix/main.cf-bak_$(date '+%Y-%m-%d_%H_%M_%S')" /etc/postfix/master.cf "/etc/postfix/master.cf-bak_$(date '+%Y-%m-%d_%H_%M_%S')" /etc/dovecot/dovecot.conf "/etc/dovecot/dovecot.conf-bak_$(date '+%Y-%m-%d_%H_%M_%S')"backup configs'
-cp /etc/dovecot/dovecot.conf "/etc/dovecot/dovecot.conf-bak_$(date '+%Y-%m-%d_%H_%M_%S')"
-cp /etc/postfix/master.cf "/etc/postfix/master.cf-bak_$(date '+%Y-%m-%d_%H_%M_%S')"
-cp /etc/postfix/main.cf "/etc/postfix/main.cf-bak_$(date '+%Y-%m-%d_%H_%M_%S')"
-cp /etc/dovecot/dovecot-sql.conf.ext "/etc/dovecot/dovecot-sql.conf.ext-bak_$(date '+%Y-%m-%d_%H_%M_%S')"/dovecot/dovecot.conf "/etc/dovecot/dovecot.conf-bak_$(date '+%Y-%m-%d_%H_%M_%S')"
-cp /etc/postfix/master.cf "/etc/postfix/master.cf-bak_$(date '+%Y-%m-%d_%H_%M_%S')"
-cp /etc/postfix/main.cf "/etc/postfix/main.cf-bak_$(date '+%Y-%m-%d_%H_%M_%S')"
-cp /etc/dovecot/dovecot-sql.conf.ext "/etc/dovecot/dovecot-sql.conf.ext-bak_$(date '+%Y-%m-%d_%H_%M_%S')"etc/dovecot/dovecot.conf "/etc/dovecot/dovecot.conf-bak_$(date '+%Y-%m-%d_%H_%M_%S')"cccp /etc/dovecot/dovecot-sql.conf.ext "/etc/dovecot/dovecot-sql.conf.ext-bak_$(date '+%Y-%m-%d_%H_%M_%S')" /etc/postfix/main.cf "/etc/postfix/main.cf-bak_$(date '+%Y-%m-%d_%H_%M_%S')" /etc/postfix/master.cf "/etc/postfix/master.cf-bak_$(date '+%Y-%m-%d_%H_%M_%S')" /etc/dovecot/dovecot.conf "/etc/dovecot/dovecot.conf-bak_$(date '+%Y-%m-%d_%H_%M_%S')"etc/dovecot/dovecot.conf "/etc/dovecot/dovecot.conf-bak_$(date '+%Y-%m-%d_%H_%M_%S')"
-cp /etc/postfix/master.cf "/etc/postfix/master.cf-bak_$(date '+%Y-%m-%d_%H_%M_%S')"
-cp /etc/postfix/main.cf "/etc/postfix/main.cf-bak_$(date '+%Y-%m-%d_%H_%M_%S')"
-cp /etc/dovecot/dovecot-sql.conf.ext "/etc/dovecot/dovecot-sql.conf.ext-bak_$(date '+%Y-%m-%d_%H_%M_%S')"mctl stop firewalld
+# backup configs
 
 check_return() {
-  #check previous command result , 0 = ok ,  non-0 = something wrong.
-  if [[ $? -eq "0" ]]; then
-    :
-  else
-    echo -e "\ncommand failed, exiting..."
-    exit
+  # check previous command result or provided status; usage: check_return $? or check_return $status
+  local status=${1:-$?}
+  if [[ $status -ne 0 ]]; then
+    echo -e "\ncommand failed (status=$status), exiting..."
+    exit 1
   fi
 }
 
