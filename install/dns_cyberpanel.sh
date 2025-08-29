@@ -27,9 +27,9 @@ dns_cyberpanel_add() {
   _info "Using CyberPanel ACME API"
   _debug fulldomain "$fulldomain"
   _debug txtvalue "$txtvalue"
-  _info "cyberpanel createDNSRecord --domainName $fulldomain --name $fulldomain --recordType TXT --value $txtvalue --priority 0 --ttl 3600"
+  _info "cyberpanel createDNSRecord --domainName \"$fulldomain\" --name \"$fulldomain\" --recordType TXT --value \"$txtvalue\" --priority 0 --ttl 3600"
 
-  cyberpanel createDNSRecord --domainName $fulldomain --name $fulldomain --recordType TXT --value $txtvalue --priority 0 --ttl 3600
+  cyberpanel createDNSRecord --domainName "$fulldomain" --name "$fulldomain" --recordType TXT --value "$txtvalue" --priority 0 --ttl 3600
 
   return 0
 }

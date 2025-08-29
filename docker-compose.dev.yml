@@ -45,7 +45,7 @@ services:
       MYSQL_USER: cyberpanel
       MYSQL_PASSWORD: SLTUIUxqhulwsh
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
@@ -60,7 +60,7 @@ services:
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     ports:
-      - "8081:80"
+      - "8082:80"
     environment:
       PMA_HOST: db
       PMA_PORT: 3306

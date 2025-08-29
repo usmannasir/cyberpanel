@@ -59,7 +59,7 @@ log_command() {
     output=$($command 2>&1)
     exit_code=$?
 
-    if [ $exit_code -eq 0 ]; then
+    if [ "$exit_code" -eq 0 ]; then
         echo "[$timestamp] [COMMAND] Success: $command" >> "$DEBUG_LOG_FILE"
         [ -n "$output" ] && echo "[$timestamp] [OUTPUT] $output" >> "$DEBUG_LOG_FILE"
     else
@@ -72,10 +72,11 @@ log_command() {
 
 log_function_start() {
     local function_name="$1"
+    shift
     local timestamp
     timestamp=$(date '+%Y-%m-%d %H:%M:%S')
     echo "[$timestamp] [FUNCTION] Starting: $function_name" | tee -a "$LOG_FILE"
-    echo "[$timestamp] [FUNCTION] Starting: $function_name with args: ${@:2}" >> "$DEBUG_LOG_FILE"
+    echo "[$timestamp] [FUNCTION] Starting: $function_name with args: $*" >> "$DEBUG_LOG_FILE"
 }
 
 log_function_end() {
@@ -166,7 +167,7 @@ Panel_Build=${Temp_Value:25:1}
 
 Branch_Name="v${Panel_Version}.${Panel_Build}"
 
-if [[ $Branch_Name = v*.*.* ]] ; then
+if [[ "$Branch_Name" = v*.*.* ]] ; then
   echo -e  "\nBranch name fetched...$Branch_Name"
   log_info "Branch name fetched: $Branch_Name"
 else
@@ -320,7 +321,8 @@ EOF
 # Helper Function for PHP timezone configuration
 configure_php_timezone() {
     local php_version="$1"
-    local php_ini_path=$(find "$php_version" -name php.ini)
+    local php_ini_path
+    php_ini_path=$(find "$php_version" -name php.ini)
 
     # Common configuration
     "${php_version}/bin/phpize"
@@ -363,7 +365,7 @@ if [[ "$1" = *.*.* ]]; then
     print "num1", (num1 < num2 ? "<" : ">="), "num2"
   }
   ')
-  if [[ $Output = *">="* ]]; then
+  if [[ "$Output" = *">="* ]]; then
     echo -e "\nYou must use version number higher than 1.9.4"
     exit
   else
@@ -395,7 +397,7 @@ Check_Return() {
   #check previous command result , 0 = ok ,  non-0 = something wrong.
 # shellcheck disable=SC2181
 local exit_code=$?
-if [[ $exit_code != "0" ]]; then
+if [[ "$exit_code" != "0" ]]; then
   log_error "Previous command failed with exit code: $exit_code"
   if [[ -n "$1" ]] ; then
     echo -e "\n\n\n$1"
@@ -422,16 +424,18 @@ do
     log_error "Command failed after 50 retries: $1"
     exit 2
   else
-    $1  && break || {
+    if $1; then
+      break
+    else
       echo -e "\n$1 has failed for $i times\nWait and try again...\n"
       log_warning "Command failed, retry $i/50: $1"
       # Exponential backoff: 1s, 2s, 4s, 8s, then cap at 10s
-      if [[ $i -le 4 ]]; then
+      if [[ "$i" -le 4 ]]; then
         sleep $((2**(i-1)))
       else
         sleep 10
       fi
-    }
+    fi
   fi
 done
 }
@@ -466,7 +470,7 @@ Check_Server_IP() {
 log_function_start "Check_Server_IP"
 log_debug "Fetching server IP address"
 Server_IP=$(curl --silent --max-time 30 -4 https://cyberpanel.sh/?ip)
-  if [[ $Server_IP =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  if [[ "$Server_IP" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     echo -e "Valid IP detected..."
     log_info "Valid server IP detected: $Server_IP"
   else
@@ -558,7 +562,7 @@ Server_OS_Version=$(grep VERSION_ID /etc/os-release | awk -F[=,] '{print $2}' | 
 echo -e "System: $Server_OS $Server_OS_Version detected...\n"
 log_info "Operating system detected: $Server_OS $Server_OS_Version"
 
-if [[ $Server_OS = "CloudLinux" ]] || [[ "$Server_OS" = "AlmaLinux" ]] || [[ "$Server_OS" = "RockyLinux" ]] || [[ "$Server_OS" = "RedHat" ]] ; then
+if [[ "$Server_OS" = "CloudLinux" ]] || [[ "$Server_OS" = "AlmaLinux" ]] || [[ "$Server_OS" = "RockyLinux" ]] || [[ "$Server_OS" = "RedHat" ]] ; then
   Server_OS="CentOS"
   #CloudLinux gives version id like 7.8, 7.9, so cut it to show first number only
   #treat CloudLinux, Rocky and Alma as CentOS
@@ -920,7 +924,7 @@ echo -e "\nInstall Full service for CyberPanel? This will include PowerDNS, Post
 echo -e ""
 printf "%s" "Full installation [Y/n]: "
 read -r Tmp_Input
-if [[ $(expr "x$Tmp_Input" : 'x[Yy]') -gt 1 ]] || [[ $Tmp_Input = "" ]]; then
+if [[ $(expr "x$Tmp_Input" : 'x[Yy]') -gt 1 ]] || [[ "$Tmp_Input" = "" ]]; then
   echo -e "\nFull installation selected..."
   Postfix_Switch="On"
   PowerDNS_Switch="On"
@@ -2293,7 +2297,7 @@ if [[ "$Server_OS" = "CentOS" ]] ; then
 
   if [[ "$Server_OS_Version" = "8" ]] ; then
   #all centos 8 specific post change goes here
-  :
+    :
   fi
 
 elif [[ "$Server_OS" = "Ubuntu" ]] ; then
@@ -2353,7 +2357,6 @@ sed -i 's|wp plugin install litespeed-cache|wp plugin install  https://cyberpane
 sed -i 's|https://www.litespeedtech.com/|https://cyberpanel.sh/www.litespeedtech.com/|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
 sed -i 's|http://license.litespeedtech.com/|https://cyberpanel.sh/license.litespeedtech.com/|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
 }
-
 echo -e "\nInitializing...\n"
 log_info "============================================="
 log_info "CyberPanel installation script started"

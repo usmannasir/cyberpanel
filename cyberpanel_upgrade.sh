@@ -618,59 +618,88 @@ else
 
 echo -e "\nNothing found, need fresh setup...\n"
 
-# Attempt to create a virtual environment
+ # Attempt to create a virtual environment and handle failure immediately
 if [[ "$Server_OS" = "CentOS" ]] && [[ "$Server_OS_Version" = "9" ]]; then
   PYTHON_PATH=$(which python3 2>/dev/null || which python3.9 2>/dev/null || echo "/usr/bin/python3")
-  virtualenv -p "$PYTHON_PATH" --system-site-packages /usr/local/CyberPanel
-else
-  virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
-fi
+  if ! virtualenv -p "$PYTHON_PATH" --system-site-packages /usr/local/CyberPanel; then
+  echo "virtualenv command failed."
 
-# Check if the virtualenv command failed
-if [ $? -ne 0 ]; then
-    echo "virtualenv command failed."
+  # Check if the operating system is AlmaLinux
+  if grep -q "AlmaLinux" /etc/os-release; then
+    echo "Operating system is AlmaLinux."
 
-    # Check if the operating system is AlmaLinux
-    if grep -q "AlmaLinux" /etc/os-release; then
-        echo "Operating system is AlmaLinux."
+    # Check if the 'packaging' module is installed via RPM
+    if rpm -q python3-packaging >/dev/null 2>&1; then
+      echo "'packaging' module installed via RPM. Proceeding with uninstallation."
 
-        # Check if the 'packaging' module is installed via RPM
-        if rpm -q python3-packaging >/dev/null 2>&1; then
-            echo "'packaging' module installed via RPM. Proceeding with uninstallation."
+      # Uninstall the 'packaging' module using RPM and check success directly
+      if sudo dnf remove python3-packaging -y >/dev/null 2>&1; then
+        echo "Successfully uninstalled 'packaging' module."
 
-            # Uninstall the 'packaging' module using RPM
-            sudo dnf remove python3-packaging -y
-
-            # Check if uninstallation was successful
-            if [ $? -eq 0 ]; then
-                echo "Successfully uninstalled 'packaging' module."
-
-                # Install and upgrade 'packaging' using pip
-                pip install --upgrade packaging
-
-                # Verify the installation
-                if [ $? -eq 0 ]; then
-                    echo "'packaging' module reinstalled and upgraded successfully."
-                    if [[ "$Server_OS" = "CentOS" ]] && [[ "$Server_OS_Version" = "9" ]]; then
-                        PYTHON_PATH=$(which python3 2>/dev/null || which python3.9 2>/dev/null || echo "/usr/bin/python3")
-                        virtualenv -p "$PYTHON_PATH" --system-site-packages /usr/local/CyberPanel
-                    else
-                        virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
-                    fi
-                else
-                    echo "Failed to install 'packaging' module using pip."
-                fi
-            else
-                echo "Failed to uninstall 'packaging' module using RPM."
-            fi
+        # Install and upgrade 'packaging' using pip (check directly)
+        if pip install --upgrade packaging >/dev/null 2>&1; then
+          echo "'packaging' module reinstalled and upgraded successfully."
+          if [[ "$Server_OS" = "CentOS" ]] && [[ "$Server_OS_Version" = "9" ]]; then
+            PYTHON_PATH=$(which python3 2>/dev/null || which python3.9 2>/dev/null || echo "/usr/bin/python3")
+            virtualenv -p "$PYTHON_PATH" --system-site-packages /usr/local/CyberPanel
+          else
+            virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
+          fi
         else
-            echo "'packaging' module is not installed via RPM. No action taken."
+          echo "Failed to install 'packaging' module using pip."
         fi
+      else
+        echo "Failed to uninstall 'packaging' module using RPM."
+      fi
     else
-        echo "Operating system is not AlmaLinux. No action taken."
+      echo "'packaging' module is not installed via RPM. No action taken."
     fi
+  else
+    echo "Operating system is not AlmaLinux. No action taken."
+  fi
+  else
+  echo "virtualenv command executed successfully."
+  fi
 else
-    echo "virtualenv command executed successfully."
+  if ! virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel; then
+  echo "virtualenv command failed."
+
+  # Check if the operating system is AlmaLinux
+  if grep -q "AlmaLinux" /etc/os-release; then
+    echo "Operating system is AlmaLinux."
+
+    # Check if the 'packaging' module is installed via RPM
+    if rpm -q python3-packaging >/dev/null 2>&1; then
+      echo "'packaging' module installed via RPM. Proceeding with uninstallation."
+
+      # Uninstall the 'packaging' module using RPM and check success directly
+      if sudo dnf remove python3-packaging -y >/dev/null 2>&1; then
+        echo "Successfully uninstalled 'packaging' module."
+
+        # Install and upgrade 'packaging' using pip (check directly)
+        if pip install --upgrade packaging >/dev/null 2>&1; then
+          echo "'packaging' module reinstalled and upgraded successfully."
+          if [[ "$Server_OS" = "CentOS" ]] && [[ "$Server_OS_Version" = "9" ]]; then
+            PYTHON_PATH=$(which python3 2>/dev/null || which python3.9 2>/dev/null || echo "/usr/bin/python3")
+            virtualenv -p "$PYTHON_PATH" --system-site-packages /usr/local/CyberPanel
+          else
+            virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
+          fi
+        else
+          echo "Failed to install 'packaging' module using pip."
+        fi
+      else
+        echo "Failed to uninstall 'packaging' module using RPM."
+      fi
+    else
+      echo "'packaging' module is not installed via RPM. No action taken."
+    fi
+  else
+    echo "Operating system is not AlmaLinux. No action taken."
+  fi
+  else
+  echo "virtualenv command executed successfully."
+  fi
 fi
 fi
 

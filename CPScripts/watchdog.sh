@@ -30,22 +30,43 @@ show_help() {
 	echo -e "You may proceed without flag file , but that will make email sending failed."
 }
 
+# Helper: return PIDs matching a pattern (one per line). Uses pgrep when available,
+# falls back to ps+awk if not.
+get_pids() {
+	local pattern="$*"
+	if command -v pgrep >/dev/null 2>&1; then
+		pgrep -f -- "$pattern" 2>/dev/null || true
+	else
+		ps aux | awk -v pat="$pattern" 'index($0, pat) && $0 !~ /awk/ {print $2}' || true
+	fi
+}
+
+# Helper: return matching process lines (like pgrep -a). Uses pgrep -a when available.
+get_pids_with_cmdline() {
+	local pattern="$*"
+	if command -v pgrep >/dev/null 2>&1; then
+		pgrep -a -f -- "$pattern" 2>/dev/null || true
+	else
+		ps aux | awk -v pat="$pattern" 'index($0, pat) && $0 !~ /awk/ {print $0}' || true
+	fi
+}
+
 watchdog_check() {
 for ((x=0; x<SERVICE_COUNT; x++)) ; do
 	DISPLAY_NAME=${SERVICE_LIST[x*3]}
 	SERVICE_NAME=${SERVICE_LIST[(x*3)+1]}
 	IFS=';' read -ra SERVICE_ARGS <<< "${SERVICE_LIST[(x*3)+2]}"
 	SERVICE_ARG=${SERVICE_ARGS[0]}
-	
+    
 	echo -e "\nChecking ${DISPLAY_NAME}..."
-	pid=$(ps aux | grep "watchdog ${SERVICE_ARG}" | grep -v grep | awk '{print $2}')
+	pid=$(get_pids "watchdog ${SERVICE_ARG}")
 	if [[ "$pid" == "" ]] ; then
 		echo -e "\nWatchDog for ${DISPLAY_NAME} is gone , restarting..."
 		nohup watchdog "${SERVICE_ARG}" > /dev/null 2>&1 &
 		echo -e "\nWatchDog for ${DISPLAY_NAME} has been started..."
 	else
 		echo -e "\nWatchDog for ${DISPLAY_NAME} is running...\n"
-		ps aux | grep "watchdog ${SERVICE_ARG}" | grep -v grep
+	get_pids_with_cmdline "watchdog ${SERVICE_ARG}" || true
 	fi
 done
 }
@@ -53,9 +74,9 @@ done
 check_service() {
 	if systemctl status "$NAME" >/dev/null 2>&1; then
 			if [[ $NAME == "mariadb" ]] ; then
-				pid=$(ps aux | grep "/usr/sbin/mysqld"  | grep -v grep | awk '{print $2}')
+				pid=$(get_pids "/usr/sbin/mysqld")
 				if [[ $pid != "" ]] ; then
-					echo "-1000" > /proc/"$pid"/oom_score_adj
+					printf '%s' '-1000' > /proc/"$pid"/oom_score_adj
 				fi
 			fi
 			echo "$NAME service is running..."
@@ -65,9 +86,9 @@ check_service() {
 				pkill lsphp
 			fi
 			if [[ $NAME == "mariadb" ]] ; then
-				pid=$(ps aux | grep "/usr/sbin/mysqld"  | grep -v grep | awk '{print $2}')
+				pid=$(get_pids "/usr/sbin/mysqld")
 				if [[ $pid != "" ]] ; then
-					echo "-1000" > /proc/"$pid"/oom_score_adj
+					printf '%s' '-1000' > /proc/"$pid"/oom_score_adj
 				fi
 			fi
 			systemctl stop "$NAME"
@@ -103,10 +124,13 @@ elif [[ $1 == "kill" ]] ; then
 		IFS=';' read -ra SERVICE_ARGS <<< "${SERVICE_LIST[(x*3)+2]}"
 		SERVICE_ARG=${SERVICE_ARGS[0]}
 		
-		pid=$(ps aux | grep "watchdog ${SERVICE_ARG}" | grep -v grep | awk '{print $2}')
-		if [[ "$pid" != "" ]] ; then
-			kill -15 "$pid"
-		fi
+			pid=$(get_pids "watchdog ${SERVICE_ARG}" )
+			if [ -n "$pid" ] ; then
+				# kill may accept multiple PIDs; loop to be safe
+				while IFS= read -r _pid; do
+					kill -15 "$_pid" || true
+				done <<< "$pid"
+			fi
 	done
 	echo "watchdog has been killed..."
 	exit

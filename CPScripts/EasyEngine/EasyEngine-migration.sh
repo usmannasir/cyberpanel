@@ -87,7 +87,7 @@ create_database() {
   echo -e "\nstarting database creation on remote CyberPanel server..."
   ssh_v="ssh -o StrictHostKeyChecking=no root@$server_ip -p$server_port -i /root/.ssh/cyberpanel_migration_key"
 
-  check_string=$(${ssh_v} "cyberpanel createDatabase --databaseWebsite  ${domains[$i]} --dbName $WPDBNAME --dbUsername $WPDBUSER --dbPassword $WPDBPASS")
+  check_string=$(${ssh_v} "cyberpanel createDatabase --databaseWebsite ${domains[$i]} --dbName $WPDBNAME --dbUsername $WPDBUSER --dbPassword $WPDBPASS")
   if echo "$check_string" | grep -q "None" ; then
     echo -e "\ndatabase successfully created..."
   else
@@ -96,8 +96,9 @@ create_database() {
     exit
   fi
 
-  check_string=$(${ssh_v} "mysql -u $WPDBUSER -p$WPDBPASS $WPDBNAME < /home/${domains[$i]}/$database_name ; if [ \$? = 0 ] ; then echo 'OK' ; fi")
-  if echo "$check_string" | grep -q "OK" ; then
+  ${ssh_v} "mysql -u '$WPDBUSER' -p'$WPDBPASS' '$WPDBNAME' < /home/${domains[$i]}/$database_name"
+  mysql_exit=$?
+  if [[ $mysql_exit == "0" ]] ; then
     echo -e "\nstarting  database import on remote CyberPanel..."
     echo -e "\ndatabase successfully imported..."
     ${ssh_v} rm -f /home/"${domains[$i]}"/"$database_name"
@@ -317,9 +318,8 @@ if [[ -f $password ]] ; then
   fi
 else
 #if it's not file , consider it as password
-  sshpass -p "${password}" ssh -o StrictHostKeyChecking=no "$user_name"@"$server_ip" -p"$server_port" "$sudoer wget -q -O /root/key.sh https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/CPScripts/EasyEngine/key.sh ; $sudoer bash /root/key.sh enable"
-  ssh_exit=$?
-  if [[ $ssh_exit == "0" ]] ; then
+  # Run ssh to deploy key script and handle success/failure immediately
+  if sshpass -p "${password}" ssh -o StrictHostKeyChecking=no "$user_name"@"$server_ip" -p"$server_port" "$sudoer wget -q -O /root/key.sh https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/CPScripts/EasyEngine/key.sh ; $sudoer bash /root/key.sh enable"; then
     sshpass -p "${password}" ssh -o StrictHostKeyChecking=no "$user_name"@"$server_ip" -p"$server_port" "$sudoer cat /root/.ssh/cyberpanel_migration_key" > /root/.ssh/cyberpanel_migration_key
     chmod 400 /root/.ssh/cyberpanel_migration_key
     status=$(ssh -o BatchMode=yes -o ConnectTimeout=5 -o StrictHostKeyChecking=no root@"$server_ip" -p"$server_port" -i /root/.ssh/cyberpanel_migration_key echo ok 2>&1)
@@ -341,9 +341,7 @@ fi
 install_lscwp() {
 ssh_v="ssh -o StrictHostKeyChecking=no root@$server_ip -p$server_port -i /root/.ssh/cyberpanel_migration_key"
 
-$ssh_v "ls -l /usr/bin/wp"
-wp_exit=$?
-if [[ $wp_exit != "0" ]] ; then
+if ! $ssh_v "ls -l /usr/bin/wp" >/dev/null 2>&1; then
   $ssh_v "$sudoer wget -O /usr/bin/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar"
   $ssh_v "$sudoer chmod +x /usr/bin/wp"
 fi
@@ -363,14 +361,14 @@ echo -e "\nstarting to export database..."
 USER="root"
 PASSWORD=$(grep MYSQL_ROOT_PASSWORD /opt/easyengine/services/docker-compose.yml | awk -F'=' '{print $2}')
 OUTPUT="$DIR_TMP/database"
-DOCKERDatabaseID=$(docker ps | grep -e 'services_global-db' | cut -c1-12;)
+DOCKERDatabaseID=$(docker ps --filter "name=services_global-db" --format "{{.ID}}" | head -n1)
 
-databases=$(docker exec "$DOCKERDatabaseID" bash -c "mysql -h localhost --user=$USER --password=$PASSWORD -e 'show databases;'" | tr -d "| " | grep -v Database)
+databases=$(docker exec "$DOCKERDatabaseID" bash -c "mysql -h localhost --user='$USER' --password='$PASSWORD' -e 'show databases;'" | tr -d "| " | grep -v Database)
 
 for db in $databases; do
     if [[ $db == "$WPDBNAME" ]] ; then
     echo -e "\ndumping database for ${domains[$i]}..."
-        sudo docker exec "$DOCKERDatabaseID" bash -c "/usr/bin/mysqldump -u $USER -p$PASSWORD --databases $db" | sudo tee "$OUTPUT/$db.sql" > /dev/null
+        sudo docker exec "$DOCKERDatabaseID" bash -c "/usr/bin/mysqldump -u '$USER' -p'$PASSWORD' --databases '$db'" | sudo tee "$OUTPUT/$db.sql" > /dev/null
         dump_exit=$?
         database_name="$db.sql"
           if [[ $dump_exit == "0" ]] ; then
@@ -469,7 +467,7 @@ db_length_check
 tLen=${#domains[@]}
 #get the domain list and number of domains.
 
-for (( i=0; i<tLen; i++ ));
+for (( i=0; i < tLen; i++ ));
   do
     # ${domains[$i]}  , domain name variable
     #create a file to save variable to source in cyberpanel server to read it.

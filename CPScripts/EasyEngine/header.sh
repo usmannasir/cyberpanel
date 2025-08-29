@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/bin/sh
 
 set_header() {
-if [[ -f /usr/local/lsws/conf/vhosts/$1/vhost.conf ]] ; then
+if [ -f "/usr/local/lsws/conf/vhosts/$1/vhost.conf" ] ; then
 cat << EOF > header.txt
 
 context /wp-content/cache/css/ {
@@ -71,19 +71,18 @@ set Access-Control-Allow-Origin: *
 }
 EOF
 
-cat header.txt >> /usr/local/lsws/conf/vhosts/$1/vhost.conf
+    cat header.txt >> "/usr/local/lsws/conf/vhosts/$1/vhost.conf"
 fi
 }
 
 if /usr/local/lsws/bin/lshttpd -v | grep -iF open ; then
-  echo -e "\nOpenLiteSpeed detected..."
-  set_header
+  printf "\nOpenLiteSpeed detected...\n"
+  set_header "$1"
 else
-  echo -e "\nLiteSpeed Enterprise detected..."
-  exit
+  printf "\nLiteSpeed Enterprise detected...\n"
+  exit 0
   #LiteSpeed Enterprise can read htaccess for expire header, no need to set it up.
 fi
 
 rm -f header.txt
-rm -f $0
-echo -e "\nexpire , cache-control and CORS header set..."
+printf "\nexpire, cache-control and CORS header set...\n"

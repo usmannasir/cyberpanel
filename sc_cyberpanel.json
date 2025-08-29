@@ -1,0 +1,1 @@
+[{"file":"cyberpanel.sh","line":427,"endLine":427,"column":9,"endColumn":11,"level":"info","code":2015,"message":"Note that A && B || C is not if-then-else. C may run when A is true.","fix":null}]

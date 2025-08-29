@@ -1,7 +1,13 @@
 #!/bin/bash
 
-USER="root"
-PASSWORD="1d1bb076c3bd9ae9ef545e3eafb1a35c68d3c5f4a6c03862"
+USER="${MYSQL_USER:-root}"
+PASSWORD="${MYSQL_PASSWORD:-}"
+# Check if password is provided via environment variable or prompt for it
+if [[ -z "$PASSWORD" ]]; then
+    echo -n "Enter MySQL password: "
+    read -r -s PASSWORD
+    echo
+fi
 #OUTPUT="/Users/rabino/DBs"
 cd /mnt/HC_Volume_2760413 || exit
 
@@ -14,6 +20,6 @@ for db in $databases; do
     if [[ "$db" != "information_schema" ]] && [[ "$db" != "performance_schema" ]] && [[ "$db" != "mysql" ]] && [[ "$db" != _* ]] ; then
         echo "Dumping database: $db"
         mysqldump -u "$USER" -p"$PASSWORD" --databases "$db" > "$(date +%Y%m%d)/$(date +%Y%m%d).$db.sql"
-       # gzip $OUTPUT/`date +%Y%m%d`.$db.sql
+       # gzip $OUTPUT/$(date +%Y%m%d).$db.sql
     fi
 done

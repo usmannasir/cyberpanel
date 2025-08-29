@@ -12,7 +12,8 @@ import logging
 
 app = FastAPI()
 # JWT_SECRET = "YOUR_SECRET_KEY"
-JWT_SECRET = "DAsjK2gl50PE09d1N3uZPTQ6JdwwfiuhlyWKMVbUEpc"
+JWT_SECRET = os.environ.get('JWT_SECRET',
+                            'dev-jwt-secret-change-in-production')
 JWT_ALGORITHM = "HS256"
 
 # Allow CORS for local dev/testing
@@ -27,6 +28,7 @@ app.add_middleware(
 SSH_USER = "your_website_user"  # Replace with a real user for testing
 AUTHORIZED_KEYS_PATH = f"/home/{SSH_USER}/.ssh/authorized_keys"
 
+
 # Helper to generate a keypair
 def generate_ssh_keypair():
     key = paramiko.RSAKey.generate(2048)
@@ -36,11 +38,13 @@ def generate_ssh_keypair():
     public_key = f"{key.get_name()} {key.get_base64()}"
     return private_key, public_key
 
+
 # Add public key to authorized_keys with a unique comment
 def add_key_to_authorized_keys(public_key, comment):
     entry = f'from="127.0.0.1,::1" {public_key} {comment}\n'
     with open(AUTHORIZED_KEYS_PATH, "a") as f:
         f.write(entry)
+
 
 # Remove public key from authorized_keys by comment
 def remove_key_from_authorized_keys(comment):
@@ -51,8 +55,11 @@ def remove_key_from_authorized_keys(comment):
             if comment not in line:
                 f.write(line)
 
+
 @app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket, token: str = Query(None), ssh_user: str = Query(None)):
+async def websocket_endpoint(websocket: WebSocket,
+                             token: str = Query(None),
+                             ssh_user: str = Query(None)):
     # Re-enable JWT validation
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
@@ -69,10 +76,12 @@ async def websocket_endpoint(websocket: WebSocket, token: str = Query(None), ssh
 
     os.makedirs(ssh_dir, exist_ok=True)
     if not os.path.exists(authorized_keys_path):
-        with open(authorized_keys_path, "w"): pass
+        with open(authorized_keys_path, "w"):
+            pass
     os.chown(ssh_dir, pwd.getpwnam(user).pw_uid, pwd.getpwnam(user).pw_gid)
     os.chmod(ssh_dir, 0o700)
-    os.chown(authorized_keys_path, pwd.getpwnam(user).pw_uid, pwd.getpwnam(user).pw_gid)
+    os.chown(authorized_keys_path, pwd.getpwnam(user).pw_uid,
+             pwd.getpwnam(user).pw_gid)
     os.chmod(authorized_keys_path, 0o600)
 
     private_key, public_key = generate_ssh_keypair()
@@ -112,7 +121,11 @@ async def websocket_endpoint(websocket: WebSocket, token: str = Query(None), ssh
                     data = await process.stdout.read(1024)
                     if data:
                         # Defensive type check and logging
-                        logging.debug(f"[ssh_to_ws] Sending to WS: type={type(data)}, sample={data[:40] if isinstance(data, bytes) else data}")
+                        sample_data = (data[:40] if isinstance(data, bytes)
+                                       else data)
+                        logging.debug(f"[ssh_to_ws] Sending to WS: "
+                                      f"type={type(data)}, "
+                                      f"sample={sample_data}")
                         if isinstance(data, bytes):
                             await websocket.send_bytes(data)
                         elif isinstance(data, str):
@@ -133,7 +146,8 @@ async def websocket_endpoint(websocket: WebSocket, token: str = Query(None), ssh
                 msg = msg.decode('utf-8', errors='replace')
             await websocket.send_text(str(msg))
         except Exception as ex:
-            logging.exception(f"[websocket_endpoint] Error sending error message: {ex}")
+            logging.exception(f"[websocket_endpoint] "
+                              f"Error sending error message: {ex}")
             pass
         try:
             await websocket.close()
@@ -151,4 +165,4 @@ async def websocket_endpoint(websocket: WebSocket, token: str = Query(None), ssh
         if process:
             process.close()
         if conn:
-            conn.close() 
+            conn.close()

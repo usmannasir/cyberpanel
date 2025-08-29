@@ -217,18 +217,17 @@ fixperms_cyberpanel () {
     #echo "------------------------"
     #tput setaf 4
     #echo "Fixing any domains with a document root outside of public_html...."
-    #for SUBDOMAIN in $(grep -i documentroot /var/cpanel/userdata/$account/* | grep -v '.cache\|_SSL' | awk '{print $2}' | grep -v public_html)
-    #do
-      #tput bold
-      #tput setaf 4
-      #echo "Fixing sub/addon domain document root $SUBDOMAIN...."
-      #tput sgr0
-      #find $SUBDOMAIN -type d -exec chmod $verbose 755 {} \;
-      #find $SUBDOMAIN -type f -print0 | xargs -d$'\n' -r chmod $verbose 644
-      #find $SUBDOMAIN -name '*.cgi' -o -name '*.pl' | xargs -r chmod $verbose 755
-      #chown $verbose -R $account:$account $SUBDOMAIN
-      #find $SUBDOMAIN -name .htaccess -exec chown $verbose $account.$account {} \;
-    #done
+    grep -i documentroot /var/cpanel/userdata/"$account"/* | grep -v '.cache\|_SSL' | awk '{print $2}' | grep -v public_html | while IFS= read -r SUBDOMAIN; do
+      tput bold
+      tput setaf 4
+      echo "Fixing sub/addon domain document root $SUBDOMAIN...."
+      tput sgr0
+      find "$SUBDOMAIN" -type d -exec chmod "$verbose" 755 {} \;
+      find "$SUBDOMAIN" -type f -print0 | xargs -0 -d$'\n' -r chmod "$verbose" 644
+  find "$SUBDOMAIN" \( -name '*.cgi' -o -name '*.pl' \) -print0 | xargs -0 -r chmod "$verbose" 755
+      chown "$verbose" -R "$account":"$account" "$SUBDOMAIN"
+      find "$SUBDOMAIN" -name .htaccess -exec chown "$verbose" "$account"."$account" {} \;
+    done
 
   #Finished
     tput bold
@@ -315,15 +314,14 @@ fixperms_cpanel () {
     echo "------------------------"
     tput setaf 4
     echo "Fixing any domains with a document root outside of public_html...."
-    for SUBDOMAIN in $(grep -i documentroot /var/cpanel/userdata/"$account"/* | grep -v '.cache\|_SSL' | awk '{print $2}' | grep -v public_html)
-    do
+    grep -i documentroot /var/cpanel/userdata/"$account"/* | grep -v '.cache\|_SSL' | awk '{print $2}' | grep -v public_html | while IFS= read -r SUBDOMAIN; do
       tput bold
       tput setaf 4
       echo "Fixing sub/addon domain document root $SUBDOMAIN...."
       tput sgr0
       find "$SUBDOMAIN" -type d -exec chmod "$verbose" 755 {} \;
-      find "$SUBDOMAIN" -type f -print0 | xargs -0 -d$'\n' -r chmod "$verbose" 644
-      find "$SUBDOMAIN" -name '*.cgi' -print0 -o -name '*.pl' | xargs -0 -r chmod "$verbose" 755
+      find "$SUBDOMAIN" -type f -print0 | xargs -0 -r chmod "$verbose" 644
+      find "$SUBDOMAIN" \( -name '*.cgi' -o -name '*.pl' \) -print0 | xargs -0 -r chmod "$verbose" 755
       chown "$verbose" -R "$account":"$account" "$SUBDOMAIN"
       chmod "$verbose" 755 "$SUBDOMAIN"
       find "$SUBDOMAIN" -name .htaccess -exec chown "$verbose" "$account"."$account" {} \;
@@ -389,28 +387,25 @@ all () {
 
 	if [ "${ControlPanel}" == "cpanel" ] ; then
 
-		for user in $(cut -d: -f1 /etc/domainusers)
-		    do
-		  	fixperms_cpanel "$user"
-		    done
+  cut -d: -f1 /etc/domainusers | while IFS= read -r user; do
+    fixperms_cpanel "$user"
+  done
 		# Fix all users mailperms
 		/scripts/mailperm --verbose
 
 	elif [ "${ControlPanel}" == "cyberpanel" ] ; then
 
 		if [[ $OS = 'CentOS Linux' ]] ; then
-	   	for user in $(getent passwd | awk -F: '5001<$3 && $3<6000 {print $1}' |grep -v spamd)
-		    do
-		  	fixperms_cyberpanel "$user"
-		    done
+    getent passwd | awk -F: '5001<$3 && $3<6000 {print $1}' | grep -v spamd | while IFS= read -r user; do
+      fixperms_cyberpanel "$user"
+    done
 		   	fixmailperms_cyberpanel
 		fi
 
 		if [[ $OS = 'Ubuntu' ]] ; then
-		   for user in $(getent passwd | awk -F: '1001<$3 && $3<2000 {print $1}')
-		    do
-		  	fixperms_cyberpanel "$user"
-		    done
+           getent passwd | awk -F: '1001<$3 && $3<2000 {print $1}' | while IFS= read -r user; do
+             fixperms_cyberpanel "$user"
+           done
 		  	fixmailperms_cyberpanel
 		fi
 	fi
