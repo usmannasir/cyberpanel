@@ -2969,7 +2969,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         writeToFile.write(content)
         writeToFile.close()
 
-        command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/snappymail.php'
+        command = '/usr/local/lsws/lsphp83/bin/php /usr/local/CyberCP/public/snappymail.php'
         subprocess.call(shlex.split(command))
 
         command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"

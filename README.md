@@ -39,9 +39,9 @@ CyberPanel supports a wide range of PHP versions across different operating syst
 
 ### ☑️ **Currently Supported PHP Versions**
 
-- **PHP 8.5** - Latest stable version (EOL: Dec 2028)
+- **PHP 8.5** - Latest stable version (EOL: Dec 2028) ⭐ **NEW!**
 - **PHP 8.4** - Stable version (EOL: Dec 2027)
-- **PHP 8.3** - Stable version (EOL: Dec 2027)
+- **PHP 8.3** - **Default version** - Stable version (EOL: Dec 2027) 🎯
 - **PHP 8.2** - Stable version (EOL: Dec 2026)
 - **PHP 8.1** - Stable version (EOL: Dec 2025)
 - **PHP 8.0** - Legacy support (EOL: Nov 2023)

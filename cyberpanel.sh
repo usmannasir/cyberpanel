@@ -2278,7 +2278,7 @@ echo "echo \$@ > /etc/cyberpanel/adminPass" >> /usr/bin/adminPass
 chmod 700 /usr/bin/adminPass
 
 rm -f /usr/bin/php
-ln -s /usr/local/lsws/lsphp80/bin/php /usr/bin/php
+ln -s /usr/local/lsws/lsphp83/bin/php /usr/bin/php
 
 if [[ "$Server_OS" = "CentOS" ]] ; then
 #all centos 7/8 post change goes here
