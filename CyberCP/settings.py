@@ -87,7 +87,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'CyberCP.secMiddleware.secMiddleware'
+    'CyberCP.secMiddleware.secMiddleware',
+    'CyberCP.phpmyadminMiddleware.PhpMyAdminAccessMiddleware'
 ]
 
 ROOT_URLCONF = 'CyberCP.urls'
