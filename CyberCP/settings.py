@@ -107,6 +107,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'baseTemplate.context_processors.version_context',
                 'baseTemplate.context_processors.cosmetic_context',
+                'baseTemplate.context_processors.notification_preferences_context',
             ],
         },
     },

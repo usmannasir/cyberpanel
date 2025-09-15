@@ -14,6 +14,9 @@ Welcome to the CyberPanel documentation hub! This folder contains all guides, tu
 ### 📧 Email & Marketing
 - **[Mautic Installation Guide](MAUTIC_INSTALLATION_GUIDE.md)** - Step-by-step guide for installing and configuring Mautic email marketing platform
 
+### 🎨 Customization & Design
+- **[Custom CSS Guide](CUSTOM_CSS_GUIDE.md)** - Complete guide for creating custom CSS that works with CyberPanel 2.5.5-dev design system
+
 ### 📖 General Documentation
 - **[README](../README.md)** - Main CyberPanel documentation with installation instructions and feature overview
 - **[Contributing Guide](CONTRIBUTING.md)** - Guidelines for contributing to the CyberPanel project
@@ -23,7 +26,8 @@ Welcome to the CyberPanel documentation hub! This folder contains all guides, tu
 1. **New to CyberPanel?** Start with the [README](../README.md) for installation and basic setup
 2. **Need Docker help?** Check the [Docker Command Execution Guide](Docker_Command_Execution_Guide.md)
 3. **Setting up email marketing?** Follow the [Mautic Installation Guide](MAUTIC_INSTALLATION_GUIDE.md)
-4. **Want to contribute?** Read the [Contributing Guide](CONTRIBUTING.md)
+4. **Want to customize the interface?** Check the [Custom CSS Guide](CUSTOM_CSS_GUIDE.md)
+5. **Want to contribute?** Read the [Contributing Guide](CONTRIBUTING.md)
 
 ## 🔍 Finding What You Need
 
@@ -31,6 +35,7 @@ Welcome to the CyberPanel documentation hub! This folder contains all guides, tu
 - **Docker Features**: [Docker Command Execution Guide](Docker_Command_Execution_Guide.md)
 - **Security Features**: [AI Scanner Documentation](AIScannerDocs.md)
 - **Email Marketing**: [Mautic Installation Guide](MAUTIC_INSTALLATION_GUIDE.md)
+- **Customization & Design**: [Custom CSS Guide](CUSTOM_CSS_GUIDE.md)
 - **Development**: [Contributing Guide](CONTRIBUTING.md)
 
 ## 📝 Guide Categories
@@ -44,6 +49,11 @@ Welcome to the CyberPanel documentation hub! This folder contains all guides, tu
 - Mautic email marketing
 - Third-party applications
 - Custom configurations
+
+### 🎨 **Customization**
+- Custom CSS theming
+- Design system integration
+- Interface personalization
 
 ### 📖 **Documentation**
 - Installation guides

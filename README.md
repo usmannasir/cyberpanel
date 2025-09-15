@@ -30,6 +30,7 @@ CyberPanel comes with comprehensive documentation and step-by-step guides:
 - 🐳 **[Docker Command Execution](guides/Docker_Command_Execution_Guide.md)** - Execute commands in Docker containers
 - 🤖 **[AI Scanner Setup](guides/AIScannerDocs.md)** - Configure AI-powered security scanning
 - 📧 **[Mautic Installation](guides/MAUTIC_INSTALLATION_GUIDE.md)** - Email marketing platform setup
+- 🎨 **[Custom CSS Guide](guides/CUSTOM_CSS_GUIDE.md)** - Create custom themes for CyberPanel 2.5.5-dev
 
 ---
 
@@ -109,7 +110,6 @@ Install CyberPanel easily with the following command:
 sh <(curl https://cyberpanel.net/install.sh || wget -O - https://cyberpanel.net/install.sh)
 ```
 
-
 ---
 
 ## 📊 Upgrading CyberPanel
@@ -125,6 +125,7 @@ sh <(curl https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgr
 ## 🆕 Recent Updates & Fixes
 
 ### **Bandwidth Reset Issue Fixed** (January 2025)
+
 - **Issue**: Monthly bandwidth usage was not resetting, causing cumulative values to grow indefinitely
 - **Solution**: Implemented automatic monthly bandwidth reset for all websites and child domains
 - **Affected OS**: All supported operating systems (Ubuntu, AlmaLinux, RockyLinux, RHEL, CloudLinux, CentOS)
@@ -132,6 +133,7 @@ sh <(curl https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgr
 - **Documentation**: See [Bandwidth Reset Fix Guide](to-do/cyberpanel-bandwidth-reset-fix.md)
 
 ### **New Operating System Support Added** (January 2025)
+
 - **Ubuntu 24.04.3**: Full compatibility with latest Ubuntu LTS
 - **AlmaLinux 10**: Full compatibility with latest AlmaLinux release
 - **Long-term Support**: Both supported until 2029-2030
@@ -157,17 +159,19 @@ sh <(curl https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgr
 - 🐳 [Docker Command Execution](guides/Docker_Command_Execution_Guide.md) - Execute commands in Docker containers
 - 🤖 [AI Scanner Setup](guides/AIScannerDocs.md) - Configure AI-powered security scanning
 - 📧 [Mautic Installation](guides/MAUTIC_INSTALLATION_GUIDE.md) - Email marketing platform setup
+- 🎨 [Custom CSS Guide](guides/CUSTOM_CSS_GUIDE.md) - Create custom themes for CyberPanel 2.5.5+
 - 📚 [All Guides Index](guides/INDEX.md) - Complete documentation hub
 
 ### 🔗 **Direct Guide Links**
 
-| Feature     | Guide                                                      | Description                    |
-| ----------- | ---------------------------------------------------------- | ------------------------------ |
-| 🐳 Docker   | [Command Execution](guides/Docker_Command_Execution_Guide.md) | Execute commands in containers |
-| 🤖 Security | [AI Scanner](guides/AIScannerDocs.md)                         | AI-powered security scanning   |
-| 📧 Email    | [Mautic Setup](guides/MAUTIC_INSTALLATION_GUIDE.md)           | Email marketing platform       |
-| 📊 Bandwidth | [Reset Fix Guide](to-do/cyberpanel-bandwidth-reset-fix.md)    | Fix bandwidth reset issues     |
-| 📚 All      | [Complete Index](guides/INDEX.md)                             | Browse all available guides    |
+| Feature      | Guide                                                      | Description                        |
+| ------------ | ---------------------------------------------------------- | ---------------------------------- |
+| 🐳 Docker    | [Command Execution](guides/Docker_Command_Execution_Guide.md) | Execute commands in containers     |
+| 🤖 Security  | [AI Scanner](guides/AIScannerDocs.md)                         | AI-powered security scanning       |
+| 📧 Email     | [Mautic Setup](guides/MAUTIC_INSTALLATION_GUIDE.md)           | Email marketing platform           |
+| 🎨 Design    | [Custom CSS Guide](guides/CUSTOM_CSS_GUIDE.md)                | Create custom themes for 2.5.5-dev |
+| 📊 Bandwidth | [Reset Fix Guide](to-do/cyberpanel-bandwidth-reset-fix.md)    | Fix bandwidth reset issues         |
+| 📚 All       | [Complete Index](guides/INDEX.md)                             | Browse all available guides        |
 
 ---
 
@@ -176,12 +180,13 @@ sh <(curl https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgr
 ### **Common Issues & Solutions**
 
 #### **Bandwidth Not Resetting Monthly**
+
 - **Issue**: Bandwidth usage shows cumulative values instead of monthly usage
 - **Solution**: Run the bandwidth reset script: `/usr/local/CyberCP/scripts/reset_bandwidth.sh`
 - **Prevention**: Ensure monthly cron job is running: `0 0 1 * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py monthlyCleanup`
 
-
 #### **General Support**
+
 - Check logs: `/usr/local/lscp/logs/error.log`
 - Verify cron jobs: `crontab -l`
 - Test manual reset: Use provided scripts in `/usr/local/CyberCP/scripts/`
