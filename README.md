@@ -80,6 +80,9 @@ CyberPanel runs on x86_64 architecture and supports the following operating syst
 - **Ubuntu 24.04.3** - Supported until April 2029 ⭐ **NEW!**
 - **Ubuntu 22.04** - Supported until April 2027
 - **Ubuntu 20.04** - Supported until April 2025
+- **Debian 13** - Supported until 2029 ⭐ **NEW!**
+- **Debian 12** - Supported until 2027
+- **Debian 11** - Supported until 2026
 - **AlmaLinux 10** - Supported until May 2030 ⭐ **NEW!**
 - **AlmaLinux 9** - Supported until May 2032
 - **AlmaLinux 8** - Supported until May 2029
@@ -94,7 +97,6 @@ CyberPanel runs on x86_64 architecture and supports the following operating syst
 
 Additional operating systems may be supported through third-party repositories or community efforts:
 
-- **Debian** - May work with Ubuntu-compatible packages
 - **openEuler** - Community-supported with limited testing
 - **Other RHEL derivatives** - May work with AlmaLinux/RockyLinux packages
 
@@ -124,7 +126,7 @@ sh <(curl https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgr
 
 ## 🆕 Recent Updates & Fixes
 
-### **Bandwidth Reset Issue Fixed** (January 2025)
+### **Bandwidth Reset Issue Fixed** (September 2025)
 
 - **Issue**: Monthly bandwidth usage was not resetting, causing cumulative values to grow indefinitely
 - **Solution**: Implemented automatic monthly bandwidth reset for all websites and child domains
@@ -132,11 +134,12 @@ sh <(curl https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgr
 - **Manual Reset**: Use `/usr/local/CyberCP/scripts/reset_bandwidth.sh` for immediate reset
 - **Documentation**: See [Bandwidth Reset Fix Guide](to-do/cyberpanel-bandwidth-reset-fix.md)
 
-### **New Operating System Support Added** (January 2025)
+### **New Operating System Support Added** (September 2025)
 
 - **Ubuntu 24.04.3**: Full compatibility with latest Ubuntu LTS
+- **Debian 13**: Full compatibility with latest Debian stable release
 - **AlmaLinux 10**: Full compatibility with latest AlmaLinux release
-- **Long-term Support**: Both supported until 2029-2030
+- **Long-term Support**: All supported until 2029-2030
 
 ---
 
