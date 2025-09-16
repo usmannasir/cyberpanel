@@ -47,9 +47,15 @@ fi
 ### OS Detection
 Server_OS=""
 Server_OS_Version=""
-if grep -q -E "CentOS Linux 7|CentOS Linux 8" /etc/os-release ; then
+if grep -q -E "CentOS Linux 7|CentOS Linux 8|CentOS Stream" /etc/os-release ; then
   Server_OS="CentOS"
-elif grep -q -E "AlmaLinux-8|AlmaLinux-9|AlmaLinux-10" /etc/os-release ; then
+elif grep -q "Red Hat Enterprise Linux" /etc/os-release ; then
+  Server_OS="RedHat"
+elif grep -q "AlmaLinux-8" /etc/os-release ; then
+  Server_OS="AlmaLinux"
+elif grep -q "AlmaLinux-9" /etc/os-release ; then
+  Server_OS="AlmaLinux"
+elif grep -q "AlmaLinux-10" /etc/os-release ; then
   Server_OS="AlmaLinux"
 elif grep -q -E "CloudLinux 7|CloudLinux 8" /etc/os-release ; then
   Server_OS="CloudLinux"
@@ -57,11 +63,13 @@ elif grep -q -E "Rocky Linux" /etc/os-release ; then
   Server_OS="RockyLinux"
 elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04|Ubuntu 20.10|Ubuntu 22.04|Ubuntu 24.04" /etc/os-release ; then
   Server_OS="Ubuntu"
+elif grep -q -E "Debian GNU/Linux 11|Debian GNU/Linux 12|Debian GNU/Linux 13" /etc/os-release ; then
+  Server_OS="Debian"
 elif grep -q -E "openEuler 20.03|openEuler 22.03" /etc/os-release ; then
   Server_OS="openEuler"
 else
   echo -e "Unable to detect your system..."
-  echo -e "\nCyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, CentOS 7, CentOS 8, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03...\n"
+  echo -e "\nCyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, Debian 11, Debian 12, Debian 13, CentOS 7, CentOS 8, CentOS 9, RHEL 8, RHEL 9, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, RockyLinux 9, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03...\n"
   exit
 fi
 
@@ -69,10 +77,13 @@ Server_OS_Version=$(grep VERSION_ID /etc/os-release | awk -F[=,] '{print $2}' | 
 
 echo -e "System: $Server_OS $Server_OS_Version detected...\n"
 
-if [[ $Server_OS = "CloudLinux" ]] || [[ "$Server_OS" = "AlmaLinux" ]] || [[ "$Server_OS" = "RockyLinux" ]] ; then
+if [[ $Server_OS = "CloudLinux" ]] || [[ "$Server_OS" = "AlmaLinux" ]] || [[ "$Server_OS" = "RockyLinux" ]] || [[ "$Server_OS" = "RedHat" ]] ; then
   Server_OS="CentOS"
   #CloudLinux gives version id like 7.8, 7.9, so cut it to show first number only
-  #treat CloudLinux, Rocky and Alma as CentOS
+  #treat CloudLinux, Rocky, Alma and RedHat as CentOS
+elif [[ "$Server_OS" = "Debian" ]] ; then
+  Server_OS="Ubuntu"
+  #Treat Debian as Ubuntu for package management (both use apt-get)
 fi
 
 if [[ $Server_OS = "CentOS" ]] && [[ "$Server_OS_Version" = "7" ]] ; then
@@ -111,6 +122,29 @@ elif [[ $Server_OS = "CentOS" ]] && [[ "$Server_OS_Version" = "8" ]] ; then
   perl -MCPAN -e 'install Razor2::Client::Agent'
   perl -MCPAN -e 'install Sys::Hostname::Long'
   perl -MCPAN -e 'install Sys::SigAction'
+
+  freshclam -v
+
+elif [[ $Server_OS = "CentOS" ]] && [[ "$Server_OS_Version" = "9" ]] ; then
+
+  setenforce 0
+  dnf install -y perl dnf-utils perl-CPAN
+  dnf --enablerepo=crb install -y perl-IO-stringy
+  dnf install -y gcc cpp perl bzip2 zip make patch automake rpm-build perl-Archive-Zip perl-Filesys-Df perl-OLE-Storage_Lite perl-Net-CIDR perl-DBI perl-MIME-tools perl-DBD-SQLite binutils glibc-devel perl-Filesys-Df zlib unzip zlib-devel wget mlocate clamav clamav-update "perl(DBD::mysql)"
+
+  # Install unrar for AlmaLinux 9 (using EPEL)
+  dnf install -y unrar
+
+  export PERL_MM_USE_DEFAULT=1
+  curl -L https://cpanmin.us | perl - App::cpanminus
+
+  perl -MCPAN -e 'install Encoding::FixLatin'
+  perl -MCPAN -e 'install Digest::SHA1'
+  perl -MCPAN -e 'install Geo::IP'
+  perl -MCPAN -e 'install Razor2::Client::Agent'
+  perl -MCPAN -e 'install Sys::Hostname::Long'
+  perl -MCPAN -e 'install Sys::SigAction'
+  perl -MCPAN -e 'install Net::Patricia'
 
   freshclam -v
 
