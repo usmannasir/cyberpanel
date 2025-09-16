@@ -273,6 +273,54 @@ app.controller('runContainer', function ($scope, $http) {
         }
     };
 
+    // Helper function to generate Docker Compose YAML
+    function generateDockerComposeYml(containerInfo) {
+        var yml = 'version: \'3.8\'\n\n';
+        yml += 'services:\n';
+        yml += '  ' + containerInfo.name + ':\n';
+        yml += '    image: ' + containerInfo.image + '\n';
+        yml += '    container_name: ' + containerInfo.name + '\n';
+        
+        // Add ports
+        var ports = Object.keys(containerInfo.ports);
+        if (ports.length > 0) {
+            yml += '    ports:\n';
+            for (var i = 0; i < ports.length; i++) {
+                var port = ports[i];
+                if (containerInfo.ports[port]) {
+                    yml += '      - "' + containerInfo.ports[port] + ':' + port + '"\n';
+                }
+            }
+        }
+        
+        // Add volumes
+        var volumes = Object.keys(containerInfo.volumes);
+        if (volumes.length > 0) {
+            yml += '    volumes:\n';
+            for (var i = 0; i < volumes.length; i++) {
+                var volume = volumes[i];
+                if (containerInfo.volumes[volume]) {
+                    yml += '      - ' + containerInfo.volumes[volume] + ':' + volume + '\n';
+                }
+            }
+        }
+        
+        // Add environment variables
+        var envVars = Object.keys(containerInfo.environment);
+        if (envVars.length > 0) {
+            yml += '    environment:\n';
+            for (var i = 0; i < envVars.length; i++) {
+                var envVar = envVars[i];
+                yml += '      - ' + envVar + '=' + containerInfo.environment[envVar] + '\n';
+            }
+        }
+        
+        // Add restart policy
+        yml += '    restart: unless-stopped\n';
+        
+        return yml;
+    }
+
     // Docker Compose Functions for runContainer
     $scope.generateDockerCompose = function() {
         // Get container information from form
@@ -1434,101 +1482,6 @@ app.controller('viewContainer', function ($scope, $http, $interval, $timeout) {
         });
     };
 
-    // Helper function to generate Docker Compose YAML
-    function generateDockerComposeYml(containerInfo) {
-        var yml = 'version: \'3.8\'\n\n';
-        yml += 'services:\n';
-        yml += '  ' + containerInfo.name + ':\n';
-        yml += '    image: ' + containerInfo.image + '\n';
-        yml += '    container_name: ' + containerInfo.name + '\n';
-        
-        // Add ports
-        var ports = Object.keys(containerInfo.ports);
-        if (ports.length > 0) {
-            yml += '    ports:\n';
-            for (var i = 0; i < ports.length; i++) {
-                var port = ports[i];
-                if (containerInfo.ports[port]) {
-                    yml += '      - "' + containerInfo.ports[port] + ':' + port + '"\n';
-                }
-            }
-        }
-        
-        // Add volumes
-        var volumes = Object.keys(containerInfo.volumes);
-        if (volumes.length > 0) {
-            yml += '    volumes:\n';
-            for (var i = 0; i < volumes.length; i++) {
-                var volume = volumes[i];
-                if (containerInfo.volumes[volume]) {
-                    yml += '      - ' + containerInfo.volumes[volume] + ':' + volume + '\n';
-                }
-            }
-        }
-        
-        // Add environment variables
-        var envVars = Object.keys(containerInfo.environment);
-        if (envVars.length > 0) {
-            yml += '    environment:\n';
-            for (var i = 0; i < envVars.length; i++) {
-                var envVar = envVars[i];
-                yml += '      - ' + envVar + '=' + containerInfo.environment[envVar] + '\n';
-            }
-        }
-        
-        // Add restart policy
-        yml += '    restart: unless-stopped\n';
-        
-        return yml;
-    }
-
-    // Helper function to generate Docker Compose YAML (for runContainer)
-    function generateDockerComposeYml(containerInfo) {
-        var yml = 'version: \'3.8\'\n\n';
-        yml += 'services:\n';
-        yml += '  ' + containerInfo.name + ':\n';
-        yml += '    image: ' + containerInfo.image + '\n';
-        yml += '    container_name: ' + containerInfo.name + '\n';
-        
-        // Add ports
-        var ports = Object.keys(containerInfo.ports);
-        if (ports.length > 0) {
-            yml += '    ports:\n';
-            for (var i = 0; i < ports.length; i++) {
-                var port = ports[i];
-                if (containerInfo.ports[port]) {
-                    yml += '      - "' + containerInfo.ports[port] + ':' + port + '"\n';
-                }
-            }
-        }
-        
-        // Add volumes
-        var volumes = Object.keys(containerInfo.volumes);
-        if (volumes.length > 0) {
-            yml += '    volumes:\n';
-            for (var i = 0; i < volumes.length; i++) {
-                var volume = volumes[i];
-                if (containerInfo.volumes[volume]) {
-                    yml += '      - ' + containerInfo.volumes[volume] + ':' + volume + '\n';
-                }
-            }
-        }
-        
-        // Add environment variables
-        var envVars = Object.keys(containerInfo.environment);
-        if (envVars.length > 0) {
-            yml += '    environment:\n';
-            for (var i = 0; i < envVars.length; i++) {
-                var envVar = envVars[i];
-                yml += '      - ' + envVar + '=' + containerInfo.environment[envVar] + '\n';
-            }
-        }
-        
-        // Add restart policy
-        yml += '    restart: unless-stopped\n';
-        
-        return yml;
-    }
 
     $scope.showTop = function () {
         $scope.topHead = [];

@@ -6,7 +6,7 @@ from django.http import HttpResponse
 from plogical.getSystemInformation import SystemInformation
 import json
 from loginSystem.views import loadLoginPage
-from .models import version
+from .models import version, UserNotificationPreferences
 import requests
 import subprocess
 import shlex
@@ -1305,3 +1305,88 @@ def getTopProcesses(request):
                 
     except Exception as e:
         return HttpResponse(json.dumps({'error': str(e)}), content_type='application/json', status=500)
+
+@csrf_exempt
+@require_POST
+def dismiss_backup_notification(request):
+    """API endpoint to permanently dismiss the backup notification for the current user"""
+    try:
+        user_id = request.session.get('userID')
+        if not user_id:
+            return HttpResponse(json.dumps({'status': 0, 'error': 'Not logged in'}), content_type='application/json', status=403)
+        
+        # Get or create user notification preferences
+        user = Administrator.objects.get(pk=user_id)
+        preferences, created = UserNotificationPreferences.objects.get_or_create(
+            user=user,
+            defaults={
+                'backup_notification_dismissed': False,
+                'ai_scanner_notification_dismissed': False
+            }
+        )
+        
+        # Mark backup notification as dismissed
+        preferences.backup_notification_dismissed = True
+        preferences.save()
+        
+        return HttpResponse(json.dumps({'status': 1, 'message': 'Backup notification dismissed permanently'}), content_type='application/json')
+        
+    except Exception as e:
+        return HttpResponse(json.dumps({'status': 0, 'error': str(e)}), content_type='application/json', status=500)
+
+@csrf_exempt
+@require_POST
+def dismiss_ai_scanner_notification(request):
+    """API endpoint to permanently dismiss the AI scanner notification for the current user"""
+    try:
+        user_id = request.session.get('userID')
+        if not user_id:
+            return HttpResponse(json.dumps({'status': 0, 'error': 'Not logged in'}), content_type='application/json', status=403)
+        
+        # Get or create user notification preferences
+        user = Administrator.objects.get(pk=user_id)
+        preferences, created = UserNotificationPreferences.objects.get_or_create(
+            user=user,
+            defaults={
+                'backup_notification_dismissed': False,
+                'ai_scanner_notification_dismissed': False
+            }
+        )
+        
+        # Mark AI scanner notification as dismissed
+        preferences.ai_scanner_notification_dismissed = True
+        preferences.save()
+        
+        return HttpResponse(json.dumps({'status': 1, 'message': 'AI scanner notification dismissed permanently'}), content_type='application/json')
+        
+    except Exception as e:
+        return HttpResponse(json.dumps({'status': 0, 'error': str(e)}), content_type='application/json', status=500)
+
+@csrf_exempt
+@require_GET
+def get_notification_preferences(request):
+    """API endpoint to get current user's notification preferences"""
+    try:
+        user_id = request.session.get('userID')
+        if not user_id:
+            return HttpResponse(json.dumps({'status': 0, 'error': 'Not logged in'}), content_type='application/json', status=403)
+        
+        # Get user notification preferences
+        user = Administrator.objects.get(pk=user_id)
+        try:
+            preferences = UserNotificationPreferences.objects.get(user=user)
+            return HttpResponse(json.dumps({
+                'status': 1,
+                'backup_notification_dismissed': preferences.backup_notification_dismissed,
+                'ai_scanner_notification_dismissed': preferences.ai_scanner_notification_dismissed
+            }), content_type='application/json')
+        except UserNotificationPreferences.DoesNotExist:
+            # Return default values if preferences don't exist yet
+            return HttpResponse(json.dumps({
+                'status': 1,
+                'backup_notification_dismissed': False,
+                'ai_scanner_notification_dismissed': False
+            }), content_type='application/json')
+        
+    except Exception as e:
+        return HttpResponse(json.dumps({'status': 0, 'error': str(e)}), content_type='application/json', status=500)

@@ -323,17 +323,26 @@ class ContainerManager(multi.Thread):
 
             if 'ExposedPorts' in inspectImage['Config']:
                 for item in inspectImage['Config']['ExposedPorts']:
-                    # Do not allow priviledged port numbers
-                    if int(data[item]) < 1024 or int(data[item]) > 65535:
-                        data_ret = {'createContainerStatus': 0, 'error_message': "Choose port between 1024 and 65535"}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
-                    portConfig[item] = data[item]
+                    # Check if port data exists and is valid
+                    if item in data and data[item]:
+                        try:
+                            port_num = int(data[item])
+                            # Do not allow priviledged port numbers
+                            if port_num < 1024 or port_num > 65535:
+                                data_ret = {'createContainerStatus': 0, 'error_message': "Choose port between 1024 and 65535"}
+                                json_data = json.dumps(data_ret)
+                                return HttpResponse(json_data)
+                            portConfig[item] = data[item]
+                        except (ValueError, TypeError):
+                            data_ret = {'createContainerStatus': 0, 'error_message': f"Invalid port number: {data[item]}"}
+                            json_data = json.dumps(data_ret)
+                            return HttpResponse(json_data)
 
             volumes = {}
-            for index, volume in volList.items():
-                volumes[volume['src']] = {'bind': volume['dest'],
-                                             'mode': 'rw'}
+            if volList:
+                for index, volume in volList.items():
+                    if isinstance(volume, dict) and 'src' in volume and 'dest' in volume:
+                        volumes[volume['src']] = {'bind': volume['dest'], 'mode': 'rw'}
 
             ## Create Configurations
             admin = Administrator.objects.get(userName=dockerOwner)
@@ -351,10 +360,15 @@ class ContainerManager(multi.Thread):
             try:
                 container = client.containers.create(**containerArgs)
             except Exception as err:
-                if "port is already allocated" in err:  # We need to delete container if port is not available
+                # Check if it's a port allocation error by converting to string first
+                error_message = str(err)
+                if "port is already allocated" in error_message:  # We need to delete container if port is not available
                     print("Deleting container")
-                    container.remove(force=True)
-                data_ret = {'createContainerStatus': 0, 'error_message': str(err)}
+                    try:
+                        container.remove(force=True)
+                    except:
+                        pass  # Container might not exist yet
+                data_ret = {'createContainerStatus': 0, 'error_message': error_message}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
@@ -376,7 +390,9 @@ class ContainerManager(multi.Thread):
 
 
         except Exception as msg:
-            data_ret = {'createContainerStatus': 0, 'error_message': str(msg)}
+            # Ensure error message is properly converted to string
+            error_message = str(msg) if msg else "Unknown error occurred"
+            data_ret = {'createContainerStatus': 0, 'error_message': error_message}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 

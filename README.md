@@ -30,6 +30,7 @@ CyberPanel comes with comprehensive documentation and step-by-step guides:
 - 🐳 **[Docker Command Execution](guides/Docker_Command_Execution_Guide.md)** - Execute commands in Docker containers
 - 🤖 **[AI Scanner Setup](guides/AIScannerDocs.md)** - Configure AI-powered security scanning
 - 📧 **[Mautic Installation](guides/MAUTIC_INSTALLATION_GUIDE.md)** - Email marketing platform setup
+- 🎨 **[Custom CSS Guide](guides/CUSTOM_CSS_GUIDE.md)** - Create custom themes for CyberPanel 2.5.5-dev
 
 ---
 
@@ -39,9 +40,9 @@ CyberPanel supports a wide range of PHP versions across different operating syst
 
 ### ☑️ **Currently Supported PHP Versions**
 
-- **PHP 8.5** - Latest stable version (EOL: Dec 2028)
+- **PHP 8.5** - Latest stable version (EOL: Dec 2028) ⭐ **NEW!**
 - **PHP 8.4** - Stable version (EOL: Dec 2027)
-- **PHP 8.3** - Stable version (EOL: Dec 2027)
+- **PHP 8.3** - **Default version** - Stable version (EOL: Dec 2027) 🎯
 - **PHP 8.2** - Stable version (EOL: Dec 2026)
 - **PHP 8.1** - Stable version (EOL: Dec 2025)
 - **PHP 8.0** - Legacy support (EOL: Nov 2023)
@@ -79,6 +80,9 @@ CyberPanel runs on x86_64 architecture and supports the following operating syst
 - **Ubuntu 24.04.3** - Supported until April 2029 ⭐ **NEW!**
 - **Ubuntu 22.04** - Supported until April 2027
 - **Ubuntu 20.04** - Supported until April 2025
+- **Debian 13** - Supported until 2029 ⭐ **NEW!**
+- **Debian 12** - Supported until 2027
+- **Debian 11** - Supported until 2026
 - **AlmaLinux 10** - Supported until May 2030 ⭐ **NEW!**
 - **AlmaLinux 9** - Supported until May 2032
 - **AlmaLinux 8** - Supported until May 2029
@@ -93,7 +97,6 @@ CyberPanel runs on x86_64 architecture and supports the following operating syst
 
 Additional operating systems may be supported through third-party repositories or community efforts:
 
-- **Debian** - May work with Ubuntu-compatible packages
 - **openEuler** - Community-supported with limited testing
 - **Other RHEL derivatives** - May work with AlmaLinux/RockyLinux packages
 
@@ -109,7 +112,6 @@ Install CyberPanel easily with the following command:
 sh <(curl https://cyberpanel.net/install.sh || wget -O - https://cyberpanel.net/install.sh)
 ```
 
-
 ---
 
 ## 📊 Upgrading CyberPanel
@@ -124,17 +126,20 @@ sh <(curl https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgr
 
 ## 🆕 Recent Updates & Fixes
 
-### **Bandwidth Reset Issue Fixed** (January 2025)
+### **Bandwidth Reset Issue Fixed** (September 2025)
+
 - **Issue**: Monthly bandwidth usage was not resetting, causing cumulative values to grow indefinitely
 - **Solution**: Implemented automatic monthly bandwidth reset for all websites and child domains
 - **Affected OS**: All supported operating systems (Ubuntu, AlmaLinux, RockyLinux, RHEL, CloudLinux, CentOS)
 - **Manual Reset**: Use `/usr/local/CyberCP/scripts/reset_bandwidth.sh` for immediate reset
 - **Documentation**: See [Bandwidth Reset Fix Guide](to-do/cyberpanel-bandwidth-reset-fix.md)
 
-### **New Operating System Support Added** (January 2025)
+### **New Operating System Support Added** (September 2025)
+
 - **Ubuntu 24.04.3**: Full compatibility with latest Ubuntu LTS
+- **Debian 13**: Full compatibility with latest Debian stable release
 - **AlmaLinux 10**: Full compatibility with latest AlmaLinux release
-- **Long-term Support**: Both supported until 2029-2030
+- **Long-term Support**: All supported until 2029-2030
 
 ---
 
@@ -157,17 +162,19 @@ sh <(curl https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgr
 - 🐳 [Docker Command Execution](guides/Docker_Command_Execution_Guide.md) - Execute commands in Docker containers
 - 🤖 [AI Scanner Setup](guides/AIScannerDocs.md) - Configure AI-powered security scanning
 - 📧 [Mautic Installation](guides/MAUTIC_INSTALLATION_GUIDE.md) - Email marketing platform setup
+- 🎨 [Custom CSS Guide](guides/CUSTOM_CSS_GUIDE.md) - Create custom themes for CyberPanel 2.5.5+
 - 📚 [All Guides Index](guides/INDEX.md) - Complete documentation hub
 
 ### 🔗 **Direct Guide Links**
 
-| Feature     | Guide                                                      | Description                    |
-| ----------- | ---------------------------------------------------------- | ------------------------------ |
-| 🐳 Docker   | [Command Execution](guides/Docker_Command_Execution_Guide.md) | Execute commands in containers |
-| 🤖 Security | [AI Scanner](guides/AIScannerDocs.md)                         | AI-powered security scanning   |
-| 📧 Email    | [Mautic Setup](guides/MAUTIC_INSTALLATION_GUIDE.md)           | Email marketing platform       |
-| 📊 Bandwidth | [Reset Fix Guide](to-do/cyberpanel-bandwidth-reset-fix.md)    | Fix bandwidth reset issues     |
-| 📚 All      | [Complete Index](guides/INDEX.md)                             | Browse all available guides    |
+| Feature      | Guide                                                      | Description                        |
+| ------------ | ---------------------------------------------------------- | ---------------------------------- |
+| 🐳 Docker    | [Command Execution](guides/Docker_Command_Execution_Guide.md) | Execute commands in containers     |
+| 🤖 Security  | [AI Scanner](guides/AIScannerDocs.md)                         | AI-powered security scanning       |
+| 📧 Email     | [Mautic Setup](guides/MAUTIC_INSTALLATION_GUIDE.md)           | Email marketing platform           |
+| 🎨 Design    | [Custom CSS Guide](guides/CUSTOM_CSS_GUIDE.md)                | Create custom themes for 2.5.5-dev |
+| 📊 Bandwidth | [Reset Fix Guide](to-do/cyberpanel-bandwidth-reset-fix.md)    | Fix bandwidth reset issues         |
+| 📚 All       | [Complete Index](guides/INDEX.md)                             | Browse all available guides        |
 
 ---
 
@@ -176,12 +183,13 @@ sh <(curl https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgr
 ### **Common Issues & Solutions**
 
 #### **Bandwidth Not Resetting Monthly**
+
 - **Issue**: Bandwidth usage shows cumulative values instead of monthly usage
 - **Solution**: Run the bandwidth reset script: `/usr/local/CyberCP/scripts/reset_bandwidth.sh`
 - **Prevention**: Ensure monthly cron job is running: `0 0 1 * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py monthlyCleanup`
 
-
 #### **General Support**
+
 - Check logs: `/usr/local/lscp/logs/error.log`
 - Verify cron jobs: `crontab -l`
 - Test manual reset: Use provided scripts in `/usr/local/CyberCP/scripts/`

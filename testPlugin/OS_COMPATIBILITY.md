@@ -10,7 +10,9 @@ The CyberPanel Test Plugin is designed to work seamlessly across all CyberPanel-
 |------------------|---------|----------------|----------------|-----------------|-----------------|
 | **Ubuntu** | 22.04 | ✅ Full Support | 3.10+ | apt-get | systemctl |
 | **Ubuntu** | 20.04 | ✅ Full Support | 3.8+ | apt-get | systemctl |
-| **Debian** | 11+ | ✅ Full Support | 3.9+ | apt-get | systemctl |
+| **Debian** | 13 | ✅ Full Support | 3.11+ | apt-get | systemctl |
+| **Debian** | 12 | ✅ Full Support | 3.10+ | apt-get | systemctl |
+| **Debian** | 11 | ✅ Full Support | 3.9+ | apt-get | systemctl |
 | **AlmaLinux** | 10 | ✅ Full Support | 3.11+ | dnf | systemctl |
 | **AlmaLinux** | 9 | ✅ Full Support | 3.9+ | dnf | systemctl |
 | **AlmaLinux** | 8 | ✅ Full Support | 3.6+ | dnf/yum | systemctl |
@@ -457,6 +459,6 @@ sudo rm -f /home/cyberpanel/plugins/testPlugin
 
 ---
 
-**Last Updated**: December 2024  
+**Last Updated**: September 2025  
 **Compatibility Version**: 1.0.0  
-**Next Review**: March 2025
+**Next Review**: March 2026
