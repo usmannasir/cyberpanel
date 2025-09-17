@@ -1721,7 +1721,7 @@ log_function_end "License_Validation"
 
 Pre_Install_CN_Replacement() {
 if [[ "$Server_OS" = "Ubuntu" ]] ; then
-  sed -i 's|wget http://rpms.litespeedtech.com/debian/|wget https://cyberpanel.sh/litespeed/|g' install.py
+  sed -i 's|https://repo.litespeed.sh|https://cyberpanel.sh/litespeed/enable_lst_debian_repo.sh|g' install.py
   sed -i 's|https://repo.dovecot.org/|https://cyberpanel.sh/repo.dovecot.org/|g' install.py
 fi
   #replace litespeed repo on ubuntu 18/20

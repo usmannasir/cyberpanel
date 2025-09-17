@@ -6,7 +6,7 @@ RUN apt-get update && \
     apt-get install -y wget gnupg ca-certificates
 
 # Install OpenLiteSpeed
-RUN wget -O - http://rpms.litespeedtech.com/debian/enable_lst_debian_repo.sh | bash
+RUN wget -O - https://repo.litespeed.sh | bash
 
 RUN apt-get install -y openlitespeed
 
