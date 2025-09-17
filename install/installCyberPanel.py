@@ -529,6 +529,51 @@ deb [arch=amd64,arm64,ppc64el,s390x signed-by=/usr/share/keyrings/mariadb-keyrin
 
 
             command = "DEBIAN_FRONTEND=noninteractive apt-get install mariadb-server -y"
+        elif self.distro == debian12:
+            # Debian 12 uses similar setup to Ubuntu but with native packages
+            command = 'DEBIAN_FRONTEND=noninteractive apt-get install software-properties-common apt-transport-https curl -y'
+            install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+
+            command = "mkdir -p /etc/apt/keyrings"
+            install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+
+            # Use MariaDB official repository for Debian 12
+            command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=10.11'
+            result = install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR, True)
+
+            # If the download fails, use manual repo configuration as fallback
+            if result != 1:
+                install_utils.writeToFile("MariaDB repo setup script failed, using manual configuration...")
+
+                # First, ensure directories exist
+                command = 'mkdir -p /usr/share/keyrings /etc/apt/sources.list.d'
+                install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+
+                # Download and add MariaDB signing key
+                command = 'curl -fsSL https://mariadb.org/mariadb_release_signing_key.pgp | gpg --dearmor -o /usr/share/keyrings/mariadb-keyring.pgp'
+                install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+
+                # Use Debian 12 bookworm codename
+                RepoPath = '/etc/apt/sources.list.d/mariadb.list'
+                RepoContent = """# MariaDB 10.11 repository list for Debian 12
+# Primary mirror
+deb [arch=amd64,arm64,ppc64el,s390x signed-by=/usr/share/keyrings/mariadb-keyring.pgp] https://mirror.mariadb.org/repo/10.11/debian bookworm main
+
+# Alternative mirrors (uncomment if primary fails)
+# deb [arch=amd64,arm64,ppc64el,s390x signed-by=/usr/share/keyrings/mariadb-keyring.pgp] https://mirrors.gigenet.com/mariadb/repo/10.11/debian bookworm main
+# deb [arch=amd64,arm64,ppc64el,s390x signed-by=/usr/share/keyrings/mariadb-keyring.pgp] https://ftp.osuosl.org/pub/mariadb/repo/10.11/debian bookworm main
+"""
+
+                WriteToFile = open(RepoPath, 'w')
+                WriteToFile.write(RepoContent)
+                WriteToFile.close()
+
+                install_utils.writeToFile("Manual MariaDB repository configuration completed.")
+
+            command = 'DEBIAN_FRONTEND=noninteractive apt-get update -y'
+            install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+
+            command = "DEBIAN_FRONTEND=noninteractive apt-get install mariadb-server -y"
         elif self.distro == centos:
 
             RepoPath = '/etc/yum.repos.d/mariadb.repo'
