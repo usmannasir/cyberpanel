@@ -34,6 +34,7 @@ centos = install_utils.centos
 ubuntu = install_utils.ubuntu
 cent8 = install_utils.cent8
 openeuler = install_utils.openeuler
+debian12 = install_utils.debian12
 cent9 = 4  # Not in install_utils yet
 CloudLinux8 = 0  # Not in install_utils yet
 
@@ -72,6 +73,10 @@ class preFlightsChecks:
     def is_centos_family(self):
         """Check if distro is CentOS, CentOS 8, or OpenEuler"""
         return self.distro in [centos, cent8, openeuler]
+
+    def is_debian_family(self):
+        """Check if distro is Ubuntu or Debian 12"""
+        return self.distro in [ubuntu, debian12]
     
     def manage_service(self, service_name, action="start"):
         """Unified service management"""
@@ -468,6 +473,15 @@ class preFlightsChecks:
             except:
                 logging.InstallLog.writeToFile("[ERROR] Exception during CyberPanel install")
                 preFlightsChecks.stdOut("[ERROR] Exception during CyberPanel install")
+                os._exit(os.EX_SOFTWARE)
+        elif self.distro == debian12:
+            try:
+                # Use the official LiteSpeed repository setup method for Debian 12
+                command = "bash -c 'wget -O - https://repo.litespeed.sh | bash'"
+                preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            except:
+                logging.InstallLog.writeToFile("[ERROR] Exception during CyberPanel install - Debian 12 repository setup")
+                preFlightsChecks.stdOut("[ERROR] Exception during CyberPanel install - Debian 12 repository setup")
                 os._exit(os.EX_SOFTWARE)
 
         elif self.distro == centos:
