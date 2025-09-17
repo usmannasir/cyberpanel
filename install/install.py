@@ -463,7 +463,7 @@ class preFlightsChecks:
         if self.distro == ubuntu:
             try:
                 # Use the new LiteSpeed repository setup method
-                command = "wget -O - https://repo.litespeed.sh | bash"
+                command = "bash -c 'wget -O - https://repo.litespeed.sh | bash'"
                 preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
             except:
                 logging.InstallLog.writeToFile("[ERROR] Exception during CyberPanel install")
