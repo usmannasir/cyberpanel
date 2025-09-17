@@ -133,7 +133,17 @@ elif [ "$CLNVERSION" = "ID=\"cloudlinux\"" ]; then
 
 elif [[ $Server_OS = "Ubuntu" ]]; then
 
-  apt-get install -y libmysqlclient-dev
+  # Debian 13+ compatibility: libmysqlclient-dev replaced with libmariadb-dev-compat libmariadb-dev
+  if [ -f /etc/debian_version ]; then
+      DEBIAN_VERSION=$(cat /etc/debian_version | cut -d. -f1)
+      if [ "$DEBIAN_VERSION" -ge 13 ] 2>/dev/null; then
+          apt-get install -y libmariadb-dev-compat libmariadb-dev
+      else
+          apt-get install -y libmysqlclient-dev
+      fi
+  else
+      apt-get install -y libmysqlclient-dev
+  fi
 
   apt-get install -y cpanminus gcc perl bzip2 zip make patch automake rpm libarchive-zip-perl libfilesys-df-perl libole-storage-lite-perl libsys-hostname-long-perl libsys-sigaction-perl libregexp-common-net-cidr-perl libmime-tools-perl libdbd-sqlite3-perl binutils build-essential libfilesys-df-perl zlib1g unzip mlocate clamav libdbd-mysql-perl unrar libclamav-dev libclamav-client-perl libclamunrar9
 
