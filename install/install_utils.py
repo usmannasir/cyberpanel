@@ -138,7 +138,8 @@ def get_debian_mariadb_packages():
             'python-setuptools': 'python3-setuptools',
             'python-minimal': '',  # Not needed in newer versions
             'python-gpg': 'python3-gpg',
-            'python': 'python3'
+            'python': 'python3',
+            'dovecot-pigeonhole': 'dovecot-sieve'
         }
     elif debian_version >= 12.0:
         # Debian 12 (Bookworm)
@@ -150,7 +151,8 @@ def get_debian_mariadb_packages():
             'python-setuptools': 'python3-setuptools',
             'python-minimal': '',
             'python-gpg': 'python3-gpg',
-            'python': 'python3'
+            'python': 'python3',
+            'dovecot-pigeonhole': 'dovecot-sieve'
         }
     else:
         # Older Debian versions (11 and below)
