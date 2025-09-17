@@ -19,7 +19,17 @@ if [ "$OS" = "NAME=\"Ubuntu\"" ];then
 if [ "$UBUNTUVERSION" = "VERSION_ID=\"18.04\"" ];then
        apt-get install -y dovecot-managesieved dovecot-sieve dovecot-lmtpd net-tools pflogsumm
 elif [ "$UBUNTUVERSION" = "VERSION_ID=\"20.04\"" ];then
-           apt-get install -y libmysqlclient-dev
+           # Debian 13+ compatibility: libmysqlclient-dev replaced with libmariadb-dev-compat libmariadb-dev
+           if [ -f /etc/debian_version ]; then
+               DEBIAN_VERSION=$(cat /etc/debian_version | cut -d. -f1)
+               if [ "$DEBIAN_VERSION" -ge 13 ] 2>/dev/null; then
+                   apt-get install -y libmariadb-dev-compat libmariadb-dev
+               else
+                   apt-get install -y libmysqlclient-dev
+               fi
+           else
+               apt-get install -y libmysqlclient-dev
+           fi
            sed -e '/deb/ s/^#*/#/' -i /etc/apt/sources.list.d/dovecot.list           
 		   apt install -y dovecot-lmtpd dovecot-managesieved dovecot-sieve net-tools pflogsumm
 fi
