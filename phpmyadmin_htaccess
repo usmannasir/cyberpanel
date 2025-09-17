@@ -1,0 +1,25 @@
+# CyberPanel phpMyAdmin Access Control
+# Place this file as /usr/local/CyberCP/public/phpmyadmin/.htaccess
+
+# Enable rewrite engine
+RewriteEngine On
+
+# Check if user is not authenticated and redirect to login
+RewriteCond %{HTTP_COOKIE} !sessionid=
+RewriteRule ^(.*)$ /base/ [R=302,L]
+
+# Additional security headers
+Header always set X-Frame-Options DENY
+Header always set X-Content-Type-Options nosniff
+Header always set X-XSS-Protection "1; mode=block"
+
+# Prevent direct access to sensitive files
+<Files "config.inc.php">
+    Order Allow,Deny
+    Deny from all
+</Files>
+
+<Files "*.log">
+    Order Allow,Deny
+    Deny from all
+</Files>

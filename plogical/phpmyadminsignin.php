@@ -1,5 +1,12 @@
 <?php
 
+// Check if user is logged into CyberPanel
+session_start();
+if (!isset($_SESSION['userID'])) {
+    // Redirect to CyberPanel login page
+    header('Location: /base/');
+    exit();
+}
 
 define("PMA_SIGNON_INDEX", 1);
 

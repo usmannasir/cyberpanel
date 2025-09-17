@@ -44,6 +44,62 @@ FetchCloudLinuxAlmaVersionVersion = install_utils.FetchCloudLinuxAlmaVersionVers
 class InstallCyberPanel:
     mysql_Root_password = ""
     mysqlPassword = ""
+    
+    def is_almalinux9(self):
+        """Check if running on AlmaLinux 9"""
+        if os.path.exists('/etc/almalinux-release'):
+            try:
+                with open('/etc/almalinux-release', 'r') as f:
+                    content = f.read()
+                    return 'release 9' in content
+            except:
+                return False
+        return False
+    
+    def fix_almalinux9_mariadb(self):
+        """Fix AlmaLinux 9 MariaDB installation issues"""
+        if not self.is_almalinux9():
+            return
+        
+        self.stdOut("Applying AlmaLinux 9 MariaDB fixes...", 1)
+        
+        try:
+            # Disable problematic MariaDB MaxScale repository
+            self.stdOut("Disabling problematic MariaDB MaxScale repository...", 1)
+            command = "dnf config-manager --disable mariadb-maxscale 2>/dev/null || true"
+            install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            
+            # Remove problematic repository files
+            self.stdOut("Removing problematic repository files...", 1)
+            problematic_repos = [
+                '/etc/yum.repos.d/mariadb-maxscale.repo',
+                '/etc/yum.repos.d/mariadb-maxscale.repo.rpmnew'
+            ]
+            for repo_file in problematic_repos:
+                if os.path.exists(repo_file):
+                    os.remove(repo_file)
+                    self.stdOut(f"Removed {repo_file}", 1)
+            
+            # Clean DNF cache
+            self.stdOut("Cleaning DNF cache...", 1)
+            command = "dnf clean all"
+            install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            
+            # Install MariaDB from official repository
+            self.stdOut("Setting up official MariaDB repository...", 1)
+            command = "curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version='10.11'"
+            install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            
+            # Install MariaDB packages
+            self.stdOut("Installing MariaDB packages...", 1)
+            mariadb_packages = "MariaDB-server MariaDB-client MariaDB-backup MariaDB-devel"
+            command = f"dnf install -y {mariadb_packages}"
+            install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            
+            self.stdOut("AlmaLinux 9 MariaDB fixes completed", 1)
+            
+        except Exception as e:
+            self.stdOut(f"Error applying AlmaLinux 9 MariaDB fixes: {str(e)}", 0)
     CloudLinux8 = 0
 
     def install_package(self, package_name, options=""):
@@ -335,7 +391,7 @@ class InstallCyberPanel:
         return self.reStartLiteSpeed()
 
     def installAllPHPVersions(self):
-        php_versions = ['71', '72', '73', '74', '80', '81', '82', '83']
+        php_versions = ['71', '72', '73', '74', '80', '81', '82', '83', '84', '85']
         
         if self.distro == ubuntu:
             # Install base PHP 7.x packages
@@ -563,6 +619,12 @@ gpgcheck=1
 
         if self.remotemysql == 'OFF':
             ############## Start mariadb ######################
+            
+            # Check if AlmaLinux 9 and apply fixes
+            if self.is_almalinux9():
+                self.stdOut("AlmaLinux 9 detected - applying MariaDB fixes", 1)
+                self.fix_almalinux9_mariadb()
+            
             self.manage_service('mariadb', 'start')
 
             ############## Enable mariadb at system startup ######################

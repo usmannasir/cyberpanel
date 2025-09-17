@@ -861,7 +861,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             command = f'wget -q -O /usr/local/CyberCP/snappymail_cyberpanel.php  https://raw.githubusercontent.com/the-djmaze/snappymail/master/integrations/cyberpanel/install.php'
             Upgrade.executioner_silent(command, 'verify certificate', 0)
 
-            command = f'/usr/local/lsws/lsphp80/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php'
+            command = f'/usr/local/lsws/lsphp83/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php'
             Upgrade.executioner_silent(command, 'verify certificate', 0)
 
             # labsPath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
@@ -3121,7 +3121,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = 'chmod 640 /usr/local/lscp/cyberpanel/logs/access.log'
             Upgrade.executioner(command, 0)
 
-            command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/snappymail.php'
+            command = '/usr/local/lsws/lsphp83/bin/php /usr/local/CyberCP/public/snappymail.php'
             Upgrade.executioner_silent(command, 'Configure SnappyMail')
 
             command = 'chmod 600 /usr/local/CyberCP/public/snappymail.php'
@@ -3183,43 +3183,220 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         Upgrade.executioner(command, command, 0)
 
     @staticmethod
+    def check_package_availability(package_name):
+        """Check if a package is available in the repositories"""
+        try:
+            # Try to search for the package without installing
+            if os.path.exists('/etc/yum.repos.d/') or os.path.exists('/etc/dnf/dnf.conf'):
+                # RHEL-based systems
+                command = f"dnf search --quiet {package_name} 2>/dev/null | grep -q '^Last metadata expiration' || yum search --quiet {package_name} 2>/dev/null | head -1"
+                result = subprocess.run(command, shell=True, capture_output=True, text=True)
+                return result.returncode == 0
+            else:
+                # Ubuntu/Debian systems
+                command = f"apt-cache search {package_name} 2>/dev/null | head -1"
+                result = subprocess.run(command, shell=True, capture_output=True, text=True)
+                return result.returncode == 0 and result.stdout.strip() != ""
+        except Exception as e:
+            Upgrade.stdOut(f"Error checking package availability for {package_name}: {str(e)}", 0)
+            return False
+
+    @staticmethod
+    def is_almalinux9():
+        """Check if running on AlmaLinux 9"""
+        if os.path.exists('/etc/almalinux-release'):
+            try:
+                with open('/etc/almalinux-release', 'r') as f:
+                    content = f.read()
+                    return 'release 9' in content
+            except:
+                return False
+        return False
+
+    @staticmethod
+    def fix_almalinux9_mariadb():
+        """Fix AlmaLinux 9 MariaDB installation issues"""
+        if not Upgrade.is_almalinux9():
+            return
+        
+        Upgrade.stdOut("Applying AlmaLinux 9 MariaDB fixes...", 1)
+        
+        try:
+            # Disable problematic MariaDB MaxScale repository
+            Upgrade.stdOut("Disabling problematic MariaDB MaxScale repository...", 1)
+            command = "dnf config-manager --disable mariadb-maxscale 2>/dev/null || true"
+            subprocess.run(command, shell=True, capture_output=True)
+            
+            # Remove problematic repository files
+            Upgrade.stdOut("Removing problematic repository files...", 1)
+            problematic_repos = [
+                '/etc/yum.repos.d/mariadb-maxscale.repo',
+                '/etc/yum.repos.d/mariadb-maxscale.repo.rpmnew'
+            ]
+            for repo_file in problematic_repos:
+                if os.path.exists(repo_file):
+                    os.remove(repo_file)
+                    Upgrade.stdOut(f"Removed {repo_file}", 1)
+            
+            # Clean DNF cache
+            Upgrade.stdOut("Cleaning DNF cache...", 1)
+            command = "dnf clean all"
+            subprocess.run(command, shell=True, capture_output=True)
+            
+            # Install MariaDB from official repository
+            Upgrade.stdOut("Setting up official MariaDB repository...", 1)
+            command = "curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version='10.11'"
+            result = subprocess.run(command, shell=True, capture_output=True, text=True)
+            if result.returncode != 0:
+                Upgrade.stdOut(f"Warning: MariaDB repo setup failed: {result.stderr}", 0)
+            
+            # Install MariaDB packages
+            Upgrade.stdOut("Installing MariaDB packages...", 1)
+            mariadb_packages = "MariaDB-server MariaDB-client MariaDB-backup MariaDB-devel"
+            command = f"dnf install -y {mariadb_packages}"
+            result = subprocess.run(command, shell=True, capture_output=True, text=True)
+            if result.returncode != 0:
+                Upgrade.stdOut(f"Warning: MariaDB installation issues: {result.stderr}", 0)
+            
+            # Start and enable MariaDB service
+            Upgrade.stdOut("Starting MariaDB service...", 1)
+            services = ['mariadb', 'mysql', 'mysqld']
+            for service in services:
+                try:
+                    command = f"systemctl start {service}"
+                    result = subprocess.run(command, shell=True, capture_output=True)
+                    if result.returncode == 0:
+                        command = f"systemctl enable {service}"
+                        subprocess.run(command, shell=True, capture_output=True)
+                        Upgrade.stdOut(f"MariaDB service started as {service}", 1)
+                        break
+                except:
+                    continue
+            
+            Upgrade.stdOut("AlmaLinux 9 MariaDB fixes completed", 1)
+            
+        except Exception as e:
+            Upgrade.stdOut(f"Error applying AlmaLinux 9 MariaDB fixes: {str(e)}", 0)
+
+    @staticmethod
+    def get_available_php_versions():
+        """Get list of available PHP versions based on OS"""
+        # Check for AlmaLinux 9+ first
+        if os.path.exists('/etc/almalinux-release'):
+            try:
+                with open('/etc/almalinux-release', 'r') as f:
+                    content = f.read()
+                    if 'release 9' in content or 'release 10' in content:
+                        Upgrade.stdOut("AlmaLinux 9+ detected - checking available PHP versions", 1)
+                        # AlmaLinux 9+ doesn't have PHP 7.1, 7.2, 7.3
+                        php_versions = ['74', '80', '81', '82', '83', '84', '85']
+                    else:
+                        php_versions = ['71', '72', '73', '74', '80', '81', '82', '83', '84', '85']
+            except:
+                php_versions = ['71', '72', '73', '74', '80', '81', '82', '83', '84', '85']
+        else:
+            # Check other OS versions
+            os_info = Upgrade.findOperatingSytem()
+            if os_info in [Ubuntu24, CENTOS8]:
+                php_versions = ['74', '80', '81', '82', '83', '84', '85']
+            else:
+                php_versions = ['71', '72', '73', '74', '80', '81', '82', '83', '84', '85']
+        
+        # Check availability of each version
+        available_versions = []
+        for version in php_versions:
+            if Upgrade.check_package_availability(f'lsphp{version}'):
+                available_versions.append(version)
+            else:
+                Upgrade.stdOut(f"PHP {version} not available on this OS", 0)
+        
+        return available_versions
+
+    @staticmethod
+    def fixLiteSpeedConfig():
+        """Fix LiteSpeed configuration issues by creating missing files"""
+        try:
+            Upgrade.stdOut("Checking and fixing LiteSpeed configuration...", 1)
+            
+            # Check if LiteSpeed is installed
+            if not os.path.exists('/usr/local/lsws'):
+                Upgrade.stdOut("LiteSpeed not found at /usr/local/lsws", 0)
+                return
+            
+            # Create missing configuration files
+            config_files = [
+                "/usr/local/lsws/conf/httpd_config.xml",
+                "/usr/local/lsws/conf/httpd.conf",
+                "/usr/local/lsws/conf/modsec.conf"
+            ]
+            
+            for config_file in config_files:
+                if not os.path.exists(config_file):
+                    Upgrade.stdOut(f"Missing LiteSpeed config: {config_file}", 0)
+                    
+                    # Create directory if it doesn't exist
+                    os.makedirs(os.path.dirname(config_file), exist_ok=True)
+                    
+                    # Create minimal config file
+                    if config_file.endswith('httpd_config.xml'):
+                        with open(config_file, 'w') as f:
+                            f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+                            f.write('<httpServerConfig>\n')
+                            f.write('    <!-- Minimal LiteSpeed configuration -->\n')
+                            f.write('    <listener>\n')
+                            f.write('        <name>Default</name>\n')
+                            f.write('        <address>*:8088</address>\n')
+                            f.write('    </listener>\n')
+                            f.write('</httpServerConfig>\n')
+                    elif config_file.endswith('httpd.conf'):
+                        with open(config_file, 'w') as f:
+                            f.write('# Minimal LiteSpeed HTTP configuration\n')
+                            f.write('# This file will be updated by CyberPanel\n')
+                    elif config_file.endswith('modsec.conf'):
+                        with open(config_file, 'w') as f:
+                            f.write('# ModSecurity configuration\n')
+                            f.write('# This file will be updated by CyberPanel\n')
+                    
+                    Upgrade.stdOut(f"Created minimal config: {config_file}", 1)
+                else:
+                    Upgrade.stdOut(f"LiteSpeed config exists: {config_file}", 1)
+                    
+        except Exception as e:
+            Upgrade.stdOut(f"Error fixing LiteSpeed config: {str(e)}", 0)
+
+    @staticmethod
     def installPHP73():
         try:
-            if Upgrade.installedOutput.find('lsphp73') == -1:
-                command = 'yum install -y lsphp73 lsphp73-json lsphp73-xmlrpc lsphp73-xml lsphp73-tidy lsphp73-soap lsphp73-snmp ' \
-                          'lsphp73-recode lsphp73-pspell lsphp73-process lsphp73-pgsql lsphp73-pear lsphp73-pdo lsphp73-opcache ' \
-                          'lsphp73-odbc lsphp73-mysqlnd lsphp73-mcrypt lsphp73-mbstring lsphp73-ldap lsphp73-intl lsphp73-imap ' \
-                          'lsphp73-gmp lsphp73-gd lsphp73-enchant lsphp73-dba  lsphp73-common  lsphp73-bcmath'
-                Upgrade.executioner(command, 'Install PHP 73, 0')
-
-            if Upgrade.installedOutput.find('lsphp74') == -1:
-                command = 'yum install -y lsphp74 lsphp74-json lsphp74-xmlrpc lsphp74-xml lsphp74-tidy lsphp74-soap lsphp74-snmp ' \
-                          'lsphp74-recode lsphp74-pspell lsphp74-process lsphp74-pgsql lsphp74-pear lsphp74-pdo lsphp74-opcache ' \
-                          'lsphp74-odbc lsphp74-mysqlnd lsphp74-mcrypt lsphp74-mbstring lsphp74-ldap lsphp74-intl lsphp74-imap ' \
-                          'lsphp74-gmp lsphp74-gd lsphp74-enchant lsphp74-dba lsphp74-common  lsphp74-bcmath'
-
-                Upgrade.executioner(command, 'Install PHP 74, 0')
-
-            if Upgrade.installedOutput.find('lsphp80') == -1:
-                command = 'yum install lsphp80* -y'
-                subprocess.call(command, shell=True)
-
-            if Upgrade.installedOutput.find('lsphp81') == -1:
-                command = 'yum install lsphp81* -y'
-                subprocess.call(command, shell=True)
-
-            if Upgrade.installedOutput.find('lsphp82') == -1:
-                command = 'yum install lsphp82* -y'
-                subprocess.call(command, shell=True)
-
-            command = 'yum install lsphp83* -y'
+            Upgrade.stdOut("Installing PHP versions based on OS compatibility...", 1)
+            
+            # Get available PHP versions
+            available_versions = Upgrade.get_available_php_versions()
+            
+            if not available_versions:
+                Upgrade.stdOut("No PHP versions available for installation", 0)
+                return
+            
+            Upgrade.stdOut(f"Installing available PHP versions: {', '.join(available_versions)}", 1)
+            
+            for version in available_versions:
+                try:
+                    if version in ['71', '72', '73', '74']:
+                        # PHP 7.x versions with specific extensions
+                        if Upgrade.installedOutput.find(f'lsphp{version}') == -1:
+                            extensions = ['json', 'xmlrpc', 'xml', 'tidy', 'soap', 'snmp', 'recode', 'pspell', 'process', 'pgsql', 'pear', 'pdo', 'opcache', 'odbc', 'mysqlnd', 'mcrypt', 'mbstring', 'ldap', 'intl', 'imap', 'gmp', 'gd', 'enchant', 'dba', 'common', 'bcmath']
+                            package_list = f"lsphp{version} " + " ".join([f"lsphp{version}-{ext}" for ext in extensions])
+                            command = f"yum install -y {package_list}"
+                            Upgrade.executioner(command, f'Install PHP {version}', 0)
+                    else:
+                        # PHP 8.x versions
+                        if Upgrade.installedOutput.find(f'lsphp{version}') == -1:
+                            command = f"yum install lsphp{version}* -y"
             subprocess.call(command, shell=True)
-
-            command = 'yum install lsphp84* -y'
-            subprocess.call(command, shell=True)
-
-            command = 'yum install lsphp85* -y'
-            subprocess.call(command, shell=True)
+                            Upgrade.stdOut(f"Installed PHP {version}", 1)
+                        
+                except Exception as e:
+                    Upgrade.stdOut(f"Error installing PHP {version}: {str(e)}", 0)
+                    continue
 
         except:
             command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install ' \
@@ -3997,9 +4174,20 @@ pm.max_spare_servers = 3
     @staticmethod
     def setupPHPSymlink():
         try:
-            # Check if PHP 8.3 exists
-            if not os.path.exists('/usr/local/lsws/lsphp83/bin/php'):
-                Upgrade.stdOut("PHP 8.3 not found, installing it first...")
+            # Try to find available PHP version (prioritize modern stable versions)
+            # Priority: 8.3 (recommended), 8.2, 8.4, 8.5, 8.1, 8.0, then older versions
+            php_versions = ['83', '82', '84', '85', '81', '80', '74', '73', '72', '71']
+            selected_php = None
+            
+            for version in php_versions:
+                if os.path.exists(f'/usr/local/lsws/lsphp{version}/bin/php'):
+                    selected_php = version
+                    Upgrade.stdOut(f"Found PHP {version}, using as default", 1)
+                    break
+            
+            if not selected_php:
+                # Try to install PHP 8.3 as fallback (modern stable version)
+                Upgrade.stdOut("No PHP found, installing PHP 8.3 as fallback...")
                 
                 # Install PHP 8.3 based on OS
                 if os.path.exists(Upgrade.CentOSPath) or os.path.exists(Upgrade.openEulerPath):
@@ -4013,16 +4201,17 @@ pm.max_spare_servers = 3
                 if not os.path.exists('/usr/local/lsws/lsphp83/bin/php'):
                     Upgrade.stdOut('[ERROR] Failed to install PHP 8.3')
                     return 0
+                selected_php = '83'
             
             # Remove existing PHP symlink if it exists
             if os.path.exists('/usr/bin/php'):
                 os.remove('/usr/bin/php')
 
-            # Create symlink to PHP 8.3
-            command = 'ln -s /usr/local/lsws/lsphp83/bin/php /usr/bin/php'
-            Upgrade.executioner(command, 'Setup PHP Symlink to 8.3', 0)
+            # Create symlink to selected PHP version
+            command = f'ln -s /usr/local/lsws/lsphp{selected_php}/bin/php /usr/bin/php'
+            Upgrade.executioner(command, f'Setup PHP Symlink to {selected_php}', 0)
 
-            Upgrade.stdOut("PHP symlink updated to PHP 8.3 successfully.")
+            Upgrade.stdOut(f"PHP symlink updated to PHP {selected_php} successfully.")
 
         except BaseException as msg:
             Upgrade.stdOut('[ERROR] ' + str(msg) + " [setupPHPSymlink]")
@@ -4150,6 +4339,9 @@ pm.max_spare_servers = 3
         Upgrade.manageServiceMigrations()
         Upgrade.enableServices()
 
+        # Apply AlmaLinux 9 fixes before other installations
+        Upgrade.fix_almalinux9_mariadb()
+
         Upgrade.installPHP73()
         Upgrade.setupCLI()
         Upgrade.someDirectories()
@@ -4158,6 +4350,9 @@ pm.max_spare_servers = 3
         
         ## Fix Apache configuration issues after upgrade
         Upgrade.fixApacheConfiguration()
+        
+        # Fix LiteSpeed configuration files if missing
+        Upgrade.fixLiteSpeedConfig()
 
         ### General migrations are not needed any more
 
@@ -4191,8 +4386,32 @@ pm.max_spare_servers = 3
         except:
             pass
 
-        command = 'cp /usr/local/lsws/lsphp80/bin/lsphp %s' % (phpPath)
+        # Try to find available PHP binary in order of preference (modern stable first)
+        php_versions = ['83', '82', '84', '85', '81', '80', '74', '73', '72', '71']
+        php_binary_found = False
+        
+        for version in php_versions:
+            php_binary = f'/usr/local/lsws/lsphp{version}/bin/lsphp'
+            if os.path.exists(php_binary):
+                command = f'cp {php_binary} {phpPath}'
         Upgrade.executioner(command, 0)
+                Upgrade.stdOut(f"Using PHP {version} for LSCPD", 1)
+                php_binary_found = True
+                break
+        
+        if not php_binary_found:
+            Upgrade.stdOut("Warning: No PHP binary found for LSCPD", 0)
+            # Try to create a symlink to any available PHP
+            try:
+                command = 'find /usr/local/lsws -name "lsphp" -type f 2>/dev/null | head -1'
+                result = subprocess.run(command, shell=True, capture_output=True, text=True)
+                if result.stdout.strip():
+                    php_binary = result.stdout.strip()
+                    command = f'cp {php_binary} {phpPath}'
+                    Upgrade.executioner(command, 0)
+                    Upgrade.stdOut(f"Using found PHP binary: {php_binary}", 1)
+            except:
+                pass
 
         if Upgrade.SoftUpgrade == 0:
             try:
@@ -4200,6 +4419,42 @@ pm.max_spare_servers = 3
                 Upgrade.executioner(command, 'Start LSCPD', 0)
             except:
                 pass
+            
+            # Try to start other services if they exist
+            # Enhanced service startup with AlmaLinux 9 support
+            services_to_start = ['fastapi_ssh_server', 'cyberpanel']
+            
+            # Special handling for AlmaLinux 9 MariaDB service
+            if Upgrade.is_almalinux9():
+                Upgrade.stdOut("AlmaLinux 9 detected - applying enhanced service management", 1)
+                mariadb_services = ['mariadb', 'mysql', 'mysqld']
+                for service in mariadb_services:
+                    try:
+                        check_command = f"systemctl list-unit-files | grep -q {service}"
+                        result = subprocess.run(check_command, shell=True, capture_output=True)
+                        if result.returncode == 0:
+                            command = f"systemctl restart {service}"
+                            Upgrade.executioner(command, f'Restart {service} for AlmaLinux 9', 0)
+                            command = f"systemctl enable {service}"
+                            Upgrade.executioner(command, f'Enable {service} for AlmaLinux 9', 0)
+                            Upgrade.stdOut(f"MariaDB service managed as {service} on AlmaLinux 9", 1)
+                            break
+                    except Exception as e:
+                        Upgrade.stdOut(f"Could not manage MariaDB service {service}: {str(e)}", 0)
+                        continue
+            
+            for service in services_to_start:
+                try:
+                    # Check if service exists
+                    check_command = f"systemctl list-unit-files | grep -q {service}"
+                    result = subprocess.run(check_command, shell=True, capture_output=True)
+                    if result.returncode == 0:
+                        command = f"systemctl start {service}"
+                        Upgrade.executioner(command, f'Start {service}', 0)
+                    else:
+                        Upgrade.stdOut(f"Service {service} not found, skipping", 0)
+                except Exception as e:
+                    Upgrade.stdOut(f"Could not start {service}: {str(e)}", 0)
 
         # Remove CSF if installed and restore firewalld (CSF is being discontinued on August 31, 2025)
         if os.path.exists('/etc/csf'):
