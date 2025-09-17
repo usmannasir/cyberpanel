@@ -108,10 +108,10 @@ class InstallCyberPanel:
         command, shell = install_utils.get_package_install_command(self.distro, package_name, options)
         
         # InstallCyberPanel always uses verbose mode (no silent option)
-        if self.distro == ubuntu:
+        if self.distro == ubuntu or self.distro == debian12:
             return install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, shell)
         else:
-            # For non-Ubuntu, original code didn't pass shell parameter
+            # For non-Ubuntu/Debian, original code didn't pass shell parameter
             return install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
     def manage_service(self, service_name, action="start"):
