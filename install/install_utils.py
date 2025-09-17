@@ -43,11 +43,11 @@ def FetchCloudLinuxAlmaVersionVersion():
 def get_Ubuntu_release(use_print=False, exit_on_error=True):
     """
     Get Ubuntu release version from /etc/lsb-release
-    
+
     Args:
         use_print: If True, use print() for errors, otherwise use the provided output function
         exit_on_error: If True, exit on error
-    
+
     Returns: float release number or -1 if not found
     """
     release = -1
@@ -76,6 +76,94 @@ def get_Ubuntu_release(use_print=False, exit_on_error=True):
             os._exit(os.EX_UNAVAILABLE)
 
     return release
+
+
+def get_Debian_version():
+    """
+    Get Debian version from /etc/debian_version
+
+    Returns: float version number or -1 if not found
+    """
+    if exists("/etc/debian_version"):
+        try:
+            with open("/etc/debian_version", 'r') as f:
+                version_str = f.read().strip()
+                # Extract numeric version (e.g., "13.8" from "13.8" or "13" from "13/sid")
+                if '/' in version_str:
+                    version_str = version_str.split('/')[0]
+                try:
+                    return float(version_str)
+                except ValueError:
+                    # Handle non-numeric versions like "bookworm/sid"
+                    if 'bookworm' in version_str.lower():
+                        return 12.0
+                    elif 'trixie' in version_str.lower():
+                        return 13.0
+                    elif 'bullseye' in version_str.lower():
+                        return 11.0
+                    else:
+                        return -1
+        except Exception:
+            return -1
+    return -1
+
+
+def is_debian():
+    """
+    Check if the system is Debian (not Ubuntu)
+
+    Returns: bool indicating if it's Debian
+    """
+    if exists("/etc/debian_version") and not exists("/etc/lsb-release"):
+        return True
+    return False
+
+
+def get_debian_mariadb_packages():
+    """
+    Get appropriate MariaDB packages for Debian based on version
+
+    Returns: dict with package mappings
+    """
+    debian_version = get_Debian_version()
+
+    # Package mappings for different Debian versions
+    if debian_version >= 13.0:
+        # Debian 13 (Trixie) uses newer package names
+        return {
+            'libmariadbclient-dev': 'libmariadb-dev-compat libmariadb-dev',
+            'python-mysqldb': 'python3-mysqldb',
+            'python-dev': 'python3-dev',
+            'python-pip': 'python3-pip',
+            'python-setuptools': 'python3-setuptools',
+            'python-minimal': '',  # Not needed in newer versions
+            'python-gpg': 'python3-gpg',
+            'python': 'python3'
+        }
+    elif debian_version >= 12.0:
+        # Debian 12 (Bookworm)
+        return {
+            'libmariadbclient-dev': 'libmariadb-dev',
+            'python-mysqldb': 'python3-mysqldb',
+            'python-dev': 'python3-dev',
+            'python-pip': 'python3-pip',
+            'python-setuptools': 'python3-setuptools',
+            'python-minimal': '',
+            'python-gpg': 'python3-gpg',
+            'python': 'python3'
+        }
+    else:
+        # Older Debian versions (11 and below)
+        return {
+            'libmariadbclient-dev': 'libmariadbclient-dev',
+            'python-mysqldb': 'python-mysqldb',
+            'python-dev': 'python-dev',
+            'python-pip': 'python-pip',
+            'python-setuptools': 'python-setuptools',
+            'python-minimal': 'python-minimal',
+            'python-gpg': 'python-gpg',
+            'python': 'python'
+        }
 
 
 # ANSI color codes
@@ -186,12 +274,28 @@ openeuler = 3
 def get_distro():
     """
     Detect Linux distribution
-    
+
     Returns: Distribution constant (ubuntu, centos, cent8, or openeuler)
     """
     distro = -1
     distro_file = ""
-    if exists("/etc/lsb-release"):
+
+    # Check for Debian first
+    if exists("/etc/debian_version"):
+        # Check if it's actually Ubuntu (which also has debian_version)
+        if exists("/etc/lsb-release"):
+            distro_file = "/etc/lsb-release"
+            with open(distro_file) as f:
+                for line in f:
+                    if line == "DISTRIB_ID=Ubuntu\n":
+                        distro = ubuntu
+                        break
+        else:
+            # Pure Debian system
+            distro = ubuntu  # Treat Debian same as Ubuntu for package management
+            distro_file = "/etc/debian_version"
+
+    elif exists("/etc/lsb-release"):
         distro_file = "/etc/lsb-release"
         with open(distro_file) as f:
             for line in f:
@@ -235,19 +339,49 @@ def get_distro():
     return distro
 
 
+def map_debian_packages(package_string):
+    """
+    Map package names for Debian compatibility
+
+    Args:
+        package_string: Space-separated package names
+
+    Returns:
+        str: Mapped package names for Debian
+    """
+    if not is_debian():
+        return package_string
+
+    package_map = get_debian_mariadb_packages()
+    packages = package_string.split()
+    mapped_packages = []
+
+    for package in packages:
+        if package in package_map:
+            replacement = package_map[package]
+            if replacement:  # Skip empty replacements
+                mapped_packages.extend(replacement.split())
+        else:
+            mapped_packages.append(package)
+
+    return ' '.join(mapped_packages)
+
+
 def get_package_install_command(distro, package_name, options=""):
     """
     Get the package installation command for a specific distribution
-    
+
     Args:
         distro: Distribution constant
         package_name: Name of the package to install
         options: Additional options for the package manager
-    
+
     Returns:
         tuple: (command, shell) where shell indicates if shell=True is needed
     """
     if distro == ubuntu:
+        # Map packages for Debian compatibility
+        package_name = map_debian_packages(package_name)
         command = f"DEBIAN_FRONTEND=noninteractive apt-get -y install {package_name} {options}"
         shell = True
     elif distro == centos:
@@ -256,7 +390,7 @@ def get_package_install_command(distro, package_name, options=""):
     else:  # cent8, openeuler
         command = f"dnf install -y {package_name} {options}"
         shell = False
-    
+
     return command, shell
 
 
