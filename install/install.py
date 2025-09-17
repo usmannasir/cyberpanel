@@ -462,13 +462,8 @@ class preFlightsChecks:
 
         if self.distro == ubuntu:
             try:
-                filename = "enable_lst_debain_repo.sh"
-                command = "wget http://rpms.litespeedtech.com/debian/" + filename
-                preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-                os.chmod(filename, S_IRWXU | S_IRWXG)
-
-                command = "./" + filename
+                # Use the new LiteSpeed repository setup method
+                command = "wget -O - https://repo.litespeed.sh | bash"
                 preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
             except:
                 logging.InstallLog.writeToFile("[ERROR] Exception during CyberPanel install")
