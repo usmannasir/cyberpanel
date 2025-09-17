@@ -269,13 +269,14 @@ ubuntu = 0
 centos = 1
 cent8 = 2
 openeuler = 3
+debian12 = 4
 
 
 def get_distro():
     """
     Detect Linux distribution
 
-    Returns: Distribution constant (ubuntu, centos, cent8, or openeuler)
+    Returns: Distribution constant (ubuntu, centos, cent8, openeuler, or debian12)
     """
     distro = -1
     distro_file = ""
@@ -291,9 +292,16 @@ def get_distro():
                         distro = ubuntu
                         break
         else:
-            # Pure Debian system
-            distro = ubuntu  # Treat Debian same as Ubuntu for package management
+            # Pure Debian system - check version
             distro_file = "/etc/debian_version"
+            with open(distro_file) as f:
+                debian_version = f.read().strip()
+                # Check specific Debian versions
+                if debian_version.startswith('bookworm') or '12' in debian_version:
+                    distro = debian12
+                else:
+                    # For other Debian versions, treat same as Ubuntu for compatibility
+                    distro = ubuntu
 
     elif exists("/etc/lsb-release"):
         distro_file = "/etc/lsb-release"
@@ -379,7 +387,7 @@ def get_package_install_command(distro, package_name, options=""):
     Returns:
         tuple: (command, shell) where shell indicates if shell=True is needed
     """
-    if distro == ubuntu:
+    if distro == ubuntu or distro == debian12:
         # Map packages for Debian compatibility
         package_name = map_debian_packages(package_name)
         command = f"DEBIAN_FRONTEND=noninteractive apt-get -y install {package_name} {options}"
@@ -405,7 +413,7 @@ def get_package_remove_command(distro, package_name):
     Returns:
         tuple: (command, shell) where shell indicates if shell=True is needed
     """
-    if distro == ubuntu:
+    if distro == ubuntu or distro == debian12:
         command = f"DEBIAN_FRONTEND=noninteractive apt-get -y remove {package_name}"
         shell = True
     elif distro == centos:
@@ -429,7 +437,7 @@ def resFailed(distro, res):
     Returns:
         bool: True if failed, False if successful
     """
-    if distro == ubuntu and res != 0:
+    if (distro == ubuntu or distro == debian12) and res != 0:
         return True
     elif distro == centos and res != 0:
         return True

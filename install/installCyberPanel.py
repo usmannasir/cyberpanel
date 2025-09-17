@@ -17,6 +17,7 @@ centos = install_utils.centos
 ubuntu = install_utils.ubuntu
 cent8 = install_utils.cent8
 openeuler = install_utils.openeuler
+debian12 = install_utils.debian12
 
 
 def get_Ubuntu_release():
