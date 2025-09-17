@@ -6,7 +6,7 @@ RUN apt-get update && \
     apt-get install -y wget gnupg ca-certificates
 
 # Install OpenLiteSpeed
-RUN wget -O - https://repo.litespeed.sh | bash
+RUN bash -c 'wget -O - https://repo.litespeed.sh | bash'
 
 RUN apt-get install -y openlitespeed
 
