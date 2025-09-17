@@ -1841,10 +1841,10 @@
         
         // Backup notification banner logic
         function checkBackupStatus() {
-            // Check if user has dismissed the notification in this session
-            if (sessionStorage.getItem('backupNotificationDismissed') === 'true') {
-                return;
-            }
+            // Check if user has dismissed the notification permanently (from server-side context)
+            {% if backup_notification_dismissed %}
+                return; // Notification already dismissed permanently
+            {% endif %}
             
             // Check if user has backup configured (you'll need to implement this API)
             // For now, we'll show it by default unless they have a backup plan
@@ -1871,16 +1871,34 @@
             const body = document.body;
             banner.classList.remove('show');
             body.classList.remove('notification-shown');
-            // Remember dismissal for this session
-            sessionStorage.setItem('backupNotificationDismissed', 'true');
+            
+            // Dismiss permanently via API
+            fetch('/base/dismiss_backup_notification', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 1) {
+                    console.log('Backup notification dismissed permanently');
+                } else {
+                    console.error('Failed to dismiss backup notification:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error dismissing backup notification:', error);
+            });
         }
         
         // AI Scanner Notification Functions
         function checkAIScannerStatus() {
-            // Check if user has dismissed the notification in this session
-            if (sessionStorage.getItem('aiScannerNotificationDismissed') === 'true') {
-                return;
-            }
+            // Check if user has dismissed the notification permanently (from server-side context)
+            {% if ai_scanner_notification_dismissed %}
+                return; // Notification already dismissed permanently
+            {% endif %}
             
             // Check if we're not already on the AI Scanner page
             if (!window.location.href.includes('aiscanner')) {
@@ -1900,8 +1918,26 @@
             const body = document.body;
             banner.classList.remove('show');
             body.classList.remove('ai-scanner-shown');
-            // Remember dismissal for this session
-            sessionStorage.setItem('aiScannerNotificationDismissed', 'true');
+            
+            // Dismiss permanently via API
+            fetch('/base/dismiss_ai_scanner_notification', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 1) {
+                    console.log('AI scanner notification dismissed permanently');
+                } else {
+                    console.error('Failed to dismiss AI scanner notification:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error dismissing AI scanner notification:', error);
+            });
         }
         
         // Check both notification statuses when page loads

@@ -60,6 +60,30 @@ class FirewallManager:
 
             rules = FirewallRules.objects.all()
 
+            # Ensure CyberPanel port 7080 rule exists in database for visibility
+            cyberpanel_rule_exists = False
+            for rule in rules:
+                if rule.port == '7080':
+                    cyberpanel_rule_exists = True
+                    break
+            
+            if not cyberpanel_rule_exists:
+                # Create database entry for port 7080 (already enabled in system firewall)
+                try:
+                    cyberpanel_rule = FirewallRules(
+                        name="CyberPanel Admin",
+                        proto="tcp",
+                        port="7080",
+                        ipAddress="0.0.0.0/0"
+                    )
+                    cyberpanel_rule.save()
+                    logging.CyberCPLogFileWriter.writeToFile("Added CyberPanel port 7080 to firewall database for UI visibility")
+                except Exception as e:
+                    logging.CyberCPLogFileWriter.writeToFile(f"Failed to add CyberPanel port 7080 to database: {str(e)}")
+
+            # Refresh rules after potential creation
+            rules = FirewallRules.objects.all()
+
             json_data = "["
             checker = 0
 
@@ -96,7 +120,6 @@ class FirewallManager:
             else:
                 return ACLManager.loadErrorJson('add_status', 0)
 
-
             ruleName = data['ruleName']
             ruleProtocol = data['ruleProtocol']
             rulePort = data['rulePort']
@@ -125,7 +148,6 @@ class FirewallManager:
                 pass
             else:
                 return ACLManager.loadErrorJson('delete_status', 0)
-
 
             ruleID = data['id']
             ruleProtocol = data['proto']

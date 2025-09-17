@@ -1372,7 +1372,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = 'chmod 640 /usr/local/lscp/cyberpanel/logs/access.log'
             ProcessUtilities.executioner(command, 'root', True)
 
-            command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/snappymail.php'
+            command = '/usr/local/lsws/lsphp83/bin/php /usr/local/CyberCP/public/snappymail.php'
             ProcessUtilities.executioner(command, 'root', True)
 
             command = 'chmod 600 /usr/local/CyberCP/public/snappymail.php'

@@ -28,7 +28,7 @@ ${BLUE}------------------------------------------------------------${NC}
 
 ${PURPLE}3.${NC} How to access LiteSpeed webadmin console ?
 
-Please check this post: ${GREEN}https://forums.cyberpanel.net/discussion/87/tutorial-how-to-setup-and-login-to-openlitespeed-webadmin-console/p1${NC}
+Please check this post: ${GREEN}https://community.cyberpanel.net/c/support/55${NC}
 
 ${BLUE}------------------------------------------------------------${NC}
 
@@ -52,9 +52,9 @@ ${BLUE}------------------------------------------------------------${NC}
 
 ${PURPLE}6.${NC} How to raise upload limit for cyberpanel's phpMyAdmin and File Manager?
 
-edit file ${RED}/usr/local/lsws/lsphp73/etc/php.ini${NC} for CentOS or openEuler
+edit file ${RED}/usr/local/lsws/lsphp83/etc/php.ini${NC} for CentOS or openEuler
 
-${RED}/usr/local/lsws/lsphp73/etc/php/7.3/litespeed/php.ini${NC} for Ubbuntu
+${RED}/usr/local/lsws/lsphp83/etc/php/8.3/litespeed/php.ini${NC} for Ubuntu
 
 find 2 configurations:
 
@@ -66,9 +66,9 @@ ${BLUE}------------------------------------------------------------${NC}
 
 ${PURPLE}7.${NC} How to add more IPs to my website(s) ?
 
-For OpenLiteSpeed, please check this post: ${GREEN}https://forums.cyberpanel.net/discussion/126/tutorial-how-to-add-2nd-ip-for-websites/p1${NC}
+For OpenLiteSpeed, please check this post: ${GREEN}https://community.cyberpanel.net/c/support/55${NC}
 
-For LiteSpeed Enterprise, please check this post: ${GREEN}https://forums.cyberpanel.net/discussion/3745/tutorial-how-to-add-2nd-ip-for-litespeed-enterprise/p1${NC}
+For LiteSpeed Enterprise, please check this post: ${GREEN}https://community.cyberpanel.net/c/support/55${NC}
 
 ${BLUE}------------------------------------------------------------${NC}
 
@@ -80,7 +80,7 @@ ${BLUE}------------------------------------------------------------${NC}
 
 ${PURPLE}9.${NC} How to enable Auto-Index for my site ?
 
-Please check this post ${GREEN}https://forums.cyberpanel.net/discussion/3850/tutorial-how-to-enable-auto-index-on-openlitespeed-and-litespeed-enterprise${NC}
+Please check this post ${GREEN}https://community.cyberpanel.net/c/support/55${NC}
 
 ${BLUE}------------------------------------------------------------${NC}
 
@@ -111,5 +111,5 @@ ${BLUE}------------------------------------------------------------${NC}
 
 ${PURPLE}13.${NC} How to enable PHP error log ?
 
-Please check this post ${GREEN}https://forums.cyberpanel.net/discussion/3977/tutorial-how-to-enable-php-error-log/p1${NC}
+Please check this post ${GREEN}https://community.cyberpanel.net/c/support/55${NC}
 "
