@@ -192,7 +192,7 @@ sh <(curl https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgr
 | 🐳 Docker    | [Command Execution](guides/Docker_Command_Execution_Guide.md) | Execute commands in containers     |
 | 🤖 Security  | [AI Scanner](guides/AIScannerDocs.md)                         | AI-powered security scanning       |
 | 📧 Email     | [Mautic Setup](guides/MAUTIC_INSTALLATION_GUIDE.md)           | Email marketing platform           |
-| 🎨 Design    | [Custom CSS Guide](guides/CUSTOM_CSS_GUIDE.md)                | Create custom themes for 2.5.5-dev |
+| 🎨 Design    | [Custom CSS Guide](guides/CUSTOM_CSS_GUIDE.md)                | Create custom themes |
 | 🔥 Security  | [Firewall Blocking Feature](guides/FIREWALL_BLOCKING_FEATURE.md) | Advanced security features         |
 
 ---
