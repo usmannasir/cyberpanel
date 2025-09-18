@@ -119,7 +119,7 @@ class InstallCyberPanel:
         service_map = {
             'mariadb': 'mariadb',
             'pureftpd': 'pure-ftpd-mysql' if self.distro == ubuntu else 'pure-ftpd',
-            'pdns': 'pdns'
+            'pdns': 'pdns-server' if self.distro == debian12 else 'pdns'
         }
         
         actual_service = service_map.get(service_name, service_name)

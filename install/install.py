@@ -77,6 +77,13 @@ class preFlightsChecks:
     def is_debian_family(self):
         """Check if distro is Ubuntu or Debian 12"""
         return self.distro in [ubuntu, debian12]
+
+    def get_service_name(self, service):
+        """Get the correct service name for the current distribution"""
+        service_map = {
+            'pdns': 'pdns-server' if self.distro == debian12 else 'pdns'
+        }
+        return service_map.get(service, service)
     
     def manage_service(self, service_name, action="start"):
         """Unified service management"""
@@ -2456,10 +2463,11 @@ milter_default_action = accept
 
             if state == 'off':
 
-                command = 'sudo systemctl stop pdns'
+                pdns_service = self.get_service_name('pdns')
+                command = f'sudo systemctl stop {pdns_service}'
                 subprocess.call(shlex.split(command))
 
-                command = 'sudo systemctl disable pdns'
+                command = f'sudo systemctl disable {pdns_service}'
                 subprocess.call(shlex.split(command))
 
                 try:
@@ -2709,12 +2717,13 @@ vmail
         # Start PowerDNS if it was installed
         if os.path.exists('/home/cyberpanel/powerdns'):
             preFlightsChecks.stdOut("Starting PowerDNS service...")
-            command = 'systemctl start pdns'
+            pdns_service = self.get_service_name('pdns')
+            command = f'systemctl start {pdns_service}'
             result = preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-            
+
             if result == 1:
                 # Check if service started successfully
-                command = 'systemctl is-active pdns'
+                command = f'systemctl is-active {pdns_service}'
                 try:
                     output = subprocess.check_output(shlex.split(command)).decode("utf-8").strip()
                     if output == 'active':
