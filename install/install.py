@@ -445,10 +445,11 @@ class preFlightsChecks:
 
             ### Docker User/group
 
-            if self.distro == ubuntu:
+            if self.distro == ubuntu or self.distro == debian12:
                 command = 'adduser --disabled-login --gecos "" docker'
             else:
-                command = "adduser docker"
+                # For CentOS/RHEL, use useradd which is non-interactive
+                command = "useradd -r -s /bin/false docker"
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
