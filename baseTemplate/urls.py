@@ -24,6 +24,7 @@ urlpatterns = [
     re_path(r'^getSSHUserActivity$', views.getSSHUserActivity, name='getSSHUserActivity'),
     re_path(r'^getTopProcesses$', views.getTopProcesses, name='getTopProcesses'),
     re_path(r'^analyzeSSHSecurity$', views.analyzeSSHSecurity, name='analyzeSSHSecurity'),
+    re_path(r'^blockIPAddress$', views.blockIPAddress, name='blockIPAddress'),
     re_path(r'^dismiss_backup_notification$', views.dismiss_backup_notification, name='dismiss_backup_notification'),
     re_path(r'^dismiss_ai_scanner_notification$', views.dismiss_ai_scanner_notification, name='dismiss_ai_scanner_notification'),
     re_path(r'^get_notification_preferences$', views.get_notification_preferences, name='get_notification_preferences'),

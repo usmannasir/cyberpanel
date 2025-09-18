@@ -197,6 +197,8 @@ urlpatterns = [
     path('statusFunc', views.statusFunc, name='statusFunc'),
     path('tuneSettings', views.tuneSettings, name='tuneSettings'),
     path('saveApacheConfigsToFile', views.saveApacheConfigsToFile, name='saveApacheConfigsToFile'),
+    path('resetApacheConfigToDefault', views.resetApacheConfigToDefault, name='resetApacheConfigToDefault'),
+    path('resetVHostConfigToDefault', views.resetVHostConfigToDefault, name='resetVHostConfigToDefault'),
     path('getTerminalJWT', views.get_terminal_jwt, name='get_terminal_jwt'),
 
     # Catch all for domains

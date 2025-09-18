@@ -303,6 +303,9 @@ openEuler20 = 6
 openEuler22 = 7
 Ubuntu22 = 8
 Ubuntu24 = 9
+Debian11 = 10
+Debian12 = 11
+Debian13 = 12
 
 
 class Upgrade:
@@ -312,6 +315,7 @@ class Upgrade:
     CentOSPath = '/etc/redhat-release'
     UbuntuPath = '/etc/lsb-release'
     openEulerPath = '/etc/openEuler-release'
+    DebianPath = '/etc/os-release'
     FromCloud = 0
     SnappyVersion = '2.38.2'
     LogPathNew = '/home/cyberpanel/upgrade_logs'
@@ -395,6 +399,18 @@ class Upgrade:
                 return openEuler20
             elif result.find('22.03') > -1:
                 return openEuler22
+
+        elif os.path.exists(Upgrade.DebianPath):
+            result = open(Upgrade.DebianPath, 'r').read()
+
+            if result.find('Debian GNU/Linux 11') > -1:
+                return Debian11
+            elif result.find('Debian GNU/Linux 12') > -1:
+                return Debian12
+            elif result.find('Debian GNU/Linux 13') > -1:
+                return Debian13
+            else:
+                return Debian11  # Default to Debian 11 for older versions
 
         else:
             result = open(Upgrade.UbuntuPath, 'r').read()
@@ -632,19 +648,32 @@ class Upgrade:
             except:
                 pass
 
+            # Try to fetch latest phpMyAdmin version from GitHub
+            phpmyadmin_version = '5.2.2'  # Fallback version
+            try:
+                from plogical.versionFetcher import get_latest_phpmyadmin_version
+                latest_version = get_latest_phpmyadmin_version()
+                if latest_version and latest_version != phpmyadmin_version:
+                    Upgrade.stdOut(f"Using latest phpMyAdmin version: {latest_version}", 0)
+                    phpmyadmin_version = latest_version
+                else:
+                    Upgrade.stdOut(f"Using fallback phpMyAdmin version: {phpmyadmin_version}", 0)
+            except Exception as e:
+                Upgrade.stdOut(f"Failed to fetch latest phpMyAdmin version, using fallback: {e}", 0)
+
             Upgrade.stdOut("Installing phpMyAdmin...", 0)
             
-            command = 'wget -q -O /usr/local/CyberCP/public/phpmyadmin.zip https://github.com/usmannasir/cyberpanel/raw/stable/phpmyadmin.zip'
-            Upgrade.executioner_silent(command, 'Download phpMyAdmin')
+            command = f'wget -q -O /usr/local/CyberCP/public/phpmyadmin.tar.gz https://files.phpmyadmin.net/phpMyAdmin/{phpmyadmin_version}/phpMyAdmin-{phpmyadmin_version}-all-languages.tar.gz'
+            Upgrade.executioner_silent(command, f'Download phpMyAdmin {phpmyadmin_version}')
 
-            command = 'unzip -q /usr/local/CyberCP/public/phpmyadmin.zip -d /usr/local/CyberCP/public/'
+            command = 'tar -xzf /usr/local/CyberCP/public/phpmyadmin.tar.gz -C /usr/local/CyberCP/public/'
             Upgrade.executioner_silent(command, 'Extract phpMyAdmin')
 
             command = 'mv /usr/local/CyberCP/public/phpMyAdmin-*-all-languages /usr/local/CyberCP/public/phpmyadmin'
             subprocess.call(command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-            command = 'rm -f /usr/local/CyberCP/public/phpmyadmin.zip'
-            Upgrade.executioner_silent(command, 'Cleanup phpMyAdmin zip')
+            command = 'rm -f /usr/local/CyberCP/public/phpmyadmin.tar.gz'
+            Upgrade.executioner_silent(command, 'Cleanup phpMyAdmin tar.gz')
             
             Upgrade.stdOut("phpMyAdmin installation completed.", 0)
 
@@ -764,6 +793,18 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             if not os.path.exists("/usr/local/CyberCP/public"):
                 os.mkdir("/usr/local/CyberCP/public")
+
+            # Try to fetch latest SnappyMail version from GitHub
+            try:
+                from plogical.versionFetcher import get_latest_snappymail_version
+                latest_version = get_latest_snappymail_version()
+                if latest_version and latest_version != Upgrade.SnappyVersion:
+                    Upgrade.stdOut(f"Using latest SnappyMail version: {latest_version}", 0)
+                    Upgrade.SnappyVersion = latest_version
+                else:
+                    Upgrade.stdOut(f"Using fallback SnappyMail version: {Upgrade.SnappyVersion}", 0)
+            except Exception as e:
+                Upgrade.stdOut(f"Failed to fetch latest SnappyMail version, using fallback: {e}", 0)
 
             os.chdir("/usr/local/CyberCP/public")
 
@@ -1654,7 +1695,7 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
             except:
                 pass
 
-            if Upgrade.FindOperatingSytem() == Ubuntu22 or Upgrade.FindOperatingSytem() == Ubuntu24:
+            if Upgrade.FindOperatingSytem() == Ubuntu22 or Upgrade.FindOperatingSytem() == Ubuntu24 or Upgrade.FindOperatingSytem() == Debian11 or Upgrade.FindOperatingSytem() == Debian12 or Upgrade.FindOperatingSytem() == Debian13:
                 ### If ftp not installed then upgrade will fail so this command should not do exit
 
                 command = "sed -i 's/MYSQLCrypt md5/MYSQLCrypt crypt/g' /etc/pure-ftpd/db/mysql.conf"
@@ -3297,7 +3338,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         else:
             # Check other OS versions
             os_info = Upgrade.findOperatingSytem()
-            if os_info in [Ubuntu24, CENTOS8]:
+            if os_info in [Ubuntu24, CENTOS8, Debian13]:
                 php_versions = ['74', '80', '81', '82', '83', '84', '85']
             else:
                 php_versions = ['71', '72', '73', '74', '80', '81', '82', '83', '84', '85']
@@ -3530,7 +3571,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
 
                 command = 'systemctl restart postfix'
                 Upgrade.executioner(command, 0)
-            elif Upgrade.FindOperatingSytem() == Ubuntu20 or Upgrade.FindOperatingSytem() == Ubuntu22 or Upgrade.FindOperatingSytem() == Ubuntu24:
+            elif Upgrade.FindOperatingSytem() == Ubuntu20 or Upgrade.FindOperatingSytem() == Ubuntu22 or Upgrade.FindOperatingSytem() == Ubuntu24 or Upgrade.FindOperatingSytem() == Debian11 or Upgrade.FindOperatingSytem() == Debian12 or Upgrade.FindOperatingSytem() == Debian13:
 
                 debPath = '/etc/apt/sources.list.d/dovecot.list'
                 # writeToFile = open(debPath, 'w')
@@ -4867,7 +4908,7 @@ extprocessor proxyApacheBackendSSL {
             ##
 
             if Upgrade.FindOperatingSytem() == Ubuntu22 or Upgrade.FindOperatingSytem() == Ubuntu24 or Upgrade.FindOperatingSytem() == Ubuntu18 \
-                    or Upgrade.FindOperatingSytem() == Ubuntu20:
+                    or Upgrade.FindOperatingSytem() == Ubuntu20 or Upgrade.FindOperatingSytem() == Debian11 or Upgrade.FindOperatingSytem() == Debian12 or Upgrade.FindOperatingSytem() == Debian13:
 
                 print("Install Quota on Ubuntu")
                 command = 'apt update -y'
