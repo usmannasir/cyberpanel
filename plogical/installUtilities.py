@@ -44,7 +44,7 @@ class installUtilities:
         try:
             # Use the official LiteSpeed repository installation script
             # This supports all OS versions including CentOS/AlmaLinux/Rocky 7, 8, and 9
-            cmd = "bash -c 'wget -O - https://repo.litespeed.sh | bash'"
+            cmd = "wget -O - https://repo.litespeed.sh | bash"
             
             res = subprocess.call(cmd, shell=True)
             

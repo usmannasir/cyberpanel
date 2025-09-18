@@ -3,6 +3,7 @@ import os
 import os.path
 import sys
 import time
+import re
 
 import django
 
@@ -1671,16 +1672,28 @@ local_name %s {
 
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating apache configurations..,90')
                 if child:
-                    ApacheVhost.perHostVirtualConfOLS(completePathToConfigFile, website.master.adminEmail)
+                    # Handle None values for child domains
+                    admin_email = website.master.adminEmail if website.master.adminEmail else website.master.admin.email
+                    ApacheVhost.perHostVirtualConfOLS(completePathToConfigFile, admin_email)
                 else:
-                    ApacheVhost.perHostVirtualConfOLS(completePathToConfigFile, website.adminEmail)
+                    # Handle None values for main domains
+                    admin_email = website.adminEmail if website.adminEmail else website.admin.email
+                    ApacheVhost.perHostVirtualConfOLS(completePathToConfigFile, admin_email)
 
                 if child:
-                    ApacheVhost.setupApacheVhostChild(website.master.adminEmail, website.master.externalApp,
-                                                      website.master.externalApp,
+                    # Handle None values for child domains
+                    admin_email = website.master.adminEmail if website.master.adminEmail else website.master.admin.email
+                    external_app = website.master.externalApp if website.master.externalApp else "".join(re.findall("[a-zA-Z]+", virtualHostName))[:5] + str(randint(1000, 9999))
+                    
+                    ApacheVhost.setupApacheVhostChild(admin_email, external_app,
+                                                      external_app,
                                                       phpVersion, virtualHostName, website.path)
                 else:
-                    ApacheVhost.setupApacheVhost(website.adminEmail, website.externalApp, website.externalApp,
+                    # Handle None values for main domains
+                    admin_email = website.adminEmail if website.adminEmail else website.admin.email
+                    external_app = website.externalApp if website.externalApp else "".join(re.findall("[a-zA-Z]+", virtualHostName))[:5] + str(randint(1000, 9999))
+                    
+                    ApacheVhost.setupApacheVhost(admin_email, external_app, external_app,
                                                  phpVersion, virtualHostName)
 
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Restarting servers and phps..,90')
