@@ -17,4 +17,10 @@ urlpatterns = [
     # v2 functions
     path('v2ManageSSL', views.v2ManageSSL, name='v2ManageSSL'),
     path('v2IssueSSL', views.v2IssueSSL, name='v2IssueSSL'),
+    
+    # SSL Reconciliation functions
+    path('sslReconcile', views.sslReconcile, name='sslReconcile'),
+    path('reconcileAllSSL', views.reconcileAllSSL, name='reconcileAllSSL'),
+    path('reconcileDomainSSL', views.reconcileDomainSSL, name='reconcileDomainSSL'),
+    path('fixACMEContexts', views.fixACMEContexts, name='fixACMEContexts'),
 ]

@@ -629,6 +629,107 @@
         }
     }
     
+    /* Additional mobile improvements */
+    @media (max-width: 768px) {
+        .cyberpanel-website-page {
+            padding: 10px;
+        }
+        
+        /* Improve table responsiveness */
+        .table-responsive {
+            border: none;
+            margin-bottom: 20px;
+        }
+        
+        .table {
+            font-size: 14px !important;
+            min-width: 600px;
+        }
+        
+        .table th, .table td {
+            padding: 8px 6px !important;
+            font-size: 13px !important;
+            white-space: nowrap;
+        }
+        
+        /* Hide less important columns on mobile */
+        .table .d-none-mobile {
+            display: none !important;
+        }
+        
+        /* Improve form layout on mobile */
+        .form-horizontal .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-horizontal .control-label {
+            text-align: left !important;
+            margin-bottom: 5px;
+        }
+        
+        .form-horizontal .col-sm-3,
+        .form-horizontal .col-sm-6,
+        .form-horizontal .col-sm-9 {
+            width: 100% !important;
+            float: none !important;
+        }
+        
+        /* Improve button layout */
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+        
+        .btn-group .btn {
+            margin-bottom: 10px;
+            width: 100%;
+        }
+        
+        /* Improve modal on mobile */
+        .modal-dialog {
+            margin: 5px;
+            width: calc(100% - 10px);
+            max-width: none;
+        }
+        
+        .modal-content {
+            padding: 15px;
+        }
+        
+        /* Improve close button visibility */
+        .glyph-icon.icon-close {
+            font-size: 20px !important;
+            min-width: 44px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        /* Extra small devices */
+        .cyberpanel-website-page {
+            padding: 5px;
+        }
+        
+        .table th, .table td {
+            padding: 6px 4px !important;
+            font-size: 12px !important;
+        }
+        
+        /* Hide even more columns on very small screens */
+        .table .d-none-mobile-sm {
+            display: none !important;
+        }
+        
+        .btn {
+            font-size: 14px !important;
+            padding: 10px 15px !important;
+        }
+    }
+    
     /* Modal and Form Modal Styling for Rewrite Rules */
     .form-horizontal.bordered-row {
         background: var(--bg-secondary, white);
@@ -1562,7 +1663,7 @@
                                     <div style="margin-bottom: 1%;" class=" col-sm-1">
                                         <a ng-click="hidelogsbtn()" href="">
                                             <!--img src="/static/images/close-32.png"-->
-                                            <h3 class="glyph-icon icon-close text-danger mt-5"></h3>
+                                            <h3 class="glyph-icon icon-close text-danger mt-5" style="font-size: 24px; cursor: pointer;">&times;</h3>
                                         </a>
                                     </div>
                                     <div class="col-sm-12">
@@ -1607,7 +1708,7 @@
                                     <div style="margin-bottom: 1%;" class=" col-sm-1">
                                         <a ng-click="hideErrorLogsbtn()" href="">
                                             <!--img src="/static/images/close-32.png"-->
-                                            <h3 class="glyph-icon icon-close text-danger mt-5"></h3>
+                                            <h3 class="glyph-icon icon-close text-danger mt-5" style="font-size: 24px; cursor: pointer;">&times;</h3>
                                         </a>
                                     </div>
                                     <div class="col-sm-12">
@@ -1671,7 +1772,7 @@
                                     </div>
                                     <div style="margin-bottom: 1%;" class=" col-sm-1">
                                         <a title="{% trans 'Cancel' %}" ng-click="hideDomainCreationForm()" href="">
-                                            <h3 class="glyph-icon icon-close text-danger mt-5"></h3>
+                                            <h3 class="glyph-icon icon-close text-danger mt-5" style="font-size: 24px; cursor: pointer;">&times;</h3>
                                         </a>
                                     </div>
                                 </div>
@@ -1828,7 +1929,7 @@
 
                                     <div style="margin-bottom: 1%;" class=" col-sm-1">
                                         <a title="{% trans 'Close' %}" ng-click="hideListDomains()" href="">
-                                                <h3 class="glyph-icon icon-close text-danger mt-5"></h3>
+                                                <h3 class="glyph-icon icon-close text-danger mt-5" style="font-size: 24px; cursor: pointer;">&times;</h3>
                                             </a>
                                         </div>
 
@@ -2119,7 +2220,7 @@
 
                                     <div style="margin-bottom: 1%;" class=" col-sm-1">
                                         <a title="{% trans 'Cancel' %}" ng-click="hideChangePHPMaster()"
-                                           href=""><h3 class="glyph-icon icon-close text-danger mt-5"></h3></a>
+                                           href=""><h3 class="glyph-icon icon-close text-danger mt-5" style="font-size: 24px; cursor: pointer;">&times;</h3></a>
                                     </div>
 
                                 </div>

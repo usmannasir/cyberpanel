@@ -1,0 +1,318 @@
+{% extends "baseTemplate/index.html" %}
+{% load static %}
+{% block title %}SSL Reconciliation - CyberPanel{% endblock %}
+
+{% block extraCSS %}
+<style>
+.ssl-reconcile-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.ssl-reconcile-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.ssl-reconcile-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+.ssl-reconcile-body {
+    padding: 30px;
+}
+
+.action-button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    margin: 10px 5px;
+    transition: all 0.3s ease;
+}
+
+.action-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.action-button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.danger-button {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+}
+
+.danger-button:hover {
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+}
+
+.success-button {
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+}
+
+.success-button:hover {
+    box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);
+}
+
+.status-message {
+    padding: 15px;
+    border-radius: 6px;
+    margin: 15px 0;
+    font-weight: 500;
+}
+
+.status-success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.status-error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.status-info {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+.domain-input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e1e5e9;
+    border-radius: 6px;
+    font-size: 14px;
+    margin: 10px 0;
+}
+
+.domain-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.loading {
+    display: none;
+    text-align: center;
+    padding: 20px;
+}
+
+.spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.feature-card {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+}
+
+.feature-card h4 {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.feature-card p {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ssl-reconcile-container">
+    <div class="ssl-reconcile-card">
+        <div class="ssl-reconcile-header">
+            <h2><i class="fas fa-shield-alt"></i> SSL Reconciliation</h2>
+            <p>Fix SSL certificate issues and ACME challenge configurations</p>
+        </div>
+        
+        <div class="ssl-reconcile-body">
+            <div id="statusMessage"></div>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4><i class="fas fa-globe"></i> Reconcile All Domains</h4>
+                    <p>Fix SSL certificates and ACME challenges for all domains on your server</p>
+                    <button class="action-button" onclick="reconcileAll()">
+                        <i class="fas fa-sync-alt"></i> Reconcile All
+                    </button>
+                </div>
+                
+                <div class="feature-card">
+                    <h4><i class="fas fa-cog"></i> Fix ACME Contexts</h4>
+                    <p>Fix ACME challenge context configurations for all domains</p>
+                    <button class="action-button success-button" onclick="fixACMEContexts()">
+                        <i class="fas fa-wrench"></i> Fix ACME Contexts
+                    </button>
+                </div>
+                
+                <div class="feature-card">
+                    <h4><i class="fas fa-search"></i> Reconcile Specific Domain</h4>
+                    <p>Fix SSL certificate issues for a specific domain</p>
+                    <input type="text" id="domainInput" class="domain-input" placeholder="Enter domain name (e.g., example.com)">
+                    <button class="action-button" onclick="reconcileDomain()">
+                        <i class="fas fa-search"></i> Reconcile Domain
+                    </button>
+                </div>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Processing SSL reconciliation...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showStatus(message, type = 'info') {
+    const statusDiv = document.getElementById('statusMessage');
+    statusDiv.innerHTML = `<div class="status-message status-${type}">${message}</div>`;
+    statusDiv.scrollIntoView({ behavior: 'smooth' });
+}
+
+function showLoading(show = true) {
+    document.getElementById('loading').style.display = show ? 'block' : 'none';
+}
+
+function reconcileAll() {
+    showLoading(true);
+    showStatus('Starting SSL reconciliation for all domains...', 'info');
+    
+    fetch('/manageSSL/reconcileAllSSL', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        showLoading(false);
+        if (data.reconcileStatus === 1) {
+            showStatus(data.error_message, 'success');
+        } else {
+            showStatus(data.error_message, 'error');
+        }
+    })
+    .catch(error => {
+        showLoading(false);
+        showStatus('Error: ' + error.message, 'error');
+    });
+}
+
+function reconcileDomain() {
+    const domain = document.getElementById('domainInput').value.trim();
+    if (!domain) {
+        showStatus('Please enter a domain name', 'error');
+        return;
+    }
+    
+    showLoading(true);
+    showStatus(`Starting SSL reconciliation for ${domain}...`, 'info');
+    
+    fetch('/manageSSL/reconcileDomainSSL', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ domain: domain })
+    })
+    .then(response => response.json())
+    .then(data => {
+        showLoading(false);
+        if (data.reconcileStatus === 1) {
+            showStatus(data.error_message, 'success');
+        } else {
+            showStatus(data.error_message, 'error');
+        }
+    })
+    .catch(error => {
+        showLoading(false);
+        showStatus('Error: ' + error.message, 'error');
+    });
+}
+
+function fixACMEContexts() {
+    showLoading(true);
+    showStatus('Fixing ACME challenge contexts...', 'info');
+    
+    fetch('/manageSSL/fixACMEContexts', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        showLoading(false);
+        if (data.reconcileStatus === 1) {
+            showStatus(data.error_message, 'success');
+        } else {
+            showStatus(data.error_message, 'error');
+        }
+    })
+    .catch(error => {
+        showLoading(false);
+        showStatus('Error: ' + error.message, 'error');
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

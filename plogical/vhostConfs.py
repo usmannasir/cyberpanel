@@ -74,7 +74,7 @@ rewrite  {
 }
 
 context /.well-known/acme-challenge {
-  location                /usr/local/lsws/Example/html/.well-known/acme-challenge
+  location                $VH_ROOT/public_html/.well-known/acme-challenge
   allowBrowse             1
 
   rewrite  {
@@ -158,16 +158,16 @@ extprocessor {externalApp} {
 }
 
 rewrite  {
-  enable                  1
+ enable                  1
   autoLoadHtaccess        1
 }
 
 context /.well-known/acme-challenge {
-  location                /usr/local/lsws/Example/html/.well-known/acme-challenge
+  location                $VH_ROOT/public_html/.well-known/acme-challenge
   allowBrowse             1
 
   rewrite  {
-    enable                  0
+     enable                  0
   }
   addDefaultCharset       off
 
@@ -185,7 +185,7 @@ context /.well-known/acme-challenge {
     ServerAdmin {administratorEmail}
     SuexecUserGroup {externalApp} {externalApp}
     DocumentRoot /home/{virtualHostName}/public_html
-    Alias /.well-known/acme-challenge /usr/local/lsws/Example/html/.well-known/acme-challenge
+    Alias /.well-known/acme-challenge /home/{virtualHostName}/public_html/.well-known/acme-challenge
     CustomLog /home/{virtualHostName}/logs/{virtualHostName}.access_log combined
     AddHandler application/x-httpd-php{php} .php .php7 .phtml
     <IfModule LiteSpeed>
@@ -203,7 +203,7 @@ context /.well-known/acme-challenge {
     ServerAdmin {administratorEmail}
     SuexecUserGroup {externalApp} {externalApp}
     DocumentRoot {path}
-    Alias /.well-known/acme-challenge /usr/local/lsws/Example/html/.well-known/acme-challenge
+    Alias /.well-known/acme-challenge /home/{virtualHostName}/public_html/.well-known/acme-challenge
     CustomLog /home/{masterDomain}/logs/{masterDomain}.access_log combined
     AddHandler application/x-httpd-php{php} .php .php7 .phtml
     <IfModule LiteSpeed>
@@ -220,7 +220,7 @@ context /.well-known/acme-challenge {
         ServerAdmin {administratorEmail}
         SuexecUserGroup {externalApp} {externalApp}
         DocumentRoot /home/{virtualHostName}/public_html/
-        Alias /.well-known/acme-challenge /usr/local/lsws/Example/html/.well-known/acme-challenge
+        Alias /.well-known/acme-challenge /home/{virtualHostName}/public_html/.well-known/acme-challenge
         <Proxy "unix:{sockPath}{virtualHostName}.sock|fcgi://php-fpm-{externalApp}">
         ProxySet disablereuse=off
         </proxy>
@@ -371,11 +371,11 @@ accesslog $VH_ROOT/logs/$VH_NAME.access_log {
 }
 
 context /.well-known/acme-challenge {
-  location                /usr/local/lsws/Example/html/.well-known/acme-challenge
+  location                $VH_ROOT/public_html/.well-known/acme-challenge
   allowBrowse             1
 
   rewrite  {
-    enable                  0
+     enable                  0
   }
   addDefaultCharset       off
 
