@@ -11,6 +11,11 @@ elif echo $OUTPUT | grep -q "CentOS Linux 8" ; then
         SERVER_OS="CentOS8"
 yum install curl wget -y 1> /dev/null
 yum update curl wget ca-certificates -y 1> /dev/null
+elif echo $OUTPUT | grep -q "CentOS Stream 9" ; then
+        echo -e "\nDetecting Centos Stream 9...\n"
+        SERVER_OS="CentOS8"
+yum install curl wget -y 1> /dev/null
+yum update curl wget ca-certificates -y 1> /dev/null
 elif echo $OUTPUT | grep -q "AlmaLinux 8" ; then
         echo -e "\nDetecting AlmaLinux 8...\n"
         SERVER_OS="CentOS8"
@@ -45,6 +50,43 @@ apt install -y -qq wget curl
 elif echo $OUTPUT | grep -q "Ubuntu 22.04" ; then
 apt install -y -qq wget curl
                 SERVER_OS="Ubuntu"
+elif echo $OUTPUT | grep -q "Ubuntu 24.04" ; then
+apt install -y -qq wget curl
+                SERVER_OS="Ubuntu"
+elif echo $OUTPUT | grep -q "Debian GNU/Linux 11" ; then
+apt install -y -qq wget curl
+                SERVER_OS="Ubuntu"
+elif echo $OUTPUT | grep -q "Debian GNU/Linux 12" ; then
+apt install -y -qq wget curl
+                SERVER_OS="Ubuntu"
+elif echo $OUTPUT | grep -q "Debian GNU/Linux 13" ; then
+apt install -y -qq wget curl
+                SERVER_OS="Ubuntu"
+elif echo $OUTPUT | grep -q "Rocky Linux 8" ; then
+        echo -e "\nDetecting Rocky Linux 8...\n"
+        SERVER_OS="CentOS8"
+yum install curl wget -y 1> /dev/null
+yum update curl wget ca-certificates -y 1> /dev/null
+elif echo $OUTPUT | grep -q "Rocky Linux 9" ; then
+        echo -e "\nDetecting Rocky Linux 9...\n"
+        SERVER_OS="CentOS8"
+yum install curl wget -y 1> /dev/null
+yum update curl wget ca-certificates -y 1> /dev/null
+elif echo $OUTPUT | grep -q "Red Hat Enterprise Linux 8" ; then
+        echo -e "\nDetecting RHEL 8...\n"
+        SERVER_OS="CentOS8"
+yum install curl wget -y 1> /dev/null
+yum update curl wget ca-certificates -y 1> /dev/null
+elif echo $OUTPUT | grep -q "Red Hat Enterprise Linux 9" ; then
+        echo -e "\nDetecting RHEL 9...\n"
+        SERVER_OS="CentOS8"
+yum install curl wget -y 1> /dev/null
+yum update curl wget ca-certificates -y 1> /dev/null
+elif echo $OUTPUT | grep -q "CentOS Linux 9" ; then
+        echo -e "\nDetecting CentOS 9...\n"
+        SERVER_OS="CentOS8"
+yum install curl wget -y 1> /dev/null
+yum update curl wget ca-certificates -y 1> /dev/null
 elif echo $OUTPUT | grep -q "openEuler 20.03" ; then
         echo -e "\nDetecting openEuler 20.03...\n"
         SERVER_OS="openEuler"
@@ -58,7 +100,15 @@ yum update curl wget ca-certificates -y 1> /dev/null
 else
 
                 echo -e "\nUnable to detect your OS...\n"
-                echo -e "\nCyberPanel is supported on Ubuntu 18.04, Ubuntu 20.04 Ubuntu 22.04, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10 and CloudLinux 7.x...\n"
+                echo -e "\nCyberPanel is supported on:\n"
+                echo -e "Ubuntu: 18.04, 20.04, 22.04, 24.04.3\n"
+                echo -e "Debian: 11, 12, 13\n"
+                echo -e "AlmaLinux: 8, 9, 10\n"
+                echo -e "RockyLinux: 8, 9\n"
+                echo -e "RHEL: 8, 9\n"
+                echo -e "CentOS: 7, 8, 9, Stream 9\n"
+                echo -e "CloudLinux: 7.x, 8\n"
+                echo -e "openEuler: 20.03, 22.03\n"
                 exit 1
 fi
 

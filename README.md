@@ -82,6 +82,7 @@ CyberPanel runs on x86_64 architecture and supports the following operating syst
 - **Ubuntu 24.04.3** - Supported until April 2029 ⭐ **NEW!**
 - **Ubuntu 22.04** - Supported until April 2027
 - **Ubuntu 20.04** - Supported until April 2025
+- **Ubuntu 18.04** - Supported until April 2023
 - **Debian 13** - Supported until 2029 ⭐ **NEW!**
 - **Debian 12** - Supported until 2027
 - **Debian 11** - Supported until 2026
@@ -93,7 +94,11 @@ CyberPanel runs on x86_64 architecture and supports the following operating syst
 - **RHEL 9** - Supported until May 2032
 - **RHEL 8** - Supported until May 2029
 - **CloudLinux 8** - Supported until May 2029
+- **CloudLinux 7** - Supported until June 2024
 - **CentOS 9** - Supported until May 2027
+- **CentOS 8** - Supported until December 2021
+- **CentOS 7** - Supported until June 2024
+- **CentOS Stream 9** - Supported until May 2027
 
 ### **🔧 Third-Party OS Support**
 

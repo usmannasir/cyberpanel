@@ -34,6 +34,14 @@ def FetchCloudLinuxAlmaVersionVersion():
             return 'al-87'
         elif (data.find('AlmaLinux') > -1 or data.find('almalinux') > -1) and (data.find('9.4') > -1 or data.find('9.3') > -1 or data.find('Shamrock Pampas') > -1 or data.find('Seafoam Ocelot') > -1 or data.find('VERSION="9.') > -1):
             return 'al-93'
+        elif data.find('CentOS Stream 9') > -1:
+            return 'el-9'
+        elif data.find('CentOS Linux 9') > -1:
+            return 'el-9'
+        elif data.find('Rocky Linux 9') > -1:
+            return 'el-9'
+        elif data.find('Red Hat Enterprise Linux 9') > -1:
+            return 'el-9'
         elif (data.find('AlmaLinux') > -1 or data.find('almalinux') > -1) and (data.find('10.0') > -1 or data.find('Purple Lion') > -1 or data.find('VERSION="10.') > -1):
             return 'al-100'
     else:
@@ -326,12 +334,18 @@ def get_distro():
 
         if data.find('CentOS Linux release 8') > -1:
             return cent8
+        if data.find('CentOS Linux release 9') > -1 or data.find('CentOS Stream 9') > -1:
+            return cent8
+        if data.find('Rocky Linux release 9') > -1 or data.find('Rocky Linux 9') > -1:
+            return cent8
+        if data.find('Red Hat Enterprise Linux 8') > -1 or data.find('Red Hat Enterprise Linux 9') > -1:
+            return cent8
         ## if almalinux 9 or 10 then pretty much same as cent8
         if data.find('AlmaLinux release 8') > -1 or data.find('AlmaLinux release 9') > -1 or data.find('AlmaLinux release 10') > -1:
             return cent8
         if data.find('Rocky Linux release 8') > -1 or data.find('Rocky Linux 8') > -1 or data.find('rocky:8') > -1:
             return cent8
-        if data.find('CloudLinux 8') or data.find('cloudlinux 8'):
+        if data.find('CloudLinux 8') or data.find('cloudlinux 8') or data.find('CloudLinux 9') or data.find('cloudlinux 9'):
             return cent8
 
     else:
