@@ -81,7 +81,7 @@ class preFlightsChecks:
     def get_service_name(self, service):
         """Get the correct service name for the current distribution"""
         service_map = {
-            'pdns': 'pdns-server' if self.distro == debian12 else 'pdns'
+            'pdns': 'pdns'
         }
         return service_map.get(service, service)
     
