@@ -141,7 +141,8 @@ def get_debian_mariadb_packages():
             'python': 'python3',
             'dovecot-pigeonhole': 'dovecot-sieve',
             'pdns': 'pdns-server',
-            'pdns-backend-mysql': 'pdns-backend-mysql'
+            'pdns-backend-mysql': 'pdns-backend-mysql',
+            'firewalld': 'firewalld'
         }
     elif debian_version >= 12.0:
         # Debian 12 (Bookworm)
@@ -156,7 +157,8 @@ def get_debian_mariadb_packages():
             'python': 'python3',
             'dovecot-pigeonhole': 'dovecot-sieve',
             'pdns': 'pdns-server',
-            'pdns-backend-mysql': 'pdns-backend-mysql'
+            'pdns-backend-mysql': 'pdns-backend-mysql',
+            'firewalld': 'firewalld'
         }
     else:
         # Older Debian versions (11 and below)

@@ -1673,7 +1673,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
     def installFirewalld(self):
 
-        if self.distro == ubuntu:
+        if self.distro == ubuntu or self.distro == debian12:
             self.removeUfw()
 
         try:
@@ -1683,9 +1683,14 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             ######
             if self.distro == centos:
-                # Not available in ubuntu
+                # Not available in ubuntu/debian
                 self.manage_service('dbus', 'restart')
+            elif self.distro == debian12:
+                # For Debian 12, ensure dbus is running for firewalld
+                self.manage_service('dbus', 'start')
+                self.manage_service('dbus', 'enable')
 
+            # Restart systemd-logind on all systems
             self.manage_service('systemd-logind', 'restart')
 
             self.manage_service('firewalld', 'start')
