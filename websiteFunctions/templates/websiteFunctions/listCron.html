@@ -403,6 +403,170 @@
         font-size: 16px;
     }
     
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+        .page-wrapper {
+            padding: 10px;
+        }
+        
+        .page-container {
+            max-width: 100%;
+        }
+        
+        .container {
+            padding: 10px;
+        }
+        
+        #page-title {
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        #page-title h1 {
+            font-size: 1.5rem !important;
+        }
+        
+        #page-title p {
+            font-size: 14px !important;
+        }
+        
+        /* Table improvements for mobile */
+        .table-responsive {
+            border: none;
+            margin-bottom: 20px;
+        }
+        
+        .table {
+            font-size: 14px !important;
+            min-width: 600px;
+        }
+        
+        .table th, .table td {
+            padding: 8px 6px !important;
+            font-size: 13px !important;
+            white-space: nowrap;
+        }
+        
+        /* Hide less important columns on mobile */
+        .table .d-none-mobile {
+            display: none !important;
+        }
+        
+        /* Button improvements for mobile */
+        .btn {
+            font-size: 16px !important;
+            padding: 12px 20px !important;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+        
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+        
+        .btn-group .btn {
+            margin-bottom: 10px;
+            width: 100%;
+        }
+        
+        /* Form improvements for mobile */
+        .form-horizontal .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-horizontal .control-label {
+            text-align: left !important;
+            margin-bottom: 5px;
+            font-size: 16px !important;
+        }
+        
+        .form-horizontal .col-sm-3,
+        .form-horizontal .col-sm-6,
+        .form-horizontal .col-sm-9 {
+            width: 100% !important;
+            float: none !important;
+        }
+        
+        .form-control, input, textarea, select {
+            font-size: 16px !important;
+            padding: 12px 16px !important;
+            width: 100%;
+        }
+        
+        /* Modal improvements for mobile */
+        .modal-dialog {
+            margin: 10px;
+            width: calc(100% - 20px);
+            max-width: none;
+        }
+        
+        .modal-content {
+            padding: 20px 15px;
+        }
+        
+        .modal-title {
+            font-size: 1.25rem !important;
+        }
+        
+        /* Card improvements for mobile */
+        .card {
+            margin-bottom: 15px;
+        }
+        
+        .card-body {
+            padding: 15px;
+        }
+        
+        .card-title {
+            font-size: 1.125rem !important;
+        }
+        
+        .card-text {
+            font-size: 14px !important;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        /* Extra small devices */
+        .page-wrapper {
+            padding: 5px;
+        }
+        
+        .container {
+            padding: 5px;
+        }
+        
+        #page-title {
+            padding: 15px;
+        }
+        
+        #page-title h1 {
+            font-size: 1.25rem !important;
+        }
+        
+        .table th, .table td {
+            padding: 6px 4px !important;
+            font-size: 12px !important;
+        }
+        
+        /* Hide even more columns on very small screens */
+        .table .d-none-mobile-sm {
+            display: none !important;
+        }
+        
+        .btn {
+            font-size: 14px !important;
+            padding: 10px 15px !important;
+        }
+        
+        .form-control, input, textarea, select {
+            font-size: 16px !important;
+            padding: 10px 14px !important;
+        }
+    }
+    
     /* Dark mode specific adjustments */
     [data-theme="dark"] body {
         background: var(--bg-primary);
