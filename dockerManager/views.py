@@ -577,6 +577,69 @@ def executeContainerCommand(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+@preDockerRun
+def updateContainer(request):
+    """
+    Update container with new image while preserving data using Docker volumes
+    """
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+
+        cm = ContainerManager()
+        coreResult = cm.updateContainer(userID, json.loads(request.body))
+
+        return coreResult
+    except KeyError:
+        return redirect(loadLoginPage)
+
+@preDockerRun
+def deleteContainerWithData(request):
+    """
+    Delete container and all associated data (volumes)
+    """
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+
+        cm = ContainerManager()
+        coreResult = cm.deleteContainerWithData(userID, json.loads(request.body))
+
+        return coreResult
+    except KeyError:
+        return redirect(loadLoginPage)
+
+@preDockerRun
+def deleteContainerKeepData(request):
+    """
+    Delete container but preserve data (volumes)
+    """
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+
+        cm = ContainerManager()
+        coreResult = cm.deleteContainerKeepData(userID, json.loads(request.body))
+
+        return coreResult
+    except KeyError:
+        return redirect(loadLoginPage)
+
 
 def loadContainersForImport(request):
     """

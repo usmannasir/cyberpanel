@@ -101,7 +101,7 @@ class FTPUtilities:
             return 0, str(msg)
 
     @staticmethod
-    def submitFTPCreation(domainName, userName, password, path, owner, api = None):
+    def submitFTPCreation(domainName, userName, password, path, owner, api = None, customQuotaSize = None, enableCustomQuota = False):
         try:
 
             ## need to get gid and uid
@@ -159,24 +159,37 @@ class FTPUtilities:
             if api == '0':
                 userName = admin.userName + "_" + userName
 
+            # Determine quota size
+            if enableCustomQuota and customQuotaSize and customQuotaSize > 0:
+                # Use custom quota
+                quotaSize = customQuotaSize
+                customQuotaEnabled = True
+            else:
+                # Use package default
+                quotaSize = website.package.diskSpace
+                customQuotaEnabled = False
 
             if website.package.ftpAccounts == 0:
                 user = Users(domain=website, user=userName, password=FTPPass, uid=uid, gid=gid,
                              dir=path,
-                             quotasize=website.package.diskSpace,
+                             quotasize=quotaSize,
                              status="1",
                              ulbandwidth=500000,
                              dlbandwidth=500000,
-                             date=datetime.now())
+                             date=datetime.now(),
+                             custom_quota_enabled=customQuotaEnabled,
+                             custom_quota_size=customQuotaSize if customQuotaEnabled else 0)
 
                 user.save()
             elif website.users_set.all().count() < website.package.ftpAccounts:
                 user = Users(domain=website, user=userName, password=FTPPass, uid=uid, gid=gid,
-                             dir=path, quotasize=website.package.diskSpace,
+                             dir=path, quotasize=quotaSize,
                              status="1",
                              ulbandwidth=500000,
                              dlbandwidth=500000,
-                             date=datetime.now())
+                             date=datetime.now(),
+                             custom_quota_enabled=customQuotaEnabled,
+                             custom_quota_size=customQuotaSize if customQuotaEnabled else 0)
 
                 user.save()
 
@@ -228,6 +241,38 @@ class FTPUtilities:
         except:
             ## There does not exist a zone for this domain.
             pass
+
+    @staticmethod
+    def updateFTPQuota(ftpUsername, customQuotaSize, enableCustomQuota):
+        """
+        Update FTP user quota settings
+        """
+        try:
+            ftp = Users.objects.get(user=ftpUsername)
+            
+            # Validate quota size
+            if enableCustomQuota and customQuotaSize <= 0:
+                return 0, "Custom quota size must be greater than 0"
+            
+            # Update quota settings
+            ftp.custom_quota_enabled = enableCustomQuota
+            if enableCustomQuota:
+                ftp.custom_quota_size = customQuotaSize
+                ftp.quotasize = customQuotaSize
+            else:
+                # Reset to package default
+                ftp.custom_quota_size = 0
+                ftp.quotasize = ftp.domain.package.diskSpace
+            
+            ftp.save()
+            
+            return 1, "FTP quota updated successfully"
+            
+        except Users.DoesNotExist:
+            return 0, "FTP user not found"
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [updateFTPQuota]")
+            return 0, str(msg)
 
 
 def main():

@@ -166,6 +166,114 @@
         box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
     }
     
+    .btn-warning {
+        background: var(--warning-color, #f59e0b);
+        color: var(--bg-secondary, white);
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.825rem;
+        margin-right: 0.5rem;
+    }
+    
+    .btn-warning:hover {
+        background: #d97706;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+    }
+    
+    .btn-group {
+        position: relative;
+        display: inline-block;
+        vertical-align: middle;
+    }
+    
+    .btn-group .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1000;
+        min-width: 200px;
+        padding: 0.5rem 0;
+        margin: 0.125rem 0 0;
+        background-color: var(--bg-secondary, white);
+        border: 1px solid var(--border-color, #e8e9ff);
+        border-radius: 8px;
+        box-shadow: 0 4px 12px var(--shadow-medium, rgba(0,0,0,0.15));
+        display: none;
+    }
+    
+    .btn-group .dropdown-menu.show {
+        display: block;
+    }
+    
+    .dropdown-item {
+        display: block;
+        width: 100%;
+        padding: 0.5rem 1rem;
+        clear: both;
+        font-weight: 400;
+        color: var(--text-primary, #1e293b);
+        text-align: inherit;
+        text-decoration: none;
+        white-space: nowrap;
+        background-color: transparent;
+        border: 0;
+        transition: all 0.2s ease;
+    }
+    
+    .dropdown-item:hover {
+        background-color: var(--bg-hover, #f8f9ff);
+        color: var(--accent-color, #5b5fcf);
+    }
+    
+    .dropdown-item i {
+        margin-right: 0.5rem;
+        width: 16px;
+        text-align: center;
+    }
+    
+    /* Bootstrap dropdown toggle */
+    .dropdown-toggle::after {
+        display: inline-block;
+        margin-left: 0.255em;
+        vertical-align: 0.255em;
+        content: "";
+        border-top: 0.3em solid;
+        border-right: 0.3em solid transparent;
+        border-bottom: 0;
+        border-left: 0.3em solid transparent;
+    }
+    
+    /* Show dropdown on hover */
+    .btn-group:hover .dropdown-menu {
+        display: block;
+    }
+    
+    /* Alert styles */
+    .alert {
+        padding: 1rem 1.5rem;
+        margin-bottom: 1rem;
+        border: 1px solid transparent;
+        border-radius: 8px;
+    }
+    
+    .alert-info {
+        color: #0c5460;
+        background-color: #d1ecf1;
+        border-color: #bee5eb;
+    }
+    
+    .alert strong {
+        font-weight: 600;
+    }
+    
     .main-card {
         background: var(--bg-secondary, white);
         border-radius: 16px;
@@ -535,9 +643,24 @@
                                     <button class="btn-info" ng-click="showLog(web.name)" title="{% trans 'View Logs' %}">
                                         <i class="fas fa-file-alt"></i>
                                     </button>
-                                    <button class="btn-danger" ng-click="delContainer(web.name)" title="{% trans 'Delete Container' %}">
-                                        <i class="fas fa-trash"></i>
+                                    <button class="btn-warning" ng-click="showUpdateModal(web.name, web.image, web.tag)" title="{% trans 'Update Container' %}">
+                                        <i class="fas fa-sync-alt"></i>
                                     </button>
+                                    <div class="btn-group" style="display: inline-block;">
+                                        <button class="btn-danger dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="{% trans 'Delete Options' %}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        <div class="dropdown-menu">
+                                            <a class="dropdown-item" href="#" ng-click="deleteContainerKeepData(web.name)">
+                                                <i class="fas fa-save" style="margin-right: 5px;"></i>
+                                                {% trans "Delete Container (Keep Data)" %}
+                                            </a>
+                                            <a class="dropdown-item" href="#" ng-click="deleteContainerWithData(web.name)">
+                                                <i class="fas fa-trash" style="margin-right: 5px;"></i>
+                                                {% trans "Delete Container + Data" %}
+                                            </a>
+                                        </div>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -611,9 +734,24 @@
                                     <button class="btn-info" ng-click="showLog('{{container.name}}')" title="{% trans 'View Logs' %}">
                                         <i class="fas fa-file-alt"></i>
                                     </button>
-                                    <button class="btn-danger" ng-click="delContainer('{{container.name}}', true)" title="{% trans 'Delete Container' %}">
-                                        <i class="fas fa-trash"></i>
+                                    <button class="btn-warning" ng-click="showUpdateModal('{{container.name}}', 'unknown', 'unknown')" title="{% trans 'Update Container' %}">
+                                        <i class="fas fa-sync-alt"></i>
                                     </button>
+                                    <div class="btn-group" style="display: inline-block;">
+                                        <button class="btn-danger dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="{% trans 'Delete Options' %}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        <div class="dropdown-menu">
+                                            <a class="dropdown-item" href="#" ng-click="deleteContainerKeepData('{{container.name}}', true)">
+                                                <i class="fas fa-save" style="margin-right: 5px;"></i>
+                                                {% trans "Delete Container (Keep Data)" %}
+                                            </a>
+                                            <a class="dropdown-item" href="#" ng-click="deleteContainerWithData('{{container.name}}', true)">
+                                                <i class="fas fa-trash" style="margin-right: 5px;"></i>
+                                                {% trans "Delete Container + Data" %}
+                                            </a>
+                                        </div>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -696,6 +834,79 @@
         </div>
     </div>
 
+</div>
+
+<!-- Update Container Modal -->
+<div id="updateContainer" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">
+                    <i class="fas fa-sync-alt" style="margin-right: 0.5rem;"></i>
+                    {% trans "Update Container" %}
+                </h4>
+                <button type="button" class="close" data-dismiss="modal" 
+                        style="font-size: 1.5rem; background: transparent; border: none;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-primary, #1e293b);">
+                        {% trans "Container Name" %}
+                    </label>
+                    <input type="text" ng-model="updateContainerName" class="form-control" readonly 
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color, #e8e9ff); border-radius: 8px; background-color: #f8f9fa;">
+                </div>
+                
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-primary, #1e293b);">
+                        {% trans "Current Image" %}
+                    </label>
+                    <input type="text" ng-model="currentImage" class="form-control" readonly 
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color, #e8e9ff); border-radius: 8px; background-color: #f8f9fa;">
+                </div>
+                
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-primary, #1e293b);">
+                        {% trans "New Image" %} <span style="color: #ef4444;">*</span>
+                    </label>
+                    <input type="text" ng-model="newImage" class="form-control" 
+                           placeholder="e.g., nginx, mysql, postgres" 
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color, #e8e9ff); border-radius: 8px;">
+                    <small class="form-text text-muted">
+                        {% trans "Enter the image name (without tag). Leave empty to update current image to latest tag." %}
+                    </small>
+                </div>
+                
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-primary, #1e293b);">
+                        {% trans "New Tag" %}
+                    </label>
+                    <input type="text" ng-model="newTag" class="form-control" 
+                           placeholder="e.g., latest, 1.21, alpine" 
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color, #e8e9ff); border-radius: 8px;">
+                    <small class="form-text text-muted">
+                        {% trans "Enter the tag version. Defaults to 'latest' if not specified." %}
+                    </small>
+                </div>
+                
+                <div class="alert alert-info" style="margin-top: 1rem;">
+                    <i class="fas fa-info-circle" style="margin-right: 0.5rem;"></i>
+                    <strong>{% trans "Data Safety:" %}</strong>
+                    {% trans "This operation will preserve all your data using Docker volumes. The container will be recreated with the new image while keeping all volumes intact." %}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" ng-click="performUpdate()" ng-disabled="!newImage && !newTag">
+                    <i class="fas fa-sync-alt"></i>
+                    {% trans "Update Container" %}
+                </button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    {% trans "Cancel" %}
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 {% endblock %}
