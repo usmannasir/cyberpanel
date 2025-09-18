@@ -5376,7 +5376,8 @@ StrictHostKeyChecking no
                     data['pmMinSpareServers'] = pmMinSpareServers
                     data['pmMaxSpareServers'] = pmMaxSpareServers
                     data['phpPath'] = phpPath
-                    data['configData'] = ProcessUtilities.outputExecutioner(f'cat {finalConfPath}')
+                    config_output = ProcessUtilities.outputExecutioner(f'cat {finalConfPath}')
+                    data['configData'] = config_output if config_output is not None else ''
                 else:
                     data = {}
                     data['status'] = 1

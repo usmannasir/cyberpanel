@@ -57,7 +57,7 @@ class preFlightsChecks:
     debug = 1
     cyberPanelMirror = "mirror.cyberpanel.net/pip"
     cdn = 'cyberpanel.sh'
-    SnappyVersion = '2.38.2'
+    SnappyVersion = '2.38.2'  # Fallback version
     apt_updated = False  # Track if apt update has been run
     
     def install_package(self, package_name, options="", silent=False):
@@ -912,19 +912,32 @@ password="%s"
             if not os.path.exists("/usr/local/CyberCP/public"):
                 os.mkdir("/usr/local/CyberCP/public")
 
-            command = 'wget -O /usr/local/CyberCP/public/phpmyadmin.zip https://github.com/usmannasir/cyberpanel/raw/stable/phpmyadmin.zip'
+            # Try to fetch latest phpMyAdmin version from GitHub
+            phpmyadmin_version = '5.2.2'  # Fallback version
+            try:
+                from plogical.versionFetcher import get_latest_phpmyadmin_version
+                latest_version = get_latest_phpmyadmin_version()
+                if latest_version and latest_version != phpmyadmin_version:
+                    preFlightsChecks.stdOut(f"Using latest phpMyAdmin version: {latest_version}", 1)
+                    phpmyadmin_version = latest_version
+                else:
+                    preFlightsChecks.stdOut(f"Using fallback phpMyAdmin version: {phpmyadmin_version}", 1)
+            except Exception as e:
+                preFlightsChecks.stdOut(f"Failed to fetch latest phpMyAdmin version, using fallback: {e}", 1)
+
+            command = f'wget -O /usr/local/CyberCP/public/phpmyadmin.tar.gz https://files.phpmyadmin.net/phpMyAdmin/{phpmyadmin_version}/phpMyAdmin-{phpmyadmin_version}-all-languages.tar.gz'
 
             preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
                                   command, 1, 0, os.EX_OSERR)
 
-            command = 'unzip /usr/local/CyberCP/public/phpmyadmin.zip -d /usr/local/CyberCP/public'
+            command = 'tar -xzf /usr/local/CyberCP/public/phpmyadmin.tar.gz -C /usr/local/CyberCP/public'
             preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
                                   command, 1, 0, os.EX_OSERR)
 
             command = 'mv /usr/local/CyberCP/public/phpMyAdmin-*-all-languages /usr/local/CyberCP/public/phpmyadmin'
             subprocess.call(command, shell=True)
 
-            command = 'rm -f /usr/local/CyberCP/public/phpmyadmin.zip'
+            command = 'rm -f /usr/local/CyberCP/public/phpmyadmin.tar.gz'
             preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
                                   command, 1, 0, os.EX_OSERR)
 
@@ -1434,6 +1447,18 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             if os.path.exists("/usr/local/CyberCP/public/snappymail"):
                 return 0
+
+            # Try to fetch latest SnappyMail version from GitHub
+            try:
+                from plogical.versionFetcher import get_latest_snappymail_version
+                latest_version = get_latest_snappymail_version()
+                if latest_version and latest_version != preFlightsChecks.SnappyVersion:
+                    preFlightsChecks.stdOut(f"Using latest SnappyMail version: {latest_version}", 1)
+                    preFlightsChecks.SnappyVersion = latest_version
+                else:
+                    preFlightsChecks.stdOut(f"Using fallback SnappyMail version: {preFlightsChecks.SnappyVersion}", 1)
+            except Exception as e:
+                preFlightsChecks.stdOut(f"Failed to fetch latest SnappyMail version, using fallback: {e}", 1)
 
             os.chdir("/usr/local/CyberCP/public")
 

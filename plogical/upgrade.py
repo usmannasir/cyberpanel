@@ -648,19 +648,32 @@ class Upgrade:
             except:
                 pass
 
+            # Try to fetch latest phpMyAdmin version from GitHub
+            phpmyadmin_version = '5.2.2'  # Fallback version
+            try:
+                from plogical.versionFetcher import get_latest_phpmyadmin_version
+                latest_version = get_latest_phpmyadmin_version()
+                if latest_version and latest_version != phpmyadmin_version:
+                    Upgrade.stdOut(f"Using latest phpMyAdmin version: {latest_version}", 0)
+                    phpmyadmin_version = latest_version
+                else:
+                    Upgrade.stdOut(f"Using fallback phpMyAdmin version: {phpmyadmin_version}", 0)
+            except Exception as e:
+                Upgrade.stdOut(f"Failed to fetch latest phpMyAdmin version, using fallback: {e}", 0)
+
             Upgrade.stdOut("Installing phpMyAdmin...", 0)
             
-            command = 'wget -q -O /usr/local/CyberCP/public/phpmyadmin.zip https://github.com/usmannasir/cyberpanel/raw/stable/phpmyadmin.zip'
-            Upgrade.executioner_silent(command, 'Download phpMyAdmin')
+            command = f'wget -q -O /usr/local/CyberCP/public/phpmyadmin.tar.gz https://files.phpmyadmin.net/phpMyAdmin/{phpmyadmin_version}/phpMyAdmin-{phpmyadmin_version}-all-languages.tar.gz'
+            Upgrade.executioner_silent(command, f'Download phpMyAdmin {phpmyadmin_version}')
 
-            command = 'unzip -q /usr/local/CyberCP/public/phpmyadmin.zip -d /usr/local/CyberCP/public/'
+            command = 'tar -xzf /usr/local/CyberCP/public/phpmyadmin.tar.gz -C /usr/local/CyberCP/public/'
             Upgrade.executioner_silent(command, 'Extract phpMyAdmin')
 
             command = 'mv /usr/local/CyberCP/public/phpMyAdmin-*-all-languages /usr/local/CyberCP/public/phpmyadmin'
             subprocess.call(command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-            command = 'rm -f /usr/local/CyberCP/public/phpmyadmin.zip'
-            Upgrade.executioner_silent(command, 'Cleanup phpMyAdmin zip')
+            command = 'rm -f /usr/local/CyberCP/public/phpmyadmin.tar.gz'
+            Upgrade.executioner_silent(command, 'Cleanup phpMyAdmin tar.gz')
             
             Upgrade.stdOut("phpMyAdmin installation completed.", 0)
 
@@ -780,6 +793,18 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             if not os.path.exists("/usr/local/CyberCP/public"):
                 os.mkdir("/usr/local/CyberCP/public")
+
+            # Try to fetch latest SnappyMail version from GitHub
+            try:
+                from plogical.versionFetcher import get_latest_snappymail_version
+                latest_version = get_latest_snappymail_version()
+                if latest_version and latest_version != Upgrade.SnappyVersion:
+                    Upgrade.stdOut(f"Using latest SnappyMail version: {latest_version}", 0)
+                    Upgrade.SnappyVersion = latest_version
+                else:
+                    Upgrade.stdOut(f"Using fallback SnappyMail version: {Upgrade.SnappyVersion}", 0)
+            except Exception as e:
+                Upgrade.stdOut(f"Failed to fetch latest SnappyMail version, using fallback: {e}", 0)
 
             os.chdir("/usr/local/CyberCP/public")
 
