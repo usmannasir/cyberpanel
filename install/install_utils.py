@@ -446,6 +446,71 @@ def resFailed(distro, res):
     return False
 
 
+def wait_for_apt_lock():
+    """
+    Wait for apt lock to be released and clean up stuck processes if needed
+    """
+    import time
+    import glob
+
+    lock_files = [
+        '/var/lib/dpkg/lock-frontend',
+        '/var/lib/dpkg/lock',
+        '/var/cache/apt/archives/lock'
+    ]
+
+    max_wait = 300  # Wait up to 5 minutes
+    wait_time = 0
+
+    while wait_time < max_wait:
+        locks_exist = any(os.path.exists(lock) for lock in lock_files)
+
+        if not locks_exist:
+            return True
+
+        # Check if any apt processes are actually running
+        try:
+            result = subprocess.run(['pgrep', '-f', 'apt'], capture_output=True)
+            if result.returncode != 0:
+                # No apt processes running but locks exist - remove them
+                stdOut("No apt processes running, removing stale locks...")
+                for lock_file in lock_files:
+                    if os.path.exists(lock_file):
+                        try:
+                            os.remove(lock_file)
+                            stdOut(f"Removed stale lock: {lock_file}")
+                        except:
+                            pass
+                return True
+        except:
+            pass
+
+        stdOut(f"Waiting for apt lock to be released... ({wait_time}s/{max_wait}s)")
+        time.sleep(10)
+        wait_time += 10
+
+    # If we get here, we've waited too long - try to clean up
+    stdOut("Timeout waiting for apt lock, attempting cleanup...")
+    try:
+        # Kill any stuck apt processes
+        subprocess.run(['killall', '-9', 'apt-get'], capture_output=True)
+        subprocess.run(['killall', '-9', 'apt'], capture_output=True)
+
+        # Remove locks
+        for lock_file in lock_files:
+            if os.path.exists(lock_file):
+                try:
+                    os.remove(lock_file)
+                except:
+                    pass
+
+        # Reconfigure dpkg
+        subprocess.run(['dpkg', '--configure', '-a'], capture_output=True)
+        return True
+    except:
+        return False
+
+
 def call(command, distro, bracket, message, log=0, do_exit=0, code=os.EX_OK, shell=False):
     """
     Execute a shell command with retry logic and error handling
@@ -463,6 +528,14 @@ def call(command, distro, bracket, message, log=0, do_exit=0, code=os.EX_OK, she
     Returns:
         bool: True if successful, False if failed
     """
+    # Check for apt lock before running apt commands
+    if 'apt-get' in command or 'apt ' in command:
+        if not wait_for_apt_lock():
+            stdOut("Failed to acquire apt lock after waiting")
+            if do_exit:
+                os._exit(code)
+            return False
+
     finalMessage = 'Running: %s' % (message)
     stdOut(finalMessage, log)
     count = 0
