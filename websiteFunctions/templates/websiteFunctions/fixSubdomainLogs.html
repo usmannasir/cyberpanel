@@ -1,0 +1,334 @@
+{% extends "baseTemplate/index.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}Fix Subdomain Logs{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Fix Subdomain Logs</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{% url 'loadWebsitesHome' %}">Websites</a></li>
+                        <li class="breadcrumb-item active">Fix Subdomain Logs</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Information Card -->
+            <div class="card card-primary">
+                <div class="card-header">
+                    <h3 class="card-title">Subdomain Log Issue Fix</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h5><i class="icon fas fa-info"></i> Issue Description</h5>
+                        <p>This tool fixes a known issue where child domains (subdomains) share log files with their master domains, causing log contamination. This fix ensures each subdomain has its own separate log files.</p>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <h5><i class="icon fas fa-exclamation-triangle"></i> What This Fix Does</h5>
+                        <ul>
+                            <li>Updates vHost configurations to use separate log files for each subdomain</li>
+                            <li>Creates individual log files: <code>subdomain.error_log</code> and <code>subdomain.access_log</code></li>
+                            <li>Restarts LiteSpeed to apply changes</li>
+                            <li>Maintains proper file ownership and permissions</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fix Options -->
+            <div class="card card-success">
+                <div class="card-header">
+                    <h3 class="card-title">Fix Options</h3>
+                </div>
+                <div class="card-body">
+                    <form id="fixLogsForm">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Action</label>
+                                    <select class="form-control" id="action" name="action" required>
+                                        <option value="">Select Action</option>
+                                        <option value="fix_all">Fix All Child Domains</option>
+                                        <option value="fix_domain">Fix Specific Domain</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6" id="domainInputGroup" style="display: none;">
+                                <div class="form-group">
+                                    <label>Domain Name</label>
+                                    <input type="text" class="form-control" id="domain" name="domain" placeholder="e.g., diabetes.example.com">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="dryRun" name="dry_run">
+                                        <label class="form-check-label" for="dryRun">
+                                            Dry Run (Show what would be changed without making changes)
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="createBackup" name="create_backup">
+                                        <label class="form-check-label" for="createBackup">
+                                            Create Backup of Original Configuration
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary" id="fixButton">
+                                <i class="fas fa-wrench"></i> Fix Subdomain Logs
+                            </button>
+                            <button type="button" class="btn btn-info" id="checkButton">
+                                <i class="fas fa-search"></i> Check Current Status
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div class="card card-default" id="resultsCard" style="display: none;">
+                <div class="card-header">
+                    <h3 class="card-title">Results</h3>
+                </div>
+                <div class="card-body">
+                    <div id="resultsContent"></div>
+                </div>
+            </div>
+
+            <!-- Child Domains List -->
+            <div class="card card-info">
+                <div class="card-header">
+                    <h3 class="card-title">Current Child Domains</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="childDomainsTable">
+                            <thead>
+                                <tr>
+                                    <th>Domain</th>
+                                    <th>Master Domain</th>
+                                    <th>Log Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const actionSelect = document.getElementById('action');
+    const domainInputGroup = document.getElementById('domainInputGroup');
+    const domainInput = document.getElementById('domain');
+    const fixButton = document.getElementById('fixButton');
+    const checkButton = document.getElementById('checkButton');
+    const resultsCard = document.getElementById('resultsCard');
+    const resultsContent = document.getElementById('resultsContent');
+    const childDomainsTable = document.getElementById('childDomainsTable');
+
+    // Show/hide domain input based on action selection
+    actionSelect.addEventListener('change', function() {
+        if (this.value === 'fix_domain') {
+            domainInputGroup.style.display = 'block';
+            domainInput.required = true;
+        } else {
+            domainInputGroup.style.display = 'none';
+            domainInput.required = false;
+        }
+    });
+
+    // Load child domains list
+    loadChildDomains();
+
+    // Check current status
+    checkButton.addEventListener('click', function() {
+        loadChildDomains();
+        showResults('Checking current status...', 'info');
+    });
+
+    // Fix logs form submission
+    document.getElementById('fixLogsForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const action = formData.get('action');
+        const domain = formData.get('domain');
+        
+        if (!action) {
+            showResults('Please select an action', 'error');
+            return;
+        }
+        
+        if (action === 'fix_domain' && !domain.trim()) {
+            showResults('Please enter a domain name', 'error');
+            return;
+        }
+        
+        fixButton.disabled = true;
+        fixButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        
+        fetch('{% url "fixSubdomainLogsAction" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            fixButton.disabled = false;
+            fixButton.innerHTML = '<i class="fas fa-wrench"></i> Fix Subdomain Logs';
+            
+            if (data.status === 1) {
+                showResults(data.message, 'success');
+                loadChildDomains(); // Refresh the list
+            } else {
+                showResults(data.error_message, 'error');
+            }
+        })
+        .catch(error => {
+            fixButton.disabled = false;
+            fixButton.innerHTML = '<i class="fas fa-wrench"></i> Fix Subdomain Logs';
+            showResults('Error: ' + error.message, 'error');
+        });
+    });
+
+    function loadChildDomains() {
+        fetch('{% url "fetchChildDomainsMain" %}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 1) {
+                populateChildDomainsTable(data.data);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading child domains:', error);
+        });
+    }
+
+    function populateChildDomainsTable(domains) {
+        const tbody = childDomainsTable.querySelector('tbody');
+        tbody.innerHTML = '';
+        
+        domains.forEach(domain => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${domain.domain}</td>
+                <td>${domain.master}</td>
+                <td><span class="badge badge-warning">Needs Fix</span></td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="fixSingleDomain('${domain.domain}')">
+                        <i class="fas fa-wrench"></i> Fix
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function fixSingleDomain(domain) {
+        const formData = new FormData();
+        formData.append('action', 'fix_domain');
+        formData.append('domain', domain);
+        formData.append('dry_run', 'false');
+        formData.append('create_backup', 'true');
+        formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+        
+        showResults(`Fixing logs for ${domain}...`, 'info');
+        
+        fetch('{% url "fixSubdomainLogsAction" %}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 1) {
+                showResults(data.message, 'success');
+                loadChildDomains(); // Refresh the list
+            } else {
+                showResults(data.error_message, 'error');
+            }
+        })
+        .catch(error => {
+            showResults('Error: ' + error.message, 'error');
+        });
+    }
+
+    function showResults(message, type) {
+        resultsCard.style.display = 'block';
+        
+        let alertClass = 'alert-info';
+        let icon = 'fas fa-info';
+        
+        if (type === 'success') {
+            alertClass = 'alert-success';
+            icon = 'fas fa-check';
+        } else if (type === 'error') {
+            alertClass = 'alert-danger';
+            icon = 'fas fa-times';
+        } else if (type === 'warning') {
+            alertClass = 'alert-warning';
+            icon = 'fas fa-exclamation-triangle';
+        }
+        
+        resultsContent.innerHTML = `
+            <div class="alert ${alertClass}">
+                <i class="${icon}"></i> ${message}
+            </div>
+        `;
+        
+        // Scroll to results
+        resultsCard.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
+{% endblock %}

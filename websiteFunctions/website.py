@@ -3936,6 +3936,7 @@ context /cyberpanel_suspension_page.html {
                 if is_child:
                     # Use child domain template
                     default_config = vhostConfs.olsChildConf
+                    default_config = default_config.replace('{virtualHostName}', virtualHost)
                     default_config = default_config.replace('{path}', path)
                     default_config = default_config.replace('{masterDomain}', master_domain)
                     default_config = default_config.replace('{adminEmails}', admin_email)
@@ -8199,4 +8200,175 @@ StrictHostKeyChecking no
             data_ret = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
+
+    def fixSubdomainLogs(self, request):
+        """Display subdomain log fix interface"""
+        try:
+            currentACL = ACLManager.loadedACL(request.user.pk)
+            admin = ACLManager.loadedAdmin(request.user.pk)
+
+            if ACLManager.currentContextPermission(currentACL, 'websites') == 0:
+                return ACLManager.loadErrorJson('websites', 0)
+
+            return render(request, 'websiteFunctions/fixSubdomainLogs.html', {
+                'acls': currentACL,
+                'admin': admin
+            })
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [fixSubdomainLogs]")
+            return ACLManager.loadErrorJson('websites', 0)
+
+    def fixSubdomainLogsAction(self, request):
+        """Execute subdomain log fix"""
+        try:
+            currentACL = ACLManager.loadedACL(request.user.pk)
+            admin = ACLManager.loadedAdmin(request.user.pk)
+
+            if ACLManager.currentContextPermission(currentACL, 'websites') == 0:
+                return ACLManager.loadErrorJson('websites', 0)
+
+            action = request.POST.get('action')
+            domain = request.POST.get('domain', '').strip()
+            dry_run = request.POST.get('dry_run', 'false').lower() == 'true'
+            create_backup = request.POST.get('create_backup', 'false').lower() == 'true'
+
+            if action == 'fix_all':
+                # Fix all child domains
+                from websiteFunctions.models import ChildDomains
+                child_domains = ChildDomains.objects.all()
+                fixed_count = 0
+                failed_domains = []
+                
+                for child_domain in child_domains:
+                    if self._fix_single_domain_logs(child_domain.domain, dry_run, create_backup):
+                        fixed_count += 1
+                    else:
+                        failed_domains.append(child_domain.domain)
+                
+                if failed_domains:
+                    message = f"Fixed {fixed_count} domains. Failed: {', '.join(failed_domains)}"
+                else:
+                    message = f"Successfully fixed {fixed_count} child domains"
+                    
+                data_ret = {'status': 1, 'message': message}
+                
+            elif action == 'fix_domain' and domain:
+                # Fix specific domain
+                if self._fix_single_domain_logs(domain, dry_run, create_backup):
+                    data_ret = {'status': 1, 'message': f"Successfully fixed logs for {domain}"}
+                else:
+                    data_ret = {'status': 0, 'error_message': f"Failed to fix logs for {domain}"}
+            else:
+                data_ret = {'status': 0, 'error_message': "Invalid action or missing domain"}
+            
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [fixSubdomainLogsAction]")
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def _fix_single_domain_logs(self, domain_name, dry_run=False, create_backup=False):
+        """Fix log configuration for a single domain"""
+        try:
+            import re
+            import shutil
+            from datetime import datetime
+            from websiteFunctions.models import ChildDomains
+            
+            # Get child domain info
+            try:
+                child_domain = ChildDomains.objects.get(domain=domain_name)
+                master_domain = child_domain.master.domain
+                domain_path = child_domain.path
+            except ChildDomains.DoesNotExist:
+                logging.CyberCPLogFileWriter.writeToFile(f'Domain {domain_name} is not a child domain')
+                return False
+            
+            vhost_conf_path = f"/usr/local/lsws/conf/vhosts/{domain_name}/vhost.conf"
+            
+            if not os.path.exists(vhost_conf_path):
+                logging.CyberCPLogFileWriter.writeToFile(f'VHost config not found for {domain_name}')
+                return False
+            
+            # Read current configuration
+            with open(vhost_conf_path, 'r') as f:
+                config_content = f.read()
+            
+            # Check if fix is needed
+            if f'{master_domain}.error_log' not in config_content and f'{master_domain}.access_log' not in config_content:
+                logging.CyberCPLogFileWriter.writeToFile(f'{domain_name} already has correct log configuration')
+                return True
+            
+            if dry_run:
+                logging.CyberCPLogFileWriter.writeToFile(f'[DRY RUN] Would fix log paths for {domain_name}')
+                return True
+            
+            # Create backup if requested
+            if create_backup:
+                backup_path = f"{vhost_conf_path}.backup.{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                shutil.copy2(vhost_conf_path, backup_path)
+                logging.CyberCPLogFileWriter.writeToFile(f'Created backup: {backup_path}')
+            
+            # Fix the configuration
+            fixed_content = config_content
+            
+            # Fix error log path
+            fixed_content = re.sub(
+                rf'errorlog\s+\$VH_ROOT/logs/{re.escape(master_domain)}\.error_log',
+                f'errorlog $VH_ROOT/logs/{domain_name}.error_log',
+                fixed_content
+            )
+            
+            # Fix access log path
+            fixed_content = re.sub(
+                rf'accesslog\s+\$VH_ROOT/logs/{re.escape(master_domain)}\.access_log',
+                f'accesslog $VH_ROOT/logs/{domain_name}.access_log',
+                fixed_content
+            )
+            
+            # Fix CustomLog paths (for Apache configurations)
+            fixed_content = re.sub(
+                rf'CustomLog\s+/home/{re.escape(master_domain)}/logs/{re.escape(master_domain)}\.access_log',
+                f'CustomLog /home/{domain_name}/logs/{domain_name}.access_log',
+                fixed_content
+            )
+            
+            # Write the fixed configuration
+            with open(vhost_conf_path, 'w') as f:
+                f.write(fixed_content)
+            
+            # Set proper ownership
+            ProcessUtilities.executioner(f'chown lsadm:lsadm {vhost_conf_path}')
+            
+            # Create the log directory if it doesn't exist
+            log_dir = f"/home/{master_domain}/logs"
+            if not os.path.exists(log_dir):
+                os.makedirs(log_dir, exist_ok=True)
+                ProcessUtilities.executioner(f'chown -R {child_domain.master.externalApp}:{child_domain.master.externalApp} {log_dir}')
+            
+            # Create separate log files for the child domain
+            error_log_path = f"{log_dir}/{domain_name}.error_log"
+            access_log_path = f"{log_dir}/{domain_name}.access_log"
+            
+            # Create empty log files if they don't exist
+            for log_path in [error_log_path, access_log_path]:
+                if not os.path.exists(log_path):
+                    with open(log_path, 'w') as f:
+                        f.write('')
+                    ProcessUtilities.executioner(f'chown {child_domain.master.externalApp}:{child_domain.master.externalApp} {log_path}')
+                    ProcessUtilities.executioner(f'chmod 644 {log_path}')
+            
+            # Restart LiteSpeed to apply changes
+            ProcessUtilities.executioner('systemctl restart lsws')
+            
+            logging.CyberCPLogFileWriter.writeToFile(f'Fixed subdomain log configuration for {domain_name}')
+            return True
+            
+        except Exception as e:
+            logging.CyberCPLogFileWriter.writeToFile(f'Error fixing subdomain logs for {domain_name}: {str(e)}')
+            return False
 

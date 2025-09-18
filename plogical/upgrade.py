@@ -2612,6 +2612,156 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
             pass
 
     @staticmethod
+    def fixSubdomainLogConfigurations():
+        """Fix subdomain log configurations during upgrade"""
+        try:
+            # Check if this fix has already been applied
+            fix_marker_file = '/usr/local/lscp/logs/subdomain_log_fix_applied'
+            if os.path.exists(fix_marker_file):
+                Upgrade.stdOut("Subdomain log fix already applied - skipping")
+                return
+            
+            Upgrade.stdOut("=== FIXING SUBDOMAIN LOG CONFIGURATIONS ===")
+            
+            # Import required modules
+            import sys
+            import os
+            sys.path.append('/usr/local/CyberCP')
+            os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
+            
+            try:
+                import django
+                django.setup()
+                
+                from websiteFunctions.models import ChildDomains
+                from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+                from plogical.processUtilities import ProcessUtilities
+                import re
+                import shutil
+                from datetime import datetime
+                
+                # Get all child domains
+                child_domains = ChildDomains.objects.all()
+                
+                if not child_domains:
+                    Upgrade.stdOut("No child domains found - skipping subdomain log fix")
+                    return
+                
+                Upgrade.stdOut(f"Found {len(child_domains)} child domains to check")
+                
+                fixed_count = 0
+                skipped_count = 0
+                
+                for child_domain in child_domains:
+                    domain_name = child_domain.domain
+                    master_domain = child_domain.master.domain
+                    
+                    vhost_conf_path = f"/usr/local/lsws/conf/vhosts/{domain_name}/vhost.conf"
+                    
+                    if not os.path.exists(vhost_conf_path):
+                        Upgrade.stdOut(f"⚠️  Skipping {domain_name}: vHost config not found")
+                        skipped_count += 1
+                        continue
+                    
+                    try:
+                        # Read current configuration
+                        with open(vhost_conf_path, 'r') as f:
+                            config_content = f.read()
+                        
+                        # Check if fix is needed
+                        if f'{master_domain}.error_log' not in config_content and f'{master_domain}.access_log' not in config_content:
+                            Upgrade.stdOut(f"✅ {domain_name}: Already has correct log configuration")
+                            skipped_count += 1
+                            continue
+                        
+                        # Create backup
+                        backup_path = f"{vhost_conf_path}.backup.{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                        shutil.copy2(vhost_conf_path, backup_path)
+                        
+                        # Fix the configuration
+                        fixed_content = config_content
+                        
+                        # Fix error log path
+                        fixed_content = re.sub(
+                            rf'errorlog\s+\$VH_ROOT/logs/{re.escape(master_domain)}\.error_log',
+                            f'errorlog $VH_ROOT/logs/{domain_name}.error_log',
+                            fixed_content
+                        )
+                        
+                        # Fix access log path
+                        fixed_content = re.sub(
+                            rf'accesslog\s+\$VH_ROOT/logs/{re.escape(master_domain)}\.access_log',
+                            f'accesslog $VH_ROOT/logs/{domain_name}.access_log',
+                            fixed_content
+                        )
+                        
+                        # Fix CustomLog paths (for Apache configurations)
+                        fixed_content = re.sub(
+                            rf'CustomLog\s+/home/{re.escape(master_domain)}/logs/{re.escape(master_domain)}\.access_log',
+                            f'CustomLog /home/{domain_name}/logs/{domain_name}.access_log',
+                            fixed_content
+                        )
+                        
+                        # Write the fixed configuration
+                        with open(vhost_conf_path, 'w') as f:
+                            f.write(fixed_content)
+                        
+                        # Set proper ownership
+                        ProcessUtilities.executioner(f'chown lsadm:lsadm {vhost_conf_path}')
+                        
+                        # Create the log directory if it doesn't exist
+                        log_dir = f"/home/{master_domain}/logs"
+                        if not os.path.exists(log_dir):
+                            os.makedirs(log_dir, exist_ok=True)
+                            ProcessUtilities.executioner(f'chown -R {child_domain.master.externalApp}:{child_domain.master.externalApp} {log_dir}')
+                        
+                        # Create separate log files for the child domain
+                        error_log_path = f"{log_dir}/{domain_name}.error_log"
+                        access_log_path = f"{log_dir}/{domain_name}.access_log"
+                        
+                        # Create empty log files if they don't exist
+                        for log_path in [error_log_path, access_log_path]:
+                            if not os.path.exists(log_path):
+                                with open(log_path, 'w') as f:
+                                    f.write('')
+                                ProcessUtilities.executioner(f'chown {child_domain.master.externalApp}:{child_domain.master.externalApp} {log_path}')
+                                ProcessUtilities.executioner(f'chmod 644 {log_path}')
+                        
+                        Upgrade.stdOut(f"✅ Fixed log configuration for {domain_name}")
+                        logging.writeToFile(f'Fixed subdomain log configuration for {domain_name} during upgrade')
+                        fixed_count += 1
+                        
+                    except Exception as e:
+                        Upgrade.stdOut(f"❌ Failed to fix {domain_name}: {str(e)}")
+                        logging.writeToFile(f'Error fixing subdomain logs for {domain_name} during upgrade: {str(e)}')
+                
+                # Restart LiteSpeed to apply changes if any were made
+                if fixed_count > 0:
+                    Upgrade.stdOut("Restarting LiteSpeed to apply log configuration changes...")
+                    ProcessUtilities.executioner('systemctl restart lsws')
+                
+                Upgrade.stdOut(f"=== SUBDOMAIN LOG FIX COMPLETE ===")
+                Upgrade.stdOut(f"Fixed: {fixed_count} domains")
+                Upgrade.stdOut(f"Skipped: {skipped_count} domains")
+                
+                # Create marker file to indicate fix has been applied
+                try:
+                    with open(fix_marker_file, 'w') as f:
+                        f.write(f"Subdomain log fix applied on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+                        f.write(f"Fixed domains: {fixed_count}\n")
+                        f.write(f"Skipped domains: {skipped_count}\n")
+                except:
+                    pass
+                
+            except ImportError as e:
+                Upgrade.stdOut(f"⚠️  Django not available during upgrade: {str(e)}")
+                Upgrade.stdOut("Subdomain log fix will be applied on next CyberPanel restart")
+                
+        except Exception as e:
+            Upgrade.stdOut(f"❌ Error in subdomain log fix: {str(e)}")
+            logging.writeToFile(f'Error in subdomain log fix during upgrade: {str(e)}')
+
+    @staticmethod
     def enableServices():
         try:
             servicePath = '/home/cyberpanel/powerdns'
@@ -4396,6 +4546,9 @@ pm.max_spare_servers = 3
         
         # Fix LiteSpeed configuration files if missing
         Upgrade.fixLiteSpeedConfig()
+        
+        # Fix subdomain log configurations
+        Upgrade.fixSubdomainLogConfigurations()
 
         ### General migrations are not needed any more
 

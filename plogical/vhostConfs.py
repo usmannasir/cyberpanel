@@ -110,13 +110,13 @@ index  {
   indexFiles              index.php, index.html
 }
 
-errorlog $VH_ROOT/logs/{masterDomain}.error_log {
+errorlog $VH_ROOT/logs/{virtualHostName}.error_log {
   useServer               0
   logLevel                WARN
   rollingSize             10M
 }
 
-accesslog $VH_ROOT/logs/{masterDomain}.access_log {
+accesslog $VH_ROOT/logs/{virtualHostName}.access_log {
   useServer               0
   logFormat               "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\""
   logHeaders              5
@@ -204,7 +204,7 @@ context /.well-known/acme-challenge {
     SuexecUserGroup {externalApp} {externalApp}
     DocumentRoot {path}
     Alias /.well-known/acme-challenge /home/{virtualHostName}/public_html/.well-known/acme-challenge
-    CustomLog /home/{masterDomain}/logs/{masterDomain}.access_log combined
+    CustomLog /home/{virtualHostName}/logs/{virtualHostName}.access_log combined
     AddHandler application/x-httpd-php{php} .php .php7 .phtml
     <IfModule LiteSpeed>
         CacheRoot lscache
@@ -474,7 +474,7 @@ pm.max_spare_servers = {pmMaxSpareServers}
     "phpVersion": {php},
     "custom_conf": {
     ServerAdmin {administratorEmail}
-    CustomLog /home/{masterDomain}/logs/{masterDomain}.access_log combined
+    CustomLog /home/{virtualHostName}/logs/{virtualHostName}.access_log combined
     <IfModule LiteSpeed>
         CacheRoot /home/{masterDomain}/lscache
     </IfModule>
@@ -489,7 +489,7 @@ pm.max_spare_servers = {pmMaxSpareServers}
     "phpVersion": {php},
     "custom_conf": {
     ServerAdmin {administratorEmail}
-    CustomLog /home/{masterDomain}/logs/{masterDomain}.access_log combined
+    CustomLog /home/{virtualHostName}/logs/{virtualHostName}.access_log combined
     <IfModule LiteSpeed>
         CacheRoot /home/{masterDomain}/lscache
     </IfModule>
