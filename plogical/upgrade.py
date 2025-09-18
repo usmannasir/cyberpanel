@@ -303,6 +303,9 @@ openEuler20 = 6
 openEuler22 = 7
 Ubuntu22 = 8
 Ubuntu24 = 9
+Debian11 = 10
+Debian12 = 11
+Debian13 = 12
 
 
 class Upgrade:
@@ -312,6 +315,7 @@ class Upgrade:
     CentOSPath = '/etc/redhat-release'
     UbuntuPath = '/etc/lsb-release'
     openEulerPath = '/etc/openEuler-release'
+    DebianPath = '/etc/os-release'
     FromCloud = 0
     SnappyVersion = '2.38.2'
     LogPathNew = '/home/cyberpanel/upgrade_logs'
@@ -395,6 +399,18 @@ class Upgrade:
                 return openEuler20
             elif result.find('22.03') > -1:
                 return openEuler22
+
+        elif os.path.exists(Upgrade.DebianPath):
+            result = open(Upgrade.DebianPath, 'r').read()
+
+            if result.find('Debian GNU/Linux 11') > -1:
+                return Debian11
+            elif result.find('Debian GNU/Linux 12') > -1:
+                return Debian12
+            elif result.find('Debian GNU/Linux 13') > -1:
+                return Debian13
+            else:
+                return Debian11  # Default to Debian 11 for older versions
 
         else:
             result = open(Upgrade.UbuntuPath, 'r').read()
@@ -1654,7 +1670,7 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
             except:
                 pass
 
-            if Upgrade.FindOperatingSytem() == Ubuntu22 or Upgrade.FindOperatingSytem() == Ubuntu24:
+            if Upgrade.FindOperatingSytem() == Ubuntu22 or Upgrade.FindOperatingSytem() == Ubuntu24 or Upgrade.FindOperatingSytem() == Debian11 or Upgrade.FindOperatingSytem() == Debian12 or Upgrade.FindOperatingSytem() == Debian13:
                 ### If ftp not installed then upgrade will fail so this command should not do exit
 
                 command = "sed -i 's/MYSQLCrypt md5/MYSQLCrypt crypt/g' /etc/pure-ftpd/db/mysql.conf"
@@ -3297,7 +3313,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         else:
             # Check other OS versions
             os_info = Upgrade.findOperatingSytem()
-            if os_info in [Ubuntu24, CENTOS8]:
+            if os_info in [Ubuntu24, CENTOS8, Debian13]:
                 php_versions = ['74', '80', '81', '82', '83', '84', '85']
             else:
                 php_versions = ['71', '72', '73', '74', '80', '81', '82', '83', '84', '85']
@@ -3530,7 +3546,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
 
                 command = 'systemctl restart postfix'
                 Upgrade.executioner(command, 0)
-            elif Upgrade.FindOperatingSytem() == Ubuntu20 or Upgrade.FindOperatingSytem() == Ubuntu22 or Upgrade.FindOperatingSytem() == Ubuntu24:
+            elif Upgrade.FindOperatingSytem() == Ubuntu20 or Upgrade.FindOperatingSytem() == Ubuntu22 or Upgrade.FindOperatingSytem() == Ubuntu24 or Upgrade.FindOperatingSytem() == Debian11 or Upgrade.FindOperatingSytem() == Debian12 or Upgrade.FindOperatingSytem() == Debian13:
 
                 debPath = '/etc/apt/sources.list.d/dovecot.list'
                 # writeToFile = open(debPath, 'w')
@@ -4867,7 +4883,7 @@ extprocessor proxyApacheBackendSSL {
             ##
 
             if Upgrade.FindOperatingSytem() == Ubuntu22 or Upgrade.FindOperatingSytem() == Ubuntu24 or Upgrade.FindOperatingSytem() == Ubuntu18 \
-                    or Upgrade.FindOperatingSytem() == Ubuntu20:
+                    or Upgrade.FindOperatingSytem() == Ubuntu20 or Upgrade.FindOperatingSytem() == Debian11 or Upgrade.FindOperatingSytem() == Debian12 or Upgrade.FindOperatingSytem() == Debian13:
 
                 print("Install Quota on Ubuntu")
                 command = 'apt update -y'

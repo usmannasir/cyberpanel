@@ -21,15 +21,17 @@ check_OS() {
 	  Server_OS="AlmaLinux"
 	elif grep -q -E "CloudLinux 7|CloudLinux 8" /etc/os-release ; then
 	  Server_OS="CloudLinux"
-	elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04|Ubuntu 20.10|Ubuntu 22.04" /etc/os-release ; then
+	elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04|Ubuntu 20.10|Ubuntu 22.04|Ubuntu 24.04" /etc/os-release ; then
 	  Server_OS="Ubuntu"
+	elif grep -q -E "Debian GNU/Linux 11|Debian GNU/Linux 12|Debian GNU/Linux 13" /etc/os-release ; then
+	  Server_OS="Debian"
 	elif grep -q -E "Rocky Linux" /etc/os-release ; then
 	  Server_OS="RockyLinux"
 	elif grep -q -E "openEuler 20.03|openEuler 22.03" /etc/os-release ; then
 	  Server_OS="openEuler"
 	else
 	  echo -e "Unable to detect your system..."
-	  echo -e "\nCyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, CentOS 7, CentOS 8, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03...\n"
+	  echo -e "\nCyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Debian 11, Debian 12, Debian 13, CentOS 7, CentOS 8, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03...\n"
   	  exit
 	fi
 
@@ -42,6 +44,9 @@ check_OS() {
 	  Server_OS="CentOS"
   	  #CloudLinux gives version id like 7.8, 7.9, so cut it to show first number only
   	  #treat CloudLinux, Rocky and Alma as CentOS
+	elif [[ "$Server_OS" = "Debian" ]]; then
+	  Server_OS="Ubuntu"
+	  #Treat Debian as Ubuntu for package management (both use apt-get)
 	fi
 
 }

@@ -181,6 +181,7 @@ ubuntu = 0
 centos = 1
 cent8 = 2
 openeuler = 3
+debian = 4
 
 
 def get_distro():
@@ -213,6 +214,16 @@ def get_distro():
             return cent8
         if data.find('CloudLinux 8') or data.find('cloudlinux 8'):
             return cent8
+
+    elif exists("/etc/os-release"):
+        # Check for Debian
+        with open("/etc/os-release") as f:
+            for line in f:
+                if line.startswith("ID="):
+                    if line.strip() == 'ID=debian':
+                        distro = debian
+                        distro_file = "/etc/os-release"
+                        break
 
     else:
         if exists("/etc/openEuler-release"):
@@ -247,7 +258,7 @@ def get_package_install_command(distro, package_name, options=""):
     Returns:
         tuple: (command, shell) where shell indicates if shell=True is needed
     """
-    if distro == ubuntu:
+    if distro == ubuntu or distro == debian:
         command = f"DEBIAN_FRONTEND=noninteractive apt-get -y install {package_name} {options}"
         shell = True
     elif distro == centos:
@@ -271,7 +282,7 @@ def get_package_remove_command(distro, package_name):
     Returns:
         tuple: (command, shell) where shell indicates if shell=True is needed
     """
-    if distro == ubuntu:
+    if distro == ubuntu or distro == debian:
         command = f"DEBIAN_FRONTEND=noninteractive apt-get -y remove {package_name}"
         shell = True
     elif distro == centos:
@@ -295,7 +306,7 @@ def resFailed(distro, res):
     Returns:
         bool: True if failed, False if successful
     """
-    if distro == ubuntu and res != 0:
+    if (distro == ubuntu or distro == debian) and res != 0:
         return True
     elif distro == centos and res != 0:
         return True
