@@ -216,7 +216,20 @@ class MailServerManager(multi.Thread):
                     numberofEmails = 0
                     duration = '0m'
 
-                dic = {'id': count, 'email': items.email, 'DiskUsage': '%sMB' % items.DiskUsage, 'numberofEmails': numberofEmails, 'duration': duration}
+                # Fix disk usage display - ensure it shows proper format
+                disk_usage = items.DiskUsage
+                if not disk_usage or disk_usage == '0' or disk_usage == '0MB':
+                    disk_usage = '0 MB'
+                elif not disk_usage.endswith('MB') and not disk_usage.endswith('GB') and not disk_usage.endswith('KB'):
+                    # If it's just a number, assume it's in MB
+                    try:
+                        # Try to convert to number and add MB suffix
+                        num_value = float(disk_usage)
+                        disk_usage = f"{num_value:.1f} MB"
+                    except:
+                        disk_usage = '0 MB'
+                
+                dic = {'id': count, 'email': items.email, 'DiskUsage': disk_usage, 'numberofEmails': numberofEmails, 'duration': duration}
                 count = count + 1
 
                 if checker == 0:
@@ -576,8 +589,24 @@ class MailServerManager(multi.Thread):
             checker = 0
 
             for items in records:
+                # Fix disk usage display - ensure it shows proper format
+                disk_usage = items.DiskUsage
+                if not disk_usage or disk_usage == '0' or disk_usage == '0MB':
+                    disk_usage = '0 MB'
+                elif not disk_usage.endswith('MB') and not disk_usage.endswith('GB') and not disk_usage.endswith('KB'):
+                    # If it's just a number, assume it's in MB
+                    try:
+                        # Try to convert to number and add MB suffix
+                        num_value = float(disk_usage)
+                        disk_usage = f"{num_value:.1f} MB"
+                    except:
+                        disk_usage = '0 MB'
+                elif disk_usage.endswith('MB'):
+                    # Ensure proper formatting with space
+                    disk_usage = disk_usage.replace('MB', ' MB')
+                
                 dic = {'email': items.email,
-                       'DiskUsage': '%sMB' % items.DiskUsage.rstrip('MB')
+                       'DiskUsage': disk_usage
                        }
 
                 if checker == 0:
@@ -1998,6 +2027,67 @@ protocol sieve {
 
         except BaseException as msg:
             data_ret = {'status': 0, 'createStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def refreshEmailDiskUsage(self):
+        """Refresh disk usage for all email accounts in a domain"""
+        try:
+            userID = self.request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'listEmails') == 0:
+                return ACLManager.loadErrorJson('refreshStatus', 0)
+
+            data = json.loads(self.request.body)
+            domain = data['domain']
+
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            try:
+                emailDomain = Domains.objects.get(domain=domain)
+            except:
+                final_dic = {'status': 0, 'refreshStatus': 0, 'error_message': "No email accounts exist for this domain!"}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
+            # Refresh disk usage for all emails in this domain
+            emails = emailDomain.eusers_set.all()
+            updated_count = 0
+            
+            for email in emails:
+                try:
+                    # Calculate the email path
+                    emailPath = '/home/vmail/%s/%s' % (domain, email.email.split('@')[0])
+                    
+                    # Get updated disk usage
+                    new_disk_usage = virtualHostUtilities.getDiskUsageofPath(emailPath)
+                    
+                    # Update the database
+                    email.DiskUsage = new_disk_usage
+                    email.save()
+                    updated_count += 1
+                    
+                except Exception as e:
+                    logging.CyberCPLogFileWriter.writeToFile(f"Error updating disk usage for {email.email}: {str(e)}")
+                    continue
+
+            final_dic = {
+                'status': 1, 
+                'refreshStatus': 1, 
+                'error_message': "None",
+                'updated_count': updated_count,
+                'message': f"Successfully updated disk usage for {updated_count} email accounts"
+            }
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'refreshStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 

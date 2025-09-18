@@ -1769,9 +1769,31 @@ local_name %s {
     @staticmethod
     def getDiskUsageofPath(path):
         try:
-            return subprocess.check_output('du -hs %s --block-size=1M' % (path), shell=True).decode("utf-8").split()[0]
-        except BaseException:
-            return '0MB'
+            # Check if path exists first
+            if not os.path.exists(path):
+                return '0 MB'
+            
+            # Use du command to get disk usage in MB
+            result = subprocess.check_output('du -sm %s' % (path), shell=True).decode("utf-8").strip()
+            
+            if result:
+                # Extract the number from the result (format: "123\t/path")
+                usage_mb = result.split('\t')[0]
+                try:
+                    # Convert to float and format properly
+                    usage_value = float(usage_mb)
+                    if usage_value < 1:
+                        return '0.1 MB'
+                    else:
+                        return f"{usage_value:.1f} MB"
+                except ValueError:
+                    return '0 MB'
+            else:
+                return '0 MB'
+        except BaseException as e:
+            # Log the error for debugging
+            logging.CyberCPLogFileWriter.writeToFile(f"Error calculating disk usage for {path}: {str(e)}")
+            return '0 MB'
 
     @staticmethod
     def permissionControl(path):
