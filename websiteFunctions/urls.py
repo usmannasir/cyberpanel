@@ -207,5 +207,9 @@ urlpatterns = [
 
     path('get_website_resources/', views.get_website_resources, name='get_website_resources'),
 
+    # Subdomain Log Fix
+    path('fixSubdomainLogs', views.fixSubdomainLogs, name='fixSubdomainLogs'),
+    path('fixSubdomainLogsAction', views.fixSubdomainLogsAction, name='fixSubdomainLogsAction'),
+
     
 ]
