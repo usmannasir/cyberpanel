@@ -1345,6 +1345,63 @@ app.controller('listEmails', function ($scope, $http) {
 
 
     };
+
+    $scope.refreshDiskUsage = function () {
+        if (!$scope.selectedDomain) {
+            new PNotify({
+                title: 'Warning!',
+                text: 'Please select a domain first.',
+                type: 'warning'
+            });
+            return;
+        }
+
+        $scope.cyberpanelLoading = true;
+
+        var url = "/email/refreshEmailDiskUsage";
+
+        var data = {
+            domain: $scope.selectedDomain,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(refreshSuccess, refreshError);
+
+        function refreshSuccess(response) {
+            $scope.cyberpanelLoading = false;
+            
+            if (response.data.refreshStatus === 1) {
+                // Refresh the email list to show updated disk usage
+                $scope.populateCurrentRecords();
+                
+                new PNotify({
+                    title: 'Success!',
+                    text: response.data.message || 'Disk usage refreshed successfully.',
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message || 'Failed to refresh disk usage.',
+                    type: 'error'
+                });
+            }
+        }
+
+        function refreshError(response) {
+            $scope.cyberpanelLoading = false;
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+        }
+    };
 });
 
 

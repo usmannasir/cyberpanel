@@ -262,5 +262,14 @@ def SaveEmailLimitsNew(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+def refreshEmailDiskUsage(request):
+    try:
+        msM = MailServerManager(request)
+        return msM.refreshEmailDiskUsage()
+    except KeyError as msg:
+        data_ret = {'refreshStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
 
 
