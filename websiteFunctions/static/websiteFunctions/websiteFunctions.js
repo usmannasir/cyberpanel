@@ -11355,6 +11355,58 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
 
     };
 
+    $scope.resetVHostToDefault = function () {
+        // Show confirmation dialog
+        if (confirm('Are you sure you want to reset the vHost configuration to default? This will overwrite your current configuration and cannot be undone.')) {
+            $scope.configFileLoading = false;
+
+            url = "/websites/resetVHostConfigToDefault";
+
+            var virtualHost = $("#domainNamePage").text();
+
+            var data = {
+                virtualHost: virtualHost
+            };
+
+            var config = {
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            };
+
+            $http.post(url, data, config).then(resetVHostSuccess, resetVHostError);
+        }
+    };
+
+    function resetVHostSuccess(response) {
+        $scope.configFileLoading = true;
+        if (response.data.configstatus === 1) {
+            new PNotify({
+                title: 'Success',
+                text: response.data.message || 'vHost configuration reset to default successfully.',
+                type: 'success'
+            });
+            
+            // Refresh the configuration display
+            $scope.fetchConfigs();
+        } else {
+            new PNotify({
+                title: 'Operation Failed!',
+                text: response.data.error_message || 'Failed to reset configuration.',
+                type: 'error'
+            });
+        }
+    }
+
+    function resetVHostError(response) {
+        $scope.configFileLoading = true;
+        new PNotify({
+            title: 'Operation Failed!',
+            text: 'Could not connect to server, please refresh this page.',
+            type: 'error'
+        });
+    }
+
     $scope.saveCongiruations = function () {
 
         $scope.configFileLoading = false;
@@ -17260,6 +17312,56 @@ app.controller('ApacheManager', function ($scope, $http, $timeout) {
 
 
     };
+
+    $scope.resetApacheToDefault = function () {
+        // Show confirmation dialog
+        if (confirm('Are you sure you want to reset the Apache configuration to default? This will overwrite your current configuration and cannot be undone.')) {
+            $scope.cyberpanelloading = false;
+
+            url = "/websites/resetApacheConfigToDefault";
+
+            var data = {
+                domainName: $("#domainNamePage").text()
+            };
+
+            var config = {
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            };
+
+            $http.post(url, data, config).then(resetApacheSuccess, resetApacheError);
+        }
+    };
+
+    function resetApacheSuccess(response) {
+        $scope.cyberpanelloading = true;
+        if (response.data.status === 1) {
+            new PNotify({
+                title: 'Success',
+                text: response.data.message || 'Apache configuration reset to default successfully.',
+                type: 'success'
+            });
+            
+            // Refresh the configuration display
+            $scope.fetchApacheConfigs();
+        } else {
+            new PNotify({
+                title: 'Operation Failed!',
+                text: response.data.error_message || 'Failed to reset Apache configuration.',
+                type: 'error'
+            });
+        }
+    }
+
+    function resetApacheError(response) {
+        $scope.cyberpanelloading = true;
+        new PNotify({
+            title: 'Operation Failed!',
+            text: 'Could not connect to server, please refresh this page.',
+            type: 'error'
+        });
+    }
 
     $scope.saveApacheConfig = function () {
         $scope.cyberpanelloading = false;

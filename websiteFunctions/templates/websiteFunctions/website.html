@@ -2029,9 +2029,15 @@
 
                                 <div ng-hide="saveConfigBtn" class="form-group">
                                     <label class="col-sm-3 control-label"></label>
-                                    <div class="col-sm-4">
+                                    <div class="col-sm-8">
                                         <button type="button" ng-click="saveCongiruations()"
-                                                class="btn btn-primary btn-lg">{% trans "Save" %}</button>
+                                                class="btn btn-primary btn-lg">
+                                            <i class="fas fa-save"></i> {% trans "Save" %}
+                                        </button>
+                                        <button type="button" ng-click="resetVHostToDefault()"
+                                                class="btn btn-warning btn-lg" style="margin-left: 10px;">
+                                            <i class="fas fa-undo"></i> {% trans "Reset to Default" %}
+                                        </button>
                                     </div>
                                 </div>
                             </form>

@@ -3902,6 +3902,91 @@ context /cyberpanel_suspension_page.html {
         final_json = json.dumps(status)
         return HttpResponse(final_json)
 
+    def resetVHostConfigToDefault(self, userID=None, data=None):
+        """Reset vHost configuration to default template"""
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] != 1:
+            return ACLManager.loadErrorJson('configstatus', 0)
+
+        virtualHost = data['virtualHost']
+        self.domain = virtualHost
+
+        try:
+            # Get the default vHost configuration template
+            from plogical import vhostConfs
+            
+            # Determine if it's a child domain or main domain
+            try:
+                child_domain = ChildDomains.objects.get(domain=virtualHost)
+                is_child = True
+                master_domain = child_domain.master.domain
+                admin_email = child_domain.master.adminEmail if child_domain.master.adminEmail else child_domain.master.admin.email
+                path = child_domain.path
+            except:
+                is_child = False
+                try:
+                    website = Websites.objects.get(domain=virtualHost)
+                    admin_email = website.adminEmail if website.adminEmail else website.admin.email
+                except:
+                    admin_email = "admin@" + virtualHost
+
+            # Generate default configuration based on server type
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                if is_child:
+                    # Use child domain template
+                    default_config = vhostConfs.olsChildConf
+                    default_config = default_config.replace('{path}', path)
+                    default_config = default_config.replace('{masterDomain}', master_domain)
+                    default_config = default_config.replace('{adminEmails}', admin_email)
+                    default_config = default_config.replace('{externalApp}', "".join(re.findall("[a-zA-Z]+", virtualHost))[:5] + str(randint(1000, 9999)))
+                    default_config = default_config.replace('{externalAppMaster}', "".join(re.findall("[a-zA-Z]+", master_domain))[:5] + str(randint(1000, 9999)))
+                    default_config = default_config.replace('{php}', '8.1')  # Default PHP version
+                    default_config = default_config.replace('{open_basedir}', '')  # Default open_basedir setting
+                else:
+                    # Use main domain template
+                    default_config = vhostConfs.olsMasterConf
+                    default_config = default_config.replace('{virtualHostName}', virtualHost)
+                    default_config = default_config.replace('{administratorEmail}', admin_email)
+                    default_config = default_config.replace('{externalApp}', "".join(re.findall("[a-zA-Z]+", virtualHost))[:5] + str(randint(1000, 9999)))
+                    default_config = default_config.replace('{php}', '8.1')  # Default PHP version
+            else:
+                # For other server types, use basic template
+                default_config = f"""# Default vHost Configuration for {virtualHost}
+# Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+# Basic configuration
+# Add your custom configuration here
+"""
+
+            # Save the default configuration
+            mailUtilities.checkHome()
+            tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+            
+            vhost = open(tempPath, "w")
+            vhost.write(default_config)
+            vhost.close()
+
+            filePath = installUtilities.Server_root_path + "/conf/vhosts/" + virtualHost + "/vhost.conf"
+
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = execPath + " saveVHostConfigs --path " + filePath + " --tempPath " + tempPath
+
+            output = ProcessUtilities.outputExecutioner(execPath)
+
+            if output.find("1,None") > -1:
+                status = {"configstatus": 1, "message": "vHost configuration reset to default successfully."}
+            else:
+                status = {"configstatus": 0, "error_message": f"Failed to reset configuration: {output}"
+
+            final_json = json.dumps(status)
+            return HttpResponse(final_json)
+
+        except Exception as e:
+            status = {"configstatus": 0, "error_message": f"Error resetting configuration: {str(e)}"}
+            final_json = json.dumps(status)
+            return HttpResponse(final_json)
+
     def saveConfigsToFile(self, userID=None, data=None):
 
         currentACL = ACLManager.loadedACL(userID)
@@ -7431,6 +7516,84 @@ StrictHostKeyChecking no
         proc = httpProc(request, 'websiteFunctions/ApacheManager.html',
                         {'domainName': self.domain, 'phps': phps, 'apachemanager': apachemanager, 'apachePHPs': apachePHPs})
         return proc.render()
+
+    def resetApacheConfigToDefault(self, userID=None, data=None):
+        """Reset Apache configuration to default template"""
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] != 1:
+            return ACLManager.loadErrorJson('configstatus', 0)
+
+        domainName = data['domainName']
+        self.domain = domainName
+
+        try:
+            # Get the default Apache configuration template
+            from plogical import vhostConfs
+            
+            # Determine if it's a child domain or main domain
+            try:
+                child_domain = ChildDomains.objects.get(domain=domainName)
+                is_child = True
+                master_domain = child_domain.master.domain
+                admin_email = child_domain.master.adminEmail if child_domain.master.adminEmail else child_domain.master.admin.email
+                path = child_domain.path
+            except:
+                is_child = False
+                try:
+                    website = Websites.objects.get(domain=domainName)
+                    admin_email = website.adminEmail if website.adminEmail else website.admin.email
+                except:
+                    admin_email = "admin@" + domainName
+
+            # Generate default Apache configuration
+            if is_child:
+                # Use child domain Apache template
+                default_config = vhostConfs.apacheConfChild
+                default_config = default_config.replace('{virtualHostName}', domainName)
+                default_config = default_config.replace('{administratorEmail}', admin_email)
+                default_config = default_config.replace('{php}', '8.1')  # Default PHP version
+                default_config = default_config.replace('{adminEmails}', admin_email)
+                default_config = default_config.replace('{externalApp}', "".join(re.findall("[a-zA-Z]+", domainName))[:5] + str(randint(1000, 9999)))
+                default_config = default_config.replace('{path}', path)
+                default_config = default_config.replace('{sockPath}', '/var/run/php/')  # Default socket path
+            else:
+                # Use main domain Apache template
+                default_config = vhostConfs.apacheConf
+                default_config = default_config.replace('{virtualHostName}', domainName)
+                default_config = default_config.replace('{administratorEmail}', admin_email)
+                default_config = default_config.replace('{php}', '8.1')  # Default PHP version
+                default_config = default_config.replace('{adminEmails}', admin_email)
+                default_config = default_config.replace('{externalApp}', "".join(re.findall("[a-zA-Z]+", domainName))[:5] + str(randint(1000, 9999)))
+                default_config = default_config.replace('{sockPath}', '/var/run/php/')  # Default socket path
+
+            # Save the default configuration
+            mailUtilities.checkHome()
+            tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+            
+            vhost = open(tempPath, "w")
+            vhost.write(default_config)
+            vhost.close()
+
+            filePath = ApacheVhost.configBasePath + domainName + '.conf'
+
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = execPath + " saveApacheConfigsToFile --path " + filePath + " --tempPath " + tempPath
+
+            output = ProcessUtilities.outputExecutioner(execPath)
+
+            if output.find("1,None") > -1:
+                status = {"status": 1, "message": "Apache configuration reset to default successfully."}
+            else:
+                status = {"status": 0, "error_message": f"Failed to reset Apache configuration: {output}"
+
+            final_json = json.dumps(status)
+            return HttpResponse(final_json)
+
+        except Exception as e:
+            status = {"status": 0, "error_message": f"Error resetting Apache configuration: {str(e)}"}
+            final_json = json.dumps(status)
+            return HttpResponse(final_json)
 
     def saveApacheConfigsToFile(self, userID=None, data=None):
 
