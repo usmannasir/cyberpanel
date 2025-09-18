@@ -722,6 +722,10 @@
                         <i class="fas fa-save"></i>
                         {% trans "Save Changes" %}
                     </button>
+                    <button type="button" ng-click="resetPHPBasicToDefault()" class="btn btn-warning">
+                        <i class="fas fa-undo"></i>
+                        {% trans "Reset to Default" %}
+                    </button>
                     <button type="button" ng-click="restartPHP()" class="btn btn-restart">
                         <i class="fas fa-sync-alt"></i>
                         {% trans "Restart PHP" %}
@@ -796,6 +800,10 @@
                     <button type="button" ng-click="saveChangesAdvance()" class="btn btn-primary">
                         <i class="fas fa-save"></i>
                         {% trans "Save Changes" %}
+                    </button>
+                    <button type="button" ng-click="resetPHPAdvanceToDefault()" class="btn btn-warning">
+                        <i class="fas fa-undo"></i>
+                        {% trans "Reset to Default" %}
                     </button>
                     <button type="button" ng-click="restartPHP()" class="btn btn-restart">
                         <i class="fas fa-sync-alt"></i>

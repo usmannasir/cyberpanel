@@ -404,6 +404,67 @@ app.controller('editPHPConfig', function ($scope, $http, $timeout) {
 
     };
 
+    $scope.resetPHPBasicToDefault = function () {
+        // Show confirmation dialog
+        if (confirm('Are you sure you want to reset the PHP basic configuration to default? This will overwrite your current settings and cannot be undone.')) {
+            $scope.loadingPHP = false;
+
+            var phpSelection = $scope.phpSelection;
+
+            var queryString = window.location.search;
+            var searchParams = new URLSearchParams(queryString);
+
+            var param3Value = searchParams.get('apache');
+            if (param3Value === null) {
+                url = "/managephp/resetPHPConfigBasicToDefault";
+                console.log('Nothing found')
+            } else {
+                url = "/managephp/resetPHPConfigBasicToDefault?apache=apache";
+            }
+
+            var data = {
+                phpSelection: phpSelection
+            };
+
+            var config = {
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            };
+
+            $http.post(url, data, config).then(resetPHPBasicSuccess, resetPHPBasicError);
+        }
+    };
+
+    function resetPHPBasicSuccess(response) {
+        $scope.loadingPHP = true;
+        if (response.data.saveStatus === 1) {
+            new PNotify({
+                title: 'Success',
+                text: response.data.message || 'PHP basic configuration reset to default successfully.',
+                type: 'success'
+            });
+            
+            // Refresh the configuration display
+            $scope.fetchPHPDetails();
+        } else {
+            new PNotify({
+                title: 'Operation Failed!',
+                text: response.data.error_message || 'Failed to reset PHP configuration.',
+                type: 'error'
+            });
+        }
+    }
+
+    function resetPHPBasicError(response) {
+        $scope.loadingPHP = true;
+        new PNotify({
+            title: 'Operation Failed!',
+            text: 'Could not connect to server, please refresh this page.',
+            type: 'error'
+        });
+    }
+
     $scope.saveChanges = function () {
 
         $scope.loadingPHP = false;
@@ -543,6 +604,67 @@ app.controller('editPHPConfig', function ($scope, $http, $timeout) {
         }
 
     };
+
+    $scope.resetPHPAdvanceToDefault = function () {
+        // Show confirmation dialog
+        if (confirm('Are you sure you want to reset the PHP advanced configuration to default? This will overwrite your current php.ini file and cannot be undone.')) {
+            $scope.loadingPHP = false;
+
+            var phpSelection = $scope.phpSelection;
+
+            var queryString = window.location.search;
+            var searchParams = new URLSearchParams(queryString);
+
+            var param3Value = searchParams.get('apache');
+            if (param3Value === null) {
+                url = "/managephp/resetPHPConfigAdvanceToDefault";
+                console.log('Nothing found')
+            } else {
+                url = "/managephp/resetPHPConfigAdvanceToDefault?apache=apache";
+            }
+
+            var data = {
+                phpSelection: phpSelection
+            };
+
+            var config = {
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            };
+
+            $http.post(url, data, config).then(resetPHPAdvanceSuccess, resetPHPAdvanceError);
+        }
+    };
+
+    function resetPHPAdvanceSuccess(response) {
+        $scope.loadingPHP = true;
+        if (response.data.saveStatus === 1) {
+            new PNotify({
+                title: 'Success',
+                text: response.data.message || 'PHP advanced configuration reset to default successfully.',
+                type: 'success'
+            });
+            
+            // Refresh the configuration display
+            $scope.fetchAdvancePHPDetails();
+        } else {
+            new PNotify({
+                title: 'Operation Failed!',
+                text: response.data.error_message || 'Failed to reset PHP advanced configuration.',
+                type: 'error'
+            });
+        }
+    }
+
+    function resetPHPAdvanceError(response) {
+        $scope.loadingPHP = true;
+        new PNotify({
+            title: 'Operation Failed!',
+            text: 'Could not connect to server, please refresh this page.',
+            type: 'error'
+        });
+    }
 
     $scope.saveChangesAdvance = function () {
 

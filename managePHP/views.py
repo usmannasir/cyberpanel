@@ -1782,6 +1782,77 @@ def getCurrentPHPConfig(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def resetPHPConfigBasicToDefault(request):
+    """Reset PHP basic configuration to default values"""
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('saveStatus', 0)
+        
+        try:
+            if request.method == 'POST':
+                data = json.loads(request.body)
+                phpVers = data['phpSelection']
+                
+                # Default PHP configuration values
+                default_config = {
+                    'allow_url_fopen': True,
+                    'display_errors': False,
+                    'file_uploads': True,
+                    'allow_url_include': False,
+                    'memory_limit': '128M',
+                    'max_execution_time': '30',
+                    'upload_max_filesize': '2M',
+                    'max_input_time': '60',
+                    'post_max_size': '8M'
+                }
+                
+                # Convert boolean values to PHP format
+                allow_url_fopen = "allow_url_fopen = On" if default_config['allow_url_fopen'] else "allow_url_fopen = Off"
+                display_errors = "display_errors = On" if default_config['display_errors'] else "display_errors = Off"
+                file_uploads = "file_uploads = On" if default_config['file_uploads'] else "file_uploads = Off"
+                allow_url_include = "allow_url_include = On" if default_config['allow_url_include'] else "allow_url_include = Off"
+                memory_limit = default_config['memory_limit']
+                max_execution_time = default_config['max_execution_time']
+                upload_max_filesize = default_config['upload_max_filesize']
+                max_input_time = default_config['max_input_time']
+                post_max_size = default_config['post_max_size']
+
+                # Check if Apache mode
+                if request.GET.get('apache', None) == None:
+                    apache = 0
+                else:
+                    apache = 1
+
+                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
+                execPath = execPath + " savePHPConfigBasic --phpVers '" + phpVers + "' --allow_url_fopen '" + allow_url_fopen +\
+                           "' --display_errors '" + display_errors + "' --file_uploads '" + file_uploads + "' --allow_url_include '" \
+                           + allow_url_include + "' --memory_limit " + memory_limit + " --max_execution_time " + \
+                           max_execution_time + " --upload_max_filesize " + upload_max_filesize \
+                           + " --max_input_time " + max_input_time + " --post_max_size " + post_max_size + f" --apache {str(apache)}"
+
+                output = ProcessUtilities.outputExecutioner(execPath)
+
+                if output.find("1,None") > -1:
+                    data_ret = {'saveStatus': 1, 'message': 'PHP configuration reset to default successfully.'}
+                    final_json = json.dumps(data_ret)
+                    return HttpResponse(final_json)
+                else:
+                    final_dic = {'saveStatus': 0, 'error_message': f'Failed to reset PHP configuration: {output}'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'saveStatus': 0, 'error_message': f'Error resetting PHP configuration: {str(msg)}'}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError:
+        return redirect(loadLoginPage)
+
 def savePHPConfigBasic(request):
     try:
         userID = request.session['userID']
@@ -1899,6 +1970,160 @@ def getCurrentAdvancedPHPConfig(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
+def resetPHPConfigAdvanceToDefault(request):
+    """Reset PHP advanced configuration to default values"""
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('saveStatus', 0)
+
+        if request.method == 'POST':
+            try:
+                data = json.loads(request.body)
+                phpVers = data['phpSelection']
+
+                # Generate default PHP configuration
+                default_config = f"""; PHP Configuration File
+; Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+[PHP]
+; Basic Settings
+engine = On
+short_open_tag = Off
+precision = 14
+output_buffering = 4096
+zlib.output_compression = Off
+implicit_flush = Off
+unserialize_callback_func =
+serialize_precision = -1
+disable_functions =
+disable_classes =
+zend.enable_gc = On
+
+; Resource Limits
+max_execution_time = 30
+max_input_time = 60
+memory_limit = 128M
+
+; Error handling and logging
+error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT
+display_errors = Off
+display_startup_errors = Off
+log_errors = On
+log_errors_max_len = 1024
+ignore_repeated_errors = Off
+ignore_repeated_source = Off
+report_memleaks = On
+track_errors = Off
+html_errors = On
+error_log = /var/log/php_errors.log
+
+; Data Handling
+variables_order = "GPCS"
+request_order = "GP"
+register_argc_argv = Off
+auto_globals_jit = On
+post_max_size = 8M
+auto_prepend_file =
+auto_append_file =
+default_mimetype = "text/html"
+default_charset = "UTF-8"
+
+; File Uploads
+file_uploads = On
+upload_max_filesize = 2M
+max_file_uploads = 20
+
+; Fopen wrappers
+allow_url_fopen = On
+allow_url_include = Off
+default_socket_timeout = 60
+
+; Dynamic Extensions
+extension_dir = "/usr/lib/php/"
+
+; Module Settings
+[Date]
+date.timezone = UTC
+
+[Session]
+session.save_handler = files
+session.save_path = "/var/lib/php/sessions"
+session.use_strict_mode = 0
+session.use_cookies = 1
+session.use_only_cookies = 1
+session.name = PHPSESSID
+session.auto_start = 0
+session.cookie_lifetime = 0
+session.cookie_path = /
+session.cookie_domain =
+session.cookie_httponly =
+session.serialize_handler = php
+session.gc_probability = 1
+session.gc_divisor = 1000
+session.gc_maxlifetime = 1440
+session.referer_check =
+session.cache_limiter = nocache
+session.cache_expire = 180
+session.use_trans_sid = 0
+session.bug_compat_42 = Off
+session.bug_compat_warn = Off
+session.hash_function = 0
+session.hash_bits_per_character = 5
+session.entropy_length = 0
+session.entropy_file =
+session.cookie_secure = 0
+session.cookie_samesite =
+session.sid_length = 26
+session.trans_sid_tags = "a=href,area=href,frame=src,form="
+session.sid_bits_per_character = 5
+
+[OPcache]
+opcache.enable = 1
+opcache.enable_cli = 0
+opcache.memory_consumption = 128
+opcache.interned_strings_buffer = 8
+opcache.max_accelerated_files = 4000
+opcache.revalidate_freq = 2
+opcache.fast_shutdown = 1
+"""
+
+                from ApachController.ApacheVhosts import ApacheVhost
+                path = ApacheVhost.DecidePHPPathforManager(request.GET.get('apache', None), phpVers)
+
+                tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+                vhost = open(tempPath, "w")
+                vhost.write(default_config)
+                vhost.close()
+
+                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
+                execPath = execPath + " savePHPConfigAdvance --phpVers " + path + " --tempPath " + tempPath
+
+                output = ProcessUtilities.outputExecutioner(execPath)
+
+                if output.find("1,None") > -1:
+                    status = {"saveStatus": 1, "message": "PHP advanced configuration reset to default successfully."}
+                    final_json = json.dumps(status)
+                    return HttpResponse(final_json)
+                else:
+                    data_ret = {'saveStatus': 0, 'error_message': f'Failed to reset PHP advanced configuration: {output}'}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+            except BaseException as msg:
+                data_ret = {'saveStatus': 0, 'error_message': f'Error resetting PHP advanced configuration: {str(msg)}'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+    except KeyError as msg:
+        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[resetPHPConfigAdvanceToDefault]")
+        return redirect(loadLoginPage)
 
 def savePHPConfigAdvance(request):
     try:

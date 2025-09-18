@@ -10,7 +10,9 @@ urlpatterns = [
     path('editPHPConfigs', views.editPHPConfigs, name='editPHPConfigs'),
     path('getCurrentPHPConfig', views.getCurrentPHPConfig, name='getCurrentPHPConfig'),
     path('savePHPConfigBasic', views.savePHPConfigBasic, name='savePHPConfigBasic'),
+    path('resetPHPConfigBasicToDefault', views.resetPHPConfigBasicToDefault, name='resetPHPConfigBasicToDefault'),
     path('getCurrentAdvancedPHPConfig', views.getCurrentAdvancedPHPConfig, name='getCurrentAdvancedPHPConfig'),
     path('savePHPConfigAdvance', views.savePHPConfigAdvance, name='savePHPConfigAdvance'),
+    path('resetPHPConfigAdvanceToDefault', views.resetPHPConfigAdvanceToDefault, name='resetPHPConfigAdvanceToDefault'),
     path('restartPHP', views.restartPHP, name='restartPHP'),
 ]
