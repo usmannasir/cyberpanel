@@ -127,6 +127,54 @@ app.controller('runContainer', function ($scope, $http) {
     
     // Advanced Environment Variable Mode
     $scope.advancedEnvMode = false;
+
+    // Helper function to generate Docker Compose YAML
+    $scope.generateDockerComposeYml = function(containerInfo) {
+        var yml = 'version: \'3.8\'\n\n';
+        yml += 'services:\n';
+        yml += '  ' + containerInfo.name + ':\n';
+        yml += '    image: ' + containerInfo.image + '\n';
+        yml += '    container_name: ' + containerInfo.name + '\n';
+        
+        // Add ports
+        var ports = Object.keys(containerInfo.ports);
+        if (ports.length > 0) {
+            yml += '    ports:\n';
+            for (var i = 0; i < ports.length; i++) {
+                var port = ports[i];
+                if (containerInfo.ports[port]) {
+                    yml += '      - "' + containerInfo.ports[port] + ':' + port + '"\n';
+                }
+            }
+        }
+        
+        // Add volumes
+        var volumes = Object.keys(containerInfo.volumes);
+        if (volumes.length > 0) {
+            yml += '    volumes:\n';
+            for (var i = 0; i < volumes.length; i++) {
+                var volume = volumes[i];
+                if (containerInfo.volumes[volume]) {
+                    yml += '      - ' + containerInfo.volumes[volume] + ':' + volume + '\n';
+                }
+            }
+        }
+        
+        // Add environment variables
+        var envVars = Object.keys(containerInfo.environment);
+        if (envVars.length > 0) {
+            yml += '    environment:\n';
+            for (var i = 0; i < envVars.length; i++) {
+                var envVar = envVars[i];
+                yml += '      - ' + envVar + '=' + containerInfo.environment[envVar] + '\n';
+            }
+        }
+        
+        // Add restart policy
+        yml += '    restart: unless-stopped\n';
+        
+        return yml;
+    };
     $scope.advancedEnvText = '';
     $scope.advancedEnvCount = 0;
     $scope.parsedEnvVars = {};
@@ -273,53 +321,6 @@ app.controller('runContainer', function ($scope, $http) {
         }
     };
 
-    // Helper function to generate Docker Compose YAML
-    function generateDockerComposeYml(containerInfo) {
-        var yml = 'version: \'3.8\'\n\n';
-        yml += 'services:\n';
-        yml += '  ' + containerInfo.name + ':\n';
-        yml += '    image: ' + containerInfo.image + '\n';
-        yml += '    container_name: ' + containerInfo.name + '\n';
-        
-        // Add ports
-        var ports = Object.keys(containerInfo.ports);
-        if (ports.length > 0) {
-            yml += '    ports:\n';
-            for (var i = 0; i < ports.length; i++) {
-                var port = ports[i];
-                if (containerInfo.ports[port]) {
-                    yml += '      - "' + containerInfo.ports[port] + ':' + port + '"\n';
-                }
-            }
-        }
-        
-        // Add volumes
-        var volumes = Object.keys(containerInfo.volumes);
-        if (volumes.length > 0) {
-            yml += '    volumes:\n';
-            for (var i = 0; i < volumes.length; i++) {
-                var volume = volumes[i];
-                if (containerInfo.volumes[volume]) {
-                    yml += '      - ' + containerInfo.volumes[volume] + ':' + volume + '\n';
-                }
-            }
-        }
-        
-        // Add environment variables
-        var envVars = Object.keys(containerInfo.environment);
-        if (envVars.length > 0) {
-            yml += '    environment:\n';
-            for (var i = 0; i < envVars.length; i++) {
-                var envVar = envVars[i];
-                yml += '      - ' + envVar + '=' + containerInfo.environment[envVar] + '\n';
-            }
-        }
-        
-        // Add restart policy
-        yml += '    restart: unless-stopped\n';
-        
-        return yml;
-    }
 
     // Docker Compose Functions for runContainer
     $scope.generateDockerCompose = function() {
@@ -344,7 +345,7 @@ app.controller('runContainer', function ($scope, $http) {
         }
         
         // Generate docker-compose.yml content
-        var composeContent = generateDockerComposeYml(containerInfo);
+        var composeContent = $scope.generateDockerComposeYml(containerInfo);
         
         // Create and download file
         var blob = new Blob([composeContent], { type: 'text/yaml' });
@@ -1576,7 +1577,7 @@ app.controller('viewContainer', function ($scope, $http, $interval, $timeout) {
         }
         
         // Generate docker-compose.yml content
-        var composeContent = generateDockerComposeYml(containerInfo);
+        var composeContent = $scope.generateDockerComposeYml(containerInfo);
         
         // Create and download file
         var blob = new Blob([composeContent], { type: 'text/yaml' });
@@ -2374,7 +2375,7 @@ app.controller('manageImages', function ($scope, $http) {
 
         (new PNotify({
             title: 'Confirmation Needed',
-            text: 'Are you sure?',
+            text: 'Are you sure you want to remove this image?',
             icon: 'fa fa-question-circle',
             hide: false,
             confirm: {
@@ -2392,14 +2393,16 @@ app.controller('manageImages', function ($scope, $http) {
 
             if (counter == '0') {
                 var name = 0;
+                var force = false;
             }
             else {
                 var name = $("#" + counter).val()
+                var force = false;
             }
 
             url = "/docker/removeImage";
 
-            var data = {name: name};
+            var data = {name: name, force: force};
 
             var config = {
                 headers: {
@@ -2416,16 +2419,67 @@ app.controller('manageImages', function ($scope, $http) {
                 if (response.data.removeImageStatus === 1) {
                     new PNotify({
                         title: 'Image(s) removed',
+                        text: 'Image has been successfully removed',
                         type: 'success'
                     });
                     window.location.href = "/docker/manageImages";
                 }
                 else {
-                    new PNotify({
-                        title: 'Unable to complete request',
-                        text: response.data.error_message,
-                        type: 'error'
-                    });
+                    var errorMessage = response.data.error_message;
+                    
+                    // Check if it's a conflict error and offer force removal
+                    if (errorMessage && errorMessage.includes("still being used by containers")) {
+                        new PNotify({
+                            title: 'Image in Use',
+                            text: errorMessage + ' Would you like to force remove it?',
+                            icon: 'fa fa-exclamation-triangle',
+                            hide: false,
+                            confirm: {
+                                confirm: true
+                            },
+                            buttons: {
+                                closer: false,
+                                sticker: false
+                            },
+                            history: {
+                                history: false
+                            }
+                        }).get().on('pnotify.confirm', function () {
+                            // Force remove the image
+                            $('#imageLoading').show();
+                            var forceData = {name: name, force: true};
+                            $http.post(url, forceData, config).then(function(forceResponse) {
+                                $('#imageLoading').hide();
+                                if (forceResponse.data.removeImageStatus === 1) {
+                                    new PNotify({
+                                        title: 'Image Force Removed',
+                                        text: 'Image has been force removed successfully',
+                                        type: 'success'
+                                    });
+                                    window.location.href = "/docker/manageImages";
+                                } else {
+                                    new PNotify({
+                                        title: 'Force Removal Failed',
+                                        text: forceResponse.data.error_message,
+                                        type: 'error'
+                                    });
+                                }
+                            }, function(forceError) {
+                                $('#imageLoading').hide();
+                                new PNotify({
+                                    title: 'Force Removal Failed',
+                                    text: 'Could not force remove the image',
+                                    type: 'error'
+                                });
+                            });
+                        });
+                    } else {
+                        new PNotify({
+                            title: 'Unable to complete request',
+                            text: errorMessage,
+                            type: 'error'
+                        });
+                    }
                 }
                 $('#imageLoading').hide();
             }

@@ -300,7 +300,24 @@ class ContainerManager(multi.Thread):
             envList = data['envList']
             volList = data['volList']
 
-            inspectImage = dockerAPI.inspect_image(image + ":" + tag)
+            try:
+                inspectImage = dockerAPI.inspect_image(image + ":" + tag)
+            except docker.errors.APIError as err:
+                error_message = str(err)
+                data_ret = {'createContainerStatus': 0, 'error_message': f'Failed to inspect image: {error_message}'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            except docker.errors.ImageNotFound as err:
+                error_message = str(err)
+                data_ret = {'createContainerStatus': 0, 'error_message': f'Image not found: {error_message}'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            except Exception as err:
+                error_message = str(err)
+                data_ret = {'createContainerStatus': 0, 'error_message': f'Error inspecting image: {error_message}'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            
             portConfig = {}
 
             # Formatting envList for usage - handle both simple and advanced modes
@@ -359,8 +376,8 @@ class ContainerManager(multi.Thread):
 
             try:
                 container = client.containers.create(**containerArgs)
-            except Exception as err:
-                # Check if it's a port allocation error by converting to string first
+            except docker.errors.APIError as err:
+                # Handle Docker API errors properly
                 error_message = str(err)
                 if "port is already allocated" in error_message:  # We need to delete container if port is not available
                     print("Deleting container")
@@ -368,7 +385,23 @@ class ContainerManager(multi.Thread):
                         container.remove(force=True)
                     except:
                         pass  # Container might not exist yet
-                data_ret = {'createContainerStatus': 0, 'error_message': error_message}
+                data_ret = {'createContainerStatus': 0, 'error_message': f'Docker API error: {error_message}'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            except docker.errors.ImageNotFound as err:
+                error_message = str(err)
+                data_ret = {'createContainerStatus': 0, 'error_message': f'Image not found: {error_message}'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            except docker.errors.ContainerError as err:
+                error_message = str(err)
+                data_ret = {'createContainerStatus': 0, 'error_message': f'Container error: {error_message}'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            except Exception as err:
+                # Handle any other exceptions
+                error_message = str(err) if err else "Unknown error occurred"
+                data_ret = {'createContainerStatus': 0, 'error_message': f'Container creation error: {error_message}'}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
@@ -957,18 +990,67 @@ class ContainerManager(multi.Thread):
             dockerAPI = docker.APIClient()
 
             name = data['name']
+            force = data.get('force', False)
+            
             try:
                 if name == 0:
+                    # Prune unused images
                     action = client.images.prune()
                 else:
-                    action = client.images.remove(name)
+                    # First, try to remove containers that might be using this image
+                    containers_using_image = []
+                    try:
+                        for container in client.containers.list(all=True):
+                            container_image = container.attrs['Config']['Image']
+                            if container_image == name or container_image.startswith(name + ':'):
+                                containers_using_image.append(container)
+                    except Exception as e:
+                        logging.CyberCPLogFileWriter.writeToFile(f'Error checking containers for image {name}: {str(e)}')
+                    
+                    # Remove containers that are using this image
+                    for container in containers_using_image:
+                        try:
+                            if container.status == 'running':
+                                container.stop()
+                                time.sleep(1)
+                            container.remove(force=True)
+                            logging.CyberCPLogFileWriter.writeToFile(f'Removed container {container.name} that was using image {name}')
+                        except Exception as e:
+                            logging.CyberCPLogFileWriter.writeToFile(f'Error removing container {container.name}: {str(e)}')
+                    
+                    # Now try to remove the image
+                    try:
+                        if force:
+                            action = client.images.remove(name, force=True)
+                        else:
+                            action = client.images.remove(name)
+                        logging.CyberCPLogFileWriter.writeToFile(f'Successfully removed image {name}')
+                    except docker.errors.APIError as err:
+                        error_msg = str(err)
+                        if "conflict: unable to remove repository reference" in error_msg and "must force" in error_msg:
+                            # Try with force if not already forced
+                            if not force:
+                                logging.CyberCPLogFileWriter.writeToFile(f'Retrying image removal with force: {name}')
+                                action = client.images.remove(name, force=True)
+                            else:
+                                raise err
+                        else:
+                            raise err
+                
                 print(action)
             except docker.errors.APIError as err:
-                data_ret = {'removeImageStatus': 0, 'error_message': str(err)}
+                error_message = str(err)
+                # Provide more helpful error messages
+                if "conflict: unable to remove repository reference" in error_message:
+                    error_message = f"Image {name} is still being used by containers. Use force removal to delete it."
+                elif "No such image" in error_message:
+                    error_message = f"Image {name} not found or already removed."
+                
+                data_ret = {'removeImageStatus': 0, 'error_message': error_message}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
-            except:
-                data_ret = {'removeImageStatus': 0, 'error_message': 'Unknown'}
+            except Exception as e:
+                data_ret = {'removeImageStatus': 0, 'error_message': f'Unknown error: {str(e)}'}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
