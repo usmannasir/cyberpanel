@@ -3978,7 +3978,7 @@ context /cyberpanel_suspension_page.html {
             if output.find("1,None") > -1:
                 status = {"configstatus": 1, "message": "vHost configuration reset to default successfully."}
             else:
-                status = {"configstatus": 0, "error_message": f"Failed to reset configuration: {output}"
+                status = {"configstatus": 0, "error_message": f"Failed to reset configuration: {output}"}
 
             final_json = json.dumps(status)
             return HttpResponse(final_json)
