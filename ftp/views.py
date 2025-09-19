@@ -216,3 +216,10 @@ def changePassword(request):
 
     except KeyError:
         return redirect(loadLoginPage)
+
+def updateFTPQuota(request):
+    try:
+        fm = FTPManager(request)
+        return fm.updateFTPQuota()
+    except KeyError:
+        return redirect(loadLoginPage)

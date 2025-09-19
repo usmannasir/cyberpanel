@@ -980,6 +980,10 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     $scope.showAddonRequired = false;
     $scope.addonInfo = {};
     
+    // IP Blocking functionality
+    $scope.blockingIP = null;
+    $scope.blockedIPs = {};
+    
     $scope.analyzeSSHSecurity = function() {
         $scope.loadingSecurityAnalysis = true;
         $scope.showAddonRequired = false;
@@ -998,6 +1002,64 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
         }, function (err) {
             $scope.loadingSecurityAnalysis = false;
         });
+    };
+    
+    $scope.blockIPAddress = function(ipAddress) {
+        if (!$scope.blockingIP) {
+            $scope.blockingIP = ipAddress;
+            
+            var data = {
+                ip_address: ipAddress
+            };
+            
+            var config = {
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            };
+            
+            $http.post('/base/blockIPAddress', data, config).then(function (response) {
+                $scope.blockingIP = null;
+                if (response.data && response.data.status === 1) {
+                    // Mark IP as blocked
+                    $scope.blockedIPs[ipAddress] = true;
+                    
+                    // Show success notification
+                    new PNotify({
+                        title: 'Success',
+                        text: `IP address ${ipAddress} has been blocked successfully using ${response.data.firewall.toUpperCase()}`,
+                        type: 'success',
+                        delay: 5000
+                    });
+                    
+                    // Refresh security analysis to update alerts
+                    $scope.analyzeSSHSecurity();
+                } else {
+                    // Show error notification
+                    new PNotify({
+                        title: 'Error',
+                        text: response.data && response.data.error ? response.data.error : 'Failed to block IP address',
+                        type: 'error',
+                        delay: 5000
+                    });
+                }
+            }, function (err) {
+                $scope.blockingIP = null;
+                var errorMessage = 'Failed to block IP address';
+                if (err.data && err.data.error) {
+                    errorMessage = err.data.error;
+                } else if (err.data && err.data.message) {
+                    errorMessage = err.data.message;
+                }
+                
+                new PNotify({
+                    title: 'Error',
+                    text: errorMessage,
+                    type: 'error',
+                    delay: 5000
+                });
+            });
+        }
     };
 
     // Initial fetch

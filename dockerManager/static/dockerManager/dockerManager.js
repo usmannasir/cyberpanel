@@ -869,6 +869,229 @@ app.controller('listContainers', function ($scope, $http) {
         })
     }
 
+    // Update Container Functions
+    $scope.showUpdateModal = function (name, currentImage, currentTag) {
+        $scope.updateContainerName = name;
+        $scope.currentImage = currentImage;
+        $scope.currentTag = currentTag;
+        $scope.newImage = '';
+        $scope.newTag = 'latest';
+        $("#updateContainer").modal("show");
+    };
+
+    $scope.performUpdate = function () {
+        if (!$scope.updateContainerName) {
+            new PNotify({
+                title: 'Error',
+                text: 'No container selected',
+                type: 'error'
+            });
+            return;
+        }
+
+        // If no new image specified, use current image
+        if (!$scope.newImage) {
+            $scope.newImage = $scope.currentImage;
+        }
+
+        // If no new tag specified, use latest
+        if (!$scope.newTag) {
+            $scope.newTag = 'latest';
+        }
+
+        (new PNotify({
+            title: 'Update Confirmation',
+            text: `Are you sure you want to update container "${$scope.updateContainerName}" to ${$scope.newImage}:${$scope.newTag}? This will preserve all data.`,
+            icon: 'fa fa-question-circle',
+            hide: false,
+            confirm: {
+                confirm: true
+            },
+            buttons: {
+                closer: false,
+                sticker: false
+            },
+            history: {
+                history: false
+            }
+        })).get().on('pnotify.confirm', function () {
+            $('#imageLoading').show();
+            $("#updateContainer").modal("hide");
+
+            url = "/docker/updateContainer";
+            var data = {
+                name: $scope.updateContainerName,
+                newImage: $scope.newImage,
+                newTag: $scope.newTag
+            };
+
+            var config = {
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            };
+
+            $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+
+            function ListInitialData(response) {
+                console.log(response);
+                $('#imageLoading').hide();
+
+                if (response.data.updateContainerStatus === 1) {
+                    new PNotify({
+                        title: 'Container Updated Successfully',
+                        text: `Container updated to ${response.data.new_image}`,
+                        type: 'success'
+                    });
+                    location.reload();
+                } else {
+                    new PNotify({
+                        title: 'Update Failed',
+                        text: response.data.error_message,
+                        type: 'error'
+                    });
+                }
+            }
+
+            function cantLoadInitialData(response) {
+                $('#imageLoading').hide();
+                new PNotify({
+                    title: 'Update Failed',
+                    text: 'Could not connect to server',
+                    type: 'error'
+                });
+            }
+        });
+    };
+
+    // Delete Container with Data
+    $scope.deleteContainerWithData = function (name, unlisted = false) {
+        (new PNotify({
+            title: 'Dangerous Operation',
+            text: `Are you sure you want to delete container "${name}" and ALL its data? This action cannot be undone!`,
+            icon: 'fa fa-exclamation-triangle',
+            hide: false,
+            confirm: {
+                confirm: true
+            },
+            buttons: {
+                closer: false,
+                sticker: false
+            },
+            history: {
+                history: false
+            }
+        })).get().on('pnotify.confirm', function () {
+            $('#imageLoading').show();
+            url = "/docker/deleteContainerWithData";
+
+            var data = {name: name, unlisted: unlisted};
+
+            var config = {
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            };
+
+            $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+
+            function ListInitialData(response) {
+                console.log(response);
+                $('#imageLoading').hide();
+
+                if (response.data.deleteContainerWithDataStatus === 1) {
+                    new PNotify({
+                        title: 'Container and Data Deleted',
+                        text: 'Container and all associated data have been permanently deleted',
+                        type: 'success'
+                    });
+                    location.reload();
+                } else {
+                    new PNotify({
+                        title: 'Deletion Failed',
+                        text: response.data.error_message,
+                        type: 'error'
+                    });
+                }
+            }
+
+            function cantLoadInitialData(response) {
+                $('#imageLoading').hide();
+                new PNotify({
+                    title: 'Deletion Failed',
+                    text: 'Could not connect to server',
+                    type: 'error'
+                });
+            }
+        });
+    };
+
+    // Delete Container Keep Data
+    $scope.deleteContainerKeepData = function (name, unlisted = false) {
+        (new PNotify({
+            title: 'Delete Container (Keep Data)',
+            text: `Are you sure you want to delete container "${name}" but keep all data? The data will be preserved in Docker volumes.`,
+            icon: 'fa fa-save',
+            hide: false,
+            confirm: {
+                confirm: true
+            },
+            buttons: {
+                closer: false,
+                sticker: false
+            },
+            history: {
+                history: false
+            }
+        })).get().on('pnotify.confirm', function () {
+            $('#imageLoading').show();
+            url = "/docker/deleteContainerKeepData";
+
+            var data = {name: name, unlisted: unlisted};
+
+            var config = {
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            };
+
+            $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+
+            function ListInitialData(response) {
+                console.log(response);
+                $('#imageLoading').hide();
+
+                if (response.data.deleteContainerKeepDataStatus === 1) {
+                    var message = 'Container deleted successfully, data preserved';
+                    if (response.data.preserved_volumes && response.data.preserved_volumes.length > 0) {
+                        message += '\nPreserved volumes: ' + response.data.preserved_volumes.join(', ');
+                    }
+                    new PNotify({
+                        title: 'Container Deleted (Data Preserved)',
+                        text: message,
+                        type: 'success'
+                    });
+                    location.reload();
+                } else {
+                    new PNotify({
+                        title: 'Deletion Failed',
+                        text: response.data.error_message,
+                        type: 'error'
+                    });
+                }
+            }
+
+            function cantLoadInitialData(response) {
+                $('#imageLoading').hide();
+                new PNotify({
+                    title: 'Deletion Failed',
+                    text: 'Could not connect to server',
+                    type: 'error'
+                });
+            }
+        });
+    };
+
     $scope.showLog = function (name, refresh = false) {
         $scope.logs = "";
         if (refresh === false) {

@@ -20,6 +20,9 @@
         {{ cosmetic.MainDashboardCSS | safe }}
     </style>
     
+    <!-- Mobile Responsive CSS -->
+    <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/mobile-responsive.css' %}?v={{ CP_VERSION }}">
+    
     <!-- Core Scripts -->
     <script src="{% static 'baseTemplate/angularjs.1.6.5.js' %}?v={{ CP_VERSION }}"></script>
     <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
@@ -955,7 +958,7 @@
 <body>
     <!-- Header -->
     <div id="header">
-        <button id="mobile-menu-toggle" onclick="toggleSidebar()">
+        <button id="mobile-menu-toggle" class="mobile-menu-toggle" onclick="toggleSidebar()" style="display: none;">
             <i class="fas fa-bars"></i>
         </button>
         <div class="logo">
@@ -1176,6 +1179,9 @@
                 </a>
                 <a href="{% url 'listChildDomains' %}" class="menu-item">
                     <span>List Sub/Addon Domains</span>
+                </a>
+                <a href="{% url 'fixSubdomainLogs' %}" class="menu-item">
+                    <span>Fix Subdomain Logs</span>
                 </a>
                 {% if admin or modifyWebsite %}
                 <a href="{% url 'modifyWebsite' %}" class="menu-item">
@@ -1456,6 +1462,10 @@
             </a>
             <a href="{% url 'manageSSL' %}" class="menu-item">
                 <span>Manage SSL</span>
+            </a>
+            <a href="{% url 'sslReconcile' %}" class="menu-item">
+                <span>SSL Reconciliation</span>
+                <span class="badge">NEW</span>
             </a>
             {% endif %}
             {% if admin or hostnameSSL %}
@@ -1786,8 +1796,50 @@
     <!-- Scripts -->
     <script>
         function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('show');
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('main-content');
+            const mobileToggle = document.getElementById('mobile-menu-toggle');
+            
+            sidebar.classList.toggle('show');
+            
+            // Add/remove sidebar-open class to main content for mobile
+            if (window.innerWidth <= 768) {
+                if (mainContent) {
+                    mainContent.classList.toggle('sidebar-open');
+                }
+            }
         }
+        
+        // Show/hide mobile menu toggle based on screen size
+        function handleResize() {
+            const mobileToggle = document.getElementById('mobile-menu-toggle');
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('main-content');
+            
+            if (window.innerWidth <= 768) {
+                mobileToggle.style.display = 'block';
+                // Close sidebar by default on mobile
+                sidebar.classList.remove('show');
+                if (mainContent) {
+                    mainContent.classList.remove('sidebar-open');
+                }
+            } else {
+                mobileToggle.style.display = 'none';
+                // Show sidebar on desktop
+                sidebar.classList.remove('show');
+                if (mainContent) {
+                    mainContent.classList.remove('sidebar-open');
+                }
+            }
+        }
+        
+        // Add event listener for window resize
+        window.addEventListener('resize', handleResize);
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            handleResize();
+        });
         
         function toggleSubmenu(id, element) {
             const submenu = document.getElementById(id);

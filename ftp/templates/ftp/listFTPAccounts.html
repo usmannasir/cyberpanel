@@ -343,6 +343,53 @@
                 transform: translateX(0);
             }
         }
+        
+        .quota-settings {
+            background: var(--bg-hover, #f8f9ff);
+            border: 1px solid var(--border-color, #e8e9ff);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+        
+        .form-check {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .form-check-input {
+            width: 18px;
+            height: 18px;
+            margin: 0;
+        }
+        
+        .form-check-label {
+            margin: 0;
+            font-weight: 500;
+            color: var(--text-primary, #1e293b);
+            cursor: pointer;
+        }
+        
+        .custom-quota-input {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color, #e8e9ff);
+        }
+        
+        .input-group-text {
+            background: var(--bg-secondary, #fff);
+            border: 1px solid var(--border-color, #e8e9ff);
+            color: var(--text-secondary, #64748b);
+            font-weight: 500;
+        }
+        
+        .package-quota-info {
+            margin-top: 1rem;
+        }
+        
+        .current-quota-info {
+            margin-bottom: 1rem;
+        }
     </style>
 
     <div class="modern-container" ng-controller="listFTPAccounts">
@@ -440,16 +487,70 @@
                             </div>
                         </div>
 
+                        <!-- Quota Management Section -->
+                        <div ng-hide="quotaManagementBox" class="password-section">
+                            <h3><i class="fas fa-hdd"></i> {% trans "Manage Quota for" %} {$ ftpUsername $}</h3>
+                            
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="form-group">
+                                        <label class="form-label">{% trans "Current Quota" %}</label>
+                                        <div class="current-quota-info">
+                                            <span class="quota-badge" ng-bind="currentQuotaInfo"></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <div class="form-check" style="margin-bottom: 1rem;">
+                                            <input type="checkbox" class="form-check-input" id="enableCustomQuotaEdit" 
+                                                   ng-model="enableCustomQuotaEdit" ng-change="toggleCustomQuotaEdit()">
+                                            <label class="form-check-label" for="enableCustomQuotaEdit">
+                                                <i class="fas fa-hdd"></i>
+                                                {% trans "Enable custom disk quota for this FTP user" %}
+                                            </label>
+                                        </div>
+                                        
+                                        <div ng-show="enableCustomQuotaEdit" class="custom-quota-input">
+                                            <label class="form-label">{% trans "Custom Quota Size (MB)" %}</label>
+                                            <div class="input-group">
+                                                <input type="number" class="form-control" ng-model="customQuotaSizeEdit" 
+                                                       placeholder="{% trans 'Enter quota size in MB' %}" min="1">
+                                                <span class="input-group-text">MB</span>
+                                            </div>
+                                            <small style="color: var(--text-secondary, #64748b); margin-top: 0.5rem; display: block; font-size: 0.875rem;">
+                                                <i class="fas fa-info-circle"></i>
+                                                {% trans "Package default quota:" %} {$ packageQuota $}MB
+                                            </small>
+                                        </div>
+                                        
+                                        <div ng-hide="enableCustomQuotaEdit" class="package-quota-info">
+                                            <div class="alert alert-info">
+                                                <i class="fas fa-info-circle"></i>
+                                                {% trans "This FTP user will use the package's default disk quota" %}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div style="margin-top: 1.5rem;">
+                                        <button type="button" ng-click="updateQuotaBtn()" class="btn-primary">
+                                            <i class="fas fa-save"></i>
+                                            {% trans "Update Quota" %}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- FTP Accounts Table -->
                         <div ng-hide="ftpAccounts">
                             <table class="ftp-table">
                                 <thead>
                                 <tr>
                                     <th style="width: 8%;">{% trans "ID" %}</th>
-                                    <th style="width: 25%;">{% trans "User Name" %}</th>
-                                    <th style="width: 35%;">{% trans "Directory" %}</th>
+                                    <th style="width: 20%;">{% trans "User Name" %}</th>
+                                    <th style="width: 30%;">{% trans "Directory" %}</th>
                                     <th style="width: 15%;">{% trans "Quota" %}</th>
-                                    <th style="width: 17%; text-align: center;">{% trans "Actions" %}</th>
+                                    <th style="width: 27%; text-align: center;">{% trans "Actions" %}</th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -469,10 +570,16 @@
                                         <span class="quota-badge" ng-bind="record.quotasize"></span>
                                     </td>
                                     <td style="text-align: center;">
-                                        <button type="button" ng-click="changePassword(record.user)" class="btn-action">
-                                            <i class="fas fa-key"></i>
-                                            {% trans "Change Password" %}
-                                        </button>
+                                        <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+                                            <button type="button" ng-click="changePassword(record.user)" class="btn-action">
+                                                <i class="fas fa-key"></i>
+                                                {% trans "Password" %}
+                                            </button>
+                                            <button type="button" ng-click="manageQuota(record)" class="btn-action">
+                                                <i class="fas fa-hdd"></i>
+                                                {% trans "Quota" %}
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                                 </tbody>

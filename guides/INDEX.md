@@ -15,10 +15,33 @@ Welcome to the CyberPanel documentation hub! This folder contains all guides, tu
 - **[Mautic Installation Guide](MAUTIC_INSTALLATION_GUIDE.md)** - Step-by-step guide for installing and configuring Mautic email marketing platform
 
 ### 🐧 Operating System Support
+
+#### **Debian Family**
 - **[Debian 13 Installation Guide](DEBIAN_13_INSTALLATION_GUIDE.md)** - Complete installation and configuration guide for CyberPanel on Debian 13 (Bookworm)
+- **[Debian 12 Troubleshooting Guide](DEBIAN_12_TROUBLESHOOTING.md)** - Troubleshooting guide for Debian 12 (Bookworm)
+- **[Debian 11 Troubleshooting Guide](DEBIAN_11_TROUBLESHOOTING.md)** - Troubleshooting guide for Debian 11 (Bullseye)
+
+#### **Ubuntu Family**
+- **[Ubuntu 24.04.3 Troubleshooting Guide](UBUNTU_24_TROUBLESHOOTING.md)** - Troubleshooting guide for Ubuntu 24.04.3 LTS
+- **[Ubuntu 22.04 Troubleshooting Guide](UBUNTU_22_TROUBLESHOOTING.md)** - Troubleshooting guide for Ubuntu 22.04 LTS
+- **[Ubuntu 20.04 Troubleshooting Guide](UBUNTU_20_TROUBLESHOOTING.md)** - Troubleshooting guide for Ubuntu 20.04 LTS
+
+#### **RHEL Family**
+- **[AlmaLinux 10 Troubleshooting Guide](ALMALINUX_10_TROUBLESHOOTING.md)** - Troubleshooting guide for AlmaLinux 10
+- **[AlmaLinux 9 Troubleshooting Guide](ALMALINUX_9_TROUBLESHOOTING.md)** - Troubleshooting guide for AlmaLinux 9
+- **[AlmaLinux 8 Troubleshooting Guide](ALMALINUX_8_TROUBLESHOOTING.md)** - Troubleshooting guide for AlmaLinux 8
+- **[RockyLinux 9 Troubleshooting Guide](ROCKYLINUX_9_TROUBLESHOOTING.md)** - Troubleshooting guide for RockyLinux 9
+- **[RockyLinux 8 Troubleshooting Guide](ROCKYLINUX_8_TROUBLESHOOTING.md)** - Troubleshooting guide for RockyLinux 8
+- **[CentOS 9 Troubleshooting Guide](CENTOS_9_TROUBLESHOOTING.md)** - Troubleshooting guide for CentOS 9
+
+#### **CloudLinux**
+- **[CloudLinux 8 Troubleshooting Guide](CLOUDLINUX_8_TROUBLESHOOTING.md)** - Troubleshooting guide for CloudLinux 8
 
 ### 🎨 Customization & Design
 - **[Custom CSS Guide](CUSTOM_CSS_GUIDE.md)** - Complete guide for creating custom CSS that works with CyberPanel 2.5.5-dev design system
+
+### 🔧 Troubleshooting & Support
+- **[Troubleshooting Guide](TROUBLESHOOTING.md)** - Comprehensive troubleshooting and diagnostic commands
 
 ### 📖 General Documentation
 - **[README](../README.md)** - Main CyberPanel documentation with installation instructions and feature overview
@@ -36,7 +59,24 @@ Welcome to the CyberPanel documentation hub! This folder contains all guides, tu
 ## 🔍 Finding What You Need
 
 - **Installation & Setup**: [README](../README.md)
-- **Debian 13 Installation**: [Debian 13 Installation Guide](DEBIAN_13_INSTALLATION_GUIDE.md)
+- **General Troubleshooting**: [Troubleshooting Guide](TROUBLESHOOTING.md)
+
+### **OS-Specific Troubleshooting**
+- **🐧 Debian 13**: [Debian 13 Installation Guide](DEBIAN_13_INSTALLATION_GUIDE.md) - Installation & troubleshooting
+- **🐧 Debian 12**: [Debian 12 Troubleshooting Guide](DEBIAN_12_TROUBLESHOOTING.md) - Troubleshooting
+- **🐧 Debian 11**: [Debian 11 Troubleshooting Guide](DEBIAN_11_TROUBLESHOOTING.md) - Troubleshooting
+- **🐧 Ubuntu 24.04**: [Ubuntu 24.04 Troubleshooting Guide](UBUNTU_24_TROUBLESHOOTING.md) - Troubleshooting
+- **🐧 Ubuntu 22.04**: [Ubuntu 22.04 Troubleshooting Guide](UBUNTU_22_TROUBLESHOOTING.md) - Troubleshooting
+- **🐧 Ubuntu 20.04**: [Ubuntu 20.04 Troubleshooting Guide](UBUNTU_20_TROUBLESHOOTING.md) - Troubleshooting
+- **🔴 AlmaLinux 10**: [AlmaLinux 10 Troubleshooting Guide](ALMALINUX_10_TROUBLESHOOTING.md) - Troubleshooting
+- **🔴 AlmaLinux 9**: [AlmaLinux 9 Troubleshooting Guide](ALMALINUX_9_TROUBLESHOOTING.md) - Troubleshooting
+- **🔴 AlmaLinux 8**: [AlmaLinux 8 Troubleshooting Guide](ALMALINUX_8_TROUBLESHOOTING.md) - Troubleshooting
+- **🔴 RockyLinux 9**: [RockyLinux 9 Troubleshooting Guide](ROCKYLINUX_9_TROUBLESHOOTING.md) - Troubleshooting
+- **🔴 RockyLinux 8**: [RockyLinux 8 Troubleshooting Guide](ROCKYLINUX_8_TROUBLESHOOTING.md) - Troubleshooting
+- **🔴 CentOS 9**: [CentOS 9 Troubleshooting Guide](CENTOS_9_TROUBLESHOOTING.md) - Troubleshooting
+- **☁️ CloudLinux 8**: [CloudLinux 8 Troubleshooting Guide](CLOUDLINUX_8_TROUBLESHOOTING.md) - Troubleshooting
+
+### **Feature-Specific Guides**
 - **Docker Features**: [Docker Command Execution Guide](Docker_Command_Execution_Guide.md)
 - **Security Features**: [AI Scanner Documentation](AIScannerDocs.md)
 - **Email Marketing**: [Mautic Installation Guide](MAUTIC_INSTALLATION_GUIDE.md)

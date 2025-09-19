@@ -372,6 +372,49 @@
             background-color: var(--bg-hover, #f8f9ff) !important;
             color: var(--accent-color, #5b5fcf) !important;
         }
+        
+        .quota-settings {
+            background: var(--bg-hover, #f8f9ff);
+            border: 1px solid var(--border-color, #e8e9ff);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+        
+        .form-check {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .form-check-input {
+            width: 18px;
+            height: 18px;
+            margin: 0;
+        }
+        
+        .form-check-label {
+            margin: 0;
+            font-weight: 500;
+            color: var(--text-primary, #1e293b);
+            cursor: pointer;
+        }
+        
+        .custom-quota-input {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color, #e8e9ff);
+        }
+        
+        .input-group-text {
+            background: var(--bg-secondary, #fff);
+            border: 1px solid var(--border-color, #e8e9ff);
+            color: var(--text-secondary, #64748b);
+            font-weight: 500;
+        }
+        
+        .package-quota-info {
+            margin-top: 1rem;
+        }
     </style>
 
     <div class="modern-container" ng-controller="createFTPAccount">
@@ -481,6 +524,40 @@
                                         </div>
                                         <input placeholder="{% trans 'e.g., public_html or leave empty' %}"
                                                type="text" class="form-control" ng-model="ftpPath">
+                                    </div>
+
+                                    <div ng-hide="ftpDetails" class="form-group">
+                                        <label class="form-label">{% trans "Disk Quota Settings" %}</label>
+                                        <div class="quota-settings">
+                                            <div class="form-check" style="margin-bottom: 1rem;">
+                                                <input type="checkbox" class="form-check-input" id="enableCustomQuota" 
+                                                       ng-model="enableCustomQuota" ng-change="toggleCustomQuota()">
+                                                <label class="form-check-label" for="enableCustomQuota">
+                                                    <i class="fas fa-hdd"></i>
+                                                    {% trans "Enable custom disk quota for this FTP user" %}
+                                                </label>
+                                            </div>
+                                            
+                                            <div ng-show="enableCustomQuota" class="custom-quota-input">
+                                                <label class="form-label">{% trans "Custom Quota Size (MB)" %}</label>
+                                                <div class="input-group">
+                                                    <input type="number" class="form-control" ng-model="customQuotaSize" 
+                                                           placeholder="{% trans 'Enter quota size in MB' %}" min="1">
+                                                    <span class="input-group-text">MB</span>
+                                                </div>
+                                                <small style="color: var(--text-secondary, #64748b); margin-top: 0.5rem; display: block; font-size: 0.875rem;">
+                                                    <i class="fas fa-info-circle"></i>
+                                                    {% trans "Leave unchecked to use the package's default quota" %}
+                                                </small>
+                                            </div>
+                                            
+                                            <div ng-hide="enableCustomQuota" class="package-quota-info">
+                                                <div class="alert alert-info">
+                                                    <i class="fas fa-info-circle"></i>
+                                                    {% trans "This FTP user will use the package's default disk quota" %}
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div style="margin-top: 2rem;">

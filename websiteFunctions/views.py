@@ -1852,6 +1852,24 @@ def ApacheManager(request, domain):
         return redirect(loadLoginPage)
 
 
+def resetVHostConfigToDefault(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.resetVHostConfigToDefault(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def resetApacheConfigToDefault(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.resetApacheConfigToDefault(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 def getSwitchStatus(request):
     try:
         userID = request.session['userID']

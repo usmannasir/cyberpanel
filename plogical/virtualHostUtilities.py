@@ -3,6 +3,7 @@ import os
 import os.path
 import sys
 import time
+import re
 
 import django
 
@@ -1671,16 +1672,28 @@ local_name %s {
 
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating apache configurations..,90')
                 if child:
-                    ApacheVhost.perHostVirtualConfOLS(completePathToConfigFile, website.master.adminEmail)
+                    # Handle None values for child domains
+                    admin_email = website.master.adminEmail if website.master.adminEmail else website.master.admin.email
+                    ApacheVhost.perHostVirtualConfOLS(completePathToConfigFile, admin_email)
                 else:
-                    ApacheVhost.perHostVirtualConfOLS(completePathToConfigFile, website.adminEmail)
+                    # Handle None values for main domains
+                    admin_email = website.adminEmail if website.adminEmail else website.admin.email
+                    ApacheVhost.perHostVirtualConfOLS(completePathToConfigFile, admin_email)
 
                 if child:
-                    ApacheVhost.setupApacheVhostChild(website.master.adminEmail, website.master.externalApp,
-                                                      website.master.externalApp,
+                    # Handle None values for child domains
+                    admin_email = website.master.adminEmail if website.master.adminEmail else website.master.admin.email
+                    external_app = website.master.externalApp if website.master.externalApp else "".join(re.findall("[a-zA-Z]+", virtualHostName))[:5] + str(randint(1000, 9999))
+                    
+                    ApacheVhost.setupApacheVhostChild(admin_email, external_app,
+                                                      external_app,
                                                       phpVersion, virtualHostName, website.path)
                 else:
-                    ApacheVhost.setupApacheVhost(website.adminEmail, website.externalApp, website.externalApp,
+                    # Handle None values for main domains
+                    admin_email = website.adminEmail if website.adminEmail else website.admin.email
+                    external_app = website.externalApp if website.externalApp else "".join(re.findall("[a-zA-Z]+", virtualHostName))[:5] + str(randint(1000, 9999))
+                    
+                    ApacheVhost.setupApacheVhost(admin_email, external_app, external_app,
                                                  phpVersion, virtualHostName)
 
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Restarting servers and phps..,90')
@@ -1756,9 +1769,31 @@ local_name %s {
     @staticmethod
     def getDiskUsageofPath(path):
         try:
-            return subprocess.check_output('du -hs %s --block-size=1M' % (path), shell=True).decode("utf-8").split()[0]
-        except BaseException:
-            return '0MB'
+            # Check if path exists first
+            if not os.path.exists(path):
+                return '0 MB'
+            
+            # Use du command to get disk usage in MB
+            result = subprocess.check_output('du -sm %s' % (path), shell=True).decode("utf-8").strip()
+            
+            if result:
+                # Extract the number from the result (format: "123\t/path")
+                usage_mb = result.split('\t')[0]
+                try:
+                    # Convert to float and format properly
+                    usage_value = float(usage_mb)
+                    if usage_value < 1:
+                        return '0.1 MB'
+                    else:
+                        return f"{usage_value:.1f} MB"
+                except ValueError:
+                    return '0 MB'
+            else:
+                return '0 MB'
+        except BaseException as e:
+            # Log the error for debugging
+            logging.CyberCPLogFileWriter.writeToFile(f"Error calculating disk usage for {path}: {str(e)}")
+            return '0 MB'
 
     @staticmethod
     def permissionControl(path):

@@ -91,8 +91,15 @@ class FTPManager:
             except:
                 path = 'None'
 
+            # Handle custom quota settings
+            try:
+                customQuotaSize = int(data.get('customQuotaSize', 0))
+                enableCustomQuota = data.get('enableCustomQuota', False)
+            except:
+                customQuotaSize = 0
+                enableCustomQuota = False
 
-            result = FTPUtilities.submitFTPCreation(domainName, userName, password, path, admin.userName, api)
+            result = FTPUtilities.submitFTPCreation(domainName, userName, password, path, admin.userName, api, customQuotaSize, enableCustomQuota)
 
             if result[0] == 1:
                 data_ret = {'status': 1, 'creatFTPStatus': 1, 'error_message': 'None'}
@@ -233,10 +240,19 @@ class FTPManager:
             checker = 0
 
             for items in records:
+                # Determine display quota
+                if items.custom_quota_enabled:
+                    quota_display = f"{items.custom_quota_size}MB (Custom)"
+                else:
+                    quota_display = f"{items.quotasize}MB (Package Default)"
+                
                 dic = {'id': items.id,
                        'user': items.user,
                        'dir': items.dir,
-                       'quotasize': str(items.quotasize) + "MB",
+                       'quotasize': quota_display,
+                       'custom_quota_enabled': items.custom_quota_enabled,
+                       'custom_quota_size': items.custom_quota_size,
+                       'package_quota': items.domain.package.diskSpace,
                        }
 
                 if checker == 0:
@@ -281,6 +297,42 @@ class FTPManager:
             return HttpResponse(json_data)
         except BaseException as msg:
             data_ret = {'status': 0, 'changePasswordStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def updateFTPQuota(self):
+        try:
+            userID = self.request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'listFTPAccounts') == 0:
+                return ACLManager.loadErrorJson('updateQuotaStatus', 0)
+
+            data = json.loads(self.request.body)
+            userName = data['ftpUserName']
+            customQuotaSize = int(data.get('customQuotaSize', 0))
+            enableCustomQuota = data.get('enableCustomQuota', False)
+
+            admin = Administrator.objects.get(pk=userID)
+            ftp = Users.objects.get(user=userName)
+
+            if currentACL['admin'] == 1:
+                pass
+            elif ftp.domain.admin != admin:
+                return ACLManager.loadErrorJson()
+
+            result = FTPUtilities.updateFTPQuota(userName, customQuotaSize, enableCustomQuota)
+
+            if result[0] == 1:
+                data_ret = {'status': 1, 'updateQuotaStatus': 1, 'error_message': "None"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            else:
+                data_ret = {'status': 0, 'updateQuotaStatus': 0, 'error_message': result[1]}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+        except BaseException as msg:
+            data_ret = {'status': 0, 'updateQuotaStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 

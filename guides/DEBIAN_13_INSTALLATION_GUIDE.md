@@ -284,18 +284,7 @@ free -h
 
 ### Testing Compatibility
 
-Run the compatibility test script:
-
-```bash
-# Download test script
-wget https://raw.githubusercontent.com/cyberpanel/cyberpanel/main/test_debian13_support.sh
-
-# Make executable
-chmod +x test_debian13_support.sh
-
-# Run test
-sudo ./test_debian13_support.sh
-```
+For comprehensive compatibility testing, refer to the diagnostic commands in the troubleshooting section below.
 
 ## ✅ Verification Checklist
 
