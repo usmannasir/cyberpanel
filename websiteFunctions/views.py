@@ -2206,3 +2206,31 @@ def fetchWPBackups(request):
 
     except KeyError:
         return redirect(loadLoginPage)
+
+def fixSubdomainLogs(request):
+    try:
+        userID = request.session['userID']
+
+
+        wm = WebsiteManager()
+        coreResult = wm.fixSubdomainLogs(userID)
+
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def fixSubdomainLogsAction(request):
+    try:
+        userID = request.session['userID']
+
+
+        wm = WebsiteManager()
+        coreResult = wm.fixSubdomainLogsAction(userID)
+
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
