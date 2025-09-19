@@ -657,40 +657,7 @@ password="%s"
 
         # self.setupVirtualEnv(self.distro)
 
-        ### Applying migrations
-
-        os.chdir("/usr/local/CyberCP")
-
-        # Try makemigrations first
-        command = "/usr/local/CyberPanel/bin/python manage.py makemigrations"
-        result = preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        # If makemigrations fails due to migration dependency issues, try to fix it
-        if result != 1:
-            preFlightsChecks.stdOut("Migration dependency issue detected, attempting to fix...")
-
-            # Reset baseTemplate migrations to resolve dependency issues
-            command = "/usr/local/CyberPanel/bin/python manage.py migrate baseTemplate zero --fake"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            # Create a new initial migration for baseTemplate
-            command = "/usr/local/CyberPanel/bin/python manage.py makemigrations baseTemplate --empty"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            # Try makemigrations again
-            command = "/usr/local/CyberPanel/bin/python manage.py makemigrations"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-        ##
-
-        # Apply migrations with fake-initial to handle missing initial migrations
-        command = "/usr/local/CyberPanel/bin/python manage.py migrate --fake-initial"
-        result = preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        # If fake-initial fails, try regular migrate
-        if result != 1:
-            command = "/usr/local/CyberPanel/bin/python manage.py migrate"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+        ### Database migrations will be handled after database creation
 
         if not os.path.exists("/usr/local/CyberCP/public"):
             os.mkdir("/usr/local/CyberCP/public")
@@ -2916,6 +2883,25 @@ def main():
     else:
         installCyberPanel.Main(cwd, mysql, distro, ent, serial, port, args.ftp, args.powerdns, args.publicip,
                                remotemysql, mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport)
+
+    # Now that database is created, run Django migrations
+    preFlightsChecks.stdOut("Running Django migrations...")
+    # Check which directory exists (installation may be at different stages)
+    if os.path.exists("/usr/local/CyberCP"):
+        os.chdir("/usr/local/CyberCP")
+    elif os.path.exists("/usr/local/cyberpanel"):
+        os.chdir("/usr/local/cyberpanel")
+    else:
+        preFlightsChecks.stdOut("ERROR: Neither /usr/local/CyberCP nor /usr/local/cyberpanel exists!")
+        sys.exit(1)
+
+    # Create fresh migrations for all apps
+    command = "/usr/local/CyberPanel/bin/python manage.py makemigrations"
+    preFlightsChecks.call(command, distro, command, command, 1, 1, os.EX_OSERR)
+
+    # Apply all migrations
+    command = "/usr/local/CyberPanel/bin/python manage.py migrate"
+    preFlightsChecks.call(command, distro, command, command, 1, 1, os.EX_OSERR)
 
     checks.setupPHPAndComposer()
     checks.fix_selinux_issue()
