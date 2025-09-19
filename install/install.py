@@ -657,17 +657,7 @@ password="%s"
 
         # self.setupVirtualEnv(self.distro)
 
-        ### Applying migrations
-
-        os.chdir("/usr/local/CyberCP")
-
-        # Create fresh migrations for all apps
-        command = "/usr/local/CyberPanel/bin/python manage.py makemigrations"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-        # Apply all migrations
-        command = "/usr/local/CyberPanel/bin/python manage.py migrate"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+        ### Database migrations will be handled after database creation
 
         if not os.path.exists("/usr/local/CyberCP/public"):
             os.mkdir("/usr/local/CyberCP/public")
@@ -2893,6 +2883,18 @@ def main():
     else:
         installCyberPanel.Main(cwd, mysql, distro, ent, serial, port, args.ftp, args.powerdns, args.publicip,
                                remotemysql, mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport)
+
+    # Now that database is created, run Django migrations
+    preFlightsChecks.stdOut("Running Django migrations...")
+    os.chdir("/usr/local/CyberCP")
+
+    # Create fresh migrations for all apps
+    command = "/usr/local/CyberPanel/bin/python manage.py makemigrations"
+    preFlightsChecks.call(command, distro, command, command, 1, 1, os.EX_OSERR)
+
+    # Apply all migrations
+    command = "/usr/local/CyberPanel/bin/python manage.py migrate"
+    preFlightsChecks.call(command, distro, command, command, 1, 1, os.EX_OSERR)
 
     checks.setupPHPAndComposer()
     checks.fix_selinux_issue()
