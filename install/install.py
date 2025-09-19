@@ -661,36 +661,13 @@ password="%s"
 
         os.chdir("/usr/local/CyberCP")
 
-        # Try makemigrations first
+        # Create fresh migrations for all apps
         command = "/usr/local/CyberPanel/bin/python manage.py makemigrations"
-        result = preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-        # If makemigrations fails due to migration dependency issues, try to fix it
-        if result != 1:
-            preFlightsChecks.stdOut("Migration dependency issue detected, attempting to fix...")
-
-            # Reset baseTemplate migrations to resolve dependency issues
-            command = "/usr/local/CyberPanel/bin/python manage.py migrate baseTemplate zero --fake"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            # Create a new initial migration for baseTemplate
-            command = "/usr/local/CyberPanel/bin/python manage.py makemigrations baseTemplate --empty"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            # Try makemigrations again
-            command = "/usr/local/CyberPanel/bin/python manage.py makemigrations"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-        ##
-
-        # Apply migrations with fake-initial to handle missing initial migrations
-        command = "/usr/local/CyberPanel/bin/python manage.py migrate --fake-initial"
-        result = preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        # If fake-initial fails, try regular migrate
-        if result != 1:
-            command = "/usr/local/CyberPanel/bin/python manage.py migrate"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+        # Apply all migrations
+        command = "/usr/local/CyberPanel/bin/python manage.py migrate"
+        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
         if not os.path.exists("/usr/local/CyberCP/public"):
             os.mkdir("/usr/local/CyberCP/public")
