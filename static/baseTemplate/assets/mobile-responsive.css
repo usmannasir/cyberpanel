@@ -1,0 +1,552 @@
+/* CyberPanel Mobile Responsive & Readability Fixes */
+/* This file ensures all pages are mobile-friendly with proper font sizes and readable text */
+
+/* Base font size and mobile-first approach */
+html {
+    font-size: 16px; /* Base font size for better readability */
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+}
+
+body {
+    font-size: 16px;
+    line-height: 1.6;
+    color: #2f3640; /* Dark text for better readability on white backgrounds */
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Ensure all text is readable with proper contrast */
+* {
+    color: inherit;
+}
+
+/* Override any light text that might be hard to read */
+.text-muted, .text-secondary, .text-light {
+    color: #64748b !important; /* Darker gray instead of light gray */
+}
+
+/* Fix small font sizes that are hard to read */
+small, .small, .text-small {
+    font-size: 14px !important; /* Minimum readable size */
+}
+
+/* Table improvements for mobile */
+.table {
+    font-size: 16px !important; /* Larger table text */
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.table th, .table td {
+    padding: 12px 8px !important; /* More padding for touch targets */
+    border: 1px solid #e8e9ff;
+    text-align: left;
+    vertical-align: middle;
+    font-size: 14px !important;
+    line-height: 1.4;
+}
+
+.table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #2f3640 !important;
+    font-size: 15px !important;
+}
+
+/* Button improvements for mobile */
+.btn {
+    font-size: 16px !important;
+    padding: 12px 20px !important;
+    border-radius: 8px;
+    min-height: 44px; /* Minimum touch target size */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-sm {
+    font-size: 14px !important;
+    padding: 8px 16px !important;
+    min-height: 36px;
+}
+
+.btn-xs {
+    font-size: 13px !important;
+    padding: 6px 12px !important;
+    min-height: 32px;
+}
+
+/* Form elements */
+.form-control, input, textarea, select {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+    padding: 12px 16px !important;
+    border: 2px solid #e8e9ff;
+    border-radius: 8px;
+    min-height: 44px;
+    line-height: 1.4;
+    color: #2f3640 !important;
+    background-color: #ffffff;
+}
+
+.form-control:focus, input:focus, textarea:focus, select:focus {
+    border-color: #5856d6;
+    box-shadow: 0 0 0 3px rgba(88, 86, 214, 0.1);
+    outline: none;
+}
+
+/* Labels and form text */
+label, .control-label {
+    font-size: 16px !important;
+    font-weight: 600;
+    color: #2f3640 !important;
+    margin-bottom: 8px;
+    display: block;
+}
+
+/* Headings with proper hierarchy */
+h1 {
+    font-size: 2.5rem !important; /* 40px */
+    font-weight: 700;
+    color: #1e293b !important;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+}
+
+h2 {
+    font-size: 2rem !important; /* 32px */
+    font-weight: 600;
+    color: #1e293b !important;
+    line-height: 1.3;
+    margin-bottom: 0.875rem;
+}
+
+h3 {
+    font-size: 1.5rem !important; /* 24px */
+    font-weight: 600;
+    color: #2f3640 !important;
+    line-height: 1.4;
+    margin-bottom: 0.75rem;
+}
+
+h4 {
+    font-size: 1.25rem !important; /* 20px */
+    font-weight: 600;
+    color: #2f3640 !important;
+    line-height: 1.4;
+    margin-bottom: 0.5rem;
+}
+
+h5 {
+    font-size: 1.125rem !important; /* 18px */
+    font-weight: 600;
+    color: #2f3640 !important;
+    line-height: 1.4;
+    margin-bottom: 0.5rem;
+}
+
+h6 {
+    font-size: 1rem !important; /* 16px */
+    font-weight: 600;
+    color: #2f3640 !important;
+    line-height: 1.4;
+    margin-bottom: 0.5rem;
+}
+
+/* Paragraph and body text */
+p {
+    font-size: 16px !important;
+    line-height: 1.6;
+    color: #2f3640 !important;
+    margin-bottom: 1rem;
+}
+
+/* Sidebar improvements */
+#page-sidebar {
+    font-size: 16px !important;
+}
+
+#page-sidebar ul li a {
+    font-size: 16px !important;
+    padding: 12px 20px !important;
+    color: #2f3640 !important;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+#page-sidebar ul li a:hover {
+    background-color: #f8f9fa;
+    color: #5856d6 !important;
+}
+
+/* Content area improvements */
+.content-box, .panel, .card {
+    font-size: 16px !important;
+    color: #2f3640 !important;
+    background-color: #ffffff;
+    border: 1px solid #e8e9ff;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+/* Modal improvements */
+.modal-content {
+    font-size: 16px !important;
+    color: #2f3640 !important;
+}
+
+.modal-title {
+    font-size: 1.5rem !important;
+    font-weight: 600;
+    color: #1e293b !important;
+}
+
+/* Alert and notification improvements */
+.alert {
+    font-size: 16px !important;
+    padding: 16px 20px !important;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.alert-success {
+    background-color: #f0fdf4;
+    border-color: #bbf7d0;
+    color: #166534 !important;
+}
+
+.alert-danger {
+    background-color: #fef2f2;
+    border-color: #fecaca;
+    color: #dc2626 !important;
+}
+
+.alert-warning {
+    background-color: #fffbeb;
+    border-color: #fed7aa;
+    color: #d97706 !important;
+}
+
+.alert-info {
+    background-color: #eff6ff;
+    border-color: #bfdbfe;
+    color: #2563eb !important;
+}
+
+/* Navigation improvements */
+.navbar-nav .nav-link {
+    font-size: 16px !important;
+    padding: 12px 16px !important;
+    color: #2f3640 !important;
+}
+
+/* Breadcrumb improvements */
+.breadcrumb {
+    font-size: 16px !important;
+    background-color: transparent;
+    padding: 0;
+    margin-bottom: 20px;
+}
+
+.breadcrumb-item {
+    color: #64748b !important;
+}
+
+.breadcrumb-item.active {
+    color: #2f3640 !important;
+}
+
+/* Mobile-first responsive breakpoints */
+@media (max-width: 1200px) {
+    .container, .container-fluid {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    .table-responsive {
+        border: none;
+        margin-bottom: 20px;
+    }
+}
+
+@media (max-width: 992px) {
+    /* Stack columns on tablets */
+    .col-md-3, .col-md-4, .col-md-6, .col-md-8, .col-md-9 {
+        flex: 0 0 100%;
+        max-width: 100%;
+        margin-bottom: 20px;
+    }
+    
+    /* Adjust sidebar for tablets */
+    #page-sidebar {
+        width: 100%;
+        position: static;
+        height: auto;
+    }
+    
+    /* Make tables horizontally scrollable */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .table {
+        min-width: 600px;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Mobile-specific adjustments */
+    html {
+        font-size: 14px;
+    }
+    
+    body {
+        font-size: 14px;
+        padding: 0;
+    }
+    
+    .container, .container-fluid {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    
+    /* Stack all columns on mobile */
+    .col-sm-1, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-6, .col-sm-8, .col-sm-9, .col-sm-12,
+    .col-md-1, .col-md-2, .col-md-3, .col-md-4, .col-md-6, .col-md-8, .col-md-9, .col-md-12 {
+        flex: 0 0 100%;
+        max-width: 100%;
+        margin-bottom: 15px;
+    }
+    
+    /* Adjust headings for mobile */
+    h1 {
+        font-size: 2rem !important; /* 32px */
+    }
+    
+    h2 {
+        font-size: 1.75rem !important; /* 28px */
+    }
+    
+    h3 {
+        font-size: 1.5rem !important; /* 24px */
+    }
+    
+    h4 {
+        font-size: 1.25rem !important; /* 20px */
+    }
+    
+    /* Button adjustments for mobile */
+    .btn {
+        font-size: 16px !important;
+        padding: 14px 20px !important;
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    
+    .btn-group .btn {
+        width: auto;
+        margin-bottom: 0;
+    }
+    
+    /* Form adjustments for mobile */
+    .form-control, input, textarea, select {
+        font-size: 16px !important; /* Prevents zoom on iOS */
+        padding: 14px 16px !important;
+        width: 100%;
+    }
+    
+    /* Table adjustments for mobile */
+    .table {
+        font-size: 14px !important;
+    }
+    
+    .table th, .table td {
+        padding: 8px 6px !important;
+        font-size: 13px !important;
+    }
+    
+    /* Hide less important columns on mobile */
+    .table .d-none-mobile {
+        display: none !important;
+    }
+    
+    /* Modal adjustments for mobile */
+    .modal-dialog {
+        margin: 10px;
+        width: calc(100% - 20px);
+    }
+    
+    .modal-content {
+        padding: 20px 15px;
+    }
+    
+    /* Content box adjustments */
+    .content-box, .panel, .card {
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+    
+    /* Sidebar adjustments for mobile */
+    #page-sidebar {
+        position: fixed;
+        top: 0;
+        left: -100%;
+        width: 280px;
+        height: 100vh;
+        z-index: 1000;
+        transition: left 0.3s ease;
+        background-color: #ffffff;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    }
+    
+    #page-sidebar.show {
+        left: 0;
+    }
+    
+    /* Main content adjustments when sidebar is open */
+    #main-content {
+        transition: margin-left 0.3s ease;
+    }
+    
+    #main-content.sidebar-open {
+        margin-left: 280px;
+    }
+    
+    /* Mobile menu toggle */
+    .mobile-menu-toggle {
+        display: block;
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 1001;
+        background-color: #5856d6;
+        color: white;
+        border: none;
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 18px;
+        cursor: pointer;
+    }
+}
+
+@media (max-width: 576px) {
+    /* Extra small devices */
+    html {
+        font-size: 14px;
+    }
+    
+    .container, .container-fluid {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+    
+    /* Even smaller buttons and forms for very small screens */
+    .btn {
+        font-size: 14px !important;
+        padding: 12px 16px !important;
+    }
+    
+    .form-control, input, textarea, select {
+        font-size: 16px !important; /* Still 16px to prevent zoom */
+        padding: 12px 14px !important;
+    }
+    
+    /* Compact table for very small screens */
+    .table th, .table td {
+        padding: 6px 4px !important;
+        font-size: 12px !important;
+    }
+    
+    /* Hide even more columns on very small screens */
+    .table .d-none-mobile-sm {
+        display: none !important;
+    }
+}
+
+/* Utility classes for mobile */
+.d-none-mobile {
+    display: block;
+}
+
+.d-none-mobile-sm {
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .d-none-mobile {
+        display: none !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .d-none-mobile-sm {
+        display: none !important;
+    }
+}
+
+/* Ensure all text has proper contrast */
+.text-white {
+    color: #ffffff !important;
+}
+
+.text-dark {
+    color: #2f3640 !important;
+}
+
+.text-muted {
+    color: #64748b !important;
+}
+
+/* Fix any light text on light backgrounds */
+.bg-light .text-muted,
+.bg-white .text-muted,
+.panel .text-muted {
+    color: #64748b !important;
+}
+
+/* Ensure proper spacing for touch targets */
+a, button, input, select, textarea {
+    min-height: 44px;
+    min-width: 44px;
+}
+
+/* Fix for small clickable elements */
+.glyph-icon, .icon {
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Loading and spinner improvements */
+.spinner, .loading {
+    font-size: 16px !important;
+    color: #5856d6 !important;
+}
+
+/* Print styles */
+@media print {
+    body {
+        font-size: 12pt;
+        color: #000000 !important;
+        background: #ffffff !important;
+    }
+    
+    .table th, .table td {
+        font-size: 10pt !important;
+        color: #000000 !important;
+    }
+    
+    .btn, .alert, .modal {
+        display: none !important;
+    }
+}

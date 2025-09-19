@@ -16,6 +16,9 @@ class Users(models.Model):
     dlbandwidth = models.IntegerField(db_column='DLBandwidth')  # Field name made lowercase.
     date = models.DateField(db_column='Date')  # Field name made lowercase.
     lastmodif = models.CharField(db_column='LastModif', max_length=255)  # Field name made lowercase.
+    # New fields for individual quota management
+    custom_quota_enabled = models.BooleanField(default=False, help_text="Enable custom quota for this FTP user")
+    custom_quota_size = models.IntegerField(default=0, help_text="Custom quota size in MB (0 = use package default)")
 
     class Meta:
         db_table = 'users'

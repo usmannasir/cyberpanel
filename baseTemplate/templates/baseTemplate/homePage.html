@@ -663,6 +663,23 @@
                                     <strong style="font-size: 12px; color: #1e293b;">Recommendation:</strong>
                                     <p style="margin: 4px 0 0 0; font-size: 12px; color: #475569; white-space: pre-line;">{$ alert.recommendation $}</p>
                                 </div>
+                                <!-- Add to Firewall Button for Brute Force Attacks -->
+                                <div ng-if="alert.title === 'Brute Force Attack Detected' && alert.details && alert.details['IP Address']" style="margin-top: 12px;">
+                                    <button ng-click="blockIPAddress(alert.details['IP Address'])" 
+                                            ng-disabled="blockingIP === alert.details['IP Address']"
+                                            style="background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;"
+                                            onmouseover="this.style.background='#b91c1c'" 
+                                            onmouseout="this.style.background='#dc2626'">
+                                        <i class="fas fa-ban" ng-if="blockingIP !== alert.details['IP Address']"></i>
+                                        <i class="fas fa-spinner fa-spin" ng-if="blockingIP === alert.details['IP Address']"></i>
+                                        <span ng-if="blockingIP !== alert.details['IP Address']">Block IP</span>
+                                        <span ng-if="blockingIP === alert.details['IP Address']">Blocking...</span>
+                                    </button>
+                                    <span ng-if="blockedIPs && blockedIPs[alert.details['IP Address']]" 
+                                          style="margin-left: 10px; color: #10b981; font-size: 12px; font-weight: 600;">
+                                        <i class="fas fa-check-circle"></i> Blocked
+                                    </span>
+                                </div>
                             </div>
                             <span style="background: {$ alert.severity === 'high' ? '#fee2e2' : (alert.severity === 'medium' ? '#fef3c7' : (alert.severity === 'low' ? '#dbeafe' : '#d1fae5')) $}; 
                                        color: {$ alert.severity === 'high' ? '#dc2626' : (alert.severity === 'medium' ? '#f59e0b' : (alert.severity === 'low' ? '#3b82f6' : '#10b981')) $}; 

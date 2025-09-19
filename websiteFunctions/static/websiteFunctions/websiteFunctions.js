@@ -13289,6 +13289,16 @@ app.controller('manageAliasController', function ($scope, $http, $timeout, $wind
     $scope.manageAliasLoading = true;
     $scope.operationSuccess = true;
 
+    // Initialize the page to show aliases list
+    $scope.showAliasesList = function() {
+        $scope.aliasTable = true;
+        $scope.addAliasButton = true;
+        $scope.domainAliasForm = false;
+    };
+
+    // Auto-show aliases list on page load
+    $scope.showAliasesList();
+
     $scope.createAliasEnter = function ($event) {
         var keyCode = $event.which || $event.keyCode;
         if (keyCode === 13) {
@@ -13534,6 +13544,64 @@ app.controller('manageAliasController', function ($scope, $http, $timeout, $wind
         }
 
 
+    };
+
+    $scope.issueAliasSSL = function (masterDomain, aliasDomain) {
+        $scope.manageAliasLoading = false;
+
+        url = "/websites/issueAliasSSL";
+
+        var data = {
+            masterDomain: masterDomain,
+            aliasDomain: aliasDomain
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            if (response.data.issueAliasSSL === 1) {
+                $scope.aliasTable = false;
+                $scope.addAliasButton = true;
+                $scope.domainAliasForm = true;
+                $scope.aliasError = true;
+                $scope.couldNotConnect = true;
+                $scope.aliasCreated = true;
+                $scope.manageAliasLoading = true;
+                $scope.operationSuccess = false;
+
+                $timeout(function () {
+                    $window.location.reload();
+                }, 3000);
+            } else {
+                $scope.aliasTable = false;
+                $scope.addAliasButton = true;
+                $scope.domainAliasForm = true;
+                $scope.aliasError = false;
+                $scope.couldNotConnect = true;
+                $scope.aliasCreated = true;
+                $scope.manageAliasLoading = true;
+                $scope.operationSuccess = true;
+
+                $scope.errorMessage = response.data.error_message;
+            }
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.aliasTable = false;
+            $scope.addAliasButton = true;
+            $scope.domainAliasForm = true;
+            $scope.aliasError = true;
+            $scope.couldNotConnect = false;
+            $scope.aliasCreated = true;
+            $scope.manageAliasLoading = true;
+            $scope.operationSuccess = true;
+        }
     };
 
 

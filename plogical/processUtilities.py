@@ -496,6 +496,7 @@ class ProcessUtilities(multi.Thread):
                 return ProcessUtilities.sendCommand(command, user, dir)[:-1]
         except BaseException as msg:
             logging.writeToFile(str(msg) + "[outputExecutioner:188]")
+            return None
 
     def customPoen(self):
         try:

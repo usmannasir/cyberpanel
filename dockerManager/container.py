@@ -1753,3 +1753,264 @@ class ContainerManager(multi.Thread):
         
         log_message = f'DOCKER_COMMAND_ERROR: User={username} Container={containerName} Error="{errorMsg}" Command="{command[:100]}" Time={time.time()}'
         logging.CyberCPLogFileWriter.writeToFile(log_message)
+
+    def updateContainer(self, userID=None, data=None):
+        """
+        Update container with new image while preserving data using Docker volumes
+        """
+        try:
+            name = data['name']
+            newImage = data.get('newImage', '')
+            newTag = data.get('newTag', 'latest')
+            
+            if ACLManager.checkContainerOwnership(name, userID) != 1:
+                return ACLManager.loadErrorJson('updateContainerStatus', 0)
+
+            client = docker.from_env()
+            dockerAPI = docker.APIClient()
+
+            try:
+                container = client.containers.get(name)
+            except docker.errors.NotFound:
+                data_ret = {'updateContainerStatus': 0, 'error_message': 'Container does not exist'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            # Get current container configuration
+            container_attrs = container.attrs
+            current_image = container_attrs['Config']['Image']
+            
+            # If no new image specified, use current image with latest tag
+            if not newImage:
+                if ':' in current_image:
+                    newImage = current_image.split(':')[0]
+                else:
+                    newImage = current_image
+                    newTag = 'latest'
+            
+            full_new_image = f"{newImage}:{newTag}"
+            
+            # Check if image exists locally, if not pull it
+            try:
+                client.images.get(full_new_image)
+            except docker.errors.ImageNotFound:
+                try:
+                    logging.CyberCPLogFileWriter.writeToFile(f'Pulling new image: {full_new_image}')
+                    client.images.pull(newImage, tag=newTag)
+                except Exception as e:
+                    data_ret = {'updateContainerStatus': 0, 'error_message': f'Failed to pull image {full_new_image}: {str(e)}'}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+            # Get current container configuration for recreation
+            container_config = container_attrs['Config']
+            container_host_config = container_attrs['HostConfig']
+            
+            # Extract volumes from current container
+            volumes = {}
+            if 'Mounts' in container_attrs:
+                for mount in container_attrs['Mounts']:
+                    if mount['Type'] == 'volume':
+                        volumes[mount['Destination']] = mount['Name']
+                    elif mount['Type'] == 'bind':
+                        volumes[mount['Destination']] = mount['Source']
+            
+            # Extract environment variables
+            env_vars = container_config.get('Env', [])
+            env_dict = {}
+            for env_var in env_vars:
+                if '=' in env_var:
+                    key, value = env_var.split('=', 1)
+                    env_dict[key] = value
+            
+            # Extract ports
+            port_bindings = {}
+            if 'PortBindings' in container_host_config and container_host_config['PortBindings']:
+                for container_port, host_bindings in container_host_config['PortBindings'].items():
+                    if host_bindings:
+                        port_bindings[container_port] = host_bindings[0]['HostPort']
+            
+            # Stop current container
+            if container.status == 'running':
+                container.stop()
+                time.sleep(2)
+            
+            # Create new container with same configuration but new image
+            new_container_name = f"{name}_updated_{int(time.time())}"
+            
+            # Create volume mounts
+            volume_mounts = []
+            for dest, src in volumes.items():
+                volume_mounts.append(f"{src}:{dest}")
+            
+            # Create new container
+            new_container = client.containers.create(
+                image=full_new_image,
+                name=new_container_name,
+                environment=env_dict,
+                volumes=volume_mounts,
+                ports=port_bindings,
+                detach=True,
+                restart_policy=container_host_config.get('RestartPolicy', {'Name': 'no'})
+            )
+            
+            # Start new container
+            new_container.start()
+            
+            # Wait a moment for container to start
+            time.sleep(3)
+            
+            # Check if new container is running
+            new_container.reload()
+            if new_container.status == 'running':
+                # Remove old container
+                container.remove()
+                
+                # Rename new container to original name
+                new_container.rename(name)
+                
+                # Update database record
+                try:
+                    container_record = Containers.objects.get(name=name)
+                    container_record.image = newImage
+                    container_record.tag = newTag
+                    container_record.cid = new_container.short_id
+                    container_record.save()
+                except Containers.DoesNotExist:
+                    pass
+                
+                data_ret = {'updateContainerStatus': 1, 'error_message': 'Container updated successfully', 'new_image': full_new_image}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            else:
+                # New container failed to start, remove it and restore old one
+                new_container.remove()
+                container.start()
+                data_ret = {'updateContainerStatus': 0, 'error_message': 'New container failed to start, old container restored'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+        except Exception as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [ContainerManager.updateContainer]')
+            data_ret = {'updateContainerStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def deleteContainerWithData(self, userID=None, data=None):
+        """
+        Delete container and all associated data (volumes)
+        """
+        try:
+            name = data['name']
+            
+            if ACLManager.checkContainerOwnership(name, userID) != 1:
+                return ACLManager.loadErrorJson('deleteContainerWithDataStatus', 0)
+
+            client = docker.from_env()
+
+            try:
+                container = client.containers.get(name)
+            except docker.errors.NotFound:
+                data_ret = {'deleteContainerWithDataStatus': 0, 'error_message': 'Container does not exist'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            # Get container volumes before deletion
+            container_attrs = container.attrs
+            volumes_to_remove = []
+            
+            if 'Mounts' in container_attrs:
+                for mount in container_attrs['Mounts']:
+                    if mount['Type'] == 'volume':
+                        volumes_to_remove.append(mount['Name'])
+
+            # Stop and remove container
+            if container.status == 'running':
+                container.stop()
+                time.sleep(2)
+            
+            container.remove(force=True)
+            
+            # Remove associated volumes
+            for volume_name in volumes_to_remove:
+                try:
+                    volume = client.volumes.get(volume_name)
+                    volume.remove()
+                    logging.CyberCPLogFileWriter.writeToFile(f'Removed volume: {volume_name}')
+                except Exception as e:
+                    logging.CyberCPLogFileWriter.writeToFile(f'Failed to remove volume {volume_name}: {str(e)}')
+
+            # Remove from database
+            try:
+                container_record = Containers.objects.get(name=name)
+                container_record.delete()
+            except Containers.DoesNotExist:
+                pass
+
+            data_ret = {'deleteContainerWithDataStatus': 1, 'error_message': 'Container and data deleted successfully'}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except Exception as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [ContainerManager.deleteContainerWithData]')
+            data_ret = {'deleteContainerWithDataStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def deleteContainerKeepData(self, userID=None, data=None):
+        """
+        Delete container but preserve data (volumes)
+        """
+        try:
+            name = data['name']
+            
+            if ACLManager.checkContainerOwnership(name, userID) != 1:
+                return ACLManager.loadErrorJson('deleteContainerKeepDataStatus', 0)
+
+            client = docker.from_env()
+
+            try:
+                container = client.containers.get(name)
+            except docker.errors.NotFound:
+                data_ret = {'deleteContainerKeepDataStatus': 0, 'error_message': 'Container does not exist'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            # Get container volumes before deletion
+            container_attrs = container.attrs
+            preserved_volumes = []
+            
+            if 'Mounts' in container_attrs:
+                for mount in container_attrs['Mounts']:
+                    if mount['Type'] == 'volume':
+                        preserved_volumes.append(mount['Name'])
+                    elif mount['Type'] == 'bind':
+                        preserved_volumes.append(f"Bind mount: {mount['Source']} -> {mount['Destination']}")
+
+            # Stop and remove container
+            if container.status == 'running':
+                container.stop()
+                time.sleep(2)
+            
+            container.remove(force=True)
+
+            # Remove from database
+            try:
+                container_record = Containers.objects.get(name=name)
+                container_record.delete()
+            except Containers.DoesNotExist:
+                pass
+
+            data_ret = {
+                'deleteContainerKeepDataStatus': 1, 
+                'error_message': 'Container deleted successfully, data preserved',
+                'preserved_volumes': preserved_volumes
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except Exception as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [ContainerManager.deleteContainerKeepData]')
+            data_ret = {'deleteContainerKeepDataStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)

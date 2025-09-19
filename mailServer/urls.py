@@ -35,4 +35,7 @@ urlpatterns = [
     ### email limits
     re_path(r'^EmailLimits$', views.EmailLimits, name='EmailLimits'),
     re_path(r'^SaveEmailLimitsNew$', views.SaveEmailLimitsNew, name='SaveEmailLimitsNew'),
+    
+    ### disk usage refresh
+    re_path(r'^refreshEmailDiskUsage$', views.refreshEmailDiskUsage, name='refreshEmailDiskUsage'),
 ]

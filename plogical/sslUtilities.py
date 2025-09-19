@@ -998,3 +998,57 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
 
     except BaseException as msg:
         return [0, "347 " + str(msg) + " [issueSSLForDomain]"]
+
+    @staticmethod
+    def reconcile_ssl_all():
+        """Reconcile SSL configuration for all domains using the new reconciliation module"""
+        try:
+            from plogical.sslReconcile import SSLReconcile
+            return SSLReconcile.reconcile_all()
+        except Exception as e:
+            logging.CyberCPLogFileWriter.writeToFile(f"Error in reconcile_ssl_all: {str(e)}")
+            return False
+
+    @staticmethod
+    def reconcile_ssl_domain(domain):
+        """Reconcile SSL configuration for a specific domain using the new reconciliation module"""
+        try:
+            from plogical.sslReconcile import SSLReconcile
+            return SSLReconcile.reconcile_domain(domain)
+        except Exception as e:
+            logging.CyberCPLogFileWriter.writeToFile(f"Error in reconcile_ssl_domain for {domain}: {str(e)}")
+            return False
+
+    @staticmethod
+    def fix_acme_challenge_context(virtualHostName):
+        """Fix ACME challenge context for a specific domain"""
+        try:
+            from plogical.sslReconcile import SSLReconcile
+            
+            vconf_path = f"{sslUtilities.Server_root}/conf/vhosts/{virtualHostName}/vhost.conf"
+            
+            if not os.path.exists(vconf_path):
+                logging.CyberCPLogFileWriter.writeToFile(f"VHost configuration not found: {vconf_path}")
+                return False
+            
+            # Read docRoot from vhost configuration
+            docroot = ""
+            with open(vconf_path, 'r') as f:
+                for line in f:
+                    if line.strip().startswith('docRoot'):
+                        docroot = line.split()[1]
+                        break
+            
+            if not docroot:
+                logging.CyberCPLogFileWriter.writeToFile(f"No docRoot found for {virtualHostName}")
+                return False
+            
+            # Resolve $VH_ROOT variable
+            if docroot.startswith('$VH_ROOT/'):
+                docroot = docroot.replace('$VH_ROOT', f"/home/{virtualHostName}")
+            
+            return SSLReconcile.fix_context_location(vconf_path, docroot)
+            
+        except Exception as e:
+            logging.CyberCPLogFileWriter.writeToFile(f"Error fixing ACME challenge context for {virtualHostName}: {str(e)}")
+            return False
