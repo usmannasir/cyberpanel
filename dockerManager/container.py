@@ -124,7 +124,7 @@ class ContainerManager(multi.Thread):
                 portDef = item.split('/')
                 portConfig[portDef[0]] = portDef[1]
 
-        if image is None or image is '' or tag is None or tag is '':
+        if image is None or image == '' or tag is None or tag == '':
             return redirect(reverse('containerImage'))
 
         Data = {"ownerList": adminNames, "image": image, "name": name, "tag": tag, "portConfig": portConfig,
