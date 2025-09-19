@@ -2886,7 +2886,14 @@ def main():
 
     # Now that database is created, run Django migrations
     preFlightsChecks.stdOut("Running Django migrations...")
-    os.chdir("/usr/local/CyberPanel")
+    # Check which directory exists (installation may be at different stages)
+    if os.path.exists("/usr/local/CyberCP"):
+        os.chdir("/usr/local/CyberCP")
+    elif os.path.exists("/usr/local/cyberpanel"):
+        os.chdir("/usr/local/cyberpanel")
+    else:
+        preFlightsChecks.stdOut("ERROR: Neither /usr/local/CyberCP nor /usr/local/cyberpanel exists!")
+        sys.exit(1)
 
     # Create fresh migrations for all apps
     command = "/usr/local/CyberPanel/bin/python manage.py makemigrations"
