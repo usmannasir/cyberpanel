@@ -2886,7 +2886,7 @@ def main():
 
     # Now that database is created, run Django migrations
     preFlightsChecks.stdOut("Running Django migrations...")
-    os.chdir("/usr/local/CyberCP")
+    os.chdir("/usr/local/CyberPanel")
 
     # Create fresh migrations for all apps
     command = "/usr/local/CyberPanel/bin/python manage.py makemigrations"
