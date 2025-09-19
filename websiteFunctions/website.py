@@ -7586,7 +7586,7 @@ StrictHostKeyChecking no
             if output.find("1,None") > -1:
                 status = {"status": 1, "message": "Apache configuration reset to default successfully."}
             else:
-                status = {"status": 0, "error_message": f"Failed to reset Apache configuration: {output}"
+                status = {"status": 0, "error_message": f"Failed to reset Apache configuration: {output}"}
 
             final_json = json.dumps(status)
             return HttpResponse(final_json)
