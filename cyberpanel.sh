@@ -1427,7 +1427,7 @@ mkdir -p /usr/local/CyberPanel
 
 if [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]]) ; then
   echo -e "Ubuntu 22.04/24.04 detected, using python3 -m venv..."
-  if python3 -m venv /usr/local/CyberPanel 2>&1; then
+  if python3 -m venv /usr/local/CyberPanel-venv 2>&1; then
     echo -e "Virtual environment created successfully"
   else
     echo -e "python3 -m venv failed, trying virtualenv..."
@@ -1438,24 +1438,24 @@ if [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$S
       # For Ubuntu 22.04, install virtualenv via apt
       Retry_Command "DEBIAN_FRONTEND=noninteractive apt-get install -y python3-virtualenv"
     fi
-    virtualenv -p /usr/bin/python3 /usr/local/CyberPanel
+    virtualenv -p /usr/bin/python3 /usr/local/CyberPanel-venv
   fi
 else
-  virtualenv -p /usr/bin/python3 /usr/local/CyberPanel
+  virtualenv -p /usr/bin/python3 /usr/local/CyberPanel-venv
 fi
 
 # Verify virtual environment was created
-if [[ ! -f /usr/local/CyberPanel/bin/activate ]]; then
+if [[ ! -f /usr/local/CyberPanel-venv/bin/activate ]]; then
   echo -e "ERROR: Virtual environment creation failed!"
   exit 1
 fi
 
 if [ "$Server_OS" = "Ubuntu" ]; then
   # shellcheck disable=SC1091
-  . /usr/local/CyberPanel/bin/activate
+  . /usr/local/CyberPanel-venv/bin/activate
 else
   # shellcheck disable=SC1091
-  source /usr/local/CyberPanel/bin/activate
+  source /usr/local/CyberPanel-venv/bin/activate
 fi
 
 Debug_Log2 "Installing requirments..,3"
@@ -1463,6 +1463,8 @@ Debug_Log2 "Installing requirments..,3"
 Retry_Command "pip install --default-timeout=3600 -r /usr/local/requirments.txt"
   Check_Return "requirments" "no_exit"
 
+# Change to /usr/local directory to clone CyberPanel
+cd /usr/local || exit
 rm -rf cyberpanel
 echo -e "\nFetching files from ${Git_Clone_URL}...\n"
 
@@ -1476,9 +1478,7 @@ echo -e "\nCyberPanel source code downloaded...\n"
 cd cyberpanel || exit
 git checkout "$Branch_Name"
   Check_Return "git checkout"
-cd - || exit
-cp -r cyberpanel /usr/local/cyberpanel
-cd cyberpanel/install || exit
+cd install || exit
 
 Debug_Log2 "Necessary components installed..,5"
 }
@@ -1803,7 +1803,8 @@ if [[ $Server_Edition = "Enterprise" ]] ; then
   Enterprise_Flag="--ent ent --serial "
 fi
 
-sed -i 's|git clone https://github.com/usmannasir/cyberpanel|echo downloaded|g' install.py
+# Remove the git clone replacement - let install.py handle the move operation
+# sed -i 's|git clone https://github.com/usmannasir/cyberpanel|echo downloaded|g' install.py
 sed -i 's|mirror.cyberpanel.net|cyberpanel.sh|g' install.py
 
 
@@ -1854,7 +1855,7 @@ if [[ "$Debug" = "On" ]] ; then
   Debug_Log "Final_Flags" "${Final_Flags[@]}"
 fi
 
-/usr/local/CyberPanel/bin/python install.py "${Final_Flags[@]}"
+/usr/local/CyberPanel-venv/bin/python install.py "${Final_Flags[@]}"
 
 
 if grep "CyberPanel installation successfully completed" /var/log/installLogs.txt >/dev/null; then
@@ -2293,10 +2294,10 @@ curl --silent -o /etc/profile.d/cyberpanel.sh https://cyberpanel.sh/?banner 2>/d
 chmod 700 /etc/profile.d/cyberpanel.sh
 echo "$Admin_Pass" > /etc/cyberpanel/adminPass
 chmod 600 /etc/cyberpanel/adminPass
-/usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py --password "$Admin_Pass"
+/usr/local/CyberPanel-venv/bin/python /usr/local/CyberCP/plogical/adminPass.py --password "$Admin_Pass"
 mkdir -p /etc/opendkim
 
-echo '/usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py --password "$@"' > /usr/bin/adminPass
+echo '/usr/local/CyberPanel-venv/bin/python /usr/local/CyberCP/plogical/adminPass.py --password "$@"' > /usr/bin/adminPass
 echo "systemctl restart lscpd" >> /usr/bin/adminPass
 echo "echo \$@ > /etc/cyberpanel/adminPass" >> /usr/bin/adminPass
 chmod 700 /usr/bin/adminPass
