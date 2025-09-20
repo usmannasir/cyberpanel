@@ -28,6 +28,7 @@ urlpatterns = [
     re_path(r'^removeImage$', views.removeImage, name='removeImage'),
     re_path(r'^pullImage$', views.pullImage, name='pullImage'),
     re_path(r'^updateContainer$', views.updateContainer, name='updateContainer'),
+    re_path(r'^listContainers$', views.listContainers, name='listContainers'),
     re_path(r'^deleteContainerWithData$', views.deleteContainerWithData, name='deleteContainerWithData'),
     re_path(r'^deleteContainerKeepData$', views.deleteContainerKeepData, name='deleteContainerKeepData'),
     re_path(r'^recreateContainer$', views.recreateContainer, name='recreateContainer'),
