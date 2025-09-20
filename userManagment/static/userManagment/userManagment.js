@@ -305,10 +305,14 @@ app.controller('modifyUser', function ($scope, $http) {
             firstName: firstName,
             lastName: lastName,
             email: email,
-            passwordByPass: password,
             securityLevel: $scope.securityLevel,
             twofa: $scope.twofa
         };
+
+        // Only include password if it's provided and not empty
+        if (password && password.trim()) {
+            data.passwordByPass = password;
+        }
 
         var config = {
             headers: {

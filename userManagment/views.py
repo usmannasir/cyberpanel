@@ -408,14 +408,16 @@ def saveModifications(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            token = hashPassword.generateToken(accountUsername, data['passwordByPass'])
-            password = hashPassword.hash_password(data['passwordByPass'])
+            # Only update password if a new one is provided
+            if 'passwordByPass' in data and data['passwordByPass'] and data['passwordByPass'].strip():
+                token = hashPassword.generateToken(accountUsername, data['passwordByPass'])
+                password = hashPassword.hash_password(data['passwordByPass'])
+                user.password = password
+                user.token = token
 
             user.firstName = firstName
             user.lastName = lastName
             user.email = email
-            user.password = password
-            user.token = token
             user.type = 0
             user.twoFA = twofa
 
