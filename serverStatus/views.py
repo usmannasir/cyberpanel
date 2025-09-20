@@ -554,6 +554,77 @@ def changeLicense(request):
         return HttpResponse(final_json)
 
 
+def switchToOLS(request):
+    """Switch back to OpenLiteSpeed from LiteSpeed Enterprise"""
+    try:
+        userID = request.session['userID']
+
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('status', 0)
+
+        # Check if we're currently running LiteSpeed Enterprise
+        if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+            data_ret = {'status': 0, 'error_message': 'Already running OpenLiteSpeed. No need to switch.'}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        # Check if backup exists
+        if not os.path.exists('/usr/local/lswsbak'):
+            data_ret = {'status': 0, 'error_message': 'No OpenLiteSpeed backup found. Cannot switch back to OpenLiteSpeed.'}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        execPath = "sudo /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/serverStatus/serverStatusUtil.py"
+        execPath = execPath + " switchToOLS"
+
+        ProcessUtilities.popenExecutioner(execPath)
+        time.sleep(2)
+
+        data_ret = {'status': 1, 'error_message': "None"}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+    except BaseException as msg:
+        data_ret = {'status': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+
+def switchToOLSStatus(request):
+    """Check the status of switching back to OpenLiteSpeed"""
+    try:
+        command = 'sudo cat ' + serverStatusUtil.ServerStatusUtil.lswsInstallStatusPath
+        output = ProcessUtilities.outputExecutioner(command)
+
+        if output.find('[404]') > -1:
+            command = "sudo rm -f " + serverStatusUtil.ServerStatusUtil.lswsInstallStatusPath
+            ProcessUtilities.popenExecutioner(command)
+            data_ret = {'status': 1, 'abort': 1, 'requestStatus': output, 'installed': 0}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+        elif output.find('[200]') > -1:
+            command = "sudo rm -f " + serverStatusUtil.ServerStatusUtil.lswsInstallStatusPath
+            ProcessUtilities.popenExecutioner(command)
+            data_ret = {'status': 1, 'abort': 1, 'requestStatus': output, 'installed': 1}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+        else:
+            data_ret = {'status': 1, 'abort': 0, 'requestStatus': output, 'installed': 0}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    except BaseException as msg:
+        command = "sudo rm -f " + serverStatusUtil.ServerStatusUtil.lswsInstallStatusPath
+        ProcessUtilities.popenExecutioner(command)
+        data_ret = {'status': 0, 'abort': 1, 'requestStatus': str(msg), 'installed': 0}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+
 def topProcesses(request):
     proc = httpProc(request, "serverStatus/topProcesses.html", None, 'admin')
     return proc.render()

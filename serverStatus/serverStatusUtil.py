@@ -469,6 +469,117 @@ class ServerStatusUtil(multi.Thread):
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
+    @staticmethod
+    def switchToOLS():
+        """Switch back to OpenLiteSpeed from LiteSpeed Enterprise"""
+        try:
+            os.environ['TERM'] = "xterm-256color"
+            
+            statusFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
+            FNULL = open(os.devnull, 'w')
+
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, "Starting switch back to OpenLiteSpeed..\n")
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, "Stopping LiteSpeed Enterprise..\n", 1)
+
+            # Stop current LiteSpeed Enterprise
+            ProcessUtilities.killLiteSpeed()
+
+            # Check if backup exists
+            if not os.path.exists('/usr/local/lswsbak'):
+                logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, "No OpenLiteSpeed backup found. Cannot switch back. [404]", 1)
+                return 0
+
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, "Removing LiteSpeed Enterprise..\n", 1)
+
+            # Remove current LiteSpeed Enterprise installation
+            if os.path.exists('/usr/local/lsws'):
+                shutil.rmtree('/usr/local/lsws')
+
+            # Restore OpenLiteSpeed from backup
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, "Restoring OpenLiteSpeed from backup..\n", 1)
+            
+            command = 'mv /usr/local/lswsbak /usr/local/lsws'
+            if ServerStatusUtil.executioner(command, statusFile) == 0:
+                logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, "Failed to restore OpenLiteSpeed. [404]", 1)
+                return 0
+
+            # Install OpenLiteSpeed if not already installed
+            if not os.path.exists('/usr/local/lsws/bin/openlitespeed'):
+                logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, "Installing OpenLiteSpeed..\n", 1)
+                
+                if os.path.exists('/etc/redhat-release'):
+                    command = 'yum -y install openlitespeed'
+                else:
+                    command = 'apt-get -y install openlitespeed'
+                
+                if ServerStatusUtil.executioner(command, statusFile) == 0:
+                    logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, "Failed to install OpenLiteSpeed. [404]", 1)
+                    return 0
+
+            # Rebuild vhost configurations for OpenLiteSpeed
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, "Rebuilding vhost configurations..\n", 1)
+            ServerStatusUtil.rebuildvConf()
+
+            # Start OpenLiteSpeed
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, "Starting OpenLiteSpeed..\n", 1)
+            ProcessUtilities.restartLitespeed()
+
+            # Clean up any Enterprise-specific cron jobs
+            CentOSPath = '/etc/redhat-release'
+            if os.path.exists(CentOSPath):
+                cronPath = '/var/spool/cron/root'
+            else:
+                cronPath = '/var/spool/cron/crontabs/root'
+
+            if os.path.exists(cronPath):
+                data = open(cronPath, 'r').readlines()
+                writeToFile = open(cronPath, 'w')
+                
+                for items in data:
+                    if items.find('-maxdepth 2 -type f -newer') > -1:
+                        pass
+                    else:
+                        writeToFile.writelines(items)
+                
+                writeToFile.close()
+
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, "Successfully switched back to OpenLiteSpeed. [200]\n", 1)
+            return 1
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, f"Error switching back to OpenLiteSpeed: {str(msg)}. [404]", 1)
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            return 0
+
+    @staticmethod
+    def switchToOLSCLI():
+        """CLI version of switch back to OpenLiteSpeed"""
+        try:
+            ssu = ServerStatusUtil('')
+            ssu.start()
+
+            while(True):
+                command = 'sudo cat ' + ServerStatusUtil.lswsInstallStatusPath
+                output = ProcessUtilities.outputExecutioner(command)
+                if output.find('[404]') > -1:
+                    command = "sudo rm -f " + ServerStatusUtil.lswsInstallStatusPath
+                    ProcessUtilities.popenExecutioner(command)
+                    data_ret = {'status': 1, 'abort': 1, 'requestStatus': output, 'installed': 0}
+                    print(str(data_ret))
+                    return 0
+                elif output.find('[200]') > -1:
+                    command = "sudo rm -f " + ServerStatusUtil.lswsInstallStatusPath
+                    ProcessUtilities.popenExecutioner(command)
+                    data_ret = {'status': 1, 'abort': 1, 'requestStatus': 'Successfully switched back to OpenLiteSpeed.', 'installed': 1}
+                    print(str(data_ret))
+                    return 1
+                else:
+                    data_ret = {'status': 1, 'abort': 0, 'requestStatus': output, 'installed': 0}
+                    time.sleep(2)
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+
 def main():
 
     parser = argparse.ArgumentParser(description='Server Status Util.')
@@ -479,6 +590,8 @@ def main():
 
     if args.function == "switchTOLSWS":
         ServerStatusUtil.switchTOLSWS(args.licenseKey)
+    elif args.function == "switchToOLS":
+        ServerStatusUtil.switchToOLS()
 
 
 if __name__ == "__main__":
