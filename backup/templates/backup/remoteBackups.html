@@ -381,6 +381,251 @@
         background: var(--success-color, #10b981);
     }
     
+    /* Progress Section Styles */
+    .progress-section {
+        background: var(--bg-primary, #fff);
+        border-radius: 15px;
+        box-shadow: 0 4px 20px var(--shadow-light, rgba(0, 0, 0, 0.1));
+        margin-top: 2rem;
+        overflow: hidden;
+        animation: fadeInUp 0.5s ease-out;
+    }
+    
+    .progress-header {
+        background: linear-gradient(135deg, var(--accent-color, #5b5fcf) 0%, var(--accent-hover, #4547a9) 100%);
+        color: white;
+        padding: 1.5rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .progress-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .status-progress {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+    
+    .status-completed {
+        background: #10b981;
+        color: white;
+    }
+    
+    .status-error {
+        background: #ef4444;
+        color: white;
+    }
+    
+    .progress-overview {
+        padding: 2rem;
+        background: var(--bg-secondary, #f8fafc);
+    }
+    
+    .progress-bar-container {
+        position: relative;
+        background: var(--bg-primary, #fff);
+        border-radius: 10px;
+        padding: 1rem;
+        box-shadow: 0 2px 10px var(--shadow-light, rgba(0, 0, 0, 0.05));
+    }
+    
+    .progress-bar {
+        width: 100%;
+        height: 20px;
+        background: #e2e8f0;
+        border-radius: 10px;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent-color, #5b5fcf) 0%, var(--accent-hover, #4547a9) 100%);
+        border-radius: 10px;
+        transition: width 0.5s ease;
+        position: relative;
+    }
+    
+    .progress-fill::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
+        animation: shimmer 2s infinite;
+    }
+    
+    @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+    
+    .progress-text {
+        text-align: center;
+        margin-top: 0.75rem;
+        font-weight: 600;
+        color: var(--text-primary, #1e293b);
+        font-size: 1.1rem;
+    }
+    
+    .progress-details {
+        padding: 2rem;
+    }
+    
+    .progress-step {
+        display: flex;
+        align-items: center;
+        padding: 1.5rem 0;
+        border-bottom: 1px solid var(--border-light, #e2e8f0);
+        opacity: 0.5;
+        transition: all 0.3s ease;
+    }
+    
+    .progress-step:last-child {
+        border-bottom: none;
+    }
+    
+    .progress-step.active {
+        opacity: 1;
+        background: var(--bg-hover, #f8f9ff);
+        margin: 0 -2rem;
+        padding: 1.5rem 2rem;
+        border-radius: 10px;
+    }
+    
+    .progress-step.completed {
+        opacity: 1;
+    }
+    
+    .step-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1.5rem;
+        font-size: 1.25rem;
+        transition: all 0.3s ease;
+    }
+    
+    .progress-step:not(.active):not(.completed) .step-icon {
+        background: var(--bg-secondary, #f1f5f9);
+        color: var(--text-secondary, #64748b);
+    }
+    
+    .progress-step.active .step-icon {
+        background: var(--accent-color, #5b5fcf);
+        color: white;
+        animation: pulse 2s infinite;
+    }
+    
+    .progress-step.completed .step-icon {
+        background: #10b981;
+        color: white;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+    
+    .step-content {
+        flex: 1;
+    }
+    
+    .step-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary, #1e293b);
+        margin-bottom: 0.25rem;
+    }
+    
+    .step-description {
+        color: var(--text-secondary, #64748b);
+        font-size: 0.9rem;
+    }
+    
+    .log-section {
+        border-top: 1px solid var(--border-light, #e2e8f0);
+        background: var(--bg-dark, #1e293b);
+        color: var(--text-light, #e2e8f0);
+    }
+    
+    .log-header {
+        padding: 1rem 2rem;
+        border-bottom: 1px solid var(--border-dark, #334155);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .log-header h4 {
+        margin: 0;
+        color: var(--text-light, #e2e8f0);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .log-content {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .log-output {
+        padding: 1rem 2rem;
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        font-size: 0.875rem;
+        line-height: 1.5;
+    }
+    
+    .log-entry {
+        margin-bottom: 0.5rem;
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .log-time {
+        color: var(--text-muted, #94a3b8);
+        min-width: 80px;
+    }
+    
+    .log-message {
+        flex: 1;
+    }
+    
+    .log-entry.log-error .log-message {
+        color: #ef4444;
+    }
+    
+    .log-entry.log-success .log-message {
+        color: #10b981;
+    }
+    
+    .log-entry.log-info .log-message {
+        color: #3b82f6;
+    }
+    
     .terminal-body {
         padding: 1.5rem;
         height: 350px;
@@ -525,7 +770,7 @@
         <div class="card-body">
             <form action="/" method="post">
                 <div class="row">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="form-group">
                             <label class="form-label">
                                 <i class="fas fa-map-marker-alt" style="margin-right: 0.5rem;"></i>
@@ -535,7 +780,20 @@
                                    placeholder="192.168.1.100" required>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-network-wired" style="margin-right: 0.5rem;"></i>
+                                {% trans "CyberPanel Port" %}
+                            </label>
+                            <input type="number" class="form-control" ng-model="cyberPanelPort" 
+                                   placeholder="8090" min="1" max="65535" required>
+                            <small class="form-text text-muted">
+                                {% trans "Port where CyberPanel is running on remote server (default: 8090)" %}
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
                         <div class="form-group">
                             <label class="form-label">
                                 <i class="fas fa-key" style="margin-right: 0.5rem;"></i>
@@ -658,32 +916,100 @@
         </div>
     </div>
 
-    <!-- Transfer Progress Terminal -->
-    <div ng-hide="backupStatus" class="terminal-section">
-        <div class="terminal-header">
-            <div class="terminal-title">
-                <i class="fas fa-terminal"></i>
+    <!-- Transfer Progress Section -->
+    <div ng-hide="backupStatus" class="progress-section">
+        <div class="progress-header">
+            <div class="progress-title">
+                <i class="fas fa-sync-alt fa-spin" ng-if="transferInProgress"></i>
+                <i class="fas fa-check-circle" ng-if="transferCompleted"></i>
+                <i class="fas fa-exclamation-triangle" ng-if="transferError"></i>
                 {% trans "Transfer Progress" %}
             </div>
-            <div class="terminal-dots">
-                <div class="terminal-dot red"></div>
-                <div class="terminal-dot yellow"></div>
-                <div class="terminal-dot green"></div>
+            <div class="progress-status">
+                <span ng-if="transferInProgress" class="status-badge status-progress">
+                    <i class="fas fa-clock"></i> {% trans "In Progress" %}
+                </span>
+                <span ng-if="transferCompleted" class="status-badge status-completed">
+                    <i class="fas fa-check"></i> {% trans "Completed" %}
+                </span>
+                <span ng-if="transferError" class="status-badge status-error">
+                    <i class="fas fa-times"></i> {% trans "Error" %}
+                </span>
             </div>
         </div>
-        <div class="terminal-body">
-            <div class="terminal-grid">
-                <div>
-                    <h4 style="color: var(--text-secondary, #94a3b8); margin-bottom: 1rem; font-size: 0.875rem;">
-                        {% trans "Backup Progress" %}
-                    </h4>
-                    <div ng-bind="requestData" style="white-space: pre-wrap;"></div>
+        
+        <!-- Overall Progress Bar -->
+        <div class="progress-overview">
+            <div class="progress-bar-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" ng-style="{'width': overallProgress + '%'}"></div>
                 </div>
-                <div>
-                    <h4 style="color: var(--text-secondary, #94a3b8); margin-bottom: 1rem; font-size: 0.875rem;">
-                        {% trans "Restore Progress" %}
-                    </h4>
-                    <div ng-bind="restoreData" style="white-space: pre-wrap;"></div>
+                <div class="progress-text">
+                    <span ng-if="overallProgress < 100">{{ overallProgress }}%</span>
+                    <span ng-if="overallProgress >= 100">{% trans "Complete!" %}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Detailed Progress -->
+        <div class="progress-details">
+            <div class="progress-step" ng-class="{'active': currentStep >= 1, 'completed': currentStep > 1}">
+                <div class="step-icon">
+                    <i class="fas fa-download" ng-if="currentStep < 1"></i>
+                    <i class="fas fa-spinner fa-spin" ng-if="currentStep === 1"></i>
+                    <i class="fas fa-check" ng-if="currentStep > 1"></i>
+                </div>
+                <div class="step-content">
+                    <div class="step-title">{% trans "Downloading Backups" %}</div>
+                    <div class="step-description">{{ downloadStatus }}</div>
+                </div>
+            </div>
+            
+            <div class="progress-step" ng-class="{'active': currentStep >= 2, 'completed': currentStep > 2}">
+                <div class="step-icon">
+                    <i class="fas fa-upload" ng-if="currentStep < 2"></i>
+                    <i class="fas fa-spinner fa-spin" ng-if="currentStep === 2"></i>
+                    <i class="fas fa-check" ng-if="currentStep > 2"></i>
+                </div>
+                <div class="step-content">
+                    <div class="step-title">{% trans "Transferring Data" %}</div>
+                    <div class="step-description">{{ transferStatus }}</div>
+                </div>
+            </div>
+            
+            <div class="progress-step" ng-class="{'active': currentStep >= 3, 'completed': currentStep > 3}">
+                <div class="step-icon">
+                    <i class="fas fa-cogs" ng-if="currentStep < 3"></i>
+                    <i class="fas fa-spinner fa-spin" ng-if="currentStep === 3"></i>
+                    <i class="fas fa-check" ng-if="currentStep > 3"></i>
+                </div>
+                <div class="step-content">
+                    <div class="step-title">{% trans "Restoring Websites" %}</div>
+                    <div class="step-description">{{ restoreStatus }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Live Log Display -->
+        <div class="log-section">
+            <div class="log-header">
+                <h4>
+                    <i class="fas fa-terminal"></i>
+                    {% trans "Live Log" %}
+                    <button class="btn btn-sm btn-outline-secondary" ng-click="toggleLog()">
+                        <i class="fas" ng-class="showLog ? 'fa-eye-slash' : 'fa-eye'"></i>
+                        {{ showLog ? 'Hide' : 'Show' }}
+                    </button>
+                </h4>
+            </div>
+            <div class="log-content" ng-show="showLog">
+                <div class="log-output" id="logOutput">
+                    <div ng-repeat="logEntry in logEntries track by $index" 
+                         class="log-entry" 
+                         ng-class="{'log-error': logEntry.type === 'error', 'log-success': logEntry.type === 'success', 'log-info': logEntry.type === 'info'}">
+                        <span class="log-time">{{ logEntry.timestamp | date:'HH:mm:ss' }}</span>
+                        <span class="log-message">{{ logEntry.message }}</span>
+                    </div>
                 </div>
             </div>
         </div>
