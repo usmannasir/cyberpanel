@@ -314,6 +314,7 @@
         overflow: hidden;
         border: 1px solid var(--border-color, #e8e9ff);
         margin-bottom: 2rem;
+        table-layout: fixed;
     }
     
     .containers-table thead {
@@ -613,11 +614,11 @@
                 <table class="containers-table">
                     <thead>
                         <tr>
-                            <th>{% trans "Container" %}</th>
-                            <th>{% trans "Owner" %}</th>
-                            <th>{% trans "Image" %}</th>
-                            <th>{% trans "Tag" %}</th>
-                            <th style="text-align: center;">{% trans "Actions" %}</th>
+                            <th style="width: 25%;">{% trans "Container" %}</th>
+                            <th style="width: 15%;">{% trans "Owner" %}</th>
+                            <th style="width: 25%;">{% trans "Image" %}</th>
+                            <th style="width: 15%;">{% trans "Tag" %}</th>
+                            <th style="width: 20%; text-align: center;">{% trans "Actions" %}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -703,9 +704,9 @@
                 <table class="containers-table">
                     <thead>
                         <tr>
-                            <th>{% trans "Container" %}</th>
-                            <th>{% trans "Status" %}</th>
-                            <th style="text-align: center;">{% trans "Actions" %}</th>
+                            <th style="width: 40%;">{% trans "Container" %}</th>
+                            <th style="width: 20%;">{% trans "Status" %}</th>
+                            <th style="width: 40%; text-align: center;">{% trans "Actions" %}</th>
                         </tr>
                     </thead>
                     <tbody>
