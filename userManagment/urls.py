@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import homeDirectoryViews
 
 urlpatterns = [
     path('', views.loadUserHome, name='loadUsersHome'),
@@ -27,4 +28,14 @@ urlpatterns = [
     path('listUsers', views.listUsers, name='listUsers'),
     path('fetchTableUsers', views.fetchTableUsers, name='fetchTableUsers'),
     path('controlUserState', views.controlUserState, name='controlUserState'),
+    
+    # Home Directory Management URLs
+    path('homeDirectoryManagement', homeDirectoryViews.loadHomeDirectoryManagement, name='homeDirectoryManagement'),
+    path('detectHomeDirectories', homeDirectoryViews.detectHomeDirectories, name='detectHomeDirectories'),
+    path('updateHomeDirectory', homeDirectoryViews.updateHomeDirectory, name='updateHomeDirectory'),
+    path('deleteHomeDirectory', homeDirectoryViews.deleteHomeDirectory, name='deleteHomeDirectory'),
+    path('getHomeDirectoryStats', homeDirectoryViews.getHomeDirectoryStats, name='getHomeDirectoryStats'),
+    path('getUserHomeDirectories', homeDirectoryViews.getUserHomeDirectories, name='getUserHomeDirectories'),
+    path('migrateUser', homeDirectoryViews.migrateUser, name='migrateUser'),
+    path('userMigration', views.userMigration, name='userMigration'),
 ]

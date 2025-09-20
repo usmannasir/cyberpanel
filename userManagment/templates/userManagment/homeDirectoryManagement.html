@@ -1,0 +1,688 @@
+{% extends "baseTemplate/index.html" %}
+{% load static %}
+{% block title %}
+    <title>Home Directory Management - CyberPanel</title>
+{% endblock %}
+
+{% block header_scripts %}
+<style>
+    /* Modern page styles matching modifyACL design */
+    .page-wrapper {
+        background: transparent;
+        padding: 20px;
+    }
+    
+    .page-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .page-header {
+        margin-bottom: 30px;
+    }
+    
+    .page-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--text-primary, #2f3640);
+        margin-bottom: 8px;
+    }
+    
+    .page-subtitle {
+        font-size: 14px;
+        color: var(--text-secondary, #8893a7);
+    }
+    
+    /* Card styles */
+    .content-card {
+        background: var(--bg-secondary, white);
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border: 1px solid var(--border-color, #e8e9ff);
+        margin-bottom: 25px;
+    }
+    
+    .card-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-primary, #2f3640);
+        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .card-title::before {
+        content: '';
+        width: 4px;
+        height: 24px;
+        background: var(--accent-color, #5b5fcf);
+        border-radius: 2px;
+    }
+    
+    /* Statistics grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        background: var(--bg-hover, #f8f9ff);
+        border: 1px solid var(--border-color, #e8e9ff);
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        transition: all 0.2s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        font-size: 20px;
+        color: white;
+    }
+    
+    .stat-icon.bg-info { background: var(--info-color, #17a2b8); }
+    .stat-icon.bg-success { background: var(--success-color, #28a745); }
+    .stat-icon.bg-warning { background: var(--warning-color, #ffc107); }
+    .stat-icon.bg-primary { background: var(--accent-color, #5b5fcf); }
+    
+    .stat-number {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--text-primary, #2f3640);
+        margin-bottom: 5px;
+    }
+    
+    .stat-label {
+        font-size: 13px;
+        color: var(--text-secondary, #8893a7);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+    }
+    
+    /* Table styles */
+    .table-container {
+        background: var(--bg-secondary, white);
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid var(--border-color, #e8e9ff);
+    }
+    
+    .table {
+        margin: 0;
+        background: transparent;
+    }
+    
+    .table thead th {
+        background: var(--bg-hover, #f8f9ff);
+        border: none;
+        padding: 15px 20px;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-secondary, #64748b);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .table tbody td {
+        border: none;
+        padding: 15px 20px;
+        border-bottom: 1px solid var(--border-color, #e8e9ff);
+        vertical-align: middle;
+    }
+    
+    .table tbody tr:hover {
+        background: var(--bg-hover, #f8f9ff);
+    }
+    
+    /* Badge styles */
+    .badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .badge-success {
+        background: var(--success-bg, #e8f5e9);
+        color: var(--success-text, #2e7d32);
+    }
+    
+    .badge-secondary {
+        background: var(--secondary-bg, #f5f5f5);
+        color: var(--secondary-text, #6c757d);
+    }
+    
+    .badge-primary {
+        background: var(--accent-color, #5b5fcf);
+        color: white;
+    }
+    
+    .badge-info {
+        background: var(--info-bg, #e3f2fd);
+        color: var(--info-text, #1565c0);
+    }
+    
+    /* Progress bar */
+    .progress {
+        height: 8px;
+        border-radius: 4px;
+        background: var(--bg-hover, #f8f9ff);
+        overflow: hidden;
+    }
+    
+    .progress-bar {
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+    
+    .progress-bar.bg-success { background: var(--success-color, #28a745); }
+    .progress-bar.bg-warning { background: var(--warning-color, #ffc107); }
+    .progress-bar.bg-danger { background: var(--danger-color, #dc3545); }
+    
+    /* Button styles */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+    }
+    
+    .btn-primary {
+        background: var(--accent-color, #5b5fcf);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #4a4fc4;
+        transform: translateY(-1px);
+    }
+    
+    .btn-success {
+        background: var(--success-color, #28a745);
+        color: white;
+    }
+    
+    .btn-success:hover {
+        background: #218838;
+        transform: translateY(-1px);
+    }
+    
+    .btn-outline-primary {
+        background: transparent;
+        color: var(--accent-color, #5b5fcf);
+        border: 1px solid var(--accent-color, #5b5fcf);
+    }
+    
+    .btn-outline-primary:hover {
+        background: var(--accent-color, #5b5fcf);
+        color: white;
+    }
+    
+    .btn-info {
+        background: var(--info-color, #17a2b8);
+        color: white;
+    }
+    
+    .btn-danger {
+        background: var(--danger-color, #dc3545);
+        color: white;
+    }
+    
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+    
+    /* Action buttons */
+    .btn-group {
+        display: flex;
+        gap: 5px;
+    }
+    
+    /* Modal styles */
+    .modal-content {
+        border-radius: 10px;
+        border: none;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    
+    .modal-header {
+        background: var(--bg-hover, #f8f9ff);
+        border-bottom: 1px solid var(--border-color, #e8e9ff);
+        border-radius: 10px 10px 0 0;
+    }
+    
+    .modal-title {
+        font-weight: 700;
+        color: var(--text-primary, #2f3640);
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary, #64748b);
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid var(--border-color, #e8e9ff);
+        border-radius: 6px;
+        font-size: 14px;
+        color: var(--text-primary, #2f3640);
+        background: var(--bg-secondary, white);
+        transition: all 0.2s ease;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--accent-color, #5b5fcf);
+        box-shadow: 0 0 0 3px rgba(91,95,207,0.1);
+    }
+    
+    .form-check {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .form-check-input {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+        accent-color: var(--accent-color, #5b5fcf);
+    }
+    
+    .form-check-label {
+        font-size: 14px;
+        color: var(--text-primary, #2f3640);
+        cursor: pointer;
+        user-select: none;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .content-card {
+            padding: 20px;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-container">
+        <div class="page-header">
+            <h1 class="page-title">Home Directory Management</h1>
+            <p class="page-subtitle">Manage multiple home directories for storage balance and user distribution</p>
+        </div>
+
+        <!-- Statistics Overview -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon bg-info">
+                    <i class="fas fa-folder"></i>
+                </div>
+                <div class="stat-number" id="totalDirectories">{{ stats.total_directories|default:0 }}</div>
+                <div class="stat-label">Total Directories</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon bg-success">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-number" id="totalUsers">{{ stats.total_users|default:0 }}</div>
+                <div class="stat-label">Total Users</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon bg-warning">
+                    <i class="fas fa-hdd"></i>
+                </div>
+                <div class="stat-number" id="totalSpace">{{ stats.total_space|default:0|filesizeformat }}</div>
+                <div class="stat-label">Total Space</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon bg-primary">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <div class="stat-number" id="availableSpace">{{ stats.total_available|default:0|filesizeformat }}</div>
+                <div class="stat-label">Available Space</div>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <div class="card-title">
+                <i class="fas fa-server"></i>
+                Home Directories
+                <div style="margin-left: auto;">
+                    <button type="button" class="btn btn-primary btn-sm" onclick="detectHomeDirectories()">
+                        <i class="fas fa-search"></i> Detect Directories
+                    </button>
+                    <button type="button" class="btn btn-success btn-sm" onclick="refreshStats()">
+                        <i class="fas fa-sync"></i> Refresh Stats
+                    </button>
+                </div>
+            </div>
+            
+            <div class="table-container">
+                <table class="table" id="homeDirectoriesTable">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Path</th>
+                                    <th>Users</th>
+                                    <th>Total Space</th>
+                                    <th>Available Space</th>
+                                    <th>Usage %</th>
+                                    <th>Status</th>
+                                    <th>Default</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for home_dir in home_directories %}
+                                <tr data-id="{{ home_dir.id }}">
+                                    <td>
+                                        <strong>{{ home_dir.name }}</strong>
+                                        {% if home_dir.description %}
+                                        <br><small class="text-muted">{{ home_dir.description }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td><code>{{ home_dir.path }}</code></td>
+                                    <td>
+                                        <span class="badge badge-info">{{ home_dir.get_user_count }}</span>
+                                        {% if home_dir.max_users > 0 %}
+                                        / {{ home_dir.max_users }}
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ home_dir.get_total_space|filesizeformat }}</td>
+                                    <td>{{ home_dir.get_available_space|filesizeformat }}</td>
+                                    <td>
+                                        <div class="progress progress-sm">
+                                            <div class="progress-bar bg-{% if home_dir.get_usage_percentage > 80 %}danger{% elif home_dir.get_usage_percentage > 60 %}warning{% else %}success{% endif %}" 
+                                                 style="width: {{ home_dir.get_usage_percentage }}%"></div>
+                                        </div>
+                                        <small>{{ home_dir.get_usage_percentage|floatformat:1 }}%</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-{% if home_dir.is_active %}success{% else %}secondary{% endif %}">
+                                            {% if home_dir.is_active %}Active{% else %}Inactive{% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if home_dir.is_default %}
+                                        <span class="badge badge-primary">Default</span>
+                                        {% else %}
+                                        <button class="btn btn-sm btn-outline-primary" onclick="setDefault({{ home_dir.id }})">Set Default</button>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-info" onclick="editHomeDirectory({{ home_dir.id }})" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            {% if not home_dir.is_default and home_dir.get_user_count == 0 %}
+                                            <button class="btn btn-sm btn-danger" onclick="deleteHomeDirectory({{ home_dir.id }})" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Home Directory Modal -->
+<div class="modal fade" id="editHomeDirectoryModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Home Directory</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editHomeDirectoryForm">
+                    <input type="hidden" id="editHomeDirectoryId">
+                    <div class="form-group">
+                        <label for="editDescription">Description</label>
+                        <textarea class="form-control" id="editDescription" rows="3" placeholder="Optional description"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="editMaxUsers">Maximum Users</label>
+                        <input type="number" class="form-control" id="editMaxUsers" min="0" placeholder="0 = unlimited">
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="editIsActive">
+                        <label class="form-check-label" for="editIsActive">Active</label>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="editIsDefault">
+                        <label class="form-check-label" for="editIsDefault">Default Directory</label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveHomeDirectory()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function detectHomeDirectories() {
+    $.ajax({
+        url: '/userManagement/detectHomeDirectories/',
+        type: 'POST',
+        data: JSON.stringify({}),
+        contentType: 'application/json',
+        success: function(data) {
+            if (data.status === 1) {
+                showNotification('success', data.message);
+                location.reload();
+            } else {
+                showNotification('error', data.error_message);
+            }
+        },
+        error: function() {
+            showNotification('error', 'Error detecting home directories');
+        }
+    });
+}
+
+function refreshStats() {
+    $.ajax({
+        url: '/userManagement/getHomeDirectoryStats/',
+        type: 'POST',
+        data: JSON.stringify({}),
+        contentType: 'application/json',
+        success: function(data) {
+            if (data.status === 1) {
+                updateStatsDisplay(data.stats);
+            } else {
+                showNotification('error', data.error_message);
+            }
+        },
+        error: function() {
+            showNotification('error', 'Error refreshing stats');
+        }
+    });
+}
+
+function updateStatsDisplay(stats) {
+    $('#totalDirectories').text(stats.total_directories);
+    $('#totalUsers').text(stats.total_users);
+    $('#totalSpace').text(formatBytes(stats.total_space));
+    $('#availableSpace').text(formatBytes(stats.total_available));
+}
+
+function editHomeDirectory(id) {
+    // Get home directory data and populate modal
+    const row = $(`tr[data-id="${id}"]`);
+    const name = row.find('td:first strong').text();
+    const path = row.find('td:nth-child(2) code').text();
+    
+    $('#editHomeDirectoryId').val(id);
+    $('#editDescription').val(row.find('td:first small').text() || '');
+    $('#editIsActive').prop('checked', row.find('.badge-success').length > 0);
+    $('#editIsDefault').prop('checked', row.find('.badge-primary').length > 0);
+    
+    $('#editHomeDirectoryModal').modal('show');
+}
+
+function saveHomeDirectory() {
+    const id = $('#editHomeDirectoryId').val();
+    const data = {
+        id: id,
+        description: $('#editDescription').val(),
+        max_users: parseInt($('#editMaxUsers').val()) || 0,
+        is_active: $('#editIsActive').is(':checked'),
+        is_default: $('#editIsDefault').is(':checked')
+    };
+    
+    $.ajax({
+        url: '/userManagement/updateHomeDirectory/',
+        type: 'POST',
+        data: JSON.stringify(data),
+        contentType: 'application/json',
+        success: function(response) {
+            if (response.status === 1) {
+                showNotification('success', response.message);
+                $('#editHomeDirectoryModal').modal('hide');
+                location.reload();
+            } else {
+                showNotification('error', response.error_message);
+            }
+        },
+        error: function() {
+            showNotification('error', 'Error updating home directory');
+        }
+    });
+}
+
+function setDefault(id) {
+    if (confirm('Are you sure you want to set this as the default home directory?')) {
+        const data = {
+            id: id,
+            is_default: true,
+            is_active: true
+        };
+        
+        $.ajax({
+            url: '/userManagement/updateHomeDirectory/',
+            type: 'POST',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function(response) {
+                if (response.status === 1) {
+                    showNotification('success', 'Default home directory updated');
+                    location.reload();
+                } else {
+                    showNotification('error', response.error_message);
+                }
+            },
+            error: function() {
+                showNotification('error', 'Error updating default home directory');
+            }
+        });
+    }
+}
+
+function deleteHomeDirectory(id) {
+    if (confirm('Are you sure you want to delete this home directory? This action cannot be undone.')) {
+        $.ajax({
+            url: '/userManagement/deleteHomeDirectory/',
+            type: 'POST',
+            data: JSON.stringify({id: id}),
+            contentType: 'application/json',
+            success: function(response) {
+                if (response.status === 1) {
+                    showNotification('success', response.message);
+                    location.reload();
+                } else {
+                    showNotification('error', response.error_message);
+                }
+            },
+            error: function() {
+                showNotification('error', 'Error deleting home directory');
+            }
+        });
+    }
+}
+
+function formatBytes(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+function showNotification(type, message) {
+    // Use CyberPanel's notification system
+    if (type === 'success') {
+        toastr.success(message);
+    } else {
+        toastr.error(message);
+    }
+}
+
+// Initialize DataTable
+$(document).ready(function() {
+    $('#homeDirectoriesTable').DataTable({
+        "responsive": true,
+        "lengthChange": false,
+        "autoWidth": false,
+        "order": [[0, "asc"]]
+    });
+});
+</script>
+{% endblock %}

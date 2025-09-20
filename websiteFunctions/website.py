@@ -3422,10 +3422,15 @@ context /cyberpanel_suspension_page.html {
             email = modifyWeb.adminEmail
             currentPack = modifyWeb.package.packageName
             owner = modifyWeb.admin.userName
+            
+            # Get current home directory information
+            from userManagment.homeDirectoryUtils import HomeDirectoryUtils
+            current_home = HomeDirectoryUtils.getUserHomeDirectoryObject(owner)
+            currentHomeDirectory = current_home.name if current_home else 'Default'
 
             data_ret = {'status': 1, 'modifyStatus': 1, 'error_message': "None", "adminEmail": email,
                         "packages": json_data, "current_pack": currentPack, "adminNames": admin_data,
-                        'currentAdmin': owner}
+                        'currentAdmin': owner, 'currentHomeDirectory': currentHomeDirectory}
             final_json = json.dumps(data_ret)
             return HttpResponse(final_json)
 
@@ -3493,6 +3498,7 @@ context /cyberpanel_suspension_page.html {
             email = data['email']
             phpVersion = data['phpVersion']
             newUser = data['admin']
+            homeDirectory = data.get('homeDirectory', '')
 
             currentACL = ACLManager.loadedACL(userID)
             if ACLManager.currentContextPermission(currentACL, 'modifyWebsite') == 0:
@@ -3530,6 +3536,46 @@ context /cyberpanel_suspension_page.html {
             modifyWeb.admin = newOwner
 
             modifyWeb.save()
+
+            # Handle home directory migration if specified
+            if homeDirectory:
+                from userManagment.homeDirectoryUtils import HomeDirectoryUtils
+                from userManagment.models import HomeDirectory, UserHomeMapping
+                
+                try:
+                    # Get the new home directory
+                    new_home_dir = HomeDirectory.objects.get(id=homeDirectory)
+                    
+                    # Get current home directory for the user
+                    current_home = HomeDirectoryUtils.getUserHomeDirectoryObject(newUser)
+                    
+                    if current_home and current_home.id != new_home_dir.id:
+                        # Migrate user to new home directory
+                        success, message = HomeDirectoryUtils.migrateUser(
+                            newUser, 
+                            current_home.path, 
+                            new_home_dir.path
+                        )
+                        
+                        if success:
+                            # Update user-home mapping
+                            UserHomeMapping.objects.update_or_create(
+                                user=newOwner,
+                                defaults={'home_directory': new_home_dir}
+                            )
+                        else:
+                            # Log error but don't fail the website modification
+                            logging.CyberCPLogFileWriter.writeToFile(f"Failed to migrate user {newUser} to home directory {new_home_dir.path}: {message}")
+                    elif not current_home:
+                        # Create new mapping if user doesn't have one
+                        UserHomeMapping.objects.create(
+                            user=newOwner,
+                            home_directory=new_home_dir
+                        )
+                        
+                except Exception as e:
+                    # Log error but don't fail the website modification
+                    logging.CyberCPLogFileWriter.writeToFile(f"Error handling home directory change for {newUser}: {str(e)}")
 
             ## Update disk quota when package changes - Fix for GitHub issue #1442
             if webpack.enforceDiskLimits:

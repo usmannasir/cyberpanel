@@ -10730,6 +10730,39 @@ $("#modifyWebsiteLoading").hide();
 $("#modifyWebsiteButton").hide();
 
 app.controller('modifyWebsitesController', function ($scope, $http) {
+    
+    // Initialize home directory variables
+    $scope.homeDirectories = [];
+    $scope.selectedHomeDirectory = '';
+    $scope.selectedHomeDirectoryInfo = null;
+    $scope.currentHomeDirectory = '';
+
+    // Load home directories on page load
+    $scope.loadHomeDirectories = function() {
+        $http.post('/userManagement/getUserHomeDirectories/', {})
+            .then(function(response) {
+                if (response.data.status === 1) {
+                    $scope.homeDirectories = response.data.directories;
+                }
+            })
+            .catch(function(error) {
+                console.error('Error loading home directories:', error);
+            });
+    };
+    
+    // Update home directory info when selection changes
+    $scope.updateHomeDirectoryInfo = function() {
+        if ($scope.selectedHomeDirectory) {
+            $scope.selectedHomeDirectoryInfo = $scope.homeDirectories.find(function(dir) {
+                return dir.id == $scope.selectedHomeDirectory;
+            });
+        } else {
+            $scope.selectedHomeDirectoryInfo = null;
+        }
+    };
+    
+    // Initialize home directories
+    $scope.loadHomeDirectories();
 
     $scope.fetchWebsites = function () {
 
@@ -10774,6 +10807,7 @@ app.controller('modifyWebsitesController', function ($scope, $http) {
                 $scope.webpacks = JSON.parse(response.data.packages);
                 $scope.adminNames = JSON.parse(response.data.adminNames);
                 $scope.currentAdmin = response.data.currentAdmin;
+                $scope.currentHomeDirectory = response.data.currentHomeDirectory || 'Default';
 
                 $("#webSiteDetailsToBeModified").fadeIn();
                 $("#websiteModifySuccess").fadeIn();
@@ -10801,6 +10835,7 @@ app.controller('modifyWebsitesController', function ($scope, $http) {
         var email = $scope.adminEmail;
         var phpVersion = $scope.phpSelection;
         var admin = $scope.selectedAdmin;
+        var homeDirectory = $scope.selectedHomeDirectory;
 
 
         $("#websiteModifyFailure").hide();
@@ -10817,7 +10852,8 @@ app.controller('modifyWebsitesController', function ($scope, $http) {
             packForWeb: packForWeb,
             email: email,
             phpVersion: phpVersion,
-            admin: admin
+            admin: admin,
+            homeDirectory: homeDirectory
         };
 
         var config = {

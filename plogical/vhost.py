@@ -196,9 +196,15 @@ class vhost:
             command = 'mkdir -p /usr/local/lsws/Example/html/.well-known/acme-challenge'
             ProcessUtilities.normalExecutioner(command)
 
-        path = "/home/" + virtualHostName
-        pathHTML = "/home/" + virtualHostName + "/public_html"
-        pathLogs = "/home/" + virtualHostName + "/logs"
+        # Get user's home directory dynamically
+        from userManagment.homeDirectoryUtils import HomeDirectoryUtils
+        home_path = HomeDirectoryUtils.getUserHomeDirectory(virtualHostUser)
+        if not home_path:
+            home_path = "/home"  # Fallback to default
+        
+        path = os.path.join(home_path, virtualHostName)
+        pathHTML = os.path.join(home_path, virtualHostName, "public_html")
+        pathLogs = os.path.join(home_path, virtualHostName, "logs")
         confPath = vhost.Server_root + "/conf/vhosts/"+virtualHostName
         completePathToConfigFile = confPath +"/vhost.conf"
 
