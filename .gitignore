@@ -118,3 +118,9 @@ dmypy.json
 /etc/cyberpanel/
 cyberpanel_password.txt
 mysql_password.txt
+
+# Development test files
+test.php
+test.sh
+*.test.php
+*.test.sh
