@@ -477,6 +477,27 @@ class WebsiteManager:
 
         php = PHPManager.getPHPString(WPobj.owner.phpSelection)
         FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+        
+        # Validate PHP binary exists before proceeding
+        is_valid, error_msg, php_path = PHPManager.validatePHPInstallation(WPobj.owner.phpSelection)
+        
+        if not is_valid:
+            # Try to fix PHP configuration
+            fix_success, fix_msg = PHPManager.fixPHPConfiguration(WPobj.owner.phpSelection)
+            if fix_success:
+                # Re-validate after fix attempt
+                is_valid, error_msg, php_path = PHPManager.validatePHPInstallation(WPobj.owner.phpSelection)
+            
+            if not is_valid:
+                # Return error page if no PHP binary found
+                from django.shortcuts import render
+                return render(request, 'websiteFunctions/error.html', {
+                    'error_message': f'PHP configuration issue: {error_msg}. Fix attempt: {fix_msg}'
+                })
+            else:
+                FinalPHPPath = php_path
+        else:
+            FinalPHPPath = php_path
 
         url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
         data = {
@@ -851,6 +872,28 @@ class WebsiteManager:
 
             php = ACLManager.getPHPString(PHPVersion)
             FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+            
+            # Validate PHP binary exists before proceeding
+            from managePHP.phpManager import PHPManager
+            is_valid, error_msg, php_path = PHPManager.validatePHPInstallation(PHPVersion)
+            
+            if not is_valid:
+                # Try to fix PHP configuration
+                fix_success, fix_msg = PHPManager.fixPHPConfiguration(PHPVersion)
+                if fix_success:
+                    # Re-validate after fix attempt
+                    is_valid, error_msg, php_path = PHPManager.validatePHPInstallation(PHPVersion)
+                
+                if not is_valid:
+                    final_json = json.dumps({
+                        'status': 0, 
+                        'error_message': f'PHP configuration issue: {error_msg}. Fix attempt: {fix_msg}'
+                    })
+                    return HttpResponse(final_json)
+                else:
+                    FinalPHPPath = php_path
+            else:
+                FinalPHPPath = php_path
 
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp core version --skip-plugins --skip-themes --path=%s 2>/dev/null' % (
                 Vhuser, FinalPHPPath, path)

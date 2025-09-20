@@ -856,8 +856,50 @@ local_name %s {
                 print("0, %s file is symlinked." % (fileName))
                 return 0
 
-            numberOfTotalLines = int(
-                ProcessUtilities.outputExecutioner('wc -l %s' % (fileName), externalApp).split(" ")[0])
+            # Improved wc -l parsing with better error handling
+            wc_output = ProcessUtilities.outputExecutioner('wc -l %s' % (fileName), externalApp)
+            
+            # Handle different wc output formats and potential errors
+            if wc_output and wc_output.strip():
+                # Split by whitespace and take the first part that looks like a number
+                wc_parts = wc_output.strip().split()
+                numberOfTotalLines = 0
+                
+                for part in wc_parts:
+                    try:
+                        numberOfTotalLines = int(part)
+                        break
+                    except ValueError:
+                        continue
+                
+                # If no valid number found, try to extract from common wc error formats
+                if numberOfTotalLines == 0:
+                    # Handle cases like "wc: filename: No such file or directory"
+                    if "No such file or directory" in wc_output:
+                        print("1,None")
+                        return "1,None"
+                    # Handle cases where wc returns just "wc:" or similar
+                    if "wc:" in wc_output:
+                        # Try to get line count using alternative method
+                        try:
+                            alt_output = ProcessUtilities.outputExecutioner('cat %s | wc -l' % (fileName), externalApp)
+                            if alt_output and alt_output.strip():
+                                alt_parts = alt_output.strip().split()
+                                for part in alt_parts:
+                                    try:
+                                        numberOfTotalLines = int(part)
+                                        break
+                                    except ValueError:
+                                        continue
+                        except:
+                            pass
+                
+                if numberOfTotalLines == 0:
+                    print("1,None")
+                    return "1,None"
+            else:
+                print("1,None")
+                return "1,None"
 
             if numberOfTotalLines < 25:
                 data = ProcessUtilities.outputExecutioner('cat %s' % (fileName), externalApp)
