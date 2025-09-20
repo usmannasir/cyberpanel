@@ -5,6 +5,7 @@ urlpatterns = [
     re_path(r'^createWebsite$', views.createWebsite, name='createWebsiteAPI'),
     re_path(r'^deleteWebsite$', views.deleteWebsite, name='deleteWebsiteAPI'),
     re_path(r'^submitWebsiteStatus$', views.submitWebsiteStatus, name='submitWebsiteStatusAPI'),
+    re_path(r'^createDockersite$', views.createDockersite, name='createDockersiteAPI'),
     re_path(r'^deleteFirewallRule$', views.deleteFirewallRule, name='deleteFirewallRule'),
     re_path(r'^addFirewallRule$', views.addFirewallRule, name='addFirewallRule'),
 
