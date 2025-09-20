@@ -695,12 +695,16 @@ password="%s"
         logging.InstallLog.writeToFile("Running Django migrations...")
         preFlightsChecks.stdOut("Running Django migrations...")
 
+        # Reset migration history in database (in case of re-installation)
+        command = "/usr/local/CyberPanel-venv/bin/python manage.py migrate --fake-initial"
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
         # Create fresh migrations for all apps
         command = "/usr/local/CyberPanel-venv/bin/python manage.py makemigrations"
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-        # Apply all migrations
-        command = "/usr/local/CyberPanel-venv/bin/python manage.py migrate"
+        # Apply all migrations with --fake-initial to handle existing tables
+        command = "/usr/local/CyberPanel-venv/bin/python manage.py migrate --fake-initial"
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
         logging.InstallLog.writeToFile("Django migrations completed successfully!")
