@@ -158,6 +158,61 @@ def createWebsite(request):
 
 
 @csrf_exempt
+def createDockersite(request):
+    try:
+        if request.method != 'POST':
+            data_ret = {"status": 0, 'error_message': "Only POST method allowed."}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data, status=405)
+
+        try:
+            data = json.loads(request.body)
+            adminUser = data['adminUser']
+            
+            # Additional security: validate critical fields for dangerous characters
+            is_valid, error_msg = validate_api_input(adminUser, "adminUser")
+            if not is_valid:
+                data_ret = {"status": 0, 'error_message': error_msg}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data, status=400)
+                
+            # Validate site name if provided
+            if 'sitename' in data:
+                is_valid, error_msg = validate_api_input(data['sitename'], "sitename")
+                if not is_valid:
+                    data_ret = {"status": 0, 'error_message': error_msg}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data, status=400)
+                    
+        except (json.JSONDecodeError, KeyError):
+            data_ret = {"status": 0, 'error_message': "Invalid JSON or missing adminUser field."}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data, status=400)
+
+        try:
+            admin = Administrator.objects.get(userName=adminUser)
+        except Administrator.DoesNotExist:
+            data_ret = {"status": 0, 'error_message': "Administrator not found."}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data, status=404)
+
+        if os.path.exists(ProcessUtilities.debugPath):
+            logging.writeToFile(f'Create dockersite payload in API {str(data)}')
+
+        if admin.api == 0:
+            data_ret = {"status": 0, 'error_message': "API Access Disabled."}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data, status=403)
+
+        wm = WebsiteManager()
+        return wm.submitDockerSiteCreation(admin.pk, data)
+    except Exception as msg:
+        data_ret = {"status": 0, 'error_message': f"Internal server error: {str(msg)}"}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data, status=500)
+
+
+@csrf_exempt
 def getPackagesListAPI(request):
     data = json.loads(request.body)
     adminUser = data['adminUser']
