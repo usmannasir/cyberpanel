@@ -595,14 +595,31 @@ class preFlightsChecks:
 
         os.chdir('/usr/local')
 
-        command = "git clone https://github.com/usmannasir/cyberpanel"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+        # Since cyberpanel.sh has already cloned the repository and we're running from it,
+        # we simply need to clone a fresh copy to /usr/local/CyberCP for the application
 
-        # Remove existing CyberCP directory if it exists (could be remnant from failed install)
-        if os.path.exists('CyberCP'):
-            shutil.rmtree('CyberCP')
+        logging.InstallLog.writeToFile("Setting up CyberPanel application directory...")
 
-        shutil.move('cyberpanel', 'CyberCP')
+        # Remove existing CyberCP directory if it exists
+        if os.path.exists('/usr/local/CyberCP'):
+            logging.InstallLog.writeToFile("Removing existing CyberCP directory...")
+            shutil.rmtree('/usr/local/CyberCP')
+
+        # Clone directly to /usr/local/CyberCP with explicit path
+        logging.InstallLog.writeToFile("Cloning repository to /usr/local/CyberCP...")
+        command = "git clone https://github.com/usmannasir/cyberpanel /usr/local/CyberCP"
+        result = preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
+        if result != 1:
+            logging.InstallLog.writeToFile("[ERROR] Git clone to /usr/local/CyberCP failed!")
+            sys.exit(1)
+
+        # Verify CyberCP directory was created at the explicit path
+        if not os.path.exists('/usr/local/CyberCP'):
+            logging.InstallLog.writeToFile("[ERROR] Git clone did not create '/usr/local/CyberCP' directory!")
+            sys.exit(1)
+
+        logging.InstallLog.writeToFile("Successfully cloned repository to /usr/local/CyberCP")
 
         ##
 
@@ -639,8 +656,19 @@ password="%s"
 
         logging.InstallLog.writeToFile("Generating secure environment configuration!")
 
-        # Generate secure environment file instead of hardcoding passwords
-        self.generate_secure_env_file(mysqlPassword, password)
+        # For CentOS, we need to get the actual cyberpanel database password
+        # which is different from the root password
+        if self.distro == centos:
+            # On CentOS, InstallCyberPanel.mysqlPassword is different from root password
+            # We need to import and use it directly
+            import installCyberPanel
+            cyberpanel_db_password = installCyberPanel.InstallCyberPanel.mysqlPassword
+        else:
+            # On Ubuntu/Debian, the cyberpanel password is the same as root password
+            cyberpanel_db_password = password
+
+        # Generate secure environment file with correct passwords
+        self.generate_secure_env_file(mysqlPassword, cyberpanel_db_password)
 
         logging.InstallLog.writeToFile("Environment configuration generated successfully!")
 
@@ -667,7 +695,7 @@ password="%s"
         if not os.path.exists("/usr/local/CyberCP/public"):
             os.mkdir("/usr/local/CyberCP/public")
 
-        command = "/usr/local/CyberPanel/bin/python manage.py collectstatic --noinput --clear"
+        command = "/usr/local/CyberPanel-venv/bin/python manage.py collectstatic --noinput --clear"
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
         ## Moving static content to lscpd location
@@ -2891,14 +2919,26 @@ def main():
 
     # Now that database is created, run Django migrations
     preFlightsChecks.stdOut("Running Django migrations...")
-    # Check which directory exists (installation may be at different stages)
+    # The application should be at /usr/local/CyberCP after download_install_CyberPanel
     if os.path.exists("/usr/local/CyberCP"):
         os.chdir("/usr/local/CyberCP")
-    elif os.path.exists("/usr/local/cyberpanel"):
-        os.chdir("/usr/local/cyberpanel")
+        preFlightsChecks.stdOut("Changed to /usr/local/CyberCP directory for migrations")
     else:
-        preFlightsChecks.stdOut("ERROR: Neither /usr/local/CyberCP nor /usr/local/cyberpanel exists!")
-        sys.exit(1)
+        # Check if it's still in cyberpanel (move may have failed)
+        if os.path.exists("/usr/local/cyberpanel"):
+            preFlightsChecks.stdOut("WARNING: Application is in /usr/local/cyberpanel instead of /usr/local/CyberCP")
+            preFlightsChecks.stdOut("Attempting to fix directory structure...")
+
+            # Try to move it now
+            os.chdir("/usr/local")
+            if os.path.exists("CyberCP"):
+                shutil.rmtree("CyberCP")
+            shutil.move("cyberpanel", "CyberCP")
+            os.chdir("/usr/local/CyberCP")
+            preFlightsChecks.stdOut("Fixed: Moved cyberpanel to CyberCP")
+        else:
+            preFlightsChecks.stdOut("ERROR: Neither /usr/local/CyberCP nor /usr/local/cyberpanel exists!")
+            sys.exit(1)
 
     # Create fresh migrations for all apps
     command = "/usr/local/CyberPanel-venv/bin/python manage.py makemigrations"
