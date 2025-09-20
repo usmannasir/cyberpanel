@@ -270,15 +270,72 @@ class ContainerManager(multi.Thread):
             dockerAPI = docker.APIClient()
 
             container = client.containers.get(name)
-            logs = container.logs().decode("utf-8")
+            
+            # Get logs with proper formatting
+            try:
+                # Get logs with timestamps and proper formatting
+                logs = container.logs(
+                    stdout=True, 
+                    stderr=True, 
+                    timestamps=True,
+                    tail=1000  # Limit to last 1000 lines for performance
+                ).decode("utf-8", errors='replace')
+                
+                # Clean up the logs for better display
+                if logs:
+                    # Split into lines and clean up
+                    log_lines = logs.split('\n')
+                    cleaned_lines = []
+                    
+                    for line in log_lines:
+                        # Remove Docker's log prefix if present
+                        if line.startswith('[') and ']' in line:
+                            # Extract timestamp and message
+                            try:
+                                timestamp_end = line.find(']')
+                                if timestamp_end > 0:
+                                    timestamp = line[1:timestamp_end]
+                                    message = line[timestamp_end + 1:].strip()
+                                    
+                                    # Format the line nicely
+                                    if message:
+                                        cleaned_lines.append(f"[{timestamp}] {message}")
+                                else:
+                                    cleaned_lines.append(line)
+                            except:
+                                cleaned_lines.append(line)
+                        else:
+                            cleaned_lines.append(line)
+                    
+                    logs = '\n'.join(cleaned_lines)
+                else:
+                    logs = "No logs available for this container."
+                    
+            except Exception as log_err:
+                # Fallback to basic logs if timestamped logs fail
+                try:
+                    logs = container.logs().decode("utf-8", errors='replace')
+                    if not logs:
+                        logs = "No logs available for this container."
+                except:
+                    logs = f"Error retrieving logs: {str(log_err)}"
 
-            data_ret = {'containerLogStatus': 1, 'containerLog': logs, 'error_message': "None"}
-            json_data = json.dumps(data_ret)
+            data_ret = {
+                'containerLogStatus': 1, 
+                'containerLog': logs, 
+                'error_message': "None",
+                'container_status': container.status,
+                'log_count': len(logs.split('\n')) if logs else 0
+            }
+            json_data = json.dumps(data_ret, ensure_ascii=False)
             return HttpResponse(json_data)
 
-
         except BaseException as msg:
-            data_ret = {'containerLogStatus': 0, 'containerLog': 'Error', 'error_message': str(msg)}
+            data_ret = {
+                'containerLogStatus': 0, 
+                'containerLog': 'Error retrieving logs', 
+                'error_message': str(msg)
+            }
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -1555,10 +1612,26 @@ class ContainerManager(multi.Thread):
                 data_ret = {'commandStatus': 0, 'error_message': f'Error accessing container: {str(err)}'}
                 return HttpResponse(json.dumps(data_ret))
 
-            # Check if container is running
+            # Handle container status - try to start if not running
+            container_was_stopped = False
             if container.status != 'running':
-                data_ret = {'commandStatus': 0, 'error_message': 'Container must be running to execute commands'}
-                return HttpResponse(json.dumps(data_ret))
+                try:
+                    # Try to start the container temporarily
+                    container.start()
+                    container_was_stopped = True
+                    # Wait a moment for container to fully start
+                    import time
+                    time.sleep(2)
+                    
+                    # Verify container is now running
+                    container.reload()
+                    if container.status != 'running':
+                        data_ret = {'commandStatus': 0, 'error_message': 'Failed to start container for command execution'}
+                        return HttpResponse(json.dumps(data_ret))
+                        
+                except Exception as start_err:
+                    data_ret = {'commandStatus': 0, 'error_message': f'Container is not running and cannot be started: {str(start_err)}'}
+                    return HttpResponse(json.dumps(data_ret))
 
             # Log the command execution attempt
             self._log_command_execution(userID, name, command)
@@ -1599,6 +1672,14 @@ class ContainerManager(multi.Thread):
                 # Log successful execution
                 self._log_command_result(userID, name, command, exit_code, len(output))
                 
+                # Stop container if it was started temporarily
+                if container_was_stopped:
+                    try:
+                        container.stop()
+                        logging.CyberCPLogFileWriter.writeToFile(f'Stopped container {name} after command execution')
+                    except Exception as stop_err:
+                        logging.CyberCPLogFileWriter.writeToFile(f'Warning: Could not stop container {name} after command execution: {str(stop_err)}')
+                
                 # Format the response
                 data_ret = {
                     'commandStatus': 1, 
@@ -1606,17 +1687,34 @@ class ContainerManager(multi.Thread):
                     'output': output,
                     'exit_code': exit_code,
                     'command': command,
-                    'timestamp': time.time()
+                    'timestamp': time.time(),
+                    'container_was_started': container_was_stopped
                 }
                 
                 return HttpResponse(json.dumps(data_ret, ensure_ascii=False))
                 
             except docker.errors.APIError as err:
+                # Stop container if it was started temporarily
+                if container_was_stopped:
+                    try:
+                        container.stop()
+                        logging.CyberCPLogFileWriter.writeToFile(f'Stopped container {name} after API error')
+                    except Exception as stop_err:
+                        logging.CyberCPLogFileWriter.writeToFile(f'Warning: Could not stop container {name} after API error: {str(stop_err)}')
+                
                 error_msg = f'Docker API error: {str(err)}'
                 self._log_command_error(userID, name, command, error_msg)
                 data_ret = {'commandStatus': 0, 'error_message': error_msg}
                 return HttpResponse(json.dumps(data_ret))
             except Exception as err:
+                # Stop container if it was started temporarily
+                if container_was_stopped:
+                    try:
+                        container.stop()
+                        logging.CyberCPLogFileWriter.writeToFile(f'Stopped container {name} after execution error')
+                    except Exception as stop_err:
+                        logging.CyberCPLogFileWriter.writeToFile(f'Warning: Could not stop container {name} after execution error: {str(stop_err)}')
+                
                 error_msg = f'Execution error: {str(err)}'
                 self._log_command_error(userID, name, command, error_msg)
                 data_ret = {'commandStatus': 0, 'error_message': error_msg}
