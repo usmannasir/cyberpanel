@@ -133,6 +133,7 @@ def submitUserCreation(request):
             password = data['password']
             websitesLimit = data['websitesLimit']
             selectedACL = data['selectedACL']
+            selectedHomeDirectory = data.get('selectedHomeDirectory', '')
 
             if ACLManager.CheckRegEx("^[\w'\-,.][^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]]{2,}$", firstName) == 0:
                 data_ret = {'status': 0, 'createStatus': 0, 'error_message': 'First Name can only contain alphabetic characters, and should be more than 2 characters long...'}
@@ -238,6 +239,42 @@ def submitUserCreation(request):
 
                 final_json = json.dumps(data_ret)
                 return HttpResponse(final_json)
+
+            # Handle home directory assignment
+            from .homeDirectoryManager import HomeDirectoryManager
+            from .models import HomeDirectory, UserHomeMapping
+            
+            if selectedHomeDirectory:
+                # Use selected home directory
+                try:
+                    home_dir = HomeDirectory.objects.get(id=selectedHomeDirectory)
+                    home_path = home_dir.path
+                except HomeDirectory.DoesNotExist:
+                    home_path = HomeDirectoryManager.getBestHomeDirectory()
+            else:
+                # Auto-select best home directory
+                home_path = HomeDirectoryManager.getBestHomeDirectory()
+                try:
+                    home_dir = HomeDirectory.objects.get(path=home_path)
+                except HomeDirectory.DoesNotExist:
+                    # Create home directory entry if it doesn't exist
+                    home_dir = HomeDirectory.objects.create(
+                        name=home_path.split('/')[-1],
+                        path=home_path,
+                        is_active=True,
+                        is_default=(home_path == '/home')
+                    )
+            
+            # Create user directory
+            if HomeDirectoryManager.createUserDirectory(userName, home_path):
+                # Create user-home mapping
+                UserHomeMapping.objects.create(
+                    user=newAdmin,
+                    home_directory=home_dir
+                )
+            else:
+                # Log error but don't fail user creation
+                logging.CyberCPLogFileWriter.writeToFile(f"Failed to create user directory for {userName} in {home_path}")
 
             data_ret = {'status': 1, 'createStatus': 1,
                         'error_message': "None"}
@@ -926,3 +963,19 @@ def controlUserState(request):
         data_ret = {'status': 0, 'saveStatus': 0, 'error_message': "Not logged in as admin", }
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
+def userMigration(request):
+    """Load user migration interface"""
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+        
+        if currentACL['admin'] != 1:
+            return ACLManager.loadError()
+        
+        proc = httpProc(request, 'userManagment/userMigration.html', {}, 'admin')
+        return proc.render()
+        
+    except Exception as e:
+        logging.CyberCPLogFileWriter.writeToFile(f"Error loading user migration: {str(e)}")
+        return ACLManager.loadError()

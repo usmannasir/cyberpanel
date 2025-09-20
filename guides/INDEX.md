@@ -46,6 +46,9 @@ Welcome to the CyberPanel documentation hub! This folder contains all guides, tu
 ### 💻 Command Line Interface
 - **[CLI Command Reference](CLI_COMMAND_REFERENCE.md)** - Complete reference for all CyberPanel CLI commands
 
+### 🏠 Storage & User Management
+- **[Home Directory Management Guide](HOME_DIRECTORY_MANAGEMENT_GUIDE.md)** - Complete guide for managing multiple home directories and storage balancing
+
 ### 📖 General Documentation
 - **[README](../README.md)** - Main CyberPanel documentation with installation instructions and feature overview
 - **[Contributing Guide](CONTRIBUTING.md)** - Guidelines for contributing to the CyberPanel project
@@ -57,7 +60,8 @@ Welcome to the CyberPanel documentation hub! This folder contains all guides, tu
 3. **Need Docker help?** Check the [Docker Command Execution Guide](Docker_Command_Execution_Guide.md)
 4. **Setting up email marketing?** Follow the [Mautic Installation Guide](MAUTIC_INSTALLATION_GUIDE.md)
 5. **Want to customize the interface?** Check the [Custom CSS Guide](CUSTOM_CSS_GUIDE.md)
-6. **Want to contribute?** Read the [Contributing Guide](CONTRIBUTING.md)
+6. **Managing multiple storage volumes?** Follow the [Home Directory Management Guide](HOME_DIRECTORY_MANAGEMENT_GUIDE.md)
+7. **Want to contribute?** Read the [Contributing Guide](CONTRIBUTING.md)
 
 ## 🔍 Finding What You Need
 
@@ -83,6 +87,7 @@ Welcome to the CyberPanel documentation hub! This folder contains all guides, tu
 - **Docker Features**: [Docker Command Execution Guide](Docker_Command_Execution_Guide.md)
 - **Security Features**: [AI Scanner Documentation](AIScannerDocs.md)
 - **Email Marketing**: [Mautic Installation Guide](MAUTIC_INSTALLATION_GUIDE.md)
+- **Storage Management**: [Home Directory Management Guide](HOME_DIRECTORY_MANAGEMENT_GUIDE.md)
 - **Customization & Design**: [Custom CSS Guide](CUSTOM_CSS_GUIDE.md)
 - **Command Line Interface**: [CLI Command Reference](CLI_COMMAND_REFERENCE.md)
 - **Development**: [Contributing Guide](CONTRIBUTING.md)
@@ -93,6 +98,7 @@ Welcome to the CyberPanel documentation hub! This folder contains all guides, tu
 - Docker container management
 - Command execution
 - Security scanning
+- Home directory management
 - CLI command reference
 
 ### 🔧 **Integrations**
