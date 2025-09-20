@@ -2890,6 +2890,17 @@ Require valid-user
                 
                 # Ensure suspension page exists and has proper permissions
                 suspensionPagePath = "/usr/local/CyberCP/websiteFunctions/suspension.html"
+                suspensionDir = "/usr/local/CyberCP/websiteFunctions"
+                
+                # Ensure directory exists
+                if not os.path.exists(suspensionDir):
+                    try:
+                        command = f"mkdir -p {suspensionDir}"
+                        ProcessUtilities.executioner(command)
+                        logging.CyberCPLogFileWriter.writeToFile(f"Created suspension directory: {suspensionDir}")
+                    except Exception as e:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Failed to create suspension directory: {str(e)}")
+                
                 if not os.path.exists(suspensionPagePath):
                     # Create default suspension page if it doesn't exist
                     defaultSuspensionHTML = """<!DOCTYPE html>
@@ -2958,17 +2969,34 @@ Require valid-user
                         # Use ProcessUtilities to move the file to the final location
                         command = f"mv {tempFile} {suspensionPagePath}"
                         ProcessUtilities.executioner(command)
-                    except:
-                        pass
+                        logging.CyberCPLogFileWriter.writeToFile(f"Created suspension page: {suspensionPagePath}")
+                    except Exception as e:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Failed to create suspension page: {str(e)}")
+                        # Try alternative method using echo command
+                        try:
+                            command = f'echo "{defaultSuspensionHTML.replace('"', '\\"')}" > {suspensionPagePath}'
+                            ProcessUtilities.executioner(command)
+                            logging.CyberCPLogFileWriter.writeToFile(f"Created suspension page using echo: {suspensionPagePath}")
+                        except Exception as e2:
+                            logging.CyberCPLogFileWriter.writeToFile(f"Failed to create suspension page with echo: {str(e2)}")
+                            return self.ajaxPre(0, f"Failed to create suspension page: {str(e2)}")
                 
                 # Set proper permissions for suspension page
                 try:
                     command = f"chown lsadm:lsadm {suspensionPagePath}"
-                    ProcessUtilities.executioner(command)
+                    result = ProcessUtilities.executioner(command)
+                    if result.find('cannot') > -1:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to set ownership for suspension page: {result}")
+                    
                     command = f"chmod 644 {suspensionPagePath}"
-                    ProcessUtilities.executioner(command)
-                except:
-                    pass
+                    result = ProcessUtilities.executioner(command)
+                    if result.find('cannot') > -1:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to set permissions for suspension page: {result}")
+                    
+                    logging.CyberCPLogFileWriter.writeToFile(f"Set permissions for suspension page: {suspensionPagePath}")
+                except Exception as e:
+                    logging.CyberCPLogFileWriter.writeToFile(f"Error setting suspension page permissions: {str(e)}")
+                    # Don't fail the entire operation for permission issues
                 
                 # Create suspension configuration with end marker
                 suspensionConf = """# Website Suspension Configuration
@@ -2999,9 +3027,17 @@ context /cyberpanel_suspension_page.html {
 """
                 
                 try:
+                    # Check if vhost file exists
+                    if not os.path.exists(vhostConfPath):
+                        logging.CyberCPLogFileWriter.writeToFile(f"Error: Vhost configuration file not found: {vhostConfPath}")
+                        return self.ajaxPre(0, f"Vhost configuration file not found for {websiteName}")
+                    
                     # Read current vhost configuration
                     with open(vhostConfPath, 'r') as f:
                         vhostContent = f.read()
+                    
+                    if not vhostContent.strip():
+                        logging.CyberCPLogFileWriter.writeToFile(f"Warning: Empty vhost configuration file: {vhostConfPath}")
                     
                     if "# Website Suspension Configuration" not in vhostContent:
                         # Check if there's an existing rewrite block at the root level
@@ -3026,7 +3062,11 @@ context /cyberpanel_suspension_page.html {
                         
                         # Set proper ownership
                         command = f"chown lsadm:lsadm {vhostConfPath}"
-                        ProcessUtilities.executioner(command)
+                        result = ProcessUtilities.executioner(command)
+                        if result.find('cannot') > -1:
+                            logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to set vhost ownership: {result}")
+                        
+                        logging.CyberCPLogFileWriter.writeToFile(f"Successfully suspended website: {websiteName}")
                 except IOError as e:
                     # If direct file access fails, fall back to command-based approach
                     command = f"cat {vhostConfPath}"
@@ -3115,16 +3155,33 @@ context /cyberpanel_suspension_page.html {
                     except Exception as e:
                         CyberCPLogFileWriter.writeToFile(f"Error suspending child domain {items.domain}: {str(e)}")
                 
-                installUtilities.reStartLiteSpeedSocket()
-                website.state = 0
+                # Restart LiteSpeed to apply changes
+                try:
+                    installUtilities.reStartLiteSpeedSocket()
+                    logging.CyberCPLogFileWriter.writeToFile(f"Restarted LiteSpeed after suspending {websiteName}")
+                except Exception as e:
+                    logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to restart LiteSpeed: {str(e)}")
+                
+                website.state = 1
             else:
+                # Unsuspend logic
                 confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + websiteName
                 vhostConfPath = confPath + "/vhost.conf"
                 
+                logging.CyberCPLogFileWriter.writeToFile(f"Attempting to unsuspend website: {websiteName}")
+                
                 try:
+                    # Check if vhost file exists
+                    if not os.path.exists(vhostConfPath):
+                        logging.CyberCPLogFileWriter.writeToFile(f"Error: Vhost configuration file not found: {vhostConfPath}")
+                        return self.ajaxPre(0, f"Vhost configuration file not found for {websiteName}")
+                    
                     # Try direct file access first
                     with open(vhostConfPath, 'r') as f:
                         vhostContent = f.read()
+                    
+                    if not vhostContent.strip():
+                        logging.CyberCPLogFileWriter.writeToFile(f"Warning: Empty vhost configuration file: {vhostConfPath}")
                     
                     if "# Website Suspension Configuration" in vhostContent:
                         # Use regex to remove the suspension configuration block
@@ -3150,7 +3207,13 @@ context /cyberpanel_suspension_page.html {
                             f.write(modifiedContent)
                         
                         command = f"chown lsadm:lsadm {vhostConfPath}"
-                        ProcessUtilities.executioner(command)
+                        result = ProcessUtilities.executioner(command)
+                        if result.find('cannot') > -1:
+                            logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to set vhost ownership: {result}")
+                        
+                        logging.CyberCPLogFileWriter.writeToFile(f"Successfully unsuspended website: {websiteName}")
+                    else:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Website {websiteName} is not currently suspended")
                 except IOError:
                     # Fall back to command-based approach
                     command = f"cat {vhostConfPath}"
@@ -3240,8 +3303,14 @@ context /cyberpanel_suspension_page.html {
                     except Exception as e:
                         CyberCPLogFileWriter.writeToFile(f"Error unsuspending child domain {items.domain}: {str(e)}")
                 
-                installUtilities.reStartLiteSpeedSocket()
-                website.state = 1
+                # Restart LiteSpeed to apply changes
+                try:
+                    installUtilities.reStartLiteSpeedSocket()
+                    logging.CyberCPLogFileWriter.writeToFile(f"Restarted LiteSpeed after unsuspending {websiteName}")
+                except Exception as e:
+                    logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to restart LiteSpeed: {str(e)}")
+                
+                website.state = 0
 
             website.save()
 
