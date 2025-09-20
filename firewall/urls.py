@@ -32,6 +32,12 @@ urlpatterns = [
     path('modSecRulesPacks', views.modSecRulesPacks, name='modSecRulesPacks'),
     path('getOWASPAndComodoStatus', views.getOWASPAndComodoStatus, name='getOWASPAndComodoStatus'),
     path('installModSecRulesPack', views.installModSecRulesPack, name='installModSecRulesPack'),
+    
+    # Banned IPs
+    path('getBannedIPs', views.getBannedIPs, name='getBannedIPs'),
+    path('addBannedIP', views.addBannedIP, name='addBannedIP'),
+    path('removeBannedIP', views.removeBannedIP, name='removeBannedIP'),
+    path('deleteBannedIP', views.deleteBannedIP, name='deleteBannedIP'),
     path('getRulesFiles', views.getRulesFiles, name='getRulesFiles'),
     path('enableDisableRuleFile', views.enableDisableRuleFile, name='enableDisableRuleFile'),
 

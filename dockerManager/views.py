@@ -745,3 +745,24 @@ def getContainerEnv(request):
         }), content_type='application/json')
     except KeyError:
         return redirect(loadLoginPage)
+
+@preDockerRun
+def listContainers(request):
+    """
+    Get list of all Docker containers
+    """
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+
+        cm = ContainerManager()
+        coreResult = cm.listContainers(userID)
+
+        return coreResult
+    except KeyError:
+        return redirect(loadLoginPage)

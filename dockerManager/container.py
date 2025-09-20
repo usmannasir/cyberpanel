@@ -2096,3 +2096,210 @@ class ContainerManager(multi.Thread):
             data_ret = {'deleteContainerKeepDataStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
+
+    def updateContainer(self, userID=None, data=None):
+        """
+        Update container with new image while preserving data using Docker volumes
+        This function handles the complete container update process:
+        1. Stops the current container
+        2. Creates a backup of the container configuration
+        3. Removes the old container
+        4. Pulls the new image
+        5. Creates a new container with the same configuration but new image
+        6. Preserves all volumes and data
+        """
+        try:
+            admin = Administrator.objects.get(pk=userID)
+            if admin.acl.adminStatus != 1:
+                return ACLManager.loadError()
+
+            client = docker.from_env()
+            dockerAPI = docker.APIClient()
+            
+            containerName = data['containerName']
+            newImage = data['newImage']
+            newTag = data.get('newTag', 'latest')
+            
+            # Get the current container
+            try:
+                currentContainer = client.containers.get(containerName)
+            except docker.errors.NotFound:
+                data_ret = {'updateContainerStatus': 0, 'error_message': f'Container {containerName} not found'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            except Exception as e:
+                data_ret = {'updateContainerStatus': 0, 'error_message': f'Error accessing container: {str(e)}'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            # Get container configuration for recreation
+            containerConfig = currentContainer.attrs['Config']
+            hostConfig = currentContainer.attrs['HostConfig']
+            
+            # Extract volumes for data preservation
+            volumes = {}
+            if 'Binds' in hostConfig and hostConfig['Binds']:
+                for bind in hostConfig['Binds']:
+                    if ':' in bind:
+                        parts = bind.split(':')
+                        if len(parts) >= 2:
+                            host_path = parts[0]
+                            container_path = parts[1]
+                            mode = parts[2] if len(parts) > 2 else 'rw'
+                            volumes[host_path] = {'bind': container_path, 'mode': mode}
+
+            # Extract environment variables
+            environment = containerConfig.get('Env', [])
+            envDict = {}
+            for env in environment:
+                if '=' in env:
+                    key, value = env.split('=', 1)
+                    envDict[key] = value
+
+            # Extract port mappings
+            portConfig = {}
+            if 'PortBindings' in hostConfig and hostConfig['PortBindings']:
+                for container_port, host_bindings in hostConfig['PortBindings'].items():
+                    if host_bindings and len(host_bindings) > 0:
+                        host_port = host_bindings[0]['HostPort']
+                        portConfig[container_port] = host_port
+
+            # Extract memory limit
+            memory_limit = hostConfig.get('Memory', 0)
+            if memory_limit > 0:
+                memory_limit = memory_limit // 1048576  # Convert bytes to MB
+
+            # Stop the current container
+            try:
+                if currentContainer.status == 'running':
+                    currentContainer.stop(timeout=30)
+                    logging.CyberCPLogFileWriter.writeToFile(f'Stopped container {containerName} for update')
+            except Exception as e:
+                logging.CyberCPLogFileWriter.writeToFile(f'Error stopping container {containerName}: {str(e)}')
+                data_ret = {'updateContainerStatus': 0, 'error_message': f'Error stopping container: {str(e)}'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            # Remove the old container
+            try:
+                currentContainer.remove(force=True)
+                logging.CyberCPLogFileWriter.writeToFile(f'Removed old container {containerName}')
+            except Exception as e:
+                logging.CyberCPLogFileWriter.writeToFile(f'Error removing old container {containerName}: {str(e)}')
+                data_ret = {'updateContainerStatus': 0, 'error_message': f'Error removing old container: {str(e)}'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            # Pull the new image
+            try:
+                image_name = f"{newImage}:{newTag}"
+                logging.CyberCPLogFileWriter.writeToFile(f'Pulling new image {image_name}')
+                client.images.pull(newImage, tag=newTag)
+                logging.CyberCPLogFileWriter.writeToFile(f'Successfully pulled image {image_name}')
+            except Exception as e:
+                logging.CyberCPLogFileWriter.writeToFile(f'Error pulling image {newImage}:{newTag}: {str(e)}')
+                data_ret = {'updateContainerStatus': 0, 'error_message': f'Error pulling new image: {str(e)}'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            # Create new container with same configuration but new image
+            try:
+                containerArgs = {
+                    'image': image_name,
+                    'detach': True,
+                    'name': containerName,
+                    'ports': portConfig,
+                    'publish_all_ports': True,
+                    'environment': envDict,
+                    'volumes': volumes
+                }
+                
+                if memory_limit > 0:
+                    containerArgs['mem_limit'] = memory_limit * 1048576
+
+                newContainer = client.containers.create(**containerArgs)
+                logging.CyberCPLogFileWriter.writeToFile(f'Created new container {containerName} with image {image_name}')
+                
+                # Start the new container
+                newContainer.start()
+                logging.CyberCPLogFileWriter.writeToFile(f'Started updated container {containerName}')
+                
+            except docker.errors.APIError as err:
+                error_message = str(err)
+                if "port is already allocated" in error_message:
+                    try:
+                        newContainer.remove(force=True)
+                    except:
+                        pass
+                data_ret = {'updateContainerStatus': 0, 'error_message': f'Docker API error creating container: {error_message}'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            except docker.errors.ImageNotFound as err:
+                error_message = str(err)
+                data_ret = {'updateContainerStatus': 0, 'error_message': f'New image not found: {error_message}'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            except Exception as e:
+                logging.CyberCPLogFileWriter.writeToFile(f'Error creating new container {containerName}: {str(e)}')
+                data_ret = {'updateContainerStatus': 0, 'error_message': f'Error creating new container: {str(e)}'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            # Log successful update
+            logging.CyberCPLogFileWriter.writeToFile(f'Successfully updated container {containerName} to image {image_name}')
+            
+            data_ret = {
+                'updateContainerStatus': 1, 
+                'error_message': 'None',
+                'message': f'Container {containerName} successfully updated to {image_name}'
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except Exception as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [ContainerManager.updateContainer]')
+            data_ret = {'updateContainerStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def listContainers(self, userID=None):
+        """
+        Get list of all Docker containers
+        """
+        try:
+            admin = Administrator.objects.get(pk=userID)
+            if admin.acl.adminStatus != 1:
+                return ACLManager.loadError()
+
+            client = docker.from_env()
+            
+            # Get all containers (including stopped ones)
+            containers = client.containers.list(all=True)
+            
+            container_list = []
+            for container in containers:
+                container_info = {
+                    'name': container.name,
+                    'image': container.image.tags[0] if container.image.tags else container.image.short_id,
+                    'status': container.status,
+                    'state': container.attrs['State']['Status'],
+                    'created': container.attrs['Created'],
+                    'ports': container.attrs['NetworkSettings']['Ports'],
+                    'mounts': container.attrs['Mounts'],
+                    'id': container.short_id
+                }
+                container_list.append(container_info)
+            
+            data_ret = {
+                'status': 1,
+                'error_message': 'None',
+                'containers': container_list
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except Exception as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [ContainerManager.listContainers]')
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)

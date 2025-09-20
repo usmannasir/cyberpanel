@@ -16,9 +16,21 @@ app.controller('firewallController', function ($scope, $http) {
     $scope.couldNotConnect = true;
     $scope.rulesDetails = false;
 
+    // Banned IPs variables
+    $scope.activeTab = 'rules';
+    $scope.bannedIPs = [];
+    $scope.bannedIPsLoading = false;
+    $scope.bannedIPActionFailed = true;
+    $scope.bannedIPActionSuccess = true;
+    $scope.bannedIPCouldNotConnect = true;
+    $scope.banIP = '';
+    $scope.banReason = '';
+    $scope.banDuration = '24h';
+
     firewallStatus();
 
     populateCurrentRecords();
+    populateBannedIPs();
 
     $scope.addRule = function () {
 
@@ -2392,5 +2404,141 @@ app.controller('litespeed_ent_conf', function ($scope, $http, $timeout, $window)
             $scope.couldNotSave = true;
         }
     }
+
+    // Banned IPs Functions
+    function populateBannedIPs() {
+        $scope.bannedIPsLoading = true;
+        var url = "/firewall/getBannedIPs";
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, {}, config).then(function(response) {
+            $scope.bannedIPsLoading = false;
+            if (response.data.status === 1) {
+                $scope.bannedIPs = response.data.bannedIPs || [];
+            } else {
+                $scope.bannedIPs = [];
+                $scope.bannedIPActionFailed = false;
+                $scope.bannedIPErrorMessage = response.data.error_message;
+            }
+        }, function(error) {
+            $scope.bannedIPsLoading = false;
+            $scope.bannedIPCouldNotConnect = false;
+        });
+    }
+
+    $scope.addBannedIP = function() {
+        if (!$scope.banIP || !$scope.banReason) {
+            $scope.bannedIPActionFailed = false;
+            $scope.bannedIPErrorMessage = "Please fill in all required fields";
+            return;
+        }
+
+        $scope.bannedIPsLoading = true;
+        $scope.bannedIPActionFailed = true;
+        $scope.bannedIPActionSuccess = true;
+        $scope.bannedIPCouldNotConnect = true;
+
+        var data = {
+            ip: $scope.banIP,
+            reason: $scope.banReason,
+            duration: $scope.banDuration
+        };
+
+        var url = "/firewall/addBannedIP";
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(function(response) {
+            $scope.bannedIPsLoading = false;
+            if (response.data.status === 1) {
+                $scope.bannedIPActionSuccess = false;
+                $scope.banIP = '';
+                $scope.banReason = '';
+                $scope.banDuration = '24h';
+                populateBannedIPs(); // Refresh the list
+            } else {
+                $scope.bannedIPActionFailed = false;
+                $scope.bannedIPErrorMessage = response.data.error_message;
+            }
+        }, function(error) {
+            $scope.bannedIPsLoading = false;
+            $scope.bannedIPCouldNotConnect = false;
+        });
+    };
+
+    $scope.removeBannedIP = function(id, ip) {
+        if (!confirm('Are you sure you want to unban IP address ' + ip + '?')) {
+            return;
+        }
+
+        $scope.bannedIPsLoading = true;
+        $scope.bannedIPActionFailed = true;
+        $scope.bannedIPActionSuccess = true;
+        $scope.bannedIPCouldNotConnect = true;
+
+        var data = { id: id };
+
+        var url = "/firewall/removeBannedIP";
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(function(response) {
+            $scope.bannedIPsLoading = false;
+            if (response.data.status === 1) {
+                $scope.bannedIPActionSuccess = false;
+                populateBannedIPs(); // Refresh the list
+            } else {
+                $scope.bannedIPActionFailed = false;
+                $scope.bannedIPErrorMessage = response.data.error_message;
+            }
+        }, function(error) {
+            $scope.bannedIPsLoading = false;
+            $scope.bannedIPCouldNotConnect = false;
+        });
+    };
+
+    $scope.deleteBannedIP = function(id, ip) {
+        if (!confirm('Are you sure you want to permanently delete the record for IP address ' + ip + '? This action cannot be undone.')) {
+            return;
+        }
+
+        $scope.bannedIPsLoading = true;
+        $scope.bannedIPActionFailed = true;
+        $scope.bannedIPActionSuccess = true;
+        $scope.bannedIPCouldNotConnect = true;
+
+        var data = { id: id };
+
+        var url = "/firewall/deleteBannedIP";
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(function(response) {
+            $scope.bannedIPsLoading = false;
+            if (response.data.status === 1) {
+                $scope.bannedIPActionSuccess = false;
+                populateBannedIPs(); // Refresh the list
+            } else {
+                $scope.bannedIPActionFailed = false;
+                $scope.bannedIPErrorMessage = response.data.error_message;
+            }
+        }, function(error) {
+            $scope.bannedIPsLoading = false;
+            $scope.bannedIPCouldNotConnect = false;
+        });
+    };
 
 });
