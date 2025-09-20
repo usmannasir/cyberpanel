@@ -598,6 +598,10 @@ class preFlightsChecks:
         command = "git clone https://github.com/usmannasir/cyberpanel"
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
+        # Remove existing CyberCP directory if it exists (could be remnant from failed install)
+        if os.path.exists('CyberCP'):
+            shutil.rmtree('CyberCP')
+
         shutil.move('cyberpanel', 'CyberCP')
 
         ##
@@ -641,6 +645,7 @@ password="%s"
         logging.InstallLog.writeToFile("Environment configuration generated successfully!")
 
         if self.remotemysql == 'ON':
+            path = self.cyberPanelPath + "/CyberCP/settings.py"
             command = "sed -i 's|localhost|%s|g' %s" % (self.mysqlhost, path)
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
@@ -2896,11 +2901,11 @@ def main():
         sys.exit(1)
 
     # Create fresh migrations for all apps
-    command = "/usr/local/CyberPanel/bin/python manage.py makemigrations"
+    command = "/usr/local/CyberPanel-venv/bin/python manage.py makemigrations"
     preFlightsChecks.call(command, distro, command, command, 1, 1, os.EX_OSERR)
 
     # Apply all migrations
-    command = "/usr/local/CyberPanel/bin/python manage.py migrate"
+    command = "/usr/local/CyberPanel-venv/bin/python manage.py migrate"
     preFlightsChecks.call(command, distro, command, command, 1, 1, os.EX_OSERR)
 
     checks.setupPHPAndComposer()
