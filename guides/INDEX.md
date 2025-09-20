@@ -43,6 +43,9 @@ Welcome to the CyberPanel documentation hub! This folder contains all guides, tu
 ### 🔧 Troubleshooting & Support
 - **[Troubleshooting Guide](TROUBLESHOOTING.md)** - Comprehensive troubleshooting and diagnostic commands
 
+### 💻 Command Line Interface
+- **[CLI Command Reference](CLI_COMMAND_REFERENCE.md)** - Complete reference for all CyberPanel CLI commands
+
 ### 📖 General Documentation
 - **[README](../README.md)** - Main CyberPanel documentation with installation instructions and feature overview
 - **[Contributing Guide](CONTRIBUTING.md)** - Guidelines for contributing to the CyberPanel project
@@ -81,6 +84,7 @@ Welcome to the CyberPanel documentation hub! This folder contains all guides, tu
 - **Security Features**: [AI Scanner Documentation](AIScannerDocs.md)
 - **Email Marketing**: [Mautic Installation Guide](MAUTIC_INSTALLATION_GUIDE.md)
 - **Customization & Design**: [Custom CSS Guide](CUSTOM_CSS_GUIDE.md)
+- **Command Line Interface**: [CLI Command Reference](CLI_COMMAND_REFERENCE.md)
 - **Development**: [Contributing Guide](CONTRIBUTING.md)
 
 ## 📝 Guide Categories
@@ -89,6 +93,7 @@ Welcome to the CyberPanel documentation hub! This folder contains all guides, tu
 - Docker container management
 - Command execution
 - Security scanning
+- CLI command reference
 
 ### 🔧 **Integrations**
 - Mautic email marketing
