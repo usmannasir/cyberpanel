@@ -1095,6 +1095,9 @@ app.controller('listContainers', function ($scope, $http) {
 
     $scope.showLog = function (name, refresh = false) {
         $scope.logs = "";
+        $scope.logInfo = null;
+        $scope.formattedLogs = "";
+        
         if (refresh === false) {
             $('#logs').modal('show');
             $scope.activeLog = name;
@@ -1122,23 +1125,112 @@ app.controller('listContainers', function ($scope, $http) {
 
             if (response.data.containerLogStatus === 1) {
                 $scope.logs = response.data.containerLog;
+                $scope.logInfo = {
+                    container_status: response.data.container_status,
+                    log_count: response.data.log_count
+                };
+                
+                // Format logs for better display
+                $scope.formatLogs();
+                
+                // Auto-scroll to bottom
+                setTimeout(function() {
+                    $scope.scrollToBottom();
+                }, 100);
             }
             else {
+                $scope.logs = response.data.error_message;
+                $scope.logInfo = null;
+                $scope.formattedLogs = "";
+                
                 new PNotify({
                     title: 'Unable to complete request',
                     text: response.data.error_message,
                     type: 'error'
                 });
-
             }
         }
 
         function cantLoadInitialData(response) {
+            $scope.logs = "Error loading logs";
+            $scope.logInfo = null;
+            $scope.formattedLogs = "";
+            
             new PNotify({
                 title: 'Unable to complete request',
                 type: 'error'
             });
         }
+    };
+
+    // Format logs with syntax highlighting and better readability
+    $scope.formatLogs = function() {
+        if (!$scope.logs || $scope.logs === 'Loading...') {
+            $scope.formattedLogs = $scope.logs;
+            return;
+        }
+
+        var lines = $scope.logs.split('\n');
+        var formattedLines = [];
+
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i];
+            var formattedLine = line;
+
+            // Escape HTML characters
+            formattedLine = formattedLine.replace(/&/g, '&amp;')
+                                       .replace(/</g, '&lt;')
+                                       .replace(/>/g, '&gt;')
+                                       .replace(/"/g, '&quot;')
+                                       .replace(/'/g, '&#39;');
+
+            // Add syntax highlighting for common log patterns
+            if (line.match(/^\[.*?\]/)) {
+                // Timestamp lines
+                formattedLine = '<span style="color: #569cd6;">' + formattedLine + '</span>';
+            } else if (line.match(/ERROR|FATAL|CRITICAL/i)) {
+                // Error lines
+                formattedLine = '<span style="color: #f44747; font-weight: bold;">' + formattedLine + '</span>';
+            } else if (line.match(/WARN|WARNING/i)) {
+                // Warning lines
+                formattedLine = '<span style="color: #ffcc02; font-weight: bold;">' + formattedLine + '</span>';
+            } else if (line.match(/INFO/i)) {
+                // Info lines
+                formattedLine = '<span style="color: #4ec9b0;">' + formattedLine + '</span>';
+            } else if (line.match(/DEBUG/i)) {
+                // Debug lines
+                formattedLine = '<span style="color: #9cdcfe;">' + formattedLine + '</span>';
+            } else if (line.match(/SUCCESS|OK|COMPLETED/i)) {
+                // Success lines
+                formattedLine = '<span style="color: #4caf50; font-weight: bold;">' + formattedLine + '</span>';
+            }
+
+            formattedLines.push(formattedLine);
+        }
+
+        $scope.formattedLogs = formattedLines.join('\n');
+    };
+
+    // Scroll functions
+    $scope.scrollToTop = function() {
+        var container = document.getElementById('logContainer');
+        if (container) {
+            container.scrollTop = 0;
+        }
+    };
+
+    $scope.scrollToBottom = function() {
+        var container = document.getElementById('logContainer');
+        if (container) {
+            container.scrollTop = container.scrollHeight;
+        }
+    };
+
+    // Clear logs function
+    $scope.clearLogs = function() {
+        $scope.logs = "";
+        $scope.formattedLogs = "";
+        $scope.logInfo = null;
     };
 
     url = "/docker/getContainerList";
@@ -2080,13 +2172,15 @@ app.controller('viewContainer', function ($scope, $http, $interval, $timeout) {
                 $scope.commandOutput = {
                     command: response.data.command,
                     output: response.data.output,
-                    exit_code: response.data.exit_code
+                    exit_code: response.data.exit_code,
+                    container_was_started: response.data.container_was_started
                 };
 
                 // Add to command history
                 $scope.commandHistory.unshift({
                     command: response.data.command,
-                    timestamp: new Date()
+                    timestamp: new Date(),
+                    container_was_started: response.data.container_was_started
                 });
 
                 // Keep only last 10 commands
@@ -2094,10 +2188,15 @@ app.controller('viewContainer', function ($scope, $http, $interval, $timeout) {
                     $scope.commandHistory = $scope.commandHistory.slice(0, 10);
                 }
 
-                // Show success notification
+                // Show success notification with container status info
+                var notificationText = 'Command completed with exit code: ' + response.data.exit_code;
+                if (response.data.container_was_started) {
+                    notificationText += ' (Container was temporarily started and stopped)';
+                }
+
                 new PNotify({
                     title: 'Command Executed',
-                    text: 'Command completed with exit code: ' + response.data.exit_code,
+                    text: notificationText,
                     type: response.data.exit_code === 0 ? 'success' : 'warning'
                 });
             }

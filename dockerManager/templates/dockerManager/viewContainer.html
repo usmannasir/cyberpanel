@@ -1104,7 +1104,7 @@
                             </div>
                         </div>
                         <small class="form-text text-muted">
-                            {% trans "Commands will be executed inside the running container. Use proper shell syntax." %}
+                            {% trans "Commands will be executed inside the container. If the container is not running, it will be temporarily started for command execution." %}
                         </small>
                     </div>
                     
@@ -1120,7 +1120,12 @@
                                  ng-click="selectCommand(cmd.command)"
                                  style="cursor: pointer; padding: 0.25rem 0.5rem; margin: 0.125rem 0; background: #f8f9fa; border-radius: 4px; border-left: 3px solid #007bff;">
                                 <code style="font-size: 0.875rem;">{{ cmd.command }}</code>
-                                <small class="text-muted" style="float: right;">{{ cmd.timestamp | date:'short' }}</small>
+                                <small class="text-muted" style="float: right;">
+                                    {{ cmd.timestamp | date:'short' }}
+                                    <span ng-if="cmd.container_was_started" style="color: #f6ad55; margin-left: 0.5rem;">
+                                        <i class="fas fa-play-circle"></i>
+                                    </span>
+                                </small>
                             </div>
                         </div>
                     </div>
@@ -1135,6 +1140,9 @@
                             <div ng-show="commandOutput.exit_code !== undefined" style="margin-bottom: 0.5rem;">
                                 <span style="color: #68d391;">$</span> <span style="color: #fbb6ce;">{{ commandOutput.command }}</span>
                                 <span style="color: #a0aec0; margin-left: 1rem;">(exit code: {{ commandOutput.exit_code }})</span>
+                                <span ng-if="commandOutput.container_was_started" style="color: #f6ad55; margin-left: 1rem;">
+                                    <i class="fas fa-info-circle"></i> Container was temporarily started
+                                </span>
                             </div>
                             <div ng-bind="commandOutput.output"></div>
                         </div>
