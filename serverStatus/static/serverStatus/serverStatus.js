@@ -778,6 +778,95 @@ app.controller('lswsSwitch', function ($scope, $http, $timeout, $window) {
 
 });
 
+/* Controller for switching back to OpenLiteSpeed */
+app.controller('switchToOLS', function ($scope, $http, $timeout, $window) {
+
+    $scope.cyberPanelLoading = true;
+    $scope.installBoxGen = true;
+
+    $scope.switchToOLS = function () {
+        $scope.cyberPanelLoading = false;
+        $scope.installBoxGen = true;
+
+        url = "/serverstatus/switchToOLS";
+
+        var data = {};
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.status === 1) {
+                $scope.installBoxGen = false;
+                getRequestStatus();
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+    };
+
+    function getRequestStatus() {
+        $scope.cyberPanelLoading = false;
+
+        url = "/serverstatus/switchToOLSStatus";
+
+        var data = {};
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            if (response.data.abort === 0) {
+                $scope.requestData = response.data.requestStatus;
+                $timeout(getRequestStatus, 1000);
+            } else {
+                // Notifications
+                $scope.cyberPanelLoading = true;
+                $timeout.cancel();
+                $scope.requestData = response.data.requestStatus;
+                if (response.data.installed === 1) {
+                    $timeout(function () {
+                        $window.location.reload();
+                    }, 3000);
+                }
+            }
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+    }
+});
+
 app.controller('topProcesses', function ($scope, $http, $timeout) {
 
     $scope.cyberPanelLoading = true;
