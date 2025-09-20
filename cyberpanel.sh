@@ -1463,6 +1463,8 @@ Debug_Log2 "Installing requirments..,3"
 Retry_Command "pip install --default-timeout=3600 -r /usr/local/requirments.txt"
   Check_Return "requirments" "no_exit"
 
+# Change to /usr/local directory to clone CyberPanel
+cd /usr/local || exit
 rm -rf cyberpanel
 echo -e "\nFetching files from ${Git_Clone_URL}...\n"
 
@@ -1476,8 +1478,7 @@ echo -e "\nCyberPanel source code downloaded...\n"
 cd cyberpanel || exit
 git checkout "$Branch_Name"
   Check_Return "git checkout"
-cd - || exit
-cd cyberpanel/install || exit
+cd install || exit
 
 Debug_Log2 "Necessary components installed..,5"
 }
@@ -1802,7 +1803,8 @@ if [[ $Server_Edition = "Enterprise" ]] ; then
   Enterprise_Flag="--ent ent --serial "
 fi
 
-sed -i 's|git clone https://github.com/usmannasir/cyberpanel|echo downloaded|g' install.py
+# Remove the git clone replacement - let install.py handle the move operation
+# sed -i 's|git clone https://github.com/usmannasir/cyberpanel|echo downloaded|g' install.py
 sed -i 's|mirror.cyberpanel.net|cyberpanel.sh|g' install.py
 
 
