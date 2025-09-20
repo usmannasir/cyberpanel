@@ -223,3 +223,17 @@ def updateFTPQuota(request):
         return fm.updateFTPQuota()
     except KeyError:
         return redirect(loadLoginPage)
+
+def getFTPQuotaUsage(request):
+    try:
+        fm = FTPManager(request)
+        return fm.getFTPQuotaUsage()
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def migrateFTPQuotas(request):
+    try:
+        fm = FTPManager(request)
+        return fm.migrateFTPQuotas()
+    except KeyError:
+        return redirect(loadLoginPage)
