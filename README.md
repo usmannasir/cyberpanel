@@ -8,6 +8,12 @@ Web Hosting Control Panel powered by OpenLiteSpeed, designed to simplify hosting
 
 > **Current Version**: 2.4 Build 3 | **Last Updated**: September 20, 2025
 
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-blue?style=flat-square&logo=github)](https://github.com/usmannasir/cyberpanel)
+[![Discord](https://img.shields.io/badge/Discord-Join%20Chat-7289DA?style=flat-square&logo=discord)](https://discord.gg/g8k8Db3)
+[![Facebook](https://img.shields.io/badge/Facebook-Community-1877F2?style=flat-square&logo=facebook)](https://www.facebook.com/groups/cyberpanel)
+[![YouTube](https://img.shields.io/badge/YouTube-Channel-FF0000?style=flat-square&logo=youtube)](https://www.youtube.com/@Cyber-Panel)
+[![Documentation](https://img.shields.io/badge/Documentation-Read%20Now-green?style=flat-square&logo=gitbook)](https://cyberpanel.net/KnowledgeBase/)
+
 ---
 
 ## 🔧 Features & Services
