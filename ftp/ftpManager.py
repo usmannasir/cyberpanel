@@ -336,6 +336,87 @@ class FTPManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
+    def getFTPQuotaUsage(self):
+        """
+        Get quota usage information for an FTP user
+        """
+        try:
+            userID = self.request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'listFTPAccounts') == 0:
+                return ACLManager.loadErrorJson('getQuotaUsage', 0)
+
+            data = json.loads(self.request.body)
+            userName = data['ftpUserName']
+
+            admin = Administrator.objects.get(pk=userID)
+            ftp = Users.objects.get(user=userName)
+
+            if currentACL['admin'] == 1:
+                pass
+            elif ftp.domain.admin != admin:
+                return ACLManager.loadErrorJson()
+
+            result = FTPUtilities.getFTPQuotaUsage(userName)
+
+            if isinstance(result, dict):
+                data_ret = {
+                    'status': 1, 
+                    'getQuotaUsage': 1, 
+                    'error_message': "None",
+                    'quota_usage': result
+                }
+            else:
+                data_ret = {
+                    'status': 0, 
+                    'getQuotaUsage': 0, 
+                    'error_message': result[1] if isinstance(result, tuple) else str(result)
+                }
+            
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+            
+        except BaseException as msg:
+            data_ret = {'status': 0, 'getQuotaUsage': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def migrateFTPQuotas(self):
+        """
+        Migrate existing FTP users to the new quota system
+        """
+        try:
+            userID = self.request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] != 1:
+                return ACLManager.loadErrorJson('migrateQuotas', 0)
+
+            result = FTPUtilities.migrateExistingFTPUsers()
+
+            if result[0] == 1:
+                data_ret = {
+                    'status': 1, 
+                    'migrateQuotas': 1, 
+                    'error_message': "None",
+                    'message': result[1]
+                }
+            else:
+                data_ret = {
+                    'status': 0, 
+                    'migrateQuotas': 0, 
+                    'error_message': result[1]
+                }
+            
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+            
+        except BaseException as msg:
+            data_ret = {'status': 0, 'migrateQuotas': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
     def installPureFTPD(self):
 
         def pureFTPDServiceName():

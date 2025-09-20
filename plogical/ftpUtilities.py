@@ -266,6 +266,9 @@ class FTPUtilities:
             
             ftp.save()
             
+            # Apply quota to filesystem if needed
+            FTPUtilities.applyQuotaToFilesystem(ftp)
+            
             return 1, "FTP quota updated successfully"
             
         except Users.DoesNotExist:
@@ -273,6 +276,107 @@ class FTPUtilities:
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [updateFTPQuota]")
             return 0, str(msg)
+
+    @staticmethod
+    def applyQuotaToFilesystem(ftp_user):
+        """
+        Apply quota settings to the filesystem level
+        """
+        try:
+            import subprocess
+            
+            # Get the user's directory
+            user_dir = ftp_user.dir
+            if not user_dir or not os.path.exists(user_dir):
+                return False, "User directory not found"
+            
+            # Convert quota from MB to KB for setquota command
+            quota_kb = ftp_user.quotasize * 1024
+            
+            # Apply quota using setquota command
+            # Note: This requires quota tools to be installed
+            try:
+                # Set both soft and hard limits to the same value
+                subprocess.run([
+                    'setquota', '-u', str(ftp_user.uid), 
+                    f'{quota_kb}K', f'{quota_kb}K', 
+                    '0', '0',  # inode limits (unlimited)
+                    user_dir
+                ], check=True, capture_output=True)
+                
+                logging.CyberCPLogFileWriter.writeToFile(f"Applied quota {quota_kb}KB to user {ftp_user.user} in {user_dir}")
+                return True, "Quota applied successfully"
+                
+            except subprocess.CalledProcessError as e:
+                logging.CyberCPLogFileWriter.writeToFile(f"Failed to apply quota: {e}")
+                return False, f"Failed to apply quota: {e}"
+            except FileNotFoundError:
+                # setquota command not found, quota tools not installed
+                logging.CyberCPLogFileWriter.writeToFile("setquota command not found - quota tools may not be installed")
+                return False, "Quota tools not installed"
+                
+        except Exception as e:
+            logging.CyberCPLogFileWriter.writeToFile(f"Error applying quota to filesystem: {str(e)}")
+            return False, str(e)
+
+    @staticmethod
+    def getFTPQuotaUsage(ftpUsername):
+        """
+        Get current quota usage for an FTP user
+        """
+        try:
+            ftp = Users.objects.get(user=ftpUsername)
+            user_dir = ftp.dir
+            
+            if not user_dir or not os.path.exists(user_dir):
+                return 0, "User directory not found"
+            
+            # Get directory size in MB
+            import subprocess
+            result = subprocess.run(['du', '-sm', user_dir], capture_output=True, text=True)
+            
+            if result.returncode == 0:
+                usage_mb = int(result.stdout.split()[0])
+                quota_mb = ftp.quotasize
+                usage_percent = (usage_mb / quota_mb * 100) if quota_mb > 0 else 0
+                
+                return {
+                    'usage_mb': usage_mb,
+                    'quota_mb': quota_mb,
+                    'usage_percent': round(usage_percent, 2),
+                    'remaining_mb': max(0, quota_mb - usage_mb)
+                }
+            else:
+                return 0, "Failed to get directory size"
+                
+        except Users.DoesNotExist:
+            return 0, "FTP user not found"
+        except Exception as e:
+            logging.CyberCPLogFileWriter.writeToFile(f"Error getting quota usage: {str(e)}")
+            return 0, str(e)
+
+    @staticmethod
+    def migrateExistingFTPUsers():
+        """
+        Migrate existing FTP users to use the new quota system
+        """
+        try:
+            migrated_count = 0
+            
+            for ftp_user in Users.objects.all():
+                # If custom_quota_enabled is not set, set it to False and use package default
+                if not hasattr(ftp_user, 'custom_quota_enabled') or ftp_user.custom_quota_enabled is None:
+                    ftp_user.custom_quota_enabled = False
+                    ftp_user.custom_quota_size = 0
+                    ftp_user.quotasize = ftp_user.domain.package.diskSpace
+                    ftp_user.save()
+                    migrated_count += 1
+            
+            return 1, f"Migrated {migrated_count} FTP users to new quota system"
+            
+        except Exception as e:
+            logging.CyberCPLogFileWriter.writeToFile(f"Error migrating FTP users: {str(e)}")
+            return 0, str(e)
 
 
 def main():
