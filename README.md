@@ -1,8 +1,12 @@
+<div align="center">
+
+<img src="https://community.cyberpanel.net/uploads/default/original/1X/416fdec0e96357d11f7b2756166c61b1aeca5939.png" alt="CyberPanel Logo" width="500"/>
+
 # 🛠️ CyberPanel
 
 Web Hosting Control Panel powered by OpenLiteSpeed, designed to simplify hosting management.
 
-> **Current Version**: 2.4 Build 3 | **Last Updated**: September 18, 2025
+> **Current Version**: 2.4 Build 3 | **Last Updated**: September 20, 2025
 
 ---
 
@@ -187,15 +191,15 @@ sh <(curl https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgr
 
 ### 🔗 **Direct Guide Links**
 
-| Category     | Guide                                                      | Description                        |
-| ------------ | ---------------------------------------------------------- | ---------------------------------- |
-| 📚 All       | [Complete Guides Index](guides/INDEX.md)                     | Browse all available guides        |
-| 🔧 General   | [Troubleshooting Guide](guides/TROUBLESHOOTING.md)            | Comprehensive troubleshooting      |
-| 🐳 Docker    | [Command Execution](guides/Docker_Command_Execution_Guide.md) | Execute commands in containers     |
-| 🤖 Security  | [AI Scanner](guides/AIScannerDocs.md)                         | AI-powered security scanning       |
-| 📧 Email     | [Mautic Setup](guides/MAUTIC_INSTALLATION_GUIDE.md)           | Email marketing platform           |
-| 🎨 Design    | [Custom CSS Guide](guides/CUSTOM_CSS_GUIDE.md)                | Create custom themes |
-| 🔥 Security  | [Firewall Blocking Feature](guides/FIREWALL_BLOCKING_FEATURE.md) | Advanced security features         |
+| Category    | Guide                                                         | Description                    |
+| ----------- | ------------------------------------------------------------- | ------------------------------ |
+| 📚 All      | [Complete Guides Index](guides/INDEX.md)                         | Browse all available guides    |
+| 🔧 General  | [Troubleshooting Guide](guides/TROUBLESHOOTING.md)               | Comprehensive troubleshooting  |
+| 🐳 Docker   | [Command Execution](guides/Docker_Command_Execution_Guide.md)    | Execute commands in containers |
+| 🤖 Security | [AI Scanner](guides/AIScannerDocs.md)                            | AI-powered security scanning   |
+| 📧 Email    | [Mautic Setup](guides/MAUTIC_INSTALLATION_GUIDE.md)              | Email marketing platform       |
+| 🎨 Design   | [Custom CSS Guide](guides/CUSTOM_CSS_GUIDE.md)                   | Create custom themes           |
+| 🔥 Security | [Firewall Blocking Feature](guides/FIREWALL_BLOCKING_FEATURE.md) | Advanced security features     |
 
 ---
 
