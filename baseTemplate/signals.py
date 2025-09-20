@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.contrib.auth.models import User
+from loginSystem.models import Administrator
 from .models import UserNotificationPreferences
 
 
-@receiver(post_save, sender=User)
+@receiver(post_save, sender=Administrator)
 def create_user_notification_preferences(sender, instance, created, **kwargs):
-    """Create default notification preferences when a new user is created"""
+    """Create default notification preferences when a new Administrator is created"""
     if created:
         UserNotificationPreferences.objects.create(
             user=instance,
@@ -16,8 +16,8 @@ def create_user_notification_preferences(sender, instance, created, **kwargs):
         )
 
 
-@receiver(post_save, sender=User)
+@receiver(post_save, sender=Administrator)
 def save_user_notification_preferences(sender, instance, **kwargs):
-    """Save notification preferences when user is saved"""
+    """Save notification preferences when Administrator is saved"""
     if hasattr(instance, 'notification_preferences'):
         instance.notification_preferences.save()

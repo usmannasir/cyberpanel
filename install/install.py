@@ -690,7 +690,25 @@ password="%s"
 
         # self.setupVirtualEnv(self.distro)
 
-        ### Database migrations will be handled after database creation
+        # Now run Django migrations since we're in /usr/local/CyberCP and database exists
+        os.chdir("/usr/local/CyberCP")
+        logging.InstallLog.writeToFile("Running Django migrations...")
+        preFlightsChecks.stdOut("Running Django migrations...")
+
+        # Reset migration history in database (in case of re-installation)
+        command = "/usr/local/CyberPanel-venv/bin/python manage.py migrate --fake-initial"
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+        # Create fresh migrations for all apps
+        command = "/usr/local/CyberPanel-venv/bin/python manage.py makemigrations"
+        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
+        # Apply all migrations with --fake-initial to handle existing tables
+        command = "/usr/local/CyberPanel-venv/bin/python manage.py migrate --fake-initial"
+        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
+        logging.InstallLog.writeToFile("Django migrations completed successfully!")
+        preFlightsChecks.stdOut("Django migrations completed successfully!")
 
         if not os.path.exists("/usr/local/CyberCP/public"):
             os.mkdir("/usr/local/CyberCP/public")
@@ -2916,37 +2934,6 @@ def main():
     else:
         installCyberPanel.Main(cwd, mysql, distro, ent, serial, port, args.ftp, args.powerdns, args.publicip,
                                remotemysql, mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport)
-
-    # Now that database is created, run Django migrations
-    preFlightsChecks.stdOut("Running Django migrations...")
-    # The application should be at /usr/local/CyberCP after download_install_CyberPanel
-    if os.path.exists("/usr/local/CyberCP"):
-        os.chdir("/usr/local/CyberCP")
-        preFlightsChecks.stdOut("Changed to /usr/local/CyberCP directory for migrations")
-    else:
-        # Check if it's still in cyberpanel (move may have failed)
-        if os.path.exists("/usr/local/cyberpanel"):
-            preFlightsChecks.stdOut("WARNING: Application is in /usr/local/cyberpanel instead of /usr/local/CyberCP")
-            preFlightsChecks.stdOut("Attempting to fix directory structure...")
-
-            # Try to move it now
-            os.chdir("/usr/local")
-            if os.path.exists("CyberCP"):
-                shutil.rmtree("CyberCP")
-            shutil.move("cyberpanel", "CyberCP")
-            os.chdir("/usr/local/CyberCP")
-            preFlightsChecks.stdOut("Fixed: Moved cyberpanel to CyberCP")
-        else:
-            preFlightsChecks.stdOut("ERROR: Neither /usr/local/CyberCP nor /usr/local/cyberpanel exists!")
-            sys.exit(1)
-
-    # Create fresh migrations for all apps
-    command = "/usr/local/CyberPanel-venv/bin/python manage.py makemigrations"
-    preFlightsChecks.call(command, distro, command, command, 1, 1, os.EX_OSERR)
-
-    # Apply all migrations
-    command = "/usr/local/CyberPanel-venv/bin/python manage.py migrate"
-    preFlightsChecks.call(command, distro, command, command, 1, 1, os.EX_OSERR)
 
     checks.setupPHPAndComposer()
     checks.fix_selinux_issue()
