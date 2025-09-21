@@ -361,6 +361,18 @@
                             <button type="button" style="background-color: #33CCCC;" ng-click="verifyLoginCredentials()"
                                     class="btn btn-success btn-block  btn-login">Sign In
                             </button>
+                            
+                            <!-- WebAuthn Passkey Login Button -->
+                            <div id="webauthn-login-section" style="margin-top: 15px; display: none;">
+                                <button type="button" id="webauthn-login-btn" 
+                                        class="btn btn-primary btn-block btn-login" 
+                                        style="background-color: #5b5fcf; border-color: #5b5fcf;">
+                                    <i class="fas fa-fingerprint"></i> Login with Passkey
+                                </button>
+                                <div class="text-center" style="margin-top: 10px;">
+                                    <small class="text-muted">or</small>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -374,6 +386,36 @@
 <script src="https://code.angularjs.org/1.6.5/angular.min.js"></script>
 <script src="https://code.angularjs.org/1.6.5/angular-route.min.js"></script>
 <script src="{% static 'loginSystem/login-system.js' %}"></script>
+<script src="{% static 'loginSystem/webauthn.js' %}"></script>
+<script>
+// Initialize WebAuthn login functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const webauthnSection = document.getElementById('webauthn-login-section');
+    const webauthnBtn = document.getElementById('webauthn-login-btn');
+    const usernameInput = document.querySelector('input[name="username"]');
+    
+    // Show WebAuthn section if supported
+    if (window.cyberPanelWebAuthn && window.cyberPanelWebAuthn.isSupported()) {
+        webauthnSection.style.display = 'block';
+        
+        // Add click handler for WebAuthn login
+        webauthnBtn.addEventListener('click', function() {
+            if (window.cyberPanelWebAuthn) {
+                window.cyberPanelWebAuthn.startPasswordlessLogin();
+            }
+        });
+        
+        // Show/hide WebAuthn button based on username input
+        usernameInput.addEventListener('input', function() {
+            if (this.value.trim()) {
+                webauthnBtn.disabled = false;
+            } else {
+                webauthnBtn.disabled = true;
+            }
+        });
+    }
+});
+</script>
 
 </body>
 

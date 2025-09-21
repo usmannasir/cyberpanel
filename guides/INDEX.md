@@ -16,6 +16,9 @@ Welcome to the CyberPanel documentation hub! This folder contains all guides, tu
 
 ### 🐧 Operating System Support
 
+#### **Windows Family**
+- **[Windows Installation Guide](WINDOWS_INSTALLATION_GUIDE.md)** - Complete installation and configuration guide for CyberPanel on Windows 7/8.1/10/11
+
 #### **Debian Family**
 - **[Debian 13 Installation Guide](DEBIAN_13_INSTALLATION_GUIDE.md)** - Complete installation and configuration guide for CyberPanel on Debian 13 (Bookworm)
 - **[Debian 12 Troubleshooting Guide](DEBIAN_12_TROUBLESHOOTING.md)** - Troubleshooting guide for Debian 12 (Bookworm)
@@ -40,8 +43,12 @@ Welcome to the CyberPanel documentation hub! This folder contains all guides, tu
 ### 🎨 Customization & Design
 - **[Custom CSS Guide](CUSTOM_CSS_GUIDE.md)** - Complete guide for creating custom CSS that works with CyberPanel 2.5.5-dev design system
 
+### 🔐 Security & Authentication
+- **[2FA Authentication Guide](2FA_AUTHENTICATION_GUIDE.md)** - Complete guide for Two-Factor Authentication and WebAuthn/Passkey setup
+
 ### 🔧 Troubleshooting & Support
 - **[Troubleshooting Guide](TROUBLESHOOTING.md)** - Comprehensive troubleshooting and diagnostic commands
+- **[Installation Verification Guide](INSTALLATION_VERIFICATION.md)** - Verify installation and upgrade commands work across all supported OS
 
 ### 💻 Command Line Interface
 - **[CLI Command Reference](CLI_COMMAND_REFERENCE.md)** - Complete reference for all CyberPanel CLI commands
@@ -51,6 +58,7 @@ Welcome to the CyberPanel documentation hub! This folder contains all guides, tu
 
 ### 📖 General Documentation
 - **[README](../README.md)** - Main CyberPanel documentation with installation instructions and feature overview
+- **[Utility Scripts](../utils/README.md)** - Installation, upgrade, and maintenance scripts for Windows and Linux
 - **[Contributing Guide](CONTRIBUTING.md)** - Guidelines for contributing to the CyberPanel project
 
 ## 🚀 Quick Start
@@ -69,6 +77,7 @@ Welcome to the CyberPanel documentation hub! This folder contains all guides, tu
 - **General Troubleshooting**: [Troubleshooting Guide](TROUBLESHOOTING.md)
 
 ### **OS-Specific Troubleshooting**
+- **🪟 Windows**: [Windows Installation Guide](WINDOWS_INSTALLATION_GUIDE.md) - Installation & troubleshooting
 - **🐧 Debian 13**: [Debian 13 Installation Guide](DEBIAN_13_INSTALLATION_GUIDE.md) - Installation & troubleshooting
 - **🐧 Debian 12**: [Debian 12 Troubleshooting Guide](DEBIAN_12_TROUBLESHOOTING.md) - Troubleshooting
 - **🐧 Debian 11**: [Debian 11 Troubleshooting Guide](DEBIAN_11_TROUBLESHOOTING.md) - Troubleshooting
@@ -86,6 +95,7 @@ Welcome to the CyberPanel documentation hub! This folder contains all guides, tu
 ### **Feature-Specific Guides**
 - **Docker Features**: [Docker Command Execution Guide](Docker_Command_Execution_Guide.md)
 - **Security Features**: [AI Scanner Documentation](AIScannerDocs.md)
+- **Authentication**: [2FA Authentication Guide](2FA_AUTHENTICATION_GUIDE.md)
 - **Email Marketing**: [Mautic Installation Guide](MAUTIC_INSTALLATION_GUIDE.md)
 - **Storage Management**: [Home Directory Management Guide](HOME_DIRECTORY_MANAGEMENT_GUIDE.md)
 - **Customization & Design**: [Custom CSS Guide](CUSTOM_CSS_GUIDE.md)
@@ -98,6 +108,8 @@ Welcome to the CyberPanel documentation hub! This folder contains all guides, tu
 - Docker container management
 - Command execution
 - Security scanning
+- Two-factor authentication (2FA)
+- WebAuthn/Passkey authentication
 - Home directory management
 - CLI command reference
 

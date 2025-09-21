@@ -179,6 +179,121 @@ app.controller('modifyUser', function ($scope, $http) {
             document.body.removeChild(tempTextarea);
         }
     };
+    
+    // WebAuthn Functions
+    $scope.loadWebAuthnData = function() {
+        if (!$scope.accountUsername) return;
+        
+        var url = '/webauthn/credentials/' + $scope.accountUsername + '/';
+        
+        $http.get(url).then(function(response) {
+            if (response.data.success) {
+                $scope.webauthnCredentials = response.data.credentials;
+                $scope.webauthnEnabled = response.data.settings.enabled;
+                $scope.webauthnRequirePasskey = response.data.settings.require_passkey;
+                $scope.webauthnAllowMultiple = response.data.settings.allow_multiple_credentials;
+                $scope.webauthnMaxCredentials = response.data.settings.max_credentials;
+                $scope.canAddCredential = response.data.settings.can_add_credential;
+            }
+        }, function(error) {
+            console.error('Error loading WebAuthn data:', error);
+        });
+    };
+    
+    $scope.toggleWebAuthn = function() {
+        if ($scope.webauthnEnabled) {
+            $scope.loadWebAuthnData();
+        } else {
+            $scope.webauthnCredentials = [];
+            $scope.canAddCredential = true;
+        }
+    };
+    
+    $scope.registerNewPasskey = function() {
+        if (!window.cyberPanelWebAuthn) {
+            alert('WebAuthn is not supported in this browser');
+            return;
+        }
+        
+        var credentialName = prompt('Enter a name for this passkey:', 'Passkey ' + new Date().toLocaleDateString());
+        if (!credentialName) return;
+        
+        window.cyberPanelWebAuthn.registerPasskey($scope.accountUsername, credentialName)
+            .then(function(response) {
+                if (response.success) {
+                    $scope.loadWebAuthnData();
+                    $scope.$apply();
+                }
+            })
+            .catch(function(error) {
+                console.error('Error registering passkey:', error);
+            });
+    };
+    
+    $scope.deleteCredential = function(credentialId) {
+        if (!confirm('Are you sure you want to delete this passkey?')) return;
+        
+        if (!window.cyberPanelWebAuthn) {
+            alert('WebAuthn is not supported in this browser');
+            return;
+        }
+        
+        window.cyberPanelWebAuthn.deleteCredential($scope.accountUsername, credentialId)
+            .then(function(response) {
+                if (response.success) {
+                    $scope.loadWebAuthnData();
+                    $scope.$apply();
+                }
+            })
+            .catch(function(error) {
+                console.error('Error deleting credential:', error);
+            });
+    };
+    
+    $scope.updateCredentialName = function(credentialId, newName) {
+        if (!window.cyberPanelWebAuthn) return;
+        
+        window.cyberPanelWebAuthn.updateCredentialName($scope.accountUsername, credentialId, newName)
+            .then(function(response) {
+                if (response.success) {
+                    $scope.loadWebAuthnData();
+                    $scope.$apply();
+                }
+            })
+            .catch(function(error) {
+                console.error('Error updating credential name:', error);
+            });
+    };
+    
+    $scope.refreshCredentials = function() {
+        $scope.loadWebAuthnData();
+    };
+    
+    $scope.saveWebAuthnSettings = function() {
+        if (!window.cyberPanelWebAuthn) {
+            alert('WebAuthn is not supported in this browser');
+            return;
+        }
+        
+        var settings = {
+            enabled: $scope.webauthnEnabled,
+            require_passkey: $scope.webauthnRequirePasskey,
+            allow_multiple_credentials: $scope.webauthnAllowMultiple,
+            max_credentials: $scope.webauthnMaxCredentials,
+            timeout_seconds: $scope.webauthnTimeout
+        };
+        
+        window.cyberPanelWebAuthn.updateSettings($scope.accountUsername, settings)
+            .then(function(response) {
+                if (response.success) {
+                    $scope.loadWebAuthnData();
+                    $scope.$apply();
+                }
+            })
+            .catch(function(error) {
+                console.error('Error updating WebAuthn settings:', error);
+            });
+    };
 
 
     $scope.fetchUserDetails = function () {
@@ -223,6 +338,18 @@ app.controller('modifyUser', function ($scope, $http) {
                     $scope.secretKey = userDetails.secretKey;
                     $scope.formattedSecretKey = userDetails.secretKey.match(/.{1,4}/g).join(' ');
                 }
+                
+                // Initialize WebAuthn settings
+                $scope.webauthnEnabled = false;
+                $scope.webauthnRequirePasskey = false;
+                $scope.webauthnAllowMultiple = true;
+                $scope.webauthnMaxCredentials = 10;
+                $scope.webauthnTimeout = 60;
+                $scope.webauthnCredentials = [];
+                $scope.canAddCredential = true;
+                
+                // Load WebAuthn settings and credentials
+                $scope.loadWebAuthnData();
 
                 qrCode.set({
                     value: userDetails.otpauth
@@ -320,7 +447,13 @@ app.controller('modifyUser', function ($scope, $http) {
             }
         };
 
-        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+        $http.post(url, data, config).then(function(response) {
+            ListInitialDatas(response);
+            // Save WebAuthn settings after successful user modification
+            if (response.data.saveStatus == 1) {
+                $scope.saveWebAuthnSettings();
+            }
+        }, cantLoadInitialDatas);
 
 
         function ListInitialDatas(response) {
