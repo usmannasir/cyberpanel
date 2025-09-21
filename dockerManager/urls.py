@@ -27,6 +27,11 @@ urlpatterns = [
     re_path(r'^getImageHistory$', views.getImageHistory, name='getImageHistory'),
     re_path(r'^removeImage$', views.removeImage, name='removeImage'),
     re_path(r'^pullImage$', views.pullImage, name='pullImage'),
+    # Network management endpoints
+    re_path(r'^getDockerNetworks$', views.getDockerNetworks, name='getDockerNetworks'),
+    re_path(r'^createDockerNetwork$', views.createDockerNetwork, name='createDockerNetwork'),
+    re_path(r'^updateContainerPorts$', views.updateContainerPorts, name='updateContainerPorts'),
+    re_path(r'^manageNetworks$', views.manageNetworks, name='manageNetworks'),
     re_path(r'^updateContainer$', views.updateContainer, name='updateContainer'),
     re_path(r'^listContainers$', views.listContainers, name='listContainers'),
     re_path(r'^deleteContainerWithData$', views.deleteContainerWithData, name='deleteContainerWithData'),

@@ -1,0 +1,621 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Docker Network Management" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+
+<style>
+    .modern-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .page-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        padding: 3rem 0;
+        background: linear-gradient(135deg, var(--bg-hover, #f8f9ff) 0%, var(--bg-gradient, #f0f1ff) 100%);
+        border-radius: 20px;
+        animation: fadeInDown 0.5s ease-out;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .page-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle at 70% 30%, var(--accent-shadow-light, rgba(91, 95, 207, 0.15)) 0%, transparent 50%);
+        animation: rotate 30s linear infinite;
+    }
+    
+    .header-content {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .page-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--text-primary, #1e293b);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+    }
+    
+    .network-icon {
+        width: 60px;
+        height: 60px;
+        background: var(--bg-secondary, white);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px var(--shadow-medium, rgba(0,0,0,0.1));
+    }
+    
+    .main-card {
+        background: var(--bg-secondary, white);
+        border-radius: 16px;
+        box-shadow: 0 1px 3px var(--shadow-light, rgba(0,0,0,0.05)), 0 10px 40px var(--shadow-color, rgba(0,0,0,0.08));
+        border: 1px solid var(--border-color, #e8e9ff);
+        overflow: hidden;
+        margin-bottom: 2rem;
+        animation: fadeInUp 0.5s ease-out;
+    }
+    
+    .card-header {
+        background: linear-gradient(135deg, var(--bg-hover, #f8f9ff) 0%, var(--bg-gradient, #f0f1ff) 100%);
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid var(--border-color, #e8e9ff);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .card-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary, #1e293b);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .card-body {
+        padding: 2rem;
+    }
+    
+    .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-primary {
+        background: var(--accent-color, #5b5fcf);
+        color: var(--bg-secondary, white);
+    }
+    
+    .btn-primary:hover {
+        background: var(--accent-hover, #4547a9);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(91, 95, 207, 0.3);
+    }
+    
+    .btn-success {
+        background: var(--success-bg, #d1fae5);
+        color: var(--success-text, #065f46);
+        border: 1px solid #a7f3d0;
+    }
+    
+    .btn-success:hover {
+        background: #a7f3d0;
+        transform: translateY(-2px);
+    }
+    
+    .btn-danger {
+        background: #fee2e2;
+        color: var(--danger-color, #ef4444);
+        border: 1px solid #fecaca;
+    }
+    
+    .btn-danger:hover {
+        background: #fecaca;
+        transform: translateY(-2px);
+    }
+    
+    .network-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .network-card {
+        background: var(--bg-secondary, white);
+        border: 1px solid var(--border-color, #e8e9ff);
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .network-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(135deg, var(--accent-focus, rgba(91, 95, 207, 0.1)) 0%, transparent 100%);
+        border-radius: 0 0 0 100%;
+    }
+    
+    .network-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px var(--accent-shadow-light, rgba(91, 95, 207, 0.15));
+        border-color: var(--accent-color, #5b5fcf);
+    }
+    
+    .network-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .network-name {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--text-primary, #1e293b);
+        margin: 0;
+    }
+    
+    .network-driver {
+        background: var(--accent-bg, #e0e7ff);
+        color: var(--accent-color, #5b5fcf);
+        padding: 0.25rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .network-info {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .info-label {
+        color: var(--text-secondary, #64748b);
+        font-weight: 500;
+    }
+    
+    .info-value {
+        color: var(--text-primary, #1e293b);
+        font-weight: 600;
+    }
+    
+    .network-actions {
+        margin-top: 1rem;
+        display: flex;
+        gap: 0.5rem;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .loading-spinner {
+        width: 20px;
+        height: 20px;
+        border: 3px solid #e8e9ff;
+        border-top-color: var(--accent-color, #5b5fcf);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        display: inline-block;
+        margin-left: 1rem;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--text-secondary, #64748b);
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .network-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .card-header {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+        }
+    }
+</style>
+
+<div class="modern-container" ng-controller="manageNetworks">
+    <div class="page-header">
+        <div class="header-content">
+            <h1 class="page-title">
+                <div class="network-icon">
+                    <i class="fas fa-network-wired" style="color: var(--accent-color, #5b5fcf); font-size: 1.75rem;"></i>
+                </div>
+                {% trans "Docker Network Management" %}
+            </h1>
+            <p style="color: var(--text-secondary, #64748b); font-size: 1.125rem; margin: 0;">
+                {% trans "Manage Docker networks for container connectivity" %}
+            </p>
+        </div>
+    </div>
+
+    <!-- Networks Overview -->
+    <div class="main-card">
+        <div class="card-header">
+            <h2 class="card-title">
+                <i class="fas fa-list"></i>
+                {% trans "Available Networks" %}
+                <img id="networkLoading" src="/static/images/loading.gif" style="display: none;" class="loading-spinner">
+            </h2>
+            <div>
+                <button class="btn btn-primary" ng-click="refreshNetworks()" ng-disabled="loading">
+                    <i class="fas fa-sync"></i>
+                    {% trans "Refresh" %}
+                </button>
+                <button class="btn btn-success" ng-click="showCreateNetworkModal()">
+                    <i class="fas fa-plus"></i>
+                    {% trans "Create Network" %}
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div ng-show="loading" class="text-center" style="padding: 2rem;">
+                <div class="loading-spinner" style="width: 40px; height: 40px; margin: 0 auto;"></div>
+                <p style="margin-top: 1rem; color: var(--text-secondary, #64748b);">{% trans "Loading networks..." %}</p>
+            </div>
+            
+            <div ng-show="!loading && networks.length === 0" class="empty-state">
+                <i class="fas fa-network-wired"></i>
+                <h3>{% trans "No Networks Found" %}</h3>
+                <p>{% trans "Create your first Docker network to get started." %}</p>
+                <button class="btn btn-primary" ng-click="showCreateNetworkModal()">
+                    <i class="fas fa-plus"></i>
+                    {% trans "Create Network" %}
+                </button>
+            </div>
+            
+            <div ng-show="!loading && networks.length > 0" class="network-grid">
+                <div ng-repeat="network in networks" class="network-card">
+                    <div class="network-header">
+                        <h3 class="network-name">{$ network.name $}</h3>
+                        <span class="network-driver">{$ network.driver $}</span>
+                    </div>
+                    
+                    <div class="network-info">
+                        <div class="info-item">
+                            <span class="info-label">{% trans "ID" %}</span>
+                            <span class="info-value">{$ network.id | limitTo: 12 $}...</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">{% trans "Scope" %}</span>
+                            <span class="info-value">{$ network.scope $}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">{% trans "Containers" %}</span>
+                            <span class="info-value">{$ network.containers $}</span>
+                        </div>
+                        <div class="info-item" ng-if="network.ipam.config.length > 0">
+                            <span class="info-label">{% trans "Subnet" %}</span>
+                            <span class="info-value">{$ network.ipam.config[0].subnet $}</span>
+                        </div>
+                        <div class="info-item" ng-if="network.ipam.config.length > 0 && network.ipam.config[0].gateway">
+                            <span class="info-label">{% trans "Gateway" %}</span>
+                            <span class="info-value">{$ network.ipam.config[0].gateway $}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="network-actions">
+                        <button class="btn btn-danger btn-sm" ng-click="removeNetwork(network)" 
+                                ng-disabled="network.containers > 0" 
+                                title="{% trans 'Cannot remove network with running containers' %}">
+                            <i class="fas fa-trash"></i>
+                            {% trans "Remove" %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Network Modal -->
+<div id="createNetworkModal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">
+                    <i class="fas fa-plus" style="margin-right: 0.5rem;"></i>
+                    {% trans "Create Docker Network" %}
+                </h4>
+                <button type="button" class="close" data-dismiss="modal" 
+                        style="font-size: 1.5rem; background: transparent; border: none;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form name="createNetworkForm" class="form-horizontal">
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">{% trans "Network Name" %}</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control" ng-model="newNetwork.name" 
+                                   placeholder="{% trans 'e.g., my-custom-network' %}" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">{% trans "Driver" %}</label>
+                        <div class="col-sm-9">
+                            <select class="form-control" ng-model="newNetwork.driver">
+                                <option value="bridge">{% trans "Bridge" %}</option>
+                                <option value="overlay">{% trans "Overlay" %}</option>
+                                <option value="macvlan">{% trans "MacVLAN" %}</option>
+                                <option value="ipvlan">{% trans "IPvLAN" %}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">{% trans "Subnet" %}</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control" ng-model="newNetwork.subnet" 
+                                   placeholder="{% trans 'e.g., 172.20.0.0/16' %}">
+                            <small class="help-block">{% trans "Optional: Specify a custom subnet for the network" %}</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">{% trans "Gateway" %}</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control" ng-model="newNetwork.gateway" 
+                                   placeholder="{% trans 'e.g., 172.20.0.1' %}">
+                            <small class="help-block">{% trans "Optional: Specify a custom gateway IP" %}</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">{% trans "IP Range" %}</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control" ng-model="newNetwork.ip_range" 
+                                   placeholder="{% trans 'e.g., 172.20.0.0/24' %}">
+                            <small class="help-block">{% trans "Optional: Specify an IP range for container IPs" %}</small>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <img id="createNetworkLoading" src="/static/images/loading.gif" style="display: none;" class="loading-spinner">
+                <button type="button" class="btn btn-primary" ng-disabled="creatingNetwork" ng-click="createNetwork()">
+                    <i class="fas fa-plus"></i> {% trans "Create Network" %}
+                </button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    <i class="fas fa-times"></i> {% trans "Cancel" %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block footer_scripts %}
+<script src="{% static 'dockerManager/dockerManager.js' %}"></script>
+<script>
+    // Network management controller
+    app.controller('manageNetworks', function ($scope, $http) {
+        $scope.networks = [];
+        $scope.loading = true;
+        $scope.creatingNetwork = false;
+        
+        $scope.newNetwork = {
+            name: '',
+            driver: 'bridge',
+            subnet: '',
+            gateway: '',
+            ip_range: ''
+        };
+
+        // Load networks
+        $scope.loadNetworks = function() {
+            $scope.loading = true;
+            var url = "/docker/getDockerNetworks";
+            var config = {
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            };
+
+            $http.post(url, {}, config).then(function(response) {
+                $scope.loading = false;
+                if (response.data.status === 1) {
+                    $scope.networks = response.data.networks;
+                } else {
+                    new PNotify({
+                        title: 'Error',
+                        text: 'Failed to load networks: ' + response.data.error_message,
+                        type: 'error'
+                    });
+                }
+            }, function(error) {
+                $scope.loading = false;
+                new PNotify({
+                    title: 'Error',
+                    text: 'Error loading networks: ' + error.data.error_message,
+                    type: 'error'
+                });
+            });
+        };
+
+        // Refresh networks
+        $scope.refreshNetworks = function() {
+            $scope.loadNetworks();
+        };
+
+        // Show create network modal
+        $scope.showCreateNetworkModal = function() {
+            $scope.newNetwork = {
+                name: '',
+                driver: 'bridge',
+                subnet: '',
+                gateway: '',
+                ip_range: ''
+            };
+            $('#createNetworkModal').modal('show');
+        };
+
+        // Create network
+        $scope.createNetwork = function() {
+            if (!$scope.newNetwork.name.trim()) {
+                new PNotify({
+                    title: 'Error',
+                    text: 'Network name is required',
+                    type: 'error'
+                });
+                return;
+            }
+
+            $('#createNetworkLoading').show();
+            $scope.creatingNetwork = true;
+
+            var url = "/docker/createDockerNetwork";
+            var data = {
+                name: $scope.newNetwork.name,
+                driver: $scope.newNetwork.driver,
+                subnet: $scope.newNetwork.subnet,
+                gateway: $scope.newNetwork.gateway,
+                ip_range: $scope.newNetwork.ip_range
+            };
+
+            var config = {
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            };
+
+            $http.post(url, data, config).then(function(response) {
+                $('#createNetworkLoading').hide();
+                $scope.creatingNetwork = false;
+
+                if (response.data.status === 1) {
+                    $('#createNetworkModal').modal('hide');
+                    $scope.loadNetworks();
+                    new PNotify({
+                        title: 'Success',
+                        text: 'Network created successfully',
+                        type: 'success'
+                    });
+                } else {
+                    new PNotify({
+                        title: 'Error',
+                        text: 'Failed to create network: ' + response.data.error_message,
+                        type: 'error'
+                    });
+                }
+            }, function(error) {
+                $('#createNetworkLoading').hide();
+                $scope.creatingNetwork = false;
+                new PNotify({
+                    title: 'Error',
+                    text: 'Error creating network: ' + error.data.error_message,
+                    type: 'error'
+                });
+            });
+        };
+
+        // Remove network
+        $scope.removeNetwork = function(network) {
+            if (network.containers > 0) {
+                new PNotify({
+                    title: 'Error',
+                    text: 'Cannot remove network with running containers',
+                    type: 'error'
+                });
+                return;
+            }
+
+            if (confirm('Are you sure you want to remove network "' + network.name + '"?')) {
+                // Implementation for removing network would go here
+                new PNotify({
+                    title: 'Info',
+                    text: 'Network removal not implemented in this demo',
+                    type: 'info'
+                });
+            }
+        };
+
+        // Initialize
+        $scope.loadNetworks();
+    });
+</script>
+{% endblock %}

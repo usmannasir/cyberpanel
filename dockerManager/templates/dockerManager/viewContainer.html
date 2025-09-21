@@ -757,10 +757,15 @@
                     <div class="action-text">{% trans "Processes" %}</div>
                 </div>
                 
-                <div class="action-btn" ng-click="showCommandModal()" ng-disabled="status!='running'">
-                    <i class="fas fa-code action-icon" style="color: #10b981;"></i>
-                    <div class="action-text">{% trans "Run Command" %}</div>
-                </div>
+                        <div class="action-btn" ng-click="showCommandModal()" ng-disabled="status!='running'">
+                            <i class="fas fa-code action-icon" style="color: #10b981;"></i>
+                            <div class="action-text">{% trans "Run Command" %}</div>
+                        </div>
+                        
+                        <div class="action-btn" ng-click="showPortEditModal()" ng-disabled="status!='running'">
+                            <i class="fas fa-edit action-icon" style="color: #8b5cf6;"></i>
+                            <div class="action-text">{% trans "Edit Ports" %}</div>
+                        </div>
             </div>
         </div>
     </div>
@@ -1236,6 +1241,78 @@
                 <button type="button" class="btn btn-secondary" ng-click="showContainerImportModal = false">
                     {% trans "Cancel" %}
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Port Editing Modal -->
+    <div id="portEditModal" class="modal fade" role="dialog">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">
+                        <i class="fas fa-edit" style="margin-right: 0.5rem;"></i>
+                        {% trans "Edit Port Mappings" %}
+                    </h4>
+                    <button type="button" class="close" data-dismiss="modal" 
+                            style="font-size: 1.5rem; background: transparent; border: none;">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>{% trans "Important:" %}</strong> {% trans "Editing port mappings will temporarily stop and recreate the container. Any unsaved data in the container may be lost." %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="control-label">
+                            <i class="fas fa-plug" style="margin-right: 0.5rem;"></i>
+                            {% trans "Port Mappings" %}
+                        </label>
+                        <div class="port-mapping-container">
+                            <div ng-repeat="(containerPort, hostPort) in currentPorts" class="port-mapping-row" style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                                <div style="flex: 1;">
+                                    <label style="font-weight: 600; color: #495057; margin-bottom: 0.25rem;">{% trans "Container Port" %}</label>
+                                    <input type="text" class="form-control" ng-model="containerPort" disabled style="font-family: monospace;">
+                                </div>
+                                <div style="color: #007bff; font-size: 1.25rem;">
+                                    <i class="fas fa-arrow-right"></i>
+                                </div>
+                                <div style="flex: 1;">
+                                    <label style="font-weight: 600; color: #495057; margin-bottom: 0.25rem;">{% trans "Host Port" %}</label>
+                                    <input type="number" class="form-control" ng-model="currentPorts[containerPort]" 
+                                           placeholder="{% trans 'e.g., 8080' %}" min="1024" max="65535">
+                                </div>
+                                <div style="display: flex; align-items: center; height: 38px;">
+                                    <button type="button" class="btn btn-danger btn-sm" ng-click="removePortMapping(containerPort)" 
+                                            ng-show="Object.keys(currentPorts).length > 1" title="{% trans 'Remove port mapping' %}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div ng-show="Object.keys(currentPorts).length === 0" class="text-center text-muted" style="padding: 2rem;">
+                                <i class="fas fa-info-circle fa-2x" style="margin-bottom: 1rem;"></i>
+                                <p>{% trans "No port mappings configured" %}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="button" class="btn btn-primary" ng-click="addNewPortMapping()">
+                            <i class="fas fa-plus"></i>
+                            {% trans "Add Port Mapping" %}
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <img id="portEditLoading" src="/static/images/loading.gif" style="display: none;" class="loading-spinner">
+                    <button type="button" class="btn btn-primary" ng-disabled="updatingPorts" ng-click="updatePortMappings()">
+                        <i class="fas fa-save"></i> {% trans "Update Port Mappings" %}
+                    </button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">
+                        <i class="fas fa-times"></i> {% trans "Cancel" %}
+                    </button>
+                </div>
             </div>
         </div>
     </div>

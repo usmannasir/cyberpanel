@@ -213,8 +213,8 @@ class ContainerManager(multi.Thread):
             proc = httpProc(request, template, data, 'admin')
             return proc.render()
         except Exception as e:
-            secure_log_error(e, \'container_operation\')
-            return HttpResponse(\'Operation failed\')
+            secure_log_error(e, 'container_operation')
+            return HttpResponse('Operation failed')
 
     def listContainers(self, request=None, userID=None, data=None):
         client = docker.from_env()
@@ -333,8 +333,8 @@ class ContainerManager(multi.Thread):
             return HttpResponse(json_data)
 
         except Exception as e:
-            secure_log_error(e, \'containerLogStatus\')
-            data_ret = secure_error_response(e, \'Failed to containerLogStatus\')
+            secure_log_error(e, 'containerLogStatus')
+            data_ret = secure_error_response(e, 'Failed to containerLogStatus')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -417,6 +417,22 @@ class ContainerManager(multi.Thread):
                     if isinstance(volume, dict) and 'src' in volume and 'dest' in volume:
                         volumes[volume['src']] = {'bind': volume['dest'], 'mode': 'rw'}
 
+            # Network configuration
+            network = data.get('network', 'bridge')  # Default to bridge network
+            network_mode = data.get('network_mode', 'bridge')
+            
+            # Extra options support (like --add-host)
+            extra_hosts = {}
+            extra_options = data.get('extraOptions', {})
+            if extra_options:
+                for option, value in extra_options.items():
+                    if option == 'add_host' and value:
+                        # Parse --add-host entries (format: hostname:ip)
+                        for host_entry in value.split(','):
+                            if ':' in host_entry:
+                                hostname, ip = host_entry.strip().split(':', 1)
+                                extra_hosts[hostname.strip()] = ip.strip()
+
             ## Create Configurations
             admin = Administrator.objects.get(userName=dockerOwner)
 
@@ -426,7 +442,16 @@ class ContainerManager(multi.Thread):
                              'ports': portConfig,
                              'publish_all_ports': True,
                              'environment': envDict,
-                             'volumes': volumes}
+                             'volumes': volumes,
+                             'network_mode': network_mode}
+
+            # Add network configuration
+            if network != 'bridge' or network_mode == 'bridge':
+                containerArgs['network'] = network
+            
+            # Add extra hosts if specified
+            if extra_hosts:
+                containerArgs['extra_hosts'] = extra_hosts
 
             containerArgs['mem_limit'] = memory * 1048576;  # Converts MB to bytes ( 0 * x = 0 for unlimited memory)
 
@@ -467,6 +492,9 @@ class ContainerManager(multi.Thread):
                              image=image,
                              memory=memory,
                              ports=json.dumps(portConfig),
+                             network=network,
+                             network_mode=network_mode,
+                             extra_options=json.dumps(extra_options),
                              volumes=json.dumps(volumes),
                              env=json.dumps(envDict),
                              cid=container.id)
@@ -2417,6 +2445,190 @@ class ContainerManager(multi.Thread):
 
         except Exception as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [ContainerManager.listContainers]')
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def getDockerNetworks(self, userID=None):
+        """
+        Get list of all Docker networks
+        """
+        try:
+            admin = Administrator.objects.get(pk=userID)
+            if admin.acl.adminStatus != 1:
+                return ACLManager.loadError()
+
+            client = docker.from_env()
+            
+            # Get all networks
+            networks = client.networks.list()
+            
+            network_list = []
+            for network in networks:
+                network_info = {
+                    'id': network.id,
+                    'name': network.name,
+                    'driver': network.attrs.get('Driver', 'unknown'),
+                    'scope': network.attrs.get('Scope', 'local'),
+                    'created': network.attrs.get('Created', ''),
+                    'containers': len(network.attrs.get('Containers', {})),
+                    'ipam': network.attrs.get('IPAM', {}),
+                    'labels': network.attrs.get('Labels', {})
+                }
+                network_list.append(network_info)
+            
+            data_ret = {
+                'status': 1,
+                'error_message': 'None',
+                'networks': network_list
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except Exception as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [ContainerManager.getDockerNetworks]')
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def createDockerNetwork(self, userID=None, data=None):
+        """
+        Create a new Docker network
+        """
+        try:
+            admin = Administrator.objects.get(pk=userID)
+            if admin.acl.adminStatus != 1:
+                return ACLManager.loadError()
+
+            client = docker.from_env()
+            
+            name = data.get('name')
+            driver = data.get('driver', 'bridge')
+            subnet = data.get('subnet', '')
+            gateway = data.get('gateway', '')
+            ip_range = data.get('ip_range', '')
+            
+            if not name:
+                data_ret = {'status': 0, 'error_message': 'Network name is required'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            
+            # Prepare IPAM configuration
+            ipam_config = []
+            if subnet:
+                ipam_entry = {'subnet': subnet}
+                if gateway:
+                    ipam_entry['gateway'] = gateway
+                if ip_range:
+                    ipam_entry['ip_range'] = ip_range
+                ipam_config.append(ipam_entry)
+            
+            ipam = {'driver': 'default', 'config': ipam_config} if ipam_config else None
+            
+            # Create the network
+            network = client.networks.create(
+                name=name,
+                driver=driver,
+                ipam=ipam
+            )
+            
+            data_ret = {
+                'status': 1,
+                'error_message': 'None',
+                'network_id': network.id,
+                'message': f'Network {name} created successfully'
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except Exception as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [ContainerManager.createDockerNetwork]')
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def updateContainerPorts(self, userID=None, data=None):
+        """
+        Update port mappings for an existing container
+        """
+        try:
+            admin = Administrator.objects.get(pk=userID)
+            if admin.acl.adminStatus != 1:
+                return ACLManager.loadError()
+
+            client = docker.from_env()
+            
+            container_name = data.get('name')
+            new_ports = data.get('ports', {})
+            
+            if not container_name:
+                data_ret = {'status': 0, 'error_message': 'Container name is required'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            
+            # Get the container
+            try:
+                container = client.containers.get(container_name)
+            except docker.errors.NotFound:
+                data_ret = {'status': 0, 'error_message': f'Container {container_name} not found'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            
+            # Check if container is running
+            if container.status != 'running':
+                data_ret = {'status': 0, 'error_message': 'Container must be running to update port mappings'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            
+            # Get current container configuration
+            container_config = container.attrs['Config']
+            host_config = container.attrs['HostConfig']
+            
+            # Update port bindings
+            port_bindings = {}
+            for container_port, host_port in new_ports.items():
+                if host_port:  # Only add if host port is specified
+                    port_bindings[container_port] = host_port
+            
+            # Stop the container
+            container.stop(timeout=10)
+            
+            # Create new container with updated port configuration
+            new_container = client.containers.create(
+                image=container_config['Image'],
+                name=f"{container_name}_temp",
+                ports=list(new_ports.keys()),
+                host_config=client.api.create_host_config(port_bindings=port_bindings),
+                environment=container_config.get('Env', []),
+                volumes=host_config.get('Binds', []),
+                detach=True
+            )
+            
+            # Remove old container and rename new one
+            container.remove()
+            new_container.rename(container_name)
+            
+            # Start the updated container
+            new_container.start()
+            
+            # Update database record if it exists
+            try:
+                db_container = Containers.objects.get(name=container_name)
+                db_container.ports = json.dumps(new_ports)
+                db_container.save()
+            except Containers.DoesNotExist:
+                pass  # Container not in database, that's okay
+            
+            data_ret = {
+                'status': 1,
+                'error_message': 'None',
+                'message': f'Port mappings updated for container {container_name}'
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except Exception as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [ContainerManager.updateContainerPorts]')
             data_ret = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
