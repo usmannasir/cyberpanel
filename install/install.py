@@ -695,16 +695,27 @@ password="%s"
         logging.InstallLog.writeToFile("Running Django migrations...")
         preFlightsChecks.stdOut("Running Django migrations...")
 
-        # Reset migration history in database (in case of re-installation)
-        command = "/usr/local/CyberPanel-venv/bin/python manage.py migrate --fake-initial"
+        # Clean any existing migration files first (except __init__.py)
+        logging.InstallLog.writeToFile("Cleaning existing migration files...")
+        command = "find /usr/local/CyberCP -path '*/migrations/0*.py' -delete 2>/dev/null || true"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        # Create fresh migrations for all apps
-        command = "/usr/local/CyberPanel-venv/bin/python manage.py makemigrations"
+        # Clean any existing migration pyc files
+        command = "find /usr/local/CyberCP -path '*/migrations/*.pyc' -delete 2>/dev/null || true"
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+        # Clean __pycache__ directories in migrations folders
+        command = "find /usr/local/CyberCP -path '*/migrations/__pycache__' -type d -exec rm -rf {} + 2>/dev/null || true"
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+        # Create all migrations at once - Django will handle dependencies
+        logging.InstallLog.writeToFile("Creating fresh migrations for all apps...")
+        command = "/usr/local/CyberPanel-venv/bin/python manage.py makemigrations --noinput"
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-        # Apply all migrations with --fake-initial to handle existing tables
-        command = "/usr/local/CyberPanel-venv/bin/python manage.py migrate --fake-initial"
+        # Apply all migrations
+        logging.InstallLog.writeToFile("Applying all migrations...")
+        command = "/usr/local/CyberPanel-venv/bin/python manage.py migrate --noinput"
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
         logging.InstallLog.writeToFile("Django migrations completed successfully!")
