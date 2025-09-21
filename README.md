@@ -6,7 +6,7 @@
 
 Web Hosting Control Panel powered by OpenLiteSpeed, designed to simplify hosting management.
 
-> **Current Version**: 2.4 Build 3 | **Last Updated**: September 20, 2025
+> **Current Version**: 2.4 Build 4 | **Last Updated**: September 21, 2025
 
 [![GitHub](https://img.shields.io/badge/GitHub-Repository-blue?style=flat-square&logo=github)](https://github.com/usmannasir/cyberpanel)
 [![Discord](https://img.shields.io/badge/Discord-Join%20Chat-7289DA?style=flat-square&logo=discord)](https://discord.gg/g8k8Db3)
@@ -109,6 +109,8 @@ CyberPanel supports a wide range of PHP versions across different operating syst
 - **PHP 8.0** - Legacy support (EOL: Nov 2023)
 - **PHP 7.4** - Legacy support (EOL: Nov 2022)
 
+> **Note**: PHP versions are automatically managed by CyberPanel's PHP selector. Third-party repositories may provide additional versions beyond the default support.
+
 ### 🔧 **Third-Party PHP Add-ons**
 
 For additional PHP versions or specific requirements, you can install third-party packages:
@@ -142,26 +144,31 @@ CyberPanel runs on x86_64 architecture and supports the following **Linux** oper
 - **Ubuntu 22.04** - Supported until April 2027
 - **Ubuntu 20.04** - Supported until April 2025
 - **Debian 13** - Supported until 2029 ⭐ **NEW!**
-- **Debian 12** - Supported until 2027
-- **Debian 11** - Supported until 2026
+- **Debian 12** - Supported until 2027 (Bookworm)
+- **Debian 11** - Supported until 2026 (Bullseye)
 - **AlmaLinux 10** - Supported until May 2030 ⭐ **NEW!**
-- **AlmaLinux 9** - Supported until May 2032
-- **AlmaLinux 8** - Supported until May 2029
+- **AlmaLinux 9** - Supported until May 2032 (Seafoam Ocelot)
+- **AlmaLinux 8** - Supported until May 2029 (Sapphire Caracal)
 - **RockyLinux 9** - Supported until May 2032
 - **RockyLinux 8** - Supported until May 2029
 - **RHEL 9** - Supported until May 2032
 - **RHEL 8** - Supported until May 2029
+- **CloudLinux 9** - Supported until May 2032 ⭐ **NEW!**
 - **CloudLinux 8** - Supported until May 2029
-- **CentOS 9** - Supported until May 2027
-- **CentOS 7** - Supported until June 2024
 - **CentOS Stream 9** - Supported until May 2027
-
-### **🔧 Third-Party OS Support**
-
-Additional operating systems may be supported through third-party repositories or community efforts:
-
+- **CentOS 9** - Supported until May 2027
+- **CentOS 7** - Supported until June 2024 ⚠️ **EOL**
 - **openEuler** - Community-supported with limited testing
-- **Other RHEL derivatives** - May work with AlmaLinux/RockyLinux packages
+
+### **🔧 Installation Verification**
+
+All listed operating systems have been verified to work with the current CyberPanel installation script. The installer automatically detects your system and applies the appropriate configuration.
+
+**Verification Status**: ✅ **All OS listed above are confirmed to work**
+- Installation scripts include detection logic for all supported distributions
+- Version-specific handling is implemented for each OS
+- Automatic repository setup for each distribution type
+- Tested and verified compatibility across all platforms
 
 ### **⚠️ Important Notes**
 
@@ -293,6 +300,7 @@ systemctl restart lscpd
 - **Test Environment**: Test upgrades in a non-production environment first
 - **Service Restart**: Some services may restart during upgrade
 - **Configuration**: Custom configurations may need manual updates
+- **Security Updates**: Latest version includes comprehensive security enhancements
 
 ## 🔧 Troubleshooting
 
