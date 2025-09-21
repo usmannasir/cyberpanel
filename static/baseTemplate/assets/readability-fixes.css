@@ -1,0 +1,265 @@
+/* CyberPanel Readability & Design Fixes */
+/* This file fixes the core design issues with grey text and color inconsistencies */
+
+/* Override CSS Variables for Better Text Contrast */
+:root {
+    /* Ensure all text uses proper dark colors for readability */
+    --text-primary: #2f3640;
+    --text-secondary: #2f3640; /* Changed from grey to dark for better readability */
+    --text-heading: #1e293b;
+}
+
+/* Dark theme also uses proper contrast */
+[data-theme="dark"] {
+    --text-primary: #e4e4e7;
+    --text-secondary: #e4e4e7; /* Changed from grey to light for better readability */
+    --text-heading: #f3f4f6;
+}
+
+/* Fix Green Text Issues */
+/* Override Angular binding colors that might be green */
+.ng-binding {
+    color: var(--text-secondary) !important;
+}
+
+/* Specific fix for uptime display */
+#sidebar .server-info .info-line span,
+#sidebar .server-info .info-line .ng-binding,
+.server-info .ng-binding {
+    color: var(--text-secondary) !important;
+}
+
+/* Fix Grey Text on White Background */
+/* Override all muted and secondary text classes */
+.text-muted,
+.text-secondary,
+.text-light,
+small,
+.small,
+.text-small {
+    color: var(--text-secondary) !important;
+}
+
+/* Fix specific Bootstrap classes */
+.text-muted {
+    color: #2f3640 !important; /* Dark text for better readability */
+}
+
+/* Fix text on white/light backgrounds */
+.bg-white .text-muted,
+.bg-light .text-muted,
+.panel .text-muted,
+.card .text-muted,
+.content-box .text-muted {
+    color: #2f3640 !important;
+}
+
+/* Fix menu items and navigation */
+#sidebar .menu-item,
+#sidebar .menu-item span,
+#sidebar .menu-item i,
+.sidebar .menu-item,
+.sidebar .menu-item span,
+.sidebar .menu-item i {
+    color: var(--text-secondary) !important;
+}
+
+#sidebar .menu-item:hover,
+.sidebar .menu-item:hover {
+    color: var(--accent-color) !important;
+}
+
+#sidebar .menu-item.active,
+.sidebar .menu-item.active {
+    color: white !important;
+}
+
+/* Fix server info and details */
+.server-info,
+.server-info *,
+.server-details,
+.server-details *,
+.info-line,
+.info-line span,
+.info-line strong,
+.tagline,
+.brand {
+    color: inherit !important;
+}
+
+/* Fix form elements */
+label,
+.control-label,
+.form-label {
+    color: var(--text-primary) !important;
+    font-weight: 600;
+}
+
+/* Fix table text */
+.table th,
+.table td {
+    color: var(--text-primary) !important;
+}
+
+.table th {
+    font-weight: 600;
+}
+
+/* Fix alert text */
+.alert {
+    color: var(--text-primary) !important;
+}
+
+.alert-success {
+    color: #059669 !important; /* Darker green for better readability */
+}
+
+.alert-info {
+    color: #0284c7 !important; /* Darker blue for better readability */
+}
+
+.alert-warning {
+    color: #d97706 !important; /* Darker orange for better readability */
+}
+
+.alert-danger {
+    color: #dc2626 !important; /* Darker red for better readability */
+}
+
+/* Fix breadcrumb text */
+.breadcrumb-item {
+    color: var(--text-secondary) !important;
+}
+
+.breadcrumb-item.active {
+    color: var(--text-primary) !important;
+}
+
+/* Fix modal text */
+.modal-content {
+    color: var(--text-primary) !important;
+}
+
+.modal-title {
+    color: var(--text-heading) !important;
+}
+
+/* Fix button text */
+.btn {
+    color: inherit;
+}
+
+/* Fix any remaining light text issues */
+.bg-light .text-light,
+.bg-white .text-light,
+.panel .text-light,
+.card .text-light {
+    color: #2f3640 !important;
+}
+
+/* Ensure proper contrast for all text elements */
+span, div, p, label, td, th, a, li {
+    color: inherit;
+}
+
+/* Fix specific color classes */
+.text-success {
+    color: #059669 !important; /* Darker green for better readability */
+}
+
+.text-info {
+    color: #0284c7 !important; /* Darker blue for better readability */
+}
+
+.text-warning {
+    color: #d97706 !important; /* Darker orange for better readability */
+}
+
+.text-danger {
+    color: #dc2626 !important; /* Darker red for better readability */
+}
+
+/* Fix any Angular-specific styling */
+[ng-controller] {
+    color: inherit;
+}
+
+[ng-show],
+[ng-hide],
+[ng-if] {
+    color: inherit;
+}
+
+/* Ensure all content areas have proper text color */
+.content-box,
+.panel,
+.card,
+.main-content,
+.page-content {
+    color: var(--text-primary) !important;
+}
+
+/* Fix any remaining Bootstrap classes */
+.text-dark {
+    color: #2f3640 !important;
+}
+
+.text-body {
+    color: var(--text-primary) !important;
+}
+
+/* Mobile-specific fixes */
+@media (max-width: 768px) {
+    /* Ensure mobile text is also readable */
+    body,
+    .container,
+    .container-fluid {
+        color: var(--text-primary) !important;
+    }
+    
+    /* Fix mobile menu text */
+    .mobile-menu .menu-item,
+    .mobile-menu .menu-item span {
+        color: var(--text-secondary) !important;
+    }
+}
+
+/* Print styles */
+@media print {
+    body,
+    .content-box,
+    .panel,
+    .card {
+        color: #000000 !important;
+        background: #ffffff !important;
+    }
+    
+    .text-muted,
+    .text-secondary {
+        color: #000000 !important;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    :root {
+        --text-primary: #000000;
+        --text-secondary: #000000;
+        --text-heading: #000000;
+    }
+    
+    [data-theme="dark"] {
+        --text-primary: #ffffff;
+        --text-secondary: #ffffff;
+        --text-heading: #ffffff;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
