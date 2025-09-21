@@ -99,6 +99,13 @@ def saveChangesAPIAccess(request):
 
             if access == "Enable":
                 userAcct.api = 1
+                # When enabling API access, ensure the user has a proper token
+                # The token should be generated based on username:password format
+                # If no token exists, we'll need the user to reset their password
+                if not userAcct.token or userAcct.token == 'None' or userAcct.token == '':
+                    # Token will be generated when user changes their password
+                    # For now, set a placeholder that indicates API access is enabled but token needs generation
+                    userAcct.token = 'TOKEN_NEEDS_GENERATION'
             else:
                 userAcct.api = 0
 
