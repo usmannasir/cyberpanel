@@ -30,6 +30,7 @@ Web Hosting Control Panel powered by OpenLiteSpeed, designed to simplify hosting
 - 📀 **One-click Backups and Restores**.
 - 🐳 **Docker Management** with command execution capabilities.
 - 🤖 **AI-Powered Security Scanner** for enhanced protection.
+- 🔐 **Advanced 2FA Authentication** - TOTP and WebAuthn/Passkey support.
 - 📊 **Monthly Bandwidth Reset** - Automatic bandwidth usage reset (Fixed in latest version).
 
 ---
@@ -41,8 +42,10 @@ CyberPanel comes with comprehensive documentation and step-by-step guides:
 - 📚 **[Complete Guides Index](guides/INDEX.md)** - All available documentation in one place
 - 🐳 **[Docker Command Execution](guides/Docker_Command_Execution_Guide.md)** - Execute commands in Docker containers
 - 🤖 **[AI Scanner Setup](guides/AIScannerDocs.md)** - Configure AI-powered security scanning
+- 🔐 **[2FA Authentication Guide](guides/2FA_AUTHENTICATION_GUIDE.md)** - Complete Two-Factor Authentication and WebAuthn setup
 - 📧 **[Mautic Installation](guides/MAUTIC_INSTALLATION_GUIDE.md)** - Email marketing platform setup
 - 🎨 **[Custom CSS Guide](guides/CUSTOM_CSS_GUIDE.md)** - Create custom themes for CyberPanel 2.5.5-dev
+- 🛠️ **[Utility Scripts](utils/README.md)** - Installation, upgrade, and maintenance scripts for Windows and Linux
 
 ---
 
@@ -85,7 +88,7 @@ For additional PHP versions or specific requirements, you can install third-part
 
 ## 🌐 Supported Operating Systems
 
-CyberPanel runs on x86_64 architecture and supports the following operating systems:
+CyberPanel runs on x86_64 architecture and supports the following **Linux** operating systems:
 
 ### **✅ Currently Supported**
 
@@ -114,62 +117,223 @@ Additional operating systems may be supported through third-party repositories o
 - **openEuler** - Community-supported with limited testing
 - **Other RHEL derivatives** - May work with AlmaLinux/RockyLinux packages
 
+### **⚠️ Important Notes**
+
+- **Linux Only**: CyberPanel is designed specifically for Linux systems and does not support Windows
+- **Architecture**: Requires x86_64 (64-bit) architecture
+- **Virtual Machines**: Windows users can run CyberPanel in a Linux VM
+- **Docker**: Alternative option for Windows users via Docker containers
+
 > **Note**: For unsupported operating systems, compatibility is not guaranteed. Always test in a non-production environment first.
 
 ---
 
 ## ⚙️ Installation Instructions
 
-Install CyberPanel easily with the following command:
+### **Quick Installation (Recommended)**
+
+Install CyberPanel on supported Linux distributions with a single command:
 
 ```bash
 sh <(curl https://cyberpanel.net/install.sh || wget -O - https://cyberpanel.net/install.sh)
 ```
 
+**Alternative Installation Methods:**
+```bash
+# Using wget only
+wget -O - https://cyberpanel.net/install.sh | sh
+
+# Download and run manually
+wget https://cyberpanel.net/install.sh
+chmod +x install.sh
+sudo ./install.sh
+```
+
+### **Prerequisites**
+
+Before installation, ensure your system meets these requirements:
+
+- **Operating System**: One of the supported Linux distributions listed above
+- **Architecture**: x86_64 (64-bit)
+- **RAM**: Minimum 1GB (2GB+ recommended)
+- **Storage**: Minimum 10GB free space (20GB+ recommended)
+- **Network**: Internet connection required
+- **Root Access**: Installation requires root/sudo privileges
+
+### **Installation Process**
+
+The installation script will automatically:
+
+1. **Detect your operating system** and version
+2. **Install required dependencies** (Python, Git, etc.)
+3. **Download and configure** OpenLiteSpeed web server
+4. **Set up MariaDB** database server
+5. **Install CyberPanel** and configure all services
+6. **Create admin user** with default credentials
+7. **Start all services** and provide access information
+
+### **Post-Installation**
+
+After successful installation:
+
+1. **Access CyberPanel**: Open your browser to `http://your-server-ip:8090`
+2. **Default Login**:
+   - **Username**: `admin`
+   - **Password**: `123456`
+3. **Change Password**: Immediately change the default password
+4. **Configure SSL**: Set up SSL certificates for secure access
+
 ---
 
 ## 📊 Upgrading CyberPanel
 
-Upgrade your CyberPanel installation using:
+### **Quick Upgrade (Recommended)**
+
+Upgrade your existing CyberPanel installation:
 
 ```bash
 sh <(curl https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgrade.sh)
 ```
 
----
+**Alternative Upgrade Methods:**
+```bash
+# Using wget only
+wget -O - https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgrade.sh | sh
 
-## 🆕 Recent Updates & Fixes
+# Download and run manually
+wget https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgrade.sh
+chmod +x preUpgrade.sh
+sudo ./preUpgrade.sh
+```
 
-### **File Integrity & Verification System** (September 2025)
+### **Upgrade Process**
 
-- **Enhancement**: Comprehensive file integrity verification system implemented
-- **Features**:
-  - Automatic detection of missing critical files
-  - Python syntax validation for all core modules
-  - Environment configuration verification
-  - Django application integrity checks
-- **Coverage**: All core components (Django settings, URLs, middleware, application modules)
-- **Status**: ✅ All files verified and synchronized (5,597 files)
+The upgrade script will automatically:
 
-### **Bandwidth Reset Issue Fixed** (September 2025)
+1. **Backup current installation** to prevent data loss
+2. **Download latest version** from the stable branch
+3. **Update all dependencies** and requirements
+4. **Run database migrations** to update schema
+5. **Restart services** with new configuration
+6. **Verify installation** and report any issues
 
-- **Enhancement**: Implemented automatic monthly bandwidth reset for all websites and child domains
-- **Coverage**: All supported operating systems (Ubuntu 20.04+, AlmaLinux, RockyLinux, RHEL, CloudLinux 8, CentOS 7/9)
-- **Status**: ✅ Automatic monthly reset now functional
+### **Manual Upgrade (Advanced Users)**
 
-### **New Operating System Support Added** (September 2025)
+For manual upgrades or troubleshooting:
 
-- **Ubuntu 24.04.3**: Full compatibility with latest Ubuntu LTS
-- **Debian 13**: Full compatibility with latest Debian stable release
-- **AlmaLinux 10**: Full compatibility with latest AlmaLinux release
-- **Long-term Support**: All supported until 2029-2030
+```bash
+# Navigate to CyberPanel directory
+cd /usr/local/CyberCP
 
-### **Core Module Enhancements** (September 2025)
+# Update source code
+git pull origin stable
 
-- **Django Configuration**: Enhanced settings.py with improved environment variable handling
-- **Security Middleware**: Updated security middleware for better protection
-- **Application Modules**: Verified and synchronized all core application modules
-- **Static Assets**: Complete synchronization of UI assets and templates
+# Update dependencies
+pip3 install -r requirments.txt
+
+# Run database migrations
+python3 manage.py migrate
+
+# Collect static files
+python3 manage.py collectstatic --noinput
+
+# Restart services
+systemctl restart lscpd
+```
+
+### **⚠️ Important Upgrade Notes**
+
+- **Backup First**: Always backup your data before upgrading
+- **Test Environment**: Test upgrades in a non-production environment first
+- **Service Restart**: Some services may restart during upgrade
+- **Configuration**: Custom configurations may need manual updates
+
+## 🔧 Troubleshooting
+
+### **Common Installation Issues**
+
+#### **"Command not found" Errors**
+```bash
+# Install missing packages
+# Ubuntu/Debian
+sudo apt update && sudo apt install curl wget git python3
+
+# RHEL/CentOS/AlmaLinux/RockyLinux
+sudo yum install curl wget git python3
+```
+
+#### **Permission Denied Errors**
+```bash
+# Ensure you're running as root
+sudo sh <(curl https://cyberpanel.net/install.sh || wget -O - https://cyberpanel.net/install.sh)
+```
+
+#### **Network Connectivity Issues**
+```bash
+# Check internet connection
+ping -c 4 google.com
+
+# Check DNS resolution
+nslookup cyberpanel.net
+
+# Try alternative download method
+wget https://cyberpanel.net/install.sh
+chmod +x install.sh
+sudo ./install.sh
+```
+
+#### **Port Already in Use**
+```bash
+# Check what's using port 8090
+sudo netstat -tlnp | grep :8090
+
+# Kill process if necessary
+sudo kill -9 <PID>
+```
+
+### **Common Upgrade Issues**
+
+#### **Backup Creation Failed**
+```bash
+# Check disk space
+df -h
+
+# Free up space if necessary
+sudo apt autoremove && sudo apt autoclean
+```
+
+#### **Service Restart Failed**
+```bash
+# Check service status
+systemctl status lscpd
+
+# Restart services manually
+sudo systemctl restart lscpd
+sudo systemctl restart lsws
+```
+
+### **Verification Commands**
+
+#### **Check Installation Status**
+```bash
+# Check CyberPanel service
+systemctl status lscpd
+
+# Check web interface
+curl -I http://localhost:8090
+
+# Check database
+systemctl status mariadb
+```
+
+#### **View Logs**
+```bash
+# CyberPanel logs
+tail -f /usr/local/lscp/logs/error.log
+
+# System logs
+journalctl -u lscpd -f
+```
 
 ---
 
@@ -222,6 +386,7 @@ For detailed troubleshooting, installation guides, and advanced configuration:
 
 - **🐳 [Docker Command Execution Guide](guides/Docker_Command_Execution_Guide.md)** - Docker management and troubleshooting
 - **🤖 [AI Scanner Documentation](guides/AIScannerDocs.md)** - Security scanner setup and configuration
+- **🔐 [2FA Authentication Guide](guides/2FA_AUTHENTICATION_GUIDE.md)** - Two-Factor Authentication and WebAuthn setup
 - **📧 [Mautic Installation Guide](guides/MAUTIC_INSTALLATION_GUIDE.md)** - Email marketing platform setup
 - **🎨 [Custom CSS Guide](guides/CUSTOM_CSS_GUIDE.md)** - Interface customization and theming
 - **🔥 [Firewall Blocking Feature Guide](guides/FIREWALL_BLOCKING_FEATURE.md)** - Security features and configuration
