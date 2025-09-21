@@ -832,6 +832,84 @@ def submitUserCreation(request):
 
 
 @csrf_exempt
+def listChildDomainsJson(request):
+    try:
+        if request.method != 'POST':
+            data_ret = {"status": 0, 'error_message': "Only POST method allowed."}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data, status=405)
+
+        try:
+            data = json.loads(request.body)
+            adminUser = data['adminUser']
+            adminPass = data['adminPass']
+            
+            # Additional security: validate critical fields for dangerous characters
+            is_valid, error_msg = validate_api_input(adminUser, "adminUser")
+            if not is_valid:
+                data_ret = {"status": 0, 'error_message': error_msg}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data, status=400)
+                
+        except (json.JSONDecodeError, KeyError):
+            data_ret = {"status": 0, 'error_message': "Invalid JSON or missing adminUser/adminPass fields."}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data, status=400)
+
+        try:
+            admin = Administrator.objects.get(userName=adminUser)
+        except Administrator.DoesNotExist:
+            data_ret = {"status": 0, 'error_message': "Administrator not found."}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data, status=404)
+
+        if admin.api == 0:
+            data_ret = {"status": 0, 'error_message': "API Access Disabled."}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data, status=403)
+
+        if not hashPassword.check_password(admin.password, adminPass):
+            data_ret = {"status": 0, 'error_message': "Invalid password."}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data, status=401)
+
+        # Get child domains
+        from websiteFunctions.models import ChildDomains
+        
+        child_domains = ChildDomains.objects.all()
+        
+        # Get machine IP
+        try:
+            ipFile = "/etc/cyberpanel/machineIP"
+            with open(ipFile, 'r') as f:
+                ipData = f.read()
+            ipAddress = ipData.split('\n', 1)[0]
+        except BaseException as msg:
+            logging.writeToFile(f"Failed to read machine IP, error: {str(msg)}")
+            ipAddress = "192.168.100.1"
+
+        json_data = []
+        for items in child_domains:
+            dic = {
+                'parent_site': items.master.domain,
+                'domain': items.domain,
+                'path': items.path,
+                'ssl': items.ssl,
+                'php_version': items.phpSelection,
+                'ip_address': ipAddress
+            }
+            json_data.append(dic)
+
+        final_json = json.dumps(json_data, indent=2)
+        return HttpResponse(final_json, content_type='application/json')
+
+    except Exception as msg:
+        data_ret = {'status': 0, 'error_message': f"Internal server error: {str(msg)}"}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data, status=500)
+
+
+@csrf_exempt
 def addFirewallRule(request):
     try:
         if request.method == 'POST':
