@@ -25,6 +25,7 @@ urlpatterns = [
     path('saveResellerChanges', views.saveResellerChanges, name='saveResellerChanges'),
     path('apiAccess', views.apiAccess, name='apiAccess'),
     path('saveChangesAPIAccess', views.saveChangesAPIAccess, name='saveChangesAPIAccess'),
+    path('fetchAPIUsers', views.fetchAPIUsers, name='fetchAPIUsers'),
     path('listUsers', views.listUsers, name='listUsers'),
     path('fetchTableUsers', views.fetchTableUsers, name='fetchTableUsers'),
     path('controlUserState', views.controlUserState, name='controlUserState'),
