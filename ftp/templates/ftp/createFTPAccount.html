@@ -521,9 +521,23 @@
                                         <div class="path-info">
                                             <i class="fas fa-folder"></i>
                                             {% trans "Leave empty to use the website's home directory, or specify a subdirectory" %}
+                                            <br>
+                                            <small style="margin-top: 0.5rem; display: block; color: var(--text-secondary, #64748b);">
+                                                <i class="fas fa-info-circle"></i>
+                                                <strong>{% trans "Examples:" %}</strong> {% trans "docs, public_html, uploads, api" %}
+                                                <br>
+                                                <i class="fas fa-shield-alt"></i>
+                                                {% trans "Security: Path will be restricted to this subdirectory only" %}
+                                            </small>
                                         </div>
-                                        <input placeholder="{% trans 'e.g., public_html or leave empty' %}"
-                                               type="text" class="form-control" ng-model="ftpPath">
+                                        <input placeholder="{% trans 'e.g., docs or public_html (leave empty for home directory)' %}"
+                                               type="text" class="form-control" ng-model="ftpPath"
+                                               pattern="^[a-zA-Z0-9._/-]+$" 
+                                               title="{% trans 'Only letters, numbers, dots, underscores, hyphens, and forward slashes allowed' %}">
+                                        <small style="color: var(--text-secondary, #64748b); margin-top: 0.5rem; display: block;">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                            {% trans "Do not use: .. ~ / or special characters like ; | & $ ` ' \" < > * ?" %}
+                                        </small>
                                     </div>
 
                                     <div ng-hide="ftpDetails" class="form-group">
