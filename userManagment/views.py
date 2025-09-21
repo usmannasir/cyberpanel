@@ -12,6 +12,7 @@ from plogical.httpProc import httpProc
 from plogical.virtualHostUtilities import virtualHostUtilities
 from CyberCP.secMiddleware import secMiddleware
 from CyberCP.SecurityLevel import SecurityLevel
+from plogical.errorSanitizer import secure_error_response, secure_log_error, handle_secure_exception
 
 
 def loadUserHome(request):
@@ -114,8 +115,9 @@ def saveChangesAPIAccess(request):
             finalResponse = {'status': 1}
             json_data = json.dumps(finalResponse)
             return HttpResponse(json_data)
-    except BaseException as msg:
-        finalResponse = {'status': 0, 'errorMessage': str(msg), 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, 'saveChangesAPIAccess', request.session.get('userID', 'Unknown'))
+        finalResponse = secure_error_response(e, 'Failed to update API access settings')
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
 
@@ -281,15 +283,17 @@ def submitUserCreation(request):
                 )
             else:
                 # Log error but don't fail user creation
-                logging.CyberCPLogFileWriter.writeToFile(f"Failed to create user directory for {userName} in {home_path}")
+                from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+                logging.writeToFile(f"Failed to create user directory for {userName} in {home_path}")
 
             data_ret = {'status': 1, 'createStatus': 1,
                         'error_message': "None"}
             final_json = json.dumps(data_ret)
             return HttpResponse(final_json)
 
-        except BaseException as msg:
-            data_ret = {'status': 0, 'createStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, 'submitUserCreation', request.session.get('userID', 'Unknown'))
+            data_ret = secure_error_response(e, 'Failed to create user account')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -362,8 +366,9 @@ def fetchUserDetails(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'fetchStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, 'fetchUserDetails', request.session.get('userID', 'Unknown'))
+            data_ret = secure_error_response(e, 'Failed to fetch user details')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -450,8 +455,9 @@ def saveModifications(request):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'status': 0, 'saveStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, 'saveModifications', request.session.get('userID', 'Unknown'))
+            data_ret = secure_error_response(e, 'Failed to save user modifications')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -534,8 +540,9 @@ def submitUserDeletion(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'status': 0, 'deleteStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, 'submitUserDeletion', request.session.get('userID', 'Unknown'))
+            data_ret = secure_error_response(e, 'Failed to delete user account')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -576,8 +583,9 @@ def createACLFunc(request):
 
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
-    except BaseException as msg:
-        finalResponse = {'status': 0, 'errorMessage': str(msg), 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, 'createACLFunc', request.session.get('userID', 'Unknown'))
+        finalResponse = secure_error_response(e, 'Failed to create ACL')
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
 
@@ -610,8 +618,9 @@ def deleteACLFunc(request):
 
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
-    except BaseException as msg:
-        finalResponse = {'status': 0, 'errorMessage': str(msg), 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, 'deleteACLFunc', request.session.get('userID', 'Unknown'))
+        finalResponse = secure_error_response(e, 'Failed to delete ACL')
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
 
@@ -642,8 +651,9 @@ def fetchACLDetails(request):
 
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
-    except BaseException as msg:
-        finalResponse = {'status': 0, 'errorMessage': str(msg)}
+    except Exception as e:
+        secure_log_error(e, 'fetchACLDetails', request.session.get('userID', 'Unknown'))
+        finalResponse = secure_error_response(e, 'Failed to fetch ACL details')
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
 
@@ -682,8 +692,9 @@ def submitACLModifications(request):
 
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
-    except BaseException as msg:
-        finalResponse = {'status': 0, 'errorMessage': str(msg), 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, 'submitACLModifications', request.session.get('userID', 'Unknown'))
+        finalResponse = secure_error_response(e, 'Failed to submit ACL modifications')
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
 
@@ -742,8 +753,9 @@ def changeACLFunc(request):
 
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
-    except BaseException as msg:
-        finalResponse = {'status': 0, 'errorMessage': str(msg), 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, 'changeACLFunc', request.session.get('userID', 'Unknown'))
+        finalResponse = secure_error_response(e, 'Failed to change user ACL')
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
 
@@ -819,8 +831,9 @@ def saveResellerChanges(request):
         finalResponse = {'status': 1}
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
-    except BaseException as msg:
-        finalResponse = {'status': 0, 'errorMessage': str(msg), 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, 'saveResellerChanges', request.session.get('userID', 'Unknown'))
+        finalResponse = secure_error_response(e, 'Failed to save reseller changes')
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
 
@@ -967,8 +980,9 @@ def controlUserState(request):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'status': 0, 'saveStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, 'controlUserState', request.session.get('userID', 'Unknown'))
+            data_ret = secure_error_response(e, 'Failed to control user state')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -1024,7 +1038,8 @@ def disable2FA(request):
                 user.secretKey = 'None'
                 user.save()
                 
-                logging.CyberCPLogFileWriter.writeToFile(f'2FA disabled for user: {accountUsername} by admin: {val}')
+                from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+                logging.writeToFile(f'2FA disabled for user: {accountUsername} by admin: {val}')
                 
                 data_ret = {
                     'status': 1, 
@@ -1044,7 +1059,7 @@ def disable2FA(request):
         return HttpResponse(json_data)
         
     except Exception as e:
-        logging.CyberCPLogFileWriter.writeToFile(f'Error in disable2FA: {str(e)}')
-        data_ret = {'status': 0, 'error_message': str(e)}
+        secure_log_error(e, 'disable2FA', request.session.get('userID', 'Unknown'))
+        data_ret = secure_error_response(e, 'Failed to disable 2FA')
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)

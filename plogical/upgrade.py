@@ -9,6 +9,7 @@ import re
 
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
+from plogical.errorSanitizer import ErrorSanitizer
 import shlex
 import subprocess
 import shutil
@@ -567,8 +568,9 @@ class Upgrade:
             writeToFile.writelines(varTmp)
             writeToFile.close()
 
-        except BaseException as msg:
-            Upgrade.stdOut(str(msg) + " [mountTemp]", 0)
+        except Exception as e:
+            ErrorSanitizer.log_error_securely(e, 'mountTemp')
+            Upgrade.stdOut("Failed to mount temporary filesystem [mountTemp]", 0)
 
     @staticmethod
     def dockerUsers():
@@ -738,8 +740,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             os.chdir(cwd)
 
-        except BaseException as msg:
-            Upgrade.stdOut(str(msg) + " [download_install_phpmyadmin]", 0)
+        except Exception as e:
+            ErrorSanitizer.log_error_securely(e, 'download_install_phpmyadmin')
+            Upgrade.stdOut("Failed to download and install phpMyAdmin [download_install_phpmyadmin]", 0)
 
     @staticmethod
     def setupComposer():
@@ -1028,8 +1031,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             
             Upgrade.stdOut("SnappyMail installation completed.", 0)
 
-        except BaseException as msg:
-            Upgrade.stdOut(str(msg) + " [downoad_and_install_raindloop]", 0)
+        except Exception as e:
+            ErrorSanitizer.log_error_securely(e, 'downoad_and_install_raindloop')
+            Upgrade.stdOut("Failed to download and install Rainloop [downoad_and_install_raindloop]", 0)
 
         return 1
 
@@ -1049,8 +1053,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 pass
 
             return (version_number + "." + version_build + ".tar.gz")
-        except BaseException as msg:
-            Upgrade.stdOut(str(msg) + ' [downloadLink]')
+        except Exception as e:
+            ErrorSanitizer.log_error_securely(e, 'downloadLink')
+            Upgrade.stdOut("Failed to download required files [downloadLink]")
             os._exit(0)
 
     @staticmethod
@@ -1063,8 +1068,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             command = "chmod +x /usr/local/CyberCP/cli/cyberPanel.py"
             Upgrade.executioner(command, 'CLI Permissions', 0)
 
-        except OSError as msg:
-            Upgrade.stdOut(str(msg) + " [setupCLI]")
+        except OSError as e:
+            ErrorSanitizer.log_error_securely(e, 'setupCLI')
+            Upgrade.stdOut("Failed to setup CLI [setupCLI]")
             return 0
 
     @staticmethod
@@ -1136,8 +1142,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             cursor = conn.cursor()
             return conn, cursor
 
-        except BaseException as msg:
-            Upgrade.stdOut(str(msg))
+        except Exception as e:
+            ErrorSanitizer.log_error_securely(e, 'database_connection')
+            Upgrade.stdOut("Failed to establish database connection")
             return 0, 0
 
     @staticmethod
@@ -1381,8 +1388,8 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             try:
                 cursor.execute("UPDATE loginSystem_acl SET config = '%s' where name = 'admin'" % (Upgrade.AdminACL))
-            except BaseException as msg:
-                print(str(msg))
+            except Exception as e:
+                ErrorSanitizer.log_error_securely(e, 'applyLoginSystemMigrations')
                 try:
                     import sleep
                 except:
@@ -2983,8 +2990,9 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
 
             return 1, None
 
-        except BaseException as msg:
-            return 0, str(msg)
+        except Exception as e:
+            ErrorSanitizer.log_error_securely(e, 'installLSCPD')
+            return 0, "Failed to install LSCPD"
 
     @staticmethod
     def installLSCPD(branch):
@@ -3074,8 +3082,9 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
 
                 Upgrade.stdOut("LSCPD successfully installed!")
 
-        except BaseException as msg:
-            Upgrade.stdOut(str(msg) + " [installLSCPD]")
+        except Exception as e:
+            ErrorSanitizer.log_error_securely(e, 'installLSCPD')
+            Upgrade.stdOut("Failed to install LSCPD [installLSCPD]")
 
     ### disable dkim signing in rspamd in ref to https://github.com/usmannasir/cyberpanel/issues/1176
     @staticmethod
@@ -3363,8 +3372,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
 
             Upgrade.stdOut("Permissions updated.")
 
-        except BaseException as msg:
-            Upgrade.stdOut(str(msg) + " [fixPermissions]")
+        except Exception as e:
+            ErrorSanitizer.log_error_securely(e, 'fixPermissions')
+            Upgrade.stdOut("Failed to fix permissions [fixPermissions]")
 
     @staticmethod
     def AutoUpgradeAcme():
@@ -3807,8 +3817,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
 
             Upgrade.stdOut("Dovecot upgraded.")
 
-        except BaseException as msg:
-            Upgrade.stdOut(str(msg) + " [upgradeDovecot]")
+        except Exception as e:
+            ErrorSanitizer.log_error_securely(e, 'upgradeDovecot')
+            Upgrade.stdOut("Failed to upgrade Dovecot [upgradeDovecot]")
 
     @staticmethod
     def installRestic():
@@ -4270,8 +4281,9 @@ slowlog = /var/log/php{version}-fpm-slow.log
 
             Upgrade.stdOut(f"PHP symlink updated to PHP {selected_php} successfully.")
 
-        except BaseException as msg:
-            Upgrade.stdOut('[ERROR] ' + str(msg) + " [setupPHPSymlink]")
+        except Exception as e:
+            ErrorSanitizer.log_error_securely(e, 'setupPHPSymlink')
+            Upgrade.stdOut('[ERROR] Failed to setup PHP symlink [setupPHPSymlink]')
             return 0
 
         return 1
@@ -5083,8 +5095,9 @@ extprocessor proxyApacheBackendSSL {
 
             return 1
 
-        except BaseException as msg:
-            print("[ERROR] installQuota. " + str(msg))
+        except Exception as e:
+            ErrorSanitizer.log_error_securely(e, 'installQuota')
+            print("[ERROR] installQuota. Failed to install quota")
             return 0
 
     @staticmethod

@@ -18,6 +18,7 @@ from packages.packagesManager import PackagesManager
 from s3Backups.s3Backups import S3Backups
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.processUtilities import ProcessUtilities
+from plogical.errorSanitizer import secure_error_response, secure_log_error
 from django.views.decorators.csrf import csrf_exempt
 from userManagment.views import submitUserCreation as suc
 from userManagment.views import submitUserDeletion as duc
@@ -271,8 +272,9 @@ def getUserInfo(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-    except BaseException as msg:
-        data_ret = {'status': 0, 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, 'submitWebsiteCreation')
+        data_ret = secure_error_response(e, 'Failed to create website')
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
@@ -313,8 +315,9 @@ def changeUserPassAPI(request):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    except BaseException as msg:
-        data_ret = {'changeStatus': 0, 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, 'changeUserPassAPI')
+        data_ret = secure_error_response(e, 'Failed to change user password')
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
@@ -345,8 +348,9 @@ def submitUserDeletion(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-    except BaseException as msg:
-        data_ret = {'submitUserDeletion': 0, 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, \'submitUserDeletion\')
+        data_ret = secure_error_response(e, \'Failed to submitUserDeletion\')
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
@@ -388,8 +392,9 @@ def changePackageAPI(request):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    except BaseException as msg:
-        data_ret = {'changePackage': 0, 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, \'changePackage\')
+        data_ret = secure_error_response(e, \'Failed to changePackage\')
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
@@ -434,8 +439,9 @@ def deleteWebsite(request):
             wm = WebsiteManager()
             return wm.submitWebsiteDeletion(admin.pk, data)
 
-    except BaseException as msg:
-        data_ret = {'websiteDeleteStatus': 0, 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, \'websiteDeleteStatus\')
+        data_ret = secure_error_response(e, \'Failed to websiteDeleteStatus\')
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
@@ -466,8 +472,9 @@ def submitWebsiteStatus(request):
             wm = WebsiteManager()
             return wm.submitWebsiteStatus(admin.pk, json.loads(request.body))
 
-    except BaseException as msg:
-        data_ret = {'websiteStatus': 0, 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, \'websiteStatus\')
+        data_ret = secure_error_response(e, \'Failed to websiteStatus\')
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
@@ -491,8 +498,9 @@ def loginAPI(request):
         else:
             return HttpResponse("Invalid Credentials.")
 
-    except BaseException as msg:
-        data = {'userID': 0, 'loginStatus': 0, 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, 'loginAPI')
+        data = secure_error_response(e, 'Login failed')
         json_data = json.dumps(data)
         return HttpResponse(json_data)
 
@@ -597,8 +605,9 @@ def remoteTransfer(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-    except BaseException as msg:
-        data = {'transferStatus': 0, 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, \'transferStatus\')
+        data = secure_error_response(e, \'Failed to transferStatus\')
         json_data = json.dumps(data)
         return HttpResponse(json_data)
 
@@ -648,8 +657,9 @@ def fetchAccountsFromRemoteServer(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-    except BaseException as msg:
-        data = {'fetchStatus': 0, 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, \'fetchStatus\')
+        data = secure_error_response(e, \'Failed to fetchStatus\')
         json_data = json.dumps(data)
         return HttpResponse(json_data)
 
@@ -687,8 +697,9 @@ def FetchRemoteTransferStatus(request):
                 final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "status": "Just started.."})
                 return HttpResponse(final_json)
 
-    except BaseException as msg:
-        data = {'fetchStatus': 0, 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, \'fetchStatus\')
+        data = secure_error_response(e, \'Failed to fetchStatus\')
         json_data = json.dumps(data)
         return HttpResponse(json_data)
 
@@ -776,11 +787,9 @@ def cyberPanelVersion(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-    except BaseException as msg:
-        data_ret = {
-                    "getVersion": 0,
-                    'error_message': str(msg)
-                    }
+    except Exception as e:
+        secure_log_error(e, \'getVersion\')
+        data_ret = secure_error_response(e, \'Failed to getVersion\')
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
@@ -795,8 +804,9 @@ def runAWSBackups(request):
         if os.path.exists(randomFile):
             s3 = S3Backups(request, None, 'runAWSBackups')
             s3.start()
-    except BaseException as msg:
-        logging.writeToFile(str(msg) + ' [API.runAWSBackups]')
+    except Exception as e:
+        secure_log_error(e, \'API.runAWSBackups\')
+        logging.writeToFile(\'Failed to API.runAWSBackups [API.runAWSBackups]\')
 
 
 @csrf_exempt
@@ -825,8 +835,9 @@ def submitUserCreation(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-    except BaseException as msg:
-        data_ret = {'changeStatus': 0, 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, \'changeStatus\')
+        data_ret = secure_error_response(e, \'Failed to changeStatus\')
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
@@ -937,8 +948,9 @@ def addFirewallRule(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-    except BaseException as msg:
-        data_ret = {'submitUserDeletion': 0, 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, \'submitUserDeletion\')
+        data_ret = secure_error_response(e, \'Failed to submitUserDeletion\')
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
@@ -971,8 +983,9 @@ def deleteFirewallRule(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-    except BaseException as msg:
-        data_ret = {'submitUserDeletion': 0, 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, \'submitUserDeletion\')
+        data_ret = secure_error_response(e, \'Failed to submitUserDeletion\')
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 

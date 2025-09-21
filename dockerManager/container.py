@@ -13,6 +13,7 @@ django.setup()
 import json
 from plogical.acl import ACLManager
 import plogical.CyberCPLogFileWriter as logging
+from plogical.errorSanitizer import secure_error_response, secure_log_error
 from django.shortcuts import HttpResponse, render, redirect
 from django.urls import reverse
 from loginSystem.models import Administrator
@@ -211,8 +212,9 @@ class ContainerManager(multi.Thread):
             template = 'dockerManager/viewContainer.html'
             proc = httpProc(request, template, data, 'admin')
             return proc.render()
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        except Exception as e:
+            secure_log_error(e, \'container_operation\')
+            return HttpResponse(\'Operation failed\')
 
     def listContainers(self, request=None, userID=None, data=None):
         client = docker.from_env()
@@ -330,12 +332,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret, ensure_ascii=False)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {
-                'containerLogStatus': 0, 
-                'containerLog': 'Error retrieving logs', 
-                'error_message': str(msg)
-            }
+        except Exception as e:
+            secure_log_error(e, \'containerLogStatus\')
+            data_ret = secure_error_response(e, \'Failed to containerLogStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -750,8 +749,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'containerActionStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'containerActionStatus\')
+            data_ret = secure_error_response(e, \'Failed to containerActionStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -780,8 +780,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'containerStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'containerStatus\')
+            data_ret = secure_error_response(e, \'Failed to containerStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -810,8 +811,9 @@ class ContainerManager(multi.Thread):
             response['Content-Disposition'] = 'attachment; filename="' + name + '.tar"'
             return response
 
-        except BaseException as msg:
-            data_ret = {'containerStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'containerStatus\')
+            data_ret = secure_error_response(e, \'Failed to containerStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -846,8 +848,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'containerTopStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'containerTopStatus\')
+            data_ret = secure_error_response(e, \'Failed to containerTopStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -887,8 +890,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'assignContainerStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'assignContainerStatus\')
+            data_ret = secure_error_response(e, \'Failed to assignContainerStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -925,8 +929,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'searchImageStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'searchImageStatus\')
+            data_ret = secure_error_response(e, \'Failed to searchImageStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -975,8 +980,9 @@ class ContainerManager(multi.Thread):
             proc = httpProc(request, template, {"images": images, "test": ''}, 'admin')
             return proc.render()
 
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        except Exception as e:
+            secure_log_error(e, \'container_operation\')
+            return HttpResponse(\'Operation failed\')
 
     def manageImages(self, request=None, userID=None, data=None):
         try:
@@ -1005,8 +1011,9 @@ class ContainerManager(multi.Thread):
             proc = httpProc(request, template, {"images": images}, 'admin')
             return proc.render()
 
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        except Exception as e:
+            secure_log_error(e, \'container_operation\')
+            return HttpResponse(\'Operation failed\')
 
     def getImageHistory(self, userID=None, data=None):
         try:
@@ -1031,8 +1038,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'imageHistoryStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'imageHistoryStatus\')
+            data_ret = secure_error_response(e, \'Failed to imageHistoryStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -1115,8 +1123,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'removeImageStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'removeImageStatus\')
+            data_ret = secure_error_response(e, \'Failed to removeImageStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -1161,8 +1170,9 @@ class ContainerManager(multi.Thread):
             con.save()
 
             return 0
-        except BaseException as msg:
-            return str(msg)
+        except Exception as e:
+            secure_log_error(e, \'container_operation\')
+            return \'Operation failed\'
 
     def saveContainerSettings(self, userID=None, data=None):
         try:
@@ -1259,8 +1269,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'saveSettingsStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'saveSettingsStatus\')
+            data_ret = secure_error_response(e, \'Failed to saveSettingsStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -1309,8 +1320,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'recreateContainerStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'recreateContainerStatus\')
+            data_ret = secure_error_response(e, \'Failed to recreateContainerStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -1340,8 +1352,9 @@ class ContainerManager(multi.Thread):
             data_ret = {'getTagsStatus': 1, 'list': tagList, 'next': registryData['next'], 'error_message': None}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-        except BaseException as msg:
-            data_ret = {'getTagsStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'getTagsStatus\')
+            data_ret = secure_error_response(e, \'Failed to getTagsStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -1366,8 +1379,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'removeImageStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'removeImageStatus\')
+            data_ret = secure_error_response(e, \'Failed to removeImageStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -1419,8 +1433,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'status': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, 'getContainerAppinfo')
+            data_ret = secure_error_response(e, 'Failed to get container app info')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -1466,8 +1481,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'removeImageStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'removeImageStatus\')
+            data_ret = secure_error_response(e, \'Failed to removeImageStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -1510,8 +1526,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'removeImageStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'removeImageStatus\')
+            data_ret = secure_error_response(e, \'Failed to removeImageStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -1536,8 +1553,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'removeImageStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'removeImageStatus\')
+            data_ret = secure_error_response(e, \'Failed to removeImageStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -1562,8 +1580,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'removeImageStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'removeImageStatus\')
+            data_ret = secure_error_response(e, \'Failed to removeImageStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
