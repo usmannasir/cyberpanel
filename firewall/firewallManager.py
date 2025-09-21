@@ -1573,6 +1573,18 @@ class FirewallManager:
 
         data['CL'] = 1
 
+        # Auto-fix PHP-FPM issues when accessing Imunify360 page
+        try:
+            from plogical import upgrade
+            logging.CyberCPLogFileWriter.writeToFile("Auto-fixing PHP-FPM pool configurations for Imunify360 compatibility...")
+            fix_result = upgrade.Upgrade.CreateMissingPoolsforFPM()
+            if fix_result == 0:
+                logging.CyberCPLogFileWriter.writeToFile("PHP-FPM pool configurations auto-fixed successfully")
+            else:
+                logging.CyberCPLogFileWriter.writeToFile("Warning: PHP-FPM auto-fix had issues")
+        except Exception as e:
+            logging.CyberCPLogFileWriter.writeToFile(f"Error in auto-fix for Imunify360: {str(e)}")
+
         if os.path.exists(FirewallManager.imunifyPath):
             data['imunify'] = 1
         else:
@@ -1627,6 +1639,18 @@ class FirewallManager:
 
         data = {}
         data['ipAddress'] = fullAddress
+
+        # Auto-fix PHP-FPM issues when accessing ImunifyAV page
+        try:
+            from plogical import upgrade
+            logging.CyberCPLogFileWriter.writeToFile("Auto-fixing PHP-FPM pool configurations for ImunifyAV compatibility...")
+            fix_result = upgrade.Upgrade.CreateMissingPoolsforFPM()
+            if fix_result == 0:
+                logging.CyberCPLogFileWriter.writeToFile("PHP-FPM pool configurations auto-fixed successfully")
+            else:
+                logging.CyberCPLogFileWriter.writeToFile("Warning: PHP-FPM auto-fix had issues")
+        except Exception as e:
+            logging.CyberCPLogFileWriter.writeToFile(f"Error in auto-fix for ImunifyAV: {str(e)}")
 
         if os.path.exists(FirewallManager.imunifyAVPath):
             data['imunify'] = 1

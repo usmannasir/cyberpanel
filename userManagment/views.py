@@ -428,6 +428,10 @@ def saveModifications(request):
             user.type = 0
             user.twoFA = twofa
 
+            # If 2FA is being disabled, clear the secret key
+            if twofa == 0:
+                user.secretKey = 'None'
+
             if securityLevel == 'LOW':
                 user.securityLevel = secMiddleware.LOW
             else:
@@ -988,3 +992,59 @@ def userMigration(request):
     except Exception as e:
         logging.CyberCPLogFileWriter.writeToFile(f"Error loading user migration: {str(e)}")
         return ACLManager.loadError()
+
+
+def disable2FA(request):
+    """
+    Disable 2FA for a specific user (admin function)
+    """
+    try:
+        val = request.session['userID']
+        currentACL = ACLManager.loadedACL(val)
+        
+        if currentACL['admin'] != 1:
+            data_ret = {'status': 0, 'error_message': 'Unauthorized access. Admin privileges required.'}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+        
+        if request.method == 'POST':
+            data = json.loads(request.body)
+            accountUsername = data.get('accountUsername')
+            
+            if not accountUsername:
+                data_ret = {'status': 0, 'error_message': 'Username is required.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            
+            try:
+                user = Administrator.objects.get(userName=accountUsername)
+                
+                # Disable 2FA and clear secret key
+                user.twoFA = 0
+                user.secretKey = 'None'
+                user.save()
+                
+                logging.CyberCPLogFileWriter.writeToFile(f'2FA disabled for user: {accountUsername} by admin: {val}')
+                
+                data_ret = {
+                    'status': 1, 
+                    'error_message': '2FA successfully disabled for user.',
+                    'message': f'Two-factor authentication has been disabled for user {accountUsername}.'
+                }
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+                
+            except Administrator.DoesNotExist:
+                data_ret = {'status': 0, 'error_message': 'User not found.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+        
+        data_ret = {'status': 0, 'error_message': 'Invalid request method.'}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+        
+    except Exception as e:
+        logging.CyberCPLogFileWriter.writeToFile(f'Error in disable2FA: {str(e)}')
+        data_ret = {'status': 0, 'error_message': str(e)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
