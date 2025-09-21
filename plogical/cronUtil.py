@@ -139,6 +139,134 @@ class CronUtil:
                 command = 'chmod 1730 /var/spool/cron/crontabs'
                 ProcessUtilities.outputExecutioner(command)
 
+    @staticmethod
+    def suspendWebsiteCrons(externalApp):
+        """
+        Suspend all cron jobs for a website by backing up and clearing the cron file.
+        This prevents cron jobs from running when a website is suspended.
+        """
+        try:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                cronPath = "/var/spool/cron/" + externalApp
+                backupPath = "/var/spool/cron/" + externalApp + ".suspended"
+            else:
+                cronPath = "/var/spool/cron/crontabs/" + externalApp
+                backupPath = "/var/spool/cron/crontabs/" + externalApp + ".suspended"
+
+            # Check if cron file exists
+            if not os.path.exists(cronPath):
+                print("1,None")  # No cron file to suspend
+                return
+
+            # Create backup of current cron jobs
+            try:
+                command = f'cp {cronPath} {backupPath}'
+                ProcessUtilities.executioner(command, 'root')
+            except Exception as e:
+                print(f"0,Warning: Could not backup cron file: {str(e)}")
+
+            # Clear the cron file to suspend all jobs
+            try:
+                CronUtil.CronPrem(1)  # Enable permissions
+                
+                # Create empty cron file or clear existing one
+                with open(cronPath, 'w') as f:
+                    f.write('')  # Empty file to disable all cron jobs
+                
+                # Set proper ownership
+                command = f'chown {externalApp}:{externalApp} {cronPath}'
+                ProcessUtilities.executioner(command, 'root')
+                
+                CronUtil.CronPrem(0)  # Restore permissions
+                
+                print("1,Cron jobs suspended successfully")
+                
+            except Exception as e:
+                CronUtil.CronPrem(0)  # Ensure permissions are restored
+                print(f"0,Failed to suspend cron jobs: {str(e)}")
+
+        except Exception as e:
+            print(f"0,Error suspending cron jobs: {str(e)}")
+
+    @staticmethod
+    def restoreWebsiteCrons(externalApp):
+        """
+        Restore cron jobs for a website by restoring from backup file.
+        This restores cron jobs when a website is unsuspended.
+        """
+        try:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                cronPath = "/var/spool/cron/" + externalApp
+                backupPath = "/var/spool/cron/" + externalApp + ".suspended"
+            else:
+                cronPath = "/var/spool/cron/crontabs/" + externalApp
+                backupPath = "/var/spool/cron/crontabs/" + externalApp + ".suspended"
+
+            # Check if backup file exists
+            if not os.path.exists(backupPath):
+                print("1,No suspended cron jobs to restore")
+                return
+
+            try:
+                CronUtil.CronPrem(1)  # Enable permissions
+                
+                # Restore cron jobs from backup
+                command = f'cp {backupPath} {cronPath}'
+                ProcessUtilities.executioner(command, 'root')
+                
+                # Set proper ownership
+                command = f'chown {externalApp}:{externalApp} {cronPath}'
+                ProcessUtilities.executioner(command, 'root')
+                
+                # Remove backup file
+                os.remove(backupPath)
+                
+                CronUtil.CronPrem(0)  # Restore permissions
+                
+                print("1,Cron jobs restored successfully")
+                
+            except Exception as e:
+                CronUtil.CronPrem(0)  # Ensure permissions are restored
+                print(f"0,Failed to restore cron jobs: {str(e)}")
+
+        except Exception as e:
+            print(f"0,Error restoring cron jobs: {str(e)}")
+
+    @staticmethod
+    def getCronSuspensionStatus(externalApp):
+        """
+        Check if cron jobs are currently suspended for a website.
+        Returns 1 if suspended, 0 if active, -1 if error.
+        """
+        try:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                cronPath = "/var/spool/cron/" + externalApp
+                backupPath = "/var/spool/cron/" + externalApp + ".suspended"
+            else:
+                cronPath = "/var/spool/cron/crontabs/" + externalApp
+                backupPath = "/var/spool/cron/crontabs/" + externalApp + ".suspended"
+
+            # Check if backup file exists (indicates suspension)
+            if os.path.exists(backupPath):
+                print("1,Cron jobs are suspended")
+                return
+            elif os.path.exists(cronPath):
+                # Check if cron file is empty (also indicates suspension)
+                try:
+                    with open(cronPath, 'r') as f:
+                        content = f.read().strip()
+                    if not content:
+                        print("1,Cron jobs are suspended (empty file)")
+                    else:
+                        print("0,Cron jobs are active")
+                except Exception as e:
+                    print(f"-1,Error reading cron file: {str(e)}")
+            else:
+                print("0,No cron jobs configured")
+                
+        except Exception as e:
+            print(f"-1,Error checking cron status: {str(e)}")
+
 
 
 def main():
@@ -162,6 +290,12 @@ def main():
         CronUtil.remCronbyLine(args.externalApp, int(args.line))
     elif args.function == "addNewCron":
         CronUtil.addNewCron(args.externalApp, args.finalCron)
+    elif args.function == "suspendWebsiteCrons":
+        CronUtil.suspendWebsiteCrons(args.externalApp)
+    elif args.function == "restoreWebsiteCrons":
+        CronUtil.restoreWebsiteCrons(args.externalApp)
+    elif args.function == "getCronSuspensionStatus":
+        CronUtil.getCronSuspensionStatus(args.externalApp)
 
 
 

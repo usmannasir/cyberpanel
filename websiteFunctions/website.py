@@ -3151,9 +3151,27 @@ context /cyberpanel_suspension_page.html {
                         except:
                             pass
                 
-                # Apply same suspension configuration to child domains
+                # Suspend cron jobs for child domains
                 childDomains = website.childdomains_set.all()
                 
+                for items in childDomains:
+                    # Suspend cron jobs for child domain
+                    try:
+                        CronUtil.CronPrem(1)
+                        execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
+                        execPath = execPath + " suspendWebsiteCrons --externalApp " + items.externalApp
+                        cronOutput = ProcessUtilities.outputExecutioner(execPath, items.externalApp)
+                        CronUtil.CronPrem(0)
+                        
+                        if cronOutput.find("1,") > -1:
+                            logging.CyberCPLogFileWriter.writeToFile(f"Successfully suspended cron jobs for child domain {items.domain}")
+                        else:
+                            logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to suspend cron jobs for child domain {items.domain}: {cronOutput}")
+                    except Exception as e:
+                        CronUtil.CronPrem(0)  # Ensure permissions are restored
+                        logging.CyberCPLogFileWriter.writeToFile(f"Error suspending cron jobs for child domain {items.domain}: {str(e)}")
+
+                # Apply same suspension configuration to child domains
                 for items in childDomains:
                     childConfPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + items.domain
                     childVhostConfPath = childConfPath + "/vhost.conf"
@@ -3198,6 +3216,22 @@ context /cyberpanel_suspension_page.html {
                     except Exception as e:
                         CyberCPLogFileWriter.writeToFile(f"Error suspending child domain {items.domain}: {str(e)}")
                 
+                # Suspend cron jobs for this website
+                try:
+                    CronUtil.CronPrem(1)
+                    execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
+                    execPath = execPath + " suspendWebsiteCrons --externalApp " + website.externalApp
+                    cronOutput = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
+                    CronUtil.CronPrem(0)
+                    
+                    if cronOutput.find("1,") > -1:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Successfully suspended cron jobs for {websiteName}")
+                    else:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to suspend cron jobs for {websiteName}: {cronOutput}")
+                except Exception as e:
+                    CronUtil.CronPrem(0)  # Ensure permissions are restored
+                    logging.CyberCPLogFileWriter.writeToFile(f"Error suspending cron jobs for {websiteName}: {str(e)}")
+
                 # Restart LiteSpeed to apply changes
                 try:
                     installUtilities.reStartLiteSpeedSocket()
@@ -3297,9 +3331,27 @@ context /cyberpanel_suspension_page.html {
                         except:
                             pass
                 
-                # Remove suspension configuration from child domains
+                # Restore cron jobs for child domains
                 childDomains = website.childdomains_set.all()
                 
+                for items in childDomains:
+                    # Restore cron jobs for child domain
+                    try:
+                        CronUtil.CronPrem(1)
+                        execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
+                        execPath = execPath + " restoreWebsiteCrons --externalApp " + items.externalApp
+                        cronOutput = ProcessUtilities.outputExecutioner(execPath, items.externalApp)
+                        CronUtil.CronPrem(0)
+                        
+                        if cronOutput.find("1,") > -1:
+                            logging.CyberCPLogFileWriter.writeToFile(f"Successfully restored cron jobs for child domain {items.domain}")
+                        else:
+                            logging.CyberCPLogFileWriter.writeToFile(f"Info: {cronOutput} for child domain {items.domain}")
+                    except Exception as e:
+                        CronUtil.CronPrem(0)  # Ensure permissions are restored
+                        logging.CyberCPLogFileWriter.writeToFile(f"Error restoring cron jobs for child domain {items.domain}: {str(e)}")
+                
+                # Remove suspension configuration from child domains
                 for items in childDomains:
                     childConfPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + items.domain
                     childVhostConfPath = childConfPath + "/vhost.conf"
@@ -3346,6 +3398,22 @@ context /cyberpanel_suspension_page.html {
                     except Exception as e:
                         CyberCPLogFileWriter.writeToFile(f"Error unsuspending child domain {items.domain}: {str(e)}")
                 
+                # Restore cron jobs for this website
+                try:
+                    CronUtil.CronPrem(1)
+                    execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
+                    execPath = execPath + " restoreWebsiteCrons --externalApp " + website.externalApp
+                    cronOutput = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
+                    CronUtil.CronPrem(0)
+                    
+                    if cronOutput.find("1,") > -1:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Successfully restored cron jobs for {websiteName}")
+                    else:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Info: {cronOutput} for {websiteName}")
+                except Exception as e:
+                    CronUtil.CronPrem(0)  # Ensure permissions are restored
+                    logging.CyberCPLogFileWriter.writeToFile(f"Error restoring cron jobs for {websiteName}: {str(e)}")
+
                 # Restart LiteSpeed to apply changes
                 try:
                     installUtilities.reStartLiteSpeedSocket()
