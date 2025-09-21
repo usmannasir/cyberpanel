@@ -148,25 +148,51 @@ class CageFS:
     @staticmethod
     def submitinstallImunify(key):
         try:
-
             imunifyKeyPath = '/home/cyberpanel/imunifyKeyPath'
-
-            ##
 
             writeToFile = open(imunifyKeyPath, 'w')
             writeToFile.write(key)
             writeToFile.close()
-
-            ##
 
             mailUtilities.checkHome()
 
             statusFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
 
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
-                                                      "Starting Imunify Installation..\n", 1)
+                                                      "Starting Imunify360 Installation..\n", 1)
 
-            ##
+            # CRITICAL: Fix PHP-FPM pool configurations before installation
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                      "Fixing PHP-FPM pool configurations for Imunify360 compatibility..\n", 1)
+            
+            # Import the upgrade module to access the fix function
+            from plogical import upgrade
+            fix_result = upgrade.Upgrade.CreateMissingPoolsforFPM()
+            
+            if fix_result == 0:
+                logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                          "PHP-FPM pool configurations fixed successfully..\n", 1)
+            else:
+                logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                          "Warning: PHP-FPM pool configuration fix had issues, continuing with installation..\n", 1)
+
+            # Fix broken package installations that might prevent Imunify360 installation
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                      "Fixing broken package installations..\n", 1)
+            
+            # Detect OS and fix packages accordingly
+            if os.path.exists('/etc/redhat-release'):
+                # CentOS/RHEL/CloudLinux
+                command = 'yum-complete-transaction --cleanup-only 2>/dev/null || true'
+                ServerStatusUtil.executioner(command, statusFile)
+                command = 'yum install -y --skip-broken 2>/dev/null || true'
+                ServerStatusUtil.executioner(command, statusFile)
+            else:
+                # Ubuntu/Debian
+                command = 'dpkg --configure -a 2>/dev/null || true'
+                ServerStatusUtil.executioner(command, statusFile)
+                command = 'apt --fix-broken install -y 2>/dev/null || true'
+                ServerStatusUtil.executioner(command, statusFile)
 
             command = 'mkdir -p /etc/sysconfig/imunify360/generic'
             ServerStatusUtil.executioner(command, statusFile)
@@ -226,8 +252,6 @@ pattern_to_watch = ^/home/.+?/(public_html|public_ftp|private_html)(/.*)?$
     @staticmethod
     def submitinstallImunifyAV():
         try:
-
-
             mailUtilities.checkHome()
 
             statusFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
@@ -235,7 +259,38 @@ pattern_to_watch = ^/home/.+?/(public_html|public_ftp|private_html)(/.*)?$
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
                                                       "Starting ImunifyAV Installation..\n", 1)
 
-            ##
+            # CRITICAL: Fix PHP-FPM pool configurations before installation
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                      "Fixing PHP-FPM pool configurations for ImunifyAV compatibility..\n", 1)
+            
+            # Import the upgrade module to access the fix function
+            from plogical import upgrade
+            fix_result = upgrade.Upgrade.CreateMissingPoolsforFPM()
+            
+            if fix_result == 0:
+                logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                          "PHP-FPM pool configurations fixed successfully..\n", 1)
+            else:
+                logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                          "Warning: PHP-FPM pool configuration fix had issues, continuing with installation..\n", 1)
+
+            # Fix broken package installations that might prevent ImunifyAV installation
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                      "Fixing broken package installations..\n", 1)
+            
+            # Detect OS and fix packages accordingly
+            if os.path.exists('/etc/redhat-release'):
+                # CentOS/RHEL/CloudLinux
+                command = 'yum-complete-transaction --cleanup-only 2>/dev/null || true'
+                ServerStatusUtil.executioner(command, statusFile)
+                command = 'yum install -y --skip-broken 2>/dev/null || true'
+                ServerStatusUtil.executioner(command, statusFile)
+            else:
+                # Ubuntu/Debian
+                command = 'dpkg --configure -a 2>/dev/null || true'
+                ServerStatusUtil.executioner(command, statusFile)
+                command = 'apt --fix-broken install -y 2>/dev/null || true'
+                ServerStatusUtil.executioner(command, statusFile)
 
             command = 'mkdir -p /etc/sysconfig/imunify360'
             ServerStatusUtil.executioner(command, statusFile)

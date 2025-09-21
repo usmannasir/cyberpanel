@@ -38,4 +38,5 @@ urlpatterns = [
     path('getUserHomeDirectories', homeDirectoryViews.getUserHomeDirectories, name='getUserHomeDirectories'),
     path('migrateUser', homeDirectoryViews.migrateUser, name='migrateUser'),
     path('userMigration', views.userMigration, name='userMigration'),
+    path('disable2FA', views.disable2FA, name='disable2FA'),
 ]
