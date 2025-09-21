@@ -3,6 +3,7 @@
 
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
+from django.db import models
 from loginSystem.views import loadLoginPage
 from loginSystem.models import Administrator, ACL
 import json
@@ -118,6 +119,78 @@ def saveChangesAPIAccess(request):
     except Exception as e:
         secure_log_error(e, 'saveChangesAPIAccess', request.session.get('userID', 'Unknown'))
         finalResponse = secure_error_response(e, 'Failed to update API access settings')
+        json_data = json.dumps(finalResponse)
+        return HttpResponse(json_data)
+
+
+def fetchAPIUsers(request):
+    """
+    Fetch all users with API access enabled, with optional search functionality
+    """
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+        
+        if currentACL['admin'] != 1:
+            finalResponse = {'status': 0, "error_message": "Only administrators are allowed to perform this task."}
+            json_data = json.dumps(finalResponse)
+            return HttpResponse(json_data)
+        
+        # Get search query if provided
+        search_query = request.GET.get('search', '').strip()
+        
+        # Fetch all users with API access enabled
+        api_users = Administrator.objects.filter(api=1).select_related('acl')
+        
+        # Apply search filter if provided
+        if search_query:
+            api_users = api_users.filter(
+                models.Q(userName__icontains=search_query) |
+                models.Q(firstName__icontains=search_query) |
+                models.Q(lastName__icontains=search_query) |
+                models.Q(email__icontains=search_query)
+            )
+        
+        # Prepare user data
+        users_data = []
+        for user in api_users:
+            # Determine token status
+            token_status = "Valid"
+            if not user.token or user.token == 'None' or user.token == '':
+                token_status = "Not Generated"
+            elif user.token == 'TOKEN_NEEDS_GENERATION':
+                token_status = "Needs Generation"
+            
+            # Get ACL name
+            acl_name = user.acl.name if user.acl else "Default"
+            
+            users_data.append({
+                'id': user.pk,
+                'userName': user.userName,
+                'firstName': user.firstName,
+                'lastName': user.lastName,
+                'email': user.email,
+                'aclName': acl_name,
+                'tokenStatus': token_status,
+                'state': user.state,
+                'createdDate': user.pk,  # Using pk as a proxy for creation order
+                'lastLogin': 'N/A'  # This would need to be tracked separately
+            })
+        
+        # Sort by username
+        users_data.sort(key=lambda x: x['userName'].lower())
+        
+        finalResponse = {
+            'status': 1,
+            'users': users_data,
+            'totalCount': len(users_data)
+        }
+        json_data = json.dumps(finalResponse)
+        return HttpResponse(json_data)
+        
+    except Exception as e:
+        secure_log_error(e, 'fetchAPIUsers', request.session.get('userID', 'Unknown'))
+        finalResponse = secure_error_response(e, 'Failed to fetch API users')
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
 

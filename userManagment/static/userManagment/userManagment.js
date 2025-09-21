@@ -1659,6 +1659,147 @@ app.controller('apiAccessCTRL', function ($scope, $http) {
 });
 /* Java script code for api access */
 
+/* Java script code for api users list */
+app.controller('apiUsersCTRL', function ($scope, $http) {
+    $scope.apiUsers = [];
+    $scope.filteredUsers = [];
+    $scope.searchQuery = '';
+    $scope.apiUsersLoading = true;
+
+    $scope.loadAPIUsers = function() {
+        $scope.apiUsersLoading = false;
+        
+        var url = "/users/fetchAPIUsers";
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.get(url, config).then(loadAPIUsersSuccess, loadAPIUsersError);
+    };
+
+    function loadAPIUsersSuccess(response) {
+        $scope.apiUsersLoading = true;
+        
+        if (response.data.status === 1) {
+            $scope.apiUsers = response.data.users;
+            $scope.filteredUsers = response.data.users;
+            
+            new PNotify({
+                title: 'Success!',
+                text: 'API users loaded successfully',
+                type: 'success'
+            });
+        } else {
+            new PNotify({
+                title: 'Error!',
+                text: response.data.error_message,
+                type: 'error'
+            });
+        }
+    }
+
+    function loadAPIUsersError(response) {
+        $scope.apiUsersLoading = true;
+        new PNotify({
+            title: 'Error!',
+            text: 'Could not load API users. Please refresh the page.',
+            type: 'error'
+        });
+    }
+
+    $scope.searchUsers = function() {
+        if (!$scope.searchQuery || $scope.searchQuery.trim() === '') {
+            $scope.filteredUsers = $scope.apiUsers;
+            return;
+        }
+        
+        var query = $scope.searchQuery.toLowerCase();
+        $scope.filteredUsers = $scope.apiUsers.filter(function(user) {
+            return user.userName.toLowerCase().includes(query) ||
+                   user.firstName.toLowerCase().includes(query) ||
+                   user.lastName.toLowerCase().includes(query) ||
+                   user.email.toLowerCase().includes(query) ||
+                   user.aclName.toLowerCase().includes(query);
+        });
+    };
+
+    $scope.clearSearch = function() {
+        $scope.searchQuery = '';
+        $scope.filteredUsers = $scope.apiUsers;
+    };
+
+    $scope.viewUserDetails = function(user) {
+        new PNotify({
+            title: 'User Details',
+            text: 'Username: ' + user.userName + '<br>' +
+                  'Full Name: ' + user.firstName + ' ' + user.lastName + '<br>' +
+                  'Email: ' + user.email + '<br>' +
+                  'ACL: ' + user.aclName + '<br>' +
+                  'Token Status: ' + user.tokenStatus + '<br>' +
+                  'State: ' + user.state,
+            type: 'info',
+            styling: 'bootstrap3',
+            delay: 10000
+        });
+    };
+
+    $scope.disableAPI = function(user) {
+        if (confirm('Are you sure you want to disable API access for ' + user.userName + '?')) {
+            $scope.apiUsersLoading = false;
+            
+            var url = "/users/saveChangesAPIAccess";
+            var data = {
+                accountUsername: user.userName,
+                access: 'Disable'
+            };
+            var config = {
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            };
+
+            $http.post(url, data, config).then(disableAPISuccess, disableAPIError);
+        }
+    };
+
+    function disableAPISuccess(response) {
+        $scope.apiUsersLoading = true;
+        
+        if (response.data.status === 1) {
+            // Remove user from the list
+            $scope.apiUsers = $scope.apiUsers.filter(function(u) {
+                return u.userName !== response.data.accountUsername;
+            });
+            $scope.filteredUsers = $scope.apiUsers;
+            
+            new PNotify({
+                title: 'Success!',
+                text: 'API access disabled for ' + response.data.accountUsername,
+                type: 'success'
+            });
+        } else {
+            new PNotify({
+                title: 'Error!',
+                text: response.data.error_message,
+                type: 'error'
+            });
+        }
+    }
+
+    function disableAPIError(response) {
+        $scope.apiUsersLoading = true;
+        new PNotify({
+            title: 'Error!',
+            text: 'Could not disable API access. Please try again.',
+            type: 'error'
+        });
+    }
+
+    // Load API users when controller initializes
+    $scope.loadAPIUsers();
+});
 
 /* Java script code to list table users */
 
