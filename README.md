@@ -32,6 +32,53 @@ Web Hosting Control Panel powered by OpenLiteSpeed, designed to simplify hosting
 - 🤖 **AI-Powered Security Scanner** for enhanced protection.
 - 🔐 **Advanced 2FA Authentication** - TOTP and WebAuthn/Passkey support.
 - 📊 **Monthly Bandwidth Reset** - Automatic bandwidth usage reset (Fixed in latest version).
+- 🔗 **RESTful API** - Complete API for automation and integration including `listChildDomainsJson` endpoint.
+
+---
+
+## 🔗 **RESTful API**
+
+CyberPanel provides a comprehensive RESTful API for automation and integration:
+
+### **Available API Endpoints**
+
+- **Website Management**: Create, delete, suspend, and manage websites
+- **User Management**: Create, delete, and manage user accounts
+- **Package Management**: List and manage hosting packages
+- **Child Domains**: List child domains with `listChildDomainsJson` endpoint
+- **Firewall**: Add and delete firewall rules
+- **Backups**: Manage AWS backups and remote transfers
+- **System Info**: Get CyberPanel version and system status
+
+### **API Authentication**
+
+All API endpoints require authentication using admin credentials:
+
+```bash
+curl -X POST http://your-server:8090/api/listChildDomainsJson \
+  -H "Content-Type: application/json" \
+  -d '{
+    "adminUser": "your_admin_username",
+    "adminPass": "your_admin_password"
+  }'
+```
+
+### **Response Format**
+
+API responses are returned in JSON format with consistent error handling:
+
+```json
+[
+  {
+    "parent_site": "example.com",
+    "domain": "subdomain.example.com",
+    "path": "/home/example.com/public_html/subdomain",
+    "ssl": 1,
+    "php_version": "8.1",
+    "ip_address": "192.168.1.100"
+  }
+]
+```
 
 ---
 
@@ -45,7 +92,6 @@ CyberPanel comes with comprehensive documentation and step-by-step guides:
 - 🔐 **[2FA Authentication Guide](guides/2FA_AUTHENTICATION_GUIDE.md)** - Complete Two-Factor Authentication and WebAuthn setup
 - 📧 **[Mautic Installation](guides/MAUTIC_INSTALLATION_GUIDE.md)** - Email marketing platform setup
 - 🎨 **[Custom CSS Guide](guides/CUSTOM_CSS_GUIDE.md)** - Create custom themes for CyberPanel 2.5.5-dev
-- 🛠️ **[Utility Scripts](utils/README.md)** - Installation, upgrade, and maintenance scripts for Windows and Linux
 
 ---
 
