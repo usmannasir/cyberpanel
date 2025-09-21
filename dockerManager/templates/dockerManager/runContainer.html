@@ -755,12 +755,76 @@
                 </div>
             </div>
 
+            <!-- Network Configuration Section -->
+            <div class="form-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="fas fa-network-wired"></i>
+                    </div>
+                    <div>
+                        <h2 class="section-title">{% trans "Network Configuration" %}</h2>
+                        <p class="section-subtitle">{% trans "Configure network settings and extra options for the container" %}</p>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <label class="form-label">
+                        {% trans "Network" %}
+                        <div class="tooltip">
+                            <i class="fas fa-question-circle tooltip-icon"></i>
+                            <div class="tooltip-content">
+                                {% trans "Select the Docker network for the container" %}
+                            </div>
+                        </div>
+                    </label>
+                    <select class="form-control" ng-model="selectedNetwork" ng-init="selectedNetwork='bridge'">
+                        <option value="bridge">{% trans "Default Bridge" %}</option>
+                        <option value="host">{% trans "Host Network" %}</option>
+                        <option value="none">{% trans "No Network" %}</option>
+                        <option ng-repeat="network in availableNetworks" value="{$ network.name $}">
+                            {$ network.name $} ({$ network.driver $})
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <label class="form-label">
+                        {% trans "Extra Hosts" %}
+                        <div class="tooltip">
+                            <i class="fas fa-question-circle tooltip-icon"></i>
+                            <div class="tooltip-content">
+                                {% trans "Add custom host entries (e.g., host.docker.internal:host-gateway)" %}
+                            </div>
+                        </div>
+                    </label>
+                    <input type="text" class="form-control" ng-model="extraHosts" 
+                           placeholder="{% trans 'host.docker.internal:host-gateway, example.com:1.2.3.4' %}">
+                </div>
+
+                <div class="form-row">
+                    <label class="form-label">
+                        {% trans "Network Mode" %}
+                        <div class="tooltip">
+                            <i class="fas fa-question-circle tooltip-icon"></i>
+                            <div class="tooltip-content">
+                                {% trans "Override network mode (bridge, host, none, or custom network)" %}
+                            </div>
+                        </div>
+                    </label>
+                    <select class="form-control" ng-model="networkMode" ng-init="networkMode='bridge'">
+                        <option value="bridge">{% trans "Bridge" %}</option>
+                        <option value="host">{% trans "Host" %}</option>
+                        <option value="none">{% trans "None" %}</option>
+                    </select>
+                </div>
+            </div>
+
             <!-- Port Configuration Section -->
             {% if portConfig %}
             <div class="form-section">
                 <div class="section-header">
                     <div class="section-icon">
-                        <i class="fas fa-network-wired"></i>
+                        <i class="fas fa-plug"></i>
                     </div>
                     <div>
                         <h2 class="section-title">{% trans "Port Mapping" %}</h2>

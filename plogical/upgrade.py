@@ -2204,6 +2204,22 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
             except:
                 pass
 
+            # Add new fields for network configuration and extra options
+            try:
+                cursor.execute('ALTER TABLE dockerManager_containers ADD network VARCHAR(100) DEFAULT "bridge"')
+            except:
+                pass
+
+            try:
+                cursor.execute('ALTER TABLE dockerManager_containers ADD network_mode VARCHAR(50) DEFAULT "bridge"')
+            except:
+                pass
+
+            try:
+                cursor.execute('ALTER TABLE dockerManager_containers ADD extra_options LONGTEXT DEFAULT "{}"')
+            except:
+                pass
+
             try:
                 connection.close()
             except:

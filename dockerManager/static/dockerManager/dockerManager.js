@@ -127,6 +127,33 @@ app.controller('runContainer', function ($scope, $http) {
     
     // Advanced Environment Variable Mode
     $scope.advancedEnvMode = false;
+    
+    // Network configuration
+    $scope.selectedNetwork = 'bridge';
+    $scope.networkMode = 'bridge';
+    $scope.extraHosts = '';
+    $scope.availableNetworks = [];
+
+    // Load available Docker networks
+    $scope.loadAvailableNetworks = function() {
+        var url = "/docker/getDockerNetworks";
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, {}, config).then(function(response) {
+            if (response.data.status === 1) {
+                $scope.availableNetworks = response.data.networks;
+            }
+        }, function(error) {
+            console.error('Failed to load networks:', error);
+        });
+    };
+
+    // Initialize networks on page load
+    $scope.loadAvailableNetworks();
 
     // Helper function to generate Docker Compose YAML
     $scope.generateDockerComposeYml = function(containerInfo) {
@@ -622,8 +649,12 @@ app.controller('runContainer', function ($scope, $http) {
             image: image,
             envList: finalEnvList,
             volList: $scope.volList,
-            advancedEnvMode: $scope.advancedEnvMode
-
+            advancedEnvMode: $scope.advancedEnvMode,
+            network: $scope.selectedNetwork,
+            network_mode: $scope.networkMode,
+            extraOptions: {
+                add_host: $scope.extraHosts
+            }
         };
 
         try {
@@ -2135,6 +2166,82 @@ app.controller('viewContainer', function ($scope, $http, $interval, $timeout) {
         $scope.commandToExecute = '';
         $scope.commandOutput = null;
         $("#commandModal").modal("show");
+    };
+
+    // Port editing functionality
+    $scope.showPortEditModal = function() {
+        // Initialize current ports from container data
+        $scope.currentPorts = {};
+        if ($scope.ports) {
+            for (var iport in $scope.ports) {
+                var eport = $scope.ports[iport];
+                if (eport && eport.length > 0) {
+                    $scope.currentPorts[iport] = eport[0].HostPort;
+                }
+            }
+        }
+        $("#portEditModal").modal("show");
+    };
+
+    $scope.addNewPortMapping = function() {
+        var containerPort = prompt('Enter container port (e.g., 80/tcp):');
+        if (containerPort) {
+            $scope.currentPorts[containerPort] = '';
+            $scope.$apply();
+        }
+    };
+
+    $scope.removePortMapping = function(containerPort) {
+        if (confirm('Are you sure you want to remove this port mapping?')) {
+            delete $scope.currentPorts[containerPort];
+        }
+    };
+
+    $scope.updatePortMappings = function() {
+        $("#portEditLoading").show();
+        $scope.updatingPorts = true;
+
+        var url = "/docker/updateContainerPorts";
+        var data = {
+            name: $scope.cName,
+            ports: $scope.currentPorts
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(function(response) {
+            $("#portEditLoading").hide();
+            $scope.updatingPorts = false;
+
+            if (response.data.status === 1) {
+                $("#portEditModal").modal("hide");
+                // Refresh container status and ports
+                $scope.refreshContainerInfo();
+                new PNotify({
+                    title: 'Success',
+                    text: 'Port mappings updated successfully',
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Error',
+                    text: 'Failed to update port mappings: ' + response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }, function(error) {
+            $("#portEditLoading").hide();
+            $scope.updatingPorts = false;
+            new PNotify({
+                title: 'Error',
+                text: 'Error updating port mappings: ' + error.data.error_message,
+                type: 'error'
+            });
+        });
     };
 
     $scope.executeCommand = function() {
