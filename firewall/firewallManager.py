@@ -1033,14 +1033,24 @@ class FirewallManager:
                     httpdConfig = ProcessUtilities.outputExecutioner(command).splitlines()
 
                     for items in httpdConfig:
-
+                        # Check for Comodo rules
                         if items.find('modsec/comodo') > -1:
                             comodoInstalled = 1
-                        elif items.find('modsec/owasp') > -1:
+                        # Check for OWASP rules - improved detection
+                        elif items.find('modsec/owasp') > -1 or items.find('owasp-modsecurity-crs') > -1:
                             owaspInstalled = 1
 
-                        if owaspInstalled == 1 and comodoInstalled == 1:
-                            break
+                    # Additional check: verify OWASP files actually exist
+                    if owaspInstalled == 0:
+                        owaspPath = os.path.join(virtualHostUtilities.Server_root, "conf/modsec/owasp-modsecurity-crs-4.18.0")
+                        if os.path.exists(owaspPath) and os.path.exists(os.path.join(owaspPath, "owasp-master.conf")):
+                            owaspInstalled = 1
+
+                    # Additional check: verify Comodo files actually exist
+                    if comodoInstalled == 0:
+                        comodoPath = os.path.join(virtualHostUtilities.Server_root, "conf/modsec/comodo")
+                        if os.path.exists(comodoPath) and os.path.exists(os.path.join(comodoPath, "modsecurity.conf")):
+                            comodoInstalled = 1
 
                     final_dic = {
                         'modSecInstalled': 1,
