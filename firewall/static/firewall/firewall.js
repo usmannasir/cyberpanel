@@ -1306,28 +1306,36 @@ app.controller('modSecRulesPack', function ($scope, $http, $timeout, $window) {
                     if (response.data.owaspInstalled === 1) {
                         $('#owaspInstalled').prop('checked', true);
                         $scope.owaspDisable = false;
+                        owaspInstalled = true;
                     } else {
                         $('#owaspInstalled').prop('checked', false);
                         $scope.owaspDisable = true;
+                        owaspInstalled = false;
                     }
                     if (response.data.comodoInstalled === 1) {
                         $('#comodoInstalled').prop('checked', true);
                         $scope.comodoDisable = false;
+                        comodoInstalled = true;
                     } else {
                         $('#comodoInstalled').prop('checked', false);
                         $scope.comodoDisable = true;
+                        comodoInstalled = false;
                     }
                 } else {
 
                     if (response.data.owaspInstalled === 1) {
                         $scope.owaspDisable = false;
+                        owaspInstalled = true;
                     } else {
                         $scope.owaspDisable = true;
+                        owaspInstalled = false;
                     }
                     if (response.data.comodoInstalled === 1) {
                         $scope.comodoDisable = false;
+                        comodoInstalled = true;
                     } else {
                         $scope.comodoDisable = true;
+                        comodoInstalled = false;
                     }
                 }
 
