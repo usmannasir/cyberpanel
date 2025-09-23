@@ -7,7 +7,7 @@
 **Web Hosting Control Panel powered by OpenLiteSpeed**
 Fast • Secure • Scalable — Simplify hosting management with style.
 
-**Version**: 2.4.5 • **Updated**: September 23, 2025
+**Version**: 2.5.5 • **Updated**: September 23, 2025
 
 [![GitHub](https://img.shields.io/badge/GitHub-Repo-000?style=flat-square\&logo=github)](https://github.com/usmannasir/cyberpanel)
 [![Docs](https://img.shields.io/badge/Docs-Read-green?style=flat-square\&logo=gitbook)](https://cyberpanel.net/KnowledgeBase/)
