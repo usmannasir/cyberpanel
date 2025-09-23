@@ -347,23 +347,16 @@ install_php_packages() {
                 return 0
             fi
             
-            # Try to install packages for each available PHP version
-            packages_to_install=""
+            # Try to install packages for each available PHP version individually
             for php_version in $available_php_versions; do
-                # Check if package exists before adding to install list
+                # Check if package exists before installing
                 if yum search ${php_version}-${php_extension} 2>/dev/null | grep -q "${php_version}-${php_extension}"; then
-                    packages_to_install="${packages_to_install} ${php_version}-${php_extension}"
+                    install_package "${php_version}-${php_extension}" || log_warning "Failed to install ${php_version}-${php_extension}"
                 fi
                 if yum search ${php_version}-pecl-${php_extension} 2>/dev/null | grep -q "${php_version}-pecl-${php_extension}"; then
-                    packages_to_install="${packages_to_install} ${php_version}-pecl-${php_extension}"
+                    install_package "${php_version}-pecl-${php_extension}" || log_warning "Failed to install ${php_version}-pecl-${php_extension}"
                 fi
             done
-            
-            if [[ -n "$packages_to_install" ]]; then
-                install_package "$packages_to_install"
-            else
-                log_warning "No matching ${php_extension} packages found for available PHP versions"
-            fi
             ;;
         "CentOS8"|"CentOS9"|"CentOSStream8"|"CentOSStream9"|"RHEL8"|"RHEL9"|"AlmaLinux8"|"AlmaLinux9"|"AlmaLinux10"|"RockyLinux8"|"RockyLinux9"|"openEuler2003"|"openEuler2203"|"openEuler2403")
             # Find available PHP versions first
@@ -373,23 +366,16 @@ install_php_packages() {
                 return 0
             fi
             
-            # Try to install packages for each available PHP version
-            packages_to_install=""
+            # Try to install packages for each available PHP version individually
             for php_version in $available_php_versions; do
-                # Check if package exists before adding to install list
+                # Check if package exists before installing
                 if dnf search ${php_version}-${php_extension} 2>/dev/null | grep -q "${php_version}-${php_extension}"; then
-                    packages_to_install="${packages_to_install} ${php_version}-${php_extension}"
+                    install_package "${php_version}-${php_extension}" || log_warning "Failed to install ${php_version}-${php_extension}"
                 fi
                 if dnf search ${php_version}-pecl-${php_extension} 2>/dev/null | grep -q "${php_version}-pecl-${php_extension}"; then
-                    packages_to_install="${packages_to_install} ${php_version}-pecl-${php_extension}"
+                    install_package "${php_version}-pecl-${php_extension}" || log_warning "Failed to install ${php_version}-pecl-${php_extension}"
                 fi
             done
-            
-            if [[ -n "$packages_to_install" ]]; then
-                install_package "$packages_to_install"
-            else
-                log_warning "No matching ${php_extension} packages found for available PHP versions"
-            fi
             ;;
         "Ubuntu1804"|"Ubuntu2004"|"Ubuntu2010"|"Ubuntu2204"|"Ubuntu2404"|"Ubuntu24043"|"Debian11"|"Debian12"|"Debian13")
             # Find available PHP versions first
@@ -2290,6 +2276,13 @@ fi
 Post_Install_Addon_Mecached_LSMCD() {
   install_dev_tools
 
+  # Install SASL development headers for LSMCD compilation
+  if [[ "$Server_OS" =~ ^(CentOS|RHEL|AlmaLinux|RockyLinux|CloudLinux|openEuler) ]] ; then
+    dnf install -y cyrus-sasl-devel cyrus-sasl-lib cyrus-sasl-gssapi cyrus-sasl-plain || yum install -y cyrus-sasl-devel cyrus-sasl-lib cyrus-sasl-gssapi cyrus-sasl-plain
+  elif [[ "$Server_OS" = "Ubuntu" ]] ; then
+    apt-get install -y libsasl2-dev libsasl2-modules
+  fi
+
   wget -O lsmcd-master.zip https://cyberpanel.sh/codeload.github.com/litespeedtech/lsmcd/zip/master
   unzip lsmcd-master.zip
   Current_Dir=$(pwd)
@@ -2332,8 +2325,24 @@ Post_Install_Addon_Memcached() {
 Post_Install_Addon_Redis() {
   log_function_start "Post_Install_Addon_Redis"
   log_info "Installing Redis server and PHP extension"
-  # Install PHP Redis extension
-  install_php_packages "redis"
+  
+  # Install PHP Redis extension for available PHP versions
+  # Check which PHP versions are actually installed
+  for php_version in $(ls /usr/local/lsws/lsphp* 2>/dev/null | grep -o 'lsphp[0-9]*' | sort -u); do
+    if [[ "$Server_OS" =~ ^(CentOS|RHEL|AlmaLinux|RockyLinux|CloudLinux|openEuler) ]] ; then
+      # Try to install Redis extension for this PHP version
+      if dnf search ${php_version}-pecl-redis 2>/dev/null | grep -q "${php_version}-pecl-redis"; then
+        dnf install -y ${php_version}-pecl-redis || yum install -y ${php_version}-pecl-redis
+      elif dnf search ${php_version}-redis 2>/dev/null | grep -q "${php_version}-redis"; then
+        dnf install -y ${php_version}-redis || yum install -y ${php_version}-redis
+      fi
+    elif [[ "$Server_OS" = "Ubuntu" ]] ; then
+      # Ubuntu Redis extension installation
+      if apt-cache search ${php_version}-redis 2>/dev/null | grep -q "${php_version}-redis"; then
+        apt-get install -y ${php_version}-redis
+      fi
+    fi
+  done
 
   # Install Redis server
   if [[ "$Server_OS" = "CentOS" ]]; then

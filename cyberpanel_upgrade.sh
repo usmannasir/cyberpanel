@@ -1257,7 +1257,8 @@ if [[ ! -f /usr/local/lscp/fcgi-bin/lsphp ]] || [[ ! -s /usr/local/lscp/fcgi-bin
     PHP_RESTORED=0
     
     # Try to find the latest lsphp version (check from newest to oldest)
-    for PHP_VER in 83 82 81 80 74 73 72; do
+    # Priority: 85 (beta), 84, 83, 82, 81, 80, 74
+    for PHP_VER in 85 84 83 82 81 80 74; do
         if [[ -f /usr/local/lsws/lsphp${PHP_VER}/bin/lsphp ]]; then
             # Try to create symlink first (preferred)
             if ln -sf /usr/local/lsws/lsphp${PHP_VER}/bin/lsphp /usr/local/lscp/fcgi-bin/lsphp 2>/dev/null; then
