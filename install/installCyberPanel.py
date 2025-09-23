@@ -460,6 +460,16 @@ class InstallCyberPanel:
                 except:
                     pass
                 
+                # Create mbstring configuration for each PHP version
+                try:
+                    mbstring_config = f'/usr/local/lsws/lsphp{version}/etc/php.d/20-mbstring.ini'
+                    if not os.path.exists(mbstring_config):
+                        os.makedirs(os.path.dirname(mbstring_config), exist_ok=True)
+                        with open(mbstring_config, 'w') as f:
+                            f.write('extension=mbstring\n')
+                except:
+                    pass
+                
         elif self.distro == centos:
             # Install PHP 7.4 only (legacy support)
             self.install_package('lsphp74*', '--skip-broken')
