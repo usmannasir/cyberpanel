@@ -889,10 +889,10 @@ class Migration(migrations.Migration):
         command = "usermod -G lscpd,lsadm,nogroup lscpd"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        command = "find /usr/local/CyberCP -type d -exec chmod 0755 {} \;"
+        command = r"find /usr/local/CyberCP -type d -exec chmod 0755 {} \;"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        command = "find /usr/local/CyberCP -type f -exec chmod 0644 {} \;"
+        command = r"find /usr/local/CyberCP -type f -exec chmod 0644 {} \;"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         command = "chmod -R 755 /usr/local/CyberCP/bin"
@@ -905,10 +905,10 @@ class Migration(migrations.Migration):
 
         ########### Fix LSCPD
 
-        command = "find /usr/local/lscp -type d -exec chmod 0755 {} \;"
+        command = r"find /usr/local/lscp -type d -exec chmod 0755 {} \;"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        command = "find /usr/local/lscp -type f -exec chmod 0644 {} \;"
+        command = r"find /usr/local/lscp -type f -exec chmod 0644 {} \;"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         command = "chmod -R 755 /usr/local/lscp/bin"
@@ -1663,12 +1663,12 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             os.chdir("/usr/local/CyberCP/public/snappymail")
 
-            command = 'find . -type d -exec chmod 755 {} \;'
+            command = r'find . -type d -exec chmod 755 {} \;'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             #############
 
-            command = 'find . -type f -exec chmod 644 {} \;'
+            command = r'find . -type f -exec chmod 644 {} \;'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             ######
@@ -3234,11 +3234,11 @@ vmail
             time.sleep(3)
             
             # Check if service is actually running
-                command = f'systemctl is-active {pdns_service}'
-                try:
+            command = f'systemctl is-active {pdns_service}'
+            try:
                 result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=10)
                 output = result.stdout.strip()
-                    if output == 'active':
+                if output == 'active':
                     preFlightsChecks.stdOut("PowerDNS service started successfully!", 1)
                     # Double-check with systemctl status for more details
                     status_command = f'systemctl status {pdns_service} --no-pager -l'
@@ -3246,9 +3246,9 @@ vmail
                         status_result = subprocess.run(status_command, shell=True, capture_output=True, text=True, timeout=10)
                         if status_result.returncode == 0:
                             preFlightsChecks.stdOut("PowerDNS service status verified", 1)
-                    else:
+                        else:
                             preFlightsChecks.stdOut("PowerDNS service running but status check failed", 0)
-                except:
+                    except:
                         preFlightsChecks.stdOut("PowerDNS service running but status verification failed", 0)
                     break
                 else:
@@ -3308,10 +3308,10 @@ vmail
                     release = install_utils.get_Ubuntu_release(use_print=False, exit_on_error=False)
                     if release and release >= 24.04:
                         preFlightsChecks.stdOut("Configuring Pure-FTPd for Ubuntu 24.04...")
-                            command = f"sed -i 's/MYSQLCrypt md5/MYSQLCrypt crypt/g' {config_file}"
+                        command = f"sed -i 's/MYSQLCrypt md5/MYSQLCrypt crypt/g' {config_file}"
                         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
                 except:
-                        pass
+                    pass
         
         # Start Pure-FTPd service with retry mechanism
         max_retries = 3
@@ -3651,7 +3651,7 @@ admin_password = "12345"
 """)
         writeToFile.close()
 
-        content = """<?php
+        content = r"""<?php
 
 $_ENV['snappymail_INCLUDE_AS_API'] = true;
 include '/usr/local/CyberCP/public/snappymail/index.php';
