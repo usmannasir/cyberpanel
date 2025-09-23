@@ -1567,7 +1567,22 @@ if [[ "$Server_OS" =~ ^(CentOS|RHEL|AlmaLinux|RockyLinux|CloudLinux|openEuler) ]
     dnf install -y epel-release
       Check_Return "EPEL repository" "no_exit"
     
-    dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-server mariadb-client mariadb-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils openssl-devel boost-devel boost-program-options
+    # Setup MariaDB repository for AlmaLinux 9/10 - using the working method from 2.4.3
+    if [[ "$Server_OS" =~ ^(AlmaLinux9|AlmaLinux10) ]] ; then
+      cat <<EOF >/etc/yum.repos.d/MariaDB.repo
+# MariaDB 10.11 CentOS repository list - created 2021-08-06 02:01 UTC
+# http://downloads.mariadb.org/mariadb/repositories/
+[mariadb]
+name = MariaDB
+baseurl = http://yum.mariadb.org/10.11/rhel9-amd64/
+gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+enabled=1
+gpgcheck=1
+EOF
+        Check_Return "MariaDB repository setup" "no_exit"
+    fi
+    
+    dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel MariaDB-server MariaDB-client MariaDB-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils openssl-devel boost-devel boost-program-options
       Check_Return
     
     # Install development tools group
