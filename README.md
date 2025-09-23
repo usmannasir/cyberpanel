@@ -111,7 +111,7 @@ curl -X POST http://your-server:8090/api/listChildDomainsJson \
 | CloudLinux 9, 8            |             ✅ Supported |
 | CentOS 7                   |         ⚠️ Legacy — EOL |
 
-> CyberPanel targets x86\_64 only. Test unsupported OS in staging first.
+> CyberPanel targets x86\_64 only. Test the unsupported OS in staging first.
 
 ---
 
@@ -120,7 +120,7 @@ curl -X POST http://your-server:8090/api/listChildDomainsJson \
 * ✅ **Recommended**: PHP 8.5, 8.4, 8.3, 8.2, 8.1
 * ⚠️ **Legacy**: PHP 8.0, PHP 7.4 (security-only)
 
-Third-party repositories (Remi, Ondrej) may provide older or niche versions — verify compatibility before use.
+Third-party repositories (Remi, Ondrej) may provide older or niche versions; verify compatibility before use.
 
 ---
 
@@ -140,7 +140,7 @@ sh <(curl -s https://cyberpanel.net/install.sh || wget -O - https://cyberpanel.n
 sh <(curl -s https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgrade.sh)
 ```
 
-**Post-upgrade checklist:** verify email, DNS, SSL and run a smoke test on key sites.
+**Post-upgrade checklist:** verify email, DNS, SSL, and run a smoke test on key sites.
 
 ---
 
@@ -180,8 +180,7 @@ journalctl -u lscpd -f
 * Docs (KnowledgeBase): [https://cyberpanel.net/KnowledgeBase/](https://cyberpanel.net/KnowledgeBase/)
 * Community forum: [https://community.cyberpanel.net](https://community.cyberpanel.net)
 * GitHub: [https://github.com/usmannasir/cyberpanel](https://github.com/usmannasir/cyberpanel)
-* Guides folder: `guides/` (API, INSTALLATION, UPGRADE, TROUBLESHOOTING)
-
+* Guides folder:  [guides](https://github.com/usmannasir/cyberpanel/blob/stable/guides/INDEX.md) (API, INSTALLATION, UPGRADE, TROUBLESHOOTING)
 ---
 
 <div align="center">
