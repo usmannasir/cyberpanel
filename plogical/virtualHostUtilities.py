@@ -33,7 +33,7 @@ from ApachController.ApacheVhosts import ApacheVhost
 from managePHP.phpManager import PHPManager
 
 try:
-    from websiteFunctions.models import Websites, ChildDomains, aliasDomains
+    from websiteFunctions.models import Websites, ChildDomains, aliasDomains, WPSites, WPStaging
     from loginSystem.models import Administrator
     from packages.models import Package
     from CLManager.models import CLPackages
@@ -598,6 +598,41 @@ local_name %s {
                     logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
                                                               'This website already exists as child domain. [404]')
                     return 0, "This website already exists as child domain."
+
+                # Check for orphaned staging site domain conflicts
+                try:
+                    # Check if there are any WP sites with FinalURL matching this domain
+                    conflicting_wp_sites = WPSites.objects.filter(FinalURL__icontains=virtualHostName)
+                    for wp_site in conflicting_wp_sites:
+                        # Check if the WP site's owner website still exists
+                        try:
+                            owner_website = wp_site.owner
+                            if not Websites.objects.filter(id=owner_website.id).exists():
+                                # Orphaned WP site found, clean it up
+                                wp_site.delete()
+                                logging.CyberCPLogFileWriter.writeToFile(f"Cleaned up orphaned WP site: {wp_site.id} with URL: {wp_site.FinalURL}")
+                        except:
+                            # WP site owner is missing, delete it
+                            wp_site.delete()
+                            logging.CyberCPLogFileWriter.writeToFile(f"Cleaned up orphaned WP site: {wp_site.id} (missing owner)")
+
+                    # Check for orphaned staging sites
+                    orphaned_staging = WPStaging.objects.filter(wpsite__FinalURL__icontains=virtualHostName)
+                    for staging in orphaned_staging:
+                        try:
+                            # Check if the staging site's wpsite still exists and has valid owner
+                            wpsite = staging.wpsite
+                            owner_website = wpsite.owner
+                            if not Websites.objects.filter(id=owner_website.id).exists():
+                                # Owner website doesn't exist, clean up staging
+                                staging.delete()
+                                logging.CyberCPLogFileWriter.writeToFile(f"Cleaned up orphaned staging site: {staging.id}")
+                        except:
+                            # Staging site has invalid references, delete it
+                            staging.delete()
+                            logging.CyberCPLogFileWriter.writeToFile(f"Cleaned up orphaned staging site: {staging.id} (invalid references)")
+                except Exception as e:
+                    logging.CyberCPLogFileWriter.writeToFile(f"Error during staging site cleanup: {str(e)}")
 
                 ####### Limitations Check End
 
