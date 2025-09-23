@@ -347,23 +347,16 @@ install_php_packages() {
                 return 0
             fi
             
-            # Try to install packages for each available PHP version
-            packages_to_install=""
+            # Try to install packages for each available PHP version individually
             for php_version in $available_php_versions; do
-                # Check if package exists before adding to install list
+                # Check if package exists before installing
                 if yum search ${php_version}-${php_extension} 2>/dev/null | grep -q "${php_version}-${php_extension}"; then
-                    packages_to_install="${packages_to_install} ${php_version}-${php_extension}"
+                    install_package "${php_version}-${php_extension}" || log_warning "Failed to install ${php_version}-${php_extension}"
                 fi
                 if yum search ${php_version}-pecl-${php_extension} 2>/dev/null | grep -q "${php_version}-pecl-${php_extension}"; then
-                    packages_to_install="${packages_to_install} ${php_version}-pecl-${php_extension}"
+                    install_package "${php_version}-pecl-${php_extension}" || log_warning "Failed to install ${php_version}-pecl-${php_extension}"
                 fi
             done
-            
-            if [[ -n "$packages_to_install" ]]; then
-                install_package "$packages_to_install"
-            else
-                log_warning "No matching ${php_extension} packages found for available PHP versions"
-            fi
             ;;
         "CentOS8"|"CentOS9"|"CentOSStream8"|"CentOSStream9"|"RHEL8"|"RHEL9"|"AlmaLinux8"|"AlmaLinux9"|"AlmaLinux10"|"RockyLinux8"|"RockyLinux9"|"openEuler2003"|"openEuler2203"|"openEuler2403")
             # Find available PHP versions first
@@ -373,23 +366,16 @@ install_php_packages() {
                 return 0
             fi
             
-            # Try to install packages for each available PHP version
-            packages_to_install=""
+            # Try to install packages for each available PHP version individually
             for php_version in $available_php_versions; do
-                # Check if package exists before adding to install list
+                # Check if package exists before installing
                 if dnf search ${php_version}-${php_extension} 2>/dev/null | grep -q "${php_version}-${php_extension}"; then
-                    packages_to_install="${packages_to_install} ${php_version}-${php_extension}"
+                    install_package "${php_version}-${php_extension}" || log_warning "Failed to install ${php_version}-${php_extension}"
                 fi
                 if dnf search ${php_version}-pecl-${php_extension} 2>/dev/null | grep -q "${php_version}-pecl-${php_extension}"; then
-                    packages_to_install="${packages_to_install} ${php_version}-pecl-${php_extension}"
+                    install_package "${php_version}-pecl-${php_extension}" || log_warning "Failed to install ${php_version}-pecl-${php_extension}"
                 fi
             done
-            
-            if [[ -n "$packages_to_install" ]]; then
-                install_package "$packages_to_install"
-            else
-                log_warning "No matching ${php_extension} packages found for available PHP versions"
-            fi
             ;;
         "Ubuntu1804"|"Ubuntu2004"|"Ubuntu2010"|"Ubuntu2204"|"Ubuntu2404"|"Ubuntu24043"|"Debian11"|"Debian12"|"Debian13")
             # Find available PHP versions first
@@ -2165,18 +2151,137 @@ fi
 /usr/local/CyberPanel-venv/bin/python install.py "${Final_Flags[@]}"
 
 
+# Installation summary function
+show_installation_summary() {
+  local install_status=$1
+  local start_time=$2
+  local end_time=$(date +%s)
+  local elapsed_time=$((end_time - start_time))
+  local elapsed_minutes=$((elapsed_time / 60))
+  local elapsed_seconds=$((elapsed_time % 60))
+  
+  # Get system info
+  local memory_usage=$(free -m | awk 'NR==2{printf "%s/%sMB (%.1f%%)", $3,$2,$3*100/$2 }')
+  local disk_usage=$(df -h / | awk 'NR==2{print $5}' | sed 's/%//')
+  local cpu_cores=$(nproc)
+  local load_avg=$(uptime | awk -F'load average:' '{print $2}' | awk '{print $1}' | sed 's/,//')
+  
+  echo ""
+  echo "╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╗"
+  echo "║                                                                                                               ║"
+  echo "║  📊 CYBERPANEL INSTALLATION SUMMARY                                                                          ║"
+  echo "║                                                                                                               ║"
+  echo "╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╝"
+  echo ""
+  
+  if [ "$install_status" = "SUCCESS" ]; then
+    echo "╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╗"
+    echo "║                                                                                                               ║"
+    echo "║  ✅ INSTALLATION STATUS: SUCCESSFUL                                                                          ║"
+    echo "║                                                                                                               ║"
+    echo "║  🌐 ACCESS YOUR CYBERPANEL:                                                                                 ║"
+    echo "║  • URL: https://$Server_IP:8090                                                                             ║"
+    echo "║  • Username: admin                                                                                          ║"
+    if [[ "$Custom_Pass" = "True" ]]; then
+      echo "║  • Password: ***** (custom password)                                                                       ║"
+    else
+      echo "║  • Password: $Admin_Pass                                                                                   ║"
+    fi
+    echo "║                                                                                                               ║"
+    echo "║  🎉 ALL COMPONENTS INSTALLED SUCCESSFULLY! 🎉                                                               ║"
+    echo "║                                                                                                               ║"
+    echo "╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╝"
+  else
+    echo "╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╗"
+    echo "║                                                                                                               ║"
+    echo "║  ❌ INSTALLATION STATUS: FAILED                                                                              ║"
+    echo "║                                                                                                               ║"
+    echo "║  🔍 TROUBLESHOOTING STEPS:                                                                                  ║"
+    echo "║  1. Check the installation logs:                                                                            ║"
+    echo "║     • Main log: /var/log/installLogs.txt                                                                   ║"
+    echo "║     • Debug log: /var/log/cyberpanel/cyberpanel_install_debug_*.log                                        ║"
+    echo "║                                                                                                               ║"
+    echo "║  2. Common issues and solutions:                                                                            ║"
+    echo "║     • Insufficient memory: Ensure at least 1GB RAM available                                               ║"
+    echo "║     • Disk space: Ensure at least 10GB free space                                                          ║"
+    echo "║     • Network issues: Check internet connectivity                                                           ║"
+    echo "║     • Repository errors: Try running 'yum clean all' or 'apt update'                                       ║"
+    echo "║                                                                                                               ║"
+    echo "║  3. Get help:                                                                                               ║"
+    echo "║     • Community: https://community.cyberpanel.net                                                           ║"
+    echo "║     • Documentation: https://cyberpanel.net/KnowledgeBase/                                                  ║"
+    echo "║     • GitHub Issues: https://github.com/usmannasir/cyberpanel/issues                                       ║"
+    echo "║                                                                                                               ║"
+    echo "║  🛠️  RETRY INSTALLATION:                                                                                   ║"
+    echo "║  bash <(curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/cyberpanel.sh) --debug    ║"
+    echo "║                                                                                                               ║"
+    echo "╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╝"
+  fi
+  
+  echo ""
+  echo "╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╗"
+  echo "║                                                                                                               ║"
+  echo "║  📈 SYSTEM INFORMATION:                                                                                      ║"
+  echo "║  • OS: $Server_OS $Server_OS_Version                                                                         ║"
+  echo "║  • CPU Cores: $cpu_cores                                                                                     ║"
+  echo "║  • Load Average: $load_avg                                                                                   ║"
+  echo "║  • Memory Usage: $memory_usage                                                                               ║"
+  echo "║  • Disk Usage: ${disk_usage}%                                                                                ║"
+  echo "║  • Install Time: ${elapsed_minutes}m ${elapsed_seconds}s                                                      ║"
+  echo "║                                                                                                               ║"
+  echo "╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╝"
+  
+  # Show recent errors if installation failed
+  if [ "$install_status" = "FAILED" ]; then
+    echo ""
+    echo "╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╗"
+    echo "║                                                                                                               ║"
+    echo "║  🚨 RECENT ERRORS:                                                                                          ║"
+    echo "║                                                                                                               ║"
+    
+    # Show last 10 lines of install log with errors
+    if [ -f "/var/log/installLogs.txt" ]; then
+      echo "║  From /var/log/installLogs.txt:                                                                           ║"
+      tail -10 /var/log/installLogs.txt | while read line; do
+        if [ ${#line} -gt 100 ]; then
+          echo "║  ${line:0:100}...                                                                                    ║"
+        else
+          printf "║  %-100s ║\n" "$line"
+        fi
+      done
+    fi
+    
+    echo "║                                                                                                               ║"
+    echo "╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╝"
+  fi
+  
+  echo ""
+}
+
+# Record installation start time
+INSTALL_START_TIME=$(date +%s)
+
 if grep "CyberPanel installation successfully completed" /var/log/installLogs.txt >/dev/null; then
-  echo -e "\nCyberPanel installation sucessfully completed...\n"
+  echo -e "\nCyberPanel installation successfully completed...\n"
   Debug_Log2 "Main installation completed...,70"
+  show_installation_summary "SUCCESS" "$INSTALL_START_TIME"
 else
-  echo -e "Oops, something went wrong..."
-  Debug_Log2 "Oops, something went wrong... [404]"
-  exit
+  echo -e "Installation encountered issues..."
+  Debug_Log2 "Installation encountered issues... [404]"
+  show_installation_summary "FAILED" "$INSTALL_START_TIME"
+  exit 1
 fi
 }
 
 Post_Install_Addon_Mecached_LSMCD() {
   install_dev_tools
+
+  # Install SASL development headers for LSMCD compilation
+  if [[ "$Server_OS" =~ ^(CentOS|RHEL|AlmaLinux|RockyLinux|CloudLinux|openEuler) ]] ; then
+    dnf install -y cyrus-sasl-devel cyrus-sasl-lib cyrus-sasl-gssapi cyrus-sasl-plain || yum install -y cyrus-sasl-devel cyrus-sasl-lib cyrus-sasl-gssapi cyrus-sasl-plain
+  elif [[ "$Server_OS" = "Ubuntu" ]] ; then
+    apt-get install -y libsasl2-dev libsasl2-modules
+  fi
 
   wget -O lsmcd-master.zip https://cyberpanel.sh/codeload.github.com/litespeedtech/lsmcd/zip/master
   unzip lsmcd-master.zip
@@ -2220,8 +2325,24 @@ Post_Install_Addon_Memcached() {
 Post_Install_Addon_Redis() {
   log_function_start "Post_Install_Addon_Redis"
   log_info "Installing Redis server and PHP extension"
-  # Install PHP Redis extension
-  install_php_packages "redis"
+  
+  # Install PHP Redis extension for available PHP versions
+  # Check which PHP versions are actually installed
+  for php_version in $(ls /usr/local/lsws/lsphp* 2>/dev/null | grep -o 'lsphp[0-9]*' | sort -u); do
+    if [[ "$Server_OS" =~ ^(CentOS|RHEL|AlmaLinux|RockyLinux|CloudLinux|openEuler) ]] ; then
+      # Try to install Redis extension for this PHP version
+      if dnf search ${php_version}-pecl-redis 2>/dev/null | grep -q "${php_version}-pecl-redis"; then
+        dnf install -y ${php_version}-pecl-redis || yum install -y ${php_version}-pecl-redis
+      elif dnf search ${php_version}-redis 2>/dev/null | grep -q "${php_version}-redis"; then
+        dnf install -y ${php_version}-redis || yum install -y ${php_version}-redis
+      fi
+    elif [[ "$Server_OS" = "Ubuntu" ]] ; then
+      # Ubuntu Redis extension installation
+      if apt-cache search ${php_version}-redis 2>/dev/null | grep -q "${php_version}-redis"; then
+        apt-get install -y ${php_version}-redis
+      fi
+    fi
+  done
 
   # Install Redis server
   if [[ "$Server_OS" = "CentOS" ]]; then
