@@ -3742,12 +3742,13 @@ def show_installation_summary():
         # Check component status
         components = {
             "CyberPanel Core": check_service_status("lscpd"),
-            "OpenLiteSpeed": check_service_status("lsws"),
+            "OpenLiteSpeed": check_openlitespeed_status(),
             "MariaDB/MySQL": check_service_status("mysql") or check_service_status("mariadb"),
-            "PowerDNS": check_service_status("pdns") or check_service_status("pdns-server"),
-            "Pure-FTPd": check_service_status("pure-ftpd"),
+            "PowerDNS": check_powerdns_status(),
+            "Pure-FTPd": check_pureftpd_status(),
             "Postfix": check_service_status("postfix"),
             "Dovecot": check_service_status("dovecot"),
+            "LSMCD": check_service_status("lsmcd"),
             "SnappyMail": check_file_exists("/usr/local/CyberCP/public/snappymail"),
             "phpMyAdmin": check_file_exists("/usr/local/CyberCP/public/phpmyadmin")
         }
@@ -3804,6 +3805,64 @@ def check_service_status(service_name):
         result = subprocess.run(['systemctl', 'is-active', service_name], 
                               capture_output=True, text=True)
         return result.returncode == 0
+    except:
+        return False
+
+def check_openlitespeed_status():
+    """Check if OpenLiteSpeed is running (special case)"""
+    try:
+        # Check if lsws process is running
+        result = subprocess.run(['pgrep', '-f', 'litespeed'], capture_output=True, text=True)
+        if result.returncode == 0:
+            return True
+        
+        # Check if lsws service is active
+        result = subprocess.run(['systemctl', 'is-active', 'lsws'], capture_output=True, text=True)
+        if result.returncode == 0:
+            return True
+            
+        # Check if openlitespeed service is active
+        result = subprocess.run(['systemctl', 'is-active', 'openlitespeed'], capture_output=True, text=True)
+        if result.returncode == 0:
+            return True
+            
+        return False
+    except:
+        return False
+
+def check_powerdns_status():
+    """Check if PowerDNS is running (special case)"""
+    try:
+        # Check if pdns process is running
+        result = subprocess.run(['pgrep', '-f', 'pdns'], capture_output=True, text=True)
+        if result.returncode == 0:
+            return True
+        
+        # Check various PowerDNS service names
+        for service in ['pdns', 'pdns-server', 'powerdns']:
+            result = subprocess.run(['systemctl', 'is-active', service], capture_output=True, text=True)
+            if result.returncode == 0:
+                return True
+                
+        return False
+    except:
+        return False
+
+def check_pureftpd_status():
+    """Check if Pure-FTPd is running (special case)"""
+    try:
+        # Check if pure-ftpd process is running
+        result = subprocess.run(['pgrep', '-f', 'pure-ftpd'], capture_output=True, text=True)
+        if result.returncode == 0:
+            return True
+        
+        # Check various Pure-FTPd service names
+        for service in ['pure-ftpd', 'pureftpd']:
+            result = subprocess.run(['systemctl', 'is-active', service], capture_output=True, text=True)
+            if result.returncode == 0:
+                return True
+                
+        return False
     except:
         return False
 
