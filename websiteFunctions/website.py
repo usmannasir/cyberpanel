@@ -153,7 +153,25 @@ class WebsiteManager:
                 WPDelete = WPSites.objects.get(pk=DeleteID)
 
                 if ACLManager.checkOwnership(WPDelete.owner.domain, admin, currentACL) == 1:
-                    WPDelete.delete()
+                    # Check if this is a staging site (referenced by WPStaging as wpsite)
+                    staging_records = WPStaging.objects.filter(wpsite=WPDelete)
+
+                    if staging_records.exists():
+                        # This is a staging site - perform complete cleanup
+                        staging_website = WPDelete.owner
+
+                        # Use the same robust deletion method as regular websites
+                        execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+                        execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName " + staging_website.domain
+                        ProcessUtilities.popenExecutioner(execPath)
+
+                        # Delete all staging records
+                        staging_records.delete()  # Delete WPStaging records
+                        WPDelete.delete()         # Delete WPSites record
+                        staging_website.delete()  # Delete Websites record
+                    else:
+                        # Regular WP site deletion
+                        WPDelete.delete()
         except BaseException as msg:
             pass
 
@@ -216,10 +234,28 @@ class WebsiteManager:
 
                     if DeleteID != None:
                         wstagingDelete = WPStaging.objects.get(pk=DeleteID, owner=WPobj)
+
+                        # Get the associated staging WPSites and Websites records
+                        staging_wpsite = wstagingDelete.wpsite
+                        staging_website = staging_wpsite.owner
+
+                        # Delete the staging Websites record and all associated data BEFORE deleting DB records
+                        # Use the same robust deletion method as regular websites
+                        execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+                        execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName " + staging_website.domain
+                        ProcessUtilities.popenExecutioner(execPath)
+
+                        # Delete the WPStaging record
                         wstagingDelete.delete()
 
+                        # Delete the staging WPSites record
+                        staging_wpsite.delete()
+
+                        # Delete the staging Websites record
+                        staging_website.delete()
+
                 except BaseException as msg:
-                    da = str(msg)
+                    logging.CyberCPLogFileWriter.writeToFile(f"Error cleaning up WP/Staging sites: {str(msg)}")
 
                 proc = httpProc(request, 'websiteFunctions/WPsiteHome.html',
                                 Data, 'createDatabase')
