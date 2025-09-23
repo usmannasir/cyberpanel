@@ -17,7 +17,8 @@ from plogical.acl import ACLManager
 import plogical.CyberCPLogFileWriter as logging
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter
 from websiteFunctions.models import Websites, ChildDomains, GitLogs, wpplugins, WPSites, WPStaging, WPSitesBackup, \
-    RemoteBackupConfig, RemoteBackupSchedule, RemoteBackupsites, DockerPackages, PackageAssignment, DockerSites
+    RemoteBackupConfig, RemoteBackupSchedule, RemoteBackupsites, DockerPackages, PackageAssignment, DockerSites, \
+    FTPQuota, BandwidthResetLog
 from plogical.virtualHostUtilities import virtualHostUtilities
 import subprocess
 import shlex
@@ -8633,4 +8634,508 @@ StrictHostKeyChecking no
         except Exception as e:
             logging.CyberCPLogFileWriter.writeToFile(f'Error fixing subdomain logs for {domain_name}: {str(e)}')
             return False
+
+    def enableFTPQuota(self, userID=None, data=None):
+        """
+        Enable FTP quota system
+        """
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+            
+            # Check if user has permission
+            if not ACLManager.checkIfUserIsAdmin(currentACL):
+                return ACLManager.loadErrorJson('status', 0)
+            
+            # Backup existing configurations
+            logging.CyberCPLogFileWriter.writeToFile("Backing up existing Pure-FTPd configurations...")
+            
+            import shutil
+            from datetime import datetime
+            
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            
+            # Backup pure-ftpd.conf
+            if os.path.exists('/etc/pure-ftpd/pure-ftpd.conf'):
+                shutil.copy('/etc/pure-ftpd/pure-ftpd.conf', f'/etc/pure-ftpd/pure-ftpd.conf.backup.{timestamp}')
+            
+            # Backup pureftpd-mysql.conf
+            if os.path.exists('/etc/pure-ftpd/pureftpd-mysql.conf'):
+                shutil.copy('/etc/pure-ftpd/pureftpd-mysql.conf', f'/etc/pure-ftpd/pureftpd-mysql.conf.backup.{timestamp}')
+            
+            # Apply new configurations
+            logging.CyberCPLogFileWriter.writeToFile("Applying FTP quota configurations...")
+            
+            # Copy updated configurations
+            if os.path.exists('/usr/local/CyberCP/install/pure-ftpd/pure-ftpd.conf'):
+                shutil.copy('/usr/local/CyberCP/install/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pure-ftpd.conf')
+            
+            if os.path.exists('/usr/local/CyberCP/install/pure-ftpd/pureftpd-mysql.conf'):
+                shutil.copy('/usr/local/CyberCP/install/pure-ftpd/pureftpd-mysql.conf', '/etc/pure-ftpd/pureftpd-mysql.conf')
+            
+            # Restart Pure-FTPd
+            logging.CyberCPLogFileWriter.writeToFile("Restarting Pure-FTPd service...")
+            ProcessUtilities.executioner('systemctl restart pure-ftpd')
+            
+            # Verify configuration
+            if ProcessUtilities.executioner('systemctl is-active --quiet pure-ftpd'):
+                logging.CyberCPLogFileWriter.writeToFile("FTP quota system enabled successfully")
+                
+                data_ret = {
+                    'status': 1,
+                    'message': 'FTP quota system enabled successfully'
+                }
+            else:
+                data_ret = {
+                    'status': 0,
+                    'message': 'Failed to restart Pure-FTPd service'
+                }
+            
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+            
+        except Exception as e:
+            data_ret = {
+                'status': 0,
+                'message': f'Error enabling FTP quota: {str(e)}'
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def getFTPQuotas(self, userID=None, data=None):
+        """
+        Get FTP quota list
+        """
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+            
+            # Check if user has permission
+            if not ACLManager.checkIfUserIsAdmin(currentACL):
+                return ACLManager.loadErrorJson('status', 0)
+            
+            quotas = FTPQuota.objects.all().order_by('-created_at')
+            
+            quota_list = []
+            for quota in quotas:
+                quota_list.append({
+                    'id': quota.id,
+                    'ftp_user': quota.ftp_user,
+                    'domain': quota.domain.domain if quota.domain else 'N/A',
+                    'quota_size_mb': quota.quota_size_mb,
+                    'quota_used_mb': quota.quota_used_mb,
+                    'quota_percentage': quota.get_quota_percentage(),
+                    'quota_files': quota.quota_files,
+                    'quota_files_used': quota.quota_files_used,
+                    'is_active': quota.is_active,
+                    'created_at': quota.created_at.strftime('%Y-%m-%d %H:%M:%S')
+                })
+            
+            data_ret = {
+                'status': 1,
+                'quotas': quota_list
+            }
+            
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+            
+        except Exception as e:
+            data_ret = {
+                'status': 0,
+                'message': f'Error getting FTP quotas: {str(e)}'
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def updateFTPQuota(self, userID=None, data=None):
+        """
+        Update FTP quota
+        """
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+            
+            # Check if user has permission
+            if not ACLManager.checkIfUserIsAdmin(currentACL):
+                return ACLManager.loadErrorJson('status', 0)
+            
+            quota_id = data.get('quota_id')
+            quota_size_mb = int(data.get('quota_size_mb', 0))
+            quota_files = int(data.get('quota_files', 0))
+            
+            try:
+                quota = FTPQuota.objects.get(id=quota_id)
+                quota.quota_size_mb = quota_size_mb
+                quota.quota_files = quota_files
+                quota.save()
+                
+                data_ret = {
+                    'status': 1,
+                    'message': 'FTP quota updated successfully'
+                }
+            except FTPQuota.DoesNotExist:
+                data_ret = {
+                    'status': 0,
+                    'message': 'FTP quota not found'
+                }
+            
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+            
+        except Exception as e:
+            data_ret = {
+                'status': 0,
+                'message': f'Error updating FTP quota: {str(e)}'
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def resetBandwidth(self, userID=None, data=None):
+        """
+        Reset bandwidth usage
+        """
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+            
+            # Check if user has permission
+            if not ACLManager.checkIfUserIsAdmin(currentACL):
+                return ACLManager.loadErrorJson('status', 0)
+            
+            reset_type = data.get('reset_type', 'manual')
+            domain_name = data.get('domain', None)
+            
+            # Import bandwidth reset functionality
+            from plogical.bandwidthReset import BandwidthReset
+            
+            if domain_name:
+                # Reset individual domain
+                try:
+                    website = Websites.objects.get(domain=domain_name)
+                    BandwidthReset.resetDomainBandwidth(domain_name)
+                    
+                    # Log the reset
+                    BandwidthResetLog.objects.create(
+                        reset_type=reset_type,
+                        domain=website,
+                        reset_by=admin,
+                        domains_affected=1,
+                        notes=f"Reset bandwidth for domain {domain_name}"
+                    )
+                    
+                    data_ret = {
+                        'status': 1,
+                        'message': f'Bandwidth reset for {domain_name} completed successfully'
+                    }
+                except Websites.DoesNotExist:
+                    data_ret = {
+                        'status': 0,
+                        'message': 'Domain not found'
+                    }
+            else:
+                # Reset all domains
+                reset_count, total_reset_mb = BandwidthReset.resetWebsiteBandwidth()
+                
+                # Log the reset
+                BandwidthResetLog.objects.create(
+                    reset_type=reset_type,
+                    reset_by=admin,
+                    domains_affected=reset_count,
+                    bandwidth_reset_mb=total_reset_mb,
+                    notes="Reset bandwidth for all domains"
+                )
+                
+                data_ret = {
+                    'status': 1,
+                    'message': f'Bandwidth reset completed successfully. {reset_count} domains affected.'
+                }
+            
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+            
+        except Exception as e:
+            data_ret = {
+                'status': 0,
+                'message': f'Error resetting bandwidth: {str(e)}'
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def getBandwidthResetLogs(self, userID=None, data=None):
+        """
+        Get bandwidth reset logs
+        """
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+            
+            # Check if user has permission
+            if not ACLManager.checkIfUserIsAdmin(currentACL):
+                return ACLManager.loadErrorJson('status', 0)
+            
+            logs = BandwidthResetLog.objects.all().order_by('-reset_at')[:50]  # Last 50 entries
+            
+            log_list = []
+            for log in logs:
+                log_list.append({
+                    'id': log.id,
+                    'reset_type': log.get_reset_type_display(),
+                    'domain': log.domain.domain if log.domain else 'All Domains',
+                    'reset_by': log.reset_by.userName,
+                    'reset_at': log.reset_at.strftime('%Y-%m-%d %H:%M:%S'),
+                    'domains_affected': log.domains_affected,
+                    'bandwidth_reset_mb': log.bandwidth_reset_mb,
+                    'notes': log.notes or ''
+                })
+            
+            data_ret = {
+                'status': 1,
+                'logs': log_list
+            }
+            
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+            
+        except Exception as e:
+            data_ret = {
+                'status': 0,
+                'message': f'Error getting bandwidth reset logs: {str(e)}'
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def scheduleBandwidthReset(self, userID=None, data=None):
+        """
+        Schedule automatic bandwidth reset
+        """
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+            
+            # Check if user has permission
+            if not ACLManager.checkIfUserIsAdmin(currentACL):
+                return ACLManager.loadErrorJson('status', 0)
+            
+            schedule_type = data.get('schedule_type', 'monthly')  # monthly, weekly, daily
+            day_of_month = int(data.get('day_of_month', 1))  # 1-31 for monthly
+            hour = int(data.get('hour', 2))  # 0-23
+            minute = int(data.get('minute', 0))  # 0-59
+            
+            # Create cron job for bandwidth reset
+            from plogical.cronUtil import CronUtil
+            
+            if schedule_type == 'monthly':
+                cron_expression = f"{minute} {hour} {day_of_month} * *"
+                job_name = "cyberpanel_bandwidth_reset_monthly"
+            elif schedule_type == 'weekly':
+                cron_expression = f"{minute} {hour} * * 0"  # Sunday
+                job_name = "cyberpanel_bandwidth_reset_weekly"
+            else:  # daily
+                cron_expression = f"{minute} {hour} * * *"
+                job_name = "cyberpanel_bandwidth_reset_daily"
+            
+            # Create the cron job
+            command = f"/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/bandwidthReset.py --reset-all"
+            
+            # Remove existing bandwidth reset cron jobs
+            CronUtil.removeCronByCommand(command)
+            
+            # Add new cron job
+            CronUtil.addCronByCommand(command, cron_expression, job_name)
+            
+            data_ret = {
+                'status': 1,
+                'message': f'Bandwidth reset scheduled for {schedule_type} at {hour:02d}:{minute:02d}'
+            }
+            
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+            
+        except Exception as e:
+            data_ret = {
+                'status': 0,
+                'message': f'Error scheduling bandwidth reset: {str(e)}'
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def blockIPAddress(self, userID=None, data=None):
+        """
+        Block an IP address
+        """
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+            
+            # Check if user has permission
+            if not ACLManager.checkIfUserIsAdmin(currentACL):
+                return ACLManager.loadErrorJson('status', 0)
+            
+            ip_address = data.get('ip_address')
+            reason = data.get('reason', 'Manual block via CyberPanel')
+            
+            if not ip_address:
+                data_ret = {
+                    'status': 0,
+                    'message': 'IP address is required'
+                }
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            
+            # Import firewall utilities
+            from plogical.firewallUtilities import FirewallUtilities
+            
+            # Block the IP
+            success, message = FirewallUtilities.blockIP(ip_address, reason)
+            
+            if success:
+                data_ret = {
+                    'status': 1,
+                    'message': message
+                }
+            else:
+                data_ret = {
+                    'status': 0,
+                    'message': message
+                }
+            
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+            
+        except Exception as e:
+            data_ret = {
+                'status': 0,
+                'message': f'Error blocking IP: {str(e)}'
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def unblockIPAddress(self, userID=None, data=None):
+        """
+        Unblock an IP address
+        """
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+            
+            # Check if user has permission
+            if not ACLManager.checkIfUserIsAdmin(currentACL):
+                return ACLManager.loadErrorJson('status', 0)
+            
+            ip_address = data.get('ip_address')
+            
+            if not ip_address:
+                data_ret = {
+                    'status': 0,
+                    'message': 'IP address is required'
+                }
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            
+            # Import firewall utilities
+            from plogical.firewallUtilities import FirewallUtilities
+            
+            # Unblock the IP
+            success, message = FirewallUtilities.unblockIP(ip_address)
+            
+            if success:
+                data_ret = {
+                    'status': 1,
+                    'message': message
+                }
+            else:
+                data_ret = {
+                    'status': 0,
+                    'message': message
+                }
+            
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+            
+        except Exception as e:
+            data_ret = {
+                'status': 0,
+                'message': f'Error unblocking IP: {str(e)}'
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def getBlockedIPs(self, userID=None, data=None):
+        """
+        Get list of blocked IP addresses
+        """
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+            
+            # Check if user has permission
+            if not ACLManager.checkIfUserIsAdmin(currentACL):
+                return ACLManager.loadErrorJson('status', 0)
+            
+            # Import firewall utilities
+            from plogical.firewallUtilities import FirewallUtilities
+            
+            # Get blocked IPs
+            blocked_ips = FirewallUtilities.getBlockedIPs()
+            
+            data_ret = {
+                'status': 1,
+                'blocked_ips': blocked_ips
+            }
+            
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+            
+        except Exception as e:
+            data_ret = {
+                'status': 0,
+                'message': f'Error getting blocked IPs: {str(e)}'
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def checkIPStatus(self, userID=None, data=None):
+        """
+        Check if an IP is blocked
+        """
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+            
+            # Check if user has permission
+            if not ACLManager.checkIfUserIsAdmin(currentACL):
+                return ACLManager.loadErrorJson('status', 0)
+            
+            ip_address = data.get('ip_address')
+            
+            if not ip_address:
+                data_ret = {
+                    'status': 0,
+                    'message': 'IP address is required'
+                }
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            
+            # Import firewall utilities
+            from plogical.firewallUtilities import FirewallUtilities
+            
+            # Check if IP is blocked
+            is_blocked = FirewallUtilities.isIPBlocked(ip_address)
+            
+            data_ret = {
+                'status': 1,
+                'ip_address': ip_address,
+                'is_blocked': is_blocked
+            }
+            
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+            
+        except Exception as e:
+            data_ret = {
+                'status': 0,
+                'message': f'Error checking IP status: {str(e)}'
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
 

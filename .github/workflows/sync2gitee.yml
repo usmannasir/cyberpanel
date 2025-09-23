@@ -1,34 +1,70 @@
-name: sync2gitee
+name: Sync to Gitee
+
 on:
   push:
-    branches:
-      - '**'
-  pull_request:
-    branches:
-      - '**'
-  create:
-    branches:
-      - '**'
-  delete:
-    branches:    
-      - '**' 
+    branches: [ main, stable, v2.5.5-dev, v2.4.0-dev ]
+  schedule:
+    # Run every 6 hours to keep repositories in sync
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
 jobs:
-  repo-sync:
-    env:
-      dst_key: ${{ secrets.GITEE_PRIVATE_KEY }}
-      dst_token: ${{ secrets.GITEE_TOKEN }}
-      gitee_user: ${{ secrets.GITEE_USER }}
+  sync-to-gitee:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
     steps:
-      - uses: actions/checkout@v2
-        with:
-          persist-credentials: false
-      - name: sync github -> gitee
-        uses: Yikun/hub-mirror-action@master
-        if: env.dst_key && env.dst_token && env.gitee_user
-        with:
-          src: 'github/${{ github.repository_owner }}'
-          dst: 'gitee/${{ secrets.GITEE_USER }}'
-          dst_key: ${{ secrets.GITEE_PRIVATE_KEY }}
-          dst_token:  ${{ secrets.GITEE_TOKEN }}
-          static_list: ${{ github.event.repository.name }}
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Configure Git
+      run: |
+        git config --global user.name "CyberPanel Bot"
+        git config --global user.email "support@cyberpanel.net"
+        git config --global init.defaultBranch main
+
+    - name: Add Gitee remote
+      run: |
+        git remote add gitee https://gitee.com/${{ secrets.GITEE_USER }}/cyberpanel.git
+
+    - name: Fetch from Gitee
+      run: |
+        git fetch gitee --all --prune || echo "Failed to fetch from Gitee, continuing..."
+
+    - name: Sync branches to Gitee
+      run: |
+        # List of branches to sync
+        BRANCHES=("main" "stable" "v2.5.5-dev" "v2.4.0-dev")
+        
+        for branch in "${BRANCHES[@]}"; do
+          echo "Processing branch: $branch"
+          
+          # Check if branch exists locally
+          if git show-ref --verify --quiet refs/heads/$branch; then
+            echo "Branch $branch exists locally"
+            git checkout $branch
+          else
+            echo "Branch $branch doesn't exist locally, creating from origin"
+            git checkout -b $branch origin/$branch || continue
+          fi
+          
+          # Ensure we're on the latest from origin
+          git fetch origin $branch
+          git reset --hard origin/$branch
+          
+          # Push to Gitee with force to resolve conflicts
+          echo "Pushing $branch to Gitee..."
+          git push gitee $branch --force || echo "Failed to push $branch"
+        done
+
+    - name: Sync tags to Gitee
+      run: |
+        # Push all tags to Gitee
+        git push gitee --tags --force || echo "Failed to push some tags"
+
+    - name: Clean up
+      run: |
+        git remote remove gitee || true

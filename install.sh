@@ -31,6 +31,11 @@ elif echo $OUTPUT | grep -q "CloudLinux 8" ; then
 yum install curl wget -y 1> /dev/null
 yum update curl wget ca-certificates -y 1> /dev/null
                 SERVER_OS="CloudLinux"
+elif echo $OUTPUT | grep -q "CloudLinux 9" ; then
+        echo "Checking and installing curl and wget"
+yum install curl wget -y 1> /dev/null
+yum update curl wget ca-certificates -y 1> /dev/null
+                SERVER_OS="CloudLinux"
 elif echo $OUTPUT | grep -q "Ubuntu 20.04" ; then
 apt install -y -qq wget curl
                 SERVER_OS="Ubuntu"
@@ -38,6 +43,9 @@ elif echo $OUTPUT | grep -q "Ubuntu 22.04" ; then
 apt install -y -qq wget curl
                 SERVER_OS="Ubuntu"
 elif echo $OUTPUT | grep -q "Ubuntu 24.04" ; then
+apt install -y -qq wget curl
+                SERVER_OS="Ubuntu"
+elif echo $OUTPUT | grep -q "Ubuntu 24.04.3" ; then
 apt install -y -qq wget curl
                 SERVER_OS="Ubuntu"
 elif echo $OUTPUT | grep -q "Debian GNU/Linux 11" ; then
@@ -88,13 +96,13 @@ else
 
                 echo -e "\nUnable to detect your OS...\n"
                 echo -e "\nCyberPanel is supported on:\n"
-                echo -e "Ubuntu: 20.04, 22.04, 24.04.3\n"
+                echo -e "Ubuntu: 20.04, 22.04, 24.04, 24.04.3\n"
                 echo -e "Debian: 11, 12, 13\n"
                 echo -e "AlmaLinux: 8, 9, 10\n"
                 echo -e "RockyLinux: 8, 9\n"
                 echo -e "RHEL: 8, 9\n"
                 echo -e "CentOS: 7, 9, Stream 9\n"
-                echo -e "CloudLinux: 8\n"
+                echo -e "CloudLinux: 8, 9\n"
                 echo -e "openEuler: 20.03, 22.03\n"
                 exit 1
 fi
