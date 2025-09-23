@@ -1071,7 +1071,6 @@ if ! /usr/local/CyberCP/bin/python -c "import django" 2>/dev/null; then
   
   # Re-install requirements
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Re-installing Python requirements..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-  pip install --upgrade pip setuptools wheel packaging 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
   pip install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
 else
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Django is properly installed" | tee -a /var/log/cyberpanel_upgrade_debug.log

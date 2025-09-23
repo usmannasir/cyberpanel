@@ -253,15 +253,29 @@ log_function_end "Set_Default_Variables"
 install_package() {
     local package="$1"
     case "$Server_OS" in
-        "CentOS"|"openEuler")
-            if [[ "$Server_OS_Version" -ge 8 ]]; then
-                dnf install -y "$package"
-            else
-                yum install -y "$package"
-            fi
+        "CentOS7")
+            yum install -y "$package"
             ;;
-        "Ubuntu")
+        "CentOS8"|"CentOS9"|"CentOSStream8"|"CentOSStream9"|"RHEL8"|"RHEL9"|"AlmaLinux8"|"AlmaLinux9"|"AlmaLinux10"|"RockyLinux8"|"RockyLinux9")
+            dnf install -y "$package"
+            ;;
+        "CloudLinux7"|"CloudLinux8"|"CloudLinux9")
+            yum install -y "$package"
+            ;;
+        "Ubuntu1804"|"Ubuntu2004"|"Ubuntu2010"|"Ubuntu2204"|"Ubuntu2404"|"Ubuntu24043"|"Debian11"|"Debian12"|"Debian13")
             DEBIAN_FRONTEND=noninteractive apt install -y "$package"
+            ;;
+        "openEuler2003"|"openEuler2203"|"openEuler2403")
+            dnf install -y "$package"
+            ;;
+        *)
+            echo -e "Unknown OS: $Server_OS, attempting package installation..."
+            # Try different package managers in order of likelihood
+            if [[ "$Server_OS" =~ ^(CentOS|RHEL|AlmaLinux|RockyLinux|CloudLinux|openEuler) ]]; then
+                dnf install -y "$package" 2>/dev/null || yum install -y "$package" 2>/dev/null || echo -e "Failed to install $package"
+            else
+                DEBIAN_FRONTEND=noninteractive apt install -y "$package" 2>/dev/null || echo -e "Failed to install $package"
+            fi
             ;;
     esac
 }
@@ -270,18 +284,53 @@ install_package() {
 manage_service() {
     local service="$1"
     local action="$2"
+    
+    # Check if service exists before trying to manage it
+    if ! systemctl list-unit-files | grep -q "${service}.service"; then
+        echo -e "Service $service not found, skipping $action"
+        return 0
+    fi
+    
+    # Handle platform-specific service names
+    case "$service" in
+        "pdns")
+            if [[ "$Server_OS" =~ ^(Ubuntu|Debian) ]]; then
+                service="pdns-server"
+            fi
+            ;;
+        "pure-ftpd")
+            if [[ "$Server_OS" =~ ^(Ubuntu|Debian) ]]; then
+                service="pure-ftpd"
+            elif [[ "$Server_OS" =~ ^(CentOS|AlmaLinux|RockyLinux|RHEL|CloudLinux) ]]; then
+                service="pure-ftpd"
+            fi
+            ;;
+    esac
+    
     systemctl "$action" "$service"
 }
 
 # Helper Function for Development Tools Installation
 install_dev_tools() {
     case "$Server_OS" in
-        "CentOS"|"openEuler")
+        "CentOS7"|"CloudLinux7"|"CloudLinux8"|"CloudLinux9")
             yum groupinstall "Development Tools" -y
             yum install autoconf automake zlib-devel openssl-devel expat-devel pcre-devel libmemcached-devel cyrus-sasl* -y
             ;;
-        "Ubuntu")
+        "CentOS8"|"CentOS9"|"CentOSStream8"|"CentOSStream9"|"RHEL8"|"RHEL9"|"AlmaLinux8"|"AlmaLinux9"|"AlmaLinux10"|"RockyLinux8"|"RockyLinux9"|"openEuler2003"|"openEuler2203"|"openEuler2403")
+            dnf groupinstall "Development Tools" -y
+            dnf install autoconf automake zlib-devel openssl-devel expat-devel pcre-devel libmemcached-devel cyrus-sasl* -y
+            ;;
+        "Ubuntu1804"|"Ubuntu2004"|"Ubuntu2010"|"Ubuntu2204"|"Ubuntu2404"|"Ubuntu24043"|"Debian11"|"Debian12"|"Debian13")
             DEBIAN_FRONTEND=noninteractive apt install build-essential zlib1g-dev libexpat1-dev openssl libssl-dev libsasl2-dev libpcre3-dev git -y
+            ;;
+        *)
+            echo -e "Unknown OS: $Server_OS, attempting to install development tools..."
+            if [[ "$Server_OS" =~ ^(CentOS|RHEL|AlmaLinux|RockyLinux|CloudLinux|openEuler) ]]; then
+                dnf groupinstall "Development Tools" -y 2>/dev/null || yum groupinstall "Development Tools" -y 2>/dev/null || echo -e "Failed to install development tools"
+            else
+                DEBIAN_FRONTEND=noninteractive apt install build-essential -y 2>/dev/null || echo -e "Failed to install development tools"
+            fi
             ;;
     esac
 }
@@ -290,11 +339,74 @@ install_dev_tools() {
 install_php_packages() {
     local php_extension="$1"
     case "$Server_OS" in
-        "CentOS"|"openEuler")
-            install_package "lsphp??-${php_extension} lsphp??-pecl-${php_extension}"
+        "CentOS7"|"CloudLinux7"|"CloudLinux8"|"CloudLinux9")
+            # Find available PHP versions first
+            available_php_versions=$(ls /usr/local/lsws/lsphp* 2>/dev/null | grep -o 'lsphp[0-9]*' | sort -u)
+            if [[ -z "$available_php_versions" ]]; then
+                log_warning "No PHP versions found, skipping ${php_extension} installation"
+                return 0
+            fi
+            
+            # Try to install packages for each available PHP version
+            packages_to_install=""
+            for php_version in $available_php_versions; do
+                # Check if package exists before adding to install list
+                if yum search ${php_version}-${php_extension} 2>/dev/null | grep -q "${php_version}-${php_extension}"; then
+                    packages_to_install="${packages_to_install} ${php_version}-${php_extension}"
+                fi
+                if yum search ${php_version}-pecl-${php_extension} 2>/dev/null | grep -q "${php_version}-pecl-${php_extension}"; then
+                    packages_to_install="${packages_to_install} ${php_version}-pecl-${php_extension}"
+                fi
+            done
+            
+            if [[ -n "$packages_to_install" ]]; then
+                install_package "$packages_to_install"
+            else
+                log_warning "No matching ${php_extension} packages found for available PHP versions"
+            fi
             ;;
-        "Ubuntu")
-            install_package "lsphp*-${php_extension}"
+        "CentOS8"|"CentOS9"|"CentOSStream8"|"CentOSStream9"|"RHEL8"|"RHEL9"|"AlmaLinux8"|"AlmaLinux9"|"AlmaLinux10"|"RockyLinux8"|"RockyLinux9"|"openEuler2003"|"openEuler2203"|"openEuler2403")
+            # Find available PHP versions first
+            available_php_versions=$(ls /usr/local/lsws/lsphp* 2>/dev/null | grep -o 'lsphp[0-9]*' | sort -u)
+            if [[ -z "$available_php_versions" ]]; then
+                log_warning "No PHP versions found, skipping ${php_extension} installation"
+                return 0
+            fi
+            
+            # Try to install packages for each available PHP version
+            packages_to_install=""
+            for php_version in $available_php_versions; do
+                # Check if package exists before adding to install list
+                if dnf search ${php_version}-${php_extension} 2>/dev/null | grep -q "${php_version}-${php_extension}"; then
+                    packages_to_install="${packages_to_install} ${php_version}-${php_extension}"
+                fi
+                if dnf search ${php_version}-pecl-${php_extension} 2>/dev/null | grep -q "${php_version}-pecl-${php_extension}"; then
+                    packages_to_install="${packages_to_install} ${php_version}-pecl-${php_extension}"
+                fi
+            done
+            
+            if [[ -n "$packages_to_install" ]]; then
+                install_package "$packages_to_install"
+            else
+                log_warning "No matching ${php_extension} packages found for available PHP versions"
+            fi
+            ;;
+        "Ubuntu1804"|"Ubuntu2004"|"Ubuntu2010"|"Ubuntu2204"|"Ubuntu2404"|"Ubuntu24043"|"Debian11"|"Debian12"|"Debian13")
+            # Find available PHP versions first
+            available_php_versions=$(ls /usr/local/lsws/lsphp* 2>/dev/null | grep -o 'lsphp[0-9]*' | sort -u)
+            if [[ -z "$available_php_versions" ]]; then
+                log_warning "No PHP versions found, skipping ${php_extension} installation"
+                return 0
+            fi
+            
+            # Try to install packages for each available PHP version
+            for php_version in $available_php_versions; do
+                if apt-cache search ${php_version}-${php_extension} 2>/dev/null | grep -q "${php_version}-${php_extension}"; then
+                    install_package "${php_version}-${php_extension}"
+                else
+                    log_warning "Package ${php_version}-${php_extension} not available"
+                fi
+            done
             ;;
     esac
 }
@@ -592,26 +704,60 @@ if ! uname -m | grep -qE 'x86_64|aarch64' ; then
   exit
 fi
 
-if grep -q -E "CentOS Linux 7|CentOS Linux 8|CentOS Stream" /etc/os-release ; then
-  Server_OS="CentOS"
-elif grep -q "Red Hat Enterprise Linux" /etc/os-release ; then
-  Server_OS="RedHat"
+if grep -q "CentOS Linux 7" /etc/os-release ; then
+  Server_OS="CentOS7"
+elif grep -q "CentOS Linux 8" /etc/os-release ; then
+  Server_OS="CentOS8"
+elif grep -q "CentOS Linux 9" /etc/os-release ; then
+  Server_OS="CentOS9"
+elif grep -q "CentOS Stream 8" /etc/os-release ; then
+  Server_OS="CentOSStream8"
+elif grep -q "CentOS Stream 9" /etc/os-release ; then
+  Server_OS="CentOSStream9"
+elif grep -q "Red Hat Enterprise Linux 8" /etc/os-release ; then
+  Server_OS="RHEL8"
+elif grep -q "Red Hat Enterprise Linux 9" /etc/os-release ; then
+  Server_OS="RHEL9"
 elif grep -q "AlmaLinux-8" /etc/os-release ; then
-  Server_OS="AlmaLinux"
+  Server_OS="AlmaLinux8"
 elif grep -q "AlmaLinux-9" /etc/os-release ; then
-  Server_OS="AlmaLinux"
+  Server_OS="AlmaLinux9"
 elif grep -q "AlmaLinux-10" /etc/os-release ; then
-  Server_OS="AlmaLinux"
-elif grep -q -E "CloudLinux 7|CloudLinux 8|CloudLinux 9" /etc/os-release ; then
-  Server_OS="CloudLinux"
-elif grep -q -E "Rocky Linux" /etc/os-release ; then
-  Server_OS="RockyLinux"
-elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04|Ubuntu 20.10|Ubuntu 22.04|Ubuntu 24.04|Ubuntu 24.04.3" /etc/os-release ; then
-  Server_OS="Ubuntu"
-elif grep -q -E "Debian GNU/Linux 11|Debian GNU/Linux 12|Debian GNU/Linux 13" /etc/os-release ; then
-  Server_OS="Debian"
-elif grep -q -E "openEuler 20.03|openEuler 22.03" /etc/os-release ; then
-  Server_OS="openEuler"
+  Server_OS="AlmaLinux10"
+elif grep -q "Rocky Linux 8" /etc/os-release ; then
+  Server_OS="RockyLinux8"
+elif grep -q "Rocky Linux 9" /etc/os-release ; then
+  Server_OS="RockyLinux9"
+elif grep -q "CloudLinux 7" /etc/os-release ; then
+  Server_OS="CloudLinux7"
+elif grep -q "CloudLinux 8" /etc/os-release ; then
+  Server_OS="CloudLinux8"
+elif grep -q "CloudLinux 9" /etc/os-release ; then
+  Server_OS="CloudLinux9"
+elif grep -q "Ubuntu 18.04" /etc/os-release ; then
+  Server_OS="Ubuntu1804"
+elif grep -q "Ubuntu 20.04" /etc/os-release ; then
+  Server_OS="Ubuntu2004"
+elif grep -q "Ubuntu 20.10" /etc/os-release ; then
+  Server_OS="Ubuntu2010"
+elif grep -q "Ubuntu 22.04" /etc/os-release ; then
+  Server_OS="Ubuntu2204"
+elif grep -q "Ubuntu 24.04" /etc/os-release ; then
+  Server_OS="Ubuntu2404"
+elif grep -q "Ubuntu 24.04.3" /etc/os-release ; then
+  Server_OS="Ubuntu24043"
+elif grep -q "Debian GNU/Linux 11" /etc/os-release ; then
+  Server_OS="Debian11"
+elif grep -q "Debian GNU/Linux 12" /etc/os-release ; then
+  Server_OS="Debian12"
+elif grep -q "Debian GNU/Linux 13" /etc/os-release ; then
+  Server_OS="Debian13"
+elif grep -q "openEuler 20.03" /etc/os-release ; then
+  Server_OS="openEuler2003"
+elif grep -q "openEuler 22.03" /etc/os-release ; then
+  Server_OS="openEuler2203"
+elif grep -q "openEuler 24.03" /etc/os-release ; then
+  Server_OS="openEuler2403"
 else
   echo -e "Unable to detect your system..."
   echo -e "\nCyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, Debian 11, Debian 12, Debian 13, CentOS 7, CentOS 8, CentOS 9, RHEL 8, RHEL 9, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, RockyLinux 9, CloudLinux 7, CloudLinux 8, CloudLinux 9, openEuler 20.03, openEuler 22.03...\n"
@@ -1685,9 +1831,15 @@ if ! grep -q "pid_max" /etc/rc.local 2>/dev/null ; then
   #add internal repo server to host file before systemd-resolved is disabled
 
   if grep -i -q "systemd-resolve" /etc/resolv.conf ; then
-    systemctl stop systemd-resolved  >/dev/null 2>&1
-    systemctl disable systemd-resolved  >/dev/null 2>&1
-    systemctl mask systemd-resolved  >/dev/null 2>&1
+    # Check if systemd-resolved service exists before trying to manage it
+    if systemctl list-unit-files | grep -q "systemd-resolved.service" ; then
+      log_info "Managing systemd-resolved service"
+      systemctl stop systemd-resolved  >/dev/null 2>&1 || log_warning "Could not stop systemd-resolved (may not be running)"
+      systemctl disable systemd-resolved  >/dev/null 2>&1 || log_warning "Could not disable systemd-resolved (may not be enabled)"
+      systemctl mask systemd-resolved  >/dev/null 2>&1 || log_warning "Could not mask systemd-resolved"
+    else
+      log_info "systemd-resolved service not found, skipping management"
+    fi
   fi
 
   # Backup previous resolv.conf file
@@ -2165,34 +2317,34 @@ echo "║                                                                       
 echo "╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╝"
 
 echo -e "\n"
-echo "╔══════════════════════════════════════════════════════════════════════════════════════╗"
-echo "║                                                                                      ║"
-echo "║  🌐 ACCESS YOUR CYBERPANEL:                                                         ║"
-echo "║                                                                                      ║"
-echo "║  • URL: https://$Server_IP:8090                                                     ║"
-echo "║  • Username: admin                                                                  ║"
+echo "╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╗"
+echo "║                                                                                                               ║"
+echo "║  🌐 ACCESS YOUR CYBERPANEL:                                                                                 ║"
+echo "║                                                                                                               ║"
+echo "║  • URL: https://$Server_IP:8090                                                                             ║"
+echo "║  • Username: admin                                                                                          ║"
 if [[ "$Custom_Pass" = "True" ]]; then
-echo "║  • Password: ***** (custom password)                                               ║"
+echo "║  • Password: ***** (custom password)                                                                       ║"
 else
-echo "║  • Password: $Admin_Pass                                                           ║"
+echo "║  • Password: $Admin_Pass                                                                                   ║"
 fi
-echo "║                                                                                      ║"
-echo "║  ⚠️  Please change the default password immediately!                                ║"
-echo "║                                                                                      ║"
-echo "╚══════════════════════════════════════════════════════════════════════════════════════╝"
+echo "║                                                                                                               ║"
+echo "║  ⚠️  Please change the default password immediately!                                                        ║"
+echo "║                                                                                                               ║"
+echo "╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╝"
 
 echo -e "\n"
-echo "╔══════════════════════════════════════════════════════════════════════════════════════╗"
-echo "║                                                                                      ║"
-echo "║  📊 SYSTEM STATUS:                                                                  ║"
-echo "║                                                                                      ║"
-echo "║  💾 Disk Usage: $(df -h | awk '$NF=="/"{printf "%d/%dGB (%s)", $3,$2,$5}')                                                      ║"
-echo "║  🧠 RAM Usage:  $(free -m | awk 'NR==2{printf "%s/%sMB (%.2f%%)", $3,$2,$3*100/$2 }')                                                      ║"
-echo "║  ⏱️  Install Time: $Elapsed_Time                                                      ║"
-echo "║                                                                                      ║"
-echo "║  🎉 INSTALLATION COMPLETED SUCCESSFULLY! 🎉                                         ║"
-echo "║                                                                                      ║"
-echo "╚══════════════════════════════════════════════════════════════════════════════════════╝"
+echo "╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╗"
+echo "║                                                                                                               ║"
+echo "║  📊 SYSTEM STATUS:                                                                                            ║"
+echo "║                                                                                                               ║"
+echo "║  💾 Disk Usage: $(df -h | awk '$NF=="/"{printf "%d/%dGB (%s)", $3,$2,$5}')                                                                   ║"
+echo "║  🧠 RAM Usage:  $(free -m | awk 'NR==2{printf "%s/%sMB (%.2f%%)", $3,$2,$3*100/$2 }')                                                                   ║"
+echo "║  ⏱️  Install Time: $Elapsed_Time                                                                               ║"
+echo "║                                                                                                               ║"
+echo "║  🎉 INSTALLATION COMPLETED SUCCESSFULLY! 🎉                                                                   ║"
+echo "║                                                                                                               ║"
+echo "╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╝"
 #echo "                Visit: https://$Server_IP:7080                     "
 #echo "                WebAdmin console username: admin                   "
 #echo "                WebAdmin console password: $Webadmin_Pass          "
@@ -2200,19 +2352,25 @@ echo "╚═══════════════════════�
 #echo "                Visit: https://$Server_IP:8090/snappymail/?admin     "
 #echo "                snappymail Admin username: admin                     "
 #echo "                snappymail Admin password: $snappymailAdminPass        "
-echo "                                                                   "
-echo -e "             Run \e[31mcyberpanel help\e[39m to get FAQ info"
-echo -e "             Run \e[31mcyberpanel upgrade\e[39m to upgrade it to latest version."
-echo -e "             Run \e[31mcyberpanel utility\e[39m to access some handy tools ."
-echo "                                                                   "
-echo "              Website : https://www.cyberpanel.net                 "
-echo "              Forums  : https://forums.cyberpanel.net              "
-echo "              Wikipage: https://cyberpanel.net/KnowledgeBase/                "
-echo "              Docs    : https://cyberpanel.net/docs/               "
-echo "                                                                   "
-echo -e "            Enjoy your accelerated Internet by                  "
-echo -e "                CyberPanel & $Word 				                     "
-echo "###################################################################"
+echo "╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╗"
+echo "║                                                                                                               ║"
+echo "║  🛠️  COMMANDS & RESOURCES:                                                                                  ║"
+echo "║                                                                                                               ║"
+echo -e "║             Run \e[31mcyberpanel help\e[39m to get FAQ info                                                      ║"
+echo -e "║             Run \e[31mcyberpanel upgrade\e[39m to upgrade it to latest version.                                ║"
+echo -e "║             Run \e[31mcyberpanel utility\e[39m to access some handy tools .                                   ║"
+echo "║                                                                                                               ║"
+echo "║  🔗 OFFICIAL LINKS:                                                                                          ║"
+echo "║                                                                                                               ║"
+echo "║              Website : https://www.cyberpanel.net                                                             ║"
+echo "║              Forums  : https://forums.cyberpanel.net                                                          ║"
+echo "║              Wikipage: https://cyberpanel.net/KnowledgeBase/                                                  ║"
+echo "║              Docs    : https://cyberpanel.net/docs/                                                           ║"
+echo "║                                                                                                               ║"
+echo -e "║            Enjoy your accelerated Internet by                                                              ║"
+echo -e "║                CyberPanel & $Word                                                                          ║"
+echo "║                                                                                                               ║"
+echo "╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╝"
 
 if [[ "$Server_Provider" != "Undefined" ]]; then
   echo -e "\033[0;32m$Server_Provider\033[39m detected..."
@@ -2321,6 +2479,12 @@ if [[ ! -f /usr/local/CyberCP/bin/activate ]]; then
   exit 1
 fi
 
+# Create symlink for backward compatibility
+if [[ ! -L /usr/local/CyberPanel ]] && [[ ! -d /usr/local/CyberPanel ]]; then
+  echo -e "Creating symlink for CyberPanel virtual environment compatibility..."
+  ln -sf /usr/local/CyberCP /usr/local/CyberPanel
+fi
+
 if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" = "20" ]] ; then
   # shellcheck disable=SC1091
   . /usr/local/CyberCP/bin/activate
@@ -2339,7 +2503,6 @@ Retry_Command "pip install --default-timeout=3600 -r /usr/local/requirments.txt"
 echo -e "Verifying Django installation..."
 if ! /usr/local/CyberCP/bin/python -c "import django" 2>/dev/null; then
   echo -e "WARNING: Django not found, reinstalling requirements..."
-  pip install --upgrade pip setuptools wheel packaging
   pip install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt
 else
   echo -e "Django is properly installed"
