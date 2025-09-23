@@ -18,7 +18,8 @@ def router(request):
 
         cm = CloudManager(data, admin)
 
-        if serverUserName != 'admin':
+        # Check if user has administrator privileges through ACL
+        if admin.acl.adminStatus != 1:
             return cm.ajaxPre(0, 'Only administrator can access API.')
 
         if admin.api == 0:

@@ -44,10 +44,9 @@ def verifyLogin(request):
                 username = data.get('username', '')
                 password = data.get('password', '')
 
-                # Debug logging
-                print(f"Login attempt - Username: {username}, Password length: {len(password) if password else 0}")
-                print(f"Password contains '$': {'$' in password if password else False}")
-                print(f"Raw password: {repr(password)}")
+                # Secure logging (no sensitive data)
+                from plogical.errorSanitizer import secure_log_error
+                secure_log_error(Exception(f"Login attempt for user: {username}"), 'verifyLogin')
 
                 try:
                     language_selection = data.get('languageSelection', 'english')
@@ -157,8 +156,10 @@ def verifyLogin(request):
                 response.write(json_data)
                 return response
 
-        except BaseException as msg:
-            data = {'userID': 0, 'loginStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            from plogical.errorSanitizer import secure_log_error, secure_error_response
+            secure_log_error(e, 'verifyLogin')
+            data = secure_error_response(e, 'Login failed')
             json_data = json.dumps(data)
             return HttpResponse(json_data)
 

@@ -829,6 +829,65 @@
             </form>
         </div>
     </div>
+
+    <!-- Switch Back to OpenLiteSpeed for Enterprise Users -->
+    <div class="license-panel" ng-controller="switchToOLS">
+        <div class="card-header">
+            <h3 class="card-title">
+                <div class="card-icon">
+                    <i class="fas fa-undo"></i>
+                </div>
+                {% trans "Switch Back to OpenLiteSpeed" %}
+            </h3>
+            <span ng-hide="cyberPanelLoading" class="loading-spinner"></span>
+        </div>
+        
+        <div class="card-content">
+            <div ng-show="installBoxGen">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle alert-icon"></i>
+                    <div class="alert-content">
+                        <div class="alert-title">{% trans "Switch Back to OpenLiteSpeed" %}</div>
+                        <div class="alert-message">
+                            {% trans "You can switch back to OpenLiteSpeed at any time, even during your trial period or after it expires. This will restore your previous OpenLiteSpeed configuration." %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button type="button" ng-click="switchToOLS()" class="btn btn-primary">
+                        <i class="fas fa-undo"></i>
+                        {% trans "Switch Back to OpenLiteSpeed" %}
+                    </button>
+                </div>
+                
+                <div style="margin-top: 2rem;">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle alert-icon"></i>
+                        <div class="alert-content">
+                            <div class="alert-title">{% trans "Important Notes" %}</div>
+                            <div class="alert-message">
+                                {% trans "• This will restore your previous OpenLiteSpeed configuration from backup" %}<br>
+                                {% trans "• All LiteSpeed Enterprise features will be disabled" %}<br>
+                                {% trans "• You can switch back to Enterprise anytime with a valid license" %}<br>
+                                {% trans "• The process may take a few minutes to complete" %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Switch Back Progress -->
+            <div ng-hide="installBoxGen">
+                <h3 style="text-align: center; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 1rem;">
+                    <i class="fas fa-undo" style="font-size: 2rem; color: var(--accent-color);"></i>
+                    {% trans "Switching Back to OpenLiteSpeed" %}
+                    <span ng-hide="cyberPanelLoading" class="loading-spinner"></span>
+                </h3>
+                <div class="console-output" ng-bind="requestData"></div>
+            </div>
+        </div>
+    </div>
     {% endif %}
 
     {% if OLS %}
@@ -889,12 +948,12 @@
                         </div>
                     </div>
                     
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle alert-icon"></i>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle alert-icon"></i>
                         <div class="alert-content">
-                            <div class="alert-title" style="color: var(--danger-accent);">{% trans "Important Warning" %}</div>
+                            <div class="alert-title">{% trans "Trial Information" %}</div>
                             <div class="alert-message">
-                                {% trans "You cannot revert back to OpenLiteSpeed if you choose not to purchase a LiteSpeed Enterprise license after the 15 day trial period. We recommend you test the Enterprise trial on a separate server." %}
+                                {% trans "You can switch back to OpenLiteSpeed at any time, even during or after the trial period. The system automatically creates a backup of your OpenLiteSpeed configuration before switching to Enterprise." %}
                             </div>
                         </div>
                     </div>

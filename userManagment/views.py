@@ -3,6 +3,7 @@
 
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
+from django.db import models
 from loginSystem.views import loadLoginPage
 from loginSystem.models import Administrator, ACL
 import json
@@ -12,6 +13,7 @@ from plogical.httpProc import httpProc
 from plogical.virtualHostUtilities import virtualHostUtilities
 from CyberCP.secMiddleware import secMiddleware
 from CyberCP.SecurityLevel import SecurityLevel
+from plogical.errorSanitizer import secure_error_response, secure_log_error, handle_secure_exception
 
 
 def loadUserHome(request):
@@ -99,6 +101,13 @@ def saveChangesAPIAccess(request):
 
             if access == "Enable":
                 userAcct.api = 1
+                # When enabling API access, ensure the user has a proper token
+                # The token should be generated based on username:password format
+                # If no token exists, we'll need the user to reset their password
+                if not userAcct.token or userAcct.token == 'None' or userAcct.token == '':
+                    # Token will be generated when user changes their password
+                    # For now, set a placeholder that indicates API access is enabled but token needs generation
+                    userAcct.token = 'TOKEN_NEEDS_GENERATION'
             else:
                 userAcct.api = 0
 
@@ -107,8 +116,81 @@ def saveChangesAPIAccess(request):
             finalResponse = {'status': 1}
             json_data = json.dumps(finalResponse)
             return HttpResponse(json_data)
-    except BaseException as msg:
-        finalResponse = {'status': 0, 'errorMessage': str(msg), 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, 'saveChangesAPIAccess', request.session.get('userID', 'Unknown'))
+        finalResponse = secure_error_response(e, 'Failed to update API access settings')
+        json_data = json.dumps(finalResponse)
+        return HttpResponse(json_data)
+
+
+def fetchAPIUsers(request):
+    """
+    Fetch all users with API access enabled, with optional search functionality
+    """
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+        
+        if currentACL['admin'] != 1:
+            finalResponse = {'status': 0, "error_message": "Only administrators are allowed to perform this task."}
+            json_data = json.dumps(finalResponse)
+            return HttpResponse(json_data)
+        
+        # Get search query if provided
+        search_query = request.GET.get('search', '').strip()
+        
+        # Fetch all users with API access enabled
+        api_users = Administrator.objects.filter(api=1).select_related('acl')
+        
+        # Apply search filter if provided
+        if search_query:
+            api_users = api_users.filter(
+                models.Q(userName__icontains=search_query) |
+                models.Q(firstName__icontains=search_query) |
+                models.Q(lastName__icontains=search_query) |
+                models.Q(email__icontains=search_query)
+            )
+        
+        # Prepare user data
+        users_data = []
+        for user in api_users:
+            # Determine token status
+            token_status = "Valid"
+            if not user.token or user.token == 'None' or user.token == '':
+                token_status = "Not Generated"
+            elif user.token == 'TOKEN_NEEDS_GENERATION':
+                token_status = "Needs Generation"
+            
+            # Get ACL name
+            acl_name = user.acl.name if user.acl else "Default"
+            
+            users_data.append({
+                'id': user.pk,
+                'userName': user.userName,
+                'firstName': user.firstName,
+                'lastName': user.lastName,
+                'email': user.email,
+                'aclName': acl_name,
+                'tokenStatus': token_status,
+                'state': user.state,
+                'createdDate': user.pk,  # Using pk as a proxy for creation order
+                'lastLogin': 'N/A'  # This would need to be tracked separately
+            })
+        
+        # Sort by username
+        users_data.sort(key=lambda x: x['userName'].lower())
+        
+        finalResponse = {
+            'status': 1,
+            'users': users_data,
+            'totalCount': len(users_data)
+        }
+        json_data = json.dumps(finalResponse)
+        return HttpResponse(json_data)
+        
+    except Exception as e:
+        secure_log_error(e, 'fetchAPIUsers', request.session.get('userID', 'Unknown'))
+        finalResponse = secure_error_response(e, 'Failed to fetch API users')
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
 
@@ -133,6 +215,7 @@ def submitUserCreation(request):
             password = data['password']
             websitesLimit = data['websitesLimit']
             selectedACL = data['selectedACL']
+            selectedHomeDirectory = data.get('selectedHomeDirectory', '')
 
             if ACLManager.CheckRegEx("^[\w'\-,.][^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]]{2,}$", firstName) == 0:
                 data_ret = {'status': 0, 'createStatus': 0, 'error_message': 'First Name can only contain alphabetic characters, and should be more than 2 characters long...'}
@@ -239,13 +322,51 @@ def submitUserCreation(request):
                 final_json = json.dumps(data_ret)
                 return HttpResponse(final_json)
 
+            # Handle home directory assignment
+            from .homeDirectoryManager import HomeDirectoryManager
+            from .models import HomeDirectory, UserHomeMapping
+            
+            if selectedHomeDirectory:
+                # Use selected home directory
+                try:
+                    home_dir = HomeDirectory.objects.get(id=selectedHomeDirectory)
+                    home_path = home_dir.path
+                except HomeDirectory.DoesNotExist:
+                    home_path = HomeDirectoryManager.getBestHomeDirectory()
+            else:
+                # Auto-select best home directory
+                home_path = HomeDirectoryManager.getBestHomeDirectory()
+                try:
+                    home_dir = HomeDirectory.objects.get(path=home_path)
+                except HomeDirectory.DoesNotExist:
+                    # Create home directory entry if it doesn't exist
+                    home_dir = HomeDirectory.objects.create(
+                        name=home_path.split('/')[-1],
+                        path=home_path,
+                        is_active=True,
+                        is_default=(home_path == '/home')
+                    )
+            
+            # Create user directory
+            if HomeDirectoryManager.createUserDirectory(userName, home_path):
+                # Create user-home mapping
+                UserHomeMapping.objects.create(
+                    user=newAdmin,
+                    home_directory=home_dir
+                )
+            else:
+                # Log error but don't fail user creation
+                from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+                logging.writeToFile(f"Failed to create user directory for {userName} in {home_path}")
+
             data_ret = {'status': 1, 'createStatus': 1,
                         'error_message': "None"}
             final_json = json.dumps(data_ret)
             return HttpResponse(final_json)
 
-        except BaseException as msg:
-            data_ret = {'status': 0, 'createStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, 'submitUserCreation', request.session.get('userID', 'Unknown'))
+            data_ret = secure_error_response(e, 'Failed to create user account')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -318,8 +439,9 @@ def fetchUserDetails(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'fetchStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, 'fetchUserDetails', request.session.get('userID', 'Unknown'))
+            data_ret = secure_error_response(e, 'Failed to fetch user details')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -371,16 +493,22 @@ def saveModifications(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            token = hashPassword.generateToken(accountUsername, data['passwordByPass'])
-            password = hashPassword.hash_password(data['passwordByPass'])
+            # Only update password if a new one is provided
+            if 'passwordByPass' in data and data['passwordByPass'] and data['passwordByPass'].strip():
+                token = hashPassword.generateToken(accountUsername, data['passwordByPass'])
+                password = hashPassword.hash_password(data['passwordByPass'])
+                user.password = password
+                user.token = token
 
             user.firstName = firstName
             user.lastName = lastName
             user.email = email
-            user.password = password
-            user.token = token
             user.type = 0
             user.twoFA = twofa
+
+            # If 2FA is being disabled, clear the secret key
+            if twofa == 0:
+                user.secretKey = 'None'
 
             if securityLevel == 'LOW':
                 user.securityLevel = secMiddleware.LOW
@@ -400,8 +528,9 @@ def saveModifications(request):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'status': 0, 'saveStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, 'saveModifications', request.session.get('userID', 'Unknown'))
+            data_ret = secure_error_response(e, 'Failed to save user modifications')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -484,8 +613,9 @@ def submitUserDeletion(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'status': 0, 'deleteStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, 'submitUserDeletion', request.session.get('userID', 'Unknown'))
+            data_ret = secure_error_response(e, 'Failed to delete user account')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -526,8 +656,9 @@ def createACLFunc(request):
 
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
-    except BaseException as msg:
-        finalResponse = {'status': 0, 'errorMessage': str(msg), 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, 'createACLFunc', request.session.get('userID', 'Unknown'))
+        finalResponse = secure_error_response(e, 'Failed to create ACL')
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
 
@@ -560,8 +691,9 @@ def deleteACLFunc(request):
 
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
-    except BaseException as msg:
-        finalResponse = {'status': 0, 'errorMessage': str(msg), 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, 'deleteACLFunc', request.session.get('userID', 'Unknown'))
+        finalResponse = secure_error_response(e, 'Failed to delete ACL')
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
 
@@ -592,8 +724,9 @@ def fetchACLDetails(request):
 
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
-    except BaseException as msg:
-        finalResponse = {'status': 0, 'errorMessage': str(msg)}
+    except Exception as e:
+        secure_log_error(e, 'fetchACLDetails', request.session.get('userID', 'Unknown'))
+        finalResponse = secure_error_response(e, 'Failed to fetch ACL details')
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
 
@@ -632,8 +765,9 @@ def submitACLModifications(request):
 
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
-    except BaseException as msg:
-        finalResponse = {'status': 0, 'errorMessage': str(msg), 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, 'submitACLModifications', request.session.get('userID', 'Unknown'))
+        finalResponse = secure_error_response(e, 'Failed to submit ACL modifications')
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
 
@@ -692,8 +826,9 @@ def changeACLFunc(request):
 
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
-    except BaseException as msg:
-        finalResponse = {'status': 0, 'errorMessage': str(msg), 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, 'changeACLFunc', request.session.get('userID', 'Unknown'))
+        finalResponse = secure_error_response(e, 'Failed to change user ACL')
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
 
@@ -769,8 +904,9 @@ def saveResellerChanges(request):
         finalResponse = {'status': 1}
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
-    except BaseException as msg:
-        finalResponse = {'status': 0, 'errorMessage': str(msg), 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, 'saveResellerChanges', request.session.get('userID', 'Unknown'))
+        finalResponse = secure_error_response(e, 'Failed to save reseller changes')
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
 
@@ -917,12 +1053,86 @@ def controlUserState(request):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'status': 0, 'saveStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, 'controlUserState', request.session.get('userID', 'Unknown'))
+            data_ret = secure_error_response(e, 'Failed to control user state')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
     except KeyError:
         data_ret = {'status': 0, 'saveStatus': 0, 'error_message': "Not logged in as admin", }
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def userMigration(request):
+    """Load user migration interface"""
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+        
+        if currentACL['admin'] != 1:
+            return ACLManager.loadError()
+        
+        proc = httpProc(request, 'userManagment/userMigration.html', {}, 'admin')
+        return proc.render()
+        
+    except Exception as e:
+        logging.CyberCPLogFileWriter.writeToFile(f"Error loading user migration: {str(e)}")
+        return ACLManager.loadError()
+
+
+def disable2FA(request):
+    """
+    Disable 2FA for a specific user (admin function)
+    """
+    try:
+        val = request.session['userID']
+        currentACL = ACLManager.loadedACL(val)
+        
+        if currentACL['admin'] != 1:
+            data_ret = {'status': 0, 'error_message': 'Unauthorized access. Admin privileges required.'}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+        
+        if request.method == 'POST':
+            data = json.loads(request.body)
+            accountUsername = data.get('accountUsername')
+            
+            if not accountUsername:
+                data_ret = {'status': 0, 'error_message': 'Username is required.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            
+            try:
+                user = Administrator.objects.get(userName=accountUsername)
+                
+                # Disable 2FA and clear secret key
+                user.twoFA = 0
+                user.secretKey = 'None'
+                user.save()
+                
+                from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+                logging.writeToFile(f'2FA disabled for user: {accountUsername} by admin: {val}')
+                
+                data_ret = {
+                    'status': 1, 
+                    'error_message': '2FA successfully disabled for user.',
+                    'message': f'Two-factor authentication has been disabled for user {accountUsername}.'
+                }
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+                
+            except Administrator.DoesNotExist:
+                data_ret = {'status': 0, 'error_message': 'User not found.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+        
+        data_ret = {'status': 0, 'error_message': 'Invalid request method.'}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+        
+    except Exception as e:
+        secure_log_error(e, 'disable2FA', request.session.get('userID', 'Unknown'))
+        data_ret = secure_error_response(e, 'Failed to disable 2FA')
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)

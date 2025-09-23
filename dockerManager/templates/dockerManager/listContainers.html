@@ -314,6 +314,7 @@
         overflow: hidden;
         border: 1px solid var(--border-color, #e8e9ff);
         margin-bottom: 2rem;
+        table-layout: fixed;
     }
     
     .containers-table thead {
@@ -613,11 +614,11 @@
                 <table class="containers-table">
                     <thead>
                         <tr>
-                            <th>{% trans "Container" %}</th>
-                            <th>{% trans "Owner" %}</th>
-                            <th>{% trans "Image" %}</th>
-                            <th>{% trans "Tag" %}</th>
-                            <th style="text-align: center;">{% trans "Actions" %}</th>
+                            <th style="width: 25%;">{% trans "Container" %}</th>
+                            <th style="width: 15%;">{% trans "Owner" %}</th>
+                            <th style="width: 25%;">{% trans "Image" %}</th>
+                            <th style="width: 15%;">{% trans "Tag" %}</th>
+                            <th style="width: 20%; text-align: center;">{% trans "Actions" %}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -703,9 +704,9 @@
                 <table class="containers-table">
                     <thead>
                         <tr>
-                            <th>{% trans "Container" %}</th>
-                            <th>{% trans "Status" %}</th>
-                            <th style="text-align: center;">{% trans "Actions" %}</th>
+                            <th style="width: 40%;">{% trans "Container" %}</th>
+                            <th style="width: 20%;">{% trans "Status" %}</th>
+                            <th style="width: 40%; text-align: center;">{% trans "Actions" %}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -765,25 +766,61 @@
 
     <!-- Container Logs Modal -->
 <div id="logs" class="modal fade" role="dialog">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
                 <h4 class="modal-title">
                     <i class="fas fa-file-alt" style="margin-right: 0.5rem;"></i>
                     {% trans "Container Logs" %}
+                    <small class="text-muted" ng-if="logInfo">
+                        - Status: <span class="badge badge-info">{$ logInfo.container_status $}</span>
+                        <span ng-if="logInfo.log_count"> | Lines: <span class="badge badge-secondary">{$ logInfo.log_count $}</span></span>
+                    </small>
                 </h4>
                 <button type="button" class="close" data-dismiss="modal" 
                         style="font-size: 1.5rem; background: transparent; border: none;">&times;</button>
             </div>
-            <div class="modal-body">
-                <textarea name="logs" class="form-control" style="font-family: monospace; height: 400px; resize: vertical;" 
-                          readonly>{$ logs $}</textarea>
+            <div class="modal-body" style="padding: 0;">
+                <!-- Log Controls -->
+                <div class="bg-light p-2 border-bottom">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-sm btn-outline-primary" ng-click="showLog('', true)">
+                                    <i class="fas fa-sync-alt"></i> Refresh
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" ng-click="scrollToTop()">
+                                    <i class="fas fa-arrow-up"></i> Top
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" ng-click="scrollToBottom()">
+                                    <i class="fas fa-arrow-down"></i> Bottom
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-info" ng-click="clearLogs()">
+                                    <i class="fas fa-trash"></i> Clear
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle"></i>
+                                Use Ctrl+F to search within logs
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Log Display -->
+                <div id="logContainer" style="height: 500px; overflow-y: auto; background: #1e1e1e; color: #d4d4d4; padding: 15px; font-family: 'Consolas', 'Monaco', 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word;">
+                    <div ng-if="logs === 'Loading...'" class="text-center text-muted">
+                        <i class="fas fa-spinner fa-spin"></i> Loading logs...
+                    </div>
+                    <div ng-if="logs && logs !== 'Loading...'" ng-bind-html="formattedLogs"></div>
+                    <div ng-if="!logs || logs === ''" class="text-center text-muted">
+                        <i class="fas fa-file-alt"></i> No logs available
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" ng-click="showLog('', true)">
-                    <i class="fas fa-sync-alt"></i>
-                    {% trans "Refresh" %}
-                </button>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">
                     <i class="fas fa-times"></i>
                     {% trans "Close" %}

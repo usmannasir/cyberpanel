@@ -9,6 +9,7 @@ import re
 
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
+from plogical.errorSanitizer import ErrorSanitizer
 import shlex
 import subprocess
 import shutil
@@ -567,8 +568,9 @@ class Upgrade:
             writeToFile.writelines(varTmp)
             writeToFile.close()
 
-        except BaseException as msg:
-            Upgrade.stdOut(str(msg) + " [mountTemp]", 0)
+        except Exception as e:
+            ErrorSanitizer.log_error_securely(e, 'mountTemp')
+            Upgrade.stdOut("Failed to mount temporary filesystem [mountTemp]", 0)
 
     @staticmethod
     def dockerUsers():
@@ -738,8 +740,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             os.chdir(cwd)
 
-        except BaseException as msg:
-            Upgrade.stdOut(str(msg) + " [download_install_phpmyadmin]", 0)
+        except Exception as e:
+            ErrorSanitizer.log_error_securely(e, 'download_install_phpmyadmin')
+            Upgrade.stdOut("Failed to download and install phpMyAdmin [download_install_phpmyadmin]", 0)
 
     @staticmethod
     def setupComposer():
@@ -1028,8 +1031,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             
             Upgrade.stdOut("SnappyMail installation completed.", 0)
 
-        except BaseException as msg:
-            Upgrade.stdOut(str(msg) + " [downoad_and_install_raindloop]", 0)
+        except Exception as e:
+            ErrorSanitizer.log_error_securely(e, 'downoad_and_install_raindloop')
+            Upgrade.stdOut("Failed to download and install Rainloop [downoad_and_install_raindloop]", 0)
 
         return 1
 
@@ -1049,8 +1053,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 pass
 
             return (version_number + "." + version_build + ".tar.gz")
-        except BaseException as msg:
-            Upgrade.stdOut(str(msg) + ' [downloadLink]')
+        except Exception as e:
+            ErrorSanitizer.log_error_securely(e, 'downloadLink')
+            Upgrade.stdOut("Failed to download required files [downloadLink]")
             os._exit(0)
 
     @staticmethod
@@ -1063,8 +1068,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             command = "chmod +x /usr/local/CyberCP/cli/cyberPanel.py"
             Upgrade.executioner(command, 'CLI Permissions', 0)
 
-        except OSError as msg:
-            Upgrade.stdOut(str(msg) + " [setupCLI]")
+        except OSError as e:
+            ErrorSanitizer.log_error_securely(e, 'setupCLI')
+            Upgrade.stdOut("Failed to setup CLI [setupCLI]")
             return 0
 
     @staticmethod
@@ -1136,8 +1142,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             cursor = conn.cursor()
             return conn, cursor
 
-        except BaseException as msg:
-            Upgrade.stdOut(str(msg))
+        except Exception as e:
+            ErrorSanitizer.log_error_securely(e, 'database_connection')
+            Upgrade.stdOut("Failed to establish database connection")
             return 0, 0
 
     @staticmethod
@@ -1381,8 +1388,8 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             try:
                 cursor.execute("UPDATE loginSystem_acl SET config = '%s' where name = 'admin'" % (Upgrade.AdminACL))
-            except BaseException as msg:
-                print(str(msg))
+            except Exception as e:
+                ErrorSanitizer.log_error_securely(e, 'applyLoginSystemMigrations')
                 try:
                     import sleep
                 except:
@@ -2197,6 +2204,22 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
             except:
                 pass
 
+            # Add new fields for network configuration and extra options
+            try:
+                cursor.execute('ALTER TABLE dockerManager_containers ADD network VARCHAR(100) DEFAULT "bridge"')
+            except:
+                pass
+
+            try:
+                cursor.execute('ALTER TABLE dockerManager_containers ADD network_mode VARCHAR(50) DEFAULT "bridge"')
+            except:
+                pass
+
+            try:
+                cursor.execute('ALTER TABLE dockerManager_containers ADD extra_options LONGTEXT DEFAULT "{}"')
+            except:
+                pass
+
             try:
                 connection.close()
             except:
@@ -2983,8 +3006,9 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
 
             return 1, None
 
-        except BaseException as msg:
-            return 0, str(msg)
+        except Exception as e:
+            ErrorSanitizer.log_error_securely(e, 'installLSCPD')
+            return 0, "Failed to install LSCPD"
 
     @staticmethod
     def installLSCPD(branch):
@@ -3074,8 +3098,9 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
 
                 Upgrade.stdOut("LSCPD successfully installed!")
 
-        except BaseException as msg:
-            Upgrade.stdOut(str(msg) + " [installLSCPD]")
+        except Exception as e:
+            ErrorSanitizer.log_error_securely(e, 'installLSCPD')
+            Upgrade.stdOut("Failed to install LSCPD [installLSCPD]")
 
     ### disable dkim signing in rspamd in ref to https://github.com/usmannasir/cyberpanel/issues/1176
     @staticmethod
@@ -3363,8 +3388,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
 
             Upgrade.stdOut("Permissions updated.")
 
-        except BaseException as msg:
-            Upgrade.stdOut(str(msg) + " [fixPermissions]")
+        except Exception as e:
+            ErrorSanitizer.log_error_securely(e, 'fixPermissions')
+            Upgrade.stdOut("Failed to fix permissions [fixPermissions]")
 
     @staticmethod
     def AutoUpgradeAcme():
@@ -3807,8 +3833,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
 
             Upgrade.stdOut("Dovecot upgraded.")
 
-        except BaseException as msg:
-            Upgrade.stdOut(str(msg) + " [upgradeDovecot]")
+        except Exception as e:
+            ErrorSanitizer.log_error_securely(e, 'upgradeDovecot')
+            Upgrade.stdOut("Failed to upgrade Dovecot [upgradeDovecot]")
 
     @staticmethod
     def installRestic():
@@ -4052,317 +4079,181 @@ vmail
 
     @staticmethod
     def CreateMissingPoolsforFPM():
-        ##### apache configs
+        """
+        Create missing PHP-FPM pool configurations for all PHP versions.
+        This function ensures all PHP versions have proper pool configurations
+        to prevent ImunifyAV/Imunify360 installation failures.
+        """
+        try:
+            # Detect OS and set paths
+            CentOSPath = '/etc/redhat-release'
+            
+            if os.path.exists(CentOSPath):
+                # CentOS/RHEL/CloudLinux paths
+                serverRootPath = '/etc/httpd'
+                configBasePath = '/etc/httpd/conf.d/'
+                sockPath = '/var/run/php-fpm/'
+                runAsUser = 'apache'
+                group = 'nobody'
+                
+                # Define PHP pool paths for CentOS
+                php_paths = {
+                    '5.4': '/opt/remi/php54/root/etc/php-fpm.d/',
+                    '5.5': '/opt/remi/php55/root/etc/php-fpm.d/',
+                    '5.6': '/etc/opt/remi/php56/php-fpm.d/',
+                    '7.0': '/etc/opt/remi/php70/php-fpm.d/',
+                    '7.1': '/etc/opt/remi/php71/php-fpm.d/',
+                    '7.2': '/etc/opt/remi/php72/php-fpm.d/',
+                    '7.3': '/etc/opt/remi/php73/php-fpm.d/',
+                    '7.4': '/etc/opt/remi/php74/php-fpm.d/',
+                    '8.0': '/etc/opt/remi/php80/php-fpm.d/',
+                    '8.1': '/etc/opt/remi/php81/php-fpm.d/',
+                    '8.2': '/etc/opt/remi/php82/php-fpm.d/',
+                    '8.3': '/etc/opt/remi/php83/php-fpm.d/',
+                    '8.4': '/etc/opt/remi/php84/php-fpm.d/',
+                    '8.5': '/etc/opt/remi/php85/php-fpm.d/'
+                }
+            else:
+                # Ubuntu/Debian paths
+                serverRootPath = '/etc/apache2'
+                configBasePath = '/etc/apache2/sites-enabled/'
+                sockPath = '/var/run/php/'
+                runAsUser = 'www-data'
+                group = 'nogroup'
+                
+                # Define PHP pool paths for Ubuntu
+                php_paths = {
+                    '5.4': '/etc/php/5.4/fpm/pool.d/',
+                    '5.5': '/etc/php/5.5/fpm/pool.d/',
+                    '5.6': '/etc/php/5.6/fpm/pool.d/',
+                    '7.0': '/etc/php/7.0/fpm/pool.d/',
+                    '7.1': '/etc/php/7.1/fpm/pool.d/',
+                    '7.2': '/etc/php/7.2/fpm/pool.d/',
+                    '7.3': '/etc/php/7.3/fpm/pool.d/',
+                    '7.4': '/etc/php/7.4/fpm/pool.d/',
+                    '8.0': '/etc/php/8.0/fpm/pool.d/',
+                    '8.1': '/etc/php/8.1/fpm/pool.d/',
+                    '8.2': '/etc/php/8.2/fpm/pool.d/',
+                    '8.3': '/etc/php/8.3/fpm/pool.d/',
+                    '8.4': '/etc/php/8.4/fpm/pool.d/',
+                    '8.5': '/etc/php/8.5/fpm/pool.d/'
+                }
 
-        CentOSPath = '/etc/redhat-release'
+            # Check if server root exists
+            if not os.path.exists(serverRootPath):
+                logging.CyberCPLogFileWriter.writeToFile(f'Server root path not found: {serverRootPath}')
+                return 1
 
-        if os.path.exists(CentOSPath):
+            # Create pool configurations for all PHP versions
+            for version, pool_path in php_paths.items():
+                if os.path.exists(pool_path):
+                    www_conf = os.path.join(pool_path, 'www.conf')
+                    
+                    # Skip if www.conf already exists
+                    if os.path.exists(www_conf):
+                        logging.CyberCPLogFileWriter.writeToFile(f'PHP {version} pool config already exists: {www_conf}')
+                        continue
+                    
+                    # Create the pool configuration
+                    pool_name = f'php{version.replace(".", "")}default'
+                    sock_name = f'php{version}-fpm.sock'
+                    
+                    content = f'''[{pool_name}]
+user = {runAsUser}
+group = {runAsUser}
+listen = {sockPath}{sock_name}
+listen.owner = {runAsUser}
+listen.group = {group}
+listen.mode = 0660
+pm = dynamic
+pm.max_children = 5
+pm.start_servers = 2
+pm.min_spare_servers = 1
+pm.max_spare_servers = 3
+pm.max_requests = 1000
+pm.status_path = /status
+ping.path = /ping
+ping.response = pong
+request_terminate_timeout = 300
+request_slowlog_timeout = 10
+slowlog = /var/log/php{version}-fpm-slow.log
+'''
+                    
+                    try:
+                        # Write the configuration file
+                        with open(www_conf, 'w') as f:
+                            f.write(content)
+                        
+                        # Set proper permissions
+                        os.chown(www_conf, 0, 0)  # root:root
+                        os.chmod(www_conf, 0o644)
+                        
+                        logging.CyberCPLogFileWriter.writeToFile(f'Created PHP {version} pool config: {www_conf}')
+                        
+                    except Exception as e:
+                        logging.CyberCPLogFileWriter.writeToFile(f'Error creating PHP {version} pool config: {str(e)}')
+                else:
+                    logging.CyberCPLogFileWriter.writeToFile(f'PHP {version} pool directory not found: {pool_path}')
 
-            serverRootPath = '/etc/httpd'
-            configBasePath = '/etc/httpd/conf.d/'
-            php54Path = '/opt/remi/php54/root/etc/php-fpm.d/'
-            php55Path = '/opt/remi/php55/root/etc/php-fpm.d/'
-            php56Path = '/etc/opt/remi/php56/php-fpm.d/'
-            php70Path = '/etc/opt/remi/php70/php-fpm.d/'
-            php71Path = '/etc/opt/remi/php71/php-fpm.d/'
-            php72Path = '/etc/opt/remi/php72/php-fpm.d/'
-            php73Path = '/etc/opt/remi/php73/php-fpm.d/'
-
-            php74Path = '/etc/opt/remi/php74/php-fpm.d/'
-
-            php80Path = '/etc/opt/remi/php80/php-fpm.d/'
-            php81Path = '/etc/opt/remi/php81/php-fpm.d/'
-            php82Path = '/etc/opt/remi/php82/php-fpm.d/'
-
-            php83Path = '/etc/opt/remi/php83/php-fpm.d/'
-            php84Path = '/etc/opt/remi/php84/php-fpm.d/'
-            php85Path = '/etc/opt/remi/php85/php-fpm.d/'
-
-            serviceName = 'httpd'
-            sockPath = '/var/run/php-fpm/'
-            runAsUser = 'apache'
-        else:
-            serverRootPath = '/etc/apache2'
-            configBasePath = '/etc/apache2/sites-enabled/'
-
-            php54Path = '/etc/php/5.4/fpm/pool.d/'
-            php55Path = '/etc/php/5.5/fpm/pool.d/'
-            php56Path = '/etc/php/5.6/fpm/pool.d/'
-            php70Path = '/etc/php/7.0/fpm/pool.d/'
-            php71Path = '/etc/php/7.1/fpm/pool.d/'
-            php72Path = '/etc/php/7.2/fpm/pool.d/'
-            php73Path = '/etc/php/7.3/fpm/pool.d/'
-
-            php74Path = '/etc/php/7.4/fpm/pool.d/'
-            php80Path = '/etc/php/8.0/fpm/pool.d/'
-            php81Path = '/etc/php/8.1/fpm/pool.d/'
-            php82Path = '/etc/php/8.2/fpm/pool.d/'
-            php83Path = '/etc/php/8.3/fpm/pool.d/'
-            php84Path = '/etc/php/8.4/fpm/pool.d/'
-            php85Path = '/etc/php/8.5/fpm/pool.d/'
-
-            serviceName = 'apache2'
-            sockPath = '/var/run/php/'
-            runAsUser = 'www-data'
-
-        #####
-
-        if not os.path.exists(serverRootPath):
+            # Restart PHP-FPM services to apply configurations
+            Upgrade.restartPHPFPMServices()
+            
+            return 0
+            
+        except Exception as e:
+            logging.CyberCPLogFileWriter.writeToFile(f'Error in CreateMissingPoolsforFPM: {str(e)}')
             return 1
 
-        if os.path.exists(php54Path):
-            content = f"""
-[php54default]
-user = {runAsUser}
-group = {runAsUser}
-listen ={sockPath}php5.4-fpm.sock
-listen.owner = {runAsUser}
-listen.group = {runAsUser}
-pm = dynamic
-pm.max_children = 5
-pm.start_servers = 2
-pm.min_spare_servers = 1
-pm.max_spare_servers = 3
-"""
-            WriteToFile = open(f'{php54Path}www.conf', 'w')
-            WriteToFile.write(content)
-            WriteToFile.close()
-
-        if os.path.exists(php55Path):
-            content = f'''
-[php55default]
-user = {runAsUser}
-group = {runAsUser}
-listen ={sockPath}php5.5-fpm.sock
-listen.owner = {runAsUser}
-listen.group = {runAsUser}
-pm = dynamic
-pm.max_children = 5
-pm.start_servers = 2
-pm.min_spare_servers = 1
-pm.max_spare_servers = 3
-'''
-            WriteToFile = open(f'{php55Path}www.conf', 'w')
-            WriteToFile.write(content)
-            WriteToFile.close()
-
-        if os.path.exists(php56Path):
-            content = f'''
-[php56default]
-user = {runAsUser}
-group = {runAsUser}
-listen ={sockPath}php5.6-fpm.sock
-listen.owner = {runAsUser}
-listen.group = {runAsUser}
-pm = dynamic
-pm.max_children = 5
-pm.start_servers = 2
-pm.min_spare_servers = 1
-pm.max_spare_servers = 3
-'''
-            WriteToFile = open(f'{php56Path}www.conf', 'w')
-            WriteToFile.write(content)
-            WriteToFile.close()
-
-        if os.path.exists(php70Path):
-            content = f'''
-[php70default]
-user = {runAsUser}
-group = {runAsUser}
-listen ={sockPath}php7.0-fpm.sock
-listen.owner = {runAsUser}
-listen.group = {runAsUser}
-pm = dynamic
-pm.max_children = 5
-pm.start_servers = 2
-pm.min_spare_servers = 1
-pm.max_spare_servers = 3
-'''
-            WriteToFile = open(f'{php70Path}www.conf', 'w')
-            WriteToFile.write(content)
-            WriteToFile.close()
-
-        if os.path.exists(php71Path):
-            content = f'''
-[php71default]
-user = {runAsUser}
-group = {runAsUser}
-listen ={sockPath}php7.1-fpm.sock
-listen.owner = {runAsUser}
-listen.group = {runAsUser}
-pm = dynamic
-pm.max_children = 5
-pm.start_servers = 2
-pm.min_spare_servers = 1
-pm.max_spare_servers = 3
-'''
-            WriteToFile = open(f'{php71Path}www.conf', 'w')
-            WriteToFile.write(content)
-            WriteToFile.close()
-
-        if os.path.exists(php72Path):
-            content = f'''
-[php72default]
-user = {runAsUser}
-group = {runAsUser}
-listen ={sockPath}php7.2-fpm.sock
-listen.owner = {runAsUser}
-listen.group = {runAsUser}
-pm = dynamic
-pm.max_children = 5
-pm.start_servers = 2
-pm.min_spare_servers = 1
-pm.max_spare_servers = 3
-'''
-            WriteToFile = open(f'{php72Path}www.conf', 'w')
-            WriteToFile.write(content)
-            WriteToFile.close()
-
-        if os.path.exists(php73Path):
-            content = f'''
-[php73default]
-user = {runAsUser}
-group = {runAsUser}
-listen ={sockPath}php7.3-fpm.sock
-listen.owner = {runAsUser}
-listen.group = {runAsUser}
-pm = dynamic
-pm.max_children = 5
-pm.start_servers = 2
-pm.min_spare_servers = 1
-pm.max_spare_servers = 3
-'''
-            WriteToFile = open(f'{php73Path}www.conf', 'w')
-            WriteToFile.write(content)
-            WriteToFile.close()
-
-        if os.path.exists(php74Path):
-            content = f'''
-[php74default]
-user = {runAsUser}
-group = {runAsUser}
-listen ={sockPath}php7.4-fpm.sock
-listen.owner = {runAsUser}
-listen.group = {runAsUser}
-pm = dynamic
-pm.max_children = 5
-pm.start_servers = 2
-pm.min_spare_servers = 1
-pm.max_spare_servers = 3
-'''
-            WriteToFile = open(f'{php74Path}www.conf', 'w')
-            WriteToFile.write(content)
-            WriteToFile.close()
-
-        if os.path.exists(php80Path):
-            content = f'''
-[php80default]
-user = {runAsUser}
-group = {runAsUser}
-listen ={sockPath}php8.0-fpm.sock
-listen.owner = {runAsUser}
-listen.group = {runAsUser}
-pm = dynamic
-pm.max_children = 5
-pm.start_servers = 2
-pm.min_spare_servers = 1
-pm.max_spare_servers = 3
-
-'''
-            WriteToFile = open(f'{php80Path}www.conf', 'w')
-            WriteToFile.write(content)
-            WriteToFile.close()
-
-        if os.path.exists(php81Path):
-            content = f'''
-[php81default]
-user = {runAsUser}
-group = {runAsUser}
-listen ={sockPath}php8.1-fpm.sock
-listen.owner = {runAsUser}
-listen.group = {runAsUser}
-pm = dynamic
-pm.max_children = 5
-pm.start_servers = 2
-pm.min_spare_servers = 1
-pm.max_spare_servers = 3
-
-'''
-            WriteToFile = open(f'{php81Path}www.conf', 'w')
-            WriteToFile.write(content)
-            WriteToFile.close()
-        if os.path.exists(php82Path):
-            content = f'''
-[php82default]
-user = {runAsUser}
-group = {runAsUser}
-listen ={sockPath}php8.2-fpm.sock
-listen.owner = {runAsUser}
-listen.group = {runAsUser}
-pm = dynamic
-pm.max_children = 5
-pm.start_servers = 2
-pm.min_spare_servers = 1
-pm.max_spare_servers = 3
+    @staticmethod
+    def restartPHPFPMServices():
+        """
+        Restart all PHP-FPM services to apply new pool configurations.
+        This ensures that ImunifyAV/Imunify360 installation will work properly.
+        """
+        try:
+            # Define all possible PHP versions
+            php_versions = ['5.4', '5.5', '5.6', '7.0', '7.1', '7.2', '7.3', '7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5']
             
-'''
-            WriteToFile = open(f'{php82Path}www.conf', 'w')
-            WriteToFile.write(content)
-            WriteToFile.close()
-
-        if os.path.exists(php83Path):
-            content = f'''
-[php83default]
-user = {runAsUser}
-group = {runAsUser}
-listen ={sockPath}php8.3-fpm.sock
-listen.owner = {runAsUser}
-listen.group = {runAsUser}
-pm = dynamic
-pm.max_children = 5
-pm.start_servers = 2
-pm.min_spare_servers = 1
-pm.max_spare_servers = 3
-'''
-            WriteToFile = open(f'{php83Path}www.conf', 'w')
-            WriteToFile.write(content)
-            WriteToFile.close()
-
-        if os.path.exists(php84Path):
-            content = f'''
-[php84default]
-user = {runAsUser}
-group = {runAsUser}
-listen ={sockPath}php8.4-fpm.sock
-listen.owner = {runAsUser}
-listen.group = {runAsUser}
-pm = dynamic
-pm.max_children = 5
-pm.start_servers = 2
-pm.min_spare_servers = 1
-pm.max_spare_servers = 3
-'''
-            WriteToFile = open(f'{php84Path}www.conf', 'w')
-            WriteToFile.write(content)
-            WriteToFile.close()
-
-        if os.path.exists(php85Path):
-            content = f'''
-[php85default]
-user = {runAsUser}
-group = {runAsUser}
-listen ={sockPath}php8.5-fpm.sock
-listen.owner = {runAsUser}
-listen.group = {runAsUser}
-pm = dynamic
-pm.max_children = 5
-pm.start_servers = 2
-pm.min_spare_servers = 1
-pm.max_spare_servers = 3
-'''
-            WriteToFile = open(f'{php85Path}www.conf', 'w')
-            WriteToFile.write(content)
-            WriteToFile.close()
+            restarted_count = 0
+            total_count = 0
+            
+            for version in php_versions:
+                service_name = f'php{version}-fpm'
+                
+                # Check if service exists
+                try:
+                    result = subprocess.run(['systemctl', 'list-unit-files', service_name], 
+                                          capture_output=True, text=True, timeout=10)
+                    if result.returncode == 0 and service_name in result.stdout:
+                        total_count += 1
+                        
+                        # Restart the service
+                        restart_result = subprocess.run(['systemctl', 'restart', service_name], 
+                                                      capture_output=True, text=True, timeout=30)
+                        
+                        if restart_result.returncode == 0:
+                            # Check if service is actually running
+                            status_result = subprocess.run(['systemctl', 'is-active', service_name], 
+                                                         capture_output=True, text=True, timeout=10)
+                            if status_result.returncode == 0 and 'active' in status_result.stdout:
+                                restarted_count += 1
+                                logging.CyberCPLogFileWriter.writeToFile(f'Successfully restarted {service_name}')
+                            else:
+                                logging.CyberCPLogFileWriter.writeToFile(f'Warning: {service_name} restarted but not active')
+                        else:
+                            logging.CyberCPLogFileWriter.writeToFile(f'Failed to restart {service_name}: {restart_result.stderr}')
+                            
+                except subprocess.TimeoutExpired:
+                    logging.CyberCPLogFileWriter.writeToFile(f'Timeout restarting {service_name}')
+                except Exception as e:
+                    logging.CyberCPLogFileWriter.writeToFile(f'Error restarting {service_name}: {str(e)}')
+            
+            logging.CyberCPLogFileWriter.writeToFile(f'PHP-FPM restart summary: {restarted_count}/{total_count} services restarted successfully')
+            return restarted_count, total_count
+            
+        except Exception as e:
+            logging.CyberCPLogFileWriter.writeToFile(f'Error in restartPHPFPMServices: {str(e)}')
+            return 0, 0
 
     @staticmethod
     def setupPHPSymlink():
@@ -4406,8 +4297,9 @@ pm.max_spare_servers = 3
 
             Upgrade.stdOut(f"PHP symlink updated to PHP {selected_php} successfully.")
 
-        except BaseException as msg:
-            Upgrade.stdOut('[ERROR] ' + str(msg) + " [setupPHPSymlink]")
+        except Exception as e:
+            ErrorSanitizer.log_error_securely(e, 'setupPHPSymlink')
+            Upgrade.stdOut('[ERROR] Failed to setup PHP symlink [setupPHPSymlink]')
             return 0
 
         return 1
@@ -5219,8 +5111,9 @@ extprocessor proxyApacheBackendSSL {
 
             return 1
 
-        except BaseException as msg:
-            print("[ERROR] installQuota. " + str(msg))
+        except Exception as e:
+            ErrorSanitizer.log_error_securely(e, 'installQuota')
+            print("[ERROR] installQuota. Failed to install quota")
             return 0
 
     @staticmethod

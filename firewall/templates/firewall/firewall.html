@@ -526,6 +526,265 @@
             min-width: 600px;
         }
     }
+
+    /* Tab Navigation Styles */
+    .tab-navigation {
+        display: flex;
+        background: var(--bg-secondary, white);
+        border-radius: 12px;
+        padding: 0.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 8px var(--shadow-light, rgba(0,0,0,0.1));
+        border: 1px solid var(--border-color, #e8e9ff);
+    }
+
+    .tab-button {
+        flex: 1;
+        padding: 1rem 1.5rem;
+        background: transparent;
+        border: none;
+        border-radius: 8px;
+        color: var(--text-secondary, #64748b);
+        font-weight: 500;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .tab-button:hover {
+        background: var(--bg-hover, #f8f9ff);
+        color: var(--accent-color, #5b5fcf);
+    }
+
+    .tab-button.tab-active {
+        background: var(--accent-color, #5b5fcf);
+        color: var(--bg-secondary, white);
+        box-shadow: 0 2px 8px rgba(91, 95, 207, 0.3);
+    }
+
+    .tab-button i {
+        font-size: 1rem;
+    }
+
+    /* Banned IPs Panel Styles */
+    .banned-ips-panel {
+        background: var(--bg-secondary, white);
+        border-radius: 16px;
+        box-shadow: 0 4px 12px var(--shadow-medium, rgba(0,0,0,0.15));
+        border: 1px solid var(--border-color, #e8e9ff);
+        overflow: hidden;
+    }
+
+    .add-banned-section {
+        padding: 2rem;
+        border-bottom: 1px solid var(--border-light, #f3f4f6);
+        background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    }
+
+    .banned-form {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr auto;
+        gap: 1rem;
+        align-items: end;
+    }
+
+    .btn-ban {
+        background: var(--danger-color, #ef4444);
+        color: var(--bg-secondary, white);
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        height: fit-content;
+    }
+
+    .btn-ban:hover {
+        background: var(--danger-hover, #dc2626);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+    }
+
+    .banned-list-section {
+        padding: 2rem;
+    }
+
+    .banned-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--bg-secondary, white);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px var(--shadow-light, rgba(0,0,0,0.1));
+    }
+
+    .banned-table th {
+        background: linear-gradient(135deg, var(--bg-hover, #f8f9ff) 0%, var(--bg-gradient, #f0f1ff) 100%);
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: var(--text-primary, #1e293b);
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 2px solid var(--border-color, #e8e9ff);
+    }
+
+    .banned-table td {
+        padding: 1rem;
+        color: var(--text-secondary, #64748b);
+        font-size: 0.875rem;
+        border-bottom: 1px solid var(--border-light, #f3f4f6);
+        vertical-align: middle;
+    }
+
+    .banned-table tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    .banned-table tbody tr:hover {
+        background: var(--bg-hover, #f8f9ff);
+    }
+
+    .ip-address {
+        font-weight: 600;
+        color: var(--text-primary, #1e293b);
+        font-family: 'Courier New', monospace;
+    }
+
+    .ip-address i {
+        color: var(--accent-color, #5b5fcf);
+        margin-right: 0.5rem;
+    }
+
+    .reason-text {
+        background: var(--bg-light, #f8f9fa);
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        color: var(--text-secondary, #64748b);
+    }
+
+    .banned-date, .expires-date {
+        color: var(--text-secondary, #64748b);
+        font-size: 0.8rem;
+    }
+
+    .banned-date i, .expires-date i {
+        color: var(--accent-color, #5b5fcf);
+        margin-right: 0.25rem;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .status-badge.status-active {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger-color, #ef4444);
+    }
+
+    .status-badge.status-expired {
+        background: rgba(107, 114, 128, 0.1);
+        color: #6b7280;
+    }
+
+    .status-badge i {
+        font-size: 0.5rem;
+    }
+
+    .actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-unban {
+        background: var(--success-color, #10b981);
+        color: var(--bg-secondary, white);
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.8rem;
+    }
+
+    .btn-unban:hover {
+        background: var(--success-hover, #059669);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-delete {
+        background: var(--danger-color, #ef4444);
+        color: var(--bg-secondary, white);
+        border: none;
+        padding: 0.5rem;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-delete:hover {
+        background: var(--danger-hover, #dc2626);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+    }
+
+    /* Responsive Design for Banned IPs */
+    @media (max-width: 768px) {
+        .banned-form {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .btn-ban {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .banned-list-section {
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .banned-table {
+            min-width: 800px;
+        }
+
+        .tab-navigation {
+            flex-direction: column;
+        }
+
+        .tab-button {
+            width: 100%;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -591,8 +850,26 @@
         </div>
     </div>
 
+    <!-- Tab Navigation -->
+    <div class="tab-navigation">
+        <button type="button" 
+                ng-click="activeTab = 'rules'" 
+                ng-class="{'tab-active': activeTab === 'rules'}"
+                class="tab-button">
+            <i class="fas fa-list-alt"></i>
+            {% trans "Firewall Rules" %}
+        </button>
+        <button type="button" 
+                ng-click="activeTab = 'banned'" 
+                ng-class="{'tab-active': activeTab === 'banned'}"
+                class="tab-button">
+            <i class="fas fa-ban"></i>
+            {% trans "Banned IPs" %}
+        </button>
+    </div>
+
     <!-- Rules Panel -->
-    <div class="rules-panel">
+    <div class="rules-panel" ng-show="activeTab === 'rules'">
         <div class="panel-header">
             <div class="panel-title">
                 <div class="panel-icon">
@@ -712,6 +989,144 @@
             </div>
             
             <div ng-hide="couldNotConnect" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle alert-icon"></i>
+                <span>{% trans "Could not connect to server. Please refresh this page." %}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Banned IPs Panel -->
+    <div class="banned-ips-panel" ng-show="activeTab === 'banned'">
+        <div class="panel-header">
+            <div class="panel-title">
+                <div class="panel-icon">
+                    <i class="fas fa-ban"></i>
+                </div>
+                {% trans "Banned IP Addresses" %}
+            </div>
+            <div ng-show="bannedIPsLoading" class="loading-spinner"></div>
+        </div>
+        
+        <!-- Add Banned IP Section -->
+        <div class="add-banned-section">
+            <form class="banned-form">
+                <div class="form-group">
+                    <label class="form-label">{% trans "IP Address" %}</label>
+                    <input type="text" 
+                           class="form-control" 
+                           ng-model="banIP"
+                           placeholder="{% trans 'e.g., 192.168.1.100 or 192.168.1.0/24' %}"
+                           required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">{% trans "Reason" %}</label>
+                    <input type="text" 
+                           class="form-control"
+                           ng-model="banReason" 
+                           placeholder="{% trans 'e.g., Suspicious activity, Brute force attack' %}"
+                           required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">{% trans "Duration" %}</label>
+                    <select ng-model="banDuration" class="form-control select-control">
+                        <option value="1h">{% trans "1 Hour" %}</option>
+                        <option value="24h">{% trans "24 Hours" %}</option>
+                        <option value="7d">{% trans "7 Days" %}</option>
+                        <option value="30d">{% trans "30 Days" %}</option>
+                        <option value="permanent">{% trans "Permanent" %}</option>
+                    </select>
+                </div>
+                
+                <button type="button" 
+                        ng-click="addBannedIP()"
+                        class="btn-ban">
+                    <i class="fas fa-ban"></i>
+                    {% trans "Ban IP Address" %}
+                </button>
+            </form>
+        </div>
+        
+        <!-- Banned IPs List -->
+        <div class="banned-list-section">
+            <table class="banned-table" ng-if="bannedIPs.length > 0">
+                <thead>
+                    <tr>
+                        <th>{% trans "IP Address" %}</th>
+                        <th>{% trans "Reason" %}</th>
+                        <th>{% trans "Banned On" %}</th>
+                        <th>{% trans "Expires" %}</th>
+                        <th>{% trans "Status" %}</th>
+                        <th>{% trans "Actions" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="bannedIP in bannedIPs">
+                        <td class="ip-address">
+                            <i class="fas fa-globe"></i>
+                            {$ bannedIP.ip $}
+                        </td>
+                        <td class="reason">
+                            <span class="reason-text">{$ bannedIP.reason $}</span>
+                        </td>
+                        <td class="banned-date">
+                            <i class="fas fa-calendar"></i>
+                            {$ bannedIP.banned_on | date:'MMM dd, yyyy HH:mm' $}
+                        </td>
+                        <td class="expires-date">
+                            <i class="fas fa-clock"></i>
+                            <span ng-if="bannedIP.expires === 'Never'">{% trans "Never" %}</span>
+                            <span ng-if="bannedIP.expires !== 'Never'">{$ bannedIP.expires | date:'MMM dd, yyyy HH:mm' $}</span>
+                        </td>
+                        <td class="status">
+                            <span ng-class="{'status-active': bannedIP.active, 'status-expired': !bannedIP.active}" 
+                                  class="status-badge">
+                                <i class="fas fa-circle"></i>
+                                {$ bannedIP.active ? 'Active' : 'Expired' $}
+                            </span>
+                        </td>
+                        <td class="actions">
+                            <button type="button"
+                                    ng-click="removeBannedIP(bannedIP.id, bannedIP.ip)"
+                                    class="btn-unban"
+                                    title="{% trans 'Unban IP' %}"
+                                    ng-if="bannedIP.active">
+                                <i class="fas fa-unlock"></i>
+                                {% trans "Unban" %}
+                            </button>
+                            <button type="button"
+                                    ng-click="deleteBannedIP(bannedIP.id, bannedIP.ip)"
+                                    class="btn-delete"
+                                    title="{% trans 'Delete Record' %}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <!-- Empty State -->
+            <div ng-if="bannedIPs.length == 0" class="empty-state">
+                <i class="fas fa-shield-check empty-icon"></i>
+                <h3 class="empty-title">{% trans "No Banned IPs" %}</h3>
+                <p class="empty-text">{% trans "All IP addresses are currently allowed. Add banned IPs to block suspicious or malicious traffic." %}</p>
+            </div>
+        </div>
+        
+        <!-- Messages -->
+        <div style="padding: 0 2rem 2rem;">
+            <div ng-hide="bannedIPActionFailed" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle alert-icon"></i>
+                <span>{% trans "Action failed. Error message:" %} {$ bannedIPErrorMessage $}</span>
+            </div>
+            
+            <div ng-hide="bannedIPActionSuccess" class="alert alert-success">
+                <i class="fas fa-check-circle alert-icon"></i>
+                <span>{% trans "Action completed successfully." %}</span>
+            </div>
+            
+            <div ng-hide="bannedIPCouldNotConnect" class="alert alert-danger">
                 <i class="fas fa-exclamation-circle alert-icon"></i>
                 <span>{% trans "Could not connect to server. Please refresh this page." %}</span>
             </div>

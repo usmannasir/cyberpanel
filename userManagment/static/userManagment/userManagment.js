@@ -179,6 +179,121 @@ app.controller('modifyUser', function ($scope, $http) {
             document.body.removeChild(tempTextarea);
         }
     };
+    
+    // WebAuthn Functions
+    $scope.loadWebAuthnData = function() {
+        if (!$scope.accountUsername) return;
+        
+        var url = '/webauthn/credentials/' + $scope.accountUsername + '/';
+        
+        $http.get(url).then(function(response) {
+            if (response.data.success) {
+                $scope.webauthnCredentials = response.data.credentials;
+                $scope.webauthnEnabled = response.data.settings.enabled;
+                $scope.webauthnRequirePasskey = response.data.settings.require_passkey;
+                $scope.webauthnAllowMultiple = response.data.settings.allow_multiple_credentials;
+                $scope.webauthnMaxCredentials = response.data.settings.max_credentials;
+                $scope.canAddCredential = response.data.settings.can_add_credential;
+            }
+        }, function(error) {
+            console.error('Error loading WebAuthn data:', error);
+        });
+    };
+    
+    $scope.toggleWebAuthn = function() {
+        if ($scope.webauthnEnabled) {
+            $scope.loadWebAuthnData();
+        } else {
+            $scope.webauthnCredentials = [];
+            $scope.canAddCredential = true;
+        }
+    };
+    
+    $scope.registerNewPasskey = function() {
+        if (!window.cyberPanelWebAuthn) {
+            alert('WebAuthn is not supported in this browser');
+            return;
+        }
+        
+        var credentialName = prompt('Enter a name for this passkey:', 'Passkey ' + new Date().toLocaleDateString());
+        if (!credentialName) return;
+        
+        window.cyberPanelWebAuthn.registerPasskey($scope.accountUsername, credentialName)
+            .then(function(response) {
+                if (response.success) {
+                    $scope.loadWebAuthnData();
+                    $scope.$apply();
+                }
+            })
+            .catch(function(error) {
+                console.error('Error registering passkey:', error);
+            });
+    };
+    
+    $scope.deleteCredential = function(credentialId) {
+        if (!confirm('Are you sure you want to delete this passkey?')) return;
+        
+        if (!window.cyberPanelWebAuthn) {
+            alert('WebAuthn is not supported in this browser');
+            return;
+        }
+        
+        window.cyberPanelWebAuthn.deleteCredential($scope.accountUsername, credentialId)
+            .then(function(response) {
+                if (response.success) {
+                    $scope.loadWebAuthnData();
+                    $scope.$apply();
+                }
+            })
+            .catch(function(error) {
+                console.error('Error deleting credential:', error);
+            });
+    };
+    
+    $scope.updateCredentialName = function(credentialId, newName) {
+        if (!window.cyberPanelWebAuthn) return;
+        
+        window.cyberPanelWebAuthn.updateCredentialName($scope.accountUsername, credentialId, newName)
+            .then(function(response) {
+                if (response.success) {
+                    $scope.loadWebAuthnData();
+                    $scope.$apply();
+                }
+            })
+            .catch(function(error) {
+                console.error('Error updating credential name:', error);
+            });
+    };
+    
+    $scope.refreshCredentials = function() {
+        $scope.loadWebAuthnData();
+    };
+    
+    $scope.saveWebAuthnSettings = function() {
+        if (!window.cyberPanelWebAuthn) {
+            alert('WebAuthn is not supported in this browser');
+            return;
+        }
+        
+        var settings = {
+            enabled: $scope.webauthnEnabled,
+            require_passkey: $scope.webauthnRequirePasskey,
+            allow_multiple_credentials: $scope.webauthnAllowMultiple,
+            max_credentials: $scope.webauthnMaxCredentials,
+            timeout_seconds: $scope.webauthnTimeout
+        };
+        
+        window.cyberPanelWebAuthn.updateSettings($scope.accountUsername, settings)
+            .then(function(response) {
+                if (response.success) {
+                    $scope.loadWebAuthnData();
+                    $scope.$apply();
+                }
+            })
+            .catch(function(error) {
+                console.error('Error updating WebAuthn settings:', error);
+            });
+    };
 
 
     $scope.fetchUserDetails = function () {
@@ -223,6 +338,18 @@ app.controller('modifyUser', function ($scope, $http) {
                     $scope.secretKey = userDetails.secretKey;
                     $scope.formattedSecretKey = userDetails.secretKey.match(/.{1,4}/g).join(' ');
                 }
+                
+                // Initialize WebAuthn settings
+                $scope.webauthnEnabled = false;
+                $scope.webauthnRequirePasskey = false;
+                $scope.webauthnAllowMultiple = true;
+                $scope.webauthnMaxCredentials = 10;
+                $scope.webauthnTimeout = 60;
+                $scope.webauthnCredentials = [];
+                $scope.canAddCredential = true;
+                
+                // Load WebAuthn settings and credentials
+                $scope.loadWebAuthnData();
 
                 qrCode.set({
                     value: userDetails.otpauth
@@ -305,10 +432,14 @@ app.controller('modifyUser', function ($scope, $http) {
             firstName: firstName,
             lastName: lastName,
             email: email,
-            passwordByPass: password,
             securityLevel: $scope.securityLevel,
             twofa: $scope.twofa
         };
+
+        // Only include password if it's provided and not empty
+        if (password && password.trim()) {
+            data.passwordByPass = password;
+        }
 
         var config = {
             headers: {
@@ -316,7 +447,13 @@ app.controller('modifyUser', function ($scope, $http) {
             }
         };
 
-        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+        $http.post(url, data, config).then(function(response) {
+            ListInitialDatas(response);
+            // Save WebAuthn settings after successful user modification
+            if (response.data.saveStatus == 1) {
+                $scope.saveWebAuthnSettings();
+            }
+        }, cantLoadInitialDatas);
 
 
         function ListInitialDatas(response) {
@@ -1522,6 +1659,147 @@ app.controller('apiAccessCTRL', function ($scope, $http) {
 });
 /* Java script code for api access */
 
+/* Java script code for api users list */
+app.controller('apiUsersCTRL', function ($scope, $http) {
+    $scope.apiUsers = [];
+    $scope.filteredUsers = [];
+    $scope.searchQuery = '';
+    $scope.apiUsersLoading = true;
+
+    $scope.loadAPIUsers = function() {
+        $scope.apiUsersLoading = false;
+        
+        var url = "/users/fetchAPIUsers";
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.get(url, config).then(loadAPIUsersSuccess, loadAPIUsersError);
+    };
+
+    function loadAPIUsersSuccess(response) {
+        $scope.apiUsersLoading = true;
+        
+        if (response.data.status === 1) {
+            $scope.apiUsers = response.data.users;
+            $scope.filteredUsers = response.data.users;
+            
+            new PNotify({
+                title: 'Success!',
+                text: 'API users loaded successfully',
+                type: 'success'
+            });
+        } else {
+            new PNotify({
+                title: 'Error!',
+                text: response.data.error_message,
+                type: 'error'
+            });
+        }
+    }
+
+    function loadAPIUsersError(response) {
+        $scope.apiUsersLoading = true;
+        new PNotify({
+            title: 'Error!',
+            text: 'Could not load API users. Please refresh the page.',
+            type: 'error'
+        });
+    }
+
+    $scope.searchUsers = function() {
+        if (!$scope.searchQuery || $scope.searchQuery.trim() === '') {
+            $scope.filteredUsers = $scope.apiUsers;
+            return;
+        }
+        
+        var query = $scope.searchQuery.toLowerCase();
+        $scope.filteredUsers = $scope.apiUsers.filter(function(user) {
+            return user.userName.toLowerCase().includes(query) ||
+                   user.firstName.toLowerCase().includes(query) ||
+                   user.lastName.toLowerCase().includes(query) ||
+                   user.email.toLowerCase().includes(query) ||
+                   user.aclName.toLowerCase().includes(query);
+        });
+    };
+
+    $scope.clearSearch = function() {
+        $scope.searchQuery = '';
+        $scope.filteredUsers = $scope.apiUsers;
+    };
+
+    $scope.viewUserDetails = function(user) {
+        new PNotify({
+            title: 'User Details',
+            text: 'Username: ' + user.userName + '<br>' +
+                  'Full Name: ' + user.firstName + ' ' + user.lastName + '<br>' +
+                  'Email: ' + user.email + '<br>' +
+                  'ACL: ' + user.aclName + '<br>' +
+                  'Token Status: ' + user.tokenStatus + '<br>' +
+                  'State: ' + user.state,
+            type: 'info',
+            styling: 'bootstrap3',
+            delay: 10000
+        });
+    };
+
+    $scope.disableAPI = function(user) {
+        if (confirm('Are you sure you want to disable API access for ' + user.userName + '?')) {
+            $scope.apiUsersLoading = false;
+            
+            var url = "/users/saveChangesAPIAccess";
+            var data = {
+                accountUsername: user.userName,
+                access: 'Disable'
+            };
+            var config = {
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            };
+
+            $http.post(url, data, config).then(disableAPISuccess, disableAPIError);
+        }
+    };
+
+    function disableAPISuccess(response) {
+        $scope.apiUsersLoading = true;
+        
+        if (response.data.status === 1) {
+            // Remove user from the list
+            $scope.apiUsers = $scope.apiUsers.filter(function(u) {
+                return u.userName !== response.data.accountUsername;
+            });
+            $scope.filteredUsers = $scope.apiUsers;
+            
+            new PNotify({
+                title: 'Success!',
+                text: 'API access disabled for ' + response.data.accountUsername,
+                type: 'success'
+            });
+        } else {
+            new PNotify({
+                title: 'Error!',
+                text: response.data.error_message,
+                type: 'error'
+            });
+        }
+    }
+
+    function disableAPIError(response) {
+        $scope.apiUsersLoading = true;
+        new PNotify({
+            title: 'Error!',
+            text: 'Could not disable API access. Please try again.',
+            type: 'error'
+        });
+    }
+
+    // Load API users when controller initializes
+    $scope.loadAPIUsers();
+});
 
 /* Java script code to list table users */
 

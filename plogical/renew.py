@@ -78,6 +78,9 @@ class Renew:
         try:
             logging.writeToFile('Restarting mail services for them to see new SSL.', 0)
             
+            # Update mail SSL configuration for all domains
+            self._update_all_mail_ssl_configs()
+            
             commands = [
                 'postmap -F hash:/etc/postfix/vmail_ssl.map',
                 'systemctl restart postfix',
@@ -92,6 +95,22 @@ class Renew:
                 
         except Exception as e:
             logging.writeToFile(f'Error restarting services: {str(e)}', 1)
+
+    def _update_all_mail_ssl_configs(self) -> None:
+        """Update mail SSL configuration for all domains after renewal"""
+        try:
+            logging.writeToFile('Updating mail SSL configurations for all domains.', 0)
+            
+            # Update mail SSL config for all websites
+            for website in Websites.objects.filter(state=1):
+                virtualHostUtilities.updateMailSSLConfig(website.domain)
+            
+            # Update mail SSL config for all child domains
+            for child in ChildDomains.objects.all():
+                virtualHostUtilities.updateMailSSLConfig(child.domain)
+                
+        except Exception as e:
+            logging.writeToFile(f'Error updating mail SSL configs: {str(e)}', 1)
 
     def SSLObtainer(self):
         try:

@@ -745,3 +745,107 @@ def getContainerEnv(request):
         }), content_type='application/json')
     except KeyError:
         return redirect(loadLoginPage)
+
+@preDockerRun
+def listContainers(request):
+    """
+    Get list of all Docker containers
+    """
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+
+        cm = ContainerManager()
+        coreResult = cm.listContainers(userID)
+
+        return coreResult
+    except KeyError:
+        return redirect(loadLoginPage)
+
+@preDockerRun
+def getDockerNetworks(request):
+    """
+    Get list of all Docker networks
+    """
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+
+        cm = ContainerManager()
+        coreResult = cm.getDockerNetworks(userID)
+
+        return coreResult
+    except KeyError:
+        return redirect(loadLoginPage)
+
+@preDockerRun
+def createDockerNetwork(request):
+    """
+    Create a new Docker network
+    """
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+
+        cm = ContainerManager()
+        coreResult = cm.createDockerNetwork(userID, json.loads(request.body))
+
+        return coreResult
+    except KeyError:
+        return redirect(loadLoginPage)
+
+@preDockerRun
+def updateContainerPorts(request):
+    """
+    Update port mappings for an existing container
+    """
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+
+        cm = ContainerManager()
+        coreResult = cm.updateContainerPorts(userID, json.loads(request.body))
+
+        return coreResult
+    except KeyError:
+        return redirect(loadLoginPage)
+
+@preDockerRun
+def manageNetworks(request):
+    """
+    Display the network management page
+    """
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        template = 'dockerManager/manageNetworks.html'
+        proc = httpProc(request, template, {}, 'admin')
+        return proc.render()
+    except KeyError:
+        return redirect(loadLoginPage)

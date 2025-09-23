@@ -1152,6 +1152,12 @@ Automatic backup failed for %s on %s.
                 #
                 #         command = 'chattr -R -i /home/%s/incbackup/' % (website.domain)
                 #         ProcessUtilities.executioner(command)
+                #
+                #         command = 'chattr -R -i /home/%s/lscache/' % (website.domain)
+                #         ProcessUtilities.executioner(command)
+                #
+                #         command = 'chattr -R -i /home/%s/.cagefs/' % (website.domain)
+                #         ProcessUtilities.executioner(command)
                 #     else:
                 #         command = 'chattr -R -i /home/%s/' % (website.domain)
                 #         ProcessUtilities.executioner(command)

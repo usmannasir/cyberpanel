@@ -6,12 +6,39 @@ import argparse
 import os
 import shutil
 import time
+import django
 from plogical.processUtilities import ProcessUtilities
 
 class pluginInstaller:
     installLogPath = "/home/cyberpanel/modSecInstallLog"
     tempRulesFile = "/home/cyberpanel/tempModSecRules"
     mirrorPath = "cyberpanel.net"
+
+    @staticmethod
+    def getUrlPattern(pluginName):
+        """
+        Generate URL pattern compatible with both Django 2.x and 3.x+
+        Django 2.x uses url() with regex patterns
+        Django 3.x+ prefers path() with simpler patterns
+        """
+        try:
+            django_version = django.get_version()
+            major_version = int(django_version.split('.')[0])
+            
+            pluginInstaller.stdOut(f"Django version detected: {django_version}")
+            
+            if major_version >= 3:
+                # Django 3.x+ - use path() syntax
+                pluginInstaller.stdOut(f"Using path() syntax for Django 3.x+ compatibility")
+                return "    path('" + pluginName + "/',include('" + pluginName + ".urls')),\n"
+            else:
+                # Django 2.x - use url() syntax with regex
+                pluginInstaller.stdOut(f"Using url() syntax for Django 2.x compatibility")
+                return "    url(r'^" + pluginName + "/',include('" + pluginName + ".urls')),\n"
+        except Exception as e:
+            # Fallback to modern path() syntax if version detection fails
+            pluginInstaller.stdOut(f"Django version detection failed: {str(e)}, using path() syntax as fallback")
+            return "    path('" + pluginName + "/',include('" + pluginName + ".urls')),\n"
 
     @staticmethod
     def stdOut(message):
@@ -57,7 +84,7 @@ class pluginInstaller:
         for items in data:
             if items.find("manageservices") > -1:
                 writeToFile.writelines(items)
-                writeToFile.writelines("    url(r'^" + pluginName + "/',include('" + pluginName + ".urls')),\n")
+                writeToFile.writelines(pluginInstaller.getUrlPattern(pluginName))
             else:
                 writeToFile.writelines(items)
 

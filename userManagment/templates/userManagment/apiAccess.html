@@ -166,6 +166,220 @@
         .text-muted {
             color: var(--text-secondary, #8893a7);
         }
+        /* Tab Navigation Styles */
+        .tab-navigation {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border-color, #e8e9ff);
+        }
+        .tab-button {
+            background: none;
+            border: none;
+            padding: 15px 25px;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-secondary, #8893a7);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tab-button:hover {
+            color: var(--accent-color, #5b5fcf);
+            background: var(--bg-hover, #f8f9ff);
+        }
+        .tab-button.active {
+            color: var(--accent-color, #5b5fcf);
+            border-bottom-color: var(--accent-color, #5b5fcf);
+            background: var(--bg-hover, #f8f9ff);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Search Container Styles */
+        .search-container {
+            margin-bottom: 25px;
+        }
+        .search-box {
+            position: relative;
+            max-width: 400px;
+        }
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary, #8893a7);
+        }
+        .search-input {
+            width: 100%;
+            padding: 12px 45px 12px 45px;
+            border: 1px solid var(--border-color, #e8e9ff);
+            border-radius: 8px;
+            font-size: 16px;
+            background: var(--bg-secondary, white);
+            color: var(--text-primary, #2f3640);
+            transition: all 0.3s ease;
+        }
+        .search-input:focus {
+            border-color: var(--accent-color, #5b5fcf);
+            box-shadow: 0 0 0 3px rgba(91, 95, 207, 0.1);
+            outline: none;
+        }
+        .clear-search {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-secondary, #8893a7);
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        .clear-search:hover {
+            background: var(--bg-hover, #f8f9ff);
+            color: var(--accent-color, #5b5fcf);
+        }
+        .search-results-info {
+            margin-top: 10px;
+            color: var(--text-secondary, #8893a7);
+            font-size: 14px;
+        }
+        
+        /* Users Table Styles */
+        .users-table-container {
+            overflow-x: auto;
+        }
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-secondary, white);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px var(--shadow-color, rgba(0,0,0,0.08));
+        }
+        .users-table th {
+            background: var(--bg-hover, #f8f9ff);
+            color: var(--text-primary, #2f3640);
+            font-weight: 600;
+            padding: 15px 12px;
+            text-align: left;
+            border-bottom: 2px solid var(--border-color, #e8e9ff);
+        }
+        .users-table td {
+            padding: 15px 12px;
+            border-bottom: 1px solid var(--border-color, #e8e9ff);
+            vertical-align: middle;
+        }
+        .users-table tbody tr:hover {
+            background: var(--bg-hover, #f8f9ff);
+        }
+        
+        /* Badge Styles */
+        .acl-badge {
+            background: var(--accent-color, #5b5fcf);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        /* Token Status Styles */
+        .token-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .token-valid {
+            color: var(--success-text, #10b981);
+        }
+        .token-warning {
+            color: var(--warning-text, #f59e0b);
+        }
+        .token-error {
+            color: var(--danger-text, #ef4444);
+        }
+        .token-status i {
+            font-size: 8px;
+        }
+        
+        /* User State Styles */
+        .user-state {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .state-active {
+            background: var(--success-bg, #f0fdf4);
+            color: var(--success-text, #166534);
+        }
+        .state-inactive {
+            background: var(--danger-bg, #fef2f2);
+            color: var(--danger-text, #991b1b);
+        }
+        
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        .btn-action {
+            background: none;
+            border: 1px solid var(--border-color, #e8e9ff);
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--text-secondary, #8893a7);
+        }
+        .btn-action:hover {
+            background: var(--bg-hover, #f8f9ff);
+            border-color: var(--accent-color, #5b5fcf);
+            color: var(--accent-color, #5b5fcf);
+        }
+        .btn-view:hover {
+            color: var(--info-text, #3b82f6);
+            border-color: var(--info-text, #3b82f6);
+        }
+        .btn-disable:hover {
+            color: var(--danger-text, #ef4444);
+            border-color: var(--danger-text, #ef4444);
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary, #8893a7);
+        }
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: var(--text-secondary, #8893a7);
+        }
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: var(--text-primary, #2f3640);
+        }
+        .empty-state p {
+            margin: 0;
+            line-height: 1.5;
+        }
+        
         @media (max-width: 768px) {
             .content-card {
                 padding: 20px;
@@ -176,6 +390,17 @@
             .section-title {
                 font-size: 1.1rem;
             }
+            .tab-button {
+                padding: 12px 15px;
+                font-size: 14px;
+            }
+            .users-table {
+                font-size: 14px;
+            }
+            .users-table th,
+            .users-table td {
+                padding: 10px 8px;
+            }
         }
 
 </style>
@@ -185,10 +410,22 @@
             <div class="page-header">
                 <h1 class="page-title">{% trans "API Access" %}</h1>
             </div>
-            <div class="content-card" ng-controller="apiAccessCTRL">
+            
+            <!-- Tab Navigation -->
+            <div class="tab-navigation">
+                <button class="tab-button active" onclick="switchTab('configure')" id="configure-tab">
+                    <i class="fa fa-cog"></i> {% trans "Configure API Access" %}
+                </button>
+                <button class="tab-button" onclick="switchTab('users')" id="users-tab">
+                    <i class="fa fa-users"></i> {% trans "API Users" %}
+                </button>
+            </div>
+            
+            <!-- Configure API Access Tab -->
+            <div class="content-card tab-content active" ng-controller="apiAccessCTRL" id="configure-content">
                 <h3 class="section-title">
                     {% trans "Configure API Access" %}
-                    <img class="loading-icon" ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                    <img class="loading-icon" ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}" alt="Loading configuration">
                 </h3>
                 <div class="info-box">
                     <h4><i class="fa fa-info-circle"></i> {% trans "Important Information" %}</h4>
@@ -197,7 +434,7 @@
                 <form action="/" class="form-horizontal">
                     <div class="form-group">
                         <label class="form-label">{% trans "Select User Account" %}</label>
-                        <select ng-change="showApiAccessDropDown()" ng-model="accountUsername" class="form-control">
+                        <select ng-change="showApiAccessDropDown()" ng-model="accountUsername" class="form-control" title="Select user account" aria-label="Select user account">
                             <option value="">-- {% trans "Choose a user" %} --</option>
                             {% for items in acctNames %}
                                 <option>{{ items }}</option>
@@ -241,7 +478,130 @@
                     </div>
                 </form>
             </div>
+            
+            <!-- API Users Tab -->
+            <div class="content-card tab-content" ng-controller="apiUsersCTRL" id="users-content">
+                <h3 class="section-title">
+                    {% trans "Users with API Access" %}
+                    <img class="loading-icon" ng-hide="apiUsersLoading" src="{% static 'images/loading.gif' %}" alt="Loading API users">
+                </h3>
+                
+                <!-- Search Box -->
+                <div class="search-container">
+                    <div class="search-box">
+                        <i class="fa fa-search"></i>
+                        <input type="text" ng-model="searchQuery" ng-keyup="searchUsers()" placeholder="{% trans 'Search users by name, email, or username...' %}" class="search-input" title="Search API users" aria-label="Search API users">
+                        <button ng-click="clearSearch()" ng-show="searchQuery" class="clear-search">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="search-results-info" ng-show="searchQuery">
+                        <span class="results-count">{{ filteredUsers.length }} {% trans "users found" %}</span>
+                    </div>
+                </div>
+                
+                <!-- Users Table -->
+                <div class="users-table-container">
+                    <table class="users-table" ng-show="apiUsers.length > 0">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Username" %}</th>
+                                <th>{% trans "Full Name" %}</th>
+                                <th>{% trans "Email" %}</th>
+                                <th>{% trans "ACL" %}</th>
+                                <th>{% trans "Token Status" %}</th>
+                                <th>{% trans "State" %}</th>
+                                <th>{% trans "Actions" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="user in filteredUsers = (apiUsers | filter:searchQuery)">
+                                <td>
+                                    <strong>{{ user.userName }}</strong>
+                                </td>
+                                <td>{{ user.firstName }} {{ user.lastName }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    <span class="acl-badge">{{ user.aclName }}</span>
+                                </td>
+                                <td>
+                                    <span ng-class="{
+                                        'token-valid': user.tokenStatus === 'Valid',
+                                        'token-warning': user.tokenStatus === 'Needs Generation',
+                                        'token-error': user.tokenStatus === 'Not Generated'
+                                    }" class="token-status">
+                                        <i class="fa fa-circle"></i> {{ user.tokenStatus }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span ng-class="{
+                                        'state-active': user.state === 'ACTIVE',
+                                        'state-inactive': user.state !== 'ACTIVE'
+                                    }" class="user-state">
+                                        {{ user.state }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button ng-click="viewUserDetails(user)" class="btn-action btn-view" title="{% trans 'View Details' %}">
+                                            <i class="fa fa-eye"></i>
+                                        </button>
+                                        <button ng-click="disableAPI(user)" class="btn-action btn-disable" title="{% trans 'Disable API Access' %}">
+                                            <i class="fa fa-power-off"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <!-- Empty State -->
+                    <div class="empty-state" ng-show="apiUsers.length === 0">
+                        <i class="fa fa-users"></i>
+                        <h3>{% trans "No users with API access found" %}</h3>
+                        <p>{% trans "No users currently have API access enabled. Use the Configure tab to enable API access for users." %}</p>
+                    </div>
+                    
+                    <!-- No Search Results -->
+                    <div class="empty-state" ng-show="apiUsers.length > 0 && filteredUsers.length === 0">
+                        <i class="fa fa-search"></i>
+                        <h3>{% trans "No users found" %}</h3>
+                        <p>{% trans "No users match your search criteria. Try adjusting your search terms." %}</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+
+<script>
+// Tab switching functionality
+function switchTab(tabName) {
+    // Hide all tab contents
+    document.getElementById('configure-content').classList.remove('active');
+    document.getElementById('users-content').classList.remove('active');
+    
+    // Remove active class from all tabs
+    document.getElementById('configure-tab').classList.remove('active');
+    document.getElementById('users-tab').classList.remove('active');
+    
+    // Show selected tab content and add active class
+    if (tabName === 'configure') {
+        document.getElementById('configure-content').classList.add('active');
+        document.getElementById('configure-tab').classList.add('active');
+    } else if (tabName === 'users') {
+        document.getElementById('users-content').classList.add('active');
+        document.getElementById('users-tab').classList.add('active');
+        // Load API users when switching to users tab
+        if (typeof angular !== 'undefined' && angular.element(document.getElementById('users-content')).scope()) {
+            angular.element(document.getElementById('users-content')).scope().loadAPIUsers();
+        }
+    }
+}
+
+// Initialize with configure tab active
+document.addEventListener('DOMContentLoaded', function() {
+    switchTab('configure');
+});
+</script>
 
 {% endblock %}

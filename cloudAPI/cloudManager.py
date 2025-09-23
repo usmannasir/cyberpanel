@@ -43,6 +43,10 @@ class CloudManager:
 
     def verifyLogin(self, request):
         try:
+            # Check if token needs to be generated
+            if self.admin.token == 'TOKEN_NEEDS_GENERATION':
+                return 0, self.ajaxPre(0, 'API token needs to be generated. Please reset your password to generate a valid API token.')
+            
             if request.META['HTTP_AUTHORIZATION'] == self.admin.token:
                 return 1, self.ajaxPre(1, None)
             else:

@@ -60,8 +60,45 @@ app.controller('createFTPAccount', function ($scope, $http) {
         var ftpPassword = $scope.ftpPassword;
         var path = $scope.ftpPath;
 
-        if (typeof path === 'undefined') {
+        // Enhanced path validation
+        if (typeof path === 'undefined' || path === null) {
             path = "";
+        } else {
+            path = path.trim();
+        }
+        
+        // Client-side path validation
+        if (path && path !== "") {
+            // Check for dangerous characters
+            var dangerousChars = /[;&|$`'"<>*?~]/;
+            if (dangerousChars.test(path)) {
+                $scope.ftpLoading = false;
+                $scope.canNotCreateFTP = false;
+                $scope.successfullyCreatedFTP = true;
+                $scope.couldNotConnect = true;
+                $scope.errorMessage = "Invalid path: Path contains dangerous characters";
+                return;
+            }
+            
+            // Check for path traversal attempts
+            if (path.indexOf("..") !== -1 || path.indexOf("~") !== -1) {
+                $scope.ftpLoading = false;
+                $scope.canNotCreateFTP = false;
+                $scope.successfullyCreatedFTP = true;
+                $scope.couldNotConnect = true;
+                $scope.errorMessage = "Invalid path: Path cannot contain '..' or '~'";
+                return;
+            }
+            
+            // Check if path starts with slash (should be relative)
+            if (path.startsWith("/")) {
+                $scope.ftpLoading = false;
+                $scope.canNotCreateFTP = false;
+                $scope.successfullyCreatedFTP = true;
+                $scope.couldNotConnect = true;
+                $scope.errorMessage = "Invalid path: Path must be relative (not starting with '/')";
+                return;
+            }
         }
 
         var url = "/ftp/submitFTPCreation";

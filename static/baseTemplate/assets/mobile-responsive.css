@@ -6,6 +6,7 @@ html {
     font-size: 16px; /* Base font size for better readability */
     -webkit-text-size-adjust: 100%;
     -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
 }
 
 body {
@@ -22,7 +23,7 @@ body {
 
 /* Override any light text that might be hard to read */
 .text-muted, .text-secondary, .text-light {
-    color: #64748b !important; /* Darker gray instead of light gray */
+    color: #2f3640 !important; /* Dark text for better readability on white backgrounds */
 }
 
 /* Fix small font sizes that are hard to read */
@@ -294,7 +295,6 @@ p {
     /* Make tables horizontally scrollable */
     .table-responsive {
         overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
     }
     
     .table {
@@ -502,20 +502,57 @@ p {
 }
 
 .text-muted {
-    color: #64748b !important;
+    color: #2f3640 !important; /* Dark text for better readability */
 }
 
 /* Fix any light text on light backgrounds */
 .bg-light .text-muted,
 .bg-white .text-muted,
 .panel .text-muted {
-    color: #64748b !important;
+    color: #2f3640 !important; /* Dark text for better readability */
 }
 
 /* Ensure proper spacing for touch targets */
 a, button, input, select, textarea {
     min-height: 44px;
     min-width: 44px;
+}
+
+/* Additional text readability improvements */
+/* Fix any green text issues */
+.ng-binding {
+    color: #2f3640 !important; /* Normal dark text instead of green */
+}
+
+/* Ensure all text elements have proper contrast */
+span, div, p, label, td, th {
+    color: inherit;
+}
+
+/* Fix specific text color issues */
+.text-success {
+    color: #059669 !important; /* Darker green for better readability */
+}
+
+.text-info {
+    color: #0284c7 !important; /* Darker blue for better readability */
+}
+
+.text-warning {
+    color: #d97706 !important; /* Darker orange for better readability */
+}
+
+/* Override Bootstrap's muted text */
+.text-muted {
+    color: #2f3640 !important; /* Dark text instead of grey */
+}
+
+/* Fix any remaining light text on light backgrounds */
+.bg-white .text-light,
+.bg-light .text-light,
+.panel .text-light,
+.card .text-light {
+    color: #2f3640 !important;
 }
 
 /* Fix for small clickable elements */

@@ -796,6 +796,12 @@ local_name %s {
                 print("0," + parsed_error)
                 return 0, parsed_error
 
+            # Update vhost SSL configuration with new certificate paths
+            virtualHostUtilities.updateVhostSSLConfig(virtualHost)
+            
+            # Update mail SSL configuration for this domain
+            virtualHostUtilities.updateMailSSLConfig(virtualHost)
+
             installUtilities.installUtilities.reStartLiteSpeed()
 
             command = 'systemctl restart postfix'
@@ -891,8 +897,50 @@ local_name %s {
                 print("0, %s file is symlinked." % (fileName))
                 return 0
 
-            numberOfTotalLines = int(
-                ProcessUtilities.outputExecutioner('wc -l %s' % (fileName), externalApp).split(" ")[0])
+            # Improved wc -l parsing with better error handling
+            wc_output = ProcessUtilities.outputExecutioner('wc -l %s' % (fileName), externalApp)
+            
+            # Handle different wc output formats and potential errors
+            if wc_output and wc_output.strip():
+                # Split by whitespace and take the first part that looks like a number
+                wc_parts = wc_output.strip().split()
+                numberOfTotalLines = 0
+                
+                for part in wc_parts:
+                    try:
+                        numberOfTotalLines = int(part)
+                        break
+                    except ValueError:
+                        continue
+                
+                # If no valid number found, try to extract from common wc error formats
+                if numberOfTotalLines == 0:
+                    # Handle cases like "wc: filename: No such file or directory"
+                    if "No such file or directory" in wc_output:
+                        print("1,None")
+                        return "1,None"
+                    # Handle cases where wc returns just "wc:" or similar
+                    if "wc:" in wc_output:
+                        # Try to get line count using alternative method
+                        try:
+                            alt_output = ProcessUtilities.outputExecutioner('cat %s | wc -l' % (fileName), externalApp)
+                            if alt_output and alt_output.strip():
+                                alt_parts = alt_output.strip().split()
+                                for part in alt_parts:
+                                    try:
+                                        numberOfTotalLines = int(part)
+                                        break
+                                    except ValueError:
+                                        continue
+                        except:
+                            pass
+                
+                if numberOfTotalLines == 0:
+                    print("1,None")
+                    return "1,None"
+            else:
+                print("1,None")
+                return "1,None"
 
             if numberOfTotalLines < 25:
                 data = ProcessUtilities.outputExecutioner('cat %s' % (fileName), externalApp)
@@ -1078,6 +1126,84 @@ local_name %s {
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [issueSSLForHostName]")
             print("0," + str(msg))
             return 0, str(msg)
+
+    @staticmethod
+    def updateVhostSSLConfig(virtualHost):
+        """Update vhost SSL configuration with new certificate paths"""
+        try:
+            logging.CyberCPLogFileWriter.writeToFile(f"Updating vhost SSL configuration for {virtualHost}")
+            
+            # Update vhost configuration file
+            vhostConfPath = f'/usr/local/lsws/conf/vhosts/{virtualHost}/vhost.conf'
+            if os.path.exists(vhostConfPath):
+                with open(vhostConfPath, 'r') as f:
+                    content = f.read()
+                
+                # Update SSL certificate paths in vhost configuration
+                new_ssl_config = f"""vhssl {{
+  keyFile                 /etc/letsencrypt/live/{virtualHost}/privkey.pem
+  certFile                /etc/letsencrypt/live/{virtualHost}/fullchain.pem
+  certChain               1
+  sslProtocol             24
+  enableECDHE             1
+  renegProtection         1
+  sslSessionCache         1
+  enableSpdy              15
+  enableStapling           1
+  ocspRespMaxAge           86400
+}}"""
+                
+                # Replace existing vhssl block
+                import re
+                pattern = r'vhssl\s*\{[^}]*\}'
+                if re.search(pattern, content, re.DOTALL):
+                    content = re.sub(pattern, new_ssl_config, content, flags=re.DOTALL)
+                else:
+                    # Add vhssl block if it doesn't exist
+                    content += f"\n{new_ssl_config}\n"
+                
+                with open(vhostConfPath, 'w') as f:
+                    f.write(content)
+                
+                logging.CyberCPLogFileWriter.writeToFile(f"Updated vhost SSL configuration for {virtualHost}")
+            
+        except Exception as e:
+            logging.CyberCPLogFileWriter.writeToFile(f"Error updating vhost SSL config for {virtualHost}: {str(e)}")
+
+    @staticmethod
+    def updateMailSSLConfig(virtualHost):
+        """Update mail SSL configuration with new certificate paths"""
+        try:
+            logging.CyberCPLogFileWriter.writeToFile(f"Updating mail SSL configuration for {virtualHost}")
+            
+            # Update vmail_ssl.map file
+            postfixMapFile = '/etc/postfix/vmail_ssl.map'
+            if os.path.exists(postfixMapFile):
+                with open(postfixMapFile, 'r') as f:
+                    content = f.read()
+                
+                # Remove old entries for this domain
+                lines = content.split('\n')
+                new_lines = []
+                for line in lines:
+                    if not line.startswith(f'{virtualHost} ') and not line.startswith(f'mail.{virtualHost} '):
+                        new_lines.append(line)
+                
+                # Add new entries
+                new_lines.append(f'{virtualHost} /etc/letsencrypt/live/{virtualHost}/privkey.pem /etc/letsencrypt/live/{virtualHost}/fullchain.pem')
+                new_lines.append(f'mail.{virtualHost} /etc/letsencrypt/live/{virtualHost}/privkey.pem /etc/letsencrypt/live/{virtualHost}/fullchain.pem')
+                
+                with open(postfixMapFile, 'w') as f:
+                    f.write('\n'.join(new_lines))
+                
+                # Update postfix map database
+                command = 'postmap -F hash:/etc/postfix/vmail_ssl.map'
+                ProcessUtilities.executioner(command)
+                
+                logging.CyberCPLogFileWriter.writeToFile(f"Updated mail SSL configuration for {virtualHost}")
+            
+        except Exception as e:
+            logging.CyberCPLogFileWriter.writeToFile(f"Error updating mail SSL config for {virtualHost}: {str(e)}")
 
     @staticmethod
     def issueSSLForMailServer(virtualHost, path):

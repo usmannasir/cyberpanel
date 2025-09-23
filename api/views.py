@@ -18,6 +18,7 @@ from packages.packagesManager import PackagesManager
 from s3Backups.s3Backups import S3Backups
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.processUtilities import ProcessUtilities
+from plogical.errorSanitizer import secure_error_response, secure_log_error
 from django.views.decorators.csrf import csrf_exempt
 from userManagment.views import submitUserCreation as suc
 from userManagment.views import submitUserDeletion as duc
@@ -158,6 +159,61 @@ def createWebsite(request):
 
 
 @csrf_exempt
+def createDockersite(request):
+    try:
+        if request.method != 'POST':
+            data_ret = {"status": 0, 'error_message': "Only POST method allowed."}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data, status=405)
+
+        try:
+            data = json.loads(request.body)
+            adminUser = data['adminUser']
+            
+            # Additional security: validate critical fields for dangerous characters
+            is_valid, error_msg = validate_api_input(adminUser, "adminUser")
+            if not is_valid:
+                data_ret = {"status": 0, 'error_message': error_msg}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data, status=400)
+                
+            # Validate site name if provided
+            if 'sitename' in data:
+                is_valid, error_msg = validate_api_input(data['sitename'], "sitename")
+                if not is_valid:
+                    data_ret = {"status": 0, 'error_message': error_msg}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data, status=400)
+                    
+        except (json.JSONDecodeError, KeyError):
+            data_ret = {"status": 0, 'error_message': "Invalid JSON or missing adminUser field."}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data, status=400)
+
+        try:
+            admin = Administrator.objects.get(userName=adminUser)
+        except Administrator.DoesNotExist:
+            data_ret = {"status": 0, 'error_message': "Administrator not found."}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data, status=404)
+
+        if os.path.exists(ProcessUtilities.debugPath):
+            logging.writeToFile(f'Create dockersite payload in API {str(data)}')
+
+        if admin.api == 0:
+            data_ret = {"status": 0, 'error_message': "API Access Disabled."}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data, status=403)
+
+        wm = WebsiteManager()
+        return wm.submitDockerSiteCreation(admin.pk, data)
+    except Exception as msg:
+        data_ret = {"status": 0, 'error_message': f"Internal server error: {str(msg)}"}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data, status=500)
+
+
+@csrf_exempt
 def getPackagesListAPI(request):
     data = json.loads(request.body)
     adminUser = data['adminUser']
@@ -216,8 +272,9 @@ def getUserInfo(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-    except BaseException as msg:
-        data_ret = {'status': 0, 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, 'submitWebsiteCreation')
+        data_ret = secure_error_response(e, 'Failed to create website')
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
@@ -258,8 +315,9 @@ def changeUserPassAPI(request):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    except BaseException as msg:
-        data_ret = {'changeStatus': 0, 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, 'changeUserPassAPI')
+        data_ret = secure_error_response(e, 'Failed to change user password')
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
@@ -290,8 +348,9 @@ def submitUserDeletion(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-    except BaseException as msg:
-        data_ret = {'submitUserDeletion': 0, 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, \'submitUserDeletion\')
+        data_ret = secure_error_response(e, \'Failed to submitUserDeletion\')
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
@@ -333,8 +392,9 @@ def changePackageAPI(request):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    except BaseException as msg:
-        data_ret = {'changePackage': 0, 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, \'changePackage\')
+        data_ret = secure_error_response(e, \'Failed to changePackage\')
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
@@ -379,8 +439,9 @@ def deleteWebsite(request):
             wm = WebsiteManager()
             return wm.submitWebsiteDeletion(admin.pk, data)
 
-    except BaseException as msg:
-        data_ret = {'websiteDeleteStatus': 0, 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, \'websiteDeleteStatus\')
+        data_ret = secure_error_response(e, \'Failed to websiteDeleteStatus\')
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
@@ -411,8 +472,9 @@ def submitWebsiteStatus(request):
             wm = WebsiteManager()
             return wm.submitWebsiteStatus(admin.pk, json.loads(request.body))
 
-    except BaseException as msg:
-        data_ret = {'websiteStatus': 0, 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, \'websiteStatus\')
+        data_ret = secure_error_response(e, \'Failed to websiteStatus\')
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
@@ -436,8 +498,9 @@ def loginAPI(request):
         else:
             return HttpResponse("Invalid Credentials.")
 
-    except BaseException as msg:
-        data = {'userID': 0, 'loginStatus': 0, 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, 'loginAPI')
+        data = secure_error_response(e, 'Login failed')
         json_data = json.dumps(data)
         return HttpResponse(json_data)
 
@@ -542,8 +605,9 @@ def remoteTransfer(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-    except BaseException as msg:
-        data = {'transferStatus': 0, 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, \'transferStatus\')
+        data = secure_error_response(e, \'Failed to transferStatus\')
         json_data = json.dumps(data)
         return HttpResponse(json_data)
 
@@ -593,8 +657,9 @@ def fetchAccountsFromRemoteServer(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-    except BaseException as msg:
-        data = {'fetchStatus': 0, 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, \'fetchStatus\')
+        data = secure_error_response(e, \'Failed to fetchStatus\')
         json_data = json.dumps(data)
         return HttpResponse(json_data)
 
@@ -632,8 +697,9 @@ def FetchRemoteTransferStatus(request):
                 final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "status": "Just started.."})
                 return HttpResponse(final_json)
 
-    except BaseException as msg:
-        data = {'fetchStatus': 0, 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, \'fetchStatus\')
+        data = secure_error_response(e, \'Failed to fetchStatus\')
         json_data = json.dumps(data)
         return HttpResponse(json_data)
 
@@ -721,11 +787,9 @@ def cyberPanelVersion(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-    except BaseException as msg:
-        data_ret = {
-                    "getVersion": 0,
-                    'error_message': str(msg)
-                    }
+    except Exception as e:
+        secure_log_error(e, \'getVersion\')
+        data_ret = secure_error_response(e, \'Failed to getVersion\')
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
@@ -740,8 +804,9 @@ def runAWSBackups(request):
         if os.path.exists(randomFile):
             s3 = S3Backups(request, None, 'runAWSBackups')
             s3.start()
-    except BaseException as msg:
-        logging.writeToFile(str(msg) + ' [API.runAWSBackups]')
+    except Exception as e:
+        secure_log_error(e, \'API.runAWSBackups\')
+        logging.writeToFile(\'Failed to API.runAWSBackups [API.runAWSBackups]\')
 
 
 @csrf_exempt
@@ -770,10 +835,89 @@ def submitUserCreation(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-    except BaseException as msg:
-        data_ret = {'changeStatus': 0, 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, \'changeStatus\')
+        data_ret = secure_error_response(e, \'Failed to changeStatus\')
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
+
+@csrf_exempt
+def listChildDomainsJson(request):
+    try:
+        if request.method != 'POST':
+            data_ret = {"status": 0, 'error_message': "Only POST method allowed."}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data, status=405)
+
+        try:
+            data = json.loads(request.body)
+            adminUser = data['adminUser']
+            adminPass = data['adminPass']
+            
+            # Additional security: validate critical fields for dangerous characters
+            is_valid, error_msg = validate_api_input(adminUser, "adminUser")
+            if not is_valid:
+                data_ret = {"status": 0, 'error_message': error_msg}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data, status=400)
+                
+        except (json.JSONDecodeError, KeyError):
+            data_ret = {"status": 0, 'error_message': "Invalid JSON or missing adminUser/adminPass fields."}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data, status=400)
+
+        try:
+            admin = Administrator.objects.get(userName=adminUser)
+        except Administrator.DoesNotExist:
+            data_ret = {"status": 0, 'error_message': "Administrator not found."}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data, status=404)
+
+        if admin.api == 0:
+            data_ret = {"status": 0, 'error_message': "API Access Disabled."}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data, status=403)
+
+        if not hashPassword.check_password(admin.password, adminPass):
+            data_ret = {"status": 0, 'error_message': "Invalid password."}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data, status=401)
+
+        # Get child domains
+        from websiteFunctions.models import ChildDomains
+        
+        child_domains = ChildDomains.objects.all()
+        
+        # Get machine IP
+        try:
+            ipFile = "/etc/cyberpanel/machineIP"
+            with open(ipFile, 'r') as f:
+                ipData = f.read()
+            ipAddress = ipData.split('\n', 1)[0]
+        except BaseException as msg:
+            logging.writeToFile(f"Failed to read machine IP, error: {str(msg)}")
+            ipAddress = "192.168.100.1"
+
+        json_data = []
+        for items in child_domains:
+            dic = {
+                'parent_site': items.master.domain,
+                'domain': items.domain,
+                'path': items.path,
+                'ssl': items.ssl,
+                'php_version': items.phpSelection,
+                'ip_address': ipAddress
+            }
+            json_data.append(dic)
+
+        final_json = json.dumps(json_data, indent=2)
+        return HttpResponse(final_json, content_type='application/json')
+
+    except Exception as msg:
+        data_ret = {'status': 0, 'error_message': f"Internal server error: {str(msg)}"}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data, status=500)
 
 
 @csrf_exempt
@@ -804,8 +948,9 @@ def addFirewallRule(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-    except BaseException as msg:
-        data_ret = {'submitUserDeletion': 0, 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, \'submitUserDeletion\')
+        data_ret = secure_error_response(e, \'Failed to submitUserDeletion\')
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
@@ -838,8 +983,9 @@ def deleteFirewallRule(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-    except BaseException as msg:
-        data_ret = {'submitUserDeletion': 0, 'error_message': str(msg)}
+    except Exception as e:
+        secure_log_error(e, \'submitUserDeletion\')
+        data_ret = secure_error_response(e, \'Failed to submitUserDeletion\')
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 

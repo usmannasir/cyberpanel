@@ -270,6 +270,11 @@ setup_epel_repo() {
             yum install -y https://cyberpanel.sh/dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
             Check_Return "yum repo" "no_exit"
             ;;
+        "10")
+            # AlmaLinux 10 EPEL support
+            yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm
+            Check_Return "yum repo" "no_exit"
+            ;;
     esac
 }
 
@@ -309,11 +314,12 @@ gpgcheck=1
 EOF
     elif [[ "$Server_OS_Version" = "10" ]] && uname -m | grep -q 'x86_64'; then
         cat <<EOF >/etc/yum.repos.d/MariaDB.repo
-# MariaDB 10.11 CentOS repository list - created 2021-08-06 02:01 UTC
+# MariaDB 10.11 RHEL10 repository list - AlmaLinux 10 compatible
 # http://downloads.mariadb.org/mariadb/repositories/
 [mariadb]
 name = MariaDB
-baseurl = http://yum.mariadb.org/10.11/rhel9-amd64/
+baseurl = http://yum.mariadb.org/10.11/rhel10-amd64/
+module_hotfixes=1
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 enabled=1
 gpgcheck=1
@@ -1117,7 +1123,13 @@ log_function_start "Pre_Install_Setup_Repository"
 log_info "Setting up package repositories for $Server_OS $Server_OS_Version"
 if [[ $Server_OS = "CentOS" ]] ; then
   log_debug "Importing LiteSpeed GPG key"
-  rpm --import https://cyberpanel.sh/rpms.litespeedtech.com/centos/RPM-GPG-KEY-litespeed
+  rpm --import https://cyberpanel.sh/rpms.litespeedtech.com/centos/RPM-GPG-KEY-litespeed || {
+    log_warning "Primary GPG key import failed, trying alternative source"
+    rpm --import https://rpms.litespeedtech.com/centos/RPM-GPG-KEY-litespeed || {
+      log_error "Failed to import LiteSpeed GPG key from all sources"
+      return 1
+    }
+  }
   #import the LiteSpeed GPG key
 
   yum clean all
@@ -1151,8 +1163,13 @@ if [[ $Server_OS = "CentOS" ]] ; then
       dnf config-manager --set-enabled crb
     fi
 
-    yum install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm
+    if [[ "$Server_OS_Version" = "9" ]]; then
+      yum install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm
       Check_Return "yum repo" "no_exit"
+    elif [[ "$Server_OS_Version" = "10" ]]; then
+      yum install -y https://rpms.remirepo.net/enterprise/remi-release-10.rpm
+      Check_Return "yum repo" "no_exit"
+    fi
   fi
 
   if [[ "$Server_OS_Version" = "8" ]]; then
@@ -1337,12 +1354,23 @@ if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "openEuler" ]] ; then
     dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils gpgme-devel
       Check_Return
   elif [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]] ; then
-
-    #!/bin/bash
-
-
-    dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel MariaDB-server MariaDB-client MariaDB-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils gpgme-devel openssl-devel
+    # Enhanced package installation for AlmaLinux 9/10
+    dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel MariaDB-server MariaDB-client MariaDB-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils gpgme-devel openssl-devel boost-devel boost-program-options
       Check_Return
+    
+    # Fix boost library compatibility for galera-4 on AlmaLinux 10
+    if [[ "$Server_OS_Version" = "10" ]]; then
+      # Create symlink for boost libraries if needed
+      if [ ! -f /usr/lib64/libboost_program_options.so.1.75.0 ]; then
+        BOOST_VERSION=$(find /usr/lib64 -name "libboost_program_options.so.*" | head -1 | sed 's/.*libboost_program_options\.so\.//')
+        if [ -n "$BOOST_VERSION" ]; then
+          ln -sf /usr/lib64/libboost_program_options.so.$BOOST_VERSION /usr/lib64/libboost_program_options.so.1.75.0
+          log_info "Created boost library symlink for galera-4 compatibility: $BOOST_VERSION -> 1.75.0"
+        else
+          log_warning "Could not find boost libraries, galera-4 may not work properly"
+        fi
+      fi
+    fi
   elif [[ "$Server_OS_Version" = "20" ]] || [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] ; then
     dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git python3-devel tar socat python3 zip unzip bind-utils gpgme-devel
       Check_Return

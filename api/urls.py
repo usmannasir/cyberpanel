@@ -5,6 +5,7 @@ urlpatterns = [
     re_path(r'^createWebsite$', views.createWebsite, name='createWebsiteAPI'),
     re_path(r'^deleteWebsite$', views.deleteWebsite, name='deleteWebsiteAPI'),
     re_path(r'^submitWebsiteStatus$', views.submitWebsiteStatus, name='submitWebsiteStatusAPI'),
+    re_path(r'^createDockersite$', views.createDockersite, name='createDockersiteAPI'),
     re_path(r'^deleteFirewallRule$', views.deleteFirewallRule, name='deleteFirewallRule'),
     re_path(r'^addFirewallRule$', views.addFirewallRule, name='addFirewallRule'),
 
@@ -29,6 +30,7 @@ urlpatterns = [
     re_path(r'^cyberPanelVersion$', views.cyberPanelVersion, name='cyberPanelVersion'),
     re_path(r'^runAWSBackups$', views.runAWSBackups, name='runAWSBackups'),
     re_path(r'^submitUserCreation$', views.submitUserCreation, name='submitUserCreation'),
+    re_path(r'^listChildDomainsJson$', views.listChildDomainsJson, name='listChildDomainsJson'),
     
     # AI Scanner API endpoints for external workers
     re_path(r'^ai-scanner/authenticate$', views.aiScannerAuthenticate, name='aiScannerAuthenticateAPI'),

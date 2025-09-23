@@ -142,6 +142,27 @@ class cyberPanel:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
             print(0)
 
+    def listChildDomainsJson(self):
+        try:
+            child_domains = ChildDomains.objects.all()
+            ipFile = "/etc/cyberpanel/machineIP"
+            with open(ipFile, 'r') as f:
+                ipData = f.read()
+            ipAddress = ipData.split('\n', 1)[0]
+            json_data = []
+            for items in child_domains:
+                dic = {'parent_site': items.master.domain,
+                       'domain': items.domain,
+                       'path': items.path,
+                       'ssl': items.ssl,
+                       'php_version': items.phpSelection}
+                json_data.append(dic)
+            final_json = json.dumps(json_data)
+            print(final_json)
+        except BaseException as msg:
+            logger.writeforCLI(str(msg), "Error", stack()[0][3])
+            print(0)
+
     def listWebsitesPretty(self):
         try:
             from prettytable import PrettyTable
@@ -1048,6 +1069,19 @@ def main():
             return
 
         cyberpanel.deleteDNSRecord(args.recordID)
+
+    ## Fix File Permission function
+
+    elif args.function == "fixFilePermissions":
+        completeCommandExample = 'cyberpanel fixFilePermissions --domainName cyberpanel.net'
+
+        if not args.domainName:
+            print("\n\nPlease enter the domain. For example:\n\n" + completeCommandExample + "\n\n")
+            return
+
+        from filemanager.filemanager import FileManager
+        fm = FileManager(None, None)
+        fm.fixPermissions(args.domainName)
 
     ## Backup Functions.
 
