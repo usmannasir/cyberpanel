@@ -451,7 +451,7 @@ setup_mariadb_repo() {
 # http://downloads.mariadb.org/mariadb/repositories/
 [mariadb]
 name = MariaDB
-baseurl = http://yum.mariadb.org/10.4/centos7-amd64
+baseurl = https://yum.mariadb.org/10.4/centos7-amd64
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1
 EOF
@@ -461,34 +461,45 @@ EOF
 # http://downloads.mariadb.org/mariadb/repositories/
 [mariadb]
 name = MariaDB
-baseurl = http://yum.mariadb.org/10.11/rhel8-amd64
+baseurl = https://yum.mariadb.org/10.11/rhel8-amd64
 module_hotfixes=1
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1
 EOF
     elif [[ "$Server_OS_Version" = "9" ]] && uname -m | grep -q 'x86_64'; then
-        cat <<EOF >/etc/yum.repos.d/MariaDB.repo
-# MariaDB 10.11 CentOS repository list - created 2021-08-06 02:01 UTC
+        # Use official MariaDB repository setup script for RHEL 9+ systems
+        curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version='10.11' --skip-maxscale --skip-tools
+        if [ $? -ne 0 ]; then
+            # Fallback to manual setup
+            cat <<EOF >/etc/yum.repos.d/MariaDB.repo
+# MariaDB 10.11 RHEL9+ repository list
 # http://downloads.mariadb.org/mariadb/repositories/
 [mariadb]
 name = MariaDB
-baseurl = http://yum.mariadb.org/10.11/rhel9-amd64/
+baseurl = https://yum.mariadb.org/10.11/rhel9-amd64/
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 enabled=1
 gpgcheck=1
-EOF
-    elif [[ "$Server_OS_Version" = "10" ]] && uname -m | grep -q 'x86_64'; then
-        cat <<EOF >/etc/yum.repos.d/MariaDB.repo
-# MariaDB 10.11 RHEL10 repository list - AlmaLinux 10 compatible
-# http://downloads.mariadb.org/mariadb/repositories/
-[mariadb]
-name = MariaDB
-baseurl = http://yum.mariadb.org/10.11/rhel10-amd64/
 module_hotfixes=1
+EOF
+        fi
+    elif [[ "$Server_OS_Version" = "10" ]] && uname -m | grep -q 'x86_64'; then
+        # Use official MariaDB repository setup script for RHEL 10+ systems
+        curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version='10.11' --skip-maxscale --skip-tools
+        if [ $? -ne 0 ]; then
+            # Fallback to manual setup
+            cat <<EOF >/etc/yum.repos.d/MariaDB.repo
+# MariaDB 10.11 RHEL10+ repository list
+# http://downloads.mariadb.org/mariadb/repositories/
+[mariadb]
+name = MariaDB
+baseurl = https://yum.mariadb.org/10.11/rhel9-amd64/
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 enabled=1
 gpgcheck=1
+module_hotfixes=1
 EOF
+        fi
     fi
 }
 
@@ -1567,19 +1578,27 @@ if [[ "$Server_OS" =~ ^(CentOS|RHEL|AlmaLinux|RockyLinux|CloudLinux|openEuler) ]
     dnf install -y epel-release
       Check_Return "EPEL repository" "no_exit"
     
-    # Setup MariaDB repository for AlmaLinux 9/10 - using the working method from 2.4.3
-    if [[ "$Server_OS" =~ ^(AlmaLinux9|AlmaLinux10) ]] ; then
-      cat <<EOF >/etc/yum.repos.d/MariaDB.repo
-# MariaDB 10.11 CentOS repository list - created 2021-08-06 02:01 UTC
+    # Setup MariaDB repository for RHEL 9+ based systems (AlmaLinux 9/10, RockyLinux 9, RHEL 9)
+    if [[ "$Server_OS" =~ ^(AlmaLinux9|AlmaLinux10|RockyLinux9|RHEL9) ]] ; then
+      # Use the official MariaDB repository setup script for better compatibility
+      curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version='10.11' --skip-maxscale --skip-tools
+      Check_Return "MariaDB repository setup" "no_exit"
+      
+      # Fallback manual repository setup if the script fails
+      if [ ! -f /etc/yum.repos.d/mariadb.repo ]; then
+        cat <<EOF >/etc/yum.repos.d/MariaDB.repo
+# MariaDB 10.11 RHEL9+ repository list
 # http://downloads.mariadb.org/mariadb/repositories/
 [mariadb]
 name = MariaDB
-baseurl = http://yum.mariadb.org/10.11/rhel9-amd64/
+baseurl = https://yum.mariadb.org/10.11/rhel9-amd64/
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 enabled=1
 gpgcheck=1
+module_hotfixes=1
 EOF
-        Check_Return "MariaDB repository setup" "no_exit"
+        Check_Return "MariaDB repository fallback setup" "no_exit"
+      fi
     fi
     
     dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel MariaDB-server MariaDB-client MariaDB-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils openssl-devel boost-devel boost-program-options
