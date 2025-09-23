@@ -1518,7 +1518,7 @@ Debug_Log2 "Setting up repositories for CN server...,1"
 Download_Requirement() {
 for i in {1..50} ;
   do
-  if [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] || [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]; then
+  if [[ "$Server_OS" =~ ^(Ubuntu2204|Ubuntu2404|Ubuntu24043|CentOS9|RHEL9|AlmaLinux9|AlmaLinux10|RockyLinux9|openEuler) ]]; then
    wget -O /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}/requirments.txt"
   else
    wget -O /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}/requirments-old.txt"
@@ -1540,20 +1540,29 @@ log_function_start "Pre_Install_Required_Components"
 Debug_Log2 "Installing necessary components..,3"
 log_info "Installing required system components and dependencies"
 
-if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "openEuler" ]] ; then
+if [[ "$Server_OS" =~ ^(CentOS|RHEL|AlmaLinux|RockyLinux|CloudLinux|openEuler) ]] ; then
   # System-wide update - consider making this optional for faster installs
   # Could add a --skip-system-update flag to bypass this
-  yum update -y
-  if [[ "$Server_OS_Version" = "7" ]] ; then
+  
+  # Determine package manager based on specific OS
+  if [[ "$Server_OS" =~ ^(CentOS7|CloudLinux7) ]] ; then
+    PKG_MANAGER="yum"
+    yum update -y
+  else
+    PKG_MANAGER="dnf"
+    dnf update -y
+  fi
+  
+  if [[ "$Server_OS" =~ ^(CentOS7|CloudLinux7) ]] ; then
     yum install -y wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel gpgme-devel curl-devel git socat openssl-devel MariaDB-shared mariadb-devel yum-utils python36u python36u-pip python36u-devel zip unzip bind-utils
       Check_Return
     yum -y groupinstall development
       Check_Return
-  elif [[ "$Server_OS_Version" = "8" ]] ; then
+  elif [[ "$Server_OS" =~ ^(CentOS8|RHEL8|AlmaLinux8|RockyLinux8|CloudLinux8) ]] ; then
     dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils gpgme-devel
       Check_Return
-  elif [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]] ; then
-    # Enhanced package installation for AlmaLinux 9/10
+  elif [[ "$Server_OS" =~ ^(CentOS9|RHEL9|AlmaLinux9|AlmaLinux10|RockyLinux9|openEuler) ]] ; then
+    # Enhanced package installation for AlmaLinux 9/10, RHEL 9, RockyLinux 9, etc.
     dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel MariaDB-server MariaDB-client MariaDB-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils gpgme-devel openssl-devel boost-devel boost-program-options
       Check_Return
     
@@ -1570,12 +1579,12 @@ if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "openEuler" ]] ; then
         fi
       fi
     fi
-  elif [[ "$Server_OS_Version" = "20" ]] || [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] ; then
-    dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git python3-devel tar socat python3 zip unzip bind-utils gpgme-devel
+  elif [[ "$Server_OS" =~ ^(CentOS8|RHEL8|AlmaLinux8|RockyLinux8|CloudLinux8) ]] ; then
+    dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils gpgme-devel
       Check_Return
   fi
   ln -s /usr/bin/pip3 /usr/bin/pip
-else
+elif [[ "$Server_OS" =~ ^(Ubuntu|Debian) ]] ; then
   # Update package lists (required for installations)
   apt update -y
   # System-wide upgrade - consider making this optional for faster installs
@@ -1602,7 +1611,7 @@ else
       DEBIAN_FRONTEND=noninteractive apt install -y dnsutils net-tools htop telnet libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadb-dev-compat libmariadb-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcom-err2 libldap2-dev virtualenv git socat vim unzip zip
        Check_Return
     fi
-  elif [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] ; then
+  elif [[ "$Server_OS" =~ ^(Ubuntu2204|Ubuntu2404|Ubuntu24043) ]] ; then
     # Ubuntu 22.04/24.04 - use newer package names
     DEBIAN_FRONTEND=noninteractive apt install -y dnsutils net-tools htop telnet libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcom-err2 libldap2-dev virtualenv git socat vim unzip zip libmariadb-dev-compat libmariadb-dev
      Check_Return
@@ -1622,6 +1631,29 @@ else
   DEBIAN_FRONTEND=noninteractive apt install -y locales
   locale-gen "en_US.UTF-8"
   update-locale LC_ALL="en_US.UTF-8"
+else
+  # Unknown OS - try to detect package manager and install basic packages
+  echo -e "Unknown OS detected: $Server_OS"
+  echo -e "Attempting to install basic packages..."
+  
+  # Try different package managers
+  if command -v dnf >/dev/null 2>&1; then
+    echo -e "Using dnf package manager..."
+    dnf update -y
+    dnf install -y wget curl git python3 python3-pip
+  elif command -v yum >/dev/null 2>&1; then
+    echo -e "Using yum package manager..."
+    yum update -y
+    yum install -y wget curl git python3 python3-pip
+  elif command -v apt >/dev/null 2>&1; then
+    echo -e "Using apt package manager..."
+    apt update -y
+    DEBIAN_FRONTEND=noninteractive apt install -y wget curl git python3 python3-pip
+  else
+    echo -e "ERROR: No supported package manager found!"
+    echo -e "Please install wget, curl, git, and python3 manually before continuing."
+    exit 1
+  fi
 fi
 
 Debug_Log2 "Installing required virtual environment,3"
@@ -1631,10 +1663,10 @@ export LC_ALL=en_US.UTF-8
 #need to set lang to address some pip module installation issue.
 
 # Install virtualenv - handle Ubuntu 24.04's externally-managed-environment policy
-if [[ "$Server_OS" = "Ubuntu" ]]; then
-  if [[ "$Server_OS_Version" = "24" ]]; then
+if [[ "$Server_OS" =~ ^(Ubuntu|Debian) ]]; then
+  if [[ "$Server_OS" =~ ^(Ubuntu2404|Ubuntu24043) ]]; then
     # Ubuntu 24.04 has python3-venv by default, no need to install virtualenv
-    echo -e "Ubuntu 24.04 detected - using built-in python3-venv"
+    echo -e "Ubuntu 24.04/24.04.3 detected - using built-in python3-venv"
   else
     # For older Ubuntu versions, install virtualenv via apt
     Retry_Command "DEBIAN_FRONTEND=noninteractive apt-get update"
@@ -1652,14 +1684,14 @@ echo -e "Creating CyberPanel virtual environment..."
 # First ensure the directory exists
 mkdir -p /usr/local/CyberPanel
 
-if [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]]) ; then
-  echo -e "Ubuntu 22.04/24.04 detected, using python3 -m venv..."
+if [[ "$Server_OS" =~ ^(Ubuntu2204|Ubuntu2404|Ubuntu24043) ]] ; then
+  echo -e "Ubuntu 22.04/24.04/24.04.3 detected, using python3 -m venv..."
   if python3 -m venv /usr/local/CyberPanel-venv 2>&1; then
     echo -e "Virtual environment created successfully"
   else
     echo -e "python3 -m venv failed, trying virtualenv..."
     # For Ubuntu 24.04, python3-venv should work, but if not, try apt install
-    if [[ "$Server_OS_Version" = "24" ]]; then
+    if [[ "$Server_OS" =~ ^(Ubuntu2404|Ubuntu24043) ]]; then
       Retry_Command "DEBIAN_FRONTEND=noninteractive apt-get install -y python3-venv"
     else
       # For Ubuntu 22.04, install virtualenv via apt
@@ -2447,8 +2479,8 @@ echo -e "Creating CyberCP virtual environment..."
 # First ensure the directory exists
 mkdir -p /usr/local/CyberCP
 
-if [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]]) ; then
-  echo -e "Ubuntu 22.04/24.04 detected, using python3 -m venv..."
+if [[ "$Server_OS" =~ ^(Ubuntu2004|Ubuntu2010|Ubuntu2204|Ubuntu2404|Ubuntu24043) ]] ; then
+  echo -e "Ubuntu 20.04/20.10/22.04/24.04/24.04.3 detected, using python3 -m venv..."
   if python3 -m venv /usr/local/CyberCP 2>&1; then
     echo -e "Virtual environment created successfully"
   else
@@ -2457,8 +2489,8 @@ if [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$S
     pip3 install --upgrade virtualenv
     virtualenv -p /usr/bin/python3 /usr/local/CyberCP
   fi
-elif [[ "$Server_OS" = "CentOS" ]] && ([[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]) ; then
-  echo -e "AlmaLinux/Rocky Linux 9/10 detected, using python3 -m venv..."
+elif [[ "$Server_OS" =~ ^(CentOS9|RHEL9|AlmaLinux9|AlmaLinux10|RockyLinux9|openEuler) ]] ; then
+  echo -e "AlmaLinux/Rocky Linux 9/10, RHEL 9, CentOS 9, OpenEuler detected, using python3 -m venv..."
   if python3 -m venv /usr/local/CyberCP 2>&1; then
     echo -e "Virtual environment created successfully"
   else
@@ -2485,7 +2517,7 @@ if [[ ! -L /usr/local/CyberPanel ]] && [[ ! -d /usr/local/CyberPanel ]]; then
   ln -sf /usr/local/CyberCP /usr/local/CyberPanel
 fi
 
-if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" = "20" ]] ; then
+if [[ "$Server_OS" = "Ubuntu2004" ]] ; then
   # shellcheck disable=SC1091
   . /usr/local/CyberCP/bin/activate
    Check_Return
@@ -2508,11 +2540,11 @@ else
   echo -e "Django is properly installed"
 fi
 
-if [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]]) ; then
+if [[ "$Server_OS" =~ ^(Ubuntu2204|Ubuntu2404|Ubuntu24043) ]] ; then
   # Ubuntu 24.04 ships with Python 3.12, but using 3.10 for compatibility with CyberPanel
   cp /usr/bin/python3.10 /usr/local/CyberCP/bin/python3
 else
-  if [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]] || [[ "$Server_OS_Version" = "8" ]] || [[ "$Server_OS_Version" = "20" ]] || [[ "$Server_OS_Version" = "24" ]]; then
+  if [[ "$Server_OS" =~ ^(CentOS8|CentOS9|RHEL8|RHEL9|AlmaLinux8|AlmaLinux9|AlmaLinux10|RockyLinux8|RockyLinux9|Ubuntu2004|Ubuntu2204|Ubuntu2404|Ubuntu24043|openEuler) ]]; then
     echo "PYTHONHOME=/usr" > /usr/local/lscp/conf/pythonenv.conf
   else
     # Uncomment and use the following lines if necessary for other OS versions
