@@ -104,6 +104,115 @@ class FirewallUtilities:
         return 1
 
     @staticmethod
+    def blockIP(ip_address, reason="Manual block"):
+        """
+        Block an IP address using firewalld
+        """
+        try:
+            # Create a drop rule for the IP address
+            ruleFamily = 'rule family="ipv4"'
+            sourceAddress = 'source address="' + ip_address + '"'
+            action = 'drop'
+
+            command = "firewall-cmd --permanent --zone=public --add-rich-rule='" + ruleFamily + " " + sourceAddress + " " + action + "'"
+            
+            logging.CyberCPLogFileWriter.writeToFile(f"Blocking IP address: {ip_address} - Reason: {reason}")
+            
+            result = ProcessUtilities.executioner(command)
+            if result == 0:
+                logging.CyberCPLogFileWriter.writeToFile(f"Successfully blocked IP: {ip_address}")
+                
+                # Reload firewall to apply changes
+                ProcessUtilities.executioner('firewall-cmd --reload')
+                
+                # Log the block in a dedicated file
+                block_log_path = "/usr/local/lscp/logs/blocked_ips.log"
+                with open(block_log_path, "a") as f:
+                    from datetime import datetime
+                    f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {ip_address} - {reason}\n")
+                
+                return True, f"IP {ip_address} blocked successfully"
+            else:
+                logging.CyberCPLogFileWriter.writeToFile(f"Failed to block IP: {ip_address}")
+                return False, f"Failed to block IP: {ip_address}"
+                
+        except Exception as e:
+            logging.CyberCPLogFileWriter.writeToFile(f"Error blocking IP {ip_address}: {str(e)}")
+            return False, f"Error blocking IP: {str(e)}"
+
+    @staticmethod
+    def unblockIP(ip_address):
+        """
+        Unblock an IP address by removing the drop rule
+        """
+        try:
+            ruleFamily = 'rule family="ipv4"'
+            sourceAddress = 'source address="' + ip_address + '"'
+            action = 'drop'
+
+            command = "firewall-cmd --permanent --zone=public --remove-rich-rule='" + ruleFamily + " " + sourceAddress + " " + action + "'"
+            
+            logging.CyberCPLogFileWriter.writeToFile(f"Unblocking IP address: {ip_address}")
+            
+            result = ProcessUtilities.executioner(command)
+            if result == 0:
+                logging.CyberCPLogFileWriter.writeToFile(f"Successfully unblocked IP: {ip_address}")
+                
+                # Reload firewall to apply changes
+                ProcessUtilities.executioner('firewall-cmd --reload')
+                
+                return True, f"IP {ip_address} unblocked successfully"
+            else:
+                logging.CyberCPLogFileWriter.writeToFile(f"Failed to unblock IP: {ip_address}")
+                return False, f"Failed to unblock IP: {ip_address}"
+                
+        except Exception as e:
+            logging.CyberCPLogFileWriter.writeToFile(f"Error unblocking IP {ip_address}: {str(e)}")
+            return False, f"Error unblocking IP: {str(e)}"
+
+    @staticmethod
+    def isIPBlocked(ip_address):
+        """
+        Check if an IP address is currently blocked
+        """
+        try:
+            command = "firewall-cmd --list-rich-rules | grep -i '" + ip_address + "'"
+            result = ProcessUtilities.normalExecutioner(command)
+            return result == 0
+        except Exception as e:
+            logging.CyberCPLogFileWriter.writeToFile(f"Error checking if IP {ip_address} is blocked: {str(e)}")
+            return False
+
+    @staticmethod
+    def getBlockedIPs():
+        """
+        Get list of currently blocked IP addresses
+        """
+        try:
+            command = "firewall-cmd --list-rich-rules | grep 'drop' | grep 'source address'"
+            result = ProcessUtilities.normalExecutioner(command)
+            if result == 0:
+                # Parse the output to extract IP addresses
+                import subprocess
+                try:
+                    output = subprocess.check_output(command, shell=True, text=True)
+                    blocked_ips = []
+                    for line in output.split('\n'):
+                        if 'source address=' in line:
+                            # Extract IP from the line
+                            import re
+                            ip_match = re.search(r'source address="([^"]+)"', line)
+                            if ip_match:
+                                blocked_ips.append(ip_match.group(1))
+                    return blocked_ips
+                except:
+                    return []
+            return []
+        except Exception as e:
+            logging.CyberCPLogFileWriter.writeToFile(f"Error getting blocked IPs: {str(e)}")
+            return []
+
+    @staticmethod
     def saveSSHConfigs(type, sshPort, rootLogin):
         try:
             if type == "1":

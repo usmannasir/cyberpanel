@@ -2234,3 +2234,86 @@ def fixSubdomainLogsAction(request):
 
     except KeyError:
         return redirect(loadLoginPage)
+
+# FTP Quota Management Views
+def enableFTPQuota(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.enableFTPQuota(userID, request.POST)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def getFTPQuotas(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.getFTPQuotas(userID, request.POST)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def updateFTPQuota(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.updateFTPQuota(userID, request.POST)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+# Bandwidth Management Views
+def resetBandwidth(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.resetBandwidth(userID, request.POST)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def getBandwidthResetLogs(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.getBandwidthResetLogs(userID, request.POST)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def scheduleBandwidthReset(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.scheduleBandwidthReset(userID, request.POST)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+# IP Blocking Views
+def blockIPAddress(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.blockIPAddress(userID, request.POST)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def unblockIPAddress(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.unblockIPAddress(userID, request.POST)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def getBlockedIPs(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.getBlockedIPs(userID, request.POST)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def checkIPStatus(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.checkIPStatus(userID, request.POST)
+    except KeyError:
+        return redirect(loadLoginPage)

@@ -1,0 +1,606 @@
+{% extends "baseTemplate/index.html" %}
+{% load static %}
+
+{% block title %}
+Bandwidth Management - CyberPanel
+{% endblock %}
+
+{% block content %}
+<style>
+/* Bandwidth Management Page Specific Styles */
+.cyberpanel-bandwidth-page {
+    background: transparent;
+    padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.cyberpanel-bandwidth-page .cyber-card {
+    background: var(--bg-secondary, white);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px var(--shadow-color, rgba(0,0,0,0.08));
+    border: 1px solid var(--border-color, #e8e9ff);
+    margin-bottom: 25px;
+    padding: 25px;
+    transition: box-shadow 0.2s;
+}
+
+.cyberpanel-bandwidth-page .cyber-card:hover {
+    box-shadow: 0 4px 16px var(--shadow-color-hover, rgba(0,0,0,0.12));
+}
+
+.cyberpanel-bandwidth-page .cyber-section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary, #2f3640);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cyberpanel-bandwidth-page .cyber-section-title::before {
+    content: '';
+    width: 4px;
+    height: 24px;
+    background: var(--accent-color, #5b5fcf);
+    border-radius: 2px;
+}
+
+.cyberpanel-bandwidth-page .cyber-btn {
+    background: var(--bg-hover, #f8f9ff);
+    border: 1px solid var(--border-color, #e8e9ff);
+    color: var(--accent-color, #5b5fcf);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: 12px;
+    transition: all 0.2s ease;
+}
+
+.cyberpanel-bandwidth-page .cyber-btn:hover {
+    background: var(--accent-color, #5b5fcf);
+    color: var(--text-on-accent, white);
+    border-color: var(--accent-color, #5b5fcf);
+    box-shadow: 0 2px 4px var(--accent-shadow, rgba(91,95,207,0.3));
+    text-decoration: none;
+}
+
+.cyberpanel-bandwidth-page .cyber-btn.warning { 
+    background: var(--warning-bg, #fff7ed); 
+    color: var(--warning-color, #ea580c); 
+    border-color: var(--warning-border, #fed7aa); 
+}
+
+.cyberpanel-bandwidth-page .cyber-btn.info { 
+    background: var(--info-bg, #f0f9ff); 
+    color: var(--info-color, #0ea5e9); 
+    border-color: var(--info-border, #bae6fd); 
+}
+
+.cyberpanel-bandwidth-page .cyber-btn.success { 
+    background: var(--success-bg, #f0fdf4); 
+    color: var(--success-color, #16a34a); 
+    border-color: var(--success-border, #bbf7d0); 
+}
+
+.cyberpanel-bandwidth-page .cyber-table {
+    width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border-color, #e8e9ff);
+}
+
+.cyberpanel-bandwidth-page .cyber-table th, 
+.cyberpanel-bandwidth-page .cyber-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-light, #f0f0ff);
+    font-size: 14px;
+}
+
+.cyberpanel-bandwidth-page .cyber-table th {
+    color: var(--text-secondary, #64748b);
+    font-weight: 700;
+    background: var(--bg-hover, #f8f9ff);
+    border-top: none;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.cyberpanel-bandwidth-page .cyber-table tr:last-child td {
+    border-bottom: none;
+}
+
+.cyberpanel-bandwidth-page .cyber-table tr:hover {
+    background: var(--bg-hover, #f8f9ff);
+}
+
+.cyberpanel-bandwidth-page .form-control {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color, #e8e9ff);
+    border-radius: 6px;
+    font-size: 14px;
+    background: var(--bg-secondary, white);
+    color: var(--text-primary, #2f3640);
+    transition: all 0.2s ease;
+}
+
+.cyberpanel-bandwidth-page .form-control:focus {
+    outline: none;
+    border-color: var(--accent-color, #5b5fcf);
+    box-shadow: 0 0 0 3px var(--accent-focus, rgba(91,95,207,0.1));
+}
+
+.cyberpanel-bandwidth-page .form-group {
+    margin-bottom: 20px;
+}
+
+.cyberpanel-bandwidth-page .form-group label {
+    font-weight: 600;
+    color: var(--text-primary, #2f3640);
+    font-size: 14px;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.cyberpanel-bandwidth-page .alert {
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.cyberpanel-bandwidth-page .alert-success {
+    background: var(--success-bg, #f0f9ff);
+    border: 1px solid var(--success-border, #bae6fd);
+    color: var(--success-text, #0c4a6e);
+}
+
+.cyberpanel-bandwidth-page .alert-danger {
+    background: var(--danger-bg, #fef2f2);
+    border: 1px solid var(--danger-border, #fecaca);
+    color: var(--danger-text, #991b1b);
+}
+
+.cyberpanel-bandwidth-page .alert-warning {
+    background: var(--warning-bg, #fffbeb);
+    border: 1px solid var(--warning-border, #fed7aa);
+    color: var(--warning-text, #92400e);
+}
+
+.cyberpanel-bandwidth-page .alert-info {
+    background: var(--info-bg, #f0f9ff);
+    border: 1px solid var(--info-border, #bae6fd);
+    color: var(--info-text, #0c4a6e);
+}
+
+/* Creative Hero Section Design */
+.bandwidth-hero {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    border-radius: 20px;
+    padding: 40px;
+    margin-bottom: 30px;
+    position: relative;
+    overflow: hidden;
+    color: white;
+}
+
+.bandwidth-hero::before {
+    content: '';
+    position: absolute;
+    top: -100px;
+    right: -100px;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+.bandwidth-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -50px;
+    left: -50px;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+.bandwidth-info {
+    position: relative;
+    z-index: 1;
+}
+
+.bandwidth-title {
+    font-size: 36px;
+    font-weight: 800;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.bandwidth-description {
+    font-size: 18px;
+    opacity: 0.9;
+    margin-bottom: 30px;
+}
+
+/* Action Cards */
+.action-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.action-card {
+    background: var(--bg-secondary, white);
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 4px 20px var(--shadow-color, rgba(0,0,0,0.08));
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.action-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+}
+
+.action-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px var(--shadow-color-hover, rgba(0,0,0,0.12));
+}
+
+.action-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.action-card-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--bg-hover, #f8f9ff);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: var(--accent-color, #5b5fcf);
+}
+
+.action-card-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary, #2f3640);
+    margin: 0;
+}
+
+.action-card-description {
+    color: var(--text-secondary, #64748b);
+    font-size: 14px;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+/* Badge styling */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge-primary {
+    background: var(--accent-bg, #f0f4ff);
+    color: var(--accent-color, #5b5fcf);
+}
+
+.badge-info {
+    background: var(--info-bg, #f0f9ff);
+    color: var(--info-color, #0ea5e9);
+}
+
+.badge-warning {
+    background: var(--warning-bg, #fff7ed);
+    color: var(--warning-color, #ea580c);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .cyberpanel-bandwidth-page {
+        padding: 15px;
+    }
+    
+    .bandwidth-hero {
+        padding: 30px 20px;
+    }
+    
+    .bandwidth-title {
+        font-size: 28px;
+    }
+    
+    .action-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .cyberpanel-bandwidth-page .cyber-table {
+        font-size: 12px;
+    }
+    
+    .cyberpanel-bandwidth-page .cyber-table th, 
+    .cyberpanel-bandwidth-page .cyber-table td {
+        padding: 8px 12px;
+    }
+}
+</style>
+
+<div class="cyberpanel-bandwidth-page">
+    <!-- Creative Hero Section -->
+    <div class="bandwidth-hero">
+        <div class="bandwidth-info">
+            <div class="bandwidth-title">
+                <i class="fas fa-tachometer-alt"></i>
+                Bandwidth Management
+            </div>
+            <p class="bandwidth-description">
+                Monitor and manage bandwidth usage across all your domains with powerful reset tools and scheduling options.
+            </p>
+        </div>
+    </div>
+
+    <!-- Action Cards -->
+    <div class="action-cards">
+        <div class="action-card">
+            <div class="action-card-header">
+                <div class="action-card-icon">
+                    <i class="fas fa-sync"></i>
+                </div>
+                <h3 class="action-card-title">Reset Bandwidth</h3>
+            </div>
+            <p class="action-card-description">Reset bandwidth usage for all domains or a specific domain.</p>
+            <div class="form-group">
+                <label for="resetDomain">Domain (leave empty for all domains)</label>
+                <select class="form-control" id="resetDomain">
+                    <option value="">All Domains</option>
+                </select>
+            </div>
+            <button class="cyber-btn warning" onclick="resetBandwidth()">
+                <i class="fas fa-sync"></i> Reset Bandwidth
+            </button>
+        </div>
+
+        <div class="action-card">
+            <div class="action-card-header">
+                <div class="action-card-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h3 class="action-card-title">Schedule Reset</h3>
+            </div>
+            <p class="action-card-description">Schedule automatic bandwidth reset.</p>
+            <div class="form-group">
+                <label for="scheduleType">Schedule Type</label>
+                <select class="form-control" id="scheduleType">
+                    <option value="monthly">Monthly</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="daily">Daily</option>
+                </select>
+            </div>
+            <div class="form-group" id="dayOfMonthGroup">
+                <label for="dayOfMonth">Day of Month</label>
+                <select class="form-control" id="dayOfMonth">
+                    {% for i in "1234567890123456789012345678901"|make_list %}
+                        <option value="{{ forloop.counter }}" {% if forloop.counter == 1 %}selected{% endif %}>{{ forloop.counter }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="resetHour">Hour (24h format)</label>
+                <select class="form-control" id="resetHour">
+                    {% for i in "012345678901234567890123"|make_list %}
+                        <option value="{{ forloop.counter0 }}" {% if forloop.counter0 == 2 %}selected{% endif %}>{{ forloop.counter0|stringformat:"02d" }}:00</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button class="cyber-btn info" onclick="scheduleReset()">
+                <i class="fas fa-clock"></i> Schedule Reset
+            </button>
+        </div>
+    </div>
+
+    <!-- Reset Logs -->
+    <div class="cyber-card">
+        <div class="cyber-section-title">
+            <i class="fas fa-history"></i>
+            Reset History
+            <button class="cyber-btn success" onclick="refreshLogs()" style="margin-left: auto;">
+                <i class="fas fa-sync"></i> Refresh
+            </button>
+        </div>
+        <div class="table-responsive">
+            <table class="cyber-table" id="logsTable">
+                <thead>
+                    <tr>
+                        <th>Reset Type</th>
+                        <th>Domain</th>
+                        <th>Reset By</th>
+                        <th>Reset At</th>
+                        <th>Domains Affected</th>
+                        <th>Bandwidth Reset (MB)</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody id="logsTableBody">
+                    <tr>
+                        <td colspan="7" class="text-center">
+                            <i class="fas fa-spinner fa-spin"></i> Loading...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function resetBandwidth() {
+    const domain = document.getElementById('resetDomain').value;
+    
+    if (domain && !confirm(`Are you sure you want to reset bandwidth for ${domain}?`)) {
+        return;
+    }
+    
+    if (!domain && !confirm('Are you sure you want to reset bandwidth for ALL domains?')) {
+        return;
+    }
+    
+    const formData = {
+        'csrfmiddlewaretoken': '{{ csrf_token }}',
+        'reset_type': 'manual',
+        'domain': domain
+    };
+    
+    $.post('{% url "resetBandwidth" %}', formData, function(data) {
+        if (data.status === 1) {
+            showNotification('success', data.message);
+            refreshLogs();
+        } else {
+            showNotification('error', data.message);
+        }
+    });
+}
+
+function scheduleReset() {
+    const scheduleType = document.getElementById('scheduleType').value;
+    const dayOfMonth = document.getElementById('dayOfMonth').value;
+    const hour = document.getElementById('resetHour').value;
+    
+    const formData = {
+        'csrfmiddlewaretoken': '{{ csrf_token }}',
+        'schedule_type': scheduleType,
+        'day_of_month': dayOfMonth,
+        'hour': hour,
+        'minute': '0'
+    };
+    
+    $.post('{% url "scheduleBandwidthReset" %}', formData, function(data) {
+        if (data.status === 1) {
+            showNotification('success', data.message);
+        } else {
+            showNotification('error', data.message);
+        }
+    });
+}
+
+function refreshLogs() {
+    $.post('{% url "getBandwidthResetLogs" %}', {
+        'csrfmiddlewaretoken': '{{ csrf_token }}'
+    }, function(data) {
+        if (data.status === 1) {
+            displayLogs(data.logs);
+        } else {
+            showNotification('error', data.message);
+        }
+    });
+}
+
+function displayLogs(logs) {
+    const tbody = document.getElementById('logsTableBody');
+    
+    if (logs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center">No reset logs found</td></tr>';
+        return;
+    }
+    
+    let html = '';
+    logs.forEach(log => {
+        const resetTypeClass = log.reset_type === 'Manual Reset' ? 'primary' : 
+                              log.reset_type === 'Scheduled Reset' ? 'info' : 'warning';
+        
+        html += `
+            <tr>
+                <td><span class="badge badge-${resetTypeClass}">${log.reset_type}</span></td>
+                <td>${log.domain}</td>
+                <td>${log.reset_by}</td>
+                <td>${log.reset_at}</td>
+                <td>${log.domains_affected}</td>
+                <td>${log.bandwidth_reset_mb.toLocaleString()}</td>
+                <td>${log.notes || '-'}</td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html;
+}
+
+function showNotification(type, message) {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+    
+    const notification = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert" style="margin-bottom: 20px;">
+            <i class="fas ${icon}"></i> ${message}
+            <button type="button" class="close" data-dismiss="alert">
+                <span>&times;</span>
+            </button>
+        </div>
+    `;
+    
+    $('.cyberpanel-bandwidth-page').prepend(notification);
+    
+    setTimeout(() => {
+        $('.alert').fadeOut();
+    }, 5000);
+}
+
+// Toggle day of month field based on schedule type
+function toggleDayOfMonth() {
+    const scheduleType = document.getElementById('scheduleType').value;
+    const dayGroup = document.getElementById('dayOfMonthGroup');
+    
+    if (scheduleType === 'monthly') {
+        dayGroup.style.display = 'block';
+    } else {
+        dayGroup.style.display = 'none';
+    }
+}
+
+// Load domains for reset dropdown
+function loadDomains() {
+    // This would typically load from an API endpoint
+    // For now, we'll leave it empty
+}
+
+// Load logs on page load
+$(document).ready(function() {
+    refreshLogs();
+    loadDomains();
+    
+    // Add event listener for schedule type change
+    document.getElementById('scheduleType').addEventListener('change', toggleDayOfMonth);
+    toggleDayOfMonth(); // Initial call
+});
+</script>
+{% endblock %}
