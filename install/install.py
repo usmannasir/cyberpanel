@@ -86,7 +86,15 @@ class preFlightsChecks:
         return service_map.get(service, service)
     
     def manage_service(self, service_name, action="start"):
-        """Unified service management"""
+        """Unified service management with error handling"""
+        # Check if service exists before trying to manage it
+        check_command = f'systemctl list-unit-files | grep -q "{service_name}.service"'
+        result = subprocess.run(check_command, shell=True, capture_output=True)
+        
+        if result.returncode != 0:
+            preFlightsChecks.stdOut(f"Service {service_name} not found, skipping {action}", 1)
+            return 1  # Return success since service doesn't exist
+        
         command = f'systemctl {action} {service_name}'
         return preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
     
@@ -2119,6 +2127,43 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
     def setupPythonWSGI(self):
         try:
             preFlightsChecks.stdOut("Setting up Python WSGI-LSAPI with optimized compilation...", 1)
+            
+            # Ensure virtual environment is properly set up
+            self.ensureVirtualEnvironmentSetup()
+            
+            # Upgrade pip to latest version for better package compatibility
+            self.upgradePip()
+
+            # Determine the correct Python path
+            python_paths = [
+                "/usr/local/CyberPanel/bin/python",
+                "/usr/local/CyberCP/bin/python",
+                "/usr/bin/python3",
+                "/usr/local/bin/python3"
+            ]
+            
+            python_path = None
+            for path in python_paths:
+                if os.path.exists(path):
+                    python_path = path
+                    preFlightsChecks.stdOut(f"Using Python at: {python_path}", 1)
+                    break
+            
+            if not python_path:
+                preFlightsChecks.stdOut("ERROR: No Python executable found for WSGI setup", 0)
+                preFlightsChecks.stdOut("Attempting to create virtual environment symlink...", 1)
+                
+                # Try to create symlink for compatibility
+                if os.path.exists('/usr/local/CyberCP/bin/python') and not os.path.exists('/usr/local/CyberPanel'):
+                    try:
+                        os.symlink('/usr/local/CyberCP', '/usr/local/CyberPanel')
+                        python_path = "/usr/local/CyberPanel/bin/python"
+                        preFlightsChecks.stdOut(f"Created symlink, using Python at: {python_path}", 1)
+                    except Exception as e:
+                        preFlightsChecks.stdOut(f"Failed to create symlink: {str(e)}", 0)
+                        return 0
+                else:
+                    return 0
 
             command = "wget http://www.litespeedtech.com/packages/lsapi/wsgi-lsapi-2.1.tgz"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -2128,7 +2173,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             os.chdir("wsgi-lsapi-2.1")
 
-            command = "/usr/local/CyberPanel/bin/python ./configure.py"
+            command = f"{python_path} ./configure.py"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             # Fix Makefile to use proper optimization flags to avoid _FORTIFY_SOURCE warnings
@@ -2157,6 +2202,69 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
         except Exception as e:
             preFlightsChecks.stdOut(f"WSGI setup error: {str(e)}", 0)
             return 0
+
+    def ensureVirtualEnvironmentSetup(self):
+        """Ensure virtual environment is properly set up and accessible"""
+        try:
+            # Check if CyberCP virtual environment exists
+            if os.path.exists('/usr/local/CyberCP/bin/python'):
+                preFlightsChecks.stdOut("CyberCP virtual environment found", 1)
+                
+                # Create symlink if CyberPanel path doesn't exist
+                if not os.path.exists('/usr/local/CyberPanel/bin/python'):
+                    if not os.path.exists('/usr/local/CyberPanel'):
+                        preFlightsChecks.stdOut("Creating CyberPanel symlink for compatibility", 1)
+                        os.symlink('/usr/local/CyberCP', '/usr/local/CyberPanel')
+                    else:
+                        preFlightsChecks.stdOut("CyberPanel directory exists but Python not found", 0)
+                        return False
+                
+                return True
+            else:
+                preFlightsChecks.stdOut("CyberCP virtual environment not found", 0)
+                return False
+                
+        except Exception as e:
+            preFlightsChecks.stdOut(f"Error setting up virtual environment: {str(e)}", 0)
+            return False
+
+    def upgradePip(self):
+        """Upgrade pip to latest version for better package compatibility"""
+        try:
+            preFlightsChecks.stdOut("Upgrading pip to latest version...", 1)
+            
+            # Determine the correct Python path
+            python_paths = [
+                "/usr/local/CyberPanel/bin/python",
+                "/usr/local/CyberCP/bin/python",
+                "/usr/bin/python3",
+                "/usr/local/bin/python3"
+            ]
+            
+            python_path = None
+            for path in python_paths:
+                if os.path.exists(path):
+                    python_path = path
+                    break
+            
+            if not python_path:
+                preFlightsChecks.stdOut("No Python executable found for pip upgrade", 0)
+                return False
+            
+            # Upgrade pip and essential packages
+            upgrade_command = f"{python_path} -m pip install --upgrade pip setuptools wheel packaging"
+            result = preFlightsChecks.call(upgrade_command, self.distro, "Upgrade pip", upgrade_command, 1, 0, os.EX_OSERR)
+            
+            if result == 1:
+                preFlightsChecks.stdOut("pip upgraded successfully", 1)
+                return True
+            else:
+                preFlightsChecks.stdOut("WARNING: pip upgrade failed, continuing with current version", 0)
+                return False
+                
+        except Exception as e:
+            preFlightsChecks.stdOut(f"Error upgrading pip: {str(e)}", 0)
+            return False
 
     def _fixWSGIMakefile(self):
         """Fix the Makefile to use proper compiler optimization flags"""
@@ -2966,6 +3074,78 @@ vmail
         
         preFlightsChecks.stdOut("[WARNING] Database may not be fully ready")
 
+    def ensurePowerDNSDatabaseAccess(self):
+        """Ensure PowerDNS database tables and access are properly set up"""
+        try:
+            preFlightsChecks.stdOut("Setting up PowerDNS database access...", 1)
+            
+            # Create PowerDNS database tables if they don't exist
+            db_commands = [
+                "mysql -e \"CREATE DATABASE IF NOT EXISTS powerdns;\"",
+                "mysql -e \"CREATE USER IF NOT EXISTS 'powerdns'@'localhost' IDENTIFIED BY 'cyberpanel';\"",
+                "mysql -e \"GRANT ALL PRIVILEGES ON powerdns.* TO 'powerdns'@'localhost';\"",
+                "mysql -e \"FLUSH PRIVILEGES;\""
+            ]
+            
+            for cmd in db_commands:
+                preFlightsChecks.call(cmd, self.distro, f"PowerDNS DB: {cmd}", cmd, 1, 0, os.EX_OSERR)
+            
+            # Import PowerDNS schema if tables don't exist
+            schema_check = "mysql -e \"USE powerdns; SHOW TABLES;\""
+            result = subprocess.run(schema_check, shell=True, capture_output=True, text=True)
+            
+            if not result.stdout.strip() or 'domains' not in result.stdout:
+                preFlightsChecks.stdOut("Importing PowerDNS database schema...", 1)
+                # Try to find and import PowerDNS schema
+                schema_files = [
+                    '/usr/share/doc/pdns-backend-mysql/schema.mysql.sql',
+                    '/usr/share/doc/powerdns/schema.mysql.sql',
+                    '/usr/share/pdns/schema.mysql.sql'
+                ]
+                
+                for schema_file in schema_files:
+                    if os.path.exists(schema_file):
+                        import_cmd = f"mysql powerdns < {schema_file}"
+                        preFlightsChecks.call(import_cmd, self.distro, f"Import PowerDNS schema", import_cmd, 1, 0, os.EX_OSERR)
+                        break
+                else:
+                    preFlightsChecks.stdOut("PowerDNS schema not found, creating basic tables...", 1)
+                    # Create basic PowerDNS tables
+                    basic_schema = """
+                    CREATE TABLE IF NOT EXISTS domains (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        name VARCHAR(255) NOT NULL,
+                        master VARCHAR(128) DEFAULT NULL,
+                        last_check INT DEFAULT NULL,
+                        type VARCHAR(6) NOT NULL,
+                        notified_serial INT DEFAULT NULL,
+                        account VARCHAR(40) DEFAULT NULL,
+                        UNIQUE KEY name (name)
+                    );
+                    CREATE TABLE IF NOT EXISTS records (
+                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                        domain_id INT DEFAULT NULL,
+                        name VARCHAR(255) DEFAULT NULL,
+                        type VARCHAR(10) DEFAULT NULL,
+                        content TEXT DEFAULT NULL,
+                        ttl INT DEFAULT NULL,
+                        prio INT DEFAULT NULL,
+                        change_date INT DEFAULT NULL,
+                        disabled TINYINT(1) DEFAULT 0,
+                        ordername VARCHAR(255) DEFAULT NULL,
+                        auth TINYINT(1) DEFAULT 1,
+                        KEY domain_id (domain_id),
+                        KEY name (name),
+                        KEY type (type)
+                    );
+                    """
+                    with open('/tmp/powerdns_schema.sql', 'w') as f:
+                        f.write(basic_schema)
+                    preFlightsChecks.call("mysql powerdns < /tmp/powerdns_schema.sql", self.distro, "Create PowerDNS tables", "mysql powerdns < /tmp/powerdns_schema.sql", 1, 0, os.EX_OSERR)
+            
+        except Exception as e:
+            preFlightsChecks.stdOut(f"Warning: Could not set up PowerDNS database access: {str(e)}", 0)
+
     def fixAndStartPowerDNS(self):
         """Fix PowerDNS configuration and start the service"""
         preFlightsChecks.stdOut("Fixing and starting PowerDNS service...")
@@ -2987,40 +3167,98 @@ vmail
             if os.path.exists(config_file):
                 preFlightsChecks.stdOut(f"Configuring PowerDNS: {config_file}")
                 
+                # Read existing content
+                try:
+                    with open(config_file, 'r') as f:
+                        content = f.read()
+                except:
+                    content = ""
+                
                 # Add missing configuration if not present
-                with open(config_file, 'a') as f:
-                    content = f.read() if os.path.getsize(config_file) > 0 else ""
-                    if 'gmysql-password=' not in content:
-                        f.write('\ngmysql-password=cyberpanel\n')
-                    if 'launch=' not in content:
-                        f.write('launch=gmysql\n')
+                config_additions = []
+                if 'gmysql-password=' not in content:
+                    config_additions.append('gmysql-password=cyberpanel')
+                if 'launch=' not in content:
+                    config_additions.append('launch=gmysql')
+                if 'gmysql-host=' not in content:
+                    config_additions.append('gmysql-host=localhost')
+                if 'gmysql-user=' not in content:
+                    config_additions.append('gmysql-user=cyberpanel')
+                if 'gmysql-dbname=' not in content:
+                    config_additions.append('gmysql-dbname=cyberpanel')
+                
+                if config_additions:
+                    with open(config_file, 'a') as f:
+                        f.write('\n# CyberPanel configuration\n')
+                        for config in config_additions:
+                            f.write(config + '\n')
                 
                 # Ensure proper permissions
                 os.chmod(config_file, 0o644)
                 break
         
-        # Start PowerDNS service
-        command = f'systemctl start {pdns_service}'
-        result = preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        # Ensure PowerDNS can connect to database
+        self.ensurePowerDNSDatabaseAccess()
         
-        if result == 1:
-            # Enable service for auto-start
-            command = f'systemctl enable {pdns_service}'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        # Start PowerDNS service with retry mechanism
+        max_retries = 3
+        for attempt in range(max_retries):
+            preFlightsChecks.stdOut(f"Starting PowerDNS service (attempt {attempt + 1}/{max_retries})...", 1)
             
-            # Verify service is running
-            command = f'systemctl is-active {pdns_service}'
-            try:
-                output = subprocess.check_output(shlex.split(command)).decode("utf-8").strip()
-                if output == 'active':
-                    preFlightsChecks.stdOut("PowerDNS service started successfully!")
+            # Stop service first to ensure clean start
+            command = f'systemctl stop {pdns_service}'
+            preFlightsChecks.call(command, self.distro, f"Stop {pdns_service}", command, 0, 0, os.EX_OSERR)
+            time.sleep(2)
+            
+            # Start service
+            command = f'systemctl start {pdns_service}'
+            result = preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+            # Wait a moment for service to start
+            time.sleep(3)
+            
+            # Check if service is actually running
+                command = f'systemctl is-active {pdns_service}'
+                try:
+                result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=10)
+                output = result.stdout.strip()
+                    if output == 'active':
+                    preFlightsChecks.stdOut("PowerDNS service started successfully!", 1)
+                    # Double-check with systemctl status for more details
+                    status_command = f'systemctl status {pdns_service} --no-pager -l'
+                    try:
+                        status_result = subprocess.run(status_command, shell=True, capture_output=True, text=True, timeout=10)
+                        if status_result.returncode == 0:
+                            preFlightsChecks.stdOut("PowerDNS service status verified", 1)
+                    else:
+                            preFlightsChecks.stdOut("PowerDNS service running but status check failed", 0)
+                except:
+                        preFlightsChecks.stdOut("PowerDNS service running but status verification failed", 0)
+                    break
                 else:
-                    preFlightsChecks.stdOut(f"[WARNING] PowerDNS service status: {output}")
-                    # Try to get more details
-                    command = f'systemctl status {pdns_service} --no-pager'
-                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-            except:
-                preFlightsChecks.stdOut("[WARNING] Could not verify PowerDNS service status")
+                    preFlightsChecks.stdOut(f"PowerDNS service status: {output} (attempt {attempt + 1})", 0)
+                    if attempt < max_retries - 1:
+                        preFlightsChecks.stdOut("Retrying PowerDNS startup...", 1)
+                        time.sleep(5)
+            except subprocess.TimeoutExpired:
+                preFlightsChecks.stdOut(f"PowerDNS service status check timed out (attempt {attempt + 1})", 0)
+                if attempt < max_retries - 1:
+                    time.sleep(5)
+            except Exception as e:
+                preFlightsChecks.stdOut(f"Could not verify PowerDNS service status (attempt {attempt + 1}): {str(e)}", 0)
+                if attempt < max_retries - 1:
+                    time.sleep(5)
+        else:
+            preFlightsChecks.stdOut("[WARNING] PowerDNS service failed to start after all retries", 0)
+            # Try to get more details about the failure
+            command = f'systemctl status {pdns_service} --no-pager'
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        
+        # Enable service for auto-start (with error handling)
+        command = f'systemctl enable {pdns_service}'
+        enable_result = preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        if enable_result != 1:
+            preFlightsChecks.stdOut(f"Warning: Could not enable {pdns_service} for auto-start", 0)
 
     def fixAndStartPureFTPd(self):
         """Fix Pure-FTPd configuration and start the service"""
@@ -3048,39 +3286,76 @@ vmail
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
                 
                 # Fix MySQL crypt method for Ubuntu 24.04 compatibility
-                if self.distro == ubuntu:
-                    import install_utils
-                    try:
-                        release = install_utils.get_Ubuntu_release(use_print=False, exit_on_error=False)
-                        if release and release >= 24.04:
-                            preFlightsChecks.stdOut("Configuring Pure-FTPd for Ubuntu 24.04...")
+            if self.distro == ubuntu:
+                import install_utils
+                try:
+                    release = install_utils.get_Ubuntu_release(use_print=False, exit_on_error=False)
+                    if release and release >= 24.04:
+                        preFlightsChecks.stdOut("Configuring Pure-FTPd for Ubuntu 24.04...")
                             command = f"sed -i 's/MYSQLCrypt md5/MYSQLCrypt crypt/g' {config_file}"
-                            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-                    except:
+                        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                except:
                         pass
         
-        # Start Pure-FTPd service
-        command = f'systemctl start {ftp_service}'
-        result = preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-        
-        if result == 1:
-            # Enable service for auto-start
-            command = f'systemctl enable {ftp_service}'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        # Start Pure-FTPd service with retry mechanism
+        max_retries = 3
+        for attempt in range(max_retries):
+            preFlightsChecks.stdOut(f"Starting Pure-FTPd service (attempt {attempt + 1}/{max_retries})...", 1)
             
-            # Verify service is running
+            # Stop service first to ensure clean start
+            command = f'systemctl stop {ftp_service}'
+            preFlightsChecks.call(command, self.distro, f"Stop {ftp_service}", command, 0, 0, os.EX_OSERR)
+            time.sleep(2)
+            
+            # Start service
+            command = f'systemctl start {ftp_service}'
+            result = preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            
+            # Wait a moment for service to start
+            time.sleep(3)
+            
+            # Check if service is actually running
             command = f'systemctl is-active {ftp_service}'
             try:
-                output = subprocess.check_output(shlex.split(command)).decode("utf-8").strip()
+                result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=10)
+                output = result.stdout.strip()
                 if output == 'active':
-                    preFlightsChecks.stdOut("Pure-FTPd service started successfully!")
+                    preFlightsChecks.stdOut("Pure-FTPd service started successfully!", 1)
+                    # Double-check with systemctl status for more details
+                    status_command = f'systemctl status {ftp_service} --no-pager -l'
+                    try:
+                        status_result = subprocess.run(status_command, shell=True, capture_output=True, text=True, timeout=10)
+                        if status_result.returncode == 0:
+                            preFlightsChecks.stdOut("Pure-FTPd service status verified", 1)
+                        else:
+                            preFlightsChecks.stdOut("Pure-FTPd service running but status check failed", 0)
+                    except:
+                        preFlightsChecks.stdOut("Pure-FTPd service running but status verification failed", 0)
+                    break
                 else:
-                    preFlightsChecks.stdOut(f"[WARNING] Pure-FTPd service status: {output}")
-                    # Try to get more details
-                    command = f'systemctl status {ftp_service} --no-pager'
-                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-            except:
-                preFlightsChecks.stdOut("[WARNING] Could not verify Pure-FTPd service status")
+                    preFlightsChecks.stdOut(f"Pure-FTPd service status: {output} (attempt {attempt + 1})", 0)
+                    if attempt < max_retries - 1:
+                        preFlightsChecks.stdOut("Retrying Pure-FTPd startup...", 1)
+                        time.sleep(5)
+            except subprocess.TimeoutExpired:
+                preFlightsChecks.stdOut(f"Pure-FTPd service status check timed out (attempt {attempt + 1})", 0)
+                if attempt < max_retries - 1:
+                    time.sleep(5)
+            except Exception as e:
+                preFlightsChecks.stdOut(f"Could not verify Pure-FTPd service status (attempt {attempt + 1}): {str(e)}", 0)
+                if attempt < max_retries - 1:
+                    time.sleep(5)
+        else:
+            preFlightsChecks.stdOut("[WARNING] Pure-FTPd service failed to start after all retries", 0)
+            # Try to get more details about the failure
+            command = f'systemctl status {ftp_service} --no-pager'
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        
+        # Enable service for auto-start (with error handling)
+        command = f'systemctl enable {ftp_service}'
+        enable_result = preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        if enable_result != 1:
+            preFlightsChecks.stdOut(f"Warning: Could not enable {ftp_service} for auto-start", 0)
 
     def ensureLiteSpeedServicesRunning(self):
         """Ensure LiteSpeed services are running properly"""
