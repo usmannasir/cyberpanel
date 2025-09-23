@@ -1248,10 +1248,19 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             ##
 
+            # Remove conflicting dovecot packages first
+            try:
+                if self.distro in [centos, cent8]:
+                    preFlightsChecks.call('yum remove -y dovecot dovecot-*', self.distro, 
+                                        'Remove conflicting dovecot packages', 
+                                        'Remove conflicting dovecot packages', 1, 0, os.EX_OSERR)
+            except:
+                pass  # Continue if removal fails
+
             if self.distro == centos:
-                command = 'yum --enablerepo=gf-plus -y install dovecot23 dovecot23-mysql'
+                command = 'yum --enablerepo=gf-plus -y install dovecot23 dovecot23-mysql --allowerasing'
             elif self.distro == cent8:
-                command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql -y'
+                command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql -y --allowerasing'
             elif self.distro == openeuler:
                 command = 'dnf install dovecot -y'
             else:
@@ -2693,8 +2702,8 @@ milter_default_action = accept
                 logging.InstallLog.writeToFile("[setup_lsphp_symlink] Removed existing lsphp file/symlink")
 
             # Try to find and use the best available PHP version
-            # Priority: 83, 82, 81, 80, 74, 73, 72 (newest to oldest)
-            php_versions = ['83', '82', '81', '80', '74', '73', '72']
+            # Priority: 85 (beta), 84, 83, 82, 81, 80, 74 (newest to oldest)
+            php_versions = ['85', '84', '83', '82', '81', '80', '74']
             lsphp_source = None
 
             for php_ver in php_versions:
@@ -3693,7 +3702,102 @@ echo $oConfig->Save() ? 'Done' : 'Error';
     # These services require database tables that are created by Django migrations
     checks.startDeferredServices()
 
+    # Installation summary
+    show_installation_summary()
+    
     logging.InstallLog.writeToFile("CyberPanel installation successfully completed!,80")
+
+
+def show_installation_summary():
+    """Display comprehensive installation summary"""
+    try:
+        import time
+        import subprocess
+        
+        print("\n" + "="*80)
+        print("📊 CYBERPANEL INSTALLATION SUMMARY")
+        print("="*80)
+        
+        # Check component status
+        components = {
+            "CyberPanel Core": check_service_status("lscpd"),
+            "OpenLiteSpeed": check_service_status("lsws"),
+            "MariaDB/MySQL": check_service_status("mysql") or check_service_status("mariadb"),
+            "PowerDNS": check_service_status("pdns") or check_service_status("pdns-server"),
+            "Pure-FTPd": check_service_status("pure-ftpd"),
+            "Postfix": check_service_status("postfix"),
+            "Dovecot": check_service_status("dovecot"),
+            "SnappyMail": check_file_exists("/usr/local/CyberCP/public/snappymail"),
+            "phpMyAdmin": check_file_exists("/usr/local/CyberCP/public/phpmyadmin")
+        }
+        
+        print("\n🔧 COMPONENT STATUS:")
+        print("-" * 50)
+        for component, status in components.items():
+            if status:
+                print(f"✅ {component:<20} - INSTALLED & RUNNING")
+            else:
+                print(f"❌ {component:<20} - NOT AVAILABLE")
+        
+        # System information
+        try:
+            memory_info = subprocess.check_output("free -m", shell=True).decode()
+            memory_line = [line for line in memory_info.split('\n') if 'Mem:' in line][0]
+            memory_parts = memory_line.split()
+            total_mem = memory_parts[1]
+            used_mem = memory_parts[2]
+            mem_percent = (int(used_mem) / int(total_mem)) * 100
+            
+            disk_info = subprocess.check_output("df -h /", shell=True).decode()
+            disk_line = [line for line in disk_info.split('\n') if '/dev/' in line][0]
+            disk_parts = disk_line.split()
+            disk_usage = disk_parts[4]
+            
+            print(f"\n📈 SYSTEM RESOURCES:")
+            print(f"   • Memory Usage: {used_mem}MB / {total_mem}MB ({mem_percent:.1f}%)")
+            print(f"   • Disk Usage: {disk_usage}")
+            print(f"   • CPU Cores: {subprocess.check_output('nproc', shell=True).decode().strip()}")
+            
+        except Exception as e:
+            print(f"\n📈 SYSTEM RESOURCES: Unable to retrieve ({str(e)})")
+        
+        # Installation time
+        try:
+            if hasattr(show_installation_summary, 'start_time'):
+                elapsed = time.time() - show_installation_summary.start_time
+                minutes = int(elapsed // 60)
+                seconds = int(elapsed % 60)
+                print(f"   • Install Time: {minutes}m {seconds}s")
+        except:
+            pass
+        
+        print("\n" + "="*80)
+        
+    except Exception as e:
+        print(f"\n⚠️  Could not generate installation summary: {str(e)}")
+
+
+def check_service_status(service_name):
+    """Check if a service is running"""
+    try:
+        result = subprocess.run(['systemctl', 'is-active', service_name], 
+                              capture_output=True, text=True)
+        return result.returncode == 0
+    except:
+        return False
+
+
+def check_file_exists(file_path):
+    """Check if a file or directory exists"""
+    try:
+        return os.path.exists(file_path)
+    except:
+        return False
+
+
+# Set installation start time
+import time
+show_installation_summary.start_time = time.time()
 
 
 if __name__ == "__main__":

@@ -408,7 +408,7 @@ class phpUtilities:
             return result
 
         else:
-            command = f'grep -Po "php\d+" {vhFile} | head -n 1'
+            command = f'grep -Po "php\\d+" {vhFile} | head -n 1'
             result = ProcessUtilities.outputExecutioner(command, None, True).rstrip('\n')
             result = f'/usr/local/lsws/ls{result}/bin/lsphp'
             result = result.rsplit("lsphp", 1)[0] + "php"
@@ -454,8 +454,28 @@ class phpUtilities:
         if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or  ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
             command = f'DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp{php}*'
         else:
-            command = f'dnf install lsphp{php}* --exclude lsphp73-pecl-zip --exclude *imagick* -y --skip-broken'
-
+            # Enhanced dependency handling for RHEL-based systems
+            # First try to install required dependencies
+            dependency_packages = [
+                'libmemcached', 'libmemcached-devel', 'libmemcached-libs',
+                'gd', 'gd-devel', 'libgd',
+                'c-client', 'c-client-devel',
+                'oniguruma', 'oniguruma-devel',
+                'libicu', 'libicu-devel',
+                'aspell', 'aspell-devel',
+                'pspell', 'pspell-devel'
+            ]
+            
+            # Install dependencies first
+            for dep in dependency_packages:
+                try:
+                    dep_command = f'dnf install -y {dep} --skip-broken'
+                    ProcessUtilities.executioner(dep_command, None, True)
+                except:
+                    pass  # Continue if dependency installation fails
+            
+            # Install PHP with better error handling
+            command = f'dnf install lsphp{php}* --exclude *imagick* -y --skip-broken --nobest'
 
         ProcessUtilities.executioner(command, None, True)
 
