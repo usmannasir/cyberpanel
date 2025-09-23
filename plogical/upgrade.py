@@ -3762,6 +3762,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         try:
             Upgrade.stdOut("Applying comprehensive service configuration fixes...", 1)
             
+            # Upgrade pip first for better package compatibility
+            Upgrade.upgradePip()
+            
             # Fix PowerDNS configuration
             Upgrade.fixPowerDNSConfig()
             
@@ -3779,6 +3782,45 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             
         except Exception as e:
             Upgrade.stdOut(f"Error in service configuration fix: {str(e)}", 0)
+
+    @staticmethod
+    def upgradePip():
+        """Upgrade pip to latest version for better package compatibility"""
+        try:
+            Upgrade.stdOut("Upgrading pip to latest version...", 1)
+            
+            # Determine the correct Python path
+            python_paths = [
+                "/usr/local/CyberPanel/bin/python",
+                "/usr/local/CyberCP/bin/python",
+                "/usr/bin/python3",
+                "/usr/local/bin/python3"
+            ]
+            
+            python_path = None
+            for path in python_paths:
+                if os.path.exists(path):
+                    python_path = path
+                    break
+            
+            if not python_path:
+                Upgrade.stdOut("No Python executable found for pip upgrade", 0)
+                return False
+            
+            # Upgrade pip and essential packages
+            upgrade_command = f"{python_path} -m pip install --upgrade pip setuptools wheel packaging"
+            result = Upgrade.executioner(upgrade_command, "Upgrade pip", 0)
+            
+            if result == 1:
+                Upgrade.stdOut("pip upgraded successfully", 1)
+                return True
+            else:
+                Upgrade.stdOut("WARNING: pip upgrade failed, continuing with current version", 0)
+                return False
+                
+        except Exception as e:
+            Upgrade.stdOut(f"Error upgrading pip: {str(e)}", 0)
+            return False
 
     @staticmethod
     def fixPowerDNSConfig():
@@ -4020,6 +4062,14 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             all_services_ok = True
             
             for service in critical_services:
+                # Check if service exists before trying to manage it
+                check_command = f'systemctl list-unit-files | grep -q "{service}.service"'
+                result = subprocess.run(check_command, shell=True, capture_output=True)
+                
+                if result.returncode != 0:
+                    Upgrade.stdOut(f"Service {service} not found, skipping management", 1)
+                    continue
+                
                 Upgrade.stdOut(f"Restarting {service}...", 1)
                 command = f'systemctl restart {service}'
                 Upgrade.executioner(command, f'Restart {service}', 0)

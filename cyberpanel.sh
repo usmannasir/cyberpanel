@@ -291,10 +291,47 @@ install_php_packages() {
     local php_extension="$1"
     case "$Server_OS" in
         "CentOS"|"openEuler")
-            install_package "lsphp??-${php_extension} lsphp??-pecl-${php_extension}"
+            # Find available PHP versions first
+            available_php_versions=$(ls /usr/local/lsws/lsphp* 2>/dev/null | grep -o 'lsphp[0-9]*' | sort -u)
+            if [[ -z "$available_php_versions" ]]; then
+                log_warning "No PHP versions found, skipping ${php_extension} installation"
+                return 0
+            fi
+            
+            # Try to install packages for each available PHP version
+            packages_to_install=""
+            for php_version in $available_php_versions; do
+                # Check if package exists before adding to install list
+                if yum search ${php_version}-${php_extension} 2>/dev/null | grep -q "${php_version}-${php_extension}"; then
+                    packages_to_install="${packages_to_install} ${php_version}-${php_extension}"
+                fi
+                if yum search ${php_version}-pecl-${php_extension} 2>/dev/null | grep -q "${php_version}-pecl-${php_extension}"; then
+                    packages_to_install="${packages_to_install} ${php_version}-pecl-${php_extension}"
+                fi
+            done
+            
+            if [[ -n "$packages_to_install" ]]; then
+                install_package "$packages_to_install"
+            else
+                log_warning "No matching ${php_extension} packages found for available PHP versions"
+            fi
             ;;
         "Ubuntu")
-            install_package "lsphp*-${php_extension}"
+            # Find available PHP versions first
+            available_php_versions=$(ls /usr/local/lsws/lsphp* 2>/dev/null | grep -o 'lsphp[0-9]*' | sort -u)
+            if [[ -z "$available_php_versions" ]]; then
+                log_warning "No PHP versions found, skipping ${php_extension} installation"
+                return 0
+            fi
+            
+            # Try to install packages for each available PHP version
+            for php_version in $available_php_versions; do
+                if apt-cache search ${php_version}-${php_extension} 2>/dev/null | grep -q "${php_version}-${php_extension}"; then
+                    install_package "${php_version}-${php_extension}"
+                else
+                    log_warning "Package ${php_version}-${php_extension} not available"
+                fi
+            done
             ;;
     esac
 }
@@ -1685,9 +1722,15 @@ if ! grep -q "pid_max" /etc/rc.local 2>/dev/null ; then
   #add internal repo server to host file before systemd-resolved is disabled
 
   if grep -i -q "systemd-resolve" /etc/resolv.conf ; then
-    systemctl stop systemd-resolved  >/dev/null 2>&1
-    systemctl disable systemd-resolved  >/dev/null 2>&1
-    systemctl mask systemd-resolved  >/dev/null 2>&1
+    # Check if systemd-resolved service exists before trying to manage it
+    if systemctl list-unit-files | grep -q "systemd-resolved.service" ; then
+      log_info "Managing systemd-resolved service"
+      systemctl stop systemd-resolved  >/dev/null 2>&1 || log_warning "Could not stop systemd-resolved (may not be running)"
+      systemctl disable systemd-resolved  >/dev/null 2>&1 || log_warning "Could not disable systemd-resolved (may not be enabled)"
+      systemctl mask systemd-resolved  >/dev/null 2>&1 || log_warning "Could not mask systemd-resolved"
+    else
+      log_info "systemd-resolved service not found, skipping management"
+    fi
   fi
 
   # Backup previous resolv.conf file
@@ -2327,6 +2370,12 @@ if [[ ! -f /usr/local/CyberCP/bin/activate ]]; then
   exit 1
 fi
 
+# Create symlink for backward compatibility
+if [[ ! -L /usr/local/CyberPanel ]] && [[ ! -d /usr/local/CyberPanel ]]; then
+  echo -e "Creating symlink for CyberPanel virtual environment compatibility..."
+  ln -sf /usr/local/CyberCP /usr/local/CyberPanel
+fi
+
 if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" = "20" ]] ; then
   # shellcheck disable=SC1091
   . /usr/local/CyberCP/bin/activate
@@ -2345,7 +2394,6 @@ Retry_Command "pip install --default-timeout=3600 -r /usr/local/requirments.txt"
 echo -e "Verifying Django installation..."
 if ! /usr/local/CyberCP/bin/python -c "import django" 2>/dev/null; then
   echo -e "WARNING: Django not found, reinstalling requirements..."
-  pip install --upgrade pip setuptools wheel packaging
   pip install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt
 else
   echo -e "Django is properly installed"
