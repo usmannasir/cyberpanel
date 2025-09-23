@@ -833,5 +833,85 @@
             }, 100);
         }
     }
+
+    // IP Blocking functionality
+    function blockIPAddress(ipAddress) {
+        if (!confirm(`Are you sure you want to block IP address ${ipAddress}?`)) {
+            return;
+        }
+        
+        // Set loading state
+        if (typeof angular !== 'undefined' && angular.element(document.body).scope()) {
+            var scope = angular.element(document.body).scope();
+            scope.$apply(function() {
+                scope.blockingIP = ipAddress;
+            });
+        }
+        
+        const formData = {
+            'csrfmiddlewaretoken': getCookie('csrftoken'),
+            'ip_address': ipAddress,
+            'reason': 'Brute force attack detected from dashboard'
+        };
+        
+        $.post('/base/blockIPAddress', formData, function(data) {
+            if (data.status === 1) {
+                showNotification('success', data.message);
+                // Refresh the page to update the blocked IPs list
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            } else {
+                showNotification('error', data.message);
+            }
+        }).fail(function() {
+            showNotification('error', 'Failed to block IP address. Please try again.');
+        }).always(function() {
+            // Clear loading state
+            if (typeof angular !== 'undefined' && angular.element(document.body).scope()) {
+                var scope = angular.element(document.body).scope();
+                scope.$apply(function() {
+                    scope.blockingIP = null;
+                });
+            }
+        });
+    }
+
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Notification function
+    function showNotification(type, message) {
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+        
+        const notification = `
+            <div class="alert ${alertClass} alert-dismissible fade show" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+                <i class="fas ${icon}"></i> ${message}
+                <button type="button" class="close" data-dismiss="alert" style="position: absolute; right: 10px; top: 10px;">
+                    <span>&times;</span>
+                </button>
+            </div>
+        `;
+        
+        $('body').append(notification);
+        
+        setTimeout(() => {
+            $('.alert').fadeOut();
+        }, 5000);
+    }
 </script>
 {% endblock %}
