@@ -1435,6 +1435,11 @@
                     <span>Reset FTP Configurations</span>
                 </a>
                 {% endif %}
+                {% if admin %}
+                <a href="#" class="menu-item" onclick="loadFTPQuotaManagement(); return false;">
+                    <span>FTP Quota Management</span>
+                </a>
+                {% endif %}
             </div>
             
             <a href="#" class="menu-item" onclick="toggleSubmenu('backup-submenu', this); return false;">
@@ -1711,6 +1716,9 @@
                 <a href="{% url 'aiScannerHome' %}" class="menu-item">
                     <span>AI Scanner</span>
                 </a>
+                <a href="#" class="menu-item" onclick="loadSecurityManagement(); return false;">
+                    <span>Security Management</span>
+                </a>
             </div>
             
             <a href="#" class="menu-item" onclick="toggleSubmenu('mail-settings-submenu', this); return false;">
@@ -1764,6 +1772,11 @@
                 <a href="{% url 'managePureFtpd' %}" class="menu-item">
                     <span>Manage FTP</span>
                 </a>
+                {% if admin %}
+                <a href="#" class="menu-item" onclick="loadBandwidthManagement(); return false;">
+                    <span>Bandwidth Management</span>
+                </a>
+                {% endif %}
             </div>
             
             <a href="#" class="menu-item" onclick="toggleSubmenu('plugins-submenu', this); return false;">
@@ -2121,6 +2134,38 @@
                 });
             }
         })();
+    </script>
+    
+    <!-- FTP Quota and Bandwidth Management Functions -->
+    <script>
+        function loadFTPQuotaManagement() {
+            // Load FTP quota management interface
+            $.get('{% url "getFTPQuotas" %}', function(data) {
+                if (data.status === 1) {
+                    // Create modal or redirect to dedicated page
+                    window.open('/websiteFunctions/ftpQuotaManagement.html', '_blank');
+                } else {
+                    alert('Error loading FTP quota management: ' + data.message);
+                }
+            });
+        }
+        
+        function loadBandwidthManagement() {
+            // Load bandwidth management interface
+            $.get('{% url "getBandwidthResetLogs" %}', function(data) {
+                if (data.status === 1) {
+                    // Create modal or redirect to dedicated page
+                    window.open('/websiteFunctions/bandwidthManagement.html', '_blank');
+                } else {
+                    alert('Error loading bandwidth management: ' + data.message);
+                }
+            });
+        }
+        
+        function loadSecurityManagement() {
+            // Load security management interface
+            window.open('/websiteFunctions/securityManagement.html', '_blank');
+        }
     </script>
     
     {% block footer_scripts %}{% endblock %}

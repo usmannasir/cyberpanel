@@ -211,5 +211,21 @@ urlpatterns = [
     path('fixSubdomainLogs', views.fixSubdomainLogs, name='fixSubdomainLogs'),
     path('fixSubdomainLogsAction', views.fixSubdomainLogsAction, name='fixSubdomainLogsAction'),
 
+    # FTP Quota Management
+    path('enableFTPQuota', views.enableFTPQuota, name='enableFTPQuota'),
+    path('getFTPQuotas', views.getFTPQuotas, name='getFTPQuotas'),
+    path('updateFTPQuota', views.updateFTPQuota, name='updateFTPQuota'),
+
+    # Bandwidth Management
+    path('resetBandwidth', views.resetBandwidth, name='resetBandwidth'),
+    path('getBandwidthResetLogs', views.getBandwidthResetLogs, name='getBandwidthResetLogs'),
+    path('scheduleBandwidthReset', views.scheduleBandwidthReset, name='scheduleBandwidthReset'),
+
+    # IP Blocking
+    path('blockIPAddress', views.blockIPAddress, name='blockIPAddress'),
+    path('unblockIPAddress', views.unblockIPAddress, name='unblockIPAddress'),
+    path('getBlockedIPs', views.getBlockedIPs, name='getBlockedIPs'),
+    path('checkIPStatus', views.checkIPStatus, name='checkIPStatus'),
+
     
 ]
