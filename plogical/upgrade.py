@@ -3733,7 +3733,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                         # PHP 8.x versions
                         if Upgrade.installedOutput.find(f'lsphp{version}') == -1:
                             command = f"yum install lsphp{version}* -y"
-            subprocess.call(command, shell=True)
+                            subprocess.call(command, shell=True)
                             Upgrade.stdOut(f"Installed PHP {version}", 1)
                         
                 except Exception as e:
@@ -3745,7 +3745,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                       'lsphp7? lsphp7?-common lsphp7?-curl lsphp7?-dev lsphp7?-imap lsphp7?-intl lsphp7?-json ' \
                       'lsphp7?-ldap lsphp7?-mysql lsphp7?-opcache lsphp7?-pspell lsphp7?-recode ' \
                       'lsphp7?-sqlite3 lsphp7?-tidy'
-            Upgrade.executioner(command, 'Install PHP 73, 0')
+            Upgrade.executioner(command, 'Install PHP 7.x', 0)
 
             command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp80*'
             os.system(command)
