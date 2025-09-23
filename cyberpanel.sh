@@ -374,7 +374,7 @@ if [[ "$1" = *.*.* ]]; then
   }
   ')
   if [[ $Output = *">="* ]]; then
-    echo -e "\nYou must use version number higher than 1.9.4"
+    echo -e "\nYou must use version number higher than 2.3.4"
     exit
   else
     Branch_Name="v${1//[[:space:]]/}"
@@ -718,7 +718,7 @@ echo -e "\n\e[31m-m postfix/pureftpd/powerdns\e[39m will do minimal install also
 echo -e "e.g.  \e[31m-m postfix\e[39m will do minimal install also with Postfix"
 echo -e "      \e[31m-m powerdns\e[39m will do minimal install also with PowerDNS"
 echo -e "      \e[31m-m postfix\e[39m powerdns will do minimal install also with Postfix and PowerDNS"
-echo -e "\n\e[31m-b\e[39m or \e[31m--branch\e[39m : install with given branch/version , must be higher than 1.9.4"
+echo -e "\n\e[31m-b\e[39m or \e[31m--branch\e[39m : install with given branch/version , must be higher than 2.3.4"
 echo -e "e.g.  \e[31m-b 2.0.2\e[39m will install 2.0.2 version"
 echo -e "\n\e[31m--mirror\e[39m : this argument force to use mirror server for majority of repositories, only suggest to use for servers within China"
 echo -e "\nExample:"
@@ -999,7 +999,7 @@ else
   echo -e "\nLocal MySQL selected..."
 fi
 
-echo -e "\nPress \e[31mEnter\e[39m key to continue with latest version or Enter specific version such as: \e[31m1.9.4\e[39m , \e[31m2.0.1\e[39m , \e[31m2.0.2\e[39m ...etc"
+echo -e "\nPress \e[31mEnter\e[39m key to continue with latest version or Enter specific version such as: \e[31m2.3.4\e[39m , \e[31m2.4.4\e[39m , \e[31m2.5.0\e[39m ...etc"
 printf "%s" ""
 read -r Tmp_Input
 
@@ -2092,22 +2092,54 @@ log_function_start "Post_Install_Display_Final_Info"
 log_info "Preparing final installation information"
 snappymailAdminPass=$(grep SetPassword /usr/local/CyberCP/public/snappymail.php| sed -e 's|$oConfig->SetPassword(||g' -e "s|');||g" -e "s|'||g")
 Elapsed_Time="$((Time_Count / 3600)) hrs $(((SECONDS / 60) % 60)) min $((Time_Count % 60)) sec"
-echo "###################################################################"
-echo "                CyberPanel Successfully Installed                  "
-echo "                                                                   "
-echo "                Current Disk usage : $(df -h | awk '$NF=="/"{printf "%d/%dGB (%s)\n", $3,$2,$5}')                        "
-echo "                                                                   "
-echo "                Current RAM  usage : $(free -m | awk 'NR==2{printf "%s/%sMB (%.2f%%)\n", $3,$2,$3*100/$2 }')                         "
-echo "                                                                   "
-echo "                Installation time  : $Elapsed_Time                 "
-echo "                                                                   "
-echo "                Visit: https://$Server_IP:8090                     "
-echo "                Panel username: admin                              "
+
+echo -e "\n"
+echo "╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╗"
+echo "║                                                                                                               ║"
+echo "║     █████████             █████                        ███████████                                ████        ║"
+echo "║    ███▒▒▒▒▒███           ▒▒███                        ▒▒███▒▒▒▒▒███                              ▒▒███        ║"
+echo "║   ███     ▒▒▒  █████ ████ ▒███████   ██████  ████████  ▒███    ▒███  ██████   ████████    ██████  ▒███        ║"
+echo "║   ▒███         ▒▒███ ▒███  ▒███▒▒███ ███▒▒███▒▒███▒▒███ ▒██████████  ▒▒▒▒▒███ ▒▒███▒▒███  ███▒▒███ ▒███       ║"
+echo "║   ▒███          ▒███ ▒███  ▒███ ▒███▒███████  ▒███ ▒▒▒  ▒███▒▒▒▒▒▒    ███████  ▒███ ▒███ ▒███████  ▒███       ║"
+echo "║   ▒▒███     ███ ▒███ ▒███  ▒███ ▒███▒███▒▒▒   ▒███      ▒███         ███▒▒███  ▒███ ▒███ ▒███▒▒▒   ▒███       ║"
+echo "║   ▒▒█████████  ▒▒███████  ████████ ▒▒██████  █████     █████       ▒▒████████ ████ █████▒▒██████  █████       ║"
+echo "║   ▒▒▒▒▒▒▒▒▒    ▒▒▒▒▒███ ▒▒▒▒▒▒▒▒   ▒▒▒▒▒▒  ▒▒▒▒▒     ▒▒▒▒▒         ▒▒▒▒▒▒▒▒ ▒▒▒▒ ▒▒▒▒▒  ▒▒▒▒▒▒  ▒▒▒▒▒         ║"
+echo "║               ███ ▒███                                                                                        ║"
+echo "║              ▒▒██████                                                                                         ║"
+echo "║               ▒▒▒▒▒▒                                                                                          ║"
+echo "║                                🚀 INSTALLATION COMPLETED SUCCESSFULLY! 🚀                                     ║"
+echo "║                                                                                                               ║"
+echo "╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╝"
+
+echo -e "\n"
+echo "╔══════════════════════════════════════════════════════════════════════════════════════╗"
+echo "║                                                                                      ║"
+echo "║  🌐 ACCESS YOUR CYBERPANEL:                                                         ║"
+echo "║                                                                                      ║"
+echo "║  • URL: https://$Server_IP:8090                                                     ║"
+echo "║  • Username: admin                                                                  ║"
 if [[ "$Custom_Pass" = "True" ]]; then
-echo "                Panel password: *****                              "
+echo "║  • Password: ***** (custom password)                                               ║"
 else
-echo "                Panel password: $Admin_Pass                        "
+echo "║  • Password: $Admin_Pass                                                           ║"
 fi
+echo "║                                                                                      ║"
+echo "║  ⚠️  Please change the default password immediately!                                ║"
+echo "║                                                                                      ║"
+echo "╚══════════════════════════════════════════════════════════════════════════════════════╝"
+
+echo -e "\n"
+echo "╔══════════════════════════════════════════════════════════════════════════════════════╗"
+echo "║                                                                                      ║"
+echo "║  📊 SYSTEM STATUS:                                                                  ║"
+echo "║                                                                                      ║"
+echo "║  💾 Disk Usage: $(df -h | awk '$NF=="/"{printf "%d/%dGB (%s)", $3,$2,$5}')                                                      ║"
+echo "║  🧠 RAM Usage:  $(free -m | awk 'NR==2{printf "%s/%sMB (%.2f%%)", $3,$2,$3*100/$2 }')                                                      ║"
+echo "║  ⏱️  Install Time: $Elapsed_Time                                                      ║"
+echo "║                                                                                      ║"
+echo "║  🎉 INSTALLATION COMPLETED SUCCESSFULLY! 🎉                                         ║"
+echo "║                                                                                      ║"
+echo "╚══════════════════════════════════════════════════════════════════════════════════════╝"
 #echo "                Visit: https://$Server_IP:7080                     "
 #echo "                WebAdmin console username: admin                   "
 #echo "                WebAdmin console password: $Webadmin_Pass          "
