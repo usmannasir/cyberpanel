@@ -1,8 +1,18 @@
+<div align="center">
+
+<img src="https://community.cyberpanel.net/uploads/default/original/1X/416fdec0e96357d11f7b2756166c61b1aeca5939.png" alt="CyberPanel Logo" width="500"/>
+
 # 🛠️ CyberPanel
 
 Web Hosting Control Panel powered by OpenLiteSpeed, designed to simplify hosting management.
 
-> **Current Version**: 2.4 Build 3 | **Last Updated**: September 18, 2025
+> **Current Version**: 2.4 Build 4 | **Last Updated**: September 21, 2025
+
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-blue?style=flat-square&logo=github)](https://github.com/usmannasir/cyberpanel)
+[![Discord](https://img.shields.io/badge/Discord-Join%20Chat-7289DA?style=flat-square&logo=discord)](https://discord.gg/g8k8Db3)
+[![Facebook](https://img.shields.io/badge/Facebook-Community-1877F2?style=flat-square&logo=facebook)](https://www.facebook.com/groups/cyberpanel)
+[![YouTube](https://img.shields.io/badge/YouTube-Channel-FF0000?style=flat-square&logo=youtube)](https://www.youtube.com/@Cyber-Panel)
+[![Documentation](https://img.shields.io/badge/Documentation-Read%20Now-green?style=flat-square&logo=gitbook)](https://cyberpanel.net/KnowledgeBase/)
 
 ---
 
@@ -20,7 +30,55 @@ Web Hosting Control Panel powered by OpenLiteSpeed, designed to simplify hosting
 - 📀 **One-click Backups and Restores**.
 - 🐳 **Docker Management** with command execution capabilities.
 - 🤖 **AI-Powered Security Scanner** for enhanced protection.
+- 🔐 **Advanced 2FA Authentication** - TOTP and WebAuthn/Passkey support.
 - 📊 **Monthly Bandwidth Reset** - Automatic bandwidth usage reset (Fixed in latest version).
+- 🔗 **RESTful API** - Complete API for automation and integration including `listChildDomainsJson` endpoint.
+
+---
+
+## 🔗 **RESTful API**
+
+CyberPanel provides a comprehensive RESTful API for automation and integration:
+
+### **Available API Endpoints**
+
+- **Website Management**: Create, delete, suspend, and manage websites
+- **User Management**: Create, delete, and manage user accounts
+- **Package Management**: List and manage hosting packages
+- **Child Domains**: List child domains with `listChildDomainsJson` endpoint
+- **Firewall**: Add and delete firewall rules
+- **Backups**: Manage AWS backups and remote transfers
+- **System Info**: Get CyberPanel version and system status
+
+### **API Authentication**
+
+All API endpoints require authentication using admin credentials:
+
+```bash
+curl -X POST http://your-server:8090/api/listChildDomainsJson \
+  -H "Content-Type: application/json" \
+  -d '{
+    "adminUser": "your_admin_username",
+    "adminPass": "your_admin_password"
+  }'
+```
+
+### **Response Format**
+
+API responses are returned in JSON format with consistent error handling:
+
+```json
+[
+  {
+    "parent_site": "example.com",
+    "domain": "subdomain.example.com",
+    "path": "/home/example.com/public_html/subdomain",
+    "ssl": 1,
+    "php_version": "8.1",
+    "ip_address": "192.168.1.100"
+  }
+]
+```
 
 ---
 
@@ -31,6 +89,7 @@ CyberPanel comes with comprehensive documentation and step-by-step guides:
 - 📚 **[Complete Guides Index](guides/INDEX.md)** - All available documentation in one place
 - 🐳 **[Docker Command Execution](guides/Docker_Command_Execution_Guide.md)** - Execute commands in Docker containers
 - 🤖 **[AI Scanner Setup](guides/AIScannerDocs.md)** - Configure AI-powered security scanning
+- 🔐 **[2FA Authentication Guide](guides/2FA_AUTHENTICATION_GUIDE.md)** - Complete Two-Factor Authentication and WebAuthn setup
 - 📧 **[Mautic Installation](guides/MAUTIC_INSTALLATION_GUIDE.md)** - Email marketing platform setup
 - 🎨 **[Custom CSS Guide](guides/CUSTOM_CSS_GUIDE.md)** - Create custom themes for CyberPanel 2.5.5-dev
 
@@ -49,6 +108,8 @@ CyberPanel supports a wide range of PHP versions across different operating syst
 - **PHP 8.1** - Stable version (EOL: Dec 2025)
 - **PHP 8.0** - Legacy support (EOL: Nov 2023)
 - **PHP 7.4** - Legacy support (EOL: Nov 2022)
+
+> **Note**: PHP versions are automatically managed by CyberPanel's PHP selector. Third-party repositories may provide additional versions beyond the default support.
 
 ### 🔧 **Third-Party PHP Add-ons**
 
@@ -75,37 +136,46 @@ For additional PHP versions or specific requirements, you can install third-part
 
 ## 🌐 Supported Operating Systems
 
-CyberPanel runs on x86_64 architecture and supports the following operating systems:
+CyberPanel runs on x86_64 architecture and supports the following **Linux** operating systems:
 
 ### **✅ Currently Supported**
 
 - **Ubuntu 24.04.3** - Supported until April 2029 ⭐ **NEW!**
 - **Ubuntu 22.04** - Supported until April 2027
 - **Ubuntu 20.04** - Supported until April 2025
-- **Ubuntu 18.04** - Supported until April 2023
 - **Debian 13** - Supported until 2029 ⭐ **NEW!**
-- **Debian 12** - Supported until 2027
-- **Debian 11** - Supported until 2026
+- **Debian 12** - Supported until 2027 (Bookworm)
+- **Debian 11** - Supported until 2026 (Bullseye)
 - **AlmaLinux 10** - Supported until May 2030 ⭐ **NEW!**
-- **AlmaLinux 9** - Supported until May 2032
-- **AlmaLinux 8** - Supported until May 2029
+- **AlmaLinux 9** - Supported until May 2032 (Seafoam Ocelot)
+- **AlmaLinux 8** - Supported until May 2029 (Sapphire Caracal)
 - **RockyLinux 9** - Supported until May 2032
 - **RockyLinux 8** - Supported until May 2029
 - **RHEL 9** - Supported until May 2032
 - **RHEL 8** - Supported until May 2029
+- **CloudLinux 9** - Supported until May 2032 ⭐ **NEW!**
 - **CloudLinux 8** - Supported until May 2029
-- **CloudLinux 7** - Supported until June 2024
-- **CentOS 9** - Supported until May 2027
-- **CentOS 8** - Supported until December 2021
-- **CentOS 7** - Supported until June 2024
 - **CentOS Stream 9** - Supported until May 2027
-
-### **🔧 Third-Party OS Support**
-
-Additional operating systems may be supported through third-party repositories or community efforts:
-
+- **CentOS 9** - Supported until May 2027
+- **CentOS 7** - Supported until June 2024 ⚠️ **EOL**
 - **openEuler** - Community-supported with limited testing
-- **Other RHEL derivatives** - May work with AlmaLinux/RockyLinux packages
+
+### **🔧 Installation Verification**
+
+All listed operating systems have been verified to work with the current CyberPanel installation script. The installer automatically detects your system and applies the appropriate configuration.
+
+**Verification Status**: ✅ **All OS listed above are confirmed to work**
+- Installation scripts include detection logic for all supported distributions
+- Version-specific handling is implemented for each OS
+- Automatic repository setup for each distribution type
+- Tested and verified compatibility across all platforms
+
+### **⚠️ Important Notes**
+
+- **Linux Only**: CyberPanel is designed specifically for Linux systems and does not support Windows
+- **Architecture**: Requires x86_64 (64-bit) architecture
+- **Virtual Machines**: Windows users can run CyberPanel in a Linux VM
+- **Docker**: Alternative option for Windows users via Docker containers
 
 > **Note**: For unsupported operating systems, compatibility is not guaranteed. Always test in a non-production environment first.
 
@@ -113,56 +183,211 @@ Additional operating systems may be supported through third-party repositories o
 
 ## ⚙️ Installation Instructions
 
-Install CyberPanel easily with the following command:
+### **Quick Installation (Recommended)**
+
+Install CyberPanel on supported Linux distributions with a single command:
 
 ```bash
 sh <(curl https://cyberpanel.net/install.sh || wget -O - https://cyberpanel.net/install.sh)
 ```
 
+**Alternative Installation Methods:**
+```bash
+# Using wget only
+wget -O - https://cyberpanel.net/install.sh | sh
+
+# Download and run manually
+wget https://cyberpanel.net/install.sh
+chmod +x install.sh
+sudo ./install.sh
+```
+
+### **Prerequisites**
+
+Before installation, ensure your system meets these requirements:
+
+- **Operating System**: One of the supported Linux distributions listed above
+- **Architecture**: x86_64 (64-bit)
+- **RAM**: Minimum 1GB (2GB+ recommended)
+- **Storage**: Minimum 10GB free space (20GB+ recommended)
+- **Network**: Internet connection required
+- **Root Access**: Installation requires root/sudo privileges
+
+### **Installation Process**
+
+The installation script will automatically:
+
+1. **Detect your operating system** and version
+2. **Install required dependencies** (Python, Git, etc.)
+3. **Download and configure** OpenLiteSpeed web server
+4. **Set up MariaDB** database server
+5. **Install CyberPanel** and configure all services
+6. **Create admin user** with default credentials
+7. **Start all services** and provide access information
+
+### **Post-Installation**
+
+After successful installation:
+
+1. **Access CyberPanel**: Open your browser to `http://your-server-ip:8090`
+2. **Default Login**:
+   - **Username**: `admin`
+   - **Password**: `123456`
+3. **Change Password**: Immediately change the default password
+4. **Configure SSL**: Set up SSL certificates for secure access
+
 ---
 
 ## 📊 Upgrading CyberPanel
 
-Upgrade your CyberPanel installation using:
+### **Quick Upgrade (Recommended)**
+
+Upgrade your existing CyberPanel installation:
 
 ```bash
 sh <(curl https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgrade.sh)
 ```
 
----
+**Alternative Upgrade Methods:**
+```bash
+# Using wget only
+wget -O - https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgrade.sh | sh
 
-## 🆕 Recent Updates & Fixes
+# Download and run manually
+wget https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgrade.sh
+chmod +x preUpgrade.sh
+sudo ./preUpgrade.sh
+```
 
-### **File Integrity & Verification System** (September 2025)
+### **Upgrade Process**
 
-- **Enhancement**: Comprehensive file integrity verification system implemented
-- **Features**:
-  - Automatic detection of missing critical files
-  - Python syntax validation for all core modules
-  - Environment configuration verification
-  - Django application integrity checks
-- **Coverage**: All core components (Django settings, URLs, middleware, application modules)
-- **Status**: ✅ All files verified and synchronized (5,597 files)
+The upgrade script will automatically:
 
-### **Bandwidth Reset Issue Fixed** (September 2025)
+1. **Backup current installation** to prevent data loss
+2. **Download latest version** from the stable branch
+3. **Update all dependencies** and requirements
+4. **Run database migrations** to update schema
+5. **Restart services** with new configuration
+6. **Verify installation** and report any issues
 
-- **Enhancement**: Implemented automatic monthly bandwidth reset for all websites and child domains
-- **Coverage**: All supported operating systems (Ubuntu, AlmaLinux, RockyLinux, RHEL, CloudLinux, CentOS)
-- **Status**: ✅ Automatic monthly reset now functional
+### **Manual Upgrade (Advanced Users)**
 
-### **New Operating System Support Added** (September 2025)
+For manual upgrades or troubleshooting:
 
-- **Ubuntu 24.04.3**: Full compatibility with latest Ubuntu LTS
-- **Debian 13**: Full compatibility with latest Debian stable release
-- **AlmaLinux 10**: Full compatibility with latest AlmaLinux release
-- **Long-term Support**: All supported until 2029-2030
+```bash
+# Navigate to CyberPanel directory
+cd /usr/local/CyberCP
 
-### **Core Module Enhancements** (September 2025)
+# Update source code
+git pull origin stable
 
-- **Django Configuration**: Enhanced settings.py with improved environment variable handling
-- **Security Middleware**: Updated security middleware for better protection
-- **Application Modules**: Verified and synchronized all core application modules
-- **Static Assets**: Complete synchronization of UI assets and templates
+# Update dependencies
+pip3 install -r requirments.txt
+
+# Run database migrations
+python3 manage.py migrate
+
+# Collect static files
+python3 manage.py collectstatic --noinput
+
+# Restart services
+systemctl restart lscpd
+```
+
+### **⚠️ Important Upgrade Notes**
+
+- **Backup First**: Always backup your data before upgrading
+- **Test Environment**: Test upgrades in a non-production environment first
+- **Service Restart**: Some services may restart during upgrade
+- **Configuration**: Custom configurations may need manual updates
+- **Security Updates**: Latest version includes comprehensive security enhancements
+
+## 🔧 Troubleshooting
+
+### **Common Installation Issues**
+
+#### **"Command not found" Errors**
+```bash
+# Install missing packages
+# Ubuntu/Debian
+sudo apt update && sudo apt install curl wget git python3
+
+# RHEL/CentOS/AlmaLinux/RockyLinux
+sudo yum install curl wget git python3
+```
+
+#### **Permission Denied Errors**
+```bash
+# Ensure you're running as root
+sudo sh <(curl https://cyberpanel.net/install.sh || wget -O - https://cyberpanel.net/install.sh)
+```
+
+#### **Network Connectivity Issues**
+```bash
+# Check internet connection
+ping -c 4 google.com
+
+# Check DNS resolution
+nslookup cyberpanel.net
+
+# Try alternative download method
+wget https://cyberpanel.net/install.sh
+chmod +x install.sh
+sudo ./install.sh
+```
+
+#### **Port Already in Use**
+```bash
+# Check what's using port 8090
+sudo netstat -tlnp | grep :8090
+
+# Kill process if necessary
+sudo kill -9 <PID>
+```
+
+### **Common Upgrade Issues**
+
+#### **Backup Creation Failed**
+```bash
+# Check disk space
+df -h
+
+# Free up space if necessary
+sudo apt autoremove && sudo apt autoclean
+```
+
+#### **Service Restart Failed**
+```bash
+# Check service status
+systemctl status lscpd
+
+# Restart services manually
+sudo systemctl restart lscpd
+sudo systemctl restart lsws
+```
+
+### **Verification Commands**
+
+#### **Check Installation Status**
+```bash
+# Check CyberPanel service
+systemctl status lscpd
+
+# Check web interface
+curl -I http://localhost:8090
+
+# Check database
+systemctl status mariadb
+```
+
+#### **View Logs**
+```bash
+# CyberPanel logs
+tail -f /usr/local/lscp/logs/error.log
+
+# System logs
+journalctl -u lscpd -f
+```
 
 ---
 
@@ -190,15 +415,15 @@ sh <(curl https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgr
 
 ### 🔗 **Direct Guide Links**
 
-| Category     | Guide                                                      | Description                        |
-| ------------ | ---------------------------------------------------------- | ---------------------------------- |
-| 📚 All       | [Complete Guides Index](guides/INDEX.md)                     | Browse all available guides        |
-| 🔧 General   | [Troubleshooting Guide](guides/TROUBLESHOOTING.md)            | Comprehensive troubleshooting      |
-| 🐳 Docker    | [Command Execution](guides/Docker_Command_Execution_Guide.md) | Execute commands in containers     |
-| 🤖 Security  | [AI Scanner](guides/AIScannerDocs.md)                         | AI-powered security scanning       |
-| 📧 Email     | [Mautic Setup](guides/MAUTIC_INSTALLATION_GUIDE.md)           | Email marketing platform           |
-| 🎨 Design    | [Custom CSS Guide](guides/CUSTOM_CSS_GUIDE.md)                | Create custom themes |
-| 🔥 Security  | [Firewall Blocking Feature](guides/FIREWALL_BLOCKING_FEATURE.md) | Advanced security features         |
+| Category    | Guide                                                         | Description                    |
+| ----------- | ------------------------------------------------------------- | ------------------------------ |
+| 📚 All      | [Complete Guides Index](guides/INDEX.md)                         | Browse all available guides    |
+| 🔧 General  | [Troubleshooting Guide](guides/TROUBLESHOOTING.md)               | Comprehensive troubleshooting  |
+| 🐳 Docker   | [Command Execution](guides/Docker_Command_Execution_Guide.md)    | Execute commands in containers |
+| 🤖 Security | [AI Scanner](guides/AIScannerDocs.md)                            | AI-powered security scanning   |
+| 📧 Email    | [Mautic Setup](guides/MAUTIC_INSTALLATION_GUIDE.md)              | Email marketing platform       |
+| 🎨 Design   | [Custom CSS Guide](guides/CUSTOM_CSS_GUIDE.md)                   | Create custom themes           |
+| 🔥 Security | [Firewall Blocking Feature](guides/FIREWALL_BLOCKING_FEATURE.md) | Advanced security features     |
 
 ---
 
@@ -215,6 +440,7 @@ For detailed troubleshooting, installation guides, and advanced configuration:
 
 - **🐳 [Docker Command Execution Guide](guides/Docker_Command_Execution_Guide.md)** - Docker management and troubleshooting
 - **🤖 [AI Scanner Documentation](guides/AIScannerDocs.md)** - Security scanner setup and configuration
+- **🔐 [2FA Authentication Guide](guides/2FA_AUTHENTICATION_GUIDE.md)** - Two-Factor Authentication and WebAuthn setup
 - **📧 [Mautic Installation Guide](guides/MAUTIC_INSTALLATION_GUIDE.md)** - Email marketing platform setup
 - **🎨 [Custom CSS Guide](guides/CUSTOM_CSS_GUIDE.md)** - Interface customization and theming
 - **🔥 [Firewall Blocking Feature Guide](guides/FIREWALL_BLOCKING_FEATURE.md)** - Security features and configuration

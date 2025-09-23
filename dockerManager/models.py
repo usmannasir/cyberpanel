@@ -16,3 +16,6 @@ class Containers(models.Model):
     volumes = models.TextField(default="{}")
     env = models.TextField(default="{}")
     startOnReboot = models.IntegerField(default=0)
+    network = models.CharField(max_length=100, default='bridge')
+    network_mode = models.CharField(max_length=50, default='bridge')
+    extra_options = models.TextField(default="{}")

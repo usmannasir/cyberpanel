@@ -16,4 +16,6 @@ urlpatterns = [
     path('getAllFTPAccounts', views.getAllFTPAccounts, name='getAllFTPAccounts'),
     path('changePassword', views.changePassword, name='changePassword'),
     path('updateFTPQuota', views.updateFTPQuota, name='updateFTPQuota'),
+    path('getFTPQuotaUsage', views.getFTPQuotaUsage, name='getFTPQuotaUsage'),
+    path('migrateFTPQuotas', views.migrateFTPQuotas, name='migrateFTPQuotas'),
 ]

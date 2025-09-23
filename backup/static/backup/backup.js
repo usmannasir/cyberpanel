@@ -742,6 +742,18 @@ app.controller('remoteBackupControl', function ($scope, $http, $timeout) {
     $scope.transferBoxBtn = true;
     $scope.stopTransferbtn = true;
     $scope.fetchAccountsBtn = false;
+    
+    // Progress tracking variables
+    $scope.overallProgress = 0;
+    $scope.currentStep = 0;
+    $scope.transferInProgress = false;
+    $scope.transferCompleted = false;
+    $scope.transferError = false;
+    $scope.downloadStatus = "Waiting...";
+    $scope.transferStatus = "Waiting...";
+    $scope.restoreStatus = "Waiting...";
+    $scope.logEntries = [];
+    $scope.showLog = false;
 
 
     // notifications boxes
@@ -764,6 +776,61 @@ app.controller('remoteBackupControl', function ($scope, $http, $timeout) {
 
     $scope.passwordEnter = function () {
         $scope.backupButton = false;
+    };
+    
+    // Progress tracking functions
+    $scope.addLogEntry = function(message, type = 'info') {
+        $scope.logEntries.push({
+            timestamp: new Date(),
+            message: message,
+            type: type
+        });
+        
+        // Keep only last 100 log entries
+        if ($scope.logEntries.length > 100) {
+            $scope.logEntries = $scope.logEntries.slice(-100);
+        }
+        
+        // Auto-scroll to bottom
+        setTimeout(function() {
+            var logOutput = document.getElementById('logOutput');
+            if (logOutput) {
+                logOutput.scrollTop = logOutput.scrollHeight;
+            }
+        }, 100);
+    };
+    
+    $scope.updateProgress = function(step, progress, status) {
+        $scope.currentStep = step;
+        $scope.overallProgress = progress;
+        
+        switch(step) {
+            case 1:
+                $scope.downloadStatus = status;
+                break;
+            case 2:
+                $scope.transferStatus = status;
+                break;
+            case 3:
+                $scope.restoreStatus = status;
+                break;
+        }
+    };
+    
+    $scope.toggleLog = function() {
+        $scope.showLog = !$scope.showLog;
+    };
+    
+    $scope.resetProgress = function() {
+        $scope.overallProgress = 0;
+        $scope.currentStep = 0;
+        $scope.transferInProgress = false;
+        $scope.transferCompleted = false;
+        $scope.transferError = false;
+        $scope.downloadStatus = "Waiting...";
+        $scope.transferStatus = "Waiting...";
+        $scope.restoreStatus = "Waiting...";
+        $scope.logEntries = [];
     };
 
     $scope.addRemoveWebsite = function (website, websiteStatus) {
@@ -819,12 +886,14 @@ app.controller('remoteBackupControl', function ($scope, $http, $timeout) {
 
         var IPAddress = $scope.IPAddress;
         var password = $scope.password;
+        var cyberPanelPort = $scope.cyberPanelPort || 8090; // Default to 8090 if not specified
 
         url = "/backup/submitRemoteBackups";
 
         var data = {
             ipAddress: IPAddress,
             password: password,
+            cyberPanelPort: cyberPanelPort,
         };
 
         var config = {
@@ -860,6 +929,16 @@ app.controller('remoteBackupControl', function ($scope, $http, $timeout) {
                 $scope.accountsFetched = false;
                 $scope.backupProcessStarted = true;
                 $scope.backupCancelled = true;
+                
+                // Show fallback port notification if used
+                if (response.data.used_port && response.data.used_port != $scope.cyberPanelPort) {
+                    new PNotify({
+                        title: 'Port Fallback Used',
+                        text: `Connected using port ${response.data.used_port} (fallback from ${$scope.cyberPanelPort})`,
+                        type: 'info',
+                        delay: 5000
+                    });
+                }
 
 
             } else {
@@ -893,6 +972,10 @@ app.controller('remoteBackupControl', function ($scope, $http, $timeout) {
     };
 
     $scope.startTransfer = function () {
+        // Reset progress tracking
+        $scope.resetProgress();
+        $scope.transferInProgress = true;
+        $scope.addLogEntry("Starting remote backup transfer...", "info");
 
         // notifications boxes
         $scope.notificationsBox = true;
@@ -915,12 +998,14 @@ app.controller('remoteBackupControl', function ($scope, $http, $timeout) {
 
         var IPAddress = $scope.IPAddress;
         var password = $scope.password;
+        var cyberPanelPort = $scope.cyberPanelPort || 8090; // Default to 8090 if not specified
 
         url = "/backup/starRemoteTransfer";
 
         var data = {
             ipAddress: IPAddress,
             password: password,
+            cyberPanelPort: cyberPanelPort,
             accountsToTransfer: websitesToBeBacked,
         };
 
@@ -1002,6 +1087,7 @@ app.controller('remoteBackupControl', function ($scope, $http, $timeout) {
         var data = {
             password: $scope.password,
             ipAddress: $scope.IPAddress,
+            cyberPanelPort: $scope.cyberPanelPort || 8090,
             dir: tempTransferDir
         };
 
@@ -1021,13 +1107,31 @@ app.controller('remoteBackupControl', function ($scope, $http, $timeout) {
                 if (response.data.backupsSent === 0) {
                     $scope.backupStatus = false;
                     $scope.requestData = response.data.status;
+                    
+                    // Update progress based on status content
+                    var status = response.data.status;
+                    if (status) {
+                        $scope.addLogEntry(status, "info");
+                        
+                        // Parse status for progress updates
+                        if (status.includes("Backup process started") || status.includes("Generating backup")) {
+                            $scope.updateProgress(1, 25, "Generating backups on remote server...");
+                        } else if (status.includes("Transferring") || status.includes("Sending backup")) {
+                            $scope.updateProgress(2, 50, "Transferring backup files...");
+                        } else if (status.includes("Backup received") || status.includes("Downloading")) {
+                            $scope.updateProgress(2, 75, "Downloading backup files...");
+                        }
+                    }
+                    
                     $timeout(getBackupStatus, 2000);
                 } else {
                     $scope.requestData = response.data.status;
+                    $scope.addLogEntry("Backup transfer completed successfully!", "success");
+                    $scope.updateProgress(2, 100, "Transfer completed");
                     $timeout.cancel();
 
                     // Start the restore of remote backups that are transferred to local server
-
+                    $scope.addLogEntry("Starting local restore process...", "info");
                     remoteBackupRestore();
                 }
             } else {
@@ -1035,6 +1139,8 @@ app.controller('remoteBackupControl', function ($scope, $http, $timeout) {
                 $scope.error_message = response.data.error_message;
                 $scope.backupLoading = true;
                 $scope.couldNotConnect = true;
+                $scope.transferError = true;
+                $scope.addLogEntry("Transfer failed: " + response.data.error_message, "error");
 
                 // Notifications box settings
 
@@ -1077,7 +1183,12 @@ app.controller('remoteBackupControl', function ($scope, $http, $timeout) {
         function ListInitialDatas(response) {
 
             if (response.data.remoteRestoreStatus === 1) {
+                $scope.addLogEntry("Remote restore initiated successfully", "success");
+                $scope.updateProgress(3, 85, "Restoring websites...");
                 localRestoreStatus();
+            } else {
+                $scope.addLogEntry("Remote restore failed: " + (response.data.error_message || "Unknown error"), "error");
+                $scope.transferError = true;
             }
         }
 
@@ -1121,9 +1232,31 @@ app.controller('remoteBackupControl', function ($scope, $http, $timeout) {
                 if (response.data.complete === 0) {
                     $scope.backupStatus = false;
                     $scope.restoreData = response.data.status;
+                    
+                    // Update restore progress
+                    var status = response.data.status;
+                    if (status) {
+                        $scope.addLogEntry(status, "info");
+                        
+                        if (status.includes("completed[success]")) {
+                            $scope.updateProgress(3, 100, "Restore completed successfully!");
+                            $scope.transferCompleted = true;
+                            $scope.transferInProgress = false;
+                            $scope.addLogEntry("All websites restored successfully!", "success");
+                        } else if (status.includes("Error") || status.includes("error")) {
+                            $scope.addLogEntry("Restore error: " + status, "error");
+                        } else {
+                            $scope.updateProgress(3, 90, "Finalizing restore...");
+                        }
+                    }
+                    
                     $timeout(localRestoreStatus, 2000);
                 } else {
                     $scope.restoreData = response.data.status;
+                    $scope.updateProgress(3, 100, "Restore completed!");
+                    $scope.transferCompleted = true;
+                    $scope.transferInProgress = false;
+                    $scope.addLogEntry("Restore process completed successfully!", "success");
                     $timeout.cancel();
                     $scope.backupLoading = true;
                     $scope.startTransferbtn = false;
@@ -1133,6 +1266,8 @@ app.controller('remoteBackupControl', function ($scope, $http, $timeout) {
                 $scope.error_message = response.data.error_message;
                 $scope.backupLoading = true;
                 $scope.couldNotConnect = true;
+                $scope.transferError = true;
+                $scope.addLogEntry("Restore failed: " + response.data.error_message, "error");
 
                 // Notifications box settings
 
@@ -1163,6 +1298,7 @@ app.controller('remoteBackupControl', function ($scope, $http, $timeout) {
         var data = {
             password: $scope.password,
             ipAddress: $scope.IPAddress,
+            cyberPanelPort: $scope.cyberPanelPort || 8090,
             dir: tempTransferDir,
         };
 
@@ -1215,12 +1351,14 @@ app.controller('remoteBackupControl', function ($scope, $http, $timeout) {
 
         var IPAddress = $scope.IPAddress;
         var password = $scope.password;
+        var cyberPanelPort = $scope.cyberPanelPort || 8090;
 
         url = "/backup/cancelRemoteBackup";
 
         var data = {
             ipAddress: IPAddress,
             password: password,
+            cyberPanelPort: cyberPanelPort,
             dir: tempTransferDir,
         };
 

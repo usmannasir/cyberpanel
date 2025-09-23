@@ -513,6 +513,27 @@ class WebsiteManager:
 
         php = PHPManager.getPHPString(WPobj.owner.phpSelection)
         FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+        
+        # Validate PHP binary exists before proceeding
+        is_valid, error_msg, php_path = PHPManager.validatePHPInstallation(WPobj.owner.phpSelection)
+        
+        if not is_valid:
+            # Try to fix PHP configuration
+            fix_success, fix_msg = PHPManager.fixPHPConfiguration(WPobj.owner.phpSelection)
+            if fix_success:
+                # Re-validate after fix attempt
+                is_valid, error_msg, php_path = PHPManager.validatePHPInstallation(WPobj.owner.phpSelection)
+            
+            if not is_valid:
+                # Return error page if no PHP binary found
+                from django.shortcuts import render
+                return render(request, 'websiteFunctions/error.html', {
+                    'error_message': f'PHP configuration issue: {error_msg}. Fix attempt: {fix_msg}'
+                })
+            else:
+                FinalPHPPath = php_path
+        else:
+            FinalPHPPath = php_path
 
         url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
         data = {
@@ -887,6 +908,28 @@ class WebsiteManager:
 
             php = ACLManager.getPHPString(PHPVersion)
             FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+            
+            # Validate PHP binary exists before proceeding
+            from managePHP.phpManager import PHPManager
+            is_valid, error_msg, php_path = PHPManager.validatePHPInstallation(PHPVersion)
+            
+            if not is_valid:
+                # Try to fix PHP configuration
+                fix_success, fix_msg = PHPManager.fixPHPConfiguration(PHPVersion)
+                if fix_success:
+                    # Re-validate after fix attempt
+                    is_valid, error_msg, php_path = PHPManager.validatePHPInstallation(PHPVersion)
+                
+                if not is_valid:
+                    final_json = json.dumps({
+                        'status': 0, 
+                        'error_message': f'PHP configuration issue: {error_msg}. Fix attempt: {fix_msg}'
+                    })
+                    return HttpResponse(final_json)
+                else:
+                    FinalPHPPath = php_path
+            else:
+                FinalPHPPath = php_path
 
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp core version --skip-plugins --skip-themes --path=%s 2>/dev/null' % (
                 Vhuser, FinalPHPPath, path)
@@ -2926,6 +2969,17 @@ Require valid-user
                 
                 # Ensure suspension page exists and has proper permissions
                 suspensionPagePath = "/usr/local/CyberCP/websiteFunctions/suspension.html"
+                suspensionDir = "/usr/local/CyberCP/websiteFunctions"
+                
+                # Ensure directory exists
+                if not os.path.exists(suspensionDir):
+                    try:
+                        command = f"mkdir -p {suspensionDir}"
+                        ProcessUtilities.executioner(command)
+                        logging.CyberCPLogFileWriter.writeToFile(f"Created suspension directory: {suspensionDir}")
+                    except Exception as e:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Failed to create suspension directory: {str(e)}")
+                
                 if not os.path.exists(suspensionPagePath):
                     # Create default suspension page if it doesn't exist
                     defaultSuspensionHTML = """<!DOCTYPE html>
@@ -2994,17 +3048,34 @@ Require valid-user
                         # Use ProcessUtilities to move the file to the final location
                         command = f"mv {tempFile} {suspensionPagePath}"
                         ProcessUtilities.executioner(command)
-                    except:
-                        pass
+                        logging.CyberCPLogFileWriter.writeToFile(f"Created suspension page: {suspensionPagePath}")
+                    except Exception as e:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Failed to create suspension page: {str(e)}")
+                        # Try alternative method using echo command
+                        try:
+                            command = f'echo "{defaultSuspensionHTML.replace('"', '\\"')}" > {suspensionPagePath}'
+                            ProcessUtilities.executioner(command)
+                            logging.CyberCPLogFileWriter.writeToFile(f"Created suspension page using echo: {suspensionPagePath}")
+                        except Exception as e2:
+                            logging.CyberCPLogFileWriter.writeToFile(f"Failed to create suspension page with echo: {str(e2)}")
+                            return self.ajaxPre(0, f"Failed to create suspension page: {str(e2)}")
                 
                 # Set proper permissions for suspension page
                 try:
                     command = f"chown lsadm:lsadm {suspensionPagePath}"
-                    ProcessUtilities.executioner(command)
+                    result = ProcessUtilities.executioner(command)
+                    if result.find('cannot') > -1:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to set ownership for suspension page: {result}")
+                    
                     command = f"chmod 644 {suspensionPagePath}"
-                    ProcessUtilities.executioner(command)
-                except:
-                    pass
+                    result = ProcessUtilities.executioner(command)
+                    if result.find('cannot') > -1:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to set permissions for suspension page: {result}")
+                    
+                    logging.CyberCPLogFileWriter.writeToFile(f"Set permissions for suspension page: {suspensionPagePath}")
+                except Exception as e:
+                    logging.CyberCPLogFileWriter.writeToFile(f"Error setting suspension page permissions: {str(e)}")
+                    # Don't fail the entire operation for permission issues
                 
                 # Create suspension configuration with end marker
                 suspensionConf = """# Website Suspension Configuration
@@ -3035,9 +3106,17 @@ context /cyberpanel_suspension_page.html {
 """
                 
                 try:
+                    # Check if vhost file exists
+                    if not os.path.exists(vhostConfPath):
+                        logging.CyberCPLogFileWriter.writeToFile(f"Error: Vhost configuration file not found: {vhostConfPath}")
+                        return self.ajaxPre(0, f"Vhost configuration file not found for {websiteName}")
+                    
                     # Read current vhost configuration
                     with open(vhostConfPath, 'r') as f:
                         vhostContent = f.read()
+                    
+                    if not vhostContent.strip():
+                        logging.CyberCPLogFileWriter.writeToFile(f"Warning: Empty vhost configuration file: {vhostConfPath}")
                     
                     if "# Website Suspension Configuration" not in vhostContent:
                         # Check if there's an existing rewrite block at the root level
@@ -3062,7 +3141,11 @@ context /cyberpanel_suspension_page.html {
                         
                         # Set proper ownership
                         command = f"chown lsadm:lsadm {vhostConfPath}"
-                        ProcessUtilities.executioner(command)
+                        result = ProcessUtilities.executioner(command)
+                        if result.find('cannot') > -1:
+                            logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to set vhost ownership: {result}")
+                        
+                        logging.CyberCPLogFileWriter.writeToFile(f"Successfully suspended website: {websiteName}")
                 except IOError as e:
                     # If direct file access fails, fall back to command-based approach
                     command = f"cat {vhostConfPath}"
@@ -3104,9 +3187,27 @@ context /cyberpanel_suspension_page.html {
                         except:
                             pass
                 
-                # Apply same suspension configuration to child domains
+                # Suspend cron jobs for child domains
                 childDomains = website.childdomains_set.all()
                 
+                for items in childDomains:
+                    # Suspend cron jobs for child domain
+                    try:
+                        CronUtil.CronPrem(1)
+                        execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
+                        execPath = execPath + " suspendWebsiteCrons --externalApp " + items.externalApp
+                        cronOutput = ProcessUtilities.outputExecutioner(execPath, items.externalApp)
+                        CronUtil.CronPrem(0)
+                        
+                        if cronOutput.find("1,") > -1:
+                            logging.CyberCPLogFileWriter.writeToFile(f"Successfully suspended cron jobs for child domain {items.domain}")
+                        else:
+                            logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to suspend cron jobs for child domain {items.domain}: {cronOutput}")
+                    except Exception as e:
+                        CronUtil.CronPrem(0)  # Ensure permissions are restored
+                        logging.CyberCPLogFileWriter.writeToFile(f"Error suspending cron jobs for child domain {items.domain}: {str(e)}")
+
+                # Apply same suspension configuration to child domains
                 for items in childDomains:
                     childConfPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + items.domain
                     childVhostConfPath = childConfPath + "/vhost.conf"
@@ -3151,16 +3252,49 @@ context /cyberpanel_suspension_page.html {
                     except Exception as e:
                         CyberCPLogFileWriter.writeToFile(f"Error suspending child domain {items.domain}: {str(e)}")
                 
-                installUtilities.reStartLiteSpeedSocket()
-                website.state = 0
+                # Suspend cron jobs for this website
+                try:
+                    CronUtil.CronPrem(1)
+                    execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
+                    execPath = execPath + " suspendWebsiteCrons --externalApp " + website.externalApp
+                    cronOutput = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
+                    CronUtil.CronPrem(0)
+                    
+                    if cronOutput.find("1,") > -1:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Successfully suspended cron jobs for {websiteName}")
+                    else:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to suspend cron jobs for {websiteName}: {cronOutput}")
+                except Exception as e:
+                    CronUtil.CronPrem(0)  # Ensure permissions are restored
+                    logging.CyberCPLogFileWriter.writeToFile(f"Error suspending cron jobs for {websiteName}: {str(e)}")
+
+                # Restart LiteSpeed to apply changes
+                try:
+                    installUtilities.reStartLiteSpeedSocket()
+                    logging.CyberCPLogFileWriter.writeToFile(f"Restarted LiteSpeed after suspending {websiteName}")
+                except Exception as e:
+                    logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to restart LiteSpeed: {str(e)}")
+                
+                website.state = 1
             else:
+                # Unsuspend logic
                 confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + websiteName
                 vhostConfPath = confPath + "/vhost.conf"
                 
+                logging.CyberCPLogFileWriter.writeToFile(f"Attempting to unsuspend website: {websiteName}")
+                
                 try:
+                    # Check if vhost file exists
+                    if not os.path.exists(vhostConfPath):
+                        logging.CyberCPLogFileWriter.writeToFile(f"Error: Vhost configuration file not found: {vhostConfPath}")
+                        return self.ajaxPre(0, f"Vhost configuration file not found for {websiteName}")
+                    
                     # Try direct file access first
                     with open(vhostConfPath, 'r') as f:
                         vhostContent = f.read()
+                    
+                    if not vhostContent.strip():
+                        logging.CyberCPLogFileWriter.writeToFile(f"Warning: Empty vhost configuration file: {vhostConfPath}")
                     
                     if "# Website Suspension Configuration" in vhostContent:
                         # Use regex to remove the suspension configuration block
@@ -3186,7 +3320,13 @@ context /cyberpanel_suspension_page.html {
                             f.write(modifiedContent)
                         
                         command = f"chown lsadm:lsadm {vhostConfPath}"
-                        ProcessUtilities.executioner(command)
+                        result = ProcessUtilities.executioner(command)
+                        if result.find('cannot') > -1:
+                            logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to set vhost ownership: {result}")
+                        
+                        logging.CyberCPLogFileWriter.writeToFile(f"Successfully unsuspended website: {websiteName}")
+                    else:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Website {websiteName} is not currently suspended")
                 except IOError:
                     # Fall back to command-based approach
                     command = f"cat {vhostConfPath}"
@@ -3227,9 +3367,27 @@ context /cyberpanel_suspension_page.html {
                         except:
                             pass
                 
-                # Remove suspension configuration from child domains
+                # Restore cron jobs for child domains
                 childDomains = website.childdomains_set.all()
                 
+                for items in childDomains:
+                    # Restore cron jobs for child domain
+                    try:
+                        CronUtil.CronPrem(1)
+                        execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
+                        execPath = execPath + " restoreWebsiteCrons --externalApp " + items.externalApp
+                        cronOutput = ProcessUtilities.outputExecutioner(execPath, items.externalApp)
+                        CronUtil.CronPrem(0)
+                        
+                        if cronOutput.find("1,") > -1:
+                            logging.CyberCPLogFileWriter.writeToFile(f"Successfully restored cron jobs for child domain {items.domain}")
+                        else:
+                            logging.CyberCPLogFileWriter.writeToFile(f"Info: {cronOutput} for child domain {items.domain}")
+                    except Exception as e:
+                        CronUtil.CronPrem(0)  # Ensure permissions are restored
+                        logging.CyberCPLogFileWriter.writeToFile(f"Error restoring cron jobs for child domain {items.domain}: {str(e)}")
+                
+                # Remove suspension configuration from child domains
                 for items in childDomains:
                     childConfPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + items.domain
                     childVhostConfPath = childConfPath + "/vhost.conf"
@@ -3276,8 +3434,30 @@ context /cyberpanel_suspension_page.html {
                     except Exception as e:
                         CyberCPLogFileWriter.writeToFile(f"Error unsuspending child domain {items.domain}: {str(e)}")
                 
-                installUtilities.reStartLiteSpeedSocket()
-                website.state = 1
+                # Restore cron jobs for this website
+                try:
+                    CronUtil.CronPrem(1)
+                    execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
+                    execPath = execPath + " restoreWebsiteCrons --externalApp " + website.externalApp
+                    cronOutput = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
+                    CronUtil.CronPrem(0)
+                    
+                    if cronOutput.find("1,") > -1:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Successfully restored cron jobs for {websiteName}")
+                    else:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Info: {cronOutput} for {websiteName}")
+                except Exception as e:
+                    CronUtil.CronPrem(0)  # Ensure permissions are restored
+                    logging.CyberCPLogFileWriter.writeToFile(f"Error restoring cron jobs for {websiteName}: {str(e)}")
+
+                # Restart LiteSpeed to apply changes
+                try:
+                    installUtilities.reStartLiteSpeedSocket()
+                    logging.CyberCPLogFileWriter.writeToFile(f"Restarted LiteSpeed after unsuspending {websiteName}")
+                except Exception as e:
+                    logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to restart LiteSpeed: {str(e)}")
+                
+                website.state = 0
 
             website.save()
 
@@ -3346,10 +3526,15 @@ context /cyberpanel_suspension_page.html {
             email = modifyWeb.adminEmail
             currentPack = modifyWeb.package.packageName
             owner = modifyWeb.admin.userName
+            
+            # Get current home directory information
+            from userManagment.homeDirectoryUtils import HomeDirectoryUtils
+            current_home = HomeDirectoryUtils.getUserHomeDirectoryObject(owner)
+            currentHomeDirectory = current_home.name if current_home else 'Default'
 
             data_ret = {'status': 1, 'modifyStatus': 1, 'error_message': "None", "adminEmail": email,
                         "packages": json_data, "current_pack": currentPack, "adminNames": admin_data,
-                        'currentAdmin': owner}
+                        'currentAdmin': owner, 'currentHomeDirectory': currentHomeDirectory}
             final_json = json.dumps(data_ret)
             return HttpResponse(final_json)
 
@@ -3417,6 +3602,7 @@ context /cyberpanel_suspension_page.html {
             email = data['email']
             phpVersion = data['phpVersion']
             newUser = data['admin']
+            homeDirectory = data.get('homeDirectory', '')
 
             currentACL = ACLManager.loadedACL(userID)
             if ACLManager.currentContextPermission(currentACL, 'modifyWebsite') == 0:
@@ -3454,6 +3640,46 @@ context /cyberpanel_suspension_page.html {
             modifyWeb.admin = newOwner
 
             modifyWeb.save()
+
+            # Handle home directory migration if specified
+            if homeDirectory:
+                from userManagment.homeDirectoryUtils import HomeDirectoryUtils
+                from userManagment.models import HomeDirectory, UserHomeMapping
+                
+                try:
+                    # Get the new home directory
+                    new_home_dir = HomeDirectory.objects.get(id=homeDirectory)
+                    
+                    # Get current home directory for the user
+                    current_home = HomeDirectoryUtils.getUserHomeDirectoryObject(newUser)
+                    
+                    if current_home and current_home.id != new_home_dir.id:
+                        # Migrate user to new home directory
+                        success, message = HomeDirectoryUtils.migrateUser(
+                            newUser, 
+                            current_home.path, 
+                            new_home_dir.path
+                        )
+                        
+                        if success:
+                            # Update user-home mapping
+                            UserHomeMapping.objects.update_or_create(
+                                user=newOwner,
+                                defaults={'home_directory': new_home_dir}
+                            )
+                        else:
+                            # Log error but don't fail the website modification
+                            logging.CyberCPLogFileWriter.writeToFile(f"Failed to migrate user {newUser} to home directory {new_home_dir.path}: {message}")
+                    elif not current_home:
+                        # Create new mapping if user doesn't have one
+                        UserHomeMapping.objects.create(
+                            user=newOwner,
+                            home_directory=new_home_dir
+                        )
+                        
+                except Exception as e:
+                    # Log error but don't fail the website modification
+                    logging.CyberCPLogFileWriter.writeToFile(f"Error handling home directory change for {newUser}: {str(e)}")
 
             ## Update disk quota when package changes - Fix for GitHub issue #1442
             if webpack.enforceDiskLimits:

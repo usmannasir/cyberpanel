@@ -648,3 +648,36 @@ def saveLitespeed_conf(request):
         return fm.saveLitespeed_conf(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
+
+# Banned IPs Views
+def getBannedIPs(request):
+    try:
+        userID = request.session['userID']
+        fm = FirewallManager()
+        return fm.getBannedIPs(userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def addBannedIP(request):
+    try:
+        userID = request.session['userID']
+        fm = FirewallManager()
+        return fm.addBannedIP(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def removeBannedIP(request):
+    try:
+        userID = request.session['userID']
+        fm = FirewallManager()
+        return fm.removeBannedIP(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def deleteBannedIP(request):
+    try:
+        userID = request.session['userID']
+        fm = FirewallManager()
+        return fm.deleteBannedIP(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)

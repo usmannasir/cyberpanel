@@ -13,6 +13,7 @@ django.setup()
 import json
 from plogical.acl import ACLManager
 import plogical.CyberCPLogFileWriter as logging
+from plogical.errorSanitizer import secure_error_response, secure_log_error
 from django.shortcuts import HttpResponse, render, redirect
 from django.urls import reverse
 from loginSystem.models import Administrator
@@ -211,8 +212,9 @@ class ContainerManager(multi.Thread):
             template = 'dockerManager/viewContainer.html'
             proc = httpProc(request, template, data, 'admin')
             return proc.render()
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        except Exception as e:
+            secure_log_error(e, 'container_operation')
+            return HttpResponse('Operation failed')
 
     def listContainers(self, request=None, userID=None, data=None):
         client = docker.from_env()
@@ -270,15 +272,69 @@ class ContainerManager(multi.Thread):
             dockerAPI = docker.APIClient()
 
             container = client.containers.get(name)
-            logs = container.logs().decode("utf-8")
+            
+            # Get logs with proper formatting
+            try:
+                # Get logs with timestamps and proper formatting
+                logs = container.logs(
+                    stdout=True, 
+                    stderr=True, 
+                    timestamps=True,
+                    tail=1000  # Limit to last 1000 lines for performance
+                ).decode("utf-8", errors='replace')
+                
+                # Clean up the logs for better display
+                if logs:
+                    # Split into lines and clean up
+                    log_lines = logs.split('\n')
+                    cleaned_lines = []
+                    
+                    for line in log_lines:
+                        # Remove Docker's log prefix if present
+                        if line.startswith('[') and ']' in line:
+                            # Extract timestamp and message
+                            try:
+                                timestamp_end = line.find(']')
+                                if timestamp_end > 0:
+                                    timestamp = line[1:timestamp_end]
+                                    message = line[timestamp_end + 1:].strip()
+                                    
+                                    # Format the line nicely
+                                    if message:
+                                        cleaned_lines.append(f"[{timestamp}] {message}")
+                                else:
+                                    cleaned_lines.append(line)
+                            except:
+                                cleaned_lines.append(line)
+                        else:
+                            cleaned_lines.append(line)
+                    
+                    logs = '\n'.join(cleaned_lines)
+                else:
+                    logs = "No logs available for this container."
+                    
+            except Exception as log_err:
+                # Fallback to basic logs if timestamped logs fail
+                try:
+                    logs = container.logs().decode("utf-8", errors='replace')
+                    if not logs:
+                        logs = "No logs available for this container."
+                except:
+                    logs = f"Error retrieving logs: {str(log_err)}"
 
-            data_ret = {'containerLogStatus': 1, 'containerLog': logs, 'error_message': "None"}
-            json_data = json.dumps(data_ret)
+            data_ret = {
+                'containerLogStatus': 1, 
+                'containerLog': logs, 
+                'error_message': "None",
+                'container_status': container.status,
+                'log_count': len(logs.split('\n')) if logs else 0
+            }
+            json_data = json.dumps(data_ret, ensure_ascii=False)
             return HttpResponse(json_data)
 
-
-        except BaseException as msg:
-            data_ret = {'containerLogStatus': 0, 'containerLog': 'Error', 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, 'containerLogStatus')
+            data_ret = secure_error_response(e, 'Failed to containerLogStatus')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -300,7 +356,24 @@ class ContainerManager(multi.Thread):
             envList = data['envList']
             volList = data['volList']
 
-            inspectImage = dockerAPI.inspect_image(image + ":" + tag)
+            try:
+                inspectImage = dockerAPI.inspect_image(image + ":" + tag)
+            except docker.errors.APIError as err:
+                error_message = str(err)
+                data_ret = {'createContainerStatus': 0, 'error_message': f'Failed to inspect image: {error_message}'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            except docker.errors.ImageNotFound as err:
+                error_message = str(err)
+                data_ret = {'createContainerStatus': 0, 'error_message': f'Image not found: {error_message}'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            except Exception as err:
+                error_message = str(err)
+                data_ret = {'createContainerStatus': 0, 'error_message': f'Error inspecting image: {error_message}'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            
             portConfig = {}
 
             # Formatting envList for usage - handle both simple and advanced modes
@@ -344,6 +417,22 @@ class ContainerManager(multi.Thread):
                     if isinstance(volume, dict) and 'src' in volume and 'dest' in volume:
                         volumes[volume['src']] = {'bind': volume['dest'], 'mode': 'rw'}
 
+            # Network configuration
+            network = data.get('network', 'bridge')  # Default to bridge network
+            network_mode = data.get('network_mode', 'bridge')
+            
+            # Extra options support (like --add-host)
+            extra_hosts = {}
+            extra_options = data.get('extraOptions', {})
+            if extra_options:
+                for option, value in extra_options.items():
+                    if option == 'add_host' and value:
+                        # Parse --add-host entries (format: hostname:ip)
+                        for host_entry in value.split(','):
+                            if ':' in host_entry:
+                                hostname, ip = host_entry.strip().split(':', 1)
+                                extra_hosts[hostname.strip()] = ip.strip()
+
             ## Create Configurations
             admin = Administrator.objects.get(userName=dockerOwner)
 
@@ -353,14 +442,23 @@ class ContainerManager(multi.Thread):
                              'ports': portConfig,
                              'publish_all_ports': True,
                              'environment': envDict,
-                             'volumes': volumes}
+                             'volumes': volumes,
+                             'network_mode': network_mode}
+
+            # Add network configuration
+            if network != 'bridge' or network_mode == 'bridge':
+                containerArgs['network'] = network
+            
+            # Add extra hosts if specified
+            if extra_hosts:
+                containerArgs['extra_hosts'] = extra_hosts
 
             containerArgs['mem_limit'] = memory * 1048576;  # Converts MB to bytes ( 0 * x = 0 for unlimited memory)
 
             try:
                 container = client.containers.create(**containerArgs)
-            except Exception as err:
-                # Check if it's a port allocation error by converting to string first
+            except docker.errors.APIError as err:
+                # Handle Docker API errors properly
                 error_message = str(err)
                 if "port is already allocated" in error_message:  # We need to delete container if port is not available
                     print("Deleting container")
@@ -368,7 +466,23 @@ class ContainerManager(multi.Thread):
                         container.remove(force=True)
                     except:
                         pass  # Container might not exist yet
-                data_ret = {'createContainerStatus': 0, 'error_message': error_message}
+                data_ret = {'createContainerStatus': 0, 'error_message': f'Docker API error: {error_message}'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            except docker.errors.ImageNotFound as err:
+                error_message = str(err)
+                data_ret = {'createContainerStatus': 0, 'error_message': f'Image not found: {error_message}'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            except docker.errors.ContainerError as err:
+                error_message = str(err)
+                data_ret = {'createContainerStatus': 0, 'error_message': f'Container error: {error_message}'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            except Exception as err:
+                # Handle any other exceptions
+                error_message = str(err) if err else "Unknown error occurred"
+                data_ret = {'createContainerStatus': 0, 'error_message': f'Container creation error: {error_message}'}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
@@ -378,6 +492,9 @@ class ContainerManager(multi.Thread):
                              image=image,
                              memory=memory,
                              ports=json.dumps(portConfig),
+                             network=network,
+                             network_mode=network_mode,
+                             extra_options=json.dumps(extra_options),
                              volumes=json.dumps(volumes),
                              env=json.dumps(envDict),
                              cid=container.id)
@@ -660,8 +777,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'containerActionStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'containerActionStatus\')
+            data_ret = secure_error_response(e, \'Failed to containerActionStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -690,8 +808,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'containerStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'containerStatus\')
+            data_ret = secure_error_response(e, \'Failed to containerStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -720,8 +839,9 @@ class ContainerManager(multi.Thread):
             response['Content-Disposition'] = 'attachment; filename="' + name + '.tar"'
             return response
 
-        except BaseException as msg:
-            data_ret = {'containerStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'containerStatus\')
+            data_ret = secure_error_response(e, \'Failed to containerStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -756,8 +876,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'containerTopStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'containerTopStatus\')
+            data_ret = secure_error_response(e, \'Failed to containerTopStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -797,8 +918,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'assignContainerStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'assignContainerStatus\')
+            data_ret = secure_error_response(e, \'Failed to assignContainerStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -835,8 +957,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'searchImageStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'searchImageStatus\')
+            data_ret = secure_error_response(e, \'Failed to searchImageStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -885,8 +1008,9 @@ class ContainerManager(multi.Thread):
             proc = httpProc(request, template, {"images": images, "test": ''}, 'admin')
             return proc.render()
 
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        except Exception as e:
+            secure_log_error(e, \'container_operation\')
+            return HttpResponse(\'Operation failed\')
 
     def manageImages(self, request=None, userID=None, data=None):
         try:
@@ -915,8 +1039,9 @@ class ContainerManager(multi.Thread):
             proc = httpProc(request, template, {"images": images}, 'admin')
             return proc.render()
 
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        except Exception as e:
+            secure_log_error(e, \'container_operation\')
+            return HttpResponse(\'Operation failed\')
 
     def getImageHistory(self, userID=None, data=None):
         try:
@@ -941,8 +1066,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'imageHistoryStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'imageHistoryStatus\')
+            data_ret = secure_error_response(e, \'Failed to imageHistoryStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -957,18 +1083,67 @@ class ContainerManager(multi.Thread):
             dockerAPI = docker.APIClient()
 
             name = data['name']
+            force = data.get('force', False)
+            
             try:
                 if name == 0:
+                    # Prune unused images
                     action = client.images.prune()
                 else:
-                    action = client.images.remove(name)
+                    # First, try to remove containers that might be using this image
+                    containers_using_image = []
+                    try:
+                        for container in client.containers.list(all=True):
+                            container_image = container.attrs['Config']['Image']
+                            if container_image == name or container_image.startswith(name + ':'):
+                                containers_using_image.append(container)
+                    except Exception as e:
+                        logging.CyberCPLogFileWriter.writeToFile(f'Error checking containers for image {name}: {str(e)}')
+                    
+                    # Remove containers that are using this image
+                    for container in containers_using_image:
+                        try:
+                            if container.status == 'running':
+                                container.stop()
+                                time.sleep(1)
+                            container.remove(force=True)
+                            logging.CyberCPLogFileWriter.writeToFile(f'Removed container {container.name} that was using image {name}')
+                        except Exception as e:
+                            logging.CyberCPLogFileWriter.writeToFile(f'Error removing container {container.name}: {str(e)}')
+                    
+                    # Now try to remove the image
+                    try:
+                        if force:
+                            action = client.images.remove(name, force=True)
+                        else:
+                            action = client.images.remove(name)
+                        logging.CyberCPLogFileWriter.writeToFile(f'Successfully removed image {name}')
+                    except docker.errors.APIError as err:
+                        error_msg = str(err)
+                        if "conflict: unable to remove repository reference" in error_msg and "must force" in error_msg:
+                            # Try with force if not already forced
+                            if not force:
+                                logging.CyberCPLogFileWriter.writeToFile(f'Retrying image removal with force: {name}')
+                                action = client.images.remove(name, force=True)
+                            else:
+                                raise err
+                        else:
+                            raise err
+                
                 print(action)
             except docker.errors.APIError as err:
-                data_ret = {'removeImageStatus': 0, 'error_message': str(err)}
+                error_message = str(err)
+                # Provide more helpful error messages
+                if "conflict: unable to remove repository reference" in error_message:
+                    error_message = f"Image {name} is still being used by containers. Use force removal to delete it."
+                elif "No such image" in error_message:
+                    error_message = f"Image {name} not found or already removed."
+                
+                data_ret = {'removeImageStatus': 0, 'error_message': error_message}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
-            except:
-                data_ret = {'removeImageStatus': 0, 'error_message': 'Unknown'}
+            except Exception as e:
+                data_ret = {'removeImageStatus': 0, 'error_message': f'Unknown error: {str(e)}'}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
@@ -976,8 +1151,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'removeImageStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'removeImageStatus\')
+            data_ret = secure_error_response(e, \'Failed to removeImageStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -1022,8 +1198,9 @@ class ContainerManager(multi.Thread):
             con.save()
 
             return 0
-        except BaseException as msg:
-            return str(msg)
+        except Exception as e:
+            secure_log_error(e, \'container_operation\')
+            return \'Operation failed\'
 
     def saveContainerSettings(self, userID=None, data=None):
         try:
@@ -1120,8 +1297,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'saveSettingsStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'saveSettingsStatus\')
+            data_ret = secure_error_response(e, \'Failed to saveSettingsStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -1170,8 +1348,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'recreateContainerStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'recreateContainerStatus\')
+            data_ret = secure_error_response(e, \'Failed to recreateContainerStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -1201,8 +1380,9 @@ class ContainerManager(multi.Thread):
             data_ret = {'getTagsStatus': 1, 'list': tagList, 'next': registryData['next'], 'error_message': None}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-        except BaseException as msg:
-            data_ret = {'getTagsStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'getTagsStatus\')
+            data_ret = secure_error_response(e, \'Failed to getTagsStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -1227,8 +1407,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'removeImageStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'removeImageStatus\')
+            data_ret = secure_error_response(e, \'Failed to removeImageStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -1280,8 +1461,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'status': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, 'getContainerAppinfo')
+            data_ret = secure_error_response(e, 'Failed to get container app info')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -1327,8 +1509,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'removeImageStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'removeImageStatus\')
+            data_ret = secure_error_response(e, \'Failed to removeImageStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -1371,8 +1554,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'removeImageStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'removeImageStatus\')
+            data_ret = secure_error_response(e, \'Failed to removeImageStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -1397,8 +1581,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'removeImageStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'removeImageStatus\')
+            data_ret = secure_error_response(e, \'Failed to removeImageStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -1423,8 +1608,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException as msg:
-            data_ret = {'removeImageStatus': 0, 'error_message': str(msg)}
+        except Exception as e:
+            secure_log_error(e, \'removeImageStatus\')
+            data_ret = secure_error_response(e, \'Failed to removeImageStatus\')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -1473,10 +1659,26 @@ class ContainerManager(multi.Thread):
                 data_ret = {'commandStatus': 0, 'error_message': f'Error accessing container: {str(err)}'}
                 return HttpResponse(json.dumps(data_ret))
 
-            # Check if container is running
+            # Handle container status - try to start if not running
+            container_was_stopped = False
             if container.status != 'running':
-                data_ret = {'commandStatus': 0, 'error_message': 'Container must be running to execute commands'}
-                return HttpResponse(json.dumps(data_ret))
+                try:
+                    # Try to start the container temporarily
+                    container.start()
+                    container_was_stopped = True
+                    # Wait a moment for container to fully start
+                    import time
+                    time.sleep(2)
+                    
+                    # Verify container is now running
+                    container.reload()
+                    if container.status != 'running':
+                        data_ret = {'commandStatus': 0, 'error_message': 'Failed to start container for command execution'}
+                        return HttpResponse(json.dumps(data_ret))
+                        
+                except Exception as start_err:
+                    data_ret = {'commandStatus': 0, 'error_message': f'Container is not running and cannot be started: {str(start_err)}'}
+                    return HttpResponse(json.dumps(data_ret))
 
             # Log the command execution attempt
             self._log_command_execution(userID, name, command)
@@ -1517,6 +1719,14 @@ class ContainerManager(multi.Thread):
                 # Log successful execution
                 self._log_command_result(userID, name, command, exit_code, len(output))
                 
+                # Stop container if it was started temporarily
+                if container_was_stopped:
+                    try:
+                        container.stop()
+                        logging.CyberCPLogFileWriter.writeToFile(f'Stopped container {name} after command execution')
+                    except Exception as stop_err:
+                        logging.CyberCPLogFileWriter.writeToFile(f'Warning: Could not stop container {name} after command execution: {str(stop_err)}')
+                
                 # Format the response
                 data_ret = {
                     'commandStatus': 1, 
@@ -1524,17 +1734,34 @@ class ContainerManager(multi.Thread):
                     'output': output,
                     'exit_code': exit_code,
                     'command': command,
-                    'timestamp': time.time()
+                    'timestamp': time.time(),
+                    'container_was_started': container_was_stopped
                 }
                 
                 return HttpResponse(json.dumps(data_ret, ensure_ascii=False))
                 
             except docker.errors.APIError as err:
+                # Stop container if it was started temporarily
+                if container_was_stopped:
+                    try:
+                        container.stop()
+                        logging.CyberCPLogFileWriter.writeToFile(f'Stopped container {name} after API error')
+                    except Exception as stop_err:
+                        logging.CyberCPLogFileWriter.writeToFile(f'Warning: Could not stop container {name} after API error: {str(stop_err)}')
+                
                 error_msg = f'Docker API error: {str(err)}'
                 self._log_command_error(userID, name, command, error_msg)
                 data_ret = {'commandStatus': 0, 'error_message': error_msg}
                 return HttpResponse(json.dumps(data_ret))
             except Exception as err:
+                # Stop container if it was started temporarily
+                if container_was_stopped:
+                    try:
+                        container.stop()
+                        logging.CyberCPLogFileWriter.writeToFile(f'Stopped container {name} after execution error')
+                    except Exception as stop_err:
+                        logging.CyberCPLogFileWriter.writeToFile(f'Warning: Could not stop container {name} after execution error: {str(stop_err)}')
+                
                 error_msg = f'Execution error: {str(err)}'
                 self._log_command_error(userID, name, command, error_msg)
                 data_ret = {'commandStatus': 0, 'error_message': error_msg}
@@ -2012,5 +2239,396 @@ class ContainerManager(multi.Thread):
         except Exception as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [ContainerManager.deleteContainerKeepData]')
             data_ret = {'deleteContainerKeepDataStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def updateContainer(self, userID=None, data=None):
+        """
+        Update container with new image while preserving data using Docker volumes
+        This function handles the complete container update process:
+        1. Stops the current container
+        2. Creates a backup of the container configuration
+        3. Removes the old container
+        4. Pulls the new image
+        5. Creates a new container with the same configuration but new image
+        6. Preserves all volumes and data
+        """
+        try:
+            admin = Administrator.objects.get(pk=userID)
+            if admin.acl.adminStatus != 1:
+                return ACLManager.loadError()
+
+            client = docker.from_env()
+            dockerAPI = docker.APIClient()
+            
+            containerName = data['containerName']
+            newImage = data['newImage']
+            newTag = data.get('newTag', 'latest')
+            
+            # Get the current container
+            try:
+                currentContainer = client.containers.get(containerName)
+            except docker.errors.NotFound:
+                data_ret = {'updateContainerStatus': 0, 'error_message': f'Container {containerName} not found'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            except Exception as e:
+                data_ret = {'updateContainerStatus': 0, 'error_message': f'Error accessing container: {str(e)}'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            # Get container configuration for recreation
+            containerConfig = currentContainer.attrs['Config']
+            hostConfig = currentContainer.attrs['HostConfig']
+            
+            # Extract volumes for data preservation
+            volumes = {}
+            if 'Binds' in hostConfig and hostConfig['Binds']:
+                for bind in hostConfig['Binds']:
+                    if ':' in bind:
+                        parts = bind.split(':')
+                        if len(parts) >= 2:
+                            host_path = parts[0]
+                            container_path = parts[1]
+                            mode = parts[2] if len(parts) > 2 else 'rw'
+                            volumes[host_path] = {'bind': container_path, 'mode': mode}
+
+            # Extract environment variables
+            environment = containerConfig.get('Env', [])
+            envDict = {}
+            for env in environment:
+                if '=' in env:
+                    key, value = env.split('=', 1)
+                    envDict[key] = value
+
+            # Extract port mappings
+            portConfig = {}
+            if 'PortBindings' in hostConfig and hostConfig['PortBindings']:
+                for container_port, host_bindings in hostConfig['PortBindings'].items():
+                    if host_bindings and len(host_bindings) > 0:
+                        host_port = host_bindings[0]['HostPort']
+                        portConfig[container_port] = host_port
+
+            # Extract memory limit
+            memory_limit = hostConfig.get('Memory', 0)
+            if memory_limit > 0:
+                memory_limit = memory_limit // 1048576  # Convert bytes to MB
+
+            # Stop the current container
+            try:
+                if currentContainer.status == 'running':
+                    currentContainer.stop(timeout=30)
+                    logging.CyberCPLogFileWriter.writeToFile(f'Stopped container {containerName} for update')
+            except Exception as e:
+                logging.CyberCPLogFileWriter.writeToFile(f'Error stopping container {containerName}: {str(e)}')
+                data_ret = {'updateContainerStatus': 0, 'error_message': f'Error stopping container: {str(e)}'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            # Remove the old container
+            try:
+                currentContainer.remove(force=True)
+                logging.CyberCPLogFileWriter.writeToFile(f'Removed old container {containerName}')
+            except Exception as e:
+                logging.CyberCPLogFileWriter.writeToFile(f'Error removing old container {containerName}: {str(e)}')
+                data_ret = {'updateContainerStatus': 0, 'error_message': f'Error removing old container: {str(e)}'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            # Pull the new image
+            try:
+                image_name = f"{newImage}:{newTag}"
+                logging.CyberCPLogFileWriter.writeToFile(f'Pulling new image {image_name}')
+                client.images.pull(newImage, tag=newTag)
+                logging.CyberCPLogFileWriter.writeToFile(f'Successfully pulled image {image_name}')
+            except Exception as e:
+                logging.CyberCPLogFileWriter.writeToFile(f'Error pulling image {newImage}:{newTag}: {str(e)}')
+                data_ret = {'updateContainerStatus': 0, 'error_message': f'Error pulling new image: {str(e)}'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            # Create new container with same configuration but new image
+            try:
+                containerArgs = {
+                    'image': image_name,
+                    'detach': True,
+                    'name': containerName,
+                    'ports': portConfig,
+                    'publish_all_ports': True,
+                    'environment': envDict,
+                    'volumes': volumes
+                }
+                
+                if memory_limit > 0:
+                    containerArgs['mem_limit'] = memory_limit * 1048576
+
+                newContainer = client.containers.create(**containerArgs)
+                logging.CyberCPLogFileWriter.writeToFile(f'Created new container {containerName} with image {image_name}')
+                
+                # Start the new container
+                newContainer.start()
+                logging.CyberCPLogFileWriter.writeToFile(f'Started updated container {containerName}')
+                
+            except docker.errors.APIError as err:
+                error_message = str(err)
+                if "port is already allocated" in error_message:
+                    try:
+                        newContainer.remove(force=True)
+                    except:
+                        pass
+                data_ret = {'updateContainerStatus': 0, 'error_message': f'Docker API error creating container: {error_message}'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            except docker.errors.ImageNotFound as err:
+                error_message = str(err)
+                data_ret = {'updateContainerStatus': 0, 'error_message': f'New image not found: {error_message}'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            except Exception as e:
+                logging.CyberCPLogFileWriter.writeToFile(f'Error creating new container {containerName}: {str(e)}')
+                data_ret = {'updateContainerStatus': 0, 'error_message': f'Error creating new container: {str(e)}'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            # Log successful update
+            logging.CyberCPLogFileWriter.writeToFile(f'Successfully updated container {containerName} to image {image_name}')
+            
+            data_ret = {
+                'updateContainerStatus': 1, 
+                'error_message': 'None',
+                'message': f'Container {containerName} successfully updated to {image_name}'
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except Exception as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [ContainerManager.updateContainer]')
+            data_ret = {'updateContainerStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def listContainers(self, userID=None):
+        """
+        Get list of all Docker containers
+        """
+        try:
+            admin = Administrator.objects.get(pk=userID)
+            if admin.acl.adminStatus != 1:
+                return ACLManager.loadError()
+
+            client = docker.from_env()
+            
+            # Get all containers (including stopped ones)
+            containers = client.containers.list(all=True)
+            
+            container_list = []
+            for container in containers:
+                container_info = {
+                    'name': container.name,
+                    'image': container.image.tags[0] if container.image.tags else container.image.short_id,
+                    'status': container.status,
+                    'state': container.attrs['State']['Status'],
+                    'created': container.attrs['Created'],
+                    'ports': container.attrs['NetworkSettings']['Ports'],
+                    'mounts': container.attrs['Mounts'],
+                    'id': container.short_id
+                }
+                container_list.append(container_info)
+            
+            data_ret = {
+                'status': 1,
+                'error_message': 'None',
+                'containers': container_list
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except Exception as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [ContainerManager.listContainers]')
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def getDockerNetworks(self, userID=None):
+        """
+        Get list of all Docker networks
+        """
+        try:
+            admin = Administrator.objects.get(pk=userID)
+            if admin.acl.adminStatus != 1:
+                return ACLManager.loadError()
+
+            client = docker.from_env()
+            
+            # Get all networks
+            networks = client.networks.list()
+            
+            network_list = []
+            for network in networks:
+                network_info = {
+                    'id': network.id,
+                    'name': network.name,
+                    'driver': network.attrs.get('Driver', 'unknown'),
+                    'scope': network.attrs.get('Scope', 'local'),
+                    'created': network.attrs.get('Created', ''),
+                    'containers': len(network.attrs.get('Containers', {})),
+                    'ipam': network.attrs.get('IPAM', {}),
+                    'labels': network.attrs.get('Labels', {})
+                }
+                network_list.append(network_info)
+            
+            data_ret = {
+                'status': 1,
+                'error_message': 'None',
+                'networks': network_list
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except Exception as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [ContainerManager.getDockerNetworks]')
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def createDockerNetwork(self, userID=None, data=None):
+        """
+        Create a new Docker network
+        """
+        try:
+            admin = Administrator.objects.get(pk=userID)
+            if admin.acl.adminStatus != 1:
+                return ACLManager.loadError()
+
+            client = docker.from_env()
+            
+            name = data.get('name')
+            driver = data.get('driver', 'bridge')
+            subnet = data.get('subnet', '')
+            gateway = data.get('gateway', '')
+            ip_range = data.get('ip_range', '')
+            
+            if not name:
+                data_ret = {'status': 0, 'error_message': 'Network name is required'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            
+            # Prepare IPAM configuration
+            ipam_config = []
+            if subnet:
+                ipam_entry = {'subnet': subnet}
+                if gateway:
+                    ipam_entry['gateway'] = gateway
+                if ip_range:
+                    ipam_entry['ip_range'] = ip_range
+                ipam_config.append(ipam_entry)
+            
+            ipam = {'driver': 'default', 'config': ipam_config} if ipam_config else None
+            
+            # Create the network
+            network = client.networks.create(
+                name=name,
+                driver=driver,
+                ipam=ipam
+            )
+            
+            data_ret = {
+                'status': 1,
+                'error_message': 'None',
+                'network_id': network.id,
+                'message': f'Network {name} created successfully'
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except Exception as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [ContainerManager.createDockerNetwork]')
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def updateContainerPorts(self, userID=None, data=None):
+        """
+        Update port mappings for an existing container
+        """
+        try:
+            admin = Administrator.objects.get(pk=userID)
+            if admin.acl.adminStatus != 1:
+                return ACLManager.loadError()
+
+            client = docker.from_env()
+            
+            container_name = data.get('name')
+            new_ports = data.get('ports', {})
+            
+            if not container_name:
+                data_ret = {'status': 0, 'error_message': 'Container name is required'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            
+            # Get the container
+            try:
+                container = client.containers.get(container_name)
+            except docker.errors.NotFound:
+                data_ret = {'status': 0, 'error_message': f'Container {container_name} not found'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            
+            # Check if container is running
+            if container.status != 'running':
+                data_ret = {'status': 0, 'error_message': 'Container must be running to update port mappings'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            
+            # Get current container configuration
+            container_config = container.attrs['Config']
+            host_config = container.attrs['HostConfig']
+            
+            # Update port bindings
+            port_bindings = {}
+            for container_port, host_port in new_ports.items():
+                if host_port:  # Only add if host port is specified
+                    port_bindings[container_port] = host_port
+            
+            # Stop the container
+            container.stop(timeout=10)
+            
+            # Create new container with updated port configuration
+            new_container = client.containers.create(
+                image=container_config['Image'],
+                name=f"{container_name}_temp",
+                ports=list(new_ports.keys()),
+                host_config=client.api.create_host_config(port_bindings=port_bindings),
+                environment=container_config.get('Env', []),
+                volumes=host_config.get('Binds', []),
+                detach=True
+            )
+            
+            # Remove old container and rename new one
+            container.remove()
+            new_container.rename(container_name)
+            
+            # Start the updated container
+            new_container.start()
+            
+            # Update database record if it exists
+            try:
+                db_container = Containers.objects.get(name=container_name)
+                db_container.ports = json.dumps(new_ports)
+                db_container.save()
+            except Containers.DoesNotExist:
+                pass  # Container not in database, that's okay
+            
+            data_ret = {
+                'status': 1,
+                'error_message': 'None',
+                'message': f'Port mappings updated for container {container_name}'
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except Exception as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [ContainerManager.updateContainerPorts]')
+            data_ret = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)

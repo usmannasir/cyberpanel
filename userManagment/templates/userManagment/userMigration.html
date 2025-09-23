@@ -1,0 +1,259 @@
+{% extends "baseTemplate/index.html" %}
+{% load static %}
+{% block title %}
+    <title>User Migration - CyberPanel</title>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">User Migration</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="refreshData()">
+                            <i class="fas fa-sync"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- User Selection -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Select User to Migrate</label>
+                                <select class="form-control" id="userSelect" onchange="loadUserInfo()">
+                                    <option value="">Choose a user...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Target Home Directory</label>
+                                <select class="form-control" id="targetHomeSelect">
+                                    <option value="">Choose target home directory...</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- User Info -->
+                    <div id="userInfo" class="alert alert-info" style="display: none;">
+                        <h5>Current User Information</h5>
+                        <div id="userDetails"></div>
+                    </div>
+
+                    <!-- Migration Button -->
+                    <div class="text-center">
+                        <button type="button" class="btn btn-warning btn-lg" onclick="migrateUser()" id="migrateBtn" disabled>
+                            <i class="fas fa-exchange-alt"></i> Migrate User
+                        </button>
+                    </div>
+
+                    <!-- Migration Progress -->
+                    <div id="migrationProgress" class="alert alert-info" style="display: none;">
+                        <h5>Migration in Progress...</h5>
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                        </div>
+                        <p>Please wait while the user is being migrated. This may take a few minutes.</p>
+                    </div>
+
+                    <!-- Migration Result -->
+                    <div id="migrationResult" class="alert" style="display: none;">
+                        <h5>Migration Result</h5>
+                        <div id="migrationMessage"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let users = [];
+let homeDirectories = [];
+
+function loadUsers() {
+    $.ajax({
+        url: '/userManagement/fetchTableUsers/',
+        type: 'POST',
+        data: JSON.stringify({}),
+        contentType: 'application/json',
+        success: function(response) {
+            if (response.status === 1) {
+                users = JSON.parse(response.data);
+                updateUserSelect();
+            }
+        },
+        error: function() {
+            showNotification('error', 'Error loading users');
+        }
+    });
+}
+
+function loadHomeDirectories() {
+    $.ajax({
+        url: '/userManagement/getUserHomeDirectories/',
+        type: 'POST',
+        data: JSON.stringify({}),
+        contentType: 'application/json',
+        success: function(response) {
+            if (response.status === 1) {
+                homeDirectories = response.directories;
+                updateHomeDirectorySelect();
+            }
+        },
+        error: function() {
+            showNotification('error', 'Error loading home directories');
+        }
+    });
+}
+
+function updateUserSelect() {
+    const select = document.getElementById('userSelect');
+    select.innerHTML = '<option value="">Choose a user...</option>';
+    
+    users.forEach(function(user) {
+        const option = document.createElement('option');
+        option.value = user.name;
+        option.textContent = user.name + ' (' + user.owner + ')';
+        select.appendChild(option);
+    });
+}
+
+function updateHomeDirectorySelect() {
+    const select = document.getElementById('targetHomeSelect');
+    select.innerHTML = '<option value="">Choose target home directory...</option>';
+    
+    homeDirectories.forEach(function(dir) {
+        const option = document.createElement('option');
+        option.value = dir.id;
+        option.textContent = dir.name + ' (' + dir.path + ') - ' + formatBytes(dir.available_space) + ' available';
+        select.appendChild(option);
+    });
+}
+
+function loadUserInfo() {
+    const username = document.getElementById('userSelect').value;
+    if (!username) {
+        document.getElementById('userInfo').style.display = 'none';
+        return;
+    }
+    
+    const user = users.find(u => u.name === username);
+    if (user) {
+        document.getElementById('userDetails').innerHTML = `
+            <p><strong>Username:</strong> ${user.name}</p>
+            <p><strong>Owner:</strong> ${user.owner}</p>
+            <p><strong>ACL:</strong> ${user.acl}</p>
+            <p><strong>Disk Usage:</strong> ${user.diskUsage}</p>
+            <p><strong>Websites:</strong> ${user.websites}</p>
+            <p><strong>Status:</strong> ${user.state}</p>
+        `;
+        document.getElementById('userInfo').style.display = 'block';
+    }
+    
+    updateMigrateButton();
+}
+
+function updateMigrateButton() {
+    const userSelected = document.getElementById('userSelect').value;
+    const homeSelected = document.getElementById('targetHomeSelect').value;
+    const migrateBtn = document.getElementById('migrateBtn');
+    
+    if (userSelected && homeSelected) {
+        migrateBtn.disabled = false;
+    } else {
+        migrateBtn.disabled = true;
+    }
+}
+
+function migrateUser() {
+    const username = document.getElementById('userSelect').value;
+    const targetHomeId = document.getElementById('targetHomeSelect').value;
+    
+    if (!username || !targetHomeId) {
+        showNotification('error', 'Please select both user and target home directory');
+        return;
+    }
+    
+    if (!confirm(`Are you sure you want to migrate user "${username}" to the selected home directory? This action will move all user files and may take several minutes.`)) {
+        return;
+    }
+    
+    // Show progress
+    document.getElementById('migrationProgress').style.display = 'block';
+    document.getElementById('migrationResult').style.display = 'none';
+    document.getElementById('migrateBtn').disabled = true;
+    
+    $.ajax({
+        url: '/userManagement/migrateUser/',
+        type: 'POST',
+        data: JSON.stringify({
+            username: username,
+            target_home_id: targetHomeId
+        }),
+        contentType: 'application/json',
+        success: function(response) {
+            document.getElementById('migrationProgress').style.display = 'none';
+            document.getElementById('migrationResult').style.display = 'block';
+            document.getElementById('migrateBtn').disabled = false;
+            
+            if (response.status === 1) {
+                document.getElementById('migrationResult').className = 'alert alert-success';
+                document.getElementById('migrationMessage').innerHTML = '<i class="fas fa-check-circle"></i> ' + response.message;
+                showNotification('success', response.message);
+            } else {
+                document.getElementById('migrationResult').className = 'alert alert-danger';
+                document.getElementById('migrationMessage').innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + response.error_message;
+                showNotification('error', response.error_message);
+            }
+        },
+        error: function() {
+            document.getElementById('migrationProgress').style.display = 'none';
+            document.getElementById('migrationResult').style.display = 'block';
+            document.getElementById('migrationResult').className = 'alert alert-danger';
+            document.getElementById('migrationMessage').innerHTML = '<i class="fas fa-times-circle"></i> Error occurred during migration';
+            document.getElementById('migrateBtn').disabled = false;
+            showNotification('error', 'Error occurred during migration');
+        }
+    });
+}
+
+function refreshData() {
+    loadUsers();
+    loadHomeDirectories();
+    document.getElementById('userInfo').style.display = 'none';
+    document.getElementById('migrationResult').style.display = 'none';
+    document.getElementById('migrateBtn').disabled = true;
+}
+
+function formatBytes(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+function showNotification(type, message) {
+    if (type === 'success') {
+        toastr.success(message);
+    } else {
+        toastr.error(message);
+    }
+}
+
+// Initialize on page load
+$(document).ready(function() {
+    loadUsers();
+    loadHomeDirectories();
+    
+    // Update migrate button when selections change
+    document.getElementById('userSelect').addEventListener('change', updateMigrateButton);
+    document.getElementById('targetHomeSelect').addEventListener('change', updateMigrateButton);
+});
+</script>
+{% endblock %}

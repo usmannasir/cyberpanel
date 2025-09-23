@@ -2,6 +2,7 @@
 import os.path
 
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+from plogical.errorSanitizer import secure_error_response, secure_log_error
 from django.shortcuts import HttpResponse, render
 import json
 import re
@@ -244,9 +245,9 @@ class secMiddleware:
                         final_json = json.dumps(final_dic)
                         return HttpResponse(final_json)
 
-            except BaseException as msg:
-                final_dic = {'error_message': f"Error: {str(msg)}",
-                             "errorMessage":  f"Error: {str(msg)}"}
+            except Exception as e:
+                secure_log_error(e, 'secMiddleware_body_validation')
+                final_dic = secure_error_response(e, 'Request validation failed')
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
         else:

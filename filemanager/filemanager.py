@@ -211,7 +211,7 @@ class FileManager:
                     currentFile = items.split(' ')
                     currentFile = [a for a in currentFile if a != '']
 
-                    if currentFile[-1] == '.' or currentFile[-1] == '..' or currentFile[0] == 'total' or currentFile[-1].startswith('mail.'):
+                    if currentFile[-1] == '.' or currentFile[-1] == '..' or currentFile[0] == 'total':
                         continue
 
                     if len(currentFile) > 9:
@@ -384,90 +384,181 @@ class FileManager:
                 website = Websites.objects.get(domain=domainName)
                 self.homePath = '/home/%s' % (domainName)
 
+                logging.CyberCPLogFileWriter.writeToFile(f"Attempting to delete files/folders for domain: {domainName}")
+
                 RemoveOK = 1
 
-                command = 'touch %s/hello.txt' % (self.homePath)
+                # Test if directory is writable
+                command = 'touch %s/public_html/hello.txt' % (self.homePath)
                 result = ProcessUtilities.outputExecutioner(command)
 
-                if result.find('No such file or directory') > -1:
+                if result.find('cannot touch') > -1:
                     RemoveOK = 0
+                    logging.CyberCPLogFileWriter.writeToFile(f"Directory {self.homePath} is not writable, removing chattr flags")
 
+                    # Remove immutable flag from entire directory
                     command = 'chattr -R -i %s' % (self.homePath)
-                    ProcessUtilities.executioner(command)
+                    result = ProcessUtilities.executioner(command)
+                    if result.find('cannot') > -1:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to remove chattr -i from {self.homePath}: {result}")
+                    else:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Successfully removed chattr -i from {self.homePath}")
 
                 else:
-                    command = 'rm -f %s/hello.txt' % (self.homePath)
+                    command = 'rm -f %s/public_html/hello.txt' % (self.homePath)
                     ProcessUtilities.executioner(command)
 
 
                 for item in self.data['fileAndFolders']:
+                    itemPath = self.data['path'] + '/' + item
+                    
+                    # Security check - prevent path traversal
+                    if itemPath.find('..') > -1 or itemPath.find(self.homePath) == -1:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Security violation: Attempted to delete outside home directory: {itemPath}")
+                        return self.ajaxPre(0, 'Not allowed to delete files outside home directory!')
 
-                    if (self.data['path'] + '/' + item).find('..') > -1 or (self.data['path'] + '/' + item).find(
-                            self.homePath) == -1:
-                        return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
+                    logging.CyberCPLogFileWriter.writeToFile(f"Deleting: {itemPath}")
 
                     if skipTrash:
-                        command = 'rm -rf ' + self.returnPathEnclosed(self.data['path'] + '/' + item)
-                        ProcessUtilities.executioner(command, website.externalApp)
+                        # Permanent deletion
+                        command = 'rm -rf ' + self.returnPathEnclosed(itemPath)
+                        result = ProcessUtilities.executioner(command, website.externalApp)
+                        if result.find('cannot') > -1 or result.find('Permission denied') > -1:
+                            logging.CyberCPLogFileWriter.writeToFile(f"Failed to delete {itemPath}: {result}")
+                            # Try with sudo if available
+                            command = 'sudo rm -rf ' + self.returnPathEnclosed(itemPath)
+                            result = ProcessUtilities.executioner(command, website.externalApp)
+                            if result.find('cannot') > -1 or result.find('Permission denied') > -1:
+                                return self.ajaxPre(0, f'Failed to delete {item}: {result}')
+                        logging.CyberCPLogFileWriter.writeToFile(f"Successfully deleted: {itemPath}")
                     else:
+                        # Move to trash
                         trashPath = '%s/.trash' % (self.homePath)
 
-                        command = 'mkdir %s' % (trashPath)
-                        ProcessUtilities.executioner(command, website.externalApp)
+                        # Ensure trash directory exists
+                        command = 'mkdir -p %s' % (trashPath)
+                        result = ProcessUtilities.executioner(command, website.externalApp)
+                        if result.find('cannot') > -1:
+                            logging.CyberCPLogFileWriter.writeToFile(f"Failed to create trash directory: {result}")
+                            return self.ajaxPre(0, f'Failed to create trash directory: {result}')
 
-                        Trash(website=website, originalPath=self.returnPathEnclosed(self.data['path']),
-                              fileName=self.returnPathEnclosed(item)).save()
+                        # Save to trash database
+                        try:
+                            Trash(website=website, originalPath=self.returnPathEnclosed(self.data['path']),
+                                  fileName=self.returnPathEnclosed(item)).save()
+                        except Exception as e:
+                            logging.CyberCPLogFileWriter.writeToFile(f"Failed to save trash record: {str(e)}")
 
-                        command = 'mv %s %s' % (self.returnPathEnclosed(self.data['path'] + '/' + item), trashPath)
-                        ProcessUtilities.executioner(command, website.externalApp)
+                        # Move to trash
+                        command = 'mv %s %s' % (self.returnPathEnclosed(itemPath), trashPath)
+                        result = ProcessUtilities.executioner(command, website.externalApp)
+                        if result.find('cannot') > -1 or result.find('Permission denied') > -1:
+                            logging.CyberCPLogFileWriter.writeToFile(f"Failed to move to trash {itemPath}: {result}")
+                            # Try with sudo if available
+                            command = 'sudo mv %s %s' % (self.returnPathEnclosed(itemPath), trashPath)
+                            result = ProcessUtilities.executioner(command, website.externalApp)
+                            if result.find('cannot') > -1 or result.find('Permission denied') > -1:
+                                return self.ajaxPre(0, f'Failed to move {item} to trash: {result}')
+                        logging.CyberCPLogFileWriter.writeToFile(f"Successfully moved to trash: {itemPath}")
 
                 if RemoveOK == 0:
+                    logging.CyberCPLogFileWriter.writeToFile(f"Restoring chattr +i flags for {self.homePath}")
+                    
+                    # Restore immutable flag to entire directory
                     command = 'chattr -R +i %s' % (self.homePath)
-                    ProcessUtilities.executioner(command)
-            except:
+                    result = ProcessUtilities.executioner(command)
+                    if result.find('cannot') > -1:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to restore chattr +i to {self.homePath}: {result}")
+                    else:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Successfully restored chattr +i to {self.homePath}")
+                    
+                    # Allow specific directories to remain mutable
+                    mutable_dirs = ['/logs/', '/.trash/', '/backup/', '/incbackup/', '/lscache/', '/.cagefs/']
+                    for dir_name in mutable_dirs:
+                        dir_path = self.homePath + dir_name
+                        command = 'chattr -R -i %s' % (dir_path)
+                        result = ProcessUtilities.executioner(command)
+                        if result.find('cannot') > -1:
+                            logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to remove chattr +i from {dir_path}: {result}")
+                        else:
+                            logging.CyberCPLogFileWriter.writeToFile(f"Successfully removed chattr +i from {dir_path}")
+            except Exception as e:
+                logging.CyberCPLogFileWriter.writeToFile(f"Error in deleteFolderOrFile for {domainName}: {str(e)}")
                 try:
                     skipTrash = self.data['skipTrash']
                 except:
                     skipTrash = False
 
 
+                # Fallback to root path for system files
                 self.homePath = '/'
+                logging.CyberCPLogFileWriter.writeToFile(f"Using fallback deletion for system files in {self.data['path']}")
 
                 RemoveOK = 1
 
-                command = 'touch %s/hello.txt' % (self.homePath)
+                # Test if directory is writable
+                command = 'touch %s/public_html/hello.txt' % (self.homePath)
                 result = ProcessUtilities.outputExecutioner(command)
 
-                if result.find('No such file or directory') > -1:
+                if result.find('cannot touch') > -1:
                     RemoveOK = 0
+                    logging.CyberCPLogFileWriter.writeToFile(f"Directory {self.homePath} is not writable, removing chattr flags")
 
                     command = 'chattr -R -i %s' % (self.homePath)
-                    ProcessUtilities.executioner(command)
+                    result = ProcessUtilities.executioner(command)
+                    if result.find('cannot') > -1:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to remove chattr -i from {self.homePath}: {result}")
 
                 else:
-                    command = 'rm -f %s/hello.txt' % (self.homePath)
+                    command = 'rm -f %s/public_html/hello.txt' % (self.homePath)
                     ProcessUtilities.executioner(command)
 
                 for item in self.data['fileAndFolders']:
+                    itemPath = self.data['path'] + '/' + item
+                    
+                    # Security check for system files
+                    if itemPath.find('..') > -1 or itemPath.find(self.homePath) == -1:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Security violation: Attempted to delete outside allowed path: {itemPath}")
+                        return self.ajaxPre(0, 'Not allowed to delete files outside allowed path!')
 
-                    if (self.data['path'] + '/' + item).find('..') > -1 or (self.data['path'] + '/' + item).find(
-                            self.homePath) == -1:
-                        return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
+                    logging.CyberCPLogFileWriter.writeToFile(f"Deleting system file: {itemPath}")
 
                     if skipTrash:
-                        command = 'rm -rf ' + self.returnPathEnclosed(self.data['path'] + '/' + item)
-                        ProcessUtilities.executioner(command)
+                        command = 'rm -rf ' + self.returnPathEnclosed(itemPath)
+                        result = ProcessUtilities.executioner(command)
+                        if result.find('cannot') > -1 or result.find('Permission denied') > -1:
+                            logging.CyberCPLogFileWriter.writeToFile(f"Failed to delete system file {itemPath}: {result}")
+                            return self.ajaxPre(0, f'Failed to delete {item}: {result}')
+                        logging.CyberCPLogFileWriter.writeToFile(f"Successfully deleted system file: {itemPath}")
 
 
                 if RemoveOK == 0:
+                    logging.CyberCPLogFileWriter.writeToFile(f"Restoring chattr +i flags for system path: {self.homePath}")
                     command = 'chattr -R +i %s' % (self.homePath)
-                    ProcessUtilities.executioner(command)
+                    result = ProcessUtilities.executioner(command)
+                    if result.find('cannot') > -1:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to restore chattr +i to system path {self.homePath}: {result}")
+                    else:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Successfully restored chattr +i to system path {self.homePath}")
+                    
+                    # Allow specific directories to remain mutable for system files
+                    mutable_dirs = ['/logs/', '/.trash/', '/backup/', '/incbackup/', '/lscache/', '/.cagefs/']
+                    for dir_name in mutable_dirs:
+                        dir_path = self.homePath + dir_name
+                        command = 'chattr -R -i %s' % (dir_path)
+                        result = ProcessUtilities.executioner(command)
+                        if result.find('cannot') > -1:
+                            logging.CyberCPLogFileWriter.writeToFile(f"Warning: Failed to remove chattr +i from system {dir_path}: {result}")
+                        else:
+                            logging.CyberCPLogFileWriter.writeToFile(f"Successfully removed chattr +i from system {dir_path}")
 
+            logging.CyberCPLogFileWriter.writeToFile(f"File deletion completed successfully for domain: {domainName}")
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
 
         except BaseException as msg:
-            return self.ajaxPre(0, str(msg))
+            logging.CyberCPLogFileWriter.writeToFile(f"Critical error in deleteFolderOrFile: {str(msg)}")
+            return self.ajaxPre(0, f"File deletion failed: {str(msg)}")
 
     def restore(self):
         try:

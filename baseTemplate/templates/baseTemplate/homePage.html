@@ -234,6 +234,7 @@
         width: 100%;
         border-collapse: collapse;
         margin-top: 15px;
+        table-layout: fixed;
     }
     
     .activity-table th {
@@ -535,12 +536,12 @@
             <table class="activity-table" ng-if="!loadingSSHLogins && sshLogins.length > 0">
                 <thead>
                     <tr>
-                        <th>USER</th>
-                        <th>IP</th>
-                        <th>COUNTRY</th>
-                        <th>DATE</th>
-                        <th>SESSION</th>
-                        <th>ACTIVITY</th>
+                        <th style="width: 15%;">USER</th>
+                        <th style="width: 20%;">IP</th>
+                        <th style="width: 15%;">COUNTRY</th>
+                        <th style="width: 20%;">DATE</th>
+                        <th style="width: 15%;">SESSION</th>
+                        <th style="width: 15%;">ACTIVITY</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -551,7 +552,15 @@
                         <td>{$ login.date $}</td>
                         <td>{$ login.session $}</td>
                         <td>
-                            <button class="view-activity-btn" ng-click="viewSSHActivity(login)">View Activity</button>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <button class="view-activity-btn" ng-click="viewSSHActivity(login)">View Activity</button>
+                                <button class="ban-ip-btn" ng-click="blockIPAddress(login.ip)" 
+                                        style="background: #dc2626; color: white; border: 1px solid #dc2626; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;"
+                                        onmouseover="this.style.background='#b91c1c'" 
+                                        onmouseout="this.style.background='#dc2626'">
+                                    <i class="fas fa-ban"></i> Ban IP
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 </tbody>
@@ -561,12 +570,12 @@
             <table class="activity-table" ng-if="loadingSSHLogins">
                 <thead>
                     <tr>
-                        <th>USER</th>
-                        <th>IP</th>
-                        <th>COUNTRY</th>
-                        <th>DATE</th>
-                        <th>SESSION</th>
-                        <th>ACTIVITY</th>
+                        <th style="width: 15%;">USER</th>
+                        <th style="width: 20%;">IP</th>
+                        <th style="width: 15%;">COUNTRY</th>
+                        <th style="width: 20%;">DATE</th>
+                        <th style="width: 15%;">SESSION</th>
+                        <th style="width: 15%;">ACTIVITY</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -577,7 +586,12 @@
                         <td>Wed Jun 4 20:59</td>
                         <td>Still Logged In</td>
                         <td>
-                            <button class="view-activity-btn" style="background: #5b5fcf; color: white; border-color: #5b5fcf;">View Activity</button>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <button class="view-activity-btn" style="background: #5b5fcf; color: white; border-color: #5b5fcf;">View Activity</button>
+                                <button class="ban-ip-btn" style="background: #dc2626; color: white; border: 1px solid #dc2626; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">
+                                    <i class="fas fa-ban"></i> Ban IP
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 </tbody>
@@ -672,9 +686,12 @@
                                             onmouseout="this.style.background='#dc2626'">
                                         <i class="fas fa-ban" ng-if="blockingIP !== alert.details['IP Address']"></i>
                                         <i class="fas fa-spinner fa-spin" ng-if="blockingIP === alert.details['IP Address']"></i>
-                                        <span ng-if="blockingIP !== alert.details['IP Address']">Block IP</span>
-                                        <span ng-if="blockingIP === alert.details['IP Address']">Blocking...</span>
+                                        <span ng-if="blockingIP !== alert.details['IP Address']">Ban IP Permanently</span>
+                                        <span ng-if="blockingIP === alert.details['IP Address']">Banning...</span>
                                     </button>
+                                    <a href="/firewall/" target="_blank" style="margin-left: 10px; color: #5b5fcf; font-size: 12px; text-decoration: none;">
+                                        <i class="fas fa-external-link-alt"></i> Manage in Firewall
+                                    </a>
                                     <span ng-if="blockedIPs && blockedIPs[alert.details['IP Address']]" 
                                           style="margin-left: 10px; color: #10b981; font-size: 12px; font-weight: 600;">
                                         <i class="fas fa-check-circle"></i> Blocked

@@ -150,10 +150,10 @@ class remoteBackup:
             return [0, msg]
 
     @staticmethod
-    def postRemoteTransfer(ipAddress, ownIP ,password, sshkey):
+    def postRemoteTransfer(ipAddress, ownIP ,password, sshkey, cyberPanelPort=8090):
         try:
             finalData = json.dumps({'username': "admin", "ipAddress": ownIP, "password": password})
-            url = "https://" + ipAddress + ":8090/api/remoteTransfer"
+            url = "https://" + ipAddress + ":" + str(cyberPanelPort) + "/api/remoteTransfer"
             r = requests.post(url, data=finalData, verify=False)
             data = json.loads(r.text)
 

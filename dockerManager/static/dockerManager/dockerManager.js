@@ -127,6 +127,81 @@ app.controller('runContainer', function ($scope, $http) {
     
     // Advanced Environment Variable Mode
     $scope.advancedEnvMode = false;
+    
+    // Network configuration
+    $scope.selectedNetwork = 'bridge';
+    $scope.networkMode = 'bridge';
+    $scope.extraHosts = '';
+    $scope.availableNetworks = [];
+
+    // Load available Docker networks
+    $scope.loadAvailableNetworks = function() {
+        var url = "/docker/getDockerNetworks";
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, {}, config).then(function(response) {
+            if (response.data.status === 1) {
+                $scope.availableNetworks = response.data.networks;
+            }
+        }, function(error) {
+            console.error('Failed to load networks:', error);
+        });
+    };
+
+    // Initialize networks on page load
+    $scope.loadAvailableNetworks();
+
+    // Helper function to generate Docker Compose YAML
+    $scope.generateDockerComposeYml = function(containerInfo) {
+        var yml = 'version: \'3.8\'\n\n';
+        yml += 'services:\n';
+        yml += '  ' + containerInfo.name + ':\n';
+        yml += '    image: ' + containerInfo.image + '\n';
+        yml += '    container_name: ' + containerInfo.name + '\n';
+        
+        // Add ports
+        var ports = Object.keys(containerInfo.ports);
+        if (ports.length > 0) {
+            yml += '    ports:\n';
+            for (var i = 0; i < ports.length; i++) {
+                var port = ports[i];
+                if (containerInfo.ports[port]) {
+                    yml += '      - "' + containerInfo.ports[port] + ':' + port + '"\n';
+                }
+            }
+        }
+        
+        // Add volumes
+        var volumes = Object.keys(containerInfo.volumes);
+        if (volumes.length > 0) {
+            yml += '    volumes:\n';
+            for (var i = 0; i < volumes.length; i++) {
+                var volume = volumes[i];
+                if (containerInfo.volumes[volume]) {
+                    yml += '      - ' + containerInfo.volumes[volume] + ':' + volume + '\n';
+                }
+            }
+        }
+        
+        // Add environment variables
+        var envVars = Object.keys(containerInfo.environment);
+        if (envVars.length > 0) {
+            yml += '    environment:\n';
+            for (var i = 0; i < envVars.length; i++) {
+                var envVar = envVars[i];
+                yml += '      - ' + envVar + '=' + containerInfo.environment[envVar] + '\n';
+            }
+        }
+        
+        // Add restart policy
+        yml += '    restart: unless-stopped\n';
+        
+        return yml;
+    };
     $scope.advancedEnvText = '';
     $scope.advancedEnvCount = 0;
     $scope.parsedEnvVars = {};
@@ -273,53 +348,6 @@ app.controller('runContainer', function ($scope, $http) {
         }
     };
 
-    // Helper function to generate Docker Compose YAML
-    function generateDockerComposeYml(containerInfo) {
-        var yml = 'version: \'3.8\'\n\n';
-        yml += 'services:\n';
-        yml += '  ' + containerInfo.name + ':\n';
-        yml += '    image: ' + containerInfo.image + '\n';
-        yml += '    container_name: ' + containerInfo.name + '\n';
-        
-        // Add ports
-        var ports = Object.keys(containerInfo.ports);
-        if (ports.length > 0) {
-            yml += '    ports:\n';
-            for (var i = 0; i < ports.length; i++) {
-                var port = ports[i];
-                if (containerInfo.ports[port]) {
-                    yml += '      - "' + containerInfo.ports[port] + ':' + port + '"\n';
-                }
-            }
-        }
-        
-        // Add volumes
-        var volumes = Object.keys(containerInfo.volumes);
-        if (volumes.length > 0) {
-            yml += '    volumes:\n';
-            for (var i = 0; i < volumes.length; i++) {
-                var volume = volumes[i];
-                if (containerInfo.volumes[volume]) {
-                    yml += '      - ' + containerInfo.volumes[volume] + ':' + volume + '\n';
-                }
-            }
-        }
-        
-        // Add environment variables
-        var envVars = Object.keys(containerInfo.environment);
-        if (envVars.length > 0) {
-            yml += '    environment:\n';
-            for (var i = 0; i < envVars.length; i++) {
-                var envVar = envVars[i];
-                yml += '      - ' + envVar + '=' + containerInfo.environment[envVar] + '\n';
-            }
-        }
-        
-        // Add restart policy
-        yml += '    restart: unless-stopped\n';
-        
-        return yml;
-    }
 
     // Docker Compose Functions for runContainer
     $scope.generateDockerCompose = function() {
@@ -344,7 +372,7 @@ app.controller('runContainer', function ($scope, $http) {
         }
         
         // Generate docker-compose.yml content
-        var composeContent = generateDockerComposeYml(containerInfo);
+        var composeContent = $scope.generateDockerComposeYml(containerInfo);
         
         // Create and download file
         var blob = new Blob([composeContent], { type: 'text/yaml' });
@@ -621,8 +649,12 @@ app.controller('runContainer', function ($scope, $http) {
             image: image,
             envList: finalEnvList,
             volList: $scope.volList,
-            advancedEnvMode: $scope.advancedEnvMode
-
+            advancedEnvMode: $scope.advancedEnvMode,
+            network: $scope.selectedNetwork,
+            network_mode: $scope.networkMode,
+            extraOptions: {
+                add_host: $scope.extraHosts
+            }
         };
 
         try {
@@ -1094,6 +1126,9 @@ app.controller('listContainers', function ($scope, $http) {
 
     $scope.showLog = function (name, refresh = false) {
         $scope.logs = "";
+        $scope.logInfo = null;
+        $scope.formattedLogs = "";
+        
         if (refresh === false) {
             $('#logs').modal('show');
             $scope.activeLog = name;
@@ -1121,23 +1156,112 @@ app.controller('listContainers', function ($scope, $http) {
 
             if (response.data.containerLogStatus === 1) {
                 $scope.logs = response.data.containerLog;
+                $scope.logInfo = {
+                    container_status: response.data.container_status,
+                    log_count: response.data.log_count
+                };
+                
+                // Format logs for better display
+                $scope.formatLogs();
+                
+                // Auto-scroll to bottom
+                setTimeout(function() {
+                    $scope.scrollToBottom();
+                }, 100);
             }
             else {
+                $scope.logs = response.data.error_message;
+                $scope.logInfo = null;
+                $scope.formattedLogs = "";
+                
                 new PNotify({
                     title: 'Unable to complete request',
                     text: response.data.error_message,
                     type: 'error'
                 });
-
             }
         }
 
         function cantLoadInitialData(response) {
+            $scope.logs = "Error loading logs";
+            $scope.logInfo = null;
+            $scope.formattedLogs = "";
+            
             new PNotify({
                 title: 'Unable to complete request',
                 type: 'error'
             });
         }
+    };
+
+    // Format logs with syntax highlighting and better readability
+    $scope.formatLogs = function() {
+        if (!$scope.logs || $scope.logs === 'Loading...') {
+            $scope.formattedLogs = $scope.logs;
+            return;
+        }
+
+        var lines = $scope.logs.split('\n');
+        var formattedLines = [];
+
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i];
+            var formattedLine = line;
+
+            // Escape HTML characters
+            formattedLine = formattedLine.replace(/&/g, '&amp;')
+                                       .replace(/</g, '&lt;')
+                                       .replace(/>/g, '&gt;')
+                                       .replace(/"/g, '&quot;')
+                                       .replace(/'/g, '&#39;');
+
+            // Add syntax highlighting for common log patterns
+            if (line.match(/^\[.*?\]/)) {
+                // Timestamp lines
+                formattedLine = '<span style="color: #569cd6;">' + formattedLine + '</span>';
+            } else if (line.match(/ERROR|FATAL|CRITICAL/i)) {
+                // Error lines
+                formattedLine = '<span style="color: #f44747; font-weight: bold;">' + formattedLine + '</span>';
+            } else if (line.match(/WARN|WARNING/i)) {
+                // Warning lines
+                formattedLine = '<span style="color: #ffcc02; font-weight: bold;">' + formattedLine + '</span>';
+            } else if (line.match(/INFO/i)) {
+                // Info lines
+                formattedLine = '<span style="color: #4ec9b0;">' + formattedLine + '</span>';
+            } else if (line.match(/DEBUG/i)) {
+                // Debug lines
+                formattedLine = '<span style="color: #9cdcfe;">' + formattedLine + '</span>';
+            } else if (line.match(/SUCCESS|OK|COMPLETED/i)) {
+                // Success lines
+                formattedLine = '<span style="color: #4caf50; font-weight: bold;">' + formattedLine + '</span>';
+            }
+
+            formattedLines.push(formattedLine);
+        }
+
+        $scope.formattedLogs = formattedLines.join('\n');
+    };
+
+    // Scroll functions
+    $scope.scrollToTop = function() {
+        var container = document.getElementById('logContainer');
+        if (container) {
+            container.scrollTop = 0;
+        }
+    };
+
+    $scope.scrollToBottom = function() {
+        var container = document.getElementById('logContainer');
+        if (container) {
+            container.scrollTop = container.scrollHeight;
+        }
+    };
+
+    // Clear logs function
+    $scope.clearLogs = function() {
+        $scope.logs = "";
+        $scope.formattedLogs = "";
+        $scope.logInfo = null;
     };
 
     url = "/docker/getContainerList";
@@ -1576,7 +1700,7 @@ app.controller('viewContainer', function ($scope, $http, $interval, $timeout) {
         }
         
         // Generate docker-compose.yml content
-        var composeContent = generateDockerComposeYml(containerInfo);
+        var composeContent = $scope.generateDockerComposeYml(containerInfo);
         
         // Create and download file
         var blob = new Blob([composeContent], { type: 'text/yaml' });
@@ -2044,6 +2168,82 @@ app.controller('viewContainer', function ($scope, $http, $interval, $timeout) {
         $("#commandModal").modal("show");
     };
 
+    // Port editing functionality
+    $scope.showPortEditModal = function() {
+        // Initialize current ports from container data
+        $scope.currentPorts = {};
+        if ($scope.ports) {
+            for (var iport in $scope.ports) {
+                var eport = $scope.ports[iport];
+                if (eport && eport.length > 0) {
+                    $scope.currentPorts[iport] = eport[0].HostPort;
+                }
+            }
+        }
+        $("#portEditModal").modal("show");
+    };
+
+    $scope.addNewPortMapping = function() {
+        var containerPort = prompt('Enter container port (e.g., 80/tcp):');
+        if (containerPort) {
+            $scope.currentPorts[containerPort] = '';
+            $scope.$apply();
+        }
+    };
+
+    $scope.removePortMapping = function(containerPort) {
+        if (confirm('Are you sure you want to remove this port mapping?')) {
+            delete $scope.currentPorts[containerPort];
+        }
+    };
+
+    $scope.updatePortMappings = function() {
+        $("#portEditLoading").show();
+        $scope.updatingPorts = true;
+
+        var url = "/docker/updateContainerPorts";
+        var data = {
+            name: $scope.cName,
+            ports: $scope.currentPorts
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(function(response) {
+            $("#portEditLoading").hide();
+            $scope.updatingPorts = false;
+
+            if (response.data.status === 1) {
+                $("#portEditModal").modal("hide");
+                // Refresh container status and ports
+                $scope.refreshContainerInfo();
+                new PNotify({
+                    title: 'Success',
+                    text: 'Port mappings updated successfully',
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Error',
+                    text: 'Failed to update port mappings: ' + response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }, function(error) {
+            $("#portEditLoading").hide();
+            $scope.updatingPorts = false;
+            new PNotify({
+                title: 'Error',
+                text: 'Error updating port mappings: ' + error.data.error_message,
+                type: 'error'
+            });
+        });
+    };
+
     $scope.executeCommand = function() {
         if (!$scope.commandToExecute.trim()) {
             new PNotify({
@@ -2079,13 +2279,15 @@ app.controller('viewContainer', function ($scope, $http, $interval, $timeout) {
                 $scope.commandOutput = {
                     command: response.data.command,
                     output: response.data.output,
-                    exit_code: response.data.exit_code
+                    exit_code: response.data.exit_code,
+                    container_was_started: response.data.container_was_started
                 };
 
                 // Add to command history
                 $scope.commandHistory.unshift({
                     command: response.data.command,
-                    timestamp: new Date()
+                    timestamp: new Date(),
+                    container_was_started: response.data.container_was_started
                 });
 
                 // Keep only last 10 commands
@@ -2093,10 +2295,15 @@ app.controller('viewContainer', function ($scope, $http, $interval, $timeout) {
                     $scope.commandHistory = $scope.commandHistory.slice(0, 10);
                 }
 
-                // Show success notification
+                // Show success notification with container status info
+                var notificationText = 'Command completed with exit code: ' + response.data.exit_code;
+                if (response.data.container_was_started) {
+                    notificationText += ' (Container was temporarily started and stopped)';
+                }
+
                 new PNotify({
                     title: 'Command Executed',
-                    text: 'Command completed with exit code: ' + response.data.exit_code,
+                    text: notificationText,
                     type: response.data.exit_code === 0 ? 'success' : 'warning'
                 });
             }
@@ -2374,7 +2581,7 @@ app.controller('manageImages', function ($scope, $http) {
 
         (new PNotify({
             title: 'Confirmation Needed',
-            text: 'Are you sure?',
+            text: 'Are you sure you want to remove this image?',
             icon: 'fa fa-question-circle',
             hide: false,
             confirm: {
@@ -2392,14 +2599,16 @@ app.controller('manageImages', function ($scope, $http) {
 
             if (counter == '0') {
                 var name = 0;
+                var force = false;
             }
             else {
                 var name = $("#" + counter).val()
+                var force = false;
             }
 
             url = "/docker/removeImage";
 
-            var data = {name: name};
+            var data = {name: name, force: force};
 
             var config = {
                 headers: {
@@ -2416,16 +2625,67 @@ app.controller('manageImages', function ($scope, $http) {
                 if (response.data.removeImageStatus === 1) {
                     new PNotify({
                         title: 'Image(s) removed',
+                        text: 'Image has been successfully removed',
                         type: 'success'
                     });
                     window.location.href = "/docker/manageImages";
                 }
                 else {
-                    new PNotify({
-                        title: 'Unable to complete request',
-                        text: response.data.error_message,
-                        type: 'error'
-                    });
+                    var errorMessage = response.data.error_message;
+                    
+                    // Check if it's a conflict error and offer force removal
+                    if (errorMessage && errorMessage.includes("still being used by containers")) {
+                        new PNotify({
+                            title: 'Image in Use',
+                            text: errorMessage + ' Would you like to force remove it?',
+                            icon: 'fa fa-exclamation-triangle',
+                            hide: false,
+                            confirm: {
+                                confirm: true
+                            },
+                            buttons: {
+                                closer: false,
+                                sticker: false
+                            },
+                            history: {
+                                history: false
+                            }
+                        }).get().on('pnotify.confirm', function () {
+                            // Force remove the image
+                            $('#imageLoading').show();
+                            var forceData = {name: name, force: true};
+                            $http.post(url, forceData, config).then(function(forceResponse) {
+                                $('#imageLoading').hide();
+                                if (forceResponse.data.removeImageStatus === 1) {
+                                    new PNotify({
+                                        title: 'Image Force Removed',
+                                        text: 'Image has been force removed successfully',
+                                        type: 'success'
+                                    });
+                                    window.location.href = "/docker/manageImages";
+                                } else {
+                                    new PNotify({
+                                        title: 'Force Removal Failed',
+                                        text: forceResponse.data.error_message,
+                                        type: 'error'
+                                    });
+                                }
+                            }, function(forceError) {
+                                $('#imageLoading').hide();
+                                new PNotify({
+                                    title: 'Force Removal Failed',
+                                    text: 'Could not force remove the image',
+                                    type: 'error'
+                                });
+                            });
+                        });
+                    } else {
+                        new PNotify({
+                            title: 'Unable to complete request',
+                            text: errorMessage,
+                            type: 'error'
+                        });
+                    }
                 }
                 $('#imageLoading').hide();
             }
@@ -2441,4 +2701,259 @@ app.controller('manageImages', function ($scope, $http) {
 
         })
     }
+});
+
+// Container List Controller
+app.controller('listContainers', function ($scope, $http, $timeout, $window) {
+    $scope.containers = [];
+    $scope.loading = false;
+    $scope.updateContainerName = '';
+    $scope.currentImage = '';
+    $scope.newImage = '';
+    $scope.newTag = 'latest';
+
+    // Load containers list
+    $scope.loadContainers = function() {
+        $scope.loading = true;
+        var url = '/docker/listContainers';
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, {}, config).then(function(response) {
+            $scope.loading = false;
+            if (response.data.status === 1) {
+                $scope.containers = response.data.containers || [];
+            } else {
+                new PNotify({
+                    title: 'Error Loading Containers',
+                    text: response.data.error_message || 'Failed to load containers',
+                    type: 'error'
+                });
+            }
+        }, function(error) {
+            $scope.loading = false;
+            new PNotify({
+                title: 'Connection Error',
+                text: 'Could not connect to server',
+                type: 'error'
+            });
+        });
+    };
+
+    // Initialize containers on page load
+    $scope.loadContainers();
+
+    // Open update container modal
+    $scope.openUpdateModal = function(container) {
+        $scope.updateContainerName = container.name;
+        $scope.currentImage = container.image;
+        $scope.newImage = '';
+        $scope.newTag = 'latest';
+        $('#updateContainer').modal('show');
+    };
+
+    // Perform container update
+    $scope.performUpdate = function() {
+        if (!$scope.newImage && !$scope.newTag) {
+            new PNotify({
+                title: 'Missing Information',
+                text: 'Please enter a new image name or tag',
+                type: 'error'
+            });
+            return;
+        }
+
+        // If no new image specified, use current image with new tag
+        var imageToUse = $scope.newImage || $scope.currentImage.split(':')[0];
+        var tagToUse = $scope.newTag || 'latest';
+
+        var data = {
+            containerName: $scope.updateContainerName,
+            newImage: imageToUse,
+            newTag: tagToUse
+        };
+
+        var url = '/docker/updateContainer';
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        // Show loading
+        $('#updateContainer').modal('hide');
+        new PNotify({
+            title: 'Updating Container',
+            text: 'Please wait while the container is being updated...',
+            type: 'info',
+            hide: false
+        });
+
+        $http.post(url, data, config).then(function(response) {
+            if (response.data.updateContainerStatus === 1) {
+                new PNotify({
+                    title: 'Container Updated Successfully',
+                    text: response.data.message || 'Container has been updated successfully',
+                    type: 'success'
+                });
+                // Reload containers list
+                $scope.loadContainers();
+            } else {
+                new PNotify({
+                    title: 'Update Failed',
+                    text: response.data.error_message || 'Failed to update container',
+                    type: 'error'
+                });
+            }
+        }, function(error) {
+            new PNotify({
+                title: 'Update Failed',
+                text: 'Could not connect to server',
+                type: 'error'
+            });
+        });
+    };
+
+    // Container actions
+    $scope.startContainer = function(containerName) {
+        var data = { containerName: containerName };
+        var url = '/docker/startContainer';
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(function(response) {
+            if (response.data.startContainerStatus === 1) {
+                new PNotify({
+                    title: 'Container Started',
+                    text: 'Container has been started successfully',
+                    type: 'success'
+                });
+                $scope.loadContainers();
+            } else {
+                new PNotify({
+                    title: 'Start Failed',
+                    text: response.data.error_message || 'Failed to start container',
+                    type: 'error'
+                });
+            }
+        });
+    };
+
+    $scope.stopContainer = function(containerName) {
+        var data = { containerName: containerName };
+        var url = '/docker/stopContainer';
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(function(response) {
+            if (response.data.stopContainerStatus === 1) {
+                new PNotify({
+                    title: 'Container Stopped',
+                    text: 'Container has been stopped successfully',
+                    type: 'success'
+                });
+                $scope.loadContainers();
+            } else {
+                new PNotify({
+                    title: 'Stop Failed',
+                    text: response.data.error_message || 'Failed to stop container',
+                    type: 'error'
+                });
+            }
+        });
+    };
+
+    $scope.restartContainer = function(containerName) {
+        var data = { containerName: containerName };
+        var url = '/docker/restartContainer';
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(function(response) {
+            if (response.data.restartContainerStatus === 1) {
+                new PNotify({
+                    title: 'Container Restarted',
+                    text: 'Container has been restarted successfully',
+                    type: 'success'
+                });
+                $scope.loadContainers();
+            } else {
+                new PNotify({
+                    title: 'Restart Failed',
+                    text: response.data.error_message || 'Failed to restart container',
+                    type: 'error'
+                });
+            }
+        });
+    };
+
+    $scope.deleteContainerWithData = function(containerName) {
+        if (confirm('Are you sure you want to delete this container and all its data? This action cannot be undone.')) {
+            var data = { containerName: containerName };
+            var url = '/docker/deleteContainerWithData';
+            var config = {
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            };
+
+            $http.post(url, data, config).then(function(response) {
+                if (response.data.deleteContainerWithDataStatus === 1) {
+                    new PNotify({
+                        title: 'Container Deleted',
+                        text: 'Container and all data have been deleted successfully',
+                        type: 'success'
+                    });
+                    $scope.loadContainers();
+                } else {
+                    new PNotify({
+                        title: 'Delete Failed',
+                        text: response.data.error_message || 'Failed to delete container',
+                        type: 'error'
+                    });
+                }
+            });
+        }
+    };
+
+    $scope.deleteContainerKeepData = function(containerName) {
+        if (confirm('Are you sure you want to delete this container but keep the data? The container will be removed but volumes will be preserved.')) {
+            var data = { containerName: containerName };
+            var url = '/docker/deleteContainerKeepData';
+            var config = {
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            };
+
+            $http.post(url, data, config).then(function(response) {
+                if (response.data.deleteContainerKeepDataStatus === 1) {
+                    new PNotify({
+                        title: 'Container Deleted',
+                        text: 'Container has been deleted but data has been preserved',
+                        type: 'success'
+                    });
+                    $scope.loadContainers();
+                } else {
+                    new PNotify({
+                        title: 'Delete Failed',
+                        text: response.data.error_message || 'Failed to delete container',
+                        type: 'error'
+                    });
+                }
+            });
+        }
+    };
 });

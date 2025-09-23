@@ -1008,8 +1008,11 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
         if (!$scope.blockingIP) {
             $scope.blockingIP = ipAddress;
             
+            // Use the new Banned IPs system instead of the old blockIPAddress
             var data = {
-                ip_address: ipAddress
+                ip: ipAddress,
+                reason: 'Brute force attack detected from SSH Security Analysis',
+                duration: 'permanent'
             };
             
             var config = {
@@ -1018,7 +1021,7 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                 }
             };
             
-            $http.post('/base/blockIPAddress', data, config).then(function (response) {
+            $http.post('/firewall/addBannedIP', data, config).then(function (response) {
                 $scope.blockingIP = null;
                 if (response.data && response.data.status === 1) {
                     // Mark IP as blocked
@@ -1026,8 +1029,8 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                     
                     // Show success notification
                     new PNotify({
-                        title: 'Success',
-                        text: `IP address ${ipAddress} has been blocked successfully using ${response.data.firewall.toUpperCase()}`,
+                        title: 'IP Address Banned',
+                        text: `IP address ${ipAddress} has been permanently banned and added to the firewall. You can manage it in the Firewall > Banned IPs section.`,
                         type: 'success',
                         delay: 5000
                     });

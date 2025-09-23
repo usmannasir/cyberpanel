@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import homeDirectoryViews
 
 urlpatterns = [
     path('', views.loadUserHome, name='loadUsersHome'),
@@ -24,7 +25,19 @@ urlpatterns = [
     path('saveResellerChanges', views.saveResellerChanges, name='saveResellerChanges'),
     path('apiAccess', views.apiAccess, name='apiAccess'),
     path('saveChangesAPIAccess', views.saveChangesAPIAccess, name='saveChangesAPIAccess'),
+    path('fetchAPIUsers', views.fetchAPIUsers, name='fetchAPIUsers'),
     path('listUsers', views.listUsers, name='listUsers'),
     path('fetchTableUsers', views.fetchTableUsers, name='fetchTableUsers'),
     path('controlUserState', views.controlUserState, name='controlUserState'),
+    
+    # Home Directory Management URLs
+    path('homeDirectoryManagement', homeDirectoryViews.loadHomeDirectoryManagement, name='homeDirectoryManagement'),
+    path('detectHomeDirectories', homeDirectoryViews.detectHomeDirectories, name='detectHomeDirectories'),
+    path('updateHomeDirectory', homeDirectoryViews.updateHomeDirectory, name='updateHomeDirectory'),
+    path('deleteHomeDirectory', homeDirectoryViews.deleteHomeDirectory, name='deleteHomeDirectory'),
+    path('getHomeDirectoryStats', homeDirectoryViews.getHomeDirectoryStats, name='getHomeDirectoryStats'),
+    path('getUserHomeDirectories', homeDirectoryViews.getUserHomeDirectories, name='getUserHomeDirectories'),
+    path('migrateUser', homeDirectoryViews.migrateUser, name='migrateUser'),
+    path('userMigration', views.userMigration, name='userMigration'),
+    path('disable2FA', views.disable2FA, name='disable2FA'),
 ]

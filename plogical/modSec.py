@@ -400,11 +400,12 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
     def setupOWASPRules():
         try:
             pathTOOWASPFolder = os.path.join(virtualHostUtilities.Server_root, "conf/modsec/owasp")
-            pathToOWASFolderNew = '%s/modsec/owasp-modsecurity-crs-3.0-master' % (virtualHostUtilities.vhostConfPath)
+            pathToOWASFolderNew = '%s/modsec/owasp-modsecurity-crs-4.18.0' % (virtualHostUtilities.vhostConfPath)
 
             command = 'mkdir -p /usr/local/lsws/conf/modsec'
             result = subprocess.call(shlex.split(command))
             if result != 0:
+                logging.CyberCPLogFileWriter.writeToFile("Failed to create modsec directory: " + str(result) + " [setupOWASPRules]")
                 return 0
 
             if os.path.exists(pathToOWASFolderNew):
@@ -416,22 +417,32 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
             if os.path.exists('owasp.tar.gz'):
                 os.remove('owasp.tar.gz')
 
-            command = "wget https://github.com/coreruleset/coreruleset/archive/v3.3.2/master.zip -O /usr/local/lsws/conf/modsec/owasp.zip"
+            # Clean up any existing zip file
+            if os.path.exists('/usr/local/lsws/conf/modsec/owasp.zip'):
+                os.remove('/usr/local/lsws/conf/modsec/owasp.zip')
+
+            command = "wget https://github.com/coreruleset/coreruleset/archive/refs/tags/v4.18.0.zip -O /usr/local/lsws/conf/modsec/owasp.zip"
+            logging.CyberCPLogFileWriter.writeToFile("Downloading OWASP rules: " + command + " [setupOWASPRules]")
             result = subprocess.call(shlex.split(command))
 
             if result != 0:
+                logging.CyberCPLogFileWriter.writeToFile("Failed to download OWASP rules: " + str(result) + " [setupOWASPRules]")
                 return 0
 
             command = "unzip -o /usr/local/lsws/conf/modsec/owasp.zip -d /usr/local/lsws/conf/modsec/"
+            logging.CyberCPLogFileWriter.writeToFile("Extracting OWASP rules: " + command + " [setupOWASPRules]")
             result = subprocess.call(shlex.split(command))
 
             if result != 0:
+                logging.CyberCPLogFileWriter.writeToFile("Failed to extract OWASP rules: " + str(result) + " [setupOWASPRules]")
                 return 0
 
-            command = 'mv /usr/local/lsws/conf/modsec/coreruleset-3.3.2 /usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master'
+            command = 'mv /usr/local/lsws/conf/modsec/coreruleset-4.18.0 /usr/local/lsws/conf/modsec/owasp-modsecurity-crs-4.18.0'
+            logging.CyberCPLogFileWriter.writeToFile("Moving OWASP rules: " + command + " [setupOWASPRules]")
             result = subprocess.call(shlex.split(command))
 
             if result != 0:
+                logging.CyberCPLogFileWriter.writeToFile("Failed to move OWASP rules: " + str(result) + " [setupOWASPRules]")
                 return 0
 
             command = 'mv %s/crs-setup.conf.example %s/crs-setup.conf' % (pathToOWASFolderNew, pathToOWASFolderNew)
@@ -453,32 +464,8 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
             if result != 0:
                 return 0
 
-            content = """include {pathToOWASFolderNew}/crs-setup.conf
-include {pathToOWASFolderNew}/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
-include {pathToOWASFolderNew}/rules/REQUEST-901-INITIALIZATION.conf
-include {pathToOWASFolderNew}/rules/REQUEST-905-COMMON-EXCEPTIONS.conf
-include {pathToOWASFolderNew}/rules/REQUEST-910-IP-REPUTATION.conf
-include {pathToOWASFolderNew}/rules/REQUEST-911-METHOD-ENFORCEMENT.conf
-include {pathToOWASFolderNew}/rules/REQUEST-912-DOS-PROTECTION.conf
-include {pathToOWASFolderNew}/rules/REQUEST-913-SCANNER-DETECTION.conf
-include {pathToOWASFolderNew}/rules/REQUEST-920-PROTOCOL-ENFORCEMENT.conf
-include {pathToOWASFolderNew}/rules/REQUEST-921-PROTOCOL-ATTACK.conf
-include {pathToOWASFolderNew}/rules/REQUEST-930-APPLICATION-ATTACK-LFI.conf
-include {pathToOWASFolderNew}/rules/REQUEST-931-APPLICATION-ATTACK-RFI.conf
-include {pathToOWASFolderNew}/rules/REQUEST-932-APPLICATION-ATTACK-RCE.conf
-include {pathToOWASFolderNew}/rules/REQUEST-933-APPLICATION-ATTACK-PHP.conf
-include {pathToOWASFolderNew}/rules/REQUEST-941-APPLICATION-ATTACK-XSS.conf
-include {pathToOWASFolderNew}/rules/REQUEST-942-APPLICATION-ATTACK-SQLI.conf
-include {pathToOWASFolderNew}/rules/REQUEST-943-APPLICATION-ATTACK-SESSION-FIXATION.conf
-include {pathToOWASFolderNew}/rules/REQUEST-949-BLOCKING-EVALUATION.conf
-include {pathToOWASFolderNew}/rules/RESPONSE-950-DATA-LEAKAGES.conf
-include {pathToOWASFolderNew}/rules/RESPONSE-951-DATA-LEAKAGES-SQL.conf
-include {pathToOWASFolderNew}/rules/RESPONSE-952-DATA-LEAKAGES-JAVA.conf
-include {pathToOWASFolderNew}/rules/RESPONSE-953-DATA-LEAKAGES-PHP.conf
-include {pathToOWASFolderNew}/rules/RESPONSE-954-DATA-LEAKAGES-IIS.conf
-include {pathToOWASFolderNew}/rules/RESPONSE-959-BLOCKING-EVALUATION.conf
-include {pathToOWASFolderNew}/rules/RESPONSE-980-CORRELATION.conf
-include {pathToOWASFolderNew}/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
+            # CRS v4.0.0 uses a different structure - it has a main crs.conf file
+            content = """include {pathToOWASFolderNew}/crs.conf
 """
             writeToFile = open('%s/owasp-master.conf' % (pathToOWASFolderNew), 'w')
             writeToFile.write(content.replace('{pathToOWASFolderNew}', pathToOWASFolderNew))
@@ -501,7 +488,7 @@ include {pathToOWASFolderNew}/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
 
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
                 owaspRulesConf = """
-modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp-modsecurity-crs-4.18.0/owasp-master.conf
 """
 
                 confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
@@ -519,6 +506,14 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-mas
                         conf.writelines(items)
 
                 conf.close()
+                
+                # Verify the installation
+                owaspPath = os.path.join(virtualHostUtilities.Server_root, "conf/modsec/owasp-modsecurity-crs-4.18.0")
+                if not os.path.exists(owaspPath) or not os.path.exists(os.path.join(owaspPath, "owasp-master.conf")):
+                    logging.CyberCPLogFileWriter.writeToFile("OWASP installation verification failed - files not found [installOWASP]")
+                    print("0, OWASP installation verification failed")
+                    return
+                    
             else:
                 confFile = os.path.join('/usr/local/lsws/conf/modsec.conf')
                 confData = open(confFile).readlines()
@@ -528,7 +523,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-mas
                 for items in confData:
                     if items.find('/conf/comodo_litespeed/') > -1:
                         conf.writelines(items)
-                        conf.write('Include /usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/*.conf\n')
+                        conf.write('Include /usr/local/lsws/conf/modsec/owasp-modsecurity-crs-4.18.0/*.conf\n')
                         continue
                     else:
                         conf.writelines(items)
@@ -536,7 +531,8 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-mas
                 conf.close()
 
             installUtilities.reStartLiteSpeed()
-
+            
+            logging.CyberCPLogFileWriter.writeToFile("OWASP ModSecurity rules installed successfully [installOWASP]")
             print("1,None")
 
         except BaseException as msg:

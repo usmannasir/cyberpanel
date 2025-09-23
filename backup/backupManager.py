@@ -38,6 +38,33 @@ from django.http import JsonResponse
 
 class BackupManager:
     localBackupPath = '/home/cyberpanel/localBackupPath'
+    
+    @staticmethod
+    def _try_remote_connection(ipAddress, password, endpoint, cyberPanelPort=8090, timeout=10):
+        """
+        Try to connect to remote CyberPanel server with port fallback.
+        Returns: (success, data, used_port, error_message)
+        """
+        import requests
+        import json
+        
+        ports_to_try = [cyberPanelPort, 8090] if cyberPanelPort != 8090 else [8090]
+        finalData = json.dumps({'username': "admin", "password": password})
+        
+        for port in ports_to_try:
+            try:
+                url = f"https://{ipAddress}:{port}{endpoint}"
+                r = requests.post(url, data=finalData, verify=False, timeout=timeout)
+                data = json.loads(r.text)
+                return True, data, port, None
+                
+            except (requests.exceptions.ConnectionError, requests.exceptions.Timeout, 
+                   requests.exceptions.RequestException, json.JSONDecodeError) as e:
+                if port == ports_to_try[-1]:  # Last port failed
+                    return False, None, None, f"Could not connect to remote server on any port. Tried ports: {', '.join(map(str, ports_to_try))}. Last error: {str(e)}"
+                continue
+        
+        return False, None, None, "Connection failed on all ports"
 
     def __init__(self, domain=None, childDomain=None):
         self.domain = domain
@@ -1084,33 +1111,35 @@ class BackupManager:
 
             ipAddress = data['ipAddress']
             password = data['password']
+            cyberPanelPort = data.get('cyberPanelPort', 8090)  # Default to 8090 if not provided
 
             ## Ask for Remote version of CyberPanel
 
             try:
-                finalData = json.dumps({'username': "admin", "password": password})
-
-                url = "https://" + ipAddress + ":8090/api/cyberPanelVersion"
-
-                r = requests.post(url, data=finalData, verify=False)
-
-                data = json.loads(r.text)
-
-                if data['getVersion'] == 1:
-
-                    if float(data['currentVersion']) >= 1.6 and data['build'] >= 0:
-                        pass
-                    else:
-                        data_ret = {'status': 0,
-                                    'error_message': "Your version does not match with version of remote server.",
-                                    "dir": "Null"}
-                        data_ret = json.dumps(data_ret)
-                        return HttpResponse(data_ret)
-                else:
+                # Try to connect with port fallback
+                success, data, used_port, error_msg = BackupManager._try_remote_connection(
+                    ipAddress, password, "/api/cyberPanelVersion", cyberPanelPort
+                )
+                
+                if not success:
+                    data_ret = {'status': 0, 'error_message': error_msg, "dir": "Null"}
+                    data_ret = json.dumps(data_ret)
+                    return HttpResponse(data_ret)
+                
+                if data['getVersion'] != 1:
                     data_ret = {'status': 0,
                                 'error_message': "Not able to fetch version of remote server. Error Message: " +
-                                                 data[
-                                                     'error_message'], "dir": "Null"}
+                                                 data.get('error_message', 'Unknown error'), "dir": "Null"}
+                    data_ret = json.dumps(data_ret)
+                    return HttpResponse(data_ret)
+
+                # Check version compatibility
+                if float(data['currentVersion']) >= 1.6 and data['build'] >= 0:
+                    pass
+                else:
+                    data_ret = {'status': 0,
+                                'error_message': "Your version does not match with version of remote server.",
+                                "dir": "Null"}
                     data_ret = json.dumps(data_ret)
                     return HttpResponse(data_ret)
 
@@ -1125,11 +1154,13 @@ class BackupManager:
 
             ## Fetch public key of remote server!
 
-            finalData = json.dumps({'username': "admin", "password": password})
-
-            url = "https://" + ipAddress + ":8090/api/fetchSSHkey"
-            r = requests.post(url, data=finalData, verify=False)
-            data = json.loads(r.text)
+            success, data, used_port, error_msg = BackupManager._try_remote_connection(
+                ipAddress, password, "/api/fetchSSHkey", used_port
+            )
+            
+            if not success:
+                final_json = json.dumps({'status': 0, 'error_message': error_msg})
+                return HttpResponse(final_json)
 
             if data['pubKeyStatus'] == 1:
                 pubKey = data["pubKey"].strip("\n")
@@ -1167,18 +1198,19 @@ class BackupManager:
             ##
 
             try:
-                finalData = json.dumps({'username': "admin", "password": password})
-
-                url = "https://" + ipAddress + ":8090/api/fetchAccountsFromRemoteServer"
-
-                r = requests.post(url, data=finalData, verify=False)
-
-                data = json.loads(r.text)
+                success, data, used_port, error_msg = BackupManager._try_remote_connection(
+                    ipAddress, password, "/api/fetchAccountsFromRemoteServer", used_port
+                )
+                
+                if not success:
+                    data_ret = {'status': 0, 'error_message': error_msg, "dir": "Null"}
+                    data_ret = json.dumps(data_ret)
+                    return HttpResponse(data_ret)
 
                 if data['fetchStatus'] == 1:
                     json_data = data['data']
                     data_ret = {'status': 1, 'error_message': "None",
-                                "dir": "Null", 'data': json_data}
+                                "dir": "Null", 'data': json_data, 'used_port': used_port}
                     data_ret = json.dumps(data_ret)
                     return HttpResponse(data_ret)
                 else:
@@ -1208,6 +1240,7 @@ class BackupManager:
             ipAddress = data['ipAddress']
             password = data['password']
             accountsToTransfer = data['accountsToTransfer']
+            cyberPanelPort = data.get('cyberPanelPort', 8090)  # Default to 8090 if not provided
 
             try:
 
@@ -1240,9 +1273,32 @@ class BackupManager:
                 finalData = json.dumps({'username': "admin", "password": password, "ipAddress": ownIP,
                                         "accountsToTransfer": accountsToTransfer, 'port': port})
 
-                url = "https://" + ipAddress + ":8090/api/remoteTransfer"
-
-                r = requests.post(url, data=finalData, verify=False)
+                # Try to connect with port fallback
+                ports_to_try = [cyberPanelPort, 8090] if cyberPanelPort != 8090 else [8090]
+                connection_successful = False
+                used_port = None
+                
+                for port in ports_to_try:
+                    try:
+                        url = f"https://{ipAddress}:{port}/api/remoteTransfer"
+                        r = requests.post(url, data=finalData, verify=False, timeout=10)
+                        data = json.loads(r.text)
+                        connection_successful = True
+                        used_port = port
+                        break
+                    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout, 
+                           requests.exceptions.RequestException, json.JSONDecodeError) as e:
+                        if port == ports_to_try[-1]:  # Last port failed
+                            data_ret = {'remoteTransferStatus': 0, 
+                                      'error_message': f"Could not connect to remote server on any port. Tried ports: {', '.join(map(str, ports_to_try))}. Last error: {str(e)}"}
+                            data_ret = json.dumps(data_ret)
+                            return HttpResponse(data_ret)
+                        continue
+                
+                if not connection_successful:
+                    data_ret = {'remoteTransferStatus': 0, 'error_message': "Connection failed on all ports"}
+                    data_ret = json.dumps(data_ret)
+                    return HttpResponse(data_ret)
 
                 if os.path.exists('/usr/local/CyberCP/debug'):
                     message = 'Remote transfer initiation status: %s' % (r.text)
@@ -1302,12 +1358,36 @@ class BackupManager:
             password = data['password']
             dir = data['dir']
             username = "admin"
+            cyberPanelPort = data.get('cyberPanelPort', 8090)  # Default to 8090 if not provided
 
             finalData = json.dumps({'dir': dir, "username": username, "password": password})
-            r = requests.post("https://" + ipAddress + ":8090/api/FetchRemoteTransferStatus", data=finalData,
-                              verify=False)
-
-            data = json.loads(r.text)
+            
+            # Try to connect with port fallback
+            ports_to_try = [cyberPanelPort, 8090] if cyberPanelPort != 8090 else [8090]
+            connection_successful = False
+            used_port = None
+            
+            for port in ports_to_try:
+                try:
+                    url = f"https://{ipAddress}:{port}/api/FetchRemoteTransferStatus"
+                    r = requests.post(url, data=finalData, verify=False, timeout=10)
+                    data = json.loads(r.text)
+                    connection_successful = True
+                    used_port = port
+                    break
+                except (requests.exceptions.ConnectionError, requests.exceptions.Timeout, 
+                       requests.exceptions.RequestException, json.JSONDecodeError) as e:
+                    if port == ports_to_try[-1]:  # Last port failed
+                        data_ret = {'remoteTransferStatus': 0, 
+                                  'error_message': f"Could not connect to remote server on any port. Tried ports: {', '.join(map(str, ports_to_try))}. Last error: {str(e)}"}
+                        data_ret = json.dumps(data_ret)
+                        return HttpResponse(data_ret)
+                    continue
+            
+            if not connection_successful:
+                data_ret = {'remoteTransferStatus': 0, 'error_message': "Connection failed on all ports"}
+                data_ret = json.dumps(data_ret)
+                return HttpResponse(data_ret)
 
             if data['fetchStatus'] == 1:
                 if data['status'].find("Backups are successfully generated and received on") > -1:
@@ -1429,12 +1509,36 @@ class BackupManager:
             password = data['password']
             dir = data['dir']
             username = "admin"
+            cyberPanelPort = data.get('cyberPanelPort', 8090)  # Default to 8090 if not provided
 
             finalData = json.dumps({'dir': dir, "username": username, "password": password})
-            r = requests.post("https://" + ipAddress + ":8090/api/cancelRemoteTransfer", data=finalData,
-                              verify=False)
-
-            data = json.loads(r.text)
+            
+            # Try to connect with port fallback
+            ports_to_try = [cyberPanelPort, 8090] if cyberPanelPort != 8090 else [8090]
+            connection_successful = False
+            used_port = None
+            
+            for port in ports_to_try:
+                try:
+                    url = f"https://{ipAddress}:{port}/api/cancelRemoteTransfer"
+                    r = requests.post(url, data=finalData, verify=False, timeout=10)
+                    data = json.loads(r.text)
+                    connection_successful = True
+                    used_port = port
+                    break
+                except (requests.exceptions.ConnectionError, requests.exceptions.Timeout, 
+                       requests.exceptions.RequestException, json.JSONDecodeError) as e:
+                    if port == ports_to_try[-1]:  # Last port failed
+                        data_ret = {'cancelStatus': 0, 
+                                  'error_message': f"Could not connect to remote server on any port. Tried ports: {', '.join(map(str, ports_to_try))}. Last error: {str(e)}"}
+                        data_ret = json.dumps(data_ret)
+                        return HttpResponse(data_ret)
+                    continue
+            
+            if not connection_successful:
+                data_ret = {'cancelStatus': 0, 'error_message': "Connection failed on all ports"}
+                data_ret = json.dumps(data_ret)
+                return HttpResponse(data_ret)
 
             if data['cancelStatus'] == 1:
                 pass
