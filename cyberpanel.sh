@@ -153,19 +153,72 @@ Server_Provider='Undefined'
 
 Watchdog="On"
 Redis_Hosting="No"
-Temp_Value=$(curl --silent --max-time 30 -4 https://cyberpanel.net/version.txt)
-Panel_Version=${Temp_Value:12:3}
-Panel_Build=${Temp_Value:25:1}
 
-Branch_Name="v${Panel_Version}.${Panel_Build}"
-
-if [[ $Branch_Name = v*.*.* ]] ; then
-  echo -e  "\nBranch name fetched...$Branch_Name"
-  log_info "Branch name fetched: $Branch_Name"
+# Check if we're running from a specific branch/version
+# This detects if the script is being run from a GitHub branch URL
+if [[ "$0" == *"/dev/fd/"* ]] && [[ -n "${BASH_SOURCE[0]}" ]]; then
+  # Script is being executed via curl/bash, try to detect branch from environment
+  if [[ -n "${CYBERPANEL_BRANCH}" ]]; then
+    Branch_Name="${CYBERPANEL_BRANCH}"
+    echo -e "\nUsing specified branch...$Branch_Name"
+    log_info "Using specified branch: $Branch_Name"
+  else
+    # Try to detect from URL if possible (fallback to stable)
+    Temp_Value=$(curl --silent --max-time 30 -4 https://cyberpanel.net/version.txt)
+    Panel_Version=${Temp_Value:12:3}
+    Panel_Build=${Temp_Value:25:1}
+    Branch_Name="v${Panel_Version}.${Panel_Build}"
+    echo -e  "\nBranch name fetched...$Branch_Name"
+    log_info "Branch name fetched: $Branch_Name"
+  fi
 else
-  echo -e "\nUnable to fetch Branch name..."
+  # Script is being run locally, try to detect git branch
+  if command -v git >/dev/null 2>&1 && [[ -d ".git" ]]; then
+    Git_Branch=$(git branch --show-current 2>/dev/null)
+    if [[ -n "$Git_Branch" ]]; then
+      Branch_Name="$Git_Branch"
+      echo -e "\nDetected git branch...$Branch_Name"
+      log_info "Detected git branch: $Branch_Name"
+    else
+      # Fallback to stable version
+      Temp_Value=$(curl --silent --max-time 30 -4 https://cyberpanel.net/version.txt)
+      Panel_Version=${Temp_Value:12:3}
+      Panel_Build=${Temp_Value:25:1}
+      Branch_Name="v${Panel_Version}.${Panel_Build}"
+      echo -e  "\nBranch name fetched...$Branch_Name"
+      log_info "Branch name fetched: $Branch_Name"
+    fi
+  else
+    # Fallback to stable version
+    Temp_Value=$(curl --silent --max-time 30 -4 https://cyberpanel.net/version.txt)
+    Panel_Version=${Temp_Value:12:3}
+    Panel_Build=${Temp_Value:25:1}
+    Branch_Name="v${Panel_Version}.${Panel_Build}"
+    echo -e  "\nBranch name fetched...$Branch_Name"
+    log_info "Branch name fetched: $Branch_Name"
+  fi
+fi
+
+# Extract version components for display
+if [[ $Branch_Name =~ v([0-9]+)\.([0-9]+)\.([0-9]+) ]]; then
+  Panel_Version="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"
+  Panel_Build="${BASH_REMATCH[3]}"
+elif [[ $Branch_Name =~ v([0-9]+)\.([0-9]+)-dev ]]; then
+  Panel_Version="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"
+  Panel_Build="dev"
+else
+  # Fallback parsing
+  Panel_Version=$(echo "$Branch_Name" | sed 's/v//' | cut -d. -f1-2)
+  Panel_Build=$(echo "$Branch_Name" | sed 's/v//' | cut -d. -f3)
+fi
+
+if [[ $Branch_Name = v*.*.* ]] || [[ $Branch_Name = v*.*-dev ]] || [[ $Branch_Name = v*.*.*-dev ]]; then
+  echo -e  "\nBranch name set to...$Branch_Name"
+  log_info "Branch name set to: $Branch_Name"
+else
+  echo -e "\nUnable to determine Branch name..."
   echo -e "\nPlease try again in few moments, if this error still happens, please contact support"
-  log_error "Unable to fetch branch name from version.txt"
+  log_error "Unable to determine branch name"
   log_function_end "Set_Default_Variables" 1
   exit
 fi

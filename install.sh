@@ -107,8 +107,26 @@ else
                 exit 1
 fi
 
+# Check for branch parameter
+BRANCH_NAME=""
+if [ "$1" = "-b" ] || [ "$1" = "--branch" ]; then
+    BRANCH_NAME="$2"
+    shift 2
+fi
+
 rm -f cyberpanel.sh
 rm -f install.tar.gz
-curl --silent -o cyberpanel.sh "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null
+
+# Download from appropriate source based on branch
+if [ -n "$BRANCH_NAME" ]; then
+    echo "Installing CyberPanel from branch: $BRANCH_NAME"
+    curl --silent -o cyberpanel.sh "https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel.sh" 2>/dev/null
+    # Set environment variable for version detection
+    export CYBERPANEL_BRANCH="$BRANCH_NAME"
+else
+    echo "Installing CyberPanel stable version"
+    curl --silent -o cyberpanel.sh "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null
+fi
+
 chmod +x cyberpanel.sh
 ./cyberpanel.sh $@
