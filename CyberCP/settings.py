@@ -208,3 +208,7 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 2147483648
 
 # Security settings
 X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
