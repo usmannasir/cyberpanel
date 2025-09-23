@@ -2295,13 +2295,59 @@ Post_Install_Addon_Mecached_LSMCD() {
   cd "$Current_Dir/lsmcd-master"  || exit
   ./fixtimestamp.sh
   ./configure CFLAGS=" -O3" CXXFLAGS=" -O3"
-  make
-  make install
+  
+  # Compile LSMCD
+  if make; then
+    echo "LSMCD compilation successful"
+    if make install; then
+      echo "LSMCD installation successful"
+      
+      # Create systemd service file for LSMCD
+      cat > /etc/systemd/system/lsmcd.service << 'EOF'
+[Unit]
+Description=LiteSpeed Memcached (LSMCD)
+After=network.target
+
+[Service]
+Type=forking
+PIDFile=/var/run/lsmcd.pid
+ExecStart=/usr/local/bin/lsmcd -d
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
+      
+      # Reload systemd and enable LSMCD service
+      systemctl daemon-reload
+      systemctl enable lsmcd
+      systemctl start lsmcd
+      
+      if systemctl is-active --quiet lsmcd; then
+        echo "LSMCD service started successfully"
+        touch /home/cyberpanel/lsmcd
+      else
+        echo "Warning: LSMCD service failed to start"
+      fi
+    else
+      echo "Error: LSMCD installation failed"
+    fi
+  else
+    echo "Error: LSMCD compilation failed"
+  fi
+  
   cd "$Current_Dir"  || exit
 
-  manage_service "lsmcd" "enable"
-  manage_service "lsmcd" "start"
-  log_info "LSMCD installation completed"
+  # Only manage service if it was successfully installed
+  if systemctl list-unit-files | grep -q "lsmcd.service"; then
+    manage_service "lsmcd" "enable"
+    manage_service "lsmcd" "start"
+    log_info "LSMCD installation completed successfully"
+  else
+    log_warning "LSMCD installation failed - service not registered"
+  fi
   log_function_end "Post_Install_Addon_Mecached_LSMCD"
 }
 
