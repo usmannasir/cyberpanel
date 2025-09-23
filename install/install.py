@@ -2118,6 +2118,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
     def setupPythonWSGI(self):
         try:
+            preFlightsChecks.stdOut("Setting up Python WSGI-LSAPI with optimized compilation...", 1)
 
             command = "wget http://www.litespeedtech.com/packages/lsapi/wsgi-lsapi-2.1.tgz"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -2130,7 +2131,13 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             command = "/usr/local/CyberPanel/bin/python ./configure.py"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
+            # Fix Makefile to use proper optimization flags to avoid _FORTIFY_SOURCE warnings
+            self._fixWSGIMakefile()
 
+            # Compile with proper optimization flags
+            command = "make clean"
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            
             command = "make"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
@@ -2140,10 +2147,46 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             command = "cp lswsgi /usr/local/CyberCP/bin/"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            os.chdir(self.cwd)
+            # Set proper permissions
+            command = "chmod +x /usr/local/CyberCP/bin/lswsgi"
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        except:
+            os.chdir(self.cwd)
+            preFlightsChecks.stdOut("WSGI-LSAPI compiled successfully with optimized flags", 1)
+
+        except Exception as e:
+            preFlightsChecks.stdOut(f"WSGI setup error: {str(e)}", 0)
             return 0
+
+    def _fixWSGIMakefile(self):
+        """Fix the Makefile to use proper compiler optimization flags"""
+        try:
+            makefile_path = "Makefile"
+            
+            if not os.path.exists(makefile_path):
+                preFlightsChecks.stdOut("Makefile not found, skipping optimization fix", 1)
+                return
+            
+            # Read the Makefile
+            with open(makefile_path, 'r') as f:
+                content = f.read()
+            
+            # Fix compiler flags to avoid _FORTIFY_SOURCE warnings
+            # Replace -O0 -g3 with -O2 -g to satisfy _FORTIFY_SOURCE
+            content = content.replace('-O0 -g3', '-O2 -g')
+            
+            # Ensure we have proper optimization flags
+            if 'CFLAGS' in content and '-O2' not in content:
+                content = content.replace('CFLAGS =', 'CFLAGS = -O2')
+            
+            # Write the fixed Makefile
+            with open(makefile_path, 'w') as f:
+                f.write(content)
+            
+            preFlightsChecks.stdOut("Makefile optimized for proper compilation", 1)
+            
+        except Exception as e:
+            preFlightsChecks.stdOut(f"Warning: Could not optimize Makefile: {str(e)}", 1)
 
     def setupLSCPDDaemon(self):
         try:

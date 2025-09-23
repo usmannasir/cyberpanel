@@ -573,6 +573,12 @@ for i in {1..50};
   fi
   if grep -q "Django==" /usr/local/requirments.txt ; then
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Requirements file downloaded successfully" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    
+    # Fix pysftp dependency issue by removing it from requirements
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Fixing pysftp dependency issue..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    sed -i 's/^pysftp$/# pysftp - deprecated, using paramiko instead/' /usr/local/requirments.txt
+    sed -i 's/pysftp/# pysftp - deprecated, using paramiko instead/' /usr/local/requirments.txt
+    
     break
   else
     echo -e "\n Requirement list has failed to download for $i times..."
@@ -1071,7 +1077,7 @@ else
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Django is properly installed" | tee -a /var/log/cyberpanel_upgrade_debug.log
 fi
 
-echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing WSGI-LSAPI..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing WSGI-LSAPI with optimized compilation..." | tee -a /var/log/cyberpanel_upgrade_debug.log
 
 # Save current directory
 UPGRADE_CWD=$(pwd)
@@ -1085,11 +1091,27 @@ cd wsgi-lsapi-2.1 || exit
 
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Configuring WSGI..." | tee -a /var/log/cyberpanel_upgrade_debug.log
 /usr/local/CyberPanel/bin/python ./configure.py 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+
+# Fix Makefile to use proper optimization flags to avoid _FORTIFY_SOURCE warnings
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Optimizing Makefile for proper compilation..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+if [[ -f Makefile ]]; then
+    # Replace -O0 -g3 with -O2 -g to satisfy _FORTIFY_SOURCE
+    sed -i 's/-O0 -g3/-O2 -g/g' Makefile
+    # Ensure we have proper optimization flags
+    if grep -q "CFLAGS" Makefile && ! grep -q "-O2" Makefile; then
+        sed -i 's/CFLAGS =/CFLAGS = -O2/' Makefile
+    fi
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Makefile optimized for proper compilation" | tee -a /var/log/cyberpanel_upgrade_debug.log
+fi
+
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Compiling WSGI with optimized flags..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+make clean 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
 make 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
 
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing lswsgi binary..." | tee -a /var/log/cyberpanel_upgrade_debug.log
 rm -f /usr/local/CyberCP/bin/lswsgi
 cp lswsgi /usr/local/CyberCP/bin/
+chmod +x /usr/local/CyberCP/bin/lswsgi
 
 # Return to original directory
 cd "$UPGRADE_CWD" || cd /root
