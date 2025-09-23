@@ -4112,15 +4112,15 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             
             for version in available_versions:
                 try:
-                    if version in ['71', '72', '73', '74']:
-                        # PHP 7.x versions with specific extensions
+                    if version in ['74']:
+                        # PHP 7.4 only (legacy support) with specific extensions
                         if Upgrade.installedOutput.find(f'lsphp{version}') == -1:
                             extensions = ['json', 'xmlrpc', 'xml', 'tidy', 'soap', 'snmp', 'recode', 'pspell', 'process', 'pgsql', 'pear', 'pdo', 'opcache', 'odbc', 'mysqlnd', 'mcrypt', 'mbstring', 'ldap', 'intl', 'imap', 'gmp', 'gd', 'enchant', 'dba', 'common', 'bcmath']
                             package_list = f"lsphp{version} " + " ".join([f"lsphp{version}-{ext}" for ext in extensions])
                             command = f"yum install -y {package_list}"
                             Upgrade.executioner(command, f'Install PHP {version}', 0)
-                    else:
-                        # PHP 8.x versions
+                    elif version in ['80', '81', '82', '83', '84', '85']:
+                        # PHP 8.x versions (including 8.5 beta)
                         if Upgrade.installedOutput.find(f'lsphp{version}') == -1:
                             command = f"yum install lsphp{version}* -y"
                             subprocess.call(command, shell=True)

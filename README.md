@@ -7,7 +7,7 @@
 **Web Hosting Control Panel powered by OpenLiteSpeed**
 Fast • Secure • Scalable — Simplify hosting management with style.
 
-**Version**: 2.5.5 • **Updated**: September 23, 2025
+**Version**: 2.5.5 • **Updated**: September 24, 2025
 
 [![GitHub](https://img.shields.io/badge/GitHub-Repo-000?style=flat-square\&logo=github)](https://github.com/usmannasir/cyberpanel)
 [![Docs](https://img.shields.io/badge/Docs-Read-green?style=flat-square\&logo=gitbook)](https://cyberpanel.net/KnowledgeBase/)
@@ -84,8 +84,9 @@ Fast • Secure • Scalable — Simplify hosting management with style.
 
 ## PHP support (short)
 
-* ✅ **Recommended**: PHP 8.5, 8.4, 8.3, 8.2, 8.1
+* ✅ **Recommended**: PHP 8.5 (beta), 8.4, 8.3, 8.2, 8.1
 * ⚠️ **Legacy**: PHP 8.0, PHP 7.4 (security-only)
+* ❌ **Deprecated**: PHP 7.1, 7.2, 7.3 (no longer installed)
 
 Third-party repositories (Remi, Ondrej) may provide older or niche versions; verify compatibility before use.
 

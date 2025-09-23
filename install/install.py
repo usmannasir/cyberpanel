@@ -1248,10 +1248,19 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             ##
 
+            # Remove conflicting dovecot packages first
+            try:
+                if self.distro in [centos, cent8]:
+                    preFlightsChecks.call('yum remove -y dovecot dovecot-*', self.distro, 
+                                        'Remove conflicting dovecot packages', 
+                                        'Remove conflicting dovecot packages', 1, 0, os.EX_OSERR)
+            except:
+                pass  # Continue if removal fails
+
             if self.distro == centos:
-                command = 'yum --enablerepo=gf-plus -y install dovecot23 dovecot23-mysql'
+                command = 'yum --enablerepo=gf-plus -y install dovecot23 dovecot23-mysql --allowerasing'
             elif self.distro == cent8:
-                command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql -y'
+                command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql -y --allowerasing'
             elif self.distro == openeuler:
                 command = 'dnf install dovecot -y'
             else:
@@ -2693,8 +2702,8 @@ milter_default_action = accept
                 logging.InstallLog.writeToFile("[setup_lsphp_symlink] Removed existing lsphp file/symlink")
 
             # Try to find and use the best available PHP version
-            # Priority: 83, 82, 81, 80, 74, 73, 72 (newest to oldest)
-            php_versions = ['83', '82', '81', '80', '74', '73', '72']
+            # Priority: 85 (beta), 84, 83, 82, 81, 80, 74 (newest to oldest)
+            php_versions = ['85', '84', '83', '82', '81', '80', '74']
             lsphp_source = None
 
             for php_ver in php_versions:

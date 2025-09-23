@@ -391,42 +391,93 @@ class InstallCyberPanel:
 
         return self.reStartLiteSpeed()
 
+    def installPHPDependencies(self):
+        """Install required dependencies for PHP extensions"""
+        try:
+            InstallCyberPanel.stdOut("Installing PHP dependencies...", 1)
+            
+            if self.distro == ubuntu:
+                # Ubuntu dependencies
+                deps = [
+                    'libmemcached-dev', 'libmemcached11',
+                    'libgd-dev', 'libgd3',
+                    'libc-client2007e-dev', 'libc-client2007e',
+                    'libonig-dev', 'libonig5',
+                    'libicu-dev', 'libicu70',
+                    'libaspell-dev', 'libaspell15',
+                    'libpspell-dev', 'libpspell1'
+                ]
+                command = f'DEBIAN_FRONTEND=noninteractive apt-get -y install {" ".join(deps)}'
+                os.system(command)
+            else:
+                # RHEL-based dependencies - enhanced list
+                deps = [
+                    'libmemcached', 'libmemcached-devel', 'libmemcached-libs',
+                    'gd', 'gd-devel', 'libgd',
+                    'c-client', 'c-client-devel',
+                    'oniguruma', 'oniguruma-devel',
+                    'libicu', 'libicu-devel',
+                    'aspell', 'aspell-devel',
+                    'pspell', 'pspell-devel',
+                    'sendmail-milter', 'sendmail-milter-devel',  # For libmilter
+                    'GeoIP', 'GeoIP-devel',  # For geoip-devel
+                    'udns', 'udns-devel',  # For udns-devel
+                    'sasl', 'cyrus-sasl-devel',  # For SASL headers
+                    'libmilter', 'sendmail-milter-devel'  # For libmilter.so.1.0
+                ]
+                
+                for dep in deps:
+                    try:
+                        self.install_package(dep, '--skip-broken')
+                    except:
+                        pass  # Continue if dependency installation fails
+                        
+        except Exception as e:
+            InstallCyberPanel.stdOut(f"Warning: Some PHP dependencies may not be available: {str(e)}", 0)
+
     def installAllPHPVersions(self):
-        php_versions = ['71', '72', '73', '74', '80', '81', '82', '83', '84', '85']
+        # Install PHP dependencies first
+        self.installPHPDependencies()
+        
+        # Updated PHP versions: Only 7.4+ and use 8.5 as beta
+        # Priority: 85 (beta), 84, 83, 82, 81, 80, 74
+        php_versions = ['74', '80', '81', '82', '83', '84', '85']
         
         if self.distro == ubuntu:
-            # Install base PHP 7.x packages
+            # Install PHP 7.4 only (legacy support) with mbstring
             command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install ' \
-                      'lsphp7? lsphp7?-common lsphp7?-curl lsphp7?-dev lsphp7?-imap lsphp7?-intl lsphp7?-json ' \
-                      'lsphp7?-ldap lsphp7?-mysql lsphp7?-opcache lsphp7?-pspell lsphp7?-recode ' \
-                      'lsphp7?-sqlite3 lsphp7?-tidy'
+                      'lsphp74 lsphp74-common lsphp74-curl lsphp74-dev lsphp74-imap lsphp74-intl lsphp74-json ' \
+                      'lsphp74-ldap lsphp74-mysql lsphp74-opcache lsphp74-pspell lsphp74-recode ' \
+                      'lsphp74-sqlite3 lsphp74-tidy lsphp74-mbstring'
             os.system(command)
             
-            # Install PHP 8.x versions
-            for version in php_versions[4:]:  # 80, 81, 82, 83
+            # Install PHP 8.x versions (8.0 to 8.5) with mbstring
+            for version in php_versions[1:]:  # 80, 81, 82, 83, 84, 85
                 self.install_package(f'lsphp{version}*')
+                # Ensure mbstring is installed for each version
+                try:
+                    self.install_package(f'lsphp{version}-mbstring')
+                except:
+                    pass
                 
         elif self.distro == centos:
-            # First install the group
-            command = 'yum -y groupinstall lsphp-all'
-            install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            # Install PHP 7.4 only (legacy support)
+            self.install_package('lsphp74*', '--skip-broken')
             
-            InstallCyberPanel.stdOut("LiteSpeed PHPs successfully installed!", 1)
-            
-            # Install individual PHP versions
-            for version in php_versions:
+            # Install PHP 8.x versions
+            for version in php_versions[1:]:  # 80, 81, 82, 83, 84, 85
                 self.install_package(f'lsphp{version}*', '--skip-broken')
                 
         elif self.distro == cent8:
             # Install PHP versions in batches with exclusions
-            exclude_flags = "--exclude lsphp73-pecl-zip --exclude *imagick*"
+            exclude_flags = "--exclude *imagick*"
             
-            # First batch: PHP 7.x and 8.0
-            versions_batch1 = ' '.join([f'lsphp{v}*' for v in php_versions[:5]])
+            # First batch: PHP 7.4 and 8.0-8.2
+            versions_batch1 = 'lsphp74* lsphp80* lsphp81* lsphp82*'
             self.install_package(versions_batch1, f'{exclude_flags} --skip-broken')
             
-            # Second batch: PHP 8.1+
-            versions_batch2 = ' '.join([f'lsphp{v}*' for v in php_versions[5:]])
+            # Second batch: PHP 8.3-8.5 (including beta 8.5)
+            versions_batch2 = 'lsphp83* lsphp84* lsphp85*'
             self.install_package(versions_batch2, f'{exclude_flags} --skip-broken')
             
         elif self.distro == openeuler:
