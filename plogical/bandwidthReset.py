@@ -75,10 +75,62 @@ class BandwidthReset:
             BandwidthReset.cleanupBandwidthMetadata()
             
             logging.CyberCPLogFileWriter.writeToFile(f"Monthly bandwidth reset completed. Reset {reset_count} domains.")
-            return True
+            return reset_count, total_reset_mb
             
         except Exception as e:
             logging.CyberCPLogFileWriter.writeToFile(f"Error in monthly bandwidth reset: {str(e)}")
+            return 0, 0
+    
+    @staticmethod
+    def resetDomainBandwidth(domain_name):
+        """
+        Reset bandwidth for a specific domain
+        """
+        try:
+            logging.CyberCPLogFileWriter.writeToFile(f"Resetting bandwidth for domain: {domain_name}")
+            
+            # Reset main website
+            try:
+                website = Websites.objects.get(domain=domain_name)
+                config = json.loads(website.config)
+                config['bwInMB'] = 0
+                config['bwUsage'] = 0
+                website.config = json.dumps(config)
+                website.save()
+                logging.CyberCPLogFileWriter.writeToFile(f"Reset bandwidth for website: {domain_name}")
+            except Websites.DoesNotExist:
+                logging.CyberCPLogFileWriter.writeToFile(f"Website {domain_name} not found")
+                return False
+            
+            # Reset child domains for this website
+            child_domains = ChildDomains.objects.filter(master=website)
+            for child in child_domains:
+                try:
+                    config = json.loads(child.config)
+                    config['bwInMB'] = 0
+                    config['bwUsage'] = 0
+                    child.config = json.dumps(config)
+                    child.save()
+                    logging.CyberCPLogFileWriter.writeToFile(f"Reset bandwidth for child domain: {child.domain}")
+                except Exception as e:
+                    logging.CyberCPLogFileWriter.writeToFile(f"Error resetting child domain {child.domain}: {str(e)}")
+            
+            # Clean up bandwidth metadata file for this domain
+            metadata_file = f"/home/cyberpanel/{domain_name}.bwmeta"
+            if os.path.exists(metadata_file):
+                try:
+                    with open(metadata_file, 'w') as f:
+                        f.write("0\n0\n")
+                    os.chmod(metadata_file, 0o600)
+                    logging.CyberCPLogFileWriter.writeToFile(f"Reset metadata file: {metadata_file}")
+                except Exception as e:
+                    logging.CyberCPLogFileWriter.writeToFile(f"Error resetting metadata file: {str(e)}")
+            
+            logging.CyberCPLogFileWriter.writeToFile(f"Bandwidth reset completed for domain: {domain_name}")
+            return True
+            
+        except Exception as e:
+            logging.CyberCPLogFileWriter.writeToFile(f"Error resetting bandwidth for domain {domain_name}: {str(e)}")
             return False
     
     @staticmethod

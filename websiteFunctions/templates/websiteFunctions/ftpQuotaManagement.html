@@ -1,0 +1,227 @@
+{% extends "baseTemplate/index.html" %}
+{% load static %}
+
+{% block title %}
+FTP Quota Management - CyberPanel
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-folder"></i>
+                        FTP Quota Management
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <!-- Enable FTP Quota Section -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <h5><i class="fas fa-info-circle"></i> FTP Quota System</h5>
+                                <p>Enable and manage individual FTP user quotas. This allows you to set storage limits for each FTP user.</p>
+                                <button class="btn btn-primary" onclick="enableFTPQuota()">
+                                    <i class="fas fa-play"></i> Enable FTP Quota System
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FTP Quotas List -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4>FTP User Quotas</h4>
+                                    <button class="btn btn-success btn-sm" onclick="refreshQuotas()">
+                                        <i class="fas fa-sync"></i> Refresh
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-striped" id="quotasTable">
+                                            <thead>
+                                                <tr>
+                                                    <th>FTP User</th>
+                                                    <th>Domain</th>
+                                                    <th>Quota Size (MB)</th>
+                                                    <th>Used (MB)</th>
+                                                    <th>Usage %</th>
+                                                    <th>File Limit</th>
+                                                    <th>Files Used</th>
+                                                    <th>Status</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="quotasTableBody">
+                                                <tr>
+                                                    <td colspan="9" class="text-center">
+                                                        <i class="fas fa-spinner fa-spin"></i> Loading...
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Quota Modal -->
+<div class="modal fade" id="editQuotaModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit FTP Quota</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editQuotaForm">
+                    <input type="hidden" id="quotaId" name="quota_id">
+                    <div class="form-group">
+                        <label for="quotaSize">Quota Size (MB)</label>
+                        <input type="number" class="form-control" id="quotaSize" name="quota_size_mb" min="0" placeholder="0 = Unlimited">
+                    </div>
+                    <div class="form-group">
+                        <label for="quotaFiles">File Limit</label>
+                        <input type="number" class="form-control" id="quotaFiles" name="quota_files" min="0" placeholder="0 = Unlimited">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveQuota()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function enableFTPQuota() {
+    $.post('{% url "enableFTPQuota" %}', {
+        'csrfmiddlewaretoken': '{{ csrf_token }}'
+    }, function(data) {
+        if (data.status === 1) {
+            showNotification('success', data.message);
+            refreshQuotas();
+        } else {
+            showNotification('error', data.message);
+        }
+    });
+}
+
+function refreshQuotas() {
+    $.post('{% url "getFTPQuotas" %}', {
+        'csrfmiddlewaretoken': '{{ csrf_token }}'
+    }, function(data) {
+        if (data.status === 1) {
+            displayQuotas(data.quotas);
+        } else {
+            showNotification('error', data.message);
+        }
+    });
+}
+
+function displayQuotas(quotas) {
+    const tbody = document.getElementById('quotasTableBody');
+    
+    if (quotas.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center">No FTP quotas found</td></tr>';
+        return;
+    }
+    
+    let html = '';
+    quotas.forEach(quota => {
+        const percentage = quota.quota_percentage.toFixed(1);
+        const statusClass = quota.is_active ? 'success' : 'danger';
+        const statusText = quota.is_active ? 'Active' : 'Inactive';
+        
+        html += `
+            <tr>
+                <td>${quota.ftp_user}</td>
+                <td>${quota.domain}</td>
+                <td>${quota.quota_size_mb === 0 ? 'Unlimited' : quota.quota_size_mb}</td>
+                <td>${quota.quota_used_mb}</td>
+                <td>
+                    <div class="progress">
+                        <div class="progress-bar" style="width: ${percentage}%"></div>
+                    </div>
+                    ${percentage}%
+                </td>
+                <td>${quota.quota_files === 0 ? 'Unlimited' : quota.quota_files}</td>
+                <td>${quota.quota_files_used}</td>
+                <td><span class="badge badge-${statusClass}">${statusText}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="editQuota(${quota.id}, ${quota.quota_size_mb}, ${quota.quota_files})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html;
+}
+
+function editQuota(id, size, files) {
+    document.getElementById('quotaId').value = id;
+    document.getElementById('quotaSize').value = size;
+    document.getElementById('quotaFiles').value = files;
+    $('#editQuotaModal').modal('show');
+}
+
+function saveQuota() {
+    const formData = {
+        'csrfmiddlewaretoken': '{{ csrf_token }}',
+        'quota_id': document.getElementById('quotaId').value,
+        'quota_size_mb': document.getElementById('quotaSize').value,
+        'quota_files': document.getElementById('quotaFiles').value
+    };
+    
+    $.post('{% url "updateFTPQuota" %}', formData, function(data) {
+        if (data.status === 1) {
+            showNotification('success', data.message);
+            $('#editQuotaModal').modal('hide');
+            refreshQuotas();
+        } else {
+            showNotification('error', data.message);
+        }
+    });
+}
+
+function showNotification(type, message) {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+    
+    const notification = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+            <i class="fas ${icon}"></i> ${message}
+            <button type="button" class="close" data-dismiss="alert">
+                <span>&times;</span>
+            </button>
+        </div>
+    `;
+    
+    $('.card-body').prepend(notification);
+    
+    setTimeout(() => {
+        $('.alert').fadeOut();
+    }, 5000);
+}
+
+// Load quotas on page load
+$(document).ready(function() {
+    refreshQuotas();
+});
+</script>
+{% endblock %}
