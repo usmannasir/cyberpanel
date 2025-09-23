@@ -2679,7 +2679,7 @@ milter_default_action = accept
 
             if state == 'off':
 
-                pdns_service = self.get_service_name('pdns')
+                pdns_service = preFlightsChecks.get_service_name('pdns')
                 command = f'sudo systemctl stop {pdns_service}'
                 subprocess.call(shlex.split(command))
 
@@ -2930,56 +2930,228 @@ vmail
         
         preFlightsChecks.stdOut("Starting deferred services that depend on database tables...")
         
+        # Ensure database is ready first
+        self.ensureDatabaseReady()
+        
         # Start PowerDNS if it was installed
         if os.path.exists('/home/cyberpanel/powerdns'):
-            preFlightsChecks.stdOut("Starting PowerDNS service...")
-            pdns_service = self.get_service_name('pdns')
-            command = f'systemctl start {pdns_service}'
-            result = preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            if result == 1:
-                # Check if service started successfully
-                command = f'systemctl is-active {pdns_service}'
-                try:
-                    output = subprocess.check_output(shlex.split(command)).decode("utf-8").strip()
-                    if output == 'active':
-                        preFlightsChecks.stdOut("PowerDNS service started successfully!")
-                    else:
-                        preFlightsChecks.stdOut("[WARNING] PowerDNS service may not have started properly. Status: " + output)
-                except:
-                    preFlightsChecks.stdOut("[WARNING] Could not verify PowerDNS service status")
+            self.fixAndStartPowerDNS()
         
         # Start Pure-FTPd if it was installed
         if os.path.exists('/home/cyberpanel/pureftpd'):
-            # Configure Pure-FTPd for Ubuntu 24.04 (SHA512 password hashing compatibility)
-            if self.distro == ubuntu:
-                import install_utils
-                try:
-                    release = install_utils.get_Ubuntu_release(use_print=False, exit_on_error=False)
-                    if release and release >= 24.04:
-                        preFlightsChecks.stdOut("Configuring Pure-FTPd for Ubuntu 24.04...")
-                        # Change MYSQLCrypt from md5 to crypt for SHA512 compatibility
-                        command = "sed -i 's/MYSQLCrypt md5/MYSQLCrypt crypt/g' /etc/pure-ftpd/db/mysql.conf"
-                        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-                except:
-                    pass  # If version detection fails, continue without configuration change
+            self.fixAndStartPureFTPd()
+        
+        # Ensure LiteSpeed services are running
+        self.ensureLiteSpeedServicesRunning()
+        
+        # Final service verification
+        self.verifyCriticalServices()
 
-            preFlightsChecks.stdOut("Starting Pure-FTPd service...")
-            ftpService = self.pureFTPDServiceName(self.distro)
-            command = f'systemctl start {ftpService}'
-            result = preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+    def ensureDatabaseReady(self):
+        """Ensure database is ready before starting dependent services"""
+        preFlightsChecks.stdOut("Ensuring database is ready...")
+        
+        # Wait for MySQL/MariaDB to be ready
+        max_attempts = 30
+        for attempt in range(max_attempts):
+            try:
+                if subprocess.run(['mysqladmin', 'ping', '-h', 'localhost', '--silent'], 
+                                capture_output=True).returncode == 0:
+                    preFlightsChecks.stdOut("Database is ready")
+                    return
+            except:
+                pass
+            preFlightsChecks.stdOut(f"Waiting for database... ({attempt + 1}/{max_attempts})")
+            time.sleep(2)
+        
+        preFlightsChecks.stdOut("[WARNING] Database may not be fully ready")
+
+    def fixAndStartPowerDNS(self):
+        """Fix PowerDNS configuration and start the service"""
+        preFlightsChecks.stdOut("Fixing and starting PowerDNS service...")
+        
+        # Determine correct service name
+        pdns_service = None
+        if subprocess.run(['systemctl', 'list-unit-files'], capture_output=True, text=True).stdout.find('pdns.service') != -1:
+            pdns_service = 'pdns'
+        elif subprocess.run(['systemctl', 'list-unit-files'], capture_output=True, text=True).stdout.find('powerdns.service') != -1:
+            pdns_service = 'powerdns'
+        
+        if not pdns_service:
+            preFlightsChecks.stdOut("[WARNING] PowerDNS service not found")
+            return
+        
+        # Fix PowerDNS configuration
+        config_files = ['/etc/pdns/pdns.conf', '/etc/powerdns/pdns.conf']
+        for config_file in config_files:
+            if os.path.exists(config_file):
+                preFlightsChecks.stdOut(f"Configuring PowerDNS: {config_file}")
+                
+                # Add missing configuration if not present
+                with open(config_file, 'a') as f:
+                    content = f.read() if os.path.getsize(config_file) > 0 else ""
+                    if 'gmysql-password=' not in content:
+                        f.write('\ngmysql-password=cyberpanel\n')
+                    if 'launch=' not in content:
+                        f.write('launch=gmysql\n')
+                
+                # Ensure proper permissions
+                os.chmod(config_file, 0o644)
+                break
+        
+        # Start PowerDNS service
+        command = f'systemctl start {pdns_service}'
+        result = preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        
+        if result == 1:
+            # Enable service for auto-start
+            command = f'systemctl enable {pdns_service}'
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             
-            if result == 1:
-                # Check if service started successfully
-                command = f'systemctl is-active {ftpService}'
+            # Verify service is running
+            command = f'systemctl is-active {pdns_service}'
+            try:
+                output = subprocess.check_output(shlex.split(command)).decode("utf-8").strip()
+                if output == 'active':
+                    preFlightsChecks.stdOut("PowerDNS service started successfully!")
+                else:
+                    preFlightsChecks.stdOut(f"[WARNING] PowerDNS service status: {output}")
+                    # Try to get more details
+                    command = f'systemctl status {pdns_service} --no-pager'
+                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            except:
+                preFlightsChecks.stdOut("[WARNING] Could not verify PowerDNS service status")
+
+    def fixAndStartPureFTPd(self):
+        """Fix Pure-FTPd configuration and start the service"""
+        preFlightsChecks.stdOut("Fixing and starting Pure-FTPd service...")
+        
+        # Determine correct service name
+        ftp_service = None
+        if subprocess.run(['systemctl', 'list-unit-files'], capture_output=True, text=True).stdout.find('pure-ftpd.service') != -1:
+            ftp_service = 'pure-ftpd'
+        elif subprocess.run(['systemctl', 'list-unit-files'], capture_output=True, text=True).stdout.find('pureftpd.service') != -1:
+            ftp_service = 'pureftpd'
+        
+        if not ftp_service:
+            preFlightsChecks.stdOut("[WARNING] Pure-FTPd service not found")
+            return
+        
+        # Fix Pure-FTPd configuration
+        config_files = ['/etc/pure-ftpd/pureftpd-mysql.conf', '/etc/pure-ftpd/db/mysql.conf']
+        for config_file in config_files:
+            if os.path.exists(config_file):
+                preFlightsChecks.stdOut(f"Configuring Pure-FTPd: {config_file}")
+                
+                # Fix MySQL password configuration
+                command = f"sed -i 's/MYSQLPassword.*/MYSQLPassword cyberpanel/' {config_file}"
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                
+                # Fix MySQL crypt method for Ubuntu 24.04 compatibility
+                if self.distro == ubuntu:
+                    import install_utils
+                    try:
+                        release = install_utils.get_Ubuntu_release(use_print=False, exit_on_error=False)
+                        if release and release >= 24.04:
+                            preFlightsChecks.stdOut("Configuring Pure-FTPd for Ubuntu 24.04...")
+                            command = f"sed -i 's/MYSQLCrypt md5/MYSQLCrypt crypt/g' {config_file}"
+                            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                    except:
+                        pass
+        
+        # Start Pure-FTPd service
+        command = f'systemctl start {ftp_service}'
+        result = preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        
+        if result == 1:
+            # Enable service for auto-start
+            command = f'systemctl enable {ftp_service}'
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            
+            # Verify service is running
+            command = f'systemctl is-active {ftp_service}'
+            try:
+                output = subprocess.check_output(shlex.split(command)).decode("utf-8").strip()
+                if output == 'active':
+                    preFlightsChecks.stdOut("Pure-FTPd service started successfully!")
+                else:
+                    preFlightsChecks.stdOut(f"[WARNING] Pure-FTPd service status: {output}")
+                    # Try to get more details
+                    command = f'systemctl status {ftp_service} --no-pager'
+                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            except:
+                preFlightsChecks.stdOut("[WARNING] Could not verify Pure-FTPd service status")
+
+    def ensureLiteSpeedServicesRunning(self):
+        """Ensure LiteSpeed services are running properly"""
+        preFlightsChecks.stdOut("Ensuring LiteSpeed services are running...")
+        
+        # Fix LiteSpeed permissions first
+        self.fixLiteSpeedPermissions()
+        
+        # Restart LiteSpeed services
+        litespeed_services = ['lsws', 'lscpd']
+        for service in litespeed_services:
+            if subprocess.run(['systemctl', 'list-unit-files'], capture_output=True, text=True).stdout.find(f'{service}.service') != -1:
+                preFlightsChecks.stdOut(f"Restarting {service}...")
+                command = f'systemctl restart {service}'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                
+                # Enable service for auto-start
+                command = f'systemctl enable {service}'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                
+                # Verify service is running
+                command = f'systemctl is-active {service}'
                 try:
                     output = subprocess.check_output(shlex.split(command)).decode("utf-8").strip()
                     if output == 'active':
-                        preFlightsChecks.stdOut("Pure-FTPd service started successfully!")
+                        preFlightsChecks.stdOut(f"{service} is running successfully!")
                     else:
-                        preFlightsChecks.stdOut("[WARNING] Pure-FTPd service may not have started properly. Status: " + output)
+                        preFlightsChecks.stdOut(f"[WARNING] {service} status: {output}")
                 except:
-                    preFlightsChecks.stdOut("[WARNING] Could not verify Pure-FTPd service status")
+                    preFlightsChecks.stdOut(f"[WARNING] Could not verify {service} status")
+
+    def fixLiteSpeedPermissions(self):
+        """Fix LiteSpeed directory permissions"""
+        preFlightsChecks.stdOut("Fixing LiteSpeed permissions...")
+        
+        litespeed_dirs = ['/usr/local/lsws', '/usr/local/lscp', '/usr/local/CyberCP']
+        for directory in litespeed_dirs:
+            if os.path.exists(directory):
+                command = f'chown -R lscpd:lscpd {directory}'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                
+                command = f'chmod -R 755 {directory}'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+    def verifyCriticalServices(self):
+        """Verify that all critical services are running"""
+        preFlightsChecks.stdOut("Verifying critical services...")
+        
+        critical_services = ['lsws', 'lscpd']
+        all_services_ok = True
+        
+        for service in critical_services:
+            if subprocess.run(['systemctl', 'list-unit-files'], capture_output=True, text=True).stdout.find(f'{service}.service') != -1:
+                command = f'systemctl is-active {service}'
+                try:
+                    output = subprocess.check_output(shlex.split(command)).decode("utf-8").strip()
+                    if output == 'active':
+                        preFlightsChecks.stdOut(f"✓ {service} is running")
+                    else:
+                        preFlightsChecks.stdOut(f"✗ {service} is not running (status: {output})")
+                        all_services_ok = False
+                except:
+                    preFlightsChecks.stdOut(f"✗ Could not verify {service} status")
+                    all_services_ok = False
+        
+        if all_services_ok:
+            preFlightsChecks.stdOut("All critical services are running successfully!")
+            preFlightsChecks.stdOut("CyberPanel should now be accessible at https://your-server-ip:8090")
+        else:
+            preFlightsChecks.stdOut("[WARNING] Some critical services are not running properly")
+            preFlightsChecks.stdOut("Please check the logs and consider running: systemctl restart lsws lscpd")
 
 def configure_jwt_secret():
     try:
