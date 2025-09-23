@@ -3656,7 +3656,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
 
     @staticmethod
     def fixLiteSpeedConfig():
-        """Fix LiteSpeed configuration issues by creating missing files"""
+        """Fix LiteSpeed configuration issues by creating missing files and fixing permissions"""
         try:
             Upgrade.stdOut("Checking and fixing LiteSpeed configuration...", 1)
             
@@ -3665,11 +3665,23 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                 Upgrade.stdOut("LiteSpeed not found at /usr/local/lsws", 0)
                 return
             
+            # Fix LiteSpeed permissions first
+            Upgrade.stdOut("Fixing LiteSpeed permissions...", 1)
+            litespeed_dirs = ['/usr/local/lsws', '/usr/local/lscp', '/usr/local/CyberCP']
+            for directory in litespeed_dirs:
+                if os.path.exists(directory):
+                    command = f'chown -R lscpd:lscpd {directory}'
+                    Upgrade.executioner(command, f'Fix ownership for {directory}', 0)
+                    
+                    command = f'chmod -R 755 {directory}'
+                    Upgrade.executioner(command, f'Fix permissions for {directory}', 0)
+            
             # Create missing configuration files
             config_files = [
                 "/usr/local/lsws/conf/httpd_config.xml",
                 "/usr/local/lsws/conf/httpd.conf",
-                "/usr/local/lsws/conf/modsec.conf"
+                "/usr/local/lscp/conf/httpd_config.xml",
+                "/usr/local/lscp/conf/httpd.conf"
             ]
             
             for config_file in config_files:
@@ -3694,17 +3706,345 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                         with open(config_file, 'w') as f:
                             f.write('# Minimal LiteSpeed HTTP configuration\n')
                             f.write('# This file will be updated by CyberPanel\n')
-                    elif config_file.endswith('modsec.conf'):
-                        with open(config_file, 'w') as f:
-                            f.write('# ModSecurity configuration\n')
-                            f.write('# This file will be updated by CyberPanel\n')
+                    
+                    # Set proper permissions
+                    os.chmod(config_file, 0o644)
+                    command = f'chown lscpd:lscpd {config_file}'
+                    Upgrade.executioner(command, f'Fix config ownership: {config_file}', 0)
                     
                     Upgrade.stdOut(f"Created minimal config: {config_file}", 1)
                 else:
                     Upgrade.stdOut(f"LiteSpeed config exists: {config_file}", 1)
+            
+            # Create PHP socket directory if it doesn't exist
+            php_sock_dir = '/var/run/php/'
+            if not os.path.exists(php_sock_dir):
+                Upgrade.stdOut("Creating PHP socket directory...", 1)
+                os.makedirs(php_sock_dir, exist_ok=True)
+                command = f'chmod 755 {php_sock_dir}'
+                Upgrade.executioner(command, 'Fix PHP socket directory permissions', 0)
+                
+                # Set ownership based on distribution
+                osType = Upgrade.decideDistro()
+                if osType in [Upgrade.centos, Upgrade.cent8, Upgrade.cloudlinux]:
+                    command = f'chown apache:apache {php_sock_dir}'
+                else:
+                    command = f'chown www-data:www-data {php_sock_dir}'
+                Upgrade.executioner(command, 'Fix PHP socket directory ownership', 0)
+            
+            # Restart LiteSpeed services to apply changes
+            Upgrade.stdOut("Restarting LiteSpeed services...", 1)
+            litespeed_services = ['lsws', 'lscpd']
+            for service in litespeed_services:
+                command = f'systemctl restart {service}'
+                Upgrade.executioner(command, f'Restart {service}', 0)
+                
+                command = f'systemctl enable {service}'
+                Upgrade.executioner(command, f'Enable {service}', 0)
+                
+                # Verify service is running
+                command = f'systemctl is-active {service}'
+                try:
+                    result = subprocess.run(command, shell=True, capture_output=True, text=True)
+                    if result.stdout.strip() == 'active':
+                        Upgrade.stdOut(f"{service} is running successfully", 1)
+                    else:
+                        Upgrade.stdOut(f"{service} status: {result.stdout.strip()}", 0)
+                except:
+                    Upgrade.stdOut(f"Could not verify {service} status", 0)
                     
         except Exception as e:
             Upgrade.stdOut(f"Error fixing LiteSpeed config: {str(e)}", 0)
+
+    @staticmethod
+    def fixServiceConfiguration():
+        """Comprehensive service configuration fix for common 503 error causes"""
+        try:
+            Upgrade.stdOut("Applying comprehensive service configuration fixes...", 1)
+            
+            # Fix PowerDNS configuration
+            Upgrade.fixPowerDNSConfig()
+            
+            # Fix Pure-FTPd configuration
+            Upgrade.fixPureFTPdConfig()
+            
+            # Fix database connectivity
+            Upgrade.fixDatabaseConnectivity()
+            
+            # Fix PHP-FPM services
+            Upgrade.fixPHPFPMServices()
+            
+            # Final service restart and verification
+            Upgrade.restartAndVerifyServices()
+            
+        except Exception as e:
+            Upgrade.stdOut(f"Error in service configuration fix: {str(e)}", 0)
+
+    @staticmethod
+    def fixPowerDNSConfig():
+        """Fix PowerDNS configuration issues"""
+        try:
+            Upgrade.stdOut("Fixing PowerDNS configuration...", 1)
+            
+            # Check if PowerDNS is installed
+            if not os.path.exists('/home/cyberpanel/powerdns'):
+                Upgrade.stdOut("PowerDNS not enabled, skipping...", 1)
+                return
+            
+            # Determine correct service name
+            pdns_service = None
+            result = subprocess.run(['systemctl', 'list-unit-files'], capture_output=True, text=True)
+            if 'pdns.service' in result.stdout:
+                pdns_service = 'pdns'
+            elif 'powerdns.service' in result.stdout:
+                pdns_service = 'powerdns'
+            
+            if not pdns_service:
+                Upgrade.stdOut("PowerDNS service not found", 0)
+                return
+            
+            # Fix PowerDNS configuration files
+            config_files = ['/etc/pdns/pdns.conf', '/etc/powerdns/pdns.conf']
+            for config_file in config_files:
+                if os.path.exists(config_file):
+                    Upgrade.stdOut(f"Configuring PowerDNS: {config_file}", 1)
+                    
+                    # Read existing content
+                    with open(config_file, 'r') as f:
+                        content = f.read()
+                    
+                    # Add missing configuration if not present
+                    if 'gmysql-password=' not in content:
+                        content += '\ngmysql-password=cyberpanel\n'
+                    if 'launch=' not in content:
+                        content += 'launch=gmysql\n'
+                    
+                    # Write back the configuration
+                    with open(config_file, 'w') as f:
+                        f.write(content)
+                    
+                    # Set proper permissions
+                    os.chmod(config_file, 0o644)
+                    command = f'chown root:root {config_file}'
+                    Upgrade.executioner(command, f'Fix PowerDNS config ownership', 0)
+                    break
+            
+            # Restart PowerDNS service
+            command = f'systemctl restart {pdns_service}'
+            Upgrade.executioner(command, f'Restart PowerDNS', 0)
+            
+            command = f'systemctl enable {pdns_service}'
+            Upgrade.executioner(command, f'Enable PowerDNS', 0)
+            
+            # Verify service is running
+            command = f'systemctl is-active {pdns_service}'
+            result = subprocess.run(command, shell=True, capture_output=True, text=True)
+            if result.stdout.strip() == 'active':
+                Upgrade.stdOut("PowerDNS is running successfully", 1)
+            else:
+                Upgrade.stdOut(f"PowerDNS status: {result.stdout.strip()}", 0)
+                
+        except Exception as e:
+            Upgrade.stdOut(f"Error fixing PowerDNS config: {str(e)}", 0)
+
+    @staticmethod
+    def fixPureFTPdConfig():
+        """Fix Pure-FTPd configuration issues"""
+        try:
+            Upgrade.stdOut("Fixing Pure-FTPd configuration...", 1)
+            
+            # Check if Pure-FTPd is installed
+            if not os.path.exists('/home/cyberpanel/pureftpd'):
+                Upgrade.stdOut("Pure-FTPd not enabled, skipping...", 1)
+                return
+            
+            # Determine correct service name
+            ftp_service = None
+            result = subprocess.run(['systemctl', 'list-unit-files'], capture_output=True, text=True)
+            if 'pure-ftpd.service' in result.stdout:
+                ftp_service = 'pure-ftpd'
+            elif 'pureftpd.service' in result.stdout:
+                ftp_service = 'pureftpd'
+            
+            if not ftp_service:
+                Upgrade.stdOut("Pure-FTPd service not found", 0)
+                return
+            
+            # Fix Pure-FTPd configuration files
+            config_files = ['/etc/pure-ftpd/pureftpd-mysql.conf', '/etc/pure-ftpd/db/mysql.conf']
+            for config_file in config_files:
+                if os.path.exists(config_file):
+                    Upgrade.stdOut(f"Configuring Pure-FTPd: {config_file}", 1)
+                    
+                    # Fix MySQL password configuration
+                    command = f"sed -i 's/MYSQLPassword.*/MYSQLPassword cyberpanel/' {config_file}"
+                    Upgrade.executioner(command, f'Fix Pure-FTPd MySQL password', 0)
+                    
+                    # Fix MySQL crypt method for Ubuntu 24.04 compatibility
+                    command = f"sed -i 's/MYSQLCrypt md5/MYSQLCrypt crypt/g' {config_file}"
+                    Upgrade.executioner(command, f'Fix Pure-FTPd MySQL crypt method', 0)
+                    
+                    # Set proper permissions
+                    os.chmod(config_file, 0o644)
+                    command = f'chown root:root {config_file}'
+                    Upgrade.executioner(command, f'Fix Pure-FTPd config ownership', 0)
+            
+            # Restart Pure-FTPd service
+            command = f'systemctl restart {ftp_service}'
+            Upgrade.executioner(command, f'Restart Pure-FTPd', 0)
+            
+            command = f'systemctl enable {ftp_service}'
+            Upgrade.executioner(command, f'Enable Pure-FTPd', 0)
+            
+            # Verify service is running
+            command = f'systemctl is-active {ftp_service}'
+            result = subprocess.run(command, shell=True, capture_output=True, text=True)
+            if result.stdout.strip() == 'active':
+                Upgrade.stdOut("Pure-FTPd is running successfully", 1)
+            else:
+                Upgrade.stdOut(f"Pure-FTPd status: {result.stdout.strip()}", 0)
+                
+        except Exception as e:
+            Upgrade.stdOut(f"Error fixing Pure-FTPd config: {str(e)}", 0)
+
+    @staticmethod
+    def fixDatabaseConnectivity():
+        """Fix database connectivity issues"""
+        try:
+            Upgrade.stdOut("Fixing database connectivity...", 1)
+            
+            # Determine database service name
+            db_service = None
+            result = subprocess.run(['systemctl', 'list-unit-files'], capture_output=True, text=True)
+            if 'mariadb.service' in result.stdout:
+                db_service = 'mariadb'
+            elif 'mysql.service' in result.stdout:
+                db_service = 'mysql'
+            elif 'mysqld.service' in result.stdout:
+                db_service = 'mysqld'
+            
+            if not db_service:
+                Upgrade.stdOut("Database service not found", 0)
+                return
+            
+            # Ensure database service is running
+            command = f'systemctl restart {db_service}'
+            Upgrade.executioner(command, f'Restart database service', 0)
+            
+            command = f'systemctl enable {db_service}'
+            Upgrade.executioner(command, f'Enable database service', 0)
+            
+            # Wait for database to be ready
+            Upgrade.stdOut("Waiting for database to be ready...", 1)
+            max_attempts = 30
+            for attempt in range(max_attempts):
+                try:
+                    result = subprocess.run(['mysqladmin', 'ping', '-h', 'localhost', '--silent'], 
+                                          capture_output=True)
+                    if result.returncode == 0:
+                        Upgrade.stdOut("Database is ready", 1)
+                        break
+                except:
+                    pass
+                time.sleep(2)
+            
+            # Ensure cyberpanel database exists
+            try:
+                result = subprocess.run(['mysql', '-e', 'USE cyberpanel;'], capture_output=True)
+                if result.returncode != 0:
+                    Upgrade.stdOut("Creating cyberpanel database...", 1)
+                    commands = [
+                        'mysql -e "CREATE DATABASE IF NOT EXISTS cyberpanel;"',
+                        'mysql -e "CREATE USER IF NOT EXISTS \'cyberpanel\'@\'localhost\' IDENTIFIED BY \'cyberpanel\';"',
+                        'mysql -e "GRANT ALL PRIVILEGES ON cyberpanel.* TO \'cyberpanel\'@\'localhost\';"',
+                        'mysql -e "FLUSH PRIVILEGES;"'
+                    ]
+                    for cmd in commands:
+                        Upgrade.executioner(cmd, 'Setup cyberpanel database', 0)
+            except:
+                Upgrade.stdOut("Could not verify cyberpanel database", 0)
+                
+        except Exception as e:
+            Upgrade.stdOut(f"Error fixing database connectivity: {str(e)}", 0)
+
+    @staticmethod
+    def fixPHPFPMServices():
+        """Fix PHP-FPM services"""
+        try:
+            Upgrade.stdOut("Fixing PHP-FPM services...", 1)
+            
+            # Get available PHP versions
+            php_versions = Upgrade.get_available_php_versions()
+            
+            for version in php_versions:
+                # Determine FPM service name based on distribution
+                osType = Upgrade.decideDistro()
+                if osType in [Upgrade.centos, Upgrade.cent8, Upgrade.cloudlinux]:
+                    fpm_service = f'php{version}-php-fpm'
+                else:
+                    fpm_service = f'php{version}-fpm'
+                
+                # Check if service exists and restart it
+                result = subprocess.run(['systemctl', 'list-unit-files'], capture_output=True, text=True)
+                if f'{fpm_service}.service' in result.stdout:
+                    Upgrade.stdOut(f"Restarting PHP-FPM {version}...", 1)
+                    command = f'systemctl restart {fpm_service}'
+                    Upgrade.executioner(command, f'Restart PHP-FPM {version}', 0)
+                    
+                    command = f'systemctl enable {fpm_service}'
+                    Upgrade.executioner(command, f'Enable PHP-FPM {version}', 0)
+                    
+                    # Verify service is running
+                    command = f'systemctl is-active {fpm_service}'
+                    result = subprocess.run(command, shell=True, capture_output=True, text=True)
+                    if result.stdout.strip() == 'active':
+                        Upgrade.stdOut(f"PHP-FPM {version} is running", 1)
+                    else:
+                        Upgrade.stdOut(f"PHP-FPM {version} status: {result.stdout.strip()}", 0)
+                        
+        except Exception as e:
+            Upgrade.stdOut(f"Error fixing PHP-FPM services: {str(e)}", 0)
+
+    @staticmethod
+    def restartAndVerifyServices():
+        """Restart and verify all critical services"""
+        try:
+            Upgrade.stdOut("Restarting and verifying critical services...", 1)
+            
+            # Reload systemd daemon
+            command = 'systemctl daemon-reload'
+            Upgrade.executioner(command, 'Reload systemd daemon', 0)
+            
+            # Restart critical services in order
+            critical_services = ['lsws', 'lscpd']
+            all_services_ok = True
+            
+            for service in critical_services:
+                Upgrade.stdOut(f"Restarting {service}...", 1)
+                command = f'systemctl restart {service}'
+                Upgrade.executioner(command, f'Restart {service}', 0)
+                
+                command = f'systemctl enable {service}'
+                Upgrade.executioner(command, f'Enable {service}', 0)
+                
+                # Verify service is running
+                command = f'systemctl is-active {service}'
+                result = subprocess.run(command, shell=True, capture_output=True, text=True)
+                if result.stdout.strip() == 'active':
+                    Upgrade.stdOut(f"✓ {service} is running successfully", 1)
+                else:
+                    Upgrade.stdOut(f"✗ {service} is not running (status: {result.stdout.strip()})", 0)
+                    all_services_ok = False
+            
+            if all_services_ok:
+                Upgrade.stdOut("All critical services are running successfully!", 1)
+                Upgrade.stdOut("CyberPanel should now be accessible at https://your-server-ip:8090", 1)
+            else:
+                Upgrade.stdOut("Some critical services are not running properly", 0)
+                Upgrade.stdOut("Please check the logs and consider a server restart", 0)
+                
+        except Exception as e:
+            Upgrade.stdOut(f"Error in service verification: {str(e)}", 0)
 
     @staticmethod
     def installPHP73():
@@ -4563,6 +4903,9 @@ slowlog = /var/log/php{version}-fpm-slow.log
         
         # Fix LiteSpeed configuration files if missing
         Upgrade.fixLiteSpeedConfig()
+        
+        # Fix comprehensive service configuration issues (503 error prevention)
+        Upgrade.fixServiceConfiguration()
         
         # Fix subdomain log configurations
         Upgrade.fixSubdomainLogConfigurations()
