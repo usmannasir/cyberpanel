@@ -25,7 +25,7 @@ from managePHP.phpManager import PHPManager
 from plogical.vhostConfs import vhostConfs
 from ApachController.ApacheVhosts import ApacheVhost
 try:
-    from websiteFunctions.models import Websites, ChildDomains, aliasDomains, DockerSites
+    from websiteFunctions.models import Websites, ChildDomains, aliasDomains, DockerSites, WPSites, WPStaging
     from databases.models import Databases
 except:
     pass
@@ -404,6 +404,21 @@ class vhost:
 
                 if ACLManager.FindIfChild() == 0:
 
+                    ### Delete WordPress Sites and Staging Sites first
+                    try:
+                        wpSites = WPSites.objects.filter(owner=delWebsite)
+                        for wpSite in wpSites:
+                            # Delete any staging sites associated with this WP site
+                            stagingSites = WPStaging.objects.filter(wpsite=wpSite)
+                            for staging in stagingSites:
+                                staging.delete()
+                                logging.CyberCPLogFileWriter.writeToFile(f"Deleted staging site record: {staging.id}")
+                            # Delete the WP site itself
+                            wpSite.delete()
+                            logging.CyberCPLogFileWriter.writeToFile(f"Deleted WP site: {wpSite.id}")
+                    except Exception as msg:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Error cleaning up WP/Staging sites: {str(msg)}")
+
                     ### Delete Docker Sites first before website deletion
 
                     if os.path.exists('/home/docker/%s' % (virtualHostName)):
@@ -497,6 +512,21 @@ class vhost:
                 ## child check to make sure no database entires are being deleted from child server
 
                 if ACLManager.FindIfChild() == 0:
+                    ### Delete WordPress Sites and Staging Sites first
+                    try:
+                        wpSites = WPSites.objects.filter(owner=delWebsite)
+                        for wpSite in wpSites:
+                            # Delete any staging sites associated with this WP site
+                            stagingSites = WPStaging.objects.filter(wpsite=wpSite)
+                            for staging in stagingSites:
+                                staging.delete()
+                                logging.CyberCPLogFileWriter.writeToFile(f"Deleted staging site record: {staging.id}")
+                            # Delete the WP site itself
+                            wpSite.delete()
+                            logging.CyberCPLogFileWriter.writeToFile(f"Deleted WP site: {wpSite.id}")
+                    except Exception as msg:
+                        logging.CyberCPLogFileWriter.writeToFile(f"Error cleaning up WP/Staging sites: {str(msg)}")
+
                     for items in databases:
                         mysqlUtilities.deleteDatabase(items.dbName, items.dbUser)
 
