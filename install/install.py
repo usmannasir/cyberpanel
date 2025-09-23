@@ -1063,7 +1063,7 @@ class Migration(migrations.Migration):
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         # Fix SnappyMail public directory ownership early
-        command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/snappymail/data 2>/dev/null || true"
+        command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/snappymail/data || true"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         snappymailinipath = '/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/application.ini'
@@ -1711,7 +1711,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             # Fix SnappyMail public directory ownership immediately after creation
-            command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/snappymail/data 2>/dev/null || true"
+            command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/snappymail/data || true"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             command = "mkdir -p /usr/local/lscp/cyberpanel/rainloop/data"
@@ -2541,10 +2541,28 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
     def installOpenDKIM(self):
         try:
-            if self.distro == cent8 or self.distro == openeuler or self.distro == ubuntu:
+            # Install dependencies first
+            if self.distro == ubuntu:
+                deps = ['libmilter-dev', 'libmemcached-dev']
+                for dep in deps:
+                    try:
+                        self.install_package(dep)
+                    except:
+                        pass
                 self.install_package('opendkim opendkim-tools')
             else:
-                self.install_package('opendkim')
+                # Install dependencies for RHEL-based systems
+                deps = ['sendmail-milter', 'sendmail-milter-devel', 'libmemcached', 'libmemcached-devel']
+                for dep in deps:
+                    try:
+                        self.install_package(dep, '--skip-broken')
+                    except:
+                        pass
+                
+                if self.distro == cent8 or self.distro == openeuler:
+                    self.install_package('opendkim opendkim-tools', '--skip-broken')
+                else:
+                    self.install_package('opendkim', '--skip-broken')
 
                 command = 'mkdir -p /etc/opendkim/keys/'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -3605,6 +3623,9 @@ def main():
     checks.setup_cron()
     checks.installRestic()
     checks.installAcme()
+    
+    # Fix Django AutoField warnings
+    checks.fix_django_autofield_warnings()
 
     ## Install and Configure OpenDKIM.
 
@@ -3690,7 +3711,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         subprocess.call(shlex.split(command))
 
         # Fix SnappyMail public directory ownership (critical fix)
-        command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/snappymail/data 2>/dev/null || true"
+        command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/snappymail/data || true"
         subprocess.call(shlex.split(command))
     except:
         pass
@@ -3785,6 +3806,25 @@ def check_service_status(service_name):
         return result.returncode == 0
     except:
         return False
+
+def fix_django_autofield_warnings():
+    """Fix Django AutoField warnings by setting DEFAULT_AUTO_FIELD"""
+    try:
+        settings_file = '/usr/local/CyberCP/cyberpanel/settings.py'
+        if os.path.exists(settings_file):
+            with open(settings_file, 'r') as f:
+                content = f.read()
+            
+            # Add DEFAULT_AUTO_FIELD setting if not present
+            if 'DEFAULT_AUTO_FIELD' not in content:
+                with open(settings_file, 'a') as f:
+                    f.write('\n# Fix Django AutoField warnings\n')
+                    f.write('DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"\n')
+                
+                logging.InstallLog.writeToFile("[fix_django_autofield_warnings] Added DEFAULT_AUTO_FIELD setting")
+        
+    except Exception as e:
+        logging.InstallLog.writeToFile(f"[ERROR] {str(e)} [fix_django_autofield_warnings]")
 
 
 def check_file_exists(file_path):

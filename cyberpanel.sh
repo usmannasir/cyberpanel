@@ -454,7 +454,7 @@ gpgcheck=1
 EOF
     elif [[ "$Server_OS_Version" = "9" ]] && uname -m | grep -q 'x86_64'; then
         # Use official MariaDB repository setup script for RHEL 9+ systems
-        curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version='10.11' --skip-maxscale --skip-tools
+        curl -sS "https://downloads.mariadb.com/MariaDB/mariadb_repo_setup" | bash -s -- --mariadb-server-version="10.11" --skip-maxscale --skip-tools
         if [ $? -ne 0 ]; then
             # Fallback to manual setup
             cat <<EOF >/etc/yum.repos.d/MariaDB.repo
@@ -471,7 +471,7 @@ EOF
         fi
     elif [[ "$Server_OS_Version" = "10" ]] && uname -m | grep -q 'x86_64'; then
         # Use official MariaDB repository setup script for RHEL 10+ systems
-        curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version='10.11' --skip-maxscale --skip-tools
+        curl -sS "https://downloads.mariadb.com/MariaDB/mariadb_repo_setup" | bash -s -- --mariadb-server-version="10.11" --skip-maxscale --skip-tools
         if [ $? -ne 0 ]; then
             # Fallback to manual setup
             cat <<EOF >/etc/yum.repos.d/MariaDB.repo
@@ -1567,7 +1567,7 @@ if [[ "$Server_OS" =~ ^(CentOS|RHEL|AlmaLinux|RockyLinux|CloudLinux|openEuler) ]
     # Setup MariaDB repository for RHEL 9+ based systems (AlmaLinux 9/10, RockyLinux 9, RHEL 9)
     if [[ "$Server_OS" =~ ^(AlmaLinux9|AlmaLinux10|RockyLinux9|RHEL9) ]] ; then
       # Use the official MariaDB repository setup script for better compatibility
-      curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version='10.11' --skip-maxscale --skip-tools
+      curl -sS "https://downloads.mariadb.com/MariaDB/mariadb_repo_setup" | bash -s -- --mariadb-server-version="10.11" --skip-maxscale --skip-tools
       Check_Return "MariaDB repository setup" "no_exit"
       
       # Fallback manual repository setup if the script fails
@@ -2276,11 +2276,17 @@ fi
 Post_Install_Addon_Mecached_LSMCD() {
   install_dev_tools
 
-  # Install SASL development headers for LSMCD compilation
+  # Install development headers for LSMCD compilation
   if [[ "$Server_OS" =~ ^(CentOS|RHEL|AlmaLinux|RockyLinux|CloudLinux|openEuler) ]] ; then
     dnf install -y cyrus-sasl-devel cyrus-sasl-lib cyrus-sasl-gssapi cyrus-sasl-plain || yum install -y cyrus-sasl-devel cyrus-sasl-lib cyrus-sasl-gssapi cyrus-sasl-plain
+    # Install libmemcached dependencies
+    dnf install -y libmemcached libmemcached-devel libmemcached-libs || yum install -y libmemcached libmemcached-devel libmemcached-libs
+    # Install expat development headers
+    dnf install -y expat-devel || yum install -y expat-devel
   elif [[ "$Server_OS" = "Ubuntu" ]] ; then
     apt-get install -y libsasl2-dev libsasl2-modules
+    apt-get install -y libmemcached-dev libmemcached11
+    apt-get install -y libexpat1-dev
   fi
 
   wget -O lsmcd-master.zip https://cyberpanel.sh/codeload.github.com/litespeedtech/lsmcd/zip/master
