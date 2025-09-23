@@ -1563,8 +1563,16 @@ if [[ "$Server_OS" =~ ^(CentOS|RHEL|AlmaLinux|RockyLinux|CloudLinux|openEuler) ]
       Check_Return
   elif [[ "$Server_OS" =~ ^(CentOS9|RHEL9|AlmaLinux9|AlmaLinux10|RockyLinux9|openEuler) ]] ; then
     # Enhanced package installation for AlmaLinux 9/10, RHEL 9, RockyLinux 9, etc.
-    dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel MariaDB-server MariaDB-client MariaDB-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils gpgme-devel openssl-devel boost-devel boost-program-options
+    # Install EPEL repository for additional packages like htop
+    dnf install -y epel-release
+      Check_Return "EPEL repository" "no_exit"
+    
+    dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-server mariadb-client mariadb-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils openssl-devel boost-devel boost-program-options
       Check_Return
+    
+    # Install development tools group
+    dnf groupinstall -y "Development Tools"
+      Check_Return "Development Tools" "no_exit"
     
     # Fix boost library compatibility for galera-4 on AlmaLinux 10
     if [[ "$Server_OS_Version" = "10" ]]; then
