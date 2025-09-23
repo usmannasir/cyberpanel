@@ -4610,7 +4610,7 @@ slowlog = /var/log/php{version}-fpm-slow.log
             php_binary = f'/usr/local/lsws/lsphp{version}/bin/lsphp'
             if os.path.exists(php_binary):
                 command = f'cp {php_binary} {phpPath}'
-        Upgrade.executioner(command, 0)
+                Upgrade.executioner(command, 0)
                 Upgrade.stdOut(f"Using PHP {version} for LSCPD", 1)
                 php_binary_found = True
                 break
