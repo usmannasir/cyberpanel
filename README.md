@@ -64,39 +64,6 @@ Fast • Secure • Scalable — Simplify hosting management with style.
 
 ---
 
-## RESTful API (quick)
-
-Simple JSON API for automation and integration. Common endpoints:
-
-* `listChildDomainsJson` — list child domains
-* Website/user/package management endpoints
-* Firewall and backup control
-
-**Example:**
-
-```bash
-curl -X POST http://your-server:8090/api/listChildDomainsJson \
-  -H "Content-Type: application/json" \
-  -d '{"adminUser":"your_admin","adminPass":"your_pass"}'
-```
-
-**Sample response:**
-
-```json
-[
-  {
-    "parent_site": "example.com",
-    "domain": "sub.example.com",
-    "path": "/home/example.com/public_html/sub",
-    "ssl": 1,
-    "php_version": "8.1",
-    "ip_address": "192.168.1.100"
-  }
-]
-```
-
-> Full API docs and auth details: `guides/API.md` (link in Resources)
-
 ---
 
 ## Supported platforms (condensed)
