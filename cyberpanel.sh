@@ -2165,13 +2165,125 @@ fi
 /usr/local/CyberPanel-venv/bin/python install.py "${Final_Flags[@]}"
 
 
+# Installation summary function
+show_installation_summary() {
+  local install_status=$1
+  local start_time=$2
+  local end_time=$(date +%s)
+  local elapsed_time=$((end_time - start_time))
+  local elapsed_minutes=$((elapsed_time / 60))
+  local elapsed_seconds=$((elapsed_time % 60))
+  
+  # Get system info
+  local memory_usage=$(free -m | awk 'NR==2{printf "%s/%sMB (%.1f%%)", $3,$2,$3*100/$2 }')
+  local disk_usage=$(df -h / | awk 'NR==2{print $5}' | sed 's/%//')
+  local cpu_cores=$(nproc)
+  local load_avg=$(uptime | awk -F'load average:' '{print $2}' | awk '{print $1}' | sed 's/,//')
+  
+  echo ""
+  echo "╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╗"
+  echo "║                                                                                                               ║"
+  echo "║  📊 CYBERPANEL INSTALLATION SUMMARY                                                                          ║"
+  echo "║                                                                                                               ║"
+  echo "╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╝"
+  echo ""
+  
+  if [ "$install_status" = "SUCCESS" ]; then
+    echo "╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╗"
+    echo "║                                                                                                               ║"
+    echo "║  ✅ INSTALLATION STATUS: SUCCESSFUL                                                                          ║"
+    echo "║                                                                                                               ║"
+    echo "║  🌐 ACCESS YOUR CYBERPANEL:                                                                                 ║"
+    echo "║  • URL: https://$Server_IP:8090                                                                             ║"
+    echo "║  • Username: admin                                                                                          ║"
+    if [[ "$Custom_Pass" = "True" ]]; then
+      echo "║  • Password: ***** (custom password)                                                                       ║"
+    else
+      echo "║  • Password: $Admin_Pass                                                                                   ║"
+    fi
+    echo "║                                                                                                               ║"
+    echo "║  🎉 ALL COMPONENTS INSTALLED SUCCESSFULLY! 🎉                                                               ║"
+    echo "║                                                                                                               ║"
+    echo "╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╝"
+  else
+    echo "╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╗"
+    echo "║                                                                                                               ║"
+    echo "║  ❌ INSTALLATION STATUS: FAILED                                                                              ║"
+    echo "║                                                                                                               ║"
+    echo "║  🔍 TROUBLESHOOTING STEPS:                                                                                  ║"
+    echo "║  1. Check the installation logs:                                                                            ║"
+    echo "║     • Main log: /var/log/installLogs.txt                                                                   ║"
+    echo "║     • Debug log: /var/log/cyberpanel/cyberpanel_install_debug_*.log                                        ║"
+    echo "║                                                                                                               ║"
+    echo "║  2. Common issues and solutions:                                                                            ║"
+    echo "║     • Insufficient memory: Ensure at least 1GB RAM available                                               ║"
+    echo "║     • Disk space: Ensure at least 10GB free space                                                          ║"
+    echo "║     • Network issues: Check internet connectivity                                                           ║"
+    echo "║     • Repository errors: Try running 'yum clean all' or 'apt update'                                       ║"
+    echo "║                                                                                                               ║"
+    echo "║  3. Get help:                                                                                               ║"
+    echo "║     • Community: https://community.cyberpanel.net                                                           ║"
+    echo "║     • Documentation: https://cyberpanel.net/KnowledgeBase/                                                  ║"
+    echo "║     • GitHub Issues: https://github.com/usmannasir/cyberpanel/issues                                       ║"
+    echo "║                                                                                                               ║"
+    echo "║  🛠️  RETRY INSTALLATION:                                                                                   ║"
+    echo "║  bash <(curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/cyberpanel.sh) --debug    ║"
+    echo "║                                                                                                               ║"
+    echo "╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╝"
+  fi
+  
+  echo ""
+  echo "╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╗"
+  echo "║                                                                                                               ║"
+  echo "║  📈 SYSTEM INFORMATION:                                                                                      ║"
+  echo "║  • OS: $Server_OS $Server_OS_Version                                                                         ║"
+  echo "║  • CPU Cores: $cpu_cores                                                                                     ║"
+  echo "║  • Load Average: $load_avg                                                                                   ║"
+  echo "║  • Memory Usage: $memory_usage                                                                               ║"
+  echo "║  • Disk Usage: ${disk_usage}%                                                                                ║"
+  echo "║  • Install Time: ${elapsed_minutes}m ${elapsed_seconds}s                                                      ║"
+  echo "║                                                                                                               ║"
+  echo "╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╝"
+  
+  # Show recent errors if installation failed
+  if [ "$install_status" = "FAILED" ]; then
+    echo ""
+    echo "╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╗"
+    echo "║                                                                                                               ║"
+    echo "║  🚨 RECENT ERRORS:                                                                                          ║"
+    echo "║                                                                                                               ║"
+    
+    # Show last 10 lines of install log with errors
+    if [ -f "/var/log/installLogs.txt" ]; then
+      echo "║  From /var/log/installLogs.txt:                                                                           ║"
+      tail -10 /var/log/installLogs.txt | while read line; do
+        if [ ${#line} -gt 100 ]; then
+          echo "║  ${line:0:100}...                                                                                    ║"
+        else
+          printf "║  %-100s ║\n" "$line"
+        fi
+      done
+    fi
+    
+    echo "║                                                                                                               ║"
+    echo "╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╝"
+  fi
+  
+  echo ""
+}
+
+# Record installation start time
+INSTALL_START_TIME=$(date +%s)
+
 if grep "CyberPanel installation successfully completed" /var/log/installLogs.txt >/dev/null; then
-  echo -e "\nCyberPanel installation sucessfully completed...\n"
+  echo -e "\nCyberPanel installation successfully completed...\n"
   Debug_Log2 "Main installation completed...,70"
+  show_installation_summary "SUCCESS" "$INSTALL_START_TIME"
 else
-  echo -e "Oops, something went wrong..."
-  Debug_Log2 "Oops, something went wrong... [404]"
-  exit
+  echo -e "Installation encountered issues..."
+  Debug_Log2 "Installation encountered issues... [404]"
+  show_installation_summary "FAILED" "$INSTALL_START_TIME"
+  exit 1
 fi
 }
 
