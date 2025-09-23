@@ -81,8 +81,24 @@ class preFlightsChecks:
     def get_service_name(self, service):
         """Get the correct service name for the current distribution"""
         service_map = {
-            'pdns': 'pdns'
+            'pdns': 'pdns',
+            'powerdns': 'pdns',
+            'pure-ftpd': 'pure-ftpd',
+            'pureftpd': 'pure-ftpd'
         }
+        
+        # Platform-specific service name mapping
+        if self.is_debian_family():
+            if service in ['pdns', 'powerdns']:
+                return 'pdns-server'
+            elif service in ['pure-ftpd', 'pureftpd']:
+                return 'pure-ftpd'
+        elif self.is_centos_family():
+            if service in ['pdns', 'powerdns']:
+                return 'pdns'
+            elif service in ['pure-ftpd', 'pureftpd']:
+                return 'pure-ftpd'
+        
         return service_map.get(service, service)
     
     def manage_service(self, service_name, action="start"):
