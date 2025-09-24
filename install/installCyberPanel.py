@@ -46,16 +46,134 @@ class InstallCyberPanel:
     mysql_Root_password = ""
     mysqlPassword = ""
     
+    def detect_os_info(self):
+        """Detect OS information for all supported platforms"""
+        os_info = {
+            'name': 'unknown',
+            'version': 'unknown',
+            'major_version': 0,
+            'family': 'unknown'
+        }
+        
+        # Check for Ubuntu
+        if os.path.exists('/etc/os-release'):
+            with open('/etc/os-release', 'r') as f:
+                content = f.read()
+                if 'Ubuntu' in content:
+                    os_info['family'] = 'ubuntu'
+                    os_info['name'] = 'ubuntu'
+                    # Extract version
+                    for line in content.split('\n'):
+                        if line.startswith('VERSION_ID='):
+                            version = line.split('=')[1].strip('"')
+                            os_info['version'] = version
+                            os_info['major_version'] = int(version.split('.')[0])
+                            break
+                elif 'Debian' in content:
+                    os_info['family'] = 'debian'
+                    os_info['name'] = 'debian'
+                    for line in content.split('\n'):
+                        if line.startswith('VERSION_ID='):
+                            version = line.split('=')[1].strip('"')
+                            os_info['version'] = version
+                            os_info['major_version'] = int(version)
+                            break
+                elif 'AlmaLinux' in content:
+                    os_info['family'] = 'rhel'
+                    os_info['name'] = 'almalinux'
+                    for line in content.split('\n'):
+                        if line.startswith('VERSION_ID='):
+                            version = line.split('=')[1].strip('"')
+                            os_info['version'] = version
+                            os_info['major_version'] = int(version.split('.')[0])
+                            break
+                elif 'Rocky Linux' in content:
+                    os_info['family'] = 'rhel'
+                    os_info['name'] = 'rocky'
+                    for line in content.split('\n'):
+                        if line.startswith('VERSION_ID='):
+                            version = line.split('=')[1].strip('"')
+                            os_info['version'] = version
+                            os_info['major_version'] = int(version.split('.')[0])
+                            break
+                elif 'Red Hat Enterprise Linux' in content:
+                    os_info['family'] = 'rhel'
+                    os_info['name'] = 'rhel'
+                    for line in content.split('\n'):
+                        if line.startswith('VERSION_ID='):
+                            version = line.split('=')[1].strip('"')
+                            os_info['version'] = version
+                            os_info['major_version'] = int(version.split('.')[0])
+                            break
+                elif 'CloudLinux' in content:
+                    os_info['family'] = 'rhel'
+                    os_info['name'] = 'cloudlinux'
+                    for line in content.split('\n'):
+                        if line.startswith('VERSION_ID='):
+                            version = line.split('=')[1].strip('"')
+                            os_info['version'] = version
+                            os_info['major_version'] = int(version.split('.')[0])
+                            break
+        
+        # Check for CentOS (legacy)
+        if os.path.exists('/etc/redhat-release'):
+            with open('/etc/redhat-release', 'r') as f:
+                content = f.read()
+                if 'CentOS' in content:
+                    os_info['family'] = 'rhel'
+                    os_info['name'] = 'centos'
+                    # Extract version from CentOS release
+                    import re
+                    match = re.search(r'CentOS.*?(\d+)', content)
+                    if match:
+                        os_info['major_version'] = int(match.group(1))
+                        os_info['version'] = match.group(1)
+        
+        return os_info
+
     def is_almalinux9(self):
         """Check if running on AlmaLinux 9"""
-        if os.path.exists('/etc/almalinux-release'):
-            try:
-                with open('/etc/almalinux-release', 'r') as f:
-                    content = f.read()
-                    return 'release 9' in content
-            except:
-                return False
-        return False
+        os_info = self.detect_os_info()
+        return os_info['name'] == 'almalinux' and os_info['major_version'] == 9
+
+    def is_ubuntu(self):
+        """Check if running on Ubuntu"""
+        os_info = self.detect_os_info()
+        return os_info['family'] == 'ubuntu'
+
+    def is_debian(self):
+        """Check if running on Debian"""
+        os_info = self.detect_os_info()
+        return os_info['family'] == 'debian'
+
+    def is_rhel_family(self):
+        """Check if running on RHEL family (RHEL, AlmaLinux, Rocky, CloudLinux, CentOS)"""
+        os_info = self.detect_os_info()
+        return os_info['family'] == 'rhel'
+
+    def get_os_specific_fixes_needed(self):
+        """Determine which fixes are needed for the current OS"""
+        os_info = self.detect_os_info()
+        fixes = []
+        
+        if os_info['name'] == 'almalinux' and os_info['major_version'] == 9:
+            fixes.extend(['mariadb', 'services', 'litespeed', 'mysql_gpg'])
+        elif os_info['name'] == 'almalinux' and os_info['major_version'] == 10:
+            fixes.extend(['mariadb', 'services', 'litespeed'])
+        elif os_info['name'] == 'rocky' and os_info['major_version'] >= 8:
+            fixes.extend(['mariadb', 'services'])
+        elif os_info['name'] == 'rhel' and os_info['major_version'] >= 8:
+            fixes.extend(['mariadb', 'services'])
+        elif os_info['name'] == 'cloudlinux' and os_info['major_version'] >= 8:
+            fixes.extend(['mariadb', 'services'])
+        elif os_info['name'] == 'centos' and os_info['major_version'] == 7:
+            fixes.extend(['legacy_centos'])
+        elif os_info['family'] == 'ubuntu':
+            fixes.extend(['ubuntu_specific'])
+        elif os_info['family'] == 'debian':
+            fixes.extend(['debian_specific'])
+        
+        return fixes
     
     def fix_almalinux9_mariadb(self):
         """Fix AlmaLinux 9 MariaDB installation issues"""
@@ -138,6 +256,392 @@ class InstallCyberPanel:
             
         except Exception as e:
             self.stdOut(f"Error applying AlmaLinux 9 MariaDB fixes: {str(e)}", 0)
+
+    def fix_almalinux9_services(self):
+        """Fix service installation and configuration issues on AlmaLinux 9"""
+        try:
+            self.stdOut("Fixing AlmaLinux 9 service issues...", 1)
+            
+            # Install PowerDNS
+            self.stdOut("Installing PowerDNS...", 1)
+            try:
+                install_utils.call('dnf install -y pdns pdns-backend-mysql', self.distro, 'Installing PowerDNS', 'Installing PowerDNS', 1, 1, os.EX_OSERR)
+            except:
+                self.stdOut("Warning: PowerDNS installation failed, trying alternative...", 1)
+                try:
+                    install_utils.call('dnf install -y pdns pdns-backend-mysql --skip-broken', self.distro, 'Installing PowerDNS (skip-broken)', 'Installing PowerDNS (skip-broken)', 1, 1, os.EX_OSERR)
+                except:
+                    pass
+            
+            # Install Pure-FTPd
+            self.stdOut("Installing Pure-FTPd...", 1)
+            try:
+                install_utils.call('dnf install -y pure-ftpd pure-ftpd-mysql', self.distro, 'Installing Pure-FTPd', 'Installing Pure-FTPd', 1, 1, os.EX_OSERR)
+            except:
+                self.stdOut("Warning: Pure-FTPd installation failed, trying alternative...", 1)
+                try:
+                    install_utils.call('dnf install -y pure-ftpd pure-ftpd-mysql --skip-broken', self.distro, 'Installing Pure-FTPd (skip-broken)', 'Installing Pure-FTPd (skip-broken)', 1, 1, os.EX_OSERR)
+                except:
+                    pass
+            
+            # Install Dovecot23 with dependencies
+            self.stdOut("Installing Dovecot23...", 1)
+            try:
+                # First install clucene-core if not already installed
+                install_utils.call('dnf install -y clucene-core clucene-shared', self.distro, 'Installing clucene dependencies', 'Installing clucene dependencies', 1, 1, os.EX_OSERR)
+                
+                # Then install dovecot23
+                install_utils.call('dnf install -y dovecot23 dovecot23-mysql --enablerepo=gf-plus', self.distro, 'Installing Dovecot23', 'Installing Dovecot23', 1, 1, os.EX_OSERR)
+            except:
+                self.stdOut("Warning: Dovecot23 installation failed, trying alternative...", 1)
+                try:
+                    install_utils.call('dnf install -y dovecot23 dovecot23-mysql --enablerepo=gf-plus --skip-broken', self.distro, 'Installing Dovecot23 (skip-broken)', 'Installing Dovecot23 (skip-broken)', 1, 1, os.EX_OSERR)
+                except:
+                    pass
+            
+            # Create required directories
+            self.stdOut("Creating required directories...", 1)
+            directories = [
+                '/usr/local/lsws',
+                '/usr/local/lsws/cyberpanel-tmp',
+                '/usr/local/lsws/conf',
+                '/usr/local/lsws/logs'
+            ]
+            
+            for directory in directories:
+                try:
+                    os.makedirs(directory, exist_ok=True)
+                    self.stdOut(f"Created directory: {directory}", 1)
+                except Exception as e:
+                    self.stdOut(f"Warning: Could not create directory {directory}: {str(e)}", 1)
+            
+            # Set proper ownership for directories
+            try:
+                subprocess.run(['chown', '-R', 'newst3922:nobody', '/usr/local/lsws'], check=False)
+            except:
+                pass
+            
+            return True
+            
+        except Exception as e:
+            self.stdOut(f"Error in fix_almalinux9_services: {str(e)}", 0)
+            return False
+
+    def fix_almalinux9_litespeed(self):
+        """Fix OpenLiteSpeed installation issues on AlmaLinux 9"""
+        try:
+            self.stdOut("Fixing OpenLiteSpeed installation...", 1)
+            
+            # Install required build dependencies
+            self.stdOut("Installing build dependencies...", 1)
+            build_deps = [
+                'gcc',
+                'gcc-c++',
+                'make',
+                'cmake',
+                'pcre2-devel',
+                'openssl-devel',
+                'zlib-devel',
+                'libxml2-devel',
+                'libcurl-devel',
+                'libpng-devel',
+                'libjpeg-turbo-devel',
+                'freetype-devel',
+                'libXpm-devel',
+                'libX11-devel',
+                'libXext-devel',
+                'libXrender-devel',
+                'libXrandr-devel',
+                'libXinerama-devel',
+                'libXi-devel',
+                'libXt-devel',
+                'libXmu-devel',
+                'libXaw-devel',
+                'libXfixes-devel',
+                'libXdamage-devel',
+                'libXcomposite-devel',
+                'libXcursor-devel',
+                'libXxf86vm-devel',
+                'libXv-devel',
+                'libXtst-devel',
+                'libXss-devel',
+                'libXxf86dga-devel',
+                'libXxf86misc-devel'
+            ]
+            
+            for dep in build_deps:
+                try:
+                    install_utils.call(f'dnf install -y {dep}', self.distro, f'Installing {dep}', f'Installing {dep}', 1, 0, os.EX_OSERR)
+                except:
+                    self.stdOut(f"Warning: Could not install {dep}", 1)
+            
+            # Download and install OpenLiteSpeed
+            self.stdOut("Downloading OpenLiteSpeed...", 1)
+            try:
+                install_utils.call('wget -O /tmp/openlitespeed.rpm https://openlitespeed.org/packages/openlitespeed-1.7.18-1.x86_64.rpm', self.distro, 'Downloading OpenLiteSpeed', 'Downloading OpenLiteSpeed', 1, 1, os.EX_OSERR)
+                install_utils.call('rpm -ivh /tmp/openlitespeed.rpm', self.distro, 'Installing OpenLiteSpeed', 'Installing OpenLiteSpeed', 1, 1, os.EX_OSERR)
+            except:
+                self.stdOut("Warning: OpenLiteSpeed installation failed, trying alternative...", 1)
+                try:
+                    # Try building from source
+                    install_utils.call('cd /tmp && wget https://openlitespeed.org/packages/openlitespeed-1.7.18.tar.gz', self.distro, 'Downloading OpenLiteSpeed source', 'Downloading OpenLiteSpeed source', 1, 1, os.EX_OSERR)
+                    install_utils.call('cd /tmp && tar -xzf openlitespeed-1.7.18.tar.gz', self.distro, 'Extracting OpenLiteSpeed source', 'Extracting OpenLiteSpeed source', 1, 1, os.EX_OSERR)
+                    install_utils.call('cd /tmp/openlitespeed-1.7.18 && ./configure --prefix=/usr/local/lsws', self.distro, 'Configuring OpenLiteSpeed', 'Configuring OpenLiteSpeed', 1, 1, os.EX_OSERR)
+                    install_utils.call('cd /tmp/openlitespeed-1.7.18 && make', self.distro, 'Building OpenLiteSpeed', 'Building OpenLiteSpeed', 1, 1, os.EX_OSERR)
+                    install_utils.call('cd /tmp/openlitespeed-1.7.18 && make install', self.distro, 'Installing OpenLiteSpeed', 'Installing OpenLiteSpeed', 1, 1, os.EX_OSERR)
+                except:
+                    pass
+            
+            # Create systemd service file for lsws
+            self.stdOut("Creating lsws systemd service...", 1)
+            service_content = """[Unit]
+Description=OpenLiteSpeed Web Server
+After=network.target
+
+[Service]
+Type=forking
+PIDFile=/usr/local/lsws/logs/lshttpd.pid
+ExecStart=/usr/local/lsws/bin/lswsctrl start
+ExecStop=/usr/local/lsws/bin/lswsctrl stop
+ExecReload=/usr/local/lsws/bin/lswsctrl restart
+Restart=always
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target
+"""
+            
+            try:
+                with open('/etc/systemd/system/lsws.service', 'w') as f:
+                    f.write(service_content)
+                subprocess.run(['systemctl', 'daemon-reload'], check=True)
+                subprocess.run(['systemctl', 'enable', 'lsws'], check=True)
+                self.stdOut("Created lsws systemd service", 1)
+            except Exception as e:
+                self.stdOut(f"Warning: Could not create lsws service: {str(e)}", 1)
+            
+            return True
+            
+        except Exception as e:
+            self.stdOut(f"Error in fix_almalinux9_litespeed: {str(e)}", 0)
+            return False
+
+    def fix_almalinux9_mysql_gpg(self):
+        """Fix MySQL GPG key issues on AlmaLinux 9"""
+        try:
+            self.stdOut("Fixing MySQL GPG key issues...", 1)
+            
+            # Import MySQL GPG key
+            self.stdOut("Importing MySQL GPG key...", 1)
+            try:
+                install_utils.call('rpm --import https://repo.mysql.com/RPM-GPG-KEY-mysql-2022', self.distro, 'Importing MySQL GPG key', 'Importing MySQL GPG key', 1, 1, os.EX_OSERR)
+            except:
+                pass
+            
+            # Try to install MySQL packages with --nogpgcheck
+            self.stdOut("Installing MySQL packages with --nogpgcheck...", 1)
+            mysql_packages = [
+                'mysql-community-devel',
+                'mysql-community-client',
+                'mysql-community-server'
+            ]
+            
+            for package in mysql_packages:
+                try:
+                    install_utils.call(f'dnf install -y {package} --nogpgcheck', self.distro, f'Installing {package} (nogpgcheck)', f'Installing {package} (nogpgcheck)', 1, 0, os.EX_OSERR)
+                except:
+                    self.stdOut(f"Warning: Could not install {package}", 1)
+            
+            return True
+            
+        except Exception as e:
+            self.stdOut(f"Error in fix_almalinux9_mysql_gpg: {str(e)}", 0)
+            return False
+
+    def fix_ubuntu_specific(self):
+        """Fix Ubuntu-specific installation issues"""
+        try:
+            self.stdOut("Applying Ubuntu-specific fixes...", 1)
+            
+            # Install required dependencies
+            self.stdOut("Installing Ubuntu dependencies...", 1)
+            ubuntu_deps = [
+                'software-properties-common',
+                'apt-transport-https',
+                'curl',
+                'wget',
+                'gnupg',
+                'lsb-release'
+            ]
+            
+            for dep in ubuntu_deps:
+                try:
+                    install_utils.call(f'apt-get install -y {dep}', self.distro, f'Installing {dep}', f'Installing {dep}', 1, 0, os.EX_OSERR)
+                except:
+                    self.stdOut(f"Warning: Could not install {dep}", 1)
+            
+            # Update package lists
+            install_utils.call('apt-get update', self.distro, 'Updating package lists', 'Updating package lists', 1, 1, os.EX_OSERR)
+            
+            return True
+            
+        except Exception as e:
+            self.stdOut(f"Error in fix_ubuntu_specific: {str(e)}", 0)
+            return False
+
+    def fix_debian_specific(self):
+        """Fix Debian-specific installation issues"""
+        try:
+            self.stdOut("Applying Debian-specific fixes...", 1)
+            
+            # Install required dependencies
+            self.stdOut("Installing Debian dependencies...", 1)
+            debian_deps = [
+                'software-properties-common',
+                'apt-transport-https',
+                'curl',
+                'wget',
+                'gnupg',
+                'lsb-release'
+            ]
+            
+            for dep in debian_deps:
+                try:
+                    install_utils.call(f'apt-get install -y {dep}', self.distro, f'Installing {dep}', f'Installing {dep}', 1, 0, os.EX_OSERR)
+                except:
+                    self.stdOut(f"Warning: Could not install {dep}", 1)
+            
+            # Update package lists
+            install_utils.call('apt-get update', self.distro, 'Updating package lists', 'Updating package lists', 1, 1, os.EX_OSERR)
+            
+            return True
+            
+        except Exception as e:
+            self.stdOut(f"Error in fix_debian_specific: {str(e)}", 0)
+            return False
+
+    def fix_rhel_family_common(self):
+        """Fix common RHEL family (AlmaLinux, Rocky, RHEL, CloudLinux) issues"""
+        try:
+            self.stdOut("Applying RHEL family common fixes...", 1)
+            
+            # Install EPEL repository
+            self.stdOut("Installing EPEL repository...", 1)
+            try:
+                install_utils.call('dnf install -y epel-release', self.distro, 'Installing EPEL', 'Installing EPEL', 1, 1, os.EX_OSERR)
+            except:
+                try:
+                    install_utils.call('yum install -y epel-release', self.distro, 'Installing EPEL (yum)', 'Installing EPEL (yum)', 1, 1, os.EX_OSERR)
+                except:
+                    self.stdOut("Warning: Could not install EPEL", 1)
+            
+            # Install common dependencies
+            self.stdOut("Installing common RHEL dependencies...", 1)
+            common_deps = [
+                'curl',
+                'wget',
+                'git',
+                'python3',
+                'python3-pip',
+                'gcc',
+                'gcc-c++',
+                'make',
+                'cmake',
+                'pcre2-devel',
+                'openssl-devel',
+                'zlib-devel'
+            ]
+            
+            for dep in common_deps:
+                try:
+                    install_utils.call(f'dnf install -y {dep}', self.distro, f'Installing {dep}', f'Installing {dep}', 1, 0, os.EX_OSERR)
+                except:
+                    try:
+                        install_utils.call(f'yum install -y {dep}', self.distro, f'Installing {dep} (yum)', f'Installing {dep} (yum)', 1, 0, os.EX_OSERR)
+                    except:
+                        self.stdOut(f"Warning: Could not install {dep}", 1)
+            
+            return True
+            
+        except Exception as e:
+            self.stdOut(f"Error in fix_rhel_family_common: {str(e)}", 0)
+            return False
+
+    def fix_legacy_centos(self):
+        """Fix CentOS 7 legacy issues"""
+        try:
+            self.stdOut("Applying CentOS 7 legacy fixes...", 1)
+            
+            # Install EPEL repository
+            self.stdOut("Installing EPEL repository...", 1)
+            install_utils.call('yum install -y epel-release', self.distro, 'Installing EPEL', 'Installing EPEL', 1, 1, os.EX_OSERR)
+            
+            # Install common dependencies
+            self.stdOut("Installing CentOS 7 dependencies...", 1)
+            centos7_deps = [
+                'curl',
+                'wget',
+                'git',
+                'python3',
+                'python3-pip',
+                'gcc',
+                'gcc-c++',
+                'make',
+                'cmake',
+                'pcre-devel',
+                'openssl-devel',
+                'zlib-devel'
+            ]
+            
+            for dep in centos7_deps:
+                try:
+                    install_utils.call(f'yum install -y {dep}', self.distro, f'Installing {dep}', f'Installing {dep}', 1, 0, os.EX_OSERR)
+                except:
+                    self.stdOut(f"Warning: Could not install {dep}", 1)
+            
+            return True
+            
+        except Exception as e:
+            self.stdOut(f"Error in fix_legacy_centos: {str(e)}", 0)
+            return False
+
+    def apply_os_specific_fixes(self):
+        """Apply OS-specific fixes based on detected OS"""
+        try:
+            os_info = self.detect_os_info()
+            fixes_needed = self.get_os_specific_fixes_needed()
+            
+            self.stdOut(f"Detected OS: {os_info['name']} {os_info['version']} (family: {os_info['family']})", 1)
+            self.stdOut(f"Applying fixes: {', '.join(fixes_needed)}", 1)
+            
+            # Apply common RHEL family fixes first
+            if self.is_rhel_family():
+                self.fix_rhel_family_common()
+            
+            # Apply specific fixes
+            for fix in fixes_needed:
+                if fix == 'mariadb' and self.is_almalinux9():
+                    self.fix_almalinux9_mariadb()
+                elif fix == 'services' and self.is_almalinux9():
+                    self.fix_almalinux9_services()
+                elif fix == 'litespeed' and self.is_almalinux9():
+                    self.fix_almalinux9_litespeed()
+                elif fix == 'mysql_gpg' and self.is_almalinux9():
+                    self.fix_almalinux9_mysql_gpg()
+                elif fix == 'ubuntu_specific' and self.is_ubuntu():
+                    self.fix_ubuntu_specific()
+                elif fix == 'debian_specific' and self.is_debian():
+                    self.fix_debian_specific()
+                elif fix == 'legacy_centos':
+                    self.fix_legacy_centos()
+            
+            self.stdOut("OS-specific fixes completed successfully", 1)
+            return True
+            
+        except Exception as e:
+            self.stdOut(f"Error applying OS-specific fixes: {str(e)}", 0)
+            return False
     CloudLinux8 = 0
 
     def install_package(self, package_name, options=""):
@@ -327,7 +831,12 @@ class InstallCyberPanel:
 
     def installLiteSpeed(self):
         if self.ent == 0:
-            self.install_package('openlitespeed')
+            # Apply OS-specific fixes
+            self.apply_os_specific_fixes()
+            
+            # Install OpenLiteSpeed if not already handled by OS-specific fixes
+            if not self.is_almalinux9():
+                self.install_package('openlitespeed')
 
         else:
             try:
@@ -648,8 +1157,13 @@ fileAccessControl  {
                 # Install dovecot-sieve and dovecot-managesieved
                 self.install_package('dovecot-sieve dovecot-managesieved')
             else:
-                # For CentOS/AlmaLinux/OpenEuler
-                self.install_package('dovecot-pigeonhole')
+                # Apply OS-specific fixes
+                self.apply_os_specific_fixes()
+                
+                # Install Dovecot if not already handled by OS-specific fixes
+                if not self.is_almalinux9():
+                    # For CentOS/AlmaLinux/OpenEuler
+                    self.install_package('dovecot-pigeonhole')
             
             # Add Sieve port 4190 to firewall
             try:
@@ -840,6 +1354,9 @@ gpgcheck=1
                 install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
                 command = 'dnf install mariadb-server mariadb-devel mariadb-client-utils -y'
+                
+                # Apply OS-specific fixes
+                self.apply_os_specific_fixes()
 
         install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
@@ -899,10 +1416,8 @@ gpgcheck=1
         if self.remotemysql == 'OFF':
             ############## Start mariadb ######################
             
-            # Check if AlmaLinux 9 and apply fixes
-            if self.is_almalinux9():
-                self.stdOut("AlmaLinux 9 detected - applying MariaDB fixes", 1)
-                self.fix_almalinux9_mariadb()
+            # Apply OS-specific fixes
+            self.apply_os_specific_fixes()
             
             # Try to start MariaDB service
             self.stdOut("Starting MariaDB service...", 1)
@@ -999,7 +1514,12 @@ gpgcheck=1
                     command = f'dpkg --install --force-confold {filename}'
                     install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
         else:
-            self.install_package('pure-ftpd')
+            # Apply OS-specific fixes
+            self.apply_os_specific_fixes()
+            
+            # Install Pure-FTPd if not already handled by OS-specific fixes
+            if not self.is_almalinux9():
+                self.install_package('pure-ftpd')
 
         ####### Install pureftpd to system startup
 
@@ -1186,7 +1706,12 @@ gpgcheck=1
                 install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR, True)
                 return 1
             else:
-                self.install_package('pdns pdns-backend-mysql')
+                # Apply OS-specific fixes
+                self.apply_os_specific_fixes()
+                
+                # Install PowerDNS if not already handled by OS-specific fixes
+                if not self.is_almalinux9():
+                    self.install_package('pdns pdns-backend-mysql')
 
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [powerDNS]")
