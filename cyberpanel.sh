@@ -1572,11 +1572,21 @@ if [[ "$Server_OS" =~ ^(CentOS|RHEL|AlmaLinux|RockyLinux|CloudLinux|openEuler) ]
     dnf clean all
     dnf makecache
     
+        # Note: OS-specific fixes are now handled by the Python installation process
+    
     # STEP 4: Setup MariaDB repository for RHEL 9+ based systems (AlmaLinux 9/10, RockyLinux 9, RHEL 9)
     if [[ "$Server_OS" =~ ^(AlmaLinux9|AlmaLinux10|RockyLinux9|RHEL9|RHEL10) ]] ; then
       # Use the official MariaDB repository setup script for better compatibility
+      log_info "Setting up MariaDB repository for $Server_OS..."
       curl -sS "https://downloads.mariadb.com/MariaDB/mariadb_repo_setup" | bash -s -- --mariadb-server-version="10.11" --skip-maxscale --skip-tools
       Check_Return "MariaDB repository setup" "no_exit"
+      
+      # Verify MariaDB repository was added successfully
+      if dnf repolist | grep -q "mariadb"; then
+        log_info "MariaDB repository added successfully"
+      else
+        log_warning "MariaDB repository setup may have failed, continuing with installation"
+      fi
       
       # Fallback manual repository setup if the script fails
       if [ ! -f /etc/yum.repos.d/mariadb.repo ]; then
