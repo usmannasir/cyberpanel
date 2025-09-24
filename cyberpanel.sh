@@ -434,20 +434,20 @@ setup_mariadb_repo() {
     if [[ "$Server_OS_Version" = "7" ]]; then
         cat <<EOF >/etc/yum.repos.d/MariaDB.repo
 # MariaDB 10.4 CentOS repository list - created 2021-08-06 02:01 UTC
-# http://downloads.mariadb.org/mariadb/repositories/
+# https://downloads.mariadb.org/mariadb/repositories/
 [mariadb]
 name = MariaDB
-baseurl = https://yum.mariadb.org/10.4/centos7-amd64
+baseurl = https://mirror.mariadb.org/yum/10.4/centos7-amd64
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1
 EOF
     elif [[ "$Server_OS_Version" = "8" ]]; then
         cat <<EOF >/etc/yum.repos.d/MariaDB.repo
 # MariaDB 10.11 RHEL8 repository list
-# http://downloads.mariadb.org/mariadb/repositories/
+# https://downloads.mariadb.org/mariadb/repositories/
 [mariadb]
 name = MariaDB
-baseurl = https://yum.mariadb.org/12.1/rhel8-amd64
+baseurl = https://mirror.mariadb.org/yum/12.1/rhel8-amd64
 module_hotfixes=1
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1
@@ -459,10 +459,10 @@ EOF
             # Fallback to manual setup
             cat <<EOF >/etc/yum.repos.d/MariaDB.repo
 # MariaDB 10.11 RHEL9+ repository list
-# http://downloads.mariadb.org/mariadb/repositories/
+# https://downloads.mariadb.org/mariadb/repositories/
 [mariadb]
 name = MariaDB
-baseurl = https://yum.mariadb.org/12.1/rhel9-amd64/
+baseurl = https://mirror.mariadb.org/yum/12.1/rhel9-amd64/
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 enabled=1
 gpgcheck=1
@@ -476,10 +476,10 @@ EOF
             # Fallback to manual setup
             cat <<EOF >/etc/yum.repos.d/MariaDB.repo
 # MariaDB 10.11 RHEL10+ repository list
-# http://downloads.mariadb.org/mariadb/repositories/
+# https://downloads.mariadb.org/mariadb/repositories/
 [mariadb]
 name = MariaDB
-baseurl = https://yum.mariadb.org/12.1/rhel9-amd64/
+baseurl = https://mirror.mariadb.org/yum/12.1/rhel9-amd64/
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 enabled=1
 gpgcheck=1
@@ -1470,10 +1470,10 @@ if [[ $Server_OS = "CentOS" ]] ; then
 
     cat <<EOF >/etc/yum.repos.d/MariaDB.repo
 # MariaDB 10.4 CentOS repository list - created 2021-08-06 02:01 UTC
-# http://downloads.mariadb.org/mariadb/repositories/
+# https://downloads.mariadb.org/mariadb/repositories/
 [mariadb]
 name = MariaDB
-baseurl = http://yum.mariadb.org/10.4/centos7-amd64
+baseurl = https://mirror.mariadb.org/yum/10.4/centos7-amd64
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1
 EOF
@@ -1677,7 +1677,7 @@ EOF
 # MariaDB 12.1 Alternative repository configuration
 [mariadb]
 name = MariaDB
-baseurl = https://yum.mariadb.org/12.1/rhel9-amd64/
+baseurl = https://mirror.mariadb.org/yum/12.1/rhel9-amd64/
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 enabled=1
 gpgcheck=1
