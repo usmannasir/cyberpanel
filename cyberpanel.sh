@@ -1560,12 +1560,20 @@ if [[ "$Server_OS" =~ ^(CentOS|RHEL|AlmaLinux|RockyLinux|CloudLinux|openEuler) ]
       Check_Return
   elif [[ "$Server_OS" =~ ^(CentOS9|RHEL9|AlmaLinux9|AlmaLinux10|RockyLinux9|openEuler) ]] ; then
     # Enhanced package installation for AlmaLinux 9/10, RHEL 9, RockyLinux 9, etc.
-    # Install EPEL repository for additional packages like htop
+    # STEP 1: Clean all caches first to prevent conflicts
+    dnf clean all
+    dnf makecache
+    
+    # STEP 2: Install EPEL repository for additional packages like htop
     dnf install -y epel-release
       Check_Return "EPEL repository" "no_exit"
     
-    # Setup MariaDB repository for RHEL 9+ based systems (AlmaLinux 9/10, RockyLinux 9, RHEL 9)
-    if [[ "$Server_OS" =~ ^(AlmaLinux9|AlmaLinux10|RockyLinux9|RHEL9) ]] ; then
+    # STEP 3: Clean caches after EPEL installation
+    dnf clean all
+    dnf makecache
+    
+    # STEP 4: Setup MariaDB repository for RHEL 9+ based systems (AlmaLinux 9/10, RockyLinux 9, RHEL 9)
+    if [[ "$Server_OS" =~ ^(AlmaLinux9|AlmaLinux10|RockyLinux9|RHEL9|RHEL10) ]] ; then
       # Use the official MariaDB repository setup script for better compatibility
       curl -sS "https://downloads.mariadb.com/MariaDB/mariadb_repo_setup" | bash -s -- --mariadb-server-version="10.11" --skip-maxscale --skip-tools
       Check_Return "MariaDB repository setup" "no_exit"
@@ -1585,14 +1593,64 @@ module_hotfixes=1
 EOF
         Check_Return "MariaDB repository fallback setup" "no_exit"
       fi
+      
+      # STEP 5: Clean caches after MariaDB repo setup
+      dnf clean all
+      dnf makecache
+      
+      # STEP 6: Set repository priorities to prevent conflicts
+      dnf install -y yum-plugin-priorities
+      if [ -f /etc/yum.repos.d/mariadb.repo ]; then
+        sed -i '/\[mariadb\]/a priority=1' /etc/yum.repos.d/mariadb.repo
+      fi
+      if [ -f /etc/yum.repos.d/MariaDB.repo ]; then
+        sed -i '/\[mariadb\]/a priority=1' /etc/yum.repos.d/MariaDB.repo
+      fi
+      
+      # STEP 6.1: Check for repository conflicts and resolve them
+      echo "Checking for repository conflicts..."
+      if dnf repolist | grep -q "mariadb"; then
+        echo "MariaDB repository detected successfully"
+      else
+        echo "Warning: MariaDB repository not found, attempting to resolve..."
+        # Try alternative repository setup
+        dnf install -y mariadb-server mariadb-devel mariadb-client-utils --skip-broken --nobest
+      fi
     fi
     
-    dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel MariaDB-server MariaDB-client MariaDB-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils openssl-devel boost-devel boost-program-options
-      Check_Return
+    # STEP 7: Install packages in logical order to prevent conflicts
+    # First: Install base system packages
+    dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils openssl-devel boost-devel boost-program-options
+      Check_Return "Base system packages" "no_exit"
     
-    # Install development tools group
+    # Second: Install MariaDB packages (with proper dependency resolution)
+    dnf install -y mariadb-server mariadb-devel mariadb-client-utils --skip-broken --nobest
+      Check_Return "MariaDB packages" "no_exit"
+    
+    # STEP 7.1: Check for package conflicts and resolve them
+    echo "Checking for package conflicts..."
+    if dnf list installed | grep -q "mariadb-server"; then
+      echo "MariaDB server installed successfully"
+    else
+      echo "Warning: MariaDB server not found, attempting to resolve..."
+      # Try installing from different sources
+      dnf install -y mariadb-server --skip-broken --nobest --allowerasing
+    fi
+    
+    # STEP 8: Install development tools group
     dnf groupinstall -y "Development Tools"
       Check_Return "Development Tools" "no_exit"
+    
+    # STEP 9: Final cache clean and update to ensure consistency
+    dnf clean all
+    dnf makecache
+    dnf update -y --skip-broken
+      Check_Return "Final system update" "no_exit"
+    
+    # STEP 10: Verify repository consistency
+    echo "Verifying repository consistency..."
+    dnf repolist
+    echo "Repository verification completed"
     
     # Fix boost library compatibility for galera-4 on AlmaLinux 10
     if [[ "$Server_OS_Version" = "10" ]]; then
@@ -2309,12 +2367,13 @@ Description=LiteSpeed Memcached (LSMCD)
 After=network.target
 
 [Service]
-Type=forking
-PIDFile=/var/run/lsmcd.pid
+Type=simple
 ExecStart=/usr/local/bin/lsmcd -d
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=process
 Restart=on-failure
+User=root
+Group=root
 
 [Install]
 WantedBy=multi-user.target
@@ -2330,6 +2389,9 @@ EOF
         touch /home/cyberpanel/lsmcd
       else
         echo "Warning: LSMCD service failed to start"
+        # Try to get more details about the failure
+        systemctl status lsmcd --no-pager
+        journalctl -u lsmcd --no-pager -n 10
       fi
     else
       echo "Error: LSMCD installation failed"
