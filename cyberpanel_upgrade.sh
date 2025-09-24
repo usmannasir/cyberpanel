@@ -151,6 +151,10 @@ elif grep -q -E "Rocky Linux" /etc/os-release ; then
   Server_OS="RockyLinux"
 elif grep -q -E "AlmaLinux-8|AlmaLinux-9|AlmaLinux-10" /etc/os-release ; then
   Server_OS="AlmaLinux"
+  # Set specific version for AlmaLinux 9+ to use dnf instead of yum
+  if grep -q -E "AlmaLinux-9|AlmaLinux-10" /etc/os-release ; then
+    Server_OS="AlmaLinux9"
+  fi
 elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04|Ubuntu 20.10|Ubuntu 22.04|Ubuntu 24.04|Ubuntu 24.04.3" /etc/os-release ; then
   Server_OS="Ubuntu"
 elif grep -q -E "Debian GNU/Linux 11|Debian GNU/Linux 12|Debian GNU/Linux 13" /etc/os-release ; then
@@ -170,9 +174,12 @@ Server_OS_Version=$(grep VERSION_ID /etc/os-release | awk -F[=,] '{print $2}' | 
 echo -e "System: $Server_OS $Server_OS_Version detected...\n"
 
 if [[ $Server_OS = "CloudLinux" ]] || [[ "$Server_OS" = "AlmaLinux" ]] || [[ "$Server_OS" = "RockyLinux" ]] || [[ "$Server_OS" = "RedHat" ]]; then
-  Server_OS="CentOS"
-  #CloudLinux gives version id like 7.8, 7.9, so cut it to show first number only
-  #treat CloudLinux, Rocky and Alma as CentOS
+  # Keep AlmaLinux9 separate for dnf package management
+  if [[ "$Server_OS" != "AlmaLinux9" ]]; then
+    Server_OS="CentOS"
+    #CloudLinux gives version id like 7.8, 7.9, so cut it to show first number only
+    #treat CloudLinux, Rocky and Alma as CentOS
+  fi
 fi
 
 if [[ "$Debug" = "On" ]] ; then
@@ -358,8 +365,8 @@ mysql -uroot -p"$MySQL_Password" -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'loca
 Pre_Upgrade_Setup_Repository() {
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Pre_Upgrade_Setup_Repository started for OS: $Server_OS" | tee -a /var/log/cyberpanel_upgrade_debug.log
 
-if [[ "$Server_OS" = "CentOS" ]] ; then
-  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Setting up CentOS repositories..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "AlmaLinux9" ]] ; then
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Setting up repositories for $Server_OS..." | tee -a /var/log/cyberpanel_upgrade_debug.log
   rm -f /etc/yum.repos.d/CyberPanel.repo
   rm -f /etc/yum.repos.d/litespeed.repo
   if [[ "$Server_Country" = "CN" ]] ; then
@@ -477,6 +484,28 @@ EOF
   fi
 
   dnf install epel-release -y
+  
+  # AlmaLinux 9 specific package installation
+  if [[ "$Server_OS" = "AlmaLinux9" ]] ; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing AlmaLinux 9 specific packages..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    
+    # Install essential build tools
+    dnf groupinstall -y 'Development Tools'
+    
+    # Install PHP dependencies that are missing on AlmaLinux 9
+    dnf install -y ImageMagick ImageMagick-devel gd gd-devel libicu libicu-devel \
+                   oniguruma oniguruma-devel aspell aspell-devel libc-client libc-client-devel \
+                   libmemcached libmemcached-devel freetype-devel libjpeg-turbo-devel \
+                   libpng-devel libwebp-devel libXpm-devel libzip-devel openssl-devel \
+                   sqlite-devel libxml2-devel libxslt-devel curl-devel libedit-devel \
+                   readline-devel pkgconfig cmake gcc-c++
+    
+    # Install MariaDB
+    dnf install -y mariadb-server mariadb-devel mariadb-client
+    
+    # Install additional required packages
+    dnf install -y wget curl unzip zip rsync firewalld psmisc git python3 python3-pip python3-devel
+  fi
 
   dnf install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-connector-c-devel curl-devel git platform-python-devel tar socat bind-utils
   dnf install gpgme-devel -y
@@ -977,15 +1006,22 @@ if [[ $NEEDS_RECREATE -eq 1 ]] || [[ ! -d /usr/local/CyberCP/bin ]]; then
     if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" = "22" ]]; then
       echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Ubuntu 22.04 detected, ensuring virtualenv is properly installed..." | tee -a /var/log/cyberpanel_upgrade_debug.log
       pip3 install --upgrade virtualenv 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
-    elif [[ "$Server_OS" = "CentOS" ]] && ([[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]); then
-      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] AlmaLinux/Rocky Linux 9/10 detected, ensuring virtualenv is properly installed..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-      pip3 install --upgrade virtualenv 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+  elif [[ "$Server_OS" = "CentOS" ]] && ([[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]); then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] AlmaLinux/Rocky Linux 9/10 detected, ensuring virtualenv is properly installed..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    pip3 install --upgrade virtualenv 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+  elif [[ "$Server_OS" = "AlmaLinux9" ]]; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] AlmaLinux 9 detected, ensuring virtualenv is properly installed..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    pip3 install --upgrade virtualenv 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
     fi
     
     # Find the correct python3 path
     if [[ "$Server_OS" = "CentOS" ]] && ([[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]); then
       PYTHON_PATH=$(which python3 2>/dev/null || which python3.9 2>/dev/null || echo "/usr/bin/python3")
       echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Using Python path: $PYTHON_PATH" | tee -a /var/log/cyberpanel_upgrade_debug.log
+      virtualenv_output=$(virtualenv -p "$PYTHON_PATH" /usr/local/CyberCP 2>&1)
+    elif [[ "$Server_OS" = "AlmaLinux9" ]]; then
+      PYTHON_PATH=$(which python3 2>/dev/null || which python3.9 2>/dev/null || echo "/usr/bin/python3")
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] AlmaLinux 9 - Using Python path: $PYTHON_PATH" | tee -a /var/log/cyberpanel_upgrade_debug.log
       virtualenv_output=$(virtualenv -p "$PYTHON_PATH" /usr/local/CyberCP 2>&1)
     else
       virtualenv_output=$(virtualenv -p /usr/bin/python3 /usr/local/CyberCP 2>&1)
