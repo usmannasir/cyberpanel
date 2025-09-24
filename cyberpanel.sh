@@ -1805,7 +1805,123 @@ fi
 
 Debug_Log2 "Installing requirments..,3"
 
-Retry_Command "pip install --default-timeout=3600 -r /usr/local/requirments.txt"
+# Install MySQL/MariaDB development headers for mysqlclient Python package
+echo "Installing MySQL/MariaDB development headers for Python packages..."
+
+# Ensure MariaDB repository is available for development packages
+if [[ "$Server_OS" =~ ^(CentOS|RHEL|AlmaLinux|RockyLinux|CloudLinux) ]]; then
+  echo "Setting up MariaDB repository for development packages..."
+  if command -v dnf >/dev/null 2>&1; then
+    # Try to add MariaDB repository if not present
+    if ! dnf repolist | grep -q "mariadb"; then
+      curl -sS "https://downloads.mariadb.com/MariaDB/mariadb_repo_setup" | bash -s -- --mariadb-server-version="10.11" --skip-maxscale --skip-tools
+    fi
+  fi
+fi
+if [[ "$Server_OS" = "Ubuntu" ]] || [[ "$Server_OS" = "Debian" ]]; then
+  # Ubuntu/Debian - comprehensive development packages
+  apt-get update -y
+  apt-get install -y \
+    libmariadb-dev \
+    libmariadb-dev-compat \
+    libmysqlclient-dev \
+    pkg-config \
+    build-essential \
+    python3-dev \
+    python3-pip \
+    libssl-dev \
+    libffi-dev \
+    zlib1g-dev \
+    libbz2-dev \
+    libreadline-dev \
+    libsqlite3-dev \
+    libncursesw5-dev \
+    xz-utils \
+    tk-dev \
+    libxml2-dev \
+    libxmlsec1-dev \
+    libffi-dev \
+    liblzma-dev
+elif [[ "$Server_OS" =~ ^(CentOS|RHEL|AlmaLinux|RockyLinux|CloudLinux) ]]; then
+  # RHEL-based systems - comprehensive development packages
+  if command -v dnf >/dev/null 2>&1; then
+    dnf install -y \
+      mariadb-devel \
+      mysql-devel \
+      pkgconfig \
+      gcc \
+      gcc-c++ \
+      python3-devel \
+      openssl-devel \
+      libffi-devel \
+      zlib-devel \
+      bzip2-devel \
+      readline-devel \
+      sqlite-devel \
+      ncurses-devel \
+      xz-devel \
+      tk-devel \
+      libxml2-devel \
+      libxmlsec1-devel \
+      lzma-devel
+  else
+    yum install -y \
+      mariadb-devel \
+      mysql-devel \
+      pkgconfig \
+      gcc \
+      gcc-c++ \
+      python3-devel \
+      openssl-devel \
+      libffi-devel \
+      zlib-devel \
+      bzip2-devel \
+      readline-devel \
+      sqlite-devel \
+      ncurses-devel \
+      xz-devel \
+      tk-devel \
+      libxml2-devel \
+      libxmlsec1-devel \
+      lzma-devel
+  fi
+fi
+
+# Verify pkg-config can find MySQL libraries
+echo "Verifying MySQL development headers installation..."
+if pkg-config --exists mysqlclient; then
+  echo "mysqlclient found via pkg-config"
+elif pkg-config --exists mariadb; then
+  echo "mariadb found via pkg-config"
+else
+  echo "WARNING: MySQL development headers not found via pkg-config"
+  # Try to set environment variables manually
+  export MYSQLCLIENT_CFLAGS="-I/usr/include/mysql"
+  export MYSQLCLIENT_LDFLAGS="-L/usr/lib64/mysql -lmysqlclient"
+  echo "Set MYSQLCLIENT environment variables as fallback"
+fi
+
+# Try pip install with enhanced error handling
+echo "Installing Python requirements with enhanced MySQL support..."
+if ! Retry_Command "pip install --default-timeout=3600 -r /usr/local/requirments.txt"; then
+  echo "Standard pip install failed, trying alternative mysqlclient installation..."
+  
+  # Try installing mysqlclient separately with specific flags
+  echo "Attempting alternative MySQL client installations..."
+  
+  # Try pre-compiled wheels first
+  pip install --no-cache-dir --only-binary=all mysqlclient==2.2.7 || \
+  pip install --no-cache-dir --only-binary=all mysqlclient || \
+  pip install --no-cache-dir --force-reinstall mysqlclient==2.2.7 || \
+  pip install --no-cache-dir --force-reinstall PyMySQL || \
+  pip install --no-cache-dir --force-reinstall mysql-connector-python || \
+  pip install --no-cache-dir --force-reinstall pymysql
+  
+  echo "Alternative MySQL client installation completed"
+  
+  # Then try the requirements again
+  Retry_Command "pip install --default-timeout=3600 -r /usr/local/requirments.txt"
+fi
   Check_Return "requirments" "no_exit"
 
 # Change to /usr/local directory to clone CyberPanel

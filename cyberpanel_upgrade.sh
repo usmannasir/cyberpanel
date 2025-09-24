@@ -1069,6 +1069,21 @@ if ! /usr/local/CyberCP/bin/python -c "import django" 2>/dev/null; then
   # Re-activate virtual environment
   source /usr/local/CyberCP/bin/activate
   
+  # Install MySQL/MariaDB development headers for mysqlclient Python package
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing MySQL/MariaDB development headers..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  if [[ "$Server_OS" = "Ubuntu" ]] || [[ "$Server_OS" = "Debian" ]]; then
+    # Ubuntu/Debian
+    apt-get update -y
+    apt-get install -y libmariadb-dev libmariadb-dev-compat pkg-config build-essential
+  elif [[ "$Server_OS" =~ ^(CentOS|RHEL|AlmaLinux|RockyLinux|CloudLinux) ]]; then
+    # RHEL-based systems
+    if command -v dnf >/dev/null 2>&1; then
+      dnf install -y mariadb-devel pkgconfig gcc python3-devel
+    else
+      yum install -y mariadb-devel pkgconfig gcc python3-devel
+    fi
+  fi
+  
   # Re-install requirements
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Re-installing Python requirements..." | tee -a /var/log/cyberpanel_upgrade_debug.log
   pip install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
