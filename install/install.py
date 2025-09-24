@@ -768,14 +768,40 @@ password="%s"
         logging.InstallLog.writeToFile("Fixing baseTemplate migrations...")
         self.fixBaseTemplateMigrations()
 
+        # Ensure virtual environment is properly set up
+        logging.InstallLog.writeToFile("Ensuring virtual environment is properly set up...")
+        if not self.ensureVirtualEnvironmentSetup():
+            logging.InstallLog.writeToFile("ERROR: Virtual environment setup failed!", 0)
+            preFlightsChecks.stdOut("ERROR: Virtual environment setup failed!", 0)
+            return False
+
+        # Find the correct Python virtual environment path
+        python_paths = [
+            "/usr/local/CyberPanel/bin/python",
+            "/usr/local/CyberCP/bin/python",
+            "/usr/local/CyberPanel-venv/bin/python"
+        ]
+        
+        python_path = None
+        for path in python_paths:
+            if os.path.exists(path):
+                python_path = path
+                logging.InstallLog.writeToFile(f"Found Python virtual environment at: {path}")
+                break
+        
+        if not python_path:
+            logging.InstallLog.writeToFile("ERROR: No Python virtual environment found!", 0)
+            preFlightsChecks.stdOut("ERROR: No Python virtual environment found!", 0)
+            return False
+
         # Create all migrations at once - Django will handle dependencies
         logging.InstallLog.writeToFile("Creating fresh migrations for all apps...")
-        command = "/usr/local/CyberPanel-venv/bin/python manage.py makemigrations --noinput"
+        command = f"{python_path} manage.py makemigrations --noinput"
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
         # Apply all migrations
         logging.InstallLog.writeToFile("Applying all migrations...")
-        command = "/usr/local/CyberPanel-venv/bin/python manage.py migrate --noinput"
+        command = f"{python_path} manage.py migrate --noinput"
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
         logging.InstallLog.writeToFile("Django migrations completed successfully!")
@@ -784,7 +810,7 @@ password="%s"
         if not os.path.exists("/usr/local/CyberCP/public"):
             os.mkdir("/usr/local/CyberCP/public")
 
-        command = "/usr/local/CyberPanel-venv/bin/python manage.py collectstatic --noinput --clear"
+        command = f"{python_path} manage.py collectstatic --noinput --clear"
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
         ## Moving static content to lscpd location
@@ -2428,11 +2454,26 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
     def ensureVirtualEnvironmentSetup(self):
         """Ensure virtual environment is properly set up and accessible"""
         try:
-            # Check if CyberCP virtual environment exists
-            if os.path.exists('/usr/local/CyberCP/bin/python'):
-                preFlightsChecks.stdOut("CyberCP virtual environment found", 1)
-                
-                # Create symlink if CyberPanel path doesn't exist
+            # Check multiple possible virtual environment locations
+            venv_paths = [
+                '/usr/local/CyberCP/bin/python',
+                '/usr/local/CyberPanel/bin/python',
+                '/usr/local/CyberPanel-venv/bin/python'
+            ]
+            
+            found_venv = None
+            for path in venv_paths:
+                if os.path.exists(path):
+                    found_venv = path
+                    preFlightsChecks.stdOut(f"Virtual environment found at: {path}", 1)
+                    break
+            
+            if not found_venv:
+                preFlightsChecks.stdOut("No virtual environment found in expected locations", 0)
+                return False
+            
+            # Create symlinks for compatibility if needed
+            if found_venv == '/usr/local/CyberCP/bin/python':
                 if not os.path.exists('/usr/local/CyberPanel/bin/python'):
                     if not os.path.exists('/usr/local/CyberPanel'):
                         preFlightsChecks.stdOut("Creating CyberPanel symlink for compatibility", 1)
@@ -2440,11 +2481,18 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
                     else:
                         preFlightsChecks.stdOut("CyberPanel directory exists but Python not found", 0)
                         return False
-                
-                return True
-            else:
-                preFlightsChecks.stdOut("CyberCP virtual environment not found", 0)
+            
+            # Test if Python is executable
+            try:
+                result = os.system(f"{found_venv} --version > /dev/null 2>&1")
+                if result != 0:
+                    preFlightsChecks.stdOut(f"Python at {found_venv} is not executable", 0)
+                    return False
+            except Exception as e:
+                preFlightsChecks.stdOut(f"Error testing Python executable: {str(e)}", 0)
                 return False
+                
+            return True
                 
         except Exception as e:
             preFlightsChecks.stdOut(f"Error setting up virtual environment: {str(e)}", 0)
