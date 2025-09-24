@@ -207,113 +207,104 @@ class preFlightsChecks:
         
         return fixes
 
-    def fix_almalinux9_mariadb(self):
-        """Fix AlmaLinux 9 MariaDB installation issues"""
+    def fix_almalinux9_comprehensive(self):
+        """Apply comprehensive AlmaLinux 9 fixes"""
         if not self.is_almalinux9():
             return
         
-        self.stdOut("Applying AlmaLinux 9 MariaDB fixes...", 1)
-        
-        # Apply mesa package fixes for AlmaLinux 9
-        self.stdOut("Applying AlmaLinux 9 mesa package fixes...", 1)
-        try:
-            # Remove potentially conflicting mesa packages
-            command = "dnf remove -y mesa-* 2>/dev/null || true"
-            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-            
-            # Install mesa packages with conflict resolution
-            command = "dnf install -y --allowerasing mesa-dri-drivers mesa-filesystem mesa-libEGL mesa-libGL mesa-libgbm mesa-libglapi mesa-libglapi-devel mesa-libGL-devel mesa-libEGL-devel libdrm libglvnd libglvnd-glx libglvnd-egl"
-            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-            
-            self.stdOut("AlmaLinux 9 mesa package fixes applied successfully", 1)
-        except Exception as e:
-            self.stdOut(f"Warning: Mesa package fixes failed: {str(e)}", 1)
+        self.stdOut("Applying comprehensive AlmaLinux 9 fixes...", 1)
         
         try:
-            # Disable problematic MariaDB MaxScale repository
-            self.stdOut("Disabling problematic MariaDB MaxScale repository...", 1)
-            command = "dnf config-manager --disable mariadb-maxscale 2>/dev/null || true"
+            # Update system packages
+            self.stdOut("Updating system packages...", 1)
+            command = "dnf update -y"
             self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             
-            # Remove problematic repository files
-            self.stdOut("Removing problematic repository files...", 1)
-            problematic_repos = [
-                '/etc/yum.repos.d/mariadb-maxscale.repo',
-                '/etc/yum.repos.d/mariadb-maxscale.repo.rpmnew'
+            # Install essential build tools and dependencies
+            self.stdOut("Installing essential build tools...", 1)
+            command = "dnf groupinstall -y 'Development Tools'"
+            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            
+            command = "dnf install -y epel-release"
+            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            
+            # Install PHP dependencies that are missing
+            self.stdOut("Installing PHP dependencies...", 1)
+            php_deps = [
+                "ImageMagick", "ImageMagick-devel",
+                "gd", "gd-devel",
+                "libicu", "libicu-devel",
+                "oniguruma", "oniguruma-devel",
+                "aspell", "aspell-devel",
+                "libc-client", "libc-client-devel",
+                "libmemcached", "libmemcached-devel",
+                "freetype-devel",
+                "libjpeg-turbo-devel",
+                "libpng-devel",
+                "libwebp-devel",
+                "libXpm-devel",
+                "libzip-devel",
+                "openssl-devel",
+                "sqlite-devel",
+                "libxml2-devel",
+                "libxslt-devel",
+                "curl-devel",
+                "libedit-devel",
+                "readline-devel",
+                "pkgconfig",
+                "cmake",
+                "gcc-c++"
             ]
-            for repo_file in problematic_repos:
-                if os.path.exists(repo_file):
-                    os.remove(repo_file)
-                    self.stdOut(f"Removed {repo_file}", 1)
             
-            # Clean DNF cache
-            self.stdOut("Cleaning DNF cache...", 1)
-            command = "dnf clean all"
+            for dep in php_deps:
+                command = f"dnf install -y {dep}"
+                self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            
+            # Install MariaDB
+            self.stdOut("Installing MariaDB...", 1)
+            command = "dnf install -y mariadb-server mariadb-devel mariadb-client"
             self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             
-            # Install MariaDB from official repository using shell=True for pipe commands
-            self.stdOut("Setting up official MariaDB repository...", 1)
-            command = "curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version='10.11'"
-            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR, shell=True)
+            # Install additional required packages
+            self.stdOut("Installing additional required packages...", 1)
+            additional_packages = [
+                "wget", "curl", "unzip", "zip", "rsync",
+                "firewalld", "psmisc", "git", "python3",
+                "python3-pip", "python3-devel"
+            ]
             
-            # Install MariaDB packages - use correct package names for AlmaLinux 9
-            self.stdOut("Installing MariaDB packages...", 1)
+            for package in additional_packages:
+                command = f"dnf install -y {package}"
+                self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             
-            # First, try to install just mariadb-server
-            command = "dnf install -y mariadb-server"
-            result = self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            # Configure firewall
+            self.stdOut("Configuring firewall...", 1)
+            command = "systemctl enable firewalld"
+            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             
-            if result == 0:
-                self.stdOut("Successfully installed mariadb-server", 1)
-                
-                # Try to install development packages
-                dev_packages = ["mariadb-devel", "mariadb-connector-c-devel", "mysql-devel"]
-                for dev_pkg in dev_packages:
-                    command = f"dnf install -y {dev_pkg}"
-                    result = self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-                    if result == 0:
-                        self.stdOut(f"Successfully installed {dev_pkg}", 1)
-                        break
-                    else:
-                        self.stdOut(f"Could not install {dev_pkg}, trying next...", 1)
-                
-                # Try to install client packages
-                client_packages = ["mariadb-client", "mariadb-connector-c"]
-                for client_pkg in client_packages:
-                    command = f"dnf install -y {client_pkg}"
-                    result = self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-                    if result == 0:
-                        self.stdOut(f"Successfully installed {client_pkg}", 1)
-                        break
-                    else:
-                        self.stdOut(f"Could not install {client_pkg}, trying next...", 1)
-            else:
-                self.stdOut("Warning: Could not install MariaDB server", 0)
+            command = "systemctl start firewalld"
+            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             
-            # Check if MariaDB service exists and create it if needed
-            self.stdOut("Checking MariaDB service configuration...", 1)
-            if not os.path.exists('/usr/lib/systemd/system/mariadb.service'):
-                # Try to find the correct service file
-                possible_services = [
-                    '/usr/lib/systemd/system/mysqld.service',
-                    '/usr/lib/systemd/system/mysql.service'
-                ]
-                
-                for service_file in possible_services:
-                    if os.path.exists(service_file):
-                        self.stdOut(f"Found service file: {service_file}", 1)
-                        # Create symlink to mariadb.service
-                        try:
-                            os.symlink(service_file, '/usr/lib/systemd/system/mariadb.service')
-                            self.stdOut("Created symlink for mariadb.service", 1)
-                        except OSError as e:
-                            self.stdOut(f"Could not create symlink: {str(e)}", 0)
-                        break
+            # Add required firewall ports
+            self.stdOut("Adding firewall ports...", 1)
+            ports = [
+                "8090/tcp", "7080/tcp", "80/tcp", "443/tcp",
+                "21/tcp", "25/tcp", "587/tcp", "465/tcp",
+                "110/tcp", "143/tcp", "993/tcp", "995/tcp",
+                "53/tcp", "53/udp", "8888/tcp", "40110-40210/tcp"
+            ]
             
-            self.stdOut("AlmaLinux 9 MariaDB fixes completed", 1)
+            for port in ports:
+                command = f"firewall-cmd --permanent --add-port={port}"
+                self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            
+            command = "firewall-cmd --reload"
+            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            
+            self.stdOut("AlmaLinux 9 comprehensive fixes completed successfully!", 1)
             
         except Exception as e:
-            self.stdOut(f"Error applying AlmaLinux 9 MariaDB fixes: {str(e)}", 0)
+            self.stdOut(f"Error applying AlmaLinux 9 comprehensive fixes: {str(e)}", 0)
 
     def fix_rhel_family_common(self):
         """Fix common RHEL family (AlmaLinux, Rocky, RHEL, CloudLinux) issues"""
@@ -642,8 +633,26 @@ class preFlightsChecks:
         """Start MariaDB service"""
         try:
             self.stdOut("Starting MariaDB service...", 1)
-            self.manage_service('mariadb', 'start')
-            self.manage_service('mariadb', 'enable')
+            
+            # Try different service names
+            service_names = ['mariadb', 'mysql', 'mysqld']
+            started = False
+            
+            for service_name in service_names:
+                try:
+                    self.manage_service(service_name, 'start')
+                    self.manage_service(service_name, 'enable')
+                    self.stdOut(f"Successfully started {service_name} service", 1)
+                    started = True
+                    break
+                except Exception as e:
+                    self.stdOut(f"Could not start {service_name}: {str(e)}", 0)
+                    continue
+            
+            if not started:
+                self.stdOut("Warning: Could not start MariaDB service", 0)
+                return False
+                
             return True
         except Exception as e:
             self.stdOut(f"Error starting MariaDB: {str(e)}", 0)
@@ -1338,43 +1347,6 @@ class preFlightsChecks:
         self.stdOut("Install psmisc")
         self.install_package("psmisc")
 
-    def install_php_dependencies(self):
-        """Install missing dependencies for PHP extensions"""
-        try:
-            self.stdOut("Installing PHP dependencies...", 1)
-            
-            # Install ImageMagick for imagick extension
-            command = "dnf install -y ImageMagick ImageMagick-devel"
-            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-            
-            # Install GD library for gd extension
-            command = "dnf install -y gd gd-devel"
-            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-            
-            # Install ICU for intl extension
-            command = "dnf install -y libicu libicu-devel"
-            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-            
-            # Install oniguruma for mbstring extension
-            command = "dnf install -y oniguruma oniguruma-devel"
-            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-            
-            # Install aspell for pspell extension
-            command = "dnf install -y aspell aspell-devel"
-            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-            
-            # Install libc-client for imap extension
-            command = "dnf install -y libc-client libc-client-devel"
-            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-            
-            # Install memcached for memcached extension
-            command = "dnf install -y libmemcached libmemcached-devel"
-            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-            
-            self.stdOut("PHP dependencies installed successfully", 1)
-            
-        except Exception as e:
-            self.stdOut(f"Warning: Some PHP dependencies could not be installed: {str(e)}", 0)
 
     def generate_secure_env_file(self, mysql_root_password, cyberpanel_db_password):
         """
@@ -4716,13 +4688,17 @@ def main():
     # Note: OS-specific fixes are now applied earlier in the installation process
     # The installCyberPanel.Main() functionality has been integrated into the main installation flow
 
+    # Apply AlmaLinux 9 comprehensive fixes first if needed
+    if checks.is_almalinux9():
+        checks.fix_almalinux9_comprehensive()
+
     # Install core services in the correct order
     checks.installLiteSpeed(ent, serial)
     checks.installMySQL(mysql)
     checks.installPowerDNS()
     checks.installPureFTPD()
 
-    checks.install_php_dependencies()
+    # Setup PHP and Composer (dependencies already installed by comprehensive fix)
     checks.setupPHPAndComposer()
     checks.fix_selinux_issue()
     checks.install_psmisc()
