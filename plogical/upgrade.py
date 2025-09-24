@@ -3587,7 +3587,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             
             # Install MariaDB from official repository
             Upgrade.stdOut("Setting up official MariaDB repository...", 1)
-            command = "curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version='10.11'"
+            command = "curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version='12.1'"
             result = subprocess.run(command, shell=True, capture_output=True, text=True)
             if result.returncode != 0:
                 Upgrade.stdOut(f"Warning: MariaDB repo setup failed: {result.stderr}", 0)

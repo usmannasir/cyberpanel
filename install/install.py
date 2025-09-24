@@ -600,7 +600,7 @@ class preFlightsChecks:
                 self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
                 
                 # Setup MariaDB repository
-                command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=10.11'
+                command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=12.1'
                 self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
                 
                 command = 'DEBIAN_FRONTEND=noninteractive apt-get update -y'
@@ -611,7 +611,7 @@ class preFlightsChecks:
                 
             else:
                 # RHEL-based MariaDB installation
-                command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=10.11'
+                command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=12.1'
                 self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
                 
                 command = 'dnf install mariadb-server mariadb-devel mariadb-client-utils -y'
