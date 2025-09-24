@@ -77,6 +77,776 @@ class preFlightsChecks:
     def is_debian_family(self):
         """Check if distro is Ubuntu or Debian 12"""
         return self.distro in [ubuntu, debian12]
+    
+    def detect_os_info(self):
+        """Detect OS information for all supported platforms"""
+        os_info = {
+            'name': 'unknown',
+            'version': 'unknown',
+            'major_version': 0,
+            'family': 'unknown'
+        }
+        
+        # Check for Ubuntu
+        if os.path.exists('/etc/os-release'):
+            with open('/etc/os-release', 'r') as f:
+                content = f.read()
+                if 'Ubuntu' in content:
+                    os_info['family'] = 'ubuntu'
+                    os_info['name'] = 'ubuntu'
+                    # Extract version
+                    for line in content.split('\n'):
+                        if line.startswith('VERSION_ID='):
+                            version = line.split('=')[1].strip('"')
+                            os_info['version'] = version
+                            os_info['major_version'] = int(version.split('.')[0])
+                            break
+                elif 'Debian' in content:
+                    os_info['family'] = 'debian'
+                    os_info['name'] = 'debian'
+                    for line in content.split('\n'):
+                        if line.startswith('VERSION_ID='):
+                            version = line.split('=')[1].strip('"')
+                            os_info['version'] = version
+                            os_info['major_version'] = int(version)
+                            break
+                elif 'AlmaLinux' in content:
+                    os_info['family'] = 'rhel'
+                    os_info['name'] = 'almalinux'
+                    for line in content.split('\n'):
+                        if line.startswith('VERSION_ID='):
+                            version = line.split('=')[1].strip('"')
+                            os_info['version'] = version
+                            os_info['major_version'] = int(version.split('.')[0])
+                            break
+                elif 'Rocky Linux' in content:
+                    os_info['family'] = 'rhel'
+                    os_info['name'] = 'rocky'
+                    for line in content.split('\n'):
+                        if line.startswith('VERSION_ID='):
+                            version = line.split('=')[1].strip('"')
+                            os_info['version'] = version
+                            os_info['major_version'] = int(version.split('.')[0])
+                            break
+                elif 'Red Hat Enterprise Linux' in content:
+                    os_info['family'] = 'rhel'
+                    os_info['name'] = 'rhel'
+                    for line in content.split('\n'):
+                        if line.startswith('VERSION_ID='):
+                            version = line.split('=')[1].strip('"')
+                            os_info['version'] = version
+                            os_info['major_version'] = int(version.split('.')[0])
+                            break
+                elif 'CloudLinux' in content:
+                    os_info['family'] = 'rhel'
+                    os_info['name'] = 'cloudlinux'
+                    for line in content.split('\n'):
+                        if line.startswith('VERSION_ID='):
+                            version = line.split('=')[1].strip('"')
+                            os_info['version'] = version
+                            os_info['major_version'] = int(version.split('.')[0])
+                            break
+        
+        # Check for CentOS (legacy)
+        if os.path.exists('/etc/redhat-release'):
+            with open('/etc/redhat-release', 'r') as f:
+                content = f.read()
+                if 'CentOS' in content:
+                    os_info['family'] = 'rhel'
+                    os_info['name'] = 'centos'
+                    # Extract version from CentOS release
+                    import re
+                    match = re.search(r'CentOS.*?(\d+)', content)
+                    if match:
+                        os_info['major_version'] = int(match.group(1))
+                        os_info['version'] = match.group(1)
+        
+        return os_info
+
+    def is_almalinux9(self):
+        """Check if running on AlmaLinux 9"""
+        os_info = self.detect_os_info()
+        return os_info['name'] == 'almalinux' and os_info['major_version'] == 9
+
+    def is_ubuntu(self):
+        """Check if running on Ubuntu"""
+        os_info = self.detect_os_info()
+        return os_info['family'] == 'ubuntu'
+
+    def is_debian(self):
+        """Check if running on Debian"""
+        os_info = self.detect_os_info()
+        return os_info['family'] == 'debian'
+
+    def is_rhel_family(self):
+        """Check if running on RHEL family (RHEL, AlmaLinux, Rocky, CloudLinux, CentOS)"""
+        os_info = self.detect_os_info()
+        return os_info['family'] == 'rhel'
+
+    def get_os_specific_fixes_needed(self):
+        """Determine which fixes are needed for the current OS"""
+        os_info = self.detect_os_info()
+        fixes = []
+        
+        if os_info['name'] == 'almalinux' and os_info['major_version'] == 9:
+            fixes.extend(['mariadb', 'services', 'litespeed', 'mysql_gpg'])
+        elif os_info['name'] == 'almalinux' and os_info['major_version'] == 10:
+            fixes.extend(['mariadb', 'services', 'litespeed'])
+        elif os_info['name'] == 'rocky' and os_info['major_version'] >= 8:
+            fixes.extend(['mariadb', 'services'])
+        elif os_info['name'] == 'rhel' and os_info['major_version'] >= 8:
+            fixes.extend(['mariadb', 'services'])
+        elif os_info['name'] == 'cloudlinux' and os_info['major_version'] >= 8:
+            fixes.extend(['mariadb', 'services'])
+        elif os_info['name'] == 'centos' and os_info['major_version'] == 7:
+            fixes.extend(['legacy_centos'])
+        elif os_info['family'] == 'ubuntu':
+            fixes.extend(['ubuntu_specific'])
+        elif os_info['family'] == 'debian':
+            fixes.extend(['debian_specific'])
+        
+        return fixes
+
+    def fix_almalinux9_mariadb(self):
+        """Fix AlmaLinux 9 MariaDB installation issues"""
+        if not self.is_almalinux9():
+            return
+        
+        self.stdOut("Applying AlmaLinux 9 MariaDB fixes...", 1)
+        
+        # Apply mesa package fixes for AlmaLinux 9
+        self.stdOut("Applying AlmaLinux 9 mesa package fixes...", 1)
+        try:
+            # Remove potentially conflicting mesa packages
+            command = "dnf remove -y mesa-* 2>/dev/null || true"
+            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            
+            # Install mesa packages with conflict resolution
+            command = "dnf install -y --allowerasing mesa-dri-drivers mesa-filesystem mesa-libEGL mesa-libGL mesa-libgbm mesa-libglapi mesa-libglapi-devel mesa-libGL-devel mesa-libEGL-devel libdrm libglvnd libglvnd-glx libglvnd-egl"
+            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            
+            self.stdOut("AlmaLinux 9 mesa package fixes applied successfully", 1)
+        except Exception as e:
+            self.stdOut(f"Warning: Mesa package fixes failed: {str(e)}", 1)
+        
+        try:
+            # Disable problematic MariaDB MaxScale repository
+            self.stdOut("Disabling problematic MariaDB MaxScale repository...", 1)
+            command = "dnf config-manager --disable mariadb-maxscale 2>/dev/null || true"
+            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            
+            # Remove problematic repository files
+            self.stdOut("Removing problematic repository files...", 1)
+            problematic_repos = [
+                '/etc/yum.repos.d/mariadb-maxscale.repo',
+                '/etc/yum.repos.d/mariadb-maxscale.repo.rpmnew'
+            ]
+            for repo_file in problematic_repos:
+                if os.path.exists(repo_file):
+                    os.remove(repo_file)
+                    self.stdOut(f"Removed {repo_file}", 1)
+            
+            # Clean DNF cache
+            self.stdOut("Cleaning DNF cache...", 1)
+            command = "dnf clean all"
+            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            
+            # Install MariaDB from official repository using shell=True for pipe commands
+            self.stdOut("Setting up official MariaDB repository...", 1)
+            command = "curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version='10.11'"
+            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR, shell=True)
+            
+            # Install MariaDB packages - use correct package names for AlmaLinux 9
+            self.stdOut("Installing MariaDB packages...", 1)
+            # Try different package combinations for AlmaLinux 9
+            mariadb_packages_attempts = [
+                "mariadb-server mariadb-devel mariadb-client",
+                "mariadb-server mariadb-devel",
+                "mariadb-server mariadb-devel mariadb-common"
+            ]
+            
+            installed = False
+            for packages in mariadb_packages_attempts:
+                command = f"dnf install -y {packages}"
+                result = self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                if result == 0:
+                    self.stdOut(f"Successfully installed MariaDB packages: {packages}", 1)
+                    installed = True
+                    break
+                else:
+                    self.stdOut(f"Failed to install packages: {packages}, trying next combination...", 1)
+            
+            if not installed:
+                self.stdOut("Warning: Some MariaDB packages may not have installed correctly", 0)
+            
+            # Check if MariaDB service exists and create it if needed
+            self.stdOut("Checking MariaDB service configuration...", 1)
+            if not os.path.exists('/usr/lib/systemd/system/mariadb.service'):
+                # Try to find the correct service file
+                possible_services = [
+                    '/usr/lib/systemd/system/mysqld.service',
+                    '/usr/lib/systemd/system/mysql.service'
+                ]
+                
+                for service_file in possible_services:
+                    if os.path.exists(service_file):
+                        self.stdOut(f"Found service file: {service_file}", 1)
+                        # Create symlink to mariadb.service
+                        try:
+                            os.symlink(service_file, '/usr/lib/systemd/system/mariadb.service')
+                            self.stdOut("Created symlink for mariadb.service", 1)
+                        except OSError as e:
+                            self.stdOut(f"Could not create symlink: {str(e)}", 0)
+                        break
+            
+            self.stdOut("AlmaLinux 9 MariaDB fixes completed", 1)
+            
+        except Exception as e:
+            self.stdOut(f"Error applying AlmaLinux 9 MariaDB fixes: {str(e)}", 0)
+
+    def fix_rhel_family_common(self):
+        """Fix common RHEL family (AlmaLinux, Rocky, RHEL, CloudLinux) issues"""
+        try:
+            self.stdOut("Applying RHEL family common fixes...", 1)
+            
+            # Install EPEL repository
+            self.stdOut("Installing EPEL repository...", 1)
+            try:
+                self.call('dnf install -y epel-release', self.distro, 'Installing EPEL', 'Installing EPEL', 1, 1, os.EX_OSERR)
+            except:
+                try:
+                    self.call('yum install -y epel-release', self.distro, 'Installing EPEL (yum)', 'Installing EPEL (yum)', 1, 1, os.EX_OSERR)
+                except:
+                    self.stdOut("Warning: Could not install EPEL", 1)
+            
+            # Apply graphics library fixes for RHEL 9+ systems
+            os_info = self.detect_os_info()
+            if os_info['major_version'] >= 9:
+                self.stdOut("Applying RHEL 9+ graphics library fixes...", 1)
+                try:
+                    command = "dnf install -y --allowerasing mesa-dri-drivers mesa-filesystem mesa-libEGL mesa-libGL mesa-libgbm mesa-libglapi libdrm libglvnd libglvnd-glx libglvnd-egl"
+                    self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                    self.stdOut("RHEL 9+ graphics library fixes applied successfully", 1)
+                except Exception as e:
+                    self.stdOut(f"Warning: Graphics library fixes failed: {str(e)}", 1)
+            
+            # Install common dependencies
+            self.stdOut("Installing common RHEL dependencies...", 1)
+            common_deps = [
+                'curl',
+                'wget',
+                'git',
+                'python3',
+                'python3-pip',
+                'gcc',
+                'gcc-c++',
+                'make',
+                'cmake',
+                'pcre2-devel',
+                'openssl-devel',
+                'zlib-devel'
+            ]
+            
+            for dep in common_deps:
+                try:
+                    self.call(f'dnf install -y {dep}', self.distro, f'Installing {dep}', f'Installing {dep}', 1, 0, os.EX_OSERR)
+                except:
+                    try:
+                        self.call(f'yum install -y {dep}', self.distro, f'Installing {dep} (yum)', f'Installing {dep} (yum)', 1, 0, os.EX_OSERR)
+                    except:
+                        self.stdOut(f"Warning: Could not install {dep}", 1)
+            
+            return True
+            
+        except Exception as e:
+            self.stdOut(f"Error in fix_rhel_family_common: {str(e)}", 0)
+            return False
+
+    def fix_ubuntu_specific(self):
+        """Fix Ubuntu-specific installation issues"""
+        try:
+            self.stdOut("Applying Ubuntu-specific fixes...", 1)
+            
+            # Install required dependencies
+            self.stdOut("Installing Ubuntu dependencies...", 1)
+            ubuntu_deps = [
+                'software-properties-common',
+                'apt-transport-https',
+                'curl',
+                'wget',
+                'gnupg',
+                'lsb-release'
+            ]
+            
+            for dep in ubuntu_deps:
+                try:
+                    self.call(f'apt-get install -y {dep}', self.distro, f'Installing {dep}', f'Installing {dep}', 1, 0, os.EX_OSERR)
+                except:
+                    self.stdOut(f"Warning: Could not install {dep}", 1)
+            
+            # Ubuntu 24.04 specific fixes
+            os_info = self.detect_os_info()
+            if os_info['name'] == 'ubuntu' and os_info['major_version'] >= 24:
+                self.stdOut("Applying Ubuntu 24.04 specific fixes...", 1)
+                try:
+                    command = "DEBIAN_FRONTEND=noninteractive apt-get install -y python3-venv python3-dev"
+                    self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                    self.stdOut("Ubuntu 24.04 specific fixes applied successfully", 1)
+                except Exception as e:
+                    self.stdOut(f"Warning: Ubuntu 24.04 fixes failed: {str(e)}", 1)
+            
+            # Update package lists
+            self.call('apt-get update', self.distro, 'Updating package lists', 'Updating package lists', 1, 1, os.EX_OSERR)
+            
+            return True
+            
+        except Exception as e:
+            self.stdOut(f"Error in fix_ubuntu_specific: {str(e)}", 0)
+            return False
+
+    def fix_debian_specific(self):
+        """Fix Debian-specific installation issues"""
+        try:
+            self.stdOut("Applying Debian-specific fixes...", 1)
+            
+            # Install required dependencies
+            self.stdOut("Installing Debian dependencies...", 1)
+            debian_deps = [
+                'software-properties-common',
+                'apt-transport-https',
+                'curl',
+                'wget',
+                'gnupg',
+                'lsb-release'
+            ]
+            
+            for dep in debian_deps:
+                try:
+                    self.call(f'apt-get install -y {dep}', self.distro, f'Installing {dep}', f'Installing {dep}', 1, 0, os.EX_OSERR)
+                except:
+                    self.stdOut(f"Warning: Could not install {dep}", 1)
+            
+            # Debian 13 specific fixes
+            os_info = self.detect_os_info()
+            if os_info['name'] == 'debian' and os_info['major_version'] >= 13:
+                self.stdOut("Applying Debian 13 specific fixes...", 1)
+                try:
+                    command = "DEBIAN_FRONTEND=noninteractive apt-get install -y python3-venv python3-dev build-essential"
+                    self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                    self.stdOut("Debian 13 specific fixes applied successfully", 1)
+                except Exception as e:
+                    self.stdOut(f"Warning: Debian 13 fixes failed: {str(e)}", 1)
+            
+            # Update package lists
+            self.call('apt-get update', self.distro, 'Updating package lists', 'Updating package lists', 1, 1, os.EX_OSERR)
+            
+            return True
+            
+        except Exception as e:
+            self.stdOut(f"Error in fix_debian_specific: {str(e)}", 0)
+            return False
+
+    def apply_os_specific_fixes(self):
+        """Apply OS-specific fixes based on detected OS"""
+        try:
+            os_info = self.detect_os_info()
+            fixes_needed = self.get_os_specific_fixes_needed()
+            
+            self.stdOut(f"Detected OS: {os_info['name']} {os_info['version']} (family: {os_info['family']})", 1)
+            self.stdOut(f"Applying fixes: {', '.join(fixes_needed)}", 1)
+            
+            # Apply common RHEL family fixes first
+            if self.is_rhel_family():
+                self.fix_rhel_family_common()
+            
+            # Apply specific fixes
+            for fix in fixes_needed:
+                if fix == 'mariadb' and self.is_almalinux9():
+                    self.fix_almalinux9_mariadb()
+                elif fix == 'ubuntu_specific' and self.is_ubuntu():
+                    self.fix_ubuntu_specific()
+                elif fix == 'debian_specific' and self.is_debian():
+                    self.fix_debian_specific()
+            
+            self.stdOut("OS-specific fixes completed successfully", 1)
+            return True
+            
+        except Exception as e:
+            self.stdOut(f"Error applying OS-specific fixes: {str(e)}", 0)
+            return False
+
+    def installLiteSpeed(self, ent, serial):
+        """Install LiteSpeed Web Server (OpenLiteSpeed or Enterprise)"""
+        try:
+            self.stdOut("Installing LiteSpeed Web Server...", 1)
+            
+            if ent == 0:
+                # Install OpenLiteSpeed
+                self.stdOut("Installing OpenLiteSpeed...", 1)
+                if self.distro == ubuntu:
+                    self.install_package('openlitespeed')
+                else:
+                    self.install_package('openlitespeed')
+                
+                # Configure OpenLiteSpeed
+                self.fix_ols_configs()
+                self.changePortTo80()
+            else:
+                # Install LiteSpeed Enterprise
+                self.stdOut("Installing LiteSpeed Enterprise...", 1)
+                self.installLiteSpeedEnterprise(serial)
+            
+            self.stdOut("LiteSpeed Web Server installed successfully", 1)
+            return True
+            
+        except Exception as e:
+            self.stdOut(f"Error installing LiteSpeed: {str(e)}", 0)
+            return False
+
+    def installLiteSpeedEnterprise(self, serial):
+        """Install LiteSpeed Enterprise"""
+        try:
+            # Get the latest LSWS Enterprise version
+            lsws_version = self.getLatestLSWSVersion()
+            
+            # Download and install LiteSpeed Enterprise
+            if self.ISARM():
+                command = f'wget https://www.litespeedtech.com/packages/6.0/lsws-{lsws_version}-ent-aarch64-linux.tar.gz'
+            else:
+                command = f'wget https://www.litespeedtech.com/packages/6.0/lsws-{lsws_version}-ent-x86_64-linux.tar.gz'
+            
+            self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            
+            if self.ISARM():
+                command = f'tar zxf lsws-{lsws_version}-ent-aarch64-linux.tar.gz'
+            else:
+                command = f'tar zxf lsws-{lsws_version}-ent-x86_64-linux.tar.gz'
+            
+            self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            
+            # Handle license
+            if str.lower(serial) == 'trial':
+                command = f'wget -q --output-document=lsws-{lsws_version}/trial.key http://license.litespeedtech.com/reseller/trial.key'
+            elif serial == '1111-2222-3333-4444':
+                command = f'wget -q --output-document=/root/cyberpanel/install/lsws-{lsws_version}/trial.key http://license.litespeedtech.com/reseller/trial.key'
+                self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            else:
+                writeSerial = open(f'lsws-{lsws_version}/serial.no', 'w')
+                writeSerial.writelines(serial)
+                writeSerial.close()
+            
+            # Install LiteSpeed Enterprise
+            os.chdir(f'lsws-{lsws_version}')
+            command = 'chmod +x install.sh'
+            self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            command = 'chmod +x functions.sh'
+            self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            command = './install.sh'
+            self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            os.chdir(self.cwd)
+            
+            return True
+            
+        except Exception as e:
+            self.stdOut(f"Error installing LiteSpeed Enterprise: {str(e)}", 0)
+            return False
+
+    def getLatestLSWSVersion(self):
+        """Fetch the latest LSWS Enterprise version"""
+        try:
+            import urllib.request
+            import re
+            url = "https://www.litespeedtech.com/products/litespeed-web-server/download"
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req, timeout=10) as response:
+                html = response.read().decode('utf-8')
+            
+            version_pattern = r'lsws-(\d+\.\d+\.\d+)-ent'
+            versions = re.findall(version_pattern, html)
+            
+            if versions:
+                latest_version = sorted(versions, key=lambda v: [int(x) for x in v.split('.')])[-1]
+                return latest_version
+        except:
+            pass
+        
+        return "6.3.4"  # Fallback version
+
+    def ISARM(self):
+        """Check if running on ARM architecture"""
+        try:
+            command = 'uname -a'
+            result = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
+            return 'aarch64' in result.stdout
+        except:
+            return False
+
+    def installMySQL(self, mysql):
+        """Install MySQL/MariaDB"""
+        try:
+            self.stdOut("Installing MySQL/MariaDB...", 1)
+            
+            if self.distro == ubuntu:
+                # Ubuntu MariaDB installation
+                command = 'DEBIAN_FRONTEND=noninteractive apt-get install software-properties-common apt-transport-https curl -y'
+                self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+                
+                command = "mkdir -p /etc/apt/keyrings"
+                self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+                
+                command = "curl -o /etc/apt/keyrings/mariadb-keyring.pgp 'https://mariadb.org/mariadb_release_signing_key.pgp'"
+                self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+                
+                # Setup MariaDB repository
+                command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=10.11'
+                self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+                
+                command = 'DEBIAN_FRONTEND=noninteractive apt-get update -y'
+                self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+                
+                command = "DEBIAN_FRONTEND=noninteractive apt-get install mariadb-server -y"
+                self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+                
+            else:
+                # RHEL-based MariaDB installation
+                command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=10.11'
+                self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+                
+                command = 'dnf install mariadb-server mariadb-devel mariadb-client-utils -y'
+                self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+            
+            # Start and enable MariaDB
+            self.startMariaDB()
+            self.changeMYSQLRootPassword()
+            self.fixMariaDB()
+            
+            self.stdOut("MySQL/MariaDB installed successfully", 1)
+            return True
+            
+        except Exception as e:
+            self.stdOut(f"Error installing MySQL/MariaDB: {str(e)}", 0)
+            return False
+
+    def startMariaDB(self):
+        """Start MariaDB service"""
+        try:
+            self.stdOut("Starting MariaDB service...", 1)
+            self.manage_service('mariadb', 'start')
+            self.manage_service('mariadb', 'enable')
+            return True
+        except Exception as e:
+            self.stdOut(f"Error starting MariaDB: {str(e)}", 0)
+            return False
+
+    def changeMYSQLRootPassword(self):
+        """Change MySQL root password"""
+        try:
+            if self.remotemysql == 'OFF':
+                passwordCMD = "use mysql;DROP DATABASE IF EXISTS test;DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%%';GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '%s';flush privileges;" % (self.mysql_Root_password)
+                
+                mysql_commands = ['mysql', 'mariadb', '/usr/bin/mysql', '/usr/bin/mariadb']
+                mysql_cmd = None
+                
+                for cmd in mysql_commands:
+                    if os.path.exists(cmd) or self.command_exists(cmd):
+                        mysql_cmd = cmd
+                        break
+                
+                if mysql_cmd:
+                    command = f'{mysql_cmd} -u root -e "{passwordCMD}"'
+                    self.call(command, self.distro, command, command, 0, 0, os.EX_OSERR)
+                
+        except Exception as e:
+            self.stdOut(f"Error changing MySQL root password: {str(e)}", 0)
+
+    def command_exists(self, command):
+        """Check if a command exists in PATH"""
+        try:
+            result = subprocess.run(['which', command], capture_output=True, text=True)
+            return result.returncode == 0
+        except:
+            return False
+
+    def fixMariaDB(self):
+        """Configure MariaDB for CyberPanel"""
+        try:
+            self.stdOut("Configuring MariaDB for CyberPanel...", 1)
+            
+            # Connect to MySQL and configure
+            import MySQLdb as mariadb
+            conn = mariadb.connect(user='root', passwd=self.mysql_Root_password)
+            cursor = conn.cursor()
+            cursor.execute('set global innodb_file_per_table = on;')
+            try:
+                cursor.execute('set global innodb_file_format = Barracuda;')
+                cursor.execute('set global innodb_large_prefix = on;')
+            except:
+                pass
+            cursor.close()
+            conn.close()
+            
+            # Update MariaDB configuration
+            try:
+                fileName = '/etc/mysql/mariadb.conf.d/50-server.cnf'
+                if os.path.exists(fileName):
+                    with open(fileName, 'r') as f:
+                        data = f.readlines()
+                    
+                    with open(fileName, 'w') as f:
+                        for line in data:
+                            f.write(line.replace('utf8mb4', 'utf8'))
+            except:
+                pass
+            
+            # Restart MariaDB
+            self.manage_service('mariadb', 'restart')
+            
+            self.stdOut("MariaDB configured successfully", 1)
+            return True
+            
+        except Exception as e:
+            self.stdOut(f"Error configuring MariaDB: {str(e)}", 0)
+            return False
+
+    def installPowerDNS(self):
+        """Install PowerDNS"""
+        try:
+            self.stdOut("Installing PowerDNS...", 1)
+            
+            if self.distro == ubuntu:
+                # Stop and disable systemd-resolved
+                self.manage_service('systemd-resolved', 'stop')
+                self.manage_service('systemd-resolved.service', 'disable')
+                
+                # Create temporary resolv.conf
+                try:
+                    os.rename('/etc/resolv.conf', '/etc/resolv.conf.bak')
+                except:
+                    pass
+                
+                with open('/etc/resolv.conf', 'w') as f:
+                    f.write('nameserver 8.8.8.8\n')
+                    f.write('nameserver 8.8.4.4\n')
+                
+                # Install PowerDNS
+                command = "DEBIAN_FRONTEND=noninteractive apt-get update"
+                self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+                
+                command = "DEBIAN_FRONTEND=noninteractive apt-get -y install pdns-server pdns-backend-mysql"
+                self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+                
+                command = 'systemctl stop pdns || true'
+                self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR, True)
+                
+            else:
+                # RHEL-based PowerDNS installation
+                self.install_package('pdns pdns-backend-mysql')
+            
+            self.stdOut("PowerDNS installed successfully", 1)
+            return True
+            
+        except Exception as e:
+            self.stdOut(f"Error installing PowerDNS: {str(e)}", 0)
+            return False
+
+    def installPureFTPD(self):
+        """Install Pure-FTPd"""
+        try:
+            self.stdOut("Installing Pure-FTPd...", 1)
+            
+            if self.distro == ubuntu:
+                self.install_package('pure-ftpd-mysql')
+            else:
+                self.install_package('pure-ftpd')
+            
+            # Enable service
+            service_name = self.pureFTPDServiceName(self.distro)
+            command = f"systemctl enable {service_name}"
+            self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            
+            # Create FTP groups and users
+            command = 'groupadd -g 2001 ftpgroup'
+            self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            
+            command = 'useradd -u 2001 -s /bin/false -d /bin/null -c "pureftpd user" -g ftpgroup ftpuser'
+            self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            
+            self.stdOut("Pure-FTPd installed successfully", 1)
+            return True
+            
+        except Exception as e:
+            self.stdOut(f"Error installing Pure-FTPd: {str(e)}", 0)
+            return False
+
+    def fix_ols_configs(self):
+        """Fix OpenLiteSpeed configurations"""
+        try:
+            self.stdOut("Fixing OpenLiteSpeed configurations...", 1)
+            
+            # Remove example virtual host
+            data = open(self.server_root_path + "conf/httpd_config.conf", 'r').readlines()
+            writeDataToFile = open(self.server_root_path + "conf/httpd_config.conf", 'w')
+            
+            for items in data:
+                if items.find("map") > -1 and items.find("Example") > -1:
+                    continue
+                else:
+                    writeDataToFile.writelines(items)
+            
+            writeDataToFile.close()
+            
+            self.stdOut("OpenLiteSpeed configurations fixed", 1)
+            return True
+            
+        except Exception as e:
+            self.stdOut(f"Error fixing OpenLiteSpeed configs: {str(e)}", 0)
+            return False
+
+    def changePortTo80(self):
+        """Change OpenLiteSpeed port to 80"""
+        try:
+            self.stdOut("Changing OpenLiteSpeed port to 80...", 1)
+            
+            file_path = self.server_root_path + "conf/httpd_config.conf"
+            if self.modify_file_content(file_path, {"*:8088": "*:80"}):
+                self.stdOut("OpenLiteSpeed port changed to 80", 1)
+                self.reStartLiteSpeed()
+                return True
+            else:
+                return False
+                
+        except Exception as e:
+            self.stdOut(f"Error changing port to 80: {str(e)}", 0)
+            return False
+
+    def modify_file_content(self, file_path, replacements):
+        """Generic file content modification"""
+        try:
+            with open(file_path, 'r') as f:
+                data = f.readlines()
+            
+            with open(file_path, 'w') as f:
+                for line in data:
+                    modified_line = line
+                    for old, new in replacements.items():
+                        if old in line:
+                            modified_line = line.replace(old, new)
+                            break
+                    f.write(modified_line)
+            return True
+        except Exception as e:
+            self.stdOut(f"Error modifying file {file_path}: {str(e)}", 0)
+            return False
+
+    def reStartLiteSpeed(self):
+        """Restart LiteSpeed"""
+        try:
+            command = f"{self.server_root_path}bin/lswsctrl restart"
+            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            return True
+        except Exception as e:
+            self.stdOut(f"Error restarting LiteSpeed: {str(e)}", 0)
+            return False
 
     def get_service_name(self, service):
         """Get the correct service name for the current distribution"""
@@ -137,6 +907,8 @@ class preFlightsChecks:
         self.mysqlpassword = mysqlpassword
         self.mysqlport = mysqlport
         self.mysqldb = mysqldb
+        self.cyberpanel_db_password = None  # Will be set during password generation
+        self.mysql_Root_password = install_utils.generate_pass()  # Generate MySQL root password
 
 
     def installQuota(self,):
@@ -715,16 +1487,14 @@ password="%s"
         # For CentOS, we need to get the actual cyberpanel database password
         # which is different from the root password
         if self.distro == centos:
-            # On CentOS, InstallCyberPanel.mysqlPassword is different from root password
-            # We need to import and use it directly
-            import installCyberPanel
-            cyberpanel_db_password = installCyberPanel.InstallCyberPanel.mysqlPassword
+            # On CentOS, generate a separate password for cyberpanel database
+            self.cyberpanel_db_password = install_utils.generate_pass()
         else:
             # On Ubuntu/Debian, the cyberpanel password is the same as root password
-            cyberpanel_db_password = password
+            self.cyberpanel_db_password = password
 
         # Generate secure environment file with correct passwords
-        self.generate_secure_env_file(mysqlPassword, cyberpanel_db_password)
+        self.generate_secure_env_file(mysqlPassword, self.cyberpanel_db_password)
 
         logging.InstallLog.writeToFile("Environment configuration generated successfully!")
 
@@ -3854,6 +4624,10 @@ def main():
     distro = get_distro()
     checks = preFlightsChecks("/usr/local/lsws/", args.publicip, "/usr/local", cwd, "/usr/local/CyberCP", distro,
                               remotemysql, mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport)
+    
+    # Apply OS-specific fixes early in the installation process
+    checks.apply_os_specific_fixes()
+    
     checks.mountTemp()
     checks.installQuota()
 
@@ -3873,14 +4647,14 @@ def main():
     checks.setup_account_cyberpanel()
     checks.installCyberPanelRepo()
 
-    import installCyberPanel
+    # Note: OS-specific fixes are now applied earlier in the installation process
+    # The installCyberPanel.Main() functionality has been integrated into the main installation flow
 
-    if ent == 0:
-        installCyberPanel.Main(cwd, mysql, distro, ent, None, port, args.ftp, args.powerdns, args.publicip, remotemysql,
-                               mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport)
-    else:
-        installCyberPanel.Main(cwd, mysql, distro, ent, serial, port, args.ftp, args.powerdns, args.publicip,
-                               remotemysql, mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport)
+    # Install core services in the correct order
+    checks.installLiteSpeed(ent, serial)
+    checks.installMySQL(mysql)
+    checks.installPowerDNS()
+    checks.installPureFTPD()
 
     checks.setupPHPAndComposer()
     checks.fix_selinux_issue()
@@ -3889,12 +4663,12 @@ def main():
 
     if args.postfix is None:
         checks.install_postfix_dovecot()
-        checks.setup_email_Passwords(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
+        checks.setup_email_Passwords(checks.cyberpanel_db_password, mysql)
         checks.setup_postfix_dovecot_config(mysql)
     else:
         if args.postfix == 'ON':
             checks.install_postfix_dovecot()
-            checks.setup_email_Passwords(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
+            checks.setup_email_Passwords(checks.cyberpanel_db_password, mysql)
             checks.setup_postfix_dovecot_config(mysql)
 
     checks.install_unzip()
@@ -3904,7 +4678,7 @@ def main():
     checks.installFirewalld()
     checks.install_default_keys()
 
-    checks.download_install_CyberPanel(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
+    checks.download_install_CyberPanel(checks.cyberpanel_db_password, mysql)
     checks.downoad_and_install_raindloop()
     checks.download_install_phpmyadmin()
     checks.setupCLI()
