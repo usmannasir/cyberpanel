@@ -4570,6 +4570,9 @@ def main():
     logging.InstallLog.writeToFile("Starting CyberPanel installation..,10")
     preFlightsChecks.stdOut("Starting CyberPanel installation..")
 
+    # Initialize serial variable
+    serial = None
+    
     if args.ent is None:
         ent = 0
         preFlightsChecks.stdOut("OpenLiteSpeed web server will be installed.")
