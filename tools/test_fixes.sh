@@ -22,6 +22,13 @@ else
     echo "❌ v2.5.5-dev branch test failed"
 fi
 
+echo "Testing GitHub API for v2.5.5-dev branch..."
+if curl -s "https://api.github.com/repos/usmannasir/cyberpanel/branches/v2.5.5-dev" | grep -q '"name"'; then
+    echo "✅ v2.5.5-dev branch verified via GitHub API"
+else
+    echo "❌ v2.5.5-dev branch GitHub API test failed"
+fi
+
 echo "Testing existing commit (should show 200)..."
 if curl -s -I "https://raw.githubusercontent.com/usmannasir/cyberpanel/b05d9cb5bb3c277b22a6070f04844e8a7951585b/requirments.txt" | grep -q "200 OK"; then
     echo "✅ Existing commit correctly returns 200"
