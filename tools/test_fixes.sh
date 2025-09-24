@@ -10,9 +10,16 @@ echo ""
 echo "Test 1: Testing requirements file fallback logic..."
 echo "Testing non-existent branch (should show 404)..."
 if curl -s -I "https://raw.githubusercontent.com/usmannasir/cyberpanel/2.5.5-dev/requirments.txt" | grep -q "404 Not Found"; then
-    echo "✅ Non-existent branch correctly returns 404"
+    echo "✅ Non-existent branch (without 'v' prefix) correctly returns 404"
 else
     echo "❌ Non-existent branch test failed"
+fi
+
+echo "Testing v2.5.5-dev branch (should show 200)..."
+if curl -s -I "https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/requirments.txt" | grep -q "200 OK"; then
+    echo "✅ v2.5.5-dev branch correctly returns 200"
+else
+    echo "❌ v2.5.5-dev branch test failed"
 fi
 
 echo "Testing existing commit (should show 200)..."
