@@ -332,9 +332,96 @@ class InstallCyberPanel:
 
                 os.chdir(self.cwd)
                 confPath = '/usr/local/lsws/conf/'
+                
+                # Ensure the conf directory exists
+                os.makedirs(confPath, exist_ok=True)
+                
+                # Copy configuration files
                 shutil.copy('litespeed/httpd_config.xml', confPath)
                 shutil.copy('litespeed/modsec.conf', confPath)
                 shutil.copy('litespeed/httpd.conf', confPath)
+                
+                # Also copy the .conf version for compatibility
+                if os.path.exists('litespeed/httpd_config.conf'):
+                    shutil.copy('litespeed/httpd_config.conf', confPath)
+                else:
+                    # Create a basic httpd_config.conf if it doesn't exist
+                    with open(f'{confPath}/httpd_config.conf', 'w') as f:
+                        f.write('''#
+# PLAIN TEXT CONFIGURATION FILE
+#
+serverName                lscp
+user                      nobody
+group                     nobody
+priority                  0
+inMemBufSize              60M
+swappingDir               /tmp/lshttpd/swap
+autoFix503                1
+gracefulRestartTimeout    300
+mime                      $SERVER_ROOT/conf/mime.properties
+showVersionNumber         0
+adminEmails               root@localhost
+adminRoot                 $SERVER_ROOT/admin/
+
+errorlog $SERVER_ROOT/logs/error.log {
+  logLevel                DEBUG
+  debugLevel              0
+  rollingSize             10M
+  enableStderrLog         1
+}
+
+accesslog $SERVER_ROOT/logs/access.log {
+  rollingSize             10M
+  keepDays                30
+  compressArchive         0
+}
+indexFiles                index.html, index.php
+
+expires  {
+  enableExpires           1
+  expiresByType           image/*=A604800, text/css=A604800, application/x-javascript=A604800
+}
+autoLoadHtaccess          1
+
+tuning  {
+  eventDispatcher         best
+  maxConnections          2000
+  maxSSLConnections       1000
+  connTimeout             300
+  maxKeepAliveReq         1000
+  smartKeepAlive          0
+  keepAliveTimeout        5
+  sndBufSize              0
+  rcvBufSize              0
+  maxReqURLLen            8192
+  maxReqHeaderSize        16380
+  maxReqBodySize          2047M
+  maxDynRespHeaderSize    8192
+  maxDynRespSize          2047M
+  maxCachedFileSize       4096
+  totalInMemCacheSize     20M
+  maxMMapFileSize         256K
+  totalMMapCacheSize      40M
+  useSendfile             1
+  fileETag                28
+  enableGzipCompress      1
+  enableDynGzipCompress   1
+  gzipCompressLevel       6
+  compressibleTypes       text/*,application/x-javascript,application/javascript,application/xml, image/svg+xml
+  gzipAutoUpdateStatic    1
+  gzipStaticCompressLevel 6
+  gzipMaxFileSize         1M
+  gzipMinFileSize         300
+  SSLCryptoDevice         null
+}
+
+fileAccessControl  {
+  followSymbolLink        1
+  checkSymbolLink         0
+  requiredPermission      644
+  restrictedPermission    000
+}
+''')
 
                 command = 'chown -R lsadm:lsadm ' + confPath
                 install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -511,7 +598,12 @@ class InstallCyberPanel:
                 self.install_package('dovecot-pigeonhole')
             
             # Add Sieve port 4190 to firewall
-            from plogical.firewallUtilities import FirewallUtilities
+            try:
+                from plogical.firewallUtilities import FirewallUtilities
+            except ImportError:
+                # plogical module not available yet, skip firewall setup
+                logging.InstallLog.writeToFile("[WARNING] plogical module not available, skipping firewall setup")
+                return
             FirewallUtilities.addSieveFirewallRule()
             
             InstallCyberPanel.stdOut("Sieve successfully installed and configured!", 1)
