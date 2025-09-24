@@ -34,13 +34,13 @@ yum update curl wget ca-certificates -y 1> /dev/null
 elif echo $OUTPUT | grep -q "AlmaLinux 9" ; then
         echo -e "\nDetecting AlmaLinux 9...\n"
         SERVER_OS="AlmaLinux9"
-yum install curl wget -y 1> /dev/null
-yum update curl wget ca-certificates -y 1> /dev/null
+dnf install curl wget -y 1> /dev/null
+dnf update curl wget ca-certificates -y 1> /dev/null
 elif echo $OUTPUT | grep -q "AlmaLinux 10" ; then
         echo -e "\nDetecting AlmaLinux 10...\n"
         SERVER_OS="AlmaLinux10"
-yum install curl wget -y 1> /dev/null
-yum update curl wget ca-certificates -y 1> /dev/null
+dnf install curl wget -y 1> /dev/null
+dnf update curl wget ca-certificates -y 1> /dev/null
 elif echo $OUTPUT | grep -q "CloudLinux 7" ; then
         echo "Checking and installing curl and wget"
 yum install curl wget -y 1> /dev/null
