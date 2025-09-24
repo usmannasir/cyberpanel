@@ -926,7 +926,29 @@ if [[ $DEV == "ON" ]] ; then
 	cd /usr/local/
 	python3.6 -m venv CyberPanel
 	source /usr/local/CyberPanel/bin/activate
-	wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
+	
+	# Try to download requirements file with fallback options
+	echo "Attempting to download requirements for branch/commit: $BRANCH_NAME"
+	
+	# First try the specified branch/commit
+	if wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt 2>/dev/null; then
+		echo "Successfully downloaded requirements from $BRANCH_NAME"
+	elif wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments-old.txt 2>/dev/null; then
+		echo "Successfully downloaded requirements-old.txt from $BRANCH_NAME"
+	elif wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/requirments.txt 2>/dev/null; then
+		echo "Fallback: Downloaded requirements from stable branch"
+	else
+		echo "Warning: Could not download requirements file, using minimal default requirements"
+		cat > requirements.txt << 'EOF'
+# Minimal CyberPanel requirements - fallback when requirements file is not available
+Django==3.2.25
+PyMySQL==1.1.0
+requests==2.31.0
+cryptography==41.0.7
+psutil==5.9.6
+EOF
+	fi
+	
 	pip3.6 install --ignore-installed -r requirements.txt
 fi
 
@@ -980,7 +1002,29 @@ if grep "CyberPanel installation successfully completed" /var/log/installLogs.tx
 if [[ $DEV == "ON" ]] ; then
 python3.6 -m venv /usr/local/CyberCP
 source /usr/local/CyberCP/bin/activate
-wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
+
+# Try to download requirements file with fallback options
+echo "Attempting to download requirements for branch/commit: $BRANCH_NAME"
+
+# First try the specified branch/commit
+if wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt 2>/dev/null; then
+	echo "Successfully downloaded requirements from $BRANCH_NAME"
+elif wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments-old.txt 2>/dev/null; then
+	echo "Successfully downloaded requirements-old.txt from $BRANCH_NAME"
+elif wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/requirments.txt 2>/dev/null; then
+	echo "Fallback: Downloaded requirements from stable branch"
+else
+	echo "Warning: Could not download requirements file, using minimal default requirements"
+	cat > requirements.txt << 'EOF'
+# Minimal CyberPanel requirements - fallback when requirements file is not available
+Django==3.2.25
+PyMySQL==1.1.0
+requests==2.31.0
+cryptography==41.0.7
+psutil==5.9.6
+EOF
+fi
+
 pip3.6 install --ignore-installed -r requirements.txt
 systemctl restart lscpd
 fi

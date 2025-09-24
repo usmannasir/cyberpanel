@@ -447,14 +447,14 @@ EOF
 # http://downloads.mariadb.org/mariadb/repositories/
 [mariadb]
 name = MariaDB
-baseurl = https://yum.mariadb.org/10.11/rhel8-amd64
+baseurl = https://yum.mariadb.org/12.1/rhel8-amd64
 module_hotfixes=1
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1
 EOF
     elif [[ "$Server_OS_Version" = "9" ]] && uname -m | grep -q 'x86_64'; then
         # Use official MariaDB repository setup script for RHEL 9+ systems
-        curl -sS "https://downloads.mariadb.com/MariaDB/mariadb_repo_setup" | bash -s -- --mariadb-server-version="10.11" --skip-maxscale --skip-tools
+        curl -sS "https://downloads.mariadb.com/MariaDB/mariadb_repo_setup" | bash -s -- --mariadb-server-version="12.1" --skip-maxscale --skip-tools
         if [ $? -ne 0 ]; then
             # Fallback to manual setup
             cat <<EOF >/etc/yum.repos.d/MariaDB.repo
@@ -462,7 +462,7 @@ EOF
 # http://downloads.mariadb.org/mariadb/repositories/
 [mariadb]
 name = MariaDB
-baseurl = https://yum.mariadb.org/10.11/rhel9-amd64/
+baseurl = https://yum.mariadb.org/12.1/rhel9-amd64/
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 enabled=1
 gpgcheck=1
@@ -471,7 +471,7 @@ EOF
         fi
     elif [[ "$Server_OS_Version" = "10" ]] && uname -m | grep -q 'x86_64'; then
         # Use official MariaDB repository setup script for RHEL 10+ systems
-        curl -sS "https://downloads.mariadb.com/MariaDB/mariadb_repo_setup" | bash -s -- --mariadb-server-version="10.11" --skip-maxscale --skip-tools
+        curl -sS "https://downloads.mariadb.com/MariaDB/mariadb_repo_setup" | bash -s -- --mariadb-server-version="12.1" --skip-maxscale --skip-tools
         if [ $? -ne 0 ]; then
             # Fallback to manual setup
             cat <<EOF >/etc/yum.repos.d/MariaDB.repo
@@ -479,7 +479,7 @@ EOF
 # http://downloads.mariadb.org/mariadb/repositories/
 [mariadb]
 name = MariaDB
-baseurl = https://yum.mariadb.org/10.11/rhel9-amd64/
+baseurl = https://yum.mariadb.org/12.1/rhel9-amd64/
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 enabled=1
 gpgcheck=1
@@ -547,6 +547,21 @@ if [[ "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-dev)?$ ]]; then
     if [[ "$1" =~ -dev$ ]]; then
       Branch_Name="${1//[[:space:]]/}"
       echo -e "\nSet branch name to $Branch_Name (development version)..."
+      
+      # Check if the development branch exists
+      echo -e "Verifying branch existence..."
+      if ! curl -s -I "https://raw.githubusercontent.com/usmannasir/cyberpanel/$Branch_Name/README.md" | grep -q "200 OK"; then
+        echo -e "\nWarning: The branch '$Branch_Name' does not exist or is not accessible."
+        echo -e "Available branches include: stable, v2.3.5-dev, v2.3.4, v2.3.3, etc."
+        echo -e "You can also use specific commits like: b05d9cb5bb3c277b22a6070f04844e8a7951585b"
+        echo -e "\nWould you like to continue anyway? This may cause installation issues. [y/N]"
+        read -r continue_choice
+        if [[ ! "$continue_choice" =~ ^[Yy]$ ]]; then
+          echo -e "Installation cancelled. Please choose a valid branch or commit."
+          exit 1
+        fi
+        echo -e "Continuing with non-existent branch '$Branch_Name'..."
+      fi
     else
       Branch_Name="v${1//[[:space:]]/}"
       echo -e "\nSet branch name to $Branch_Name (stable version)..."
@@ -558,6 +573,15 @@ elif [[ "$1" =~ ^[a-f0-9]{7,40}$ ]]; then
   Branch_Name="commit:$commit_hash"
   echo -e "\nSet branch name to commit $commit_hash..."
   echo -e "This will install from the specific commit: $commit_hash"
+  
+  # Verify commit exists
+  echo -e "Verifying commit existence..."
+  if ! curl -s "https://api.github.com/repos/usmannasir/cyberpanel/commits/$commit_hash" | grep -q '"sha"'; then
+    echo -e "\nError: The commit '$commit_hash' does not exist or is not accessible."
+    echo -e "Please verify the commit hash and try again."
+    exit 1
+  fi
+  echo -e "Commit verified successfully."
 else
   echo -e "\nPlease input a valid format:"
   echo -e "  Version number: 2.4.4, 2.5.0, 2.5.5-dev"
@@ -1216,11 +1240,13 @@ fi
 
 echo -e "\nPress \e[31mEnter\e[39m key to continue with latest version or Enter specific version such as:"
 echo -e "  \e[31m2.4.4\e[39m (stable version)"
-echo -e "  \e[31m2.5.0\e[39m (stable version)" 
-echo -e "  \e[31m2.5.5-dev\e[39m (development version)"
-echo -e "  \e[31m2.6.0-dev\e[39m (development version)"
+echo -e "  \e[31m2.5.0\e[39m (stable version)"
+echo -e "  \e[31mv2.3.5-dev\e[39m (development version - note: use 'v' prefix)"
+echo -e "  \e[31mv2.3.4\e[39m (stable version)"
 echo -e "  \e[31mb05d9cb5bb3c277b22a6070f04844e8a7951585b\e[39m (specific commit)"
 echo -e "  \e[31mb05d9cb\e[39m (short commit hash)"
+echo -e ""
+echo -e "\e[33mNote: The '2.5.5-dev' branch does not exist. Use 'v2.3.5-dev' instead.\e[39m"
 printf "%s" ""
 read -r Tmp_Input
 
@@ -1603,7 +1629,7 @@ if [[ "$Server_OS" =~ ^(CentOS|RHEL|AlmaLinux|RockyLinux|CloudLinux|openEuler) ]
     if [[ "$Server_OS" =~ ^(AlmaLinux9|AlmaLinux10|RockyLinux9|RHEL9|RHEL10) ]] ; then
       # Use the official MariaDB repository setup script for better compatibility
       log_info "Setting up MariaDB repository for $Server_OS..."
-      curl -sS "https://downloads.mariadb.com/MariaDB/mariadb_repo_setup" | bash -s -- --mariadb-server-version="10.11" --skip-maxscale --skip-tools
+      curl -sS "https://downloads.mariadb.com/MariaDB/mariadb_repo_setup" | bash -s -- --mariadb-server-version="12.1" --skip-maxscale --skip-tools
       Check_Return "MariaDB repository setup" "no_exit"
       
       # Verify MariaDB repository was added successfully
@@ -1620,7 +1646,7 @@ if [[ "$Server_OS" =~ ^(CentOS|RHEL|AlmaLinux|RockyLinux|CloudLinux|openEuler) ]
 # http://downloads.mariadb.org/mariadb/repositories/
 [mariadb]
 name = MariaDB
-baseurl = https://yum.mariadb.org/10.11/rhel9-amd64/
+baseurl = https://yum.mariadb.org/12.1/rhel9-amd64/
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 enabled=1
 gpgcheck=1
@@ -1849,7 +1875,7 @@ if [[ "$Server_OS" =~ ^(CentOS|RHEL|AlmaLinux|RockyLinux|CloudLinux) ]]; then
   if command -v dnf >/dev/null 2>&1; then
     # Try to add MariaDB repository if not present
     if ! dnf repolist | grep -q "mariadb"; then
-      curl -sS "https://downloads.mariadb.com/MariaDB/mariadb_repo_setup" | bash -s -- --mariadb-server-version="10.11" --skip-maxscale --skip-tools
+      curl -sS "https://downloads.mariadb.com/MariaDB/mariadb_repo_setup" | bash -s -- --mariadb-server-version="12.1" --skip-maxscale --skip-tools
     fi
   fi
   
@@ -1874,31 +1900,27 @@ if [[ "$Server_OS" =~ ^(CentOS|RHEL|AlmaLinux|RockyLinux|CloudLinux) ]]; then
     dnf remove -y mysql-server mysql-client mysql-community-server mysql-community-client || true
     dnf remove -y mysql-devel mysql-community-devel || true
     
-    # Add MySQL repository
-    dnf install -y https://dev.mysql.com/get/mysql80-community-release-el9-1.noarch.rpm || \
-    dnf install -y https://dev.mysql.com/get/mysql80-community-release-el8-1.noarch.rpm || true
+    # Prioritize MariaDB packages to avoid MySQL Community GPG issues
+    echo "Installing MariaDB development packages..."
     
-    # Install MySQL development packages with conflict resolution
-    dnf install -y --allowerasing --skip-broken --nobest mysql-devel mariadb-devel mysql-community-devel || \
-    dnf install -y --allowerasing --skip-broken --nobest mariadb-connector-c-devel || \
-    dnf install -y --allowerasing --skip-broken --nobest mysql-connector-c-devel || \
-    dnf install -y --allowerasing --skip-broken --nobest mysql-community-devel || \
-    # Fallback: try to install just the development headers
-    dnf install -y --allowerasing --skip-broken --nobest mariadb-devel || \
-    dnf install -y --allowerasing --skip-broken --nobest mysql-devel || \
-    # Last resort: install from AppStream
+    # Try MariaDB packages first (preferred approach)
     dnf install -y --allowerasing --skip-broken --nobest mariadb-devel mariadb-connector-c-devel || \
-    # Final fallback: install MariaDB server and development packages
+    dnf install -y --allowerasing --skip-broken --nobest MariaDB-devel MariaDB-connector-c-devel || \
+    # Fallback: try MySQL development packages without GPG verification
+    dnf install -y --allowerasing --skip-broken --nobest mysql-devel --nogpgcheck || \
+    # Last resort: install MariaDB server and development packages
     dnf install -y --allowerasing --skip-broken --nobest MariaDB-server MariaDB-devel MariaDB-client-utils
   else
-    # Add MySQL repository for yum
-    yum install -y https://dev.mysql.com/get/mysql80-community-release-el7-3.noarch.rpm || true
+    # Prioritize MariaDB packages to avoid MySQL Community GPG issues
+    echo "Installing MariaDB development packages for yum..."
     
-    # Install MySQL development packages with conflict resolution
-    yum install -y --allowerasing --skip-broken --nobest mysql-devel mariadb-devel mysql-community-devel || \
-    yum install -y --allowerasing --skip-broken --nobest mariadb-connector-c-devel || \
-    yum install -y --allowerasing --skip-broken --nobest mysql-connector-c-devel || \
-    yum install -y --allowerasing --skip-broken --nobest mysql-community-devel
+    # Try MariaDB packages first (preferred approach)
+    yum install -y --allowerasing --skip-broken --nobest mariadb-devel mariadb-connector-c-devel || \
+    yum install -y --allowerasing --skip-broken --nobest MariaDB-devel MariaDB-connector-c-devel || \
+    # Fallback: try MySQL development packages without GPG verification
+    yum install -y --allowerasing --skip-broken --nobest mysql-devel --nogpgcheck || \
+    # Last resort: install MariaDB server and development packages
+    yum install -y --allowerasing --skip-broken --nobest MariaDB-server MariaDB-devel MariaDB-client-utils
   fi
 fi
 if [[ "$Server_OS" = "Ubuntu" ]] || [[ "$Server_OS" = "Debian" ]]; then
@@ -2009,11 +2031,10 @@ fi
       
       # Try to install specific packages that provide mysql.h
       echo "Attempting to install packages that provide mysql.h..."
-      yum install -y --allowerasing --skip-broken --nobest $(yum search mysql-devel | grep -i "mysql.*devel" | head -1 | awk '{print $1}') || \
       yum install -y --allowerasing --skip-broken --nobest $(yum search mariadb-devel | grep -i "mariadb.*devel" | head -1 | awk '{print $1}') || \
-      yum install -y --allowerasing --skip-broken --nobest mysql-community-devel || \
+      yum install -y --allowerasing --skip-broken --nobest $(yum search mysql-devel | grep -i "mysql.*devel" | head -1 | awk '{print $1}') --nogpgcheck || \
       yum install -y --allowerasing --skip-broken --nobest mariadb-connector-c-devel || \
-      yum install -y --allowerasing --skip-broken --nobest mysql-connector-c-devel
+      yum install -y --allowerasing --skip-broken --nobest mysql-connector-c-devel --nogpgcheck
     fi
     
     # Check again after installation attempts
