@@ -528,9 +528,13 @@ curl --max-time 20 -d '{"ipAddress": "'"$Server_IP"'", "InstallCyberPanelStatus"
 }
 
 Branch_Check() {
-if [[ "$1" = *.*.* ]]; then
-  #check input if it's valid format as X.Y.Z
-  Output=$(awk -v num1="$Base_Number" -v num2="${1//[[:space:]]/}" '
+# Enhanced version validation to handle stable versions, development versions, and commit hashes
+if [[ "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-dev)?$ ]]; then
+  # Handle version numbers (stable and development)
+  version_number=$(echo "$1" | sed 's/-dev$//')
+  
+  # Check if version is higher than 2.3.4
+  Output=$(awk -v num1="$Base_Number" -v num2="$version_number" '
   BEGIN {
     print "num1", (num1 < num2 ? "<" : ">="), "num2"
   }
@@ -539,11 +543,26 @@ if [[ "$1" = *.*.* ]]; then
     echo -e "\nYou must use version number higher than 2.3.4"
     exit
   else
-    Branch_Name="v${1//[[:space:]]/}"
-    echo -e "\nSet branch name to $Branch_Name..."
+    # Handle both stable and development versions
+    if [[ "$1" =~ -dev$ ]]; then
+      Branch_Name="${1//[[:space:]]/}"
+      echo -e "\nSet branch name to $Branch_Name (development version)..."
+    else
+      Branch_Name="v${1//[[:space:]]/}"
+      echo -e "\nSet branch name to $Branch_Name (stable version)..."
+    fi
   fi
+elif [[ "$1" =~ ^[a-f0-9]{7,40}$ ]]; then
+  # Handle commit hashes (7-40 character hex strings)
+  commit_hash="${1//[[:space:]]/}"
+  Branch_Name="commit:$commit_hash"
+  echo -e "\nSet branch name to commit $commit_hash..."
+  echo -e "This will install from the specific commit: $commit_hash"
 else
-  echo -e "\nPlease input a valid format version number."
+  echo -e "\nPlease input a valid format:"
+  echo -e "  Version number: 2.4.4, 2.5.0, 2.5.5-dev"
+  echo -e "  Commit hash: b05d9cb5bb3c277b22a6070f04844e8a7951585b"
+  echo -e "  Short commit: b05d9cb"
   exit
 fi
 }
@@ -1195,7 +1214,13 @@ else
   echo -e "\nLocal MySQL selected..."
 fi
 
-echo -e "\nPress \e[31mEnter\e[39m key to continue with latest version or Enter specific version such as: \e[31m2.3.4\e[39m , \e[31m2.4.4\e[39m , \e[31m2.5.0\e[39m ...etc"
+echo -e "\nPress \e[31mEnter\e[39m key to continue with latest version or Enter specific version such as:"
+echo -e "  \e[31m2.4.4\e[39m (stable version)"
+echo -e "  \e[31m2.5.0\e[39m (stable version)" 
+echo -e "  \e[31m2.5.5-dev\e[39m (development version)"
+echo -e "  \e[31m2.6.0-dev\e[39m (development version)"
+echo -e "  \e[31mb05d9cb5bb3c277b22a6070f04844e8a7951585b\e[39m (specific commit)"
+echo -e "  \e[31mb05d9cb\e[39m (short commit hash)"
 printf "%s" ""
 read -r Tmp_Input
 

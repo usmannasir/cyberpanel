@@ -34,8 +34,15 @@ yum update curl wget ca-certificates -y 1> /dev/null
 elif echo $OUTPUT | grep -q "AlmaLinux 9" ; then
         echo -e "\nDetecting AlmaLinux 9...\n"
         SERVER_OS="AlmaLinux9"
-dnf install curl wget -y 1> /dev/null
-dnf update curl wget ca-certificates -y 1> /dev/null
+        echo "Installing essential packages for AlmaLinux 9..."
+        dnf install curl wget -y 1> /dev/null
+        dnf update curl wget ca-certificates -y 1> /dev/null
+        
+        # Install additional packages needed for AlmaLinux 9
+        echo "Installing additional dependencies for AlmaLinux 9..."
+        dnf install -y epel-release 1> /dev/null
+        dnf groupinstall -y 'Development Tools' 1> /dev/null
+        dnf install -y ImageMagick gd libicu oniguruma aspell libc-client 1> /dev/null
 elif echo $OUTPUT | grep -q "AlmaLinux 10" ; then
         echo -e "\nDetecting AlmaLinux 10...\n"
         SERVER_OS="AlmaLinux10"
@@ -143,12 +150,27 @@ fi
 rm -f cyberpanel.sh
 rm -f install.tar.gz
 
-# Download from appropriate source based on branch
+# Download from appropriate source based on branch/commit
 if [ -n "$BRANCH_NAME" ]; then
-    echo "Installing CyberPanel from branch: $BRANCH_NAME"
-    curl --silent -o cyberpanel.sh "https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel.sh" 2>/dev/null
-    # Set environment variable for version detection
-    export CYBERPANEL_BRANCH="$BRANCH_NAME"
+    # Check if it's a commit hash
+    if [[ "$BRANCH_NAME" =~ ^[a-f0-9]{7,40}$ ]]; then
+        echo "Installing CyberPanel from commit: $BRANCH_NAME"
+        curl --silent -o cyberpanel.sh "https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel.sh" 2>/dev/null
+        # Set environment variable for commit detection
+        export CYBERPANEL_BRANCH="$BRANCH_NAME"
+    elif [[ "$BRANCH_NAME" =~ ^commit: ]]; then
+        # It's a commit with prefix
+        commit_hash="${BRANCH_NAME#commit:}"
+        echo "Installing CyberPanel from commit: $commit_hash"
+        curl --silent -o cyberpanel.sh "https://raw.githubusercontent.com/usmannasir/cyberpanel/$commit_hash/cyberpanel.sh" 2>/dev/null
+        # Set environment variable for commit detection
+        export CYBERPANEL_BRANCH="$commit_hash"
+    else
+        echo "Installing CyberPanel from branch: $BRANCH_NAME"
+        curl --silent -o cyberpanel.sh "https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel.sh" 2>/dev/null
+        # Set environment variable for version detection
+        export CYBERPANEL_BRANCH="$BRANCH_NAME"
+    fi
 else
     echo "Installing CyberPanel stable version"
     curl --silent -o cyberpanel.sh "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null
