@@ -631,17 +631,49 @@ class preFlightsChecks:
 
         # Clone directly to /usr/local/CyberCP with explicit path
         logging.InstallLog.writeToFile("Cloning repository to /usr/local/CyberCP...")
-        command = "git clone https://github.com/usmannasir/cyberpanel /usr/local/CyberCP"
-        result = preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-        if result != 1:
-            logging.InstallLog.writeToFile("[ERROR] Git clone to /usr/local/CyberCP failed!")
-            sys.exit(1)
-
-        # Verify CyberCP directory was created at the explicit path
-        if not os.path.exists('/usr/local/CyberCP'):
-            logging.InstallLog.writeToFile("[ERROR] Git clone did not create '/usr/local/CyberCP' directory!")
-            sys.exit(1)
+        
+        # Ensure the parent directory exists
+        os.makedirs("/usr/local", exist_ok=True)
+        
+        # Try multiple clone methods for better reliability
+        clone_commands = [
+            "git clone https://github.com/usmannasir/cyberpanel /usr/local/CyberCP",
+            "git clone --depth 1 https://github.com/usmannasir/cyberpanel /usr/local/CyberCP",
+            "git clone --single-branch --branch stable https://github.com/usmannasir/cyberpanel /usr/local/CyberCP"
+        ]
+        
+        clone_success = False
+        for cmd in clone_commands:
+            try:
+                result = preFlightsChecks.call(cmd, self.distro, cmd, cmd, 1, 1, os.EX_OSERR)
+                if result == 1 and os.path.exists('/usr/local/CyberCP'):
+                    clone_success = True
+                    break
+            except:
+                continue
+        
+        if not clone_success or not os.path.exists('/usr/local/CyberCP'):
+            logging.InstallLog.writeToFile("[ERROR] All Git clone attempts failed!")
+            preFlightsChecks.stdOut("[ERROR] All Git clone attempts failed!")
+            
+            # Try manual download as fallback
+            logging.InstallLog.writeToFile("Attempting manual download as fallback...")
+            command = "wget -O /tmp/cyberpanel.zip https://github.com/usmannasir/cyberpanel/archive/refs/heads/stable.zip"
+            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            
+            command = "unzip /tmp/cyberpanel.zip -d /usr/local/"
+            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            
+            command = "mv /usr/local/cyberpanel-stable /usr/local/CyberCP"
+            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            
+            command = "rm -f /tmp/cyberpanel.zip"
+            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            
+            if not os.path.exists('/usr/local/CyberCP'):
+                logging.InstallLog.writeToFile("[ERROR] Manual download also failed!")
+                preFlightsChecks.stdOut("[ERROR] Manual download also failed!")
+                sys.exit(1)
 
         logging.InstallLog.writeToFile("Successfully cloned repository to /usr/local/CyberCP")
 
@@ -1250,23 +1282,66 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             # Remove conflicting dovecot packages first
             try:
-                if self.distro in [centos, cent8]:
+                if self.distro == centos:
+                    # CentOS 7 (Legacy - EOL) - use yum
                     preFlightsChecks.call('yum remove -y dovecot dovecot-*', self.distro, 
+                                        'Remove conflicting dovecot packages', 
+                                        'Remove conflicting dovecot packages', 1, 0, os.EX_OSERR)
+                elif self.distro in [cent8, openeuler]:
+                    # CentOS 8, AlmaLinux 8/9/10, RockyLinux 8/9, RHEL 8/9, CloudLinux 8/9 - use dnf
+                    preFlightsChecks.call('dnf remove -y dovecot dovecot-*', self.distro, 
+                                        'Remove conflicting dovecot packages', 
+                                        'Remove conflicting dovecot packages', 1, 0, os.EX_OSERR)
+                else:
+                    # Ubuntu 24.04/22.04/20.04, Debian 13/12/11 - use apt
+                    preFlightsChecks.call('apt-get remove -y dovecot dovecot-*', self.distro, 
                                         'Remove conflicting dovecot packages', 
                                         'Remove conflicting dovecot packages', 1, 0, os.EX_OSERR)
             except:
                 pass  # Continue if removal fails
 
             if self.distro == centos:
+                # CentOS 7 (Legacy - EOL)
                 command = 'yum --enablerepo=gf-plus -y install dovecot23 dovecot23-mysql --allowerasing'
             elif self.distro == cent8:
+                # CentOS 8, AlmaLinux 8, RockyLinux 8, RHEL 8, CloudLinux 8
                 command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql -y --allowerasing'
             elif self.distro == openeuler:
-                command = 'dnf install dovecot -y'
+                # AlmaLinux 9/10, RockyLinux 9, RHEL 9, CloudLinux 9, and other modern RHEL-based systems
+                dovecot_commands = [
+                    'dnf install dovecot dovecot-mysql -y --skip-broken --nobest',
+                    'dnf install dovecot23 dovecot23-mysql -y --skip-broken --nobest',
+                    'dnf install dovecot -y --skip-broken --nobest'
+                ]
+                
+                dovecot_installed = False
+                for cmd in dovecot_commands:
+                    try:
+                        preFlightsChecks.call(cmd, self.distro, cmd, cmd, 1, 1, os.EX_OSERR, True)
+                        if os.path.exists('/etc/dovecot') or os.path.exists('/usr/sbin/dovecot'):
+                            dovecot_installed = True
+                            break
+                    except:
+                        continue
+                
+                if not dovecot_installed:
+                    command = 'dnf install dovecot -y --skip-broken --nobest --allowerasing'
+                    preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
             else:
+                # Ubuntu 24.04/22.04/20.04, Debian 13/12/11
                 command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install dovecot-mysql dovecot-imapd dovecot-pop3d'
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+            
+            # Ensure Dovecot service is properly configured
+            self.manage_service('dovecot', 'enable')
+            self.manage_service('dovecot', 'start')
+            
+            # Verify Dovecot installation
+            if os.path.exists('/usr/sbin/dovecot') or os.path.exists('/usr/bin/dovecot'):
+                logging.InstallLog.writeToFile("Dovecot installation successful")
+            else:
+                logging.InstallLog.writeToFile("[WARNING] Dovecot binary not found after installation")
 
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [install_postfix_dovecot]")
@@ -1435,6 +1510,17 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             master = "/etc/postfix/master.cf"
             dovecot = "/etc/dovecot/dovecot.conf"
             dovecotmysql = "/etc/dovecot/dovecot-sql.conf.ext"
+            
+            # Ensure dovecot directory exists
+            os.makedirs("/etc/dovecot", exist_ok=True)
+            
+            # Also ensure dovecot conf.d directory exists
+            os.makedirs("/etc/dovecot/conf.d", exist_ok=True)
+            
+            # Check if Dovecot is installed before proceeding
+            if not os.path.exists('/usr/sbin/dovecot') and not os.path.exists('/usr/bin/dovecot'):
+                logging.InstallLog.writeToFile("[ERROR] Dovecot not installed, cannot configure")
+                return 0
 
             if os.path.exists(mysql_virtual_domains):
                 os.remove(mysql_virtual_domains)
@@ -1488,8 +1574,113 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                         "/etc/postfix/mysql-virtual_email2email.cf")
             shutil.copy("email-configs-one/main.cf", main)
             shutil.copy("email-configs-one/master.cf", master)
-            shutil.copy("email-configs-one/dovecot.conf", dovecot)
-            shutil.copy("email-configs-one/dovecot-sql.conf.ext", dovecotmysql)
+            # Copy Dovecot configuration files with fallback
+            try:
+                shutil.copy("email-configs-one/dovecot.conf", dovecot)
+                shutil.copy("email-configs-one/dovecot-sql.conf.ext", dovecotmysql)
+            except FileNotFoundError:
+                # Fallback: create basic dovecot.conf if template not found
+                logging.InstallLog.writeToFile("[WARNING] Dovecot config templates not found, creating basic configuration")
+                
+                # Create basic dovecot.conf
+                with open(dovecot, 'w') as f:
+                    f.write('''protocols = imap pop3
+log_timestamp = "%Y-%m-%d %H:%M:%S "
+
+ssl_cert = <cert.pem
+ssl_key = <key.pem
+
+mail_plugins = zlib
+
+namespace {
+    type = private
+    separator = .
+    prefix = INBOX.
+    inbox = yes
+}
+
+service auth {
+    unix_listener auth-master {
+        mode = 0600
+        user = vmail
+    }
+
+    unix_listener /var/spool/postfix/private/auth {
+        mode = 0666
+        user = postfix
+        group = postfix
+    }
+
+    user = root
+}
+
+service auth-worker {
+    user = root
+}
+
+protocol lda {
+    log_path = /home/vmail/dovecot-deliver.log
+    auth_socket_path = /var/run/dovecot/auth-master
+    postmaster_address = postmaster@example.com
+
+    mail_plugins = zlib
+}
+
+protocol pop3 {
+    pop3_uidl_format = %08Xu%08Xv
+    mail_plugins = $mail_plugins zlib
+}
+
+protocol imap {
+    mail_plugins = $mail_plugins zlib imap_zlib
+}
+
+passdb {
+    driver = sql
+    args = /etc/dovecot/dovecot-sql.conf.ext
+}
+
+userdb {
+    driver = sql
+    args = /etc/dovecot/dovecot-sql.conf.ext
+}
+
+plugin {
+  zlib_save = gz
+  zlib_save_level = 6
+}
+
+service stats {
+    unix_listener stats-reader {
+        user = vmail
+        group = vmail
+        mode = 0660
+    }
+    unix_listener stats-writer {
+        user = vmail
+        group = vmail
+        mode = 0660
+    }
+}
+''')
+                
+                # Create basic dovecot-sql.conf.ext
+                with open(dovecotmysql, 'w') as f:
+                    f.write(f'''# Database driver: mysql, pgsql, sqlite
+driver = mysql
+
+# Database connection string
+connect = host=localhost dbname=cyberpanel user=cyberpanel password={self.mysqlPassword}
+
+# Default password scheme
+default_pass_scheme = MD5-CRYPT
+
+# SQL query to get password
+password_query = SELECT email as user, password FROM mail_users WHERE email='%u';
+
+# SQL query to get user info
+user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/home/vmail/%d/%n' as home FROM mail_users WHERE email='%u';
+''')
             
             ########### Set custom settings
 
@@ -1595,6 +1786,12 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             self.manage_service('dovecot', 'enable')
             self.manage_service('dovecot', 'start')
+            
+            # Verify Dovecot service is running
+            if self.manage_service('dovecot', 'status') == 0:
+                logging.InstallLog.writeToFile("Dovecot service started successfully")
+            else:
+                logging.InstallLog.writeToFile("[WARNING] Dovecot service may not be running properly")
 
             ##
 
@@ -2638,13 +2835,24 @@ milter_default_action = accept
 
     def setupPHPSymlink(self):
         try:
+            # Ensure LiteSpeed repository is available for PHP packages
+            if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
+                # Check if LiteSpeed repository is available
+                command = 'dnf repolist | grep -q litespeed'
+                result = preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+                if result != 1:
+                    logging.InstallLog.writeToFile("[setupPHPSymlink] LiteSpeed repository not found, attempting to add it...")
+                    # Add LiteSpeed repository
+                    repo_command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
+                    preFlightsChecks.call(repo_command, self.distro, repo_command, repo_command, 1, 0, os.EX_OSERR)
+            
             # Check if PHP 8.2 exists
             if not os.path.exists('/usr/local/lsws/lsphp82/bin/php'):
                 logging.InstallLog.writeToFile("[setupPHPSymlink] PHP 8.2 not found, ensuring it's installed...")
                 
                 # Install PHP 8.2 based on OS
                 if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
-                    command = 'yum install lsphp82 lsphp82-* -y'
+                    command = 'dnf install lsphp82 lsphp82-* -y --skip-broken --nobest'
                 else:
                     command = 'DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp82 lsphp82-*'
                 
@@ -2656,23 +2864,29 @@ milter_default_action = accept
                 
                 # Install PHP 8.3 based on OS
                 if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
-                    command = 'yum install lsphp83 lsphp83-* -y'
+                    command = 'dnf install lsphp83 lsphp83-* -y --skip-broken --nobest'
                 else:
                     command = 'DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp83 lsphp83-*'
                 
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                result = preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
                 
                 # Verify installation
                 if not os.path.exists('/usr/local/lsws/lsphp83/bin/php'):
-                    logging.InstallLog.writeToFile('[ERROR] Failed to install PHP 8.3')
-                    return 0
+                    logging.InstallLog.writeToFile('[ERROR] Failed to install PHP 8.3, trying alternative method...')
+                    # Try alternative installation method
+                    alt_command = 'dnf install lsphp83 -y --skip-broken --nobest --allowerasing'
+                    preFlightsChecks.call(alt_command, self.distro, alt_command, alt_command, 1, 0, os.EX_OSERR)
+                    
+                    if not os.path.exists('/usr/local/lsws/lsphp83/bin/php'):
+                        logging.InstallLog.writeToFile('[ERROR] Alternative PHP 8.3 installation also failed')
+                        return 0
 
             # Install PHP 8.4
             if not os.path.exists('/usr/local/lsws/lsphp84/bin/php'):
                 logging.InstallLog.writeToFile("[setupPHPSymlink] PHP 8.4 not found, ensuring it's installed...")
                 
                 if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
-                    command = 'yum install lsphp84 lsphp84-* -y'
+                    command = 'dnf install lsphp84 lsphp84-* -y --skip-broken --nobest'
                 else:
                     command = 'DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp84 lsphp84-*'
                 
@@ -2683,7 +2897,7 @@ milter_default_action = accept
                 logging.InstallLog.writeToFile("[setupPHPSymlink] PHP 8.5 not found, ensuring it's installed...")
                 
                 if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
-                    command = 'yum install lsphp85 lsphp85-* -y'
+                    command = 'dnf install lsphp85 lsphp85-* -y --skip-broken --nobest'
                 else:
                     command = 'DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp85 lsphp85-*'
                 
@@ -2693,11 +2907,37 @@ milter_default_action = accept
             if os.path.exists('/usr/bin/php'):
                 os.remove('/usr/bin/php')
 
-            # Create symlink to PHP 8.3 (default)
-            command = 'ln -s /usr/local/lsws/lsphp83/bin/php /usr/bin/php'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            logging.InstallLog.writeToFile("[setupPHPSymlink] PHP symlink updated to PHP 8.3 successfully.")
+            # Create symlink to the best available PHP version
+            # Try to find and use the best available PHP version
+            # Priority: 85 (beta), 84, 83, 82, 81, 80, 74 (newest to oldest)
+            php_versions = ['85', '84', '83', '82', '81', '80', '74']
+            php_symlink_source = None
+            
+            for php_ver in php_versions:
+                candidate_path = f"/usr/local/lsws/lsphp{php_ver}/bin/php"
+                if os.path.exists(candidate_path):
+                    php_symlink_source = candidate_path
+                    logging.InstallLog.writeToFile(f"[setupPHPSymlink] Found PHP {php_ver} binary: {candidate_path}")
+                    break
+            
+            if php_symlink_source:
+                command = f'ln -sf {php_symlink_source} /usr/bin/php'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                logging.InstallLog.writeToFile(f"[setupPHPSymlink] PHP symlink updated to {php_symlink_source} successfully.")
+                
+                # Verify symlink works
+                verify_command = f'{php_symlink_source} --version'
+                result = preFlightsChecks.call(verify_command, self.distro, verify_command, verify_command, 1, 1, os.EX_OSERR)
+                if result == 1:
+                    logging.InstallLog.writeToFile("[setupPHPSymlink] PHP symlink verification successful")
+                else:
+                    logging.InstallLog.writeToFile("[WARNING] PHP symlink verification failed")
+            else:
+                logging.InstallLog.writeToFile("[ERROR] No PHP versions found for symlink creation")
+                # List available PHP versions for debugging
+                command = 'find /usr/local/lsws -name "lsphp*" -type d 2>/dev/null || true'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                return 0
 
         except OSError as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [setupPHPSymlink]")
