@@ -414,12 +414,19 @@ if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "AlmaLinux9" ]] ; then
     curl -o /etc/yum.repos.d/powerdns-auth-43.repo https://cyberpanel.sh/repo.powerdns.com/repo-files/centos-auth-43.repo
       Check_Return "yum repo" "no_exit"
 
+    # Determine appropriate MariaDB repository based on OS version
+    if [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]] ; then
+        MARIADB_REPO="rhel9-amd64"
+    else
+        MARIADB_REPO="centos7-amd64"
+    fi
+    
     cat << EOF > /etc/yum.repos.d/MariaDB.repo
-# MariaDB 12.1 CentOS repository list - updated 2025-09-25
-# http://downloads.mariadb.org/mariadb/repositories/
+# MariaDB 12.1 repository list - updated 2025-09-25
+# https://downloads.mariadb.org/mariadb/repositories/
 [mariadb]
 name = MariaDB
-baseurl = http://yum.mariadb.org/12.1/centos7-amd64
+baseurl = https://mirror.mariadb.org/yum/12.1/$MARIADB_REPO
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1
 EOF
