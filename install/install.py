@@ -1438,12 +1438,40 @@ class preFlightsChecks:
         # Ensure the parent directory exists
         os.makedirs("/usr/local", exist_ok=True)
         
+        # Determine the correct branch/tag/commit to clone
+        branch_name = os.environ.get('CYBERPANEL_BRANCH', 'stable')
+        
         # Try multiple clone methods for better reliability
-        clone_commands = [
+        clone_commands = []
+        
+        # If a specific branch/tag/commit is specified, try to clone it
+        if branch_name and branch_name != 'stable':
+            if branch_name.startswith('commit:'):
+                # It's a commit hash (e.g., commit:b05d9cb5bb3c277b22a6070f04844e8a7951585b)
+                commit_hash = branch_name[7:]  # Remove 'commit:' prefix
+                clone_commands.append(f"git clone https://github.com/usmannasir/cyberpanel /usr/local/CyberCP")
+                clone_commands.append(f"cd /usr/local/CyberCP && git checkout {commit_hash}")
+            elif branch_name.startswith('v'):
+                # It's a tag (e.g., v2.4.4)
+                clone_commands.append(f"git clone --depth 1 --branch {branch_name} https://github.com/usmannasir/cyberpanel /usr/local/CyberCP")
+            elif branch_name.endswith('-dev'):
+                # It's a development branch (e.g., 2.5.5-dev)
+                clone_commands.append(f"git clone --depth 1 --branch {branch_name} https://github.com/usmannasir/cyberpanel /usr/local/CyberCP")
+            elif len(branch_name) >= 7 and all(c in '0123456789abcdef' for c in branch_name.lower()):
+                # It's a commit hash (e.g., b05d9cb5bb3c277b22a6070f04844e8a7951585b)
+                clone_commands.append(f"git clone https://github.com/usmannasir/cyberpanel /usr/local/CyberCP")
+                clone_commands.append(f"cd /usr/local/CyberCP && git checkout {branch_name}")
+            else:
+                # It's a version number, try as both tag and branch
+                clone_commands.append(f"git clone --depth 1 --branch v{branch_name} https://github.com/usmannasir/cyberpanel /usr/local/CyberCP")
+                clone_commands.append(f"git clone --depth 1 --branch {branch_name} https://github.com/usmannasir/cyberpanel /usr/local/CyberCP")
+        
+        # Fallback to stable branch
+        clone_commands.extend([
             "git clone https://github.com/usmannasir/cyberpanel /usr/local/CyberCP",
             "git clone --depth 1 https://github.com/usmannasir/cyberpanel /usr/local/CyberCP",
             "git clone --single-branch --branch stable https://github.com/usmannasir/cyberpanel /usr/local/CyberCP"
-        ]
+        ])
         
         clone_success = False
         for cmd in clone_commands:
@@ -1461,13 +1489,42 @@ class preFlightsChecks:
             
             # Try manual download as fallback
             logging.InstallLog.writeToFile("Attempting manual download as fallback...")
-            command = "wget -O /tmp/cyberpanel.zip https://github.com/usmannasir/cyberpanel/archive/refs/heads/stable.zip"
+            
+            # Determine the correct download URL based on branch/tag/commit
+            if branch_name and branch_name != 'stable':
+                if branch_name.startswith('commit:'):
+                    # It's a commit hash - use the commit hash directly
+                    commit_hash = branch_name[7:]  # Remove 'commit:' prefix
+                    download_url = f"https://github.com/usmannasir/cyberpanel/archive/{commit_hash}.zip"
+                    extract_dir = f"cyberpanel-{commit_hash}"
+                elif len(branch_name) >= 7 and all(c in '0123456789abcdef' for c in branch_name.lower()):
+                    # It's a commit hash (e.g., b05d9cb5bb3c277b22a6070f04844e8a7951585b)
+                    download_url = f"https://github.com/usmannasir/cyberpanel/archive/{branch_name}.zip"
+                    extract_dir = f"cyberpanel-{branch_name}"
+                elif branch_name.startswith('v'):
+                    # It's a tag
+                    download_url = f"https://github.com/usmannasir/cyberpanel/archive/refs/tags/{branch_name}.zip"
+                    extract_dir = f"cyberpanel-{branch_name[1:]}"  # Remove 'v' prefix
+                elif branch_name.endswith('-dev'):
+                    # It's a development branch
+                    download_url = f"https://github.com/usmannasir/cyberpanel/archive/refs/heads/{branch_name}.zip"
+                    extract_dir = f"cyberpanel-{branch_name}"
+                else:
+                    # It's a version number, try as tag first
+                    download_url = f"https://github.com/usmannasir/cyberpanel/archive/refs/tags/v{branch_name}.zip"
+                    extract_dir = f"cyberpanel-{branch_name}"
+            else:
+                # Default to stable
+                download_url = "https://github.com/usmannasir/cyberpanel/archive/refs/heads/stable.zip"
+                extract_dir = "cyberpanel-stable"
+            
+            command = f"wget -O /tmp/cyberpanel.zip {download_url}"
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
             
             command = "unzip /tmp/cyberpanel.zip -d /usr/local/"
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
             
-            command = "mv /usr/local/cyberpanel-stable /usr/local/CyberCP"
+            command = f"mv /usr/local/{extract_dir} /usr/local/CyberCP"
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
             
             command = "rm -f /tmp/cyberpanel.zip"
