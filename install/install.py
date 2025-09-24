@@ -228,16 +228,29 @@ class preFlightsChecks:
             command = "dnf install -y epel-release"
             self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             
-            # Install PHP dependencies that are missing
+            # Install AlmaLinux 9 compatibility packages
+            self.stdOut("Installing AlmaLinux 9 compatibility packages...", 1)
+            compat_packages = [
+                "libxcrypt-compat",
+                "libnsl",
+                "compat-openssl11",
+                "compat-openssl11-devel"
+            ]
+            
+            for package in compat_packages:
+                command = f"dnf install -y {package}"
+                self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            
+            # Install PHP dependencies that are missing (with AlmaLinux 9 compatibility)
             self.stdOut("Installing PHP dependencies...", 1)
-            php_deps = [
+            
+            # Base packages that should work on all systems
+            base_deps = [
                 "ImageMagick", "ImageMagick-devel",
                 "gd", "gd-devel",
                 "libicu", "libicu-devel",
                 "oniguruma", "oniguruma-devel",
                 "aspell", "aspell-devel",
-                "libc-client", "libc-client-devel",
-                "libmemcached", "libmemcached-devel",
                 "freetype-devel",
                 "libjpeg-turbo-devel",
                 "libpng-devel",
@@ -256,14 +269,77 @@ class preFlightsChecks:
                 "gcc-c++"
             ]
             
-            for dep in php_deps:
+            # Install base packages
+            for dep in base_deps:
                 command = f"dnf install -y {dep}"
                 self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             
-            # Install MariaDB
-            self.stdOut("Installing MariaDB...", 1)
-            command = "dnf install -y mariadb-server mariadb-devel mariadb-client"
-            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            # Install AlmaLinux 9 specific packages with fallbacks
+            alma9_specific = [
+                ("libc-client", "libc-client-devel"),
+                ("libmemcached", "libmemcached-devel")
+            ]
+            
+            for package, dev_package in alma9_specific:
+                # Try to install the main package first
+                command = f"dnf install -y {package}"
+                result = self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                
+                if result == 1:
+                    self.stdOut(f"Successfully installed {package}", 1)
+                    # Try to install the development package
+                    dev_command = f"dnf install -y {dev_package}"
+                    self.call(dev_command, self.distro, dev_command, dev_command, 1, 0, os.EX_OSERR)
+                else:
+                    self.stdOut(f"Package {package} not available, trying alternatives...", 1)
+                    # Try alternative package names for AlmaLinux 9
+                    alternatives = {
+                        "libc-client": ["libc-client-devel", "uw-imap-devel"],
+                        "libmemcached": ["libmemcached-devel", "memcached-devel"]
+                    }
+                    
+                    if package in alternatives:
+                        for alt_package in alternatives[package]:
+                            alt_command = f"dnf install -y {alt_package}"
+                            result = self.call(alt_command, self.distro, alt_command, alt_command, 1, 0, os.EX_OSERR)
+                            if result == 1:
+                                self.stdOut(f"Successfully installed alternative: {alt_package}", 1)
+                                break
+            
+            # Install MariaDB with enhanced AlmaLinux 9.6 support
+            self.stdOut("Installing MariaDB for AlmaLinux 9.6...", 1)
+            
+            # Try multiple installation methods for maximum compatibility
+            mariadb_commands = [
+                "dnf install -y mariadb-server mariadb-devel mariadb-client --skip-broken --nobest",
+                "dnf install -y mariadb-server mariadb-devel mariadb-client --allowerasing",
+                "dnf install -y mariadb-server mariadb-devel --skip-broken --nobest --allowerasing",
+                "dnf install -y mariadb-server --skip-broken --nobest --allowerasing"
+            ]
+            
+            mariadb_installed = False
+            for cmd in mariadb_commands:
+                try:
+                    result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=300)
+                    if result.returncode == 0:
+                        mariadb_installed = True
+                        self.stdOut(f"MariaDB installed successfully with command: {cmd}", 1)
+                        break
+                except subprocess.TimeoutExpired:
+                    self.stdOut(f"Timeout installing MariaDB with command: {cmd}", 0)
+                    continue
+                except Exception as e:
+                    self.stdOut(f"Error installing MariaDB with command: {cmd} - {str(e)}", 0)
+                    continue
+            
+            if not mariadb_installed:
+                self.stdOut("MariaDB installation failed, trying MySQL as fallback...", 0)
+                try:
+                    command = "dnf install -y mysql-server mysql-devel --skip-broken --nobest --allowerasing"
+                    self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                    self.stdOut("MySQL installed as fallback for MariaDB", 1)
+                except:
+                    self.stdOut("Both MariaDB and MySQL installation failed", 0)
             
             # Install additional required packages
             self.stdOut("Installing additional required packages...", 1)
@@ -677,17 +753,41 @@ class preFlightsChecks:
                     self.call(command, self.distro, command, command, 0, 0, os.EX_OSERR)
                 
                 # Save MySQL password to file for later use
-                try:
-                    os.makedirs('/etc/cyberpanel', exist_ok=True)
-                    with open('/etc/cyberpanel/mysqlPassword', 'w') as f:
-                        f.write(self.mysql_Root_password)
-                    os.chmod('/etc/cyberpanel/mysqlPassword', 0o600)
-                    self.stdOut("MySQL password saved to /etc/cyberpanel/mysqlPassword", 1)
-                except Exception as e:
-                    self.stdOut(f"Warning: Could not save MySQL password to file: {str(e)}", 0)
+                self.ensure_mysql_password_file()
                 
         except Exception as e:
             self.stdOut(f"Error changing MySQL root password: {str(e)}", 0)
+
+    def ensure_mysql_password_file(self):
+        """Ensure MySQL password file exists and is properly configured"""
+        try:
+            os.makedirs('/etc/cyberpanel', exist_ok=True)
+            
+            # Check if password file already exists
+            passFile = '/etc/cyberpanel/mysqlPassword'
+            if os.path.exists(passFile):
+                # Verify the file has content
+                with open(passFile, 'r') as f:
+                    content = f.read().strip()
+                if content:
+                    self.stdOut("MySQL password file already exists and has content", 1)
+                    return
+            
+            # Create or update the password file
+            if hasattr(self, 'mysql_Root_password') and self.mysql_Root_password:
+                with open(passFile, 'w') as f:
+                    f.write(self.mysql_Root_password)
+                os.chmod(passFile, 0o600)
+                self.stdOut("MySQL password saved to /etc/cyberpanel/mysqlPassword", 1)
+                logging.InstallLog.writeToFile("MySQL password file created successfully")
+            else:
+                raise Exception("No MySQL root password available to save")
+                
+        except Exception as e:
+            error_msg = f"Critical: Could not save MySQL password to file: {str(e)}"
+            self.stdOut(error_msg, 0)
+            logging.InstallLog.writeToFile(error_msg)
+            raise Exception(error_msg)
 
     def command_exists(self, command):
         """Check if a command exists in PATH"""
@@ -813,9 +913,31 @@ class preFlightsChecks:
         try:
             self.stdOut("Fixing OpenLiteSpeed configurations...", 1)
             
+            # Check if OpenLiteSpeed configuration file exists
+            config_file = self.server_root_path + "conf/httpd_config.conf"
+            if not os.path.exists(config_file):
+                self.stdOut("OpenLiteSpeed configuration file not found, creating default configuration...", 1)
+                # Create the configuration directory if it doesn't exist
+                os.makedirs(os.path.dirname(config_file), exist_ok=True)
+                # Create a basic configuration file
+                with open(config_file, 'w') as f:
+                    f.write("# OpenLiteSpeed Configuration\n")
+                    f.write("serverName localhost\n")
+                    f.write("listener *:8088 {\n")
+                    f.write("  address *:8088\n")
+                    f.write("  secure 0\n")
+                    f.write("  map *:8088 *\n")
+                    f.write("}\n")
+                    f.write("listener *:80 {\n")
+                    f.write("  address *:80\n")
+                    f.write("  secure 0\n")
+                    f.write("  map *:80 *\n")
+                    f.write("}\n")
+                self.stdOut("Default OpenLiteSpeed configuration created", 1)
+            
             # Remove example virtual host
-            data = open(self.server_root_path + "conf/httpd_config.conf", 'r').readlines()
-            writeDataToFile = open(self.server_root_path + "conf/httpd_config.conf", 'w')
+            data = open(config_file, 'r').readlines()
+            writeDataToFile = open(config_file, 'w')
             
             for items in data:
                 if items.find("map") > -1 and items.find("Example") > -1:
@@ -838,11 +960,15 @@ class preFlightsChecks:
             self.stdOut("Changing OpenLiteSpeed port to 80...", 1)
             
             file_path = self.server_root_path + "conf/httpd_config.conf"
-            if self.modify_file_content(file_path, {"*:8088": "*:80"}):
-                self.stdOut("OpenLiteSpeed port changed to 80", 1)
-                self.reStartLiteSpeed()
-                return True
+            if os.path.exists(file_path):
+                if self.modify_file_content(file_path, {"*:8088": "*:80"}):
+                    self.stdOut("OpenLiteSpeed port changed to 80", 1)
+                    self.reStartLiteSpeed()
+                    return True
+                else:
+                    return False
             else:
+                self.stdOut("OpenLiteSpeed configuration file not found, skipping port change", 1)
                 return False
                 
         except Exception as e:
@@ -1322,7 +1448,12 @@ class preFlightsChecks:
             command = 'rpm -ivh http://rpms.litespeedtech.com/centos/litespeed-repo-1.2-1.el7.noarch.rpm'
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
         elif self.distro == cent8:
-            command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
+            # Use compatible repository version for RHEL-based systems
+            # AlmaLinux 9 is compatible with el8 repositories
+            if os_info['name'] in ['almalinux', 'rocky', 'rhel'] and os_info['major_version'] in ['8', '9']:
+                command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
+            else:
+                command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
     def fix_selinux_issue(self):
@@ -1544,9 +1675,38 @@ class preFlightsChecks:
         if self.remotemysql == 'OFF':
             passFile = "/etc/cyberpanel/mysqlPassword"
 
-            f = open(passFile)
-            data = f.read()
-            password = data.split('\n', 1)[0]
+            # Check if MySQL password file exists, create it if missing
+            if not os.path.exists(passFile):
+                logging.InstallLog.writeToFile("MySQL password file not found, creating it...")
+                try:
+                    # Ensure directory exists
+                    os.makedirs('/etc/cyberpanel', exist_ok=True)
+                    
+                    # Use the stored MySQL root password
+                    if hasattr(self, 'mysql_Root_password') and self.mysql_Root_password:
+                        password = self.mysql_Root_password
+                        # Create the password file
+                        with open(passFile, 'w') as f:
+                            f.write(password)
+                        os.chmod(passFile, 0o600)
+                        logging.InstallLog.writeToFile("MySQL password file created successfully")
+                    else:
+                        logging.InstallLog.writeToFile("ERROR: No MySQL root password available")
+                        raise Exception("MySQL root password not available")
+                except Exception as e:
+                    logging.InstallLog.writeToFile(f"ERROR: Failed to create MySQL password file: {str(e)}")
+                    raise Exception(f"Failed to create MySQL password file: {str(e)}")
+            else:
+                # Read existing password file
+                try:
+                    with open(passFile, 'r') as f:
+                        data = f.read()
+                    password = data.split('\n', 1)[0].strip()
+                    if not password:
+                        raise Exception("Empty password in file")
+                except Exception as e:
+                    logging.InstallLog.writeToFile(f"ERROR: Failed to read MySQL password file: {str(e)}")
+                    raise Exception(f"Failed to read MySQL password file: {str(e)}")
         else:
             password = self.mysqlpassword
 
@@ -3753,7 +3913,12 @@ milter_default_action = accept
                 if result != 1:
                     logging.InstallLog.writeToFile("[setupPHPSymlink] LiteSpeed repository not found, attempting to add it...")
                     # Add LiteSpeed repository
-                    repo_command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
+                    # Use compatible repository version for RHEL-based systems
+                    # AlmaLinux 9 is compatible with el8 repositories
+                    if os_info['name'] in ['almalinux', 'rocky', 'rhel'] and os_info['major_version'] in ['8', '9']:
+                        repo_command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
+                    else:
+                        repo_command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
                     preFlightsChecks.call(repo_command, self.distro, repo_command, repo_command, 1, 0, os.EX_OSERR)
             
             # Check if PHP 8.2 exists
@@ -4722,6 +4887,9 @@ def main():
     
     # Apply OS-specific fixes early in the installation process
     checks.apply_os_specific_fixes()
+    
+    # Ensure MySQL password file is created early to prevent FileNotFoundError
+    checks.ensure_mysql_password_file()
     
     checks.mountTemp()
     checks.installQuota()

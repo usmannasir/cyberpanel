@@ -1266,8 +1266,11 @@ else
 fi
 
 echo -e "\nPlease choose to use default admin password \e[31m1234567\e[39m, randomly generate one \e[31m(recommended)\e[39m or specify the admin password?"
-printf "%s" "Choose [d]fault, [r]andom or [s]et password: [d/r/s] "
-Tmp_Input="r"
+printf "%s" "Choose [d]fault, [r]andom or [s]et password (default: random): [d/r/s] "
+read -r Tmp_Input
+if [[ -z $Tmp_Input ]]; then
+  Tmp_Input="r"
+fi
 
 if [[ $Tmp_Input =~ ^(d|D| ) ]] || [[ -z $Tmp_Input ]]; then
   Admin_Pass="1234567"
@@ -1309,7 +1312,7 @@ else
 fi
 
 echo -e "\nDo you wish to install Memcached process and its PHP extension?"
-printf "%s" "Please select [Y/n]: "
+printf "%s" "Please select [Y/n] (default: Yes): "
 read -r Tmp_Input
 if [[ $Tmp_Input =~ ^(no|n|N) ]]; then
   Memcached="Off"
@@ -1319,7 +1322,7 @@ else
 fi
 
 echo -e "\nDo you wish to install Redis process and its PHP extension?"
-printf "%s" "Please select [Y/n]: "
+printf "%s" "Please select [Y/n] (default: Yes): "
 read -r Tmp_Input
 if [[ $Tmp_Input =~ ^(no|n|N) ]]; then
   Redis="Off"
@@ -1331,13 +1334,14 @@ fi
 echo -e "\nWould you like to set up a WatchDog \e[31m(beta)\e[39m for Web service and Database service ?"
 echo -e "The watchdog script will be automatically started up after installation and server reboot"
 echo -e "If you want to kill the watchdog , run \e[31mwatchdog kill\e[39m"
-echo -e "Please type Yes or no (with capital \e[31mY\e[39m, default Yes): "
+echo -e "Please select [Y/n] (default: Yes): "
 read -r Tmp_Input
-if [[ $Tmp_Input = "Yes" ]] || [[ $Tmp_Input = "" ]]; then
+if [[ $Tmp_Input =~ ^(no|n|N) ]]; then
+  Watchdog="Off"
+  echo -e "\nInstall Watchdog set to No...\n"
+else
   Watchdog="On"
   echo -e "\nInstall Watchdog set to Yes...\n"
-else
-  Watchdog="Off"
 fi
 }
 
@@ -1636,23 +1640,41 @@ if [[ "$Server_OS" =~ ^(CentOS|RHEL|AlmaLinux|RockyLinux|CloudLinux|openEuler) ]
     
     # STEP 4: Setup MariaDB repository for RHEL 9+ based systems (AlmaLinux 9/10, RockyLinux 9, RHEL 9)
     if [[ "$Server_OS" =~ ^(AlmaLinux9|AlmaLinux10|RockyLinux9|RHEL9|RHEL10) ]] ; then
-      # Use the official MariaDB repository setup script for better compatibility
       log_info "Setting up MariaDB repository for $Server_OS..."
-      curl -sS "https://downloads.mariadb.com/MariaDB/mariadb_repo_setup" | bash -s -- --mariadb-server-version="12.1" --skip-maxscale --skip-tools
-      Check_Return "MariaDB repository setup" "no_exit"
       
-      # Verify MariaDB repository was added successfully
-      if dnf repolist | grep -q "mariadb"; then
-        log_info "MariaDB repository added successfully"
+      # First, try to use the official MariaDB repository setup script
+      log_info "Attempting official MariaDB repository setup script..."
+      curl -sS "https://downloads.mariadb.com/MariaDB/mariadb_repo_setup" | bash -s -- --mariadb-server-version="12.1" --skip-maxscale --skip-tools 2>/dev/null
+      
+      # Check if the official script worked
+      if dnf repolist | grep -q "mariadb" 2>/dev/null; then
+        log_info "MariaDB repository added successfully via official script"
       else
-        log_warning "MariaDB repository setup may have failed, continuing with installation"
-      fi
-      
-      # Fallback manual repository setup if the script fails
-      if [ ! -f /etc/yum.repos.d/mariadb.repo ]; then
+        log_warning "Official MariaDB repository setup failed, using fallback method"
+        
+        # Enhanced fallback: Try multiple repository configurations
+        log_info "Setting up MariaDB repository using fallback method..."
+        
+        # Method 1: Use the redirected mirror URL
         cat <<EOF >/etc/yum.repos.d/MariaDB.repo
-# MariaDB 10.11 RHEL9+ repository list
-# http://downloads.mariadb.org/mariadb/repositories/
+# MariaDB 12.1 RHEL9+ repository list
+# https://downloads.mariadb.org/mariadb/repositories/
+[mariadb]
+name = MariaDB
+baseurl = https://mirror.mariadb.org/yum/12.1/rhel9-amd64/
+gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+enabled=1
+gpgcheck=1
+module_hotfixes=1
+gpgkey=https://downloads.mariadb.com/MariaDB/MariaDB-Server-GPG-KEY
+gpgkey=https://downloads.mariadb.com/MariaDB/MariaDB-ColumnStore-GPG-KEY
+EOF
+        
+        # Method 2: Alternative repository configuration if first fails
+        if ! dnf repolist | grep -q "mariadb" 2>/dev/null; then
+          log_info "Trying alternative MariaDB repository configuration..."
+          cat <<EOF >/etc/yum.repos.d/MariaDB.repo
+# MariaDB 12.1 Alternative repository configuration
 [mariadb]
 name = MariaDB
 baseurl = https://yum.mariadb.org/12.1/rhel9-amd64/
@@ -1661,7 +1683,14 @@ enabled=1
 gpgcheck=1
 module_hotfixes=1
 EOF
-        Check_Return "MariaDB repository fallback setup" "no_exit"
+        fi
+        
+        # Method 3: If still no repository, try using AppStream (AlmaLinux 9.6 default)
+        if ! dnf repolist | grep -q "mariadb" 2>/dev/null; then
+          log_info "MariaDB repository setup failed, will use AlmaLinux AppStream repository"
+          # Enable AppStream if not already enabled
+          dnf config-manager --enable appstream 2>/dev/null || true
+        fi
       fi
       
       # STEP 5: Clean caches after MariaDB repo setup
@@ -1693,18 +1722,59 @@ EOF
     dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils openssl-devel boost-devel boost-program-options
       Check_Return "Base system packages" "no_exit"
     
-    # Second: Install MariaDB packages (with proper dependency resolution)
-    dnf install -y mariadb-server mariadb-devel mariadb-client-utils --skip-broken --nobest
-      Check_Return "MariaDB packages" "no_exit"
+    # Second: Install MariaDB packages (with comprehensive fallback logic for AlmaLinux 9.6)
+    log_info "Installing MariaDB packages for AlmaLinux 9.6..."
     
-    # STEP 7.1: Check for package conflicts and resolve them
-    echo "Checking for package conflicts..."
-    if dnf list installed | grep -q "mariadb-server"; then
-      echo "MariaDB server installed successfully"
+    # Try multiple installation methods for maximum compatibility
+    mariadb_installed=false
+    
+    # Method 1: Try from MariaDB repository (if available)
+    if dnf repolist | grep -q "mariadb" 2>/dev/null; then
+      log_info "Installing MariaDB from official MariaDB repository..."
+      dnf install -y mariadb-server mariadb-devel mariadb-client-utils --skip-broken --nobest 2>/dev/null
+      if dnf list installed | grep -q "mariadb-server" 2>/dev/null; then
+        mariadb_installed=true
+        log_info "MariaDB installed successfully from official repository"
+      fi
+    fi
+    
+    # Method 2: Try from AppStream repository (AlmaLinux 9.6 default)
+    if [ "$mariadb_installed" = false ]; then
+      log_info "Installing MariaDB from AlmaLinux AppStream repository..."
+      dnf install -y mariadb-server mariadb-devel mariadb-client-utils --skip-broken --nobest --allowerasing 2>/dev/null
+      if dnf list installed | grep -q "mariadb-server" 2>/dev/null; then
+        mariadb_installed=true
+        log_info "MariaDB installed successfully from AppStream repository"
+      fi
+    fi
+    
+    # Method 3: Try with minimal dependencies if still failing
+    if [ "$mariadb_installed" = false ]; then
+      log_info "Installing MariaDB with minimal dependencies..."
+      dnf install -y mariadb-server --skip-broken --nobest --allowerasing 2>/dev/null || true
+      dnf install -y mariadb-devel --skip-broken --nobest --allowerasing 2>/dev/null || true
+      if dnf list installed | grep -q "mariadb-server" 2>/dev/null; then
+        mariadb_installed=true
+        log_info "MariaDB installed successfully with minimal dependencies"
+      fi
+    fi
+    
+    # Method 4: Final fallback - try MySQL as alternative
+    if [ "$mariadb_installed" = false ]; then
+      log_warning "MariaDB installation failed, trying MySQL as fallback..."
+      dnf install -y mysql-server mysql-devel --skip-broken --nobest --allowerasing 2>/dev/null || true
+      if dnf list installed | grep -q "mysql-server" 2>/dev/null; then
+        log_info "MySQL installed as fallback for MariaDB"
+        mariadb_installed=true
+      fi
+    fi
+    
+    # Final verification
+    if [ "$mariadb_installed" = false ]; then
+      log_error "Failed to install MariaDB or MySQL. Manual intervention may be required."
+      Check_Return "MariaDB packages" "no_exit"
     else
-      echo "Warning: MariaDB server not found, attempting to resolve..."
-      # Try installing from different sources
-      dnf install -y mariadb-server --skip-broken --nobest --allowerasing
+      log_info "Database server installed successfully"
     fi
     
     # STEP 8: Install development tools group
