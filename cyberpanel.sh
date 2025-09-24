@@ -553,11 +553,11 @@ if [[ "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-dev)?$ ]]; then
       fi
       echo -e "\nSet branch name to $Branch_Name (development version)..."
       
-      # Check if the development branch exists
+      # Check if the development branch exists using GitHub API
       echo -e "Verifying branch existence..."
-      if ! curl -s -I "https://raw.githubusercontent.com/usmannasir/cyberpanel/$Branch_Name/README.md" | grep -q "200 OK"; then
+      if ! curl -s "https://api.github.com/repos/usmannasir/cyberpanel/branches/$Branch_Name" | grep -q '"name"'; then
         echo -e "\nWarning: The branch '$Branch_Name' does not exist or is not accessible."
-        echo -e "Available branches include: stable, v2.3.5-dev, v2.3.4, v2.3.3, etc."
+        echo -e "Available branches include: stable, v2.5.5-dev, v2.4.4, v2.4.3, etc."
         echo -e "You can also use specific commits like: b05d9cb5bb3c277b22a6070f04844e8a7951585b"
         echo -e "\nWould you like to continue anyway? This may cause installation issues. [y/N]"
         read -r continue_choice
@@ -566,6 +566,8 @@ if [[ "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-dev)?$ ]]; then
           exit 1
         fi
         echo -e "Continuing with non-existent branch '$Branch_Name'..."
+      else
+        echo -e "✅ Branch '$Branch_Name' verified successfully."
       fi
     else
       Branch_Name="v${1//[[:space:]]/}"
@@ -1247,6 +1249,7 @@ echo -e "\nPress \e[31mEnter\e[39m key to continue with latest version or Enter 
 echo -e "  \e[31m2.4.4\e[39m (stable version)"
 echo -e "  \e[31m2.5.0\e[39m (stable version)"
 echo -e "  \e[31m2.5.5-dev\e[39m (development version - will auto-add 'v' prefix)"
+echo -e "  \e[31mv2.5.5-dev\e[39m (development version with 'v' prefix)"
 echo -e "  \e[31mv2.3.5-dev\e[39m (development version with 'v' prefix)"
 echo -e "  \e[31mv2.3.4\e[39m (stable version)"
 echo -e "  \e[31mb05d9cb5bb3c277b22a6070f04844e8a7951585b\e[39m (specific commit)"
