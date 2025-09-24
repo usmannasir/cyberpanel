@@ -545,7 +545,12 @@ if [[ "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-dev)?$ ]]; then
   else
     # Handle both stable and development versions
     if [[ "$1" =~ -dev$ ]]; then
-      Branch_Name="${1//[[:space:]]/}"
+      # Add 'v' prefix for development branches if not already present
+      if [[ "$1" =~ ^v.*-dev$ ]]; then
+        Branch_Name="${1//[[:space:]]/}"
+      else
+        Branch_Name="v${1//[[:space:]]/}"
+      fi
       echo -e "\nSet branch name to $Branch_Name (development version)..."
       
       # Check if the development branch exists
@@ -1241,12 +1246,13 @@ fi
 echo -e "\nPress \e[31mEnter\e[39m key to continue with latest version or Enter specific version such as:"
 echo -e "  \e[31m2.4.4\e[39m (stable version)"
 echo -e "  \e[31m2.5.0\e[39m (stable version)"
-echo -e "  \e[31mv2.3.5-dev\e[39m (development version - note: use 'v' prefix)"
+echo -e "  \e[31m2.5.5-dev\e[39m (development version - will auto-add 'v' prefix)"
+echo -e "  \e[31mv2.3.5-dev\e[39m (development version with 'v' prefix)"
 echo -e "  \e[31mv2.3.4\e[39m (stable version)"
 echo -e "  \e[31mb05d9cb5bb3c277b22a6070f04844e8a7951585b\e[39m (specific commit)"
 echo -e "  \e[31mb05d9cb\e[39m (short commit hash)"
 echo -e ""
-echo -e "\e[33mNote: The '2.5.5-dev' branch does not exist. Use 'v2.3.5-dev' instead.\e[39m"
+echo -e "\e[33mNote: Development versions will automatically get 'v' prefix if not provided.\e[39m"
 printf "%s" ""
 read -r Tmp_Input
 
