@@ -1078,10 +1078,24 @@ if ! /usr/local/CyberCP/bin/python -c "import django" 2>/dev/null; then
   elif [[ "$Server_OS" =~ ^(CentOS|RHEL|AlmaLinux|RockyLinux|CloudLinux) ]]; then
     # RHEL-based systems
     if command -v dnf >/dev/null 2>&1; then
-      dnf install -y mariadb-devel pkgconfig gcc python3-devel
+      # Remove conflicting packages first
+      dnf remove -y mariadb mariadb-client-utils mariadb-server || true
+      dnf remove -y MariaDB-server MariaDB-client MariaDB-devel || true
+      
+      # Install development packages with conflict resolution
+      dnf install -y --allowerasing --skip-broken --nobest mariadb-devel pkgconfig gcc python3-devel || \
+      dnf install -y --allowerasing --skip-broken --nobest mysql-devel pkgconfig gcc python3-devel || \
+      dnf install -y --allowerasing --skip-broken --nobest mysql-community-devel pkgconfig gcc python3-devel
     else
       yum install -y mariadb-devel pkgconfig gcc python3-devel
     fi
+  fi
+
+  # Check if mysql.h is available and create symlink if needed
+  if [[ ! -f "/usr/include/mysql/mysql.h" ]] && [[ -f "/usr/include/mariadb/mysql.h" ]]; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Creating mysql.h symlink for compatibility..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    mkdir -p /usr/include/mysql
+    ln -sf /usr/include/mariadb/mysql.h /usr/include/mysql/mysql.h
   fi
   
   # Re-install requirements

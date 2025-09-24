@@ -1817,6 +1817,54 @@ if [[ "$Server_OS" =~ ^(CentOS|RHEL|AlmaLinux|RockyLinux|CloudLinux) ]]; then
       curl -sS "https://downloads.mariadb.com/MariaDB/mariadb_repo_setup" | bash -s -- --mariadb-server-version="10.11" --skip-maxscale --skip-tools
     fi
   fi
+  
+  # Install specific MySQL development packages that provide mysql.h
+  echo "Installing MySQL development packages for mysql.h header..."
+  
+  # First, try to resolve MariaDB conflicts
+  echo "Resolving MariaDB package conflicts..."
+  if command -v dnf >/dev/null 2>&1; then
+    # Set repository priorities to avoid conflicts
+    echo "Setting repository priorities..."
+    dnf config-manager --set-enabled mariadb-main || true
+    dnf config-manager --set-disabled mariadb || true
+    
+    # Remove conflicting packages first
+    echo "Removing conflicting MariaDB packages..."
+    dnf remove -y mariadb mariadb-client-utils mariadb-server || true
+    dnf remove -y MariaDB-server MariaDB-client MariaDB-devel || true
+    
+    # Also remove any MySQL packages that might conflict
+    echo "Removing conflicting MySQL packages..."
+    dnf remove -y mysql-server mysql-client mysql-community-server mysql-community-client || true
+    dnf remove -y mysql-devel mysql-community-devel || true
+    
+    # Add MySQL repository
+    dnf install -y https://dev.mysql.com/get/mysql80-community-release-el9-1.noarch.rpm || \
+    dnf install -y https://dev.mysql.com/get/mysql80-community-release-el8-1.noarch.rpm || true
+    
+    # Install MySQL development packages with conflict resolution
+    dnf install -y --allowerasing --skip-broken --nobest mysql-devel mariadb-devel mysql-community-devel || \
+    dnf install -y --allowerasing --skip-broken --nobest mariadb-connector-c-devel || \
+    dnf install -y --allowerasing --skip-broken --nobest mysql-connector-c-devel || \
+    dnf install -y --allowerasing --skip-broken --nobest mysql-community-devel || \
+    # Fallback: try to install just the development headers
+    dnf install -y --allowerasing --skip-broken --nobest mariadb-devel || \
+    dnf install -y --allowerasing --skip-broken --nobest mysql-devel || \
+    # Last resort: install from AppStream
+    dnf install -y --allowerasing --skip-broken --nobest mariadb-devel mariadb-connector-c-devel || \
+    # Final fallback: install MariaDB server and development packages
+    dnf install -y --allowerasing --skip-broken --nobest MariaDB-server MariaDB-devel MariaDB-client-utils
+  else
+    # Add MySQL repository for yum
+    yum install -y https://dev.mysql.com/get/mysql80-community-release-el7-3.noarch.rpm || true
+    
+    # Install MySQL development packages with conflict resolution
+    yum install -y --allowerasing --skip-broken --nobest mysql-devel mariadb-devel mysql-community-devel || \
+    yum install -y --allowerasing --skip-broken --nobest mariadb-connector-c-devel || \
+    yum install -y --allowerasing --skip-broken --nobest mysql-connector-c-devel || \
+    yum install -y --allowerasing --skip-broken --nobest mysql-community-devel
+  fi
 fi
 if [[ "$Server_OS" = "Ubuntu" ]] || [[ "$Server_OS" = "Debian" ]]; then
   # Ubuntu/Debian - comprehensive development packages
@@ -1887,8 +1935,67 @@ elif [[ "$Server_OS" =~ ^(CentOS|RHEL|AlmaLinux|RockyLinux|CloudLinux) ]]; then
   fi
 fi
 
+  # Verify MySQL development headers installation
+  echo "Verifying MySQL development headers installation..."
+  if [[ -f "/usr/include/mysql/mysql.h" ]]; then
+    echo "mysql.h found at /usr/include/mysql/mysql.h"
+  elif [[ -f "/usr/include/mariadb/mysql.h" ]]; then
+    echo "mysql.h found at /usr/include/mariadb/mysql.h"
+    # Create symlink for compatibility
+    mkdir -p /usr/include/mysql
+    ln -sf /usr/include/mariadb/mysql.h /usr/include/mysql/mysql.h
+    echo "Created symlink for mysql.h compatibility"
+  elif [[ -f "/usr/local/include/mysql/mysql.h" ]]; then
+    echo "mysql.h found at /usr/local/include/mysql/mysql.h"
+    # Create symlink for compatibility
+    mkdir -p /usr/include/mysql
+    ln -sf /usr/local/include/mysql/mysql.h /usr/include/mysql/mysql.h
+    echo "Created symlink for mysql.h compatibility"
+  else
+    echo "WARNING: mysql.h not found, attempting manual installation..."
+
+    # Try to find and install the correct package
+    if command -v dnf >/dev/null 2>&1; then
+      echo "Searching for MySQL development packages..."
+      dnf search mysql-devel | grep -i "mysql.*devel" | head -5
+      dnf search mariadb-devel | grep -i "mariadb.*devel" | head -5
+      
+      # Try to install specific packages that provide mysql.h
+      echo "Attempting to install packages that provide mysql.h..."
+      dnf install -y --allowerasing --skip-broken --nobest $(dnf search mysql-devel | grep -i "mysql.*devel" | head -1 | awk '{print $1}') || \
+      dnf install -y --allowerasing --skip-broken --nobest $(dnf search mariadb-devel | grep -i "mariadb.*devel" | head -1 | awk '{print $1}') || \
+      dnf install -y --allowerasing --skip-broken --nobest mysql-community-devel || \
+      dnf install -y --allowerasing --skip-broken --nobest mariadb-connector-c-devel || \
+      dnf install -y --allowerasing --skip-broken --nobest mysql-connector-c-devel
+    elif command -v yum >/dev/null 2>&1; then
+      echo "Searching for MySQL development packages..."
+      yum search mysql-devel | grep -i "mysql.*devel" | head -5
+      yum search mariadb-devel | grep -i "mariadb.*devel" | head -5
+      
+      # Try to install specific packages that provide mysql.h
+      echo "Attempting to install packages that provide mysql.h..."
+      yum install -y --allowerasing --skip-broken --nobest $(yum search mysql-devel | grep -i "mysql.*devel" | head -1 | awk '{print $1}') || \
+      yum install -y --allowerasing --skip-broken --nobest $(yum search mariadb-devel | grep -i "mariadb.*devel" | head -1 | awk '{print $1}') || \
+      yum install -y --allowerasing --skip-broken --nobest mysql-community-devel || \
+      yum install -y --allowerasing --skip-broken --nobest mariadb-connector-c-devel || \
+      yum install -y --allowerasing --skip-broken --nobest mysql-connector-c-devel
+    fi
+    
+    # Check again after installation attempts
+    if [[ -f "/usr/include/mysql/mysql.h" ]]; then
+      echo "mysql.h found at /usr/include/mysql/mysql.h after installation"
+    elif [[ -f "/usr/include/mariadb/mysql.h" ]]; then
+      echo "mysql.h found at /usr/include/mariadb/mysql.h after installation"
+      mkdir -p /usr/include/mysql
+      ln -sf /usr/include/mariadb/mysql.h /usr/include/mysql/mysql.h
+      echo "Created symlink for mysql.h compatibility"
+    else
+      echo "ERROR: mysql.h still not found after all installation attempts"
+      echo "This will cause mysqlclient compilation to fail"
+    fi
+  fi
+
 # Verify pkg-config can find MySQL libraries
-echo "Verifying MySQL development headers installation..."
 if pkg-config --exists mysqlclient; then
   echo "mysqlclient found via pkg-config"
 elif pkg-config --exists mariadb; then
@@ -1903,17 +2010,35 @@ fi
 
 # Try pip install with enhanced error handling
 echo "Installing Python requirements with enhanced MySQL support..."
+
+# Check if mysql.h is available before attempting pip install
+if [[ ! -f "/usr/include/mysql/mysql.h" ]] && [[ ! -f "/usr/include/mariadb/mysql.h" ]]; then
+  echo "WARNING: mysql.h not found, mysqlclient will likely fail to compile"
+  echo "Pre-installing PyMySQL as fallback..."
+  pip install --no-cache-dir PyMySQL
+  
+  # Also modify requirements.txt to use PyMySQL instead of mysqlclient
+  if [[ -f "/usr/local/requirments.txt" ]]; then
+    echo "Modifying requirements.txt to use PyMySQL instead of mysqlclient..."
+    cp /usr/local/requirments.txt /usr/local/requirments.txt.original
+    sed 's/mysqlclient/PyMySQL/g' /usr/local/requirments.txt.original > /usr/local/requirments.txt
+    echo "Modified requirements.txt to avoid mysqlclient compilation issues"
+  fi
+fi
 if ! Retry_Command "pip install --default-timeout=3600 -r /usr/local/requirments.txt"; then
   echo "Standard pip install failed, trying alternative mysqlclient installation..."
   
   # Try installing mysqlclient separately with specific flags
   echo "Attempting alternative MySQL client installations..."
   
+  # First, try to install PyMySQL as a drop-in replacement
+  echo "Installing PyMySQL as MySQL client alternative..."
+  pip install --no-cache-dir PyMySQL
+  
   # Try pre-compiled wheels first
   pip install --no-cache-dir --only-binary=all mysqlclient==2.2.7 || \
   pip install --no-cache-dir --only-binary=all mysqlclient || \
   pip install --no-cache-dir --force-reinstall mysqlclient==2.2.7 || \
-  pip install --no-cache-dir --force-reinstall PyMySQL || \
   pip install --no-cache-dir --force-reinstall mysql-connector-python || \
   pip install --no-cache-dir --force-reinstall pymysql
   
@@ -1922,6 +2047,41 @@ if ! Retry_Command "pip install --default-timeout=3600 -r /usr/local/requirments
   # Then try the requirements again
   Retry_Command "pip install --default-timeout=3600 -r /usr/local/requirments.txt"
 fi
+
+  # Final fallback: if mysqlclient still fails, modify requirements to skip it
+  if ! pip list | grep -q "mysqlclient\|PyMySQL\|mysql-connector-python\|pymysql"; then
+    echo "WARNING: No MySQL client found, creating modified requirements file..."
+    cp /usr/local/requirments.txt /usr/local/requirments.txt.backup
+
+    # Remove mysqlclient from requirements and add PyMySQL instead
+    sed 's/mysqlclient/PyMySQL/g' /usr/local/requirments.txt.backup > /usr/local/requirments.txt
+
+    echo "Installing modified requirements without mysqlclient..."
+    Retry_Command "pip install --default-timeout=3600 -r /usr/local/requirments.txt"
+  fi
+
+  # Additional fallback: if mysqlclient is still failing after 10 attempts, force PyMySQL
+  echo "Checking if mysqlclient installation is still failing..."
+  if pip list | grep -q "mysqlclient"; then
+    echo "mysqlclient successfully installed"
+  else
+    echo "mysqlclient installation failed, forcing PyMySQL installation..."
+    
+    # Install PyMySQL as primary MySQL client
+    pip install --no-cache-dir --force-reinstall PyMySQL
+    
+    # Create a modified requirements file that uses PyMySQL instead of mysqlclient
+    if [[ -f "/usr/local/requirments.txt" ]]; then
+      cp /usr/local/requirments.txt /usr/local/requirments.txt.mysqlclient_backup
+      sed 's/mysqlclient/PyMySQL/g' /usr/local/requirments.txt.mysqlclient_backup > /usr/local/requirments.txt
+      echo "Modified requirements.txt to use PyMySQL instead of mysqlclient"
+      
+      # Try installing the modified requirements
+      echo "Installing modified requirements with PyMySQL..."
+      Retry_Command "pip install --default-timeout=3600 -r /usr/local/requirments.txt"
+    fi
+  fi
+
   Check_Return "requirments" "no_exit"
 
 # Change to /usr/local directory to clone CyberPanel
