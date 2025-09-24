@@ -440,6 +440,28 @@ class preFlightsChecks:
             self.stdOut(f"Error in fix_rhel_family_common: {str(e)}", 0)
             return False
 
+    def fix_almalinux9_mariadb(self):
+        """Apply AlmaLinux 9 MariaDB fixes"""
+        try:
+            self.stdOut("Applying AlmaLinux 9 MariaDB fixes...", 1)
+            
+            # Install AlmaLinux 9 compatibility packages
+            self.stdOut("Installing AlmaLinux 9 compatibility packages...", 1)
+            compat_packages = [
+                "libxcrypt-compat",
+                "libnsl",
+                "compat-openssl11",
+                "compat-openssl11-devel"
+            ]
+            
+            for package in compat_packages:
+                command = f"dnf install -y {package}"
+                self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            
+            self.stdOut("AlmaLinux 9 MariaDB fixes applied successfully", 1)
+        except Exception as e:
+            self.stdOut(f"Error applying AlmaLinux 9 MariaDB fixes: {str(e)}", 0)
+
     def fix_ubuntu_specific(self):
         """Fix Ubuntu-specific installation issues"""
         try:
@@ -1450,6 +1472,7 @@ class preFlightsChecks:
         elif self.distro == cent8:
             # Use compatible repository version for RHEL-based systems
             # AlmaLinux 9 is compatible with el8 repositories
+            os_info = self.detect_os_info()
             if os_info['name'] in ['almalinux', 'rocky', 'rhel'] and os_info['major_version'] in ['8', '9']:
                 command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
             else:
@@ -3915,6 +3938,7 @@ milter_default_action = accept
                     # Add LiteSpeed repository
                     # Use compatible repository version for RHEL-based systems
                     # AlmaLinux 9 is compatible with el8 repositories
+                    os_info = self.detect_os_info()
                     if os_info['name'] in ['almalinux', 'rocky', 'rhel'] and os_info['major_version'] in ['8', '9']:
                         repo_command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
                     else:
