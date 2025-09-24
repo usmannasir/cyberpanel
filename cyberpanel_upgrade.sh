@@ -1121,7 +1121,7 @@ if ! /usr/local/CyberCP/bin/python -c "import django" 2>/dev/null; then
       # Install development packages with conflict resolution
       dnf install -y --allowerasing --skip-broken --nobest mariadb-devel pkgconfig gcc python3-devel || \
       dnf install -y --allowerasing --skip-broken --nobest mysql-devel pkgconfig gcc python3-devel || \
-      dnf install -y --allowerasing --skip-broken --nobest mysql-community-devel pkgconfig gcc python3-devel
+      dnf install -y --allowerasing --skip-broken --nobest mariadb-devel mariadb-connector-c-devel pkgconfig gcc python3-devel
     else
       yum install -y mariadb-devel pkgconfig gcc python3-devel
     fi
