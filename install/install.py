@@ -3625,7 +3625,7 @@ def main():
     checks.installAcme()
     
     # Fix Django AutoField warnings
-    checks.fix_django_autofield_warnings()
+    fix_django_autofield_warnings()
 
     ## Install and Configure OpenDKIM.
 
