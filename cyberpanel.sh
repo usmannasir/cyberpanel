@@ -1565,7 +1565,7 @@ if [[ "$Server_OS" =~ ^(CentOS|RHEL|AlmaLinux|RockyLinux|CloudLinux|openEuler) ]
       Check_Return "EPEL repository" "no_exit"
     
     # Setup MariaDB repository for RHEL 9+ based systems (AlmaLinux 9/10, RockyLinux 9, RHEL 9)
-    if [[ "$Server_OS" =~ ^(AlmaLinux9|AlmaLinux10|RockyLinux9|RHEL9) ]] ; then
+    if [[ "$Server_OS" =~ ^(AlmaLinux9|AlmaLinux10|RockyLinux9|RHEL9|RHEL10) ]] ; then
       # Use the official MariaDB repository setup script for better compatibility
       curl -sS "https://downloads.mariadb.com/MariaDB/mariadb_repo_setup" | bash -s -- --mariadb-server-version="10.11" --skip-maxscale --skip-tools
       Check_Return "MariaDB repository setup" "no_exit"
@@ -1587,7 +1587,7 @@ EOF
       fi
     fi
     
-    dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel MariaDB-server MariaDB-client MariaDB-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils openssl-devel boost-devel boost-program-options
+    dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-server mariadb-devel mariadb-client-utils curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils openssl-devel boost-devel boost-program-options
       Check_Return
     
     # Install development tools group
@@ -2309,12 +2309,13 @@ Description=LiteSpeed Memcached (LSMCD)
 After=network.target
 
 [Service]
-Type=forking
-PIDFile=/var/run/lsmcd.pid
+Type=simple
 ExecStart=/usr/local/bin/lsmcd -d
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=process
 Restart=on-failure
+User=root
+Group=root
 
 [Install]
 WantedBy=multi-user.target
@@ -2330,6 +2331,9 @@ EOF
         touch /home/cyberpanel/lsmcd
       else
         echo "Warning: LSMCD service failed to start"
+        # Try to get more details about the failure
+        systemctl status lsmcd --no-pager
+        journalctl -u lsmcd --no-pager -n 10
       fi
     else
       echo "Error: LSMCD installation failed"

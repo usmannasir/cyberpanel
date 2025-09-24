@@ -93,7 +93,7 @@ class InstallCyberPanel:
             
             # Install MariaDB packages
             self.stdOut("Installing MariaDB packages...", 1)
-            mariadb_packages = "MariaDB-server MariaDB-client MariaDB-backup MariaDB-devel"
+            mariadb_packages = "mariadb-server mariadb-devel mariadb-client-utils"
             command = f"dnf install -y {mariadb_packages}"
             install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             
@@ -693,7 +693,7 @@ gpgcheck=1
                 command = 'dnf clean all'
                 install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
-                command = 'dnf install MariaDB-server MariaDB-client MariaDB-backup -y'
+                command = 'dnf install mariadb-server mariadb-devel mariadb-client-utils -y'
 
         install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
