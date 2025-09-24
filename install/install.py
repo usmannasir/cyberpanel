@@ -258,26 +258,37 @@ class preFlightsChecks:
             
             # Install MariaDB packages - use correct package names for AlmaLinux 9
             self.stdOut("Installing MariaDB packages...", 1)
-            # Try different package combinations for AlmaLinux 9
-            mariadb_packages_attempts = [
-                "mariadb-server mariadb-devel mariadb-client",
-                "mariadb-server mariadb-devel",
-                "mariadb-server mariadb-devel mariadb-common"
-            ]
             
-            installed = False
-            for packages in mariadb_packages_attempts:
-                command = f"dnf install -y {packages}"
-                result = self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-                if result == 0:
-                    self.stdOut(f"Successfully installed MariaDB packages: {packages}", 1)
-                    installed = True
-                    break
-                else:
-                    self.stdOut(f"Failed to install packages: {packages}, trying next combination...", 1)
+            # First, try to install just mariadb-server
+            command = "dnf install -y mariadb-server"
+            result = self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             
-            if not installed:
-                self.stdOut("Warning: Some MariaDB packages may not have installed correctly", 0)
+            if result == 0:
+                self.stdOut("Successfully installed mariadb-server", 1)
+                
+                # Try to install development packages
+                dev_packages = ["mariadb-devel", "mariadb-connector-c-devel", "mysql-devel"]
+                for dev_pkg in dev_packages:
+                    command = f"dnf install -y {dev_pkg}"
+                    result = self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                    if result == 0:
+                        self.stdOut(f"Successfully installed {dev_pkg}", 1)
+                        break
+                    else:
+                        self.stdOut(f"Could not install {dev_pkg}, trying next...", 1)
+                
+                # Try to install client packages
+                client_packages = ["mariadb-client", "mariadb-connector-c"]
+                for client_pkg in client_packages:
+                    command = f"dnf install -y {client_pkg}"
+                    result = self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                    if result == 0:
+                        self.stdOut(f"Successfully installed {client_pkg}", 1)
+                        break
+                    else:
+                        self.stdOut(f"Could not install {client_pkg}, trying next...", 1)
+            else:
+                self.stdOut("Warning: Could not install MariaDB server", 0)
             
             # Check if MariaDB service exists and create it if needed
             self.stdOut("Checking MariaDB service configuration...", 1)
@@ -655,6 +666,16 @@ class preFlightsChecks:
                 if mysql_cmd:
                     command = f'{mysql_cmd} -u root -e "{passwordCMD}"'
                     self.call(command, self.distro, command, command, 0, 0, os.EX_OSERR)
+                
+                # Save MySQL password to file for later use
+                try:
+                    os.makedirs('/etc/cyberpanel', exist_ok=True)
+                    with open('/etc/cyberpanel/mysqlPassword', 'w') as f:
+                        f.write(self.mysql_Root_password)
+                    os.chmod('/etc/cyberpanel/mysqlPassword', 0o600)
+                    self.stdOut("MySQL password saved to /etc/cyberpanel/mysqlPassword", 1)
+                except Exception as e:
+                    self.stdOut(f"Warning: Could not save MySQL password to file: {str(e)}", 0)
                 
         except Exception as e:
             self.stdOut(f"Error changing MySQL root password: {str(e)}", 0)
@@ -1316,6 +1337,44 @@ class preFlightsChecks:
     def install_psmisc(self):
         self.stdOut("Install psmisc")
         self.install_package("psmisc")
+
+    def install_php_dependencies(self):
+        """Install missing dependencies for PHP extensions"""
+        try:
+            self.stdOut("Installing PHP dependencies...", 1)
+            
+            # Install ImageMagick for imagick extension
+            command = "dnf install -y ImageMagick ImageMagick-devel"
+            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            
+            # Install GD library for gd extension
+            command = "dnf install -y gd gd-devel"
+            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            
+            # Install ICU for intl extension
+            command = "dnf install -y libicu libicu-devel"
+            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            
+            # Install oniguruma for mbstring extension
+            command = "dnf install -y oniguruma oniguruma-devel"
+            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            
+            # Install aspell for pspell extension
+            command = "dnf install -y aspell aspell-devel"
+            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            
+            # Install libc-client for imap extension
+            command = "dnf install -y libc-client libc-client-devel"
+            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            
+            # Install memcached for memcached extension
+            command = "dnf install -y libmemcached libmemcached-devel"
+            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            
+            self.stdOut("PHP dependencies installed successfully", 1)
+            
+        except Exception as e:
+            self.stdOut(f"Warning: Some PHP dependencies could not be installed: {str(e)}", 0)
 
     def generate_secure_env_file(self, mysql_root_password, cyberpanel_db_password):
         """
@@ -2147,6 +2206,10 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
     def setup_email_Passwords(self, mysqlPassword, mysql):
         try:
+            # Ensure mysqlPassword is not None
+            if mysqlPassword is None:
+                mysqlPassword = self.mysql_Root_password
+                logging.InstallLog.writeToFile("Warning: mysqlPassword was None, using mysql_Root_password")
 
             logging.InstallLog.writeToFile("Setting up authentication for Postfix and Dovecot...")
 
@@ -4659,6 +4722,7 @@ def main():
     checks.installPowerDNS()
     checks.installPureFTPD()
 
+    checks.install_php_dependencies()
     checks.setupPHPAndComposer()
     checks.fix_selinux_issue()
     checks.install_psmisc()
@@ -4666,11 +4730,17 @@ def main():
 
     if args.postfix is None:
         checks.install_postfix_dovecot()
+        # Ensure cyberpanel_db_password is set before calling setup_email_Passwords
+        if not hasattr(checks, 'cyberpanel_db_password') or checks.cyberpanel_db_password is None:
+            checks.cyberpanel_db_password = checks.mysql_Root_password
         checks.setup_email_Passwords(checks.cyberpanel_db_password, mysql)
         checks.setup_postfix_dovecot_config(mysql)
     else:
         if args.postfix == 'ON':
             checks.install_postfix_dovecot()
+            # Ensure cyberpanel_db_password is set before calling setup_email_Passwords
+            if not hasattr(checks, 'cyberpanel_db_password') or checks.cyberpanel_db_password is None:
+                checks.cyberpanel_db_password = checks.mysql_Root_password
             checks.setup_email_Passwords(checks.cyberpanel_db_password, mysql)
             checks.setup_postfix_dovecot_config(mysql)
 
