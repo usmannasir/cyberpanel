@@ -86,16 +86,53 @@ class InstallCyberPanel:
             command = "dnf clean all"
             install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             
-            # Install MariaDB from official repository
+            # Install MariaDB from official repository using shell=True for pipe commands
             self.stdOut("Setting up official MariaDB repository...", 1)
             command = "curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version='10.11'"
-            install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR, shell=True)
             
-            # Install MariaDB packages
+            # Install MariaDB packages - use correct package names for AlmaLinux 9
             self.stdOut("Installing MariaDB packages...", 1)
-            mariadb_packages = "mariadb-server mariadb-devel mariadb-client-utils"
-            command = f"dnf install -y {mariadb_packages}"
-            install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            # Try different package combinations for AlmaLinux 9
+            mariadb_packages_attempts = [
+                "mariadb-server mariadb-devel mariadb-client",
+                "mariadb-server mariadb-devel",
+                "mariadb-server mariadb-devel mariadb-common"
+            ]
+            
+            installed = False
+            for packages in mariadb_packages_attempts:
+                command = f"dnf install -y {packages}"
+                result = install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                if result == 0:
+                    self.stdOut(f"Successfully installed MariaDB packages: {packages}", 1)
+                    installed = True
+                    break
+                else:
+                    self.stdOut(f"Failed to install packages: {packages}, trying next combination...", 1)
+            
+            if not installed:
+                self.stdOut("Warning: Some MariaDB packages may not have installed correctly", 0)
+            
+            # Check if MariaDB service exists and create it if needed
+            self.stdOut("Checking MariaDB service configuration...", 1)
+            if not os.path.exists('/usr/lib/systemd/system/mariadb.service'):
+                # Try to find the correct service file
+                possible_services = [
+                    '/usr/lib/systemd/system/mysqld.service',
+                    '/usr/lib/systemd/system/mysql.service'
+                ]
+                
+                for service_file in possible_services:
+                    if os.path.exists(service_file):
+                        self.stdOut(f"Found service file: {service_file}", 1)
+                        # Create symlink to mariadb.service
+                        try:
+                            os.symlink(service_file, '/usr/lib/systemd/system/mariadb.service')
+                            self.stdOut("Created symlink for mariadb.service", 1)
+                        except OSError as e:
+                            self.stdOut(f"Could not create symlink: {str(e)}", 0)
+                        break
             
             self.stdOut("AlmaLinux 9 MariaDB fixes completed", 1)
             
@@ -115,7 +152,7 @@ class InstallCyberPanel:
             return install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
     def manage_service(self, service_name, action="start"):
-        """Unified service management"""
+        """Unified service management with symlink detection"""
         service_map = {
             'mariadb': 'mariadb',
             'pureftpd': 'pure-ftpd-mysql' if self.distro == ubuntu else 'pure-ftpd',
@@ -124,16 +161,33 @@ class InstallCyberPanel:
         
         actual_service = service_map.get(service_name, service_name)
         
-        # For AlmaLinux 9, try both mariadb and mysqld services
-        if service_name == 'mariadb' and (self.distro == cent8 or self.distro == openeuler):
-            # Try mariadb first, then mysqld if mariadb fails
-            command = f'systemctl {action} {actual_service}'
-            result = install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-            if result != 0:
-                # If mariadb service fails, try mysqld
-                command = f'systemctl {action} mysqld'
+        # For MariaDB, check if mysqld.service is a symlink to mariadb.service
+        if service_name == 'mariadb':
+            # Check if mysqld.service is a symlink to mariadb.service
+            if os.path.islink('/etc/systemd/system/mysqld.service'):
+                try:
+                    target = os.readlink('/etc/systemd/system/mysqld.service')
+                    if 'mariadb.service' in target:
+                        self.stdOut(f"mysqld.service is a symlink to mariadb.service, skipping duplicate {action}", 1)
+                        # Only run the action on mariadb, not mysqld
+                        command = f'systemctl {action} mariadb'
+                        return install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+                except OSError:
+                    pass
+            
+            # For AlmaLinux 9, try both mariadb and mysqld services
+            if self.distro == cent8 or self.distro == openeuler:
+                # Try mariadb first, then mysqld if mariadb fails
+                command = f'systemctl {action} {actual_service}'
+                result = install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                if result != 0:
+                    # If mariadb service fails, try mysqld
+                    command = f'systemctl {action} mysqld'
+                    return install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+                return result
+            else:
+                command = f'systemctl {action} {actual_service}'
                 return install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-            return result
         else:
             command = f'systemctl {action} {actual_service}'
             return install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
@@ -802,17 +856,43 @@ gpgcheck=1
                 passwordCMD = "use mysql;DROP DATABASE IF EXISTS test;DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%%';GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '%s';flush privileges;" % (
                     InstallCyberPanel.mysql_Root_password)
 
+            # Find the correct MySQL/MariaDB client command
+            mysql_commands = ['mysql', 'mariadb', '/usr/bin/mysql', '/usr/bin/mariadb', '/usr/local/bin/mysql', '/usr/local/bin/mariadb']
+            mysql_cmd = None
+            
+            for cmd in mysql_commands:
+                if os.path.exists(cmd) or self.command_exists(cmd):
+                    mysql_cmd = cmd
+                    self.stdOut(f"Found MySQL client: {cmd}", 1)
+                    break
+            
+            if not mysql_cmd:
+                self.stdOut("ERROR: No MySQL/MariaDB client found!", 0)
+                return False
+
             # For AlmaLinux 9, try mysql command first, then mariadb
             if self.distro == cent8 or self.distro == openeuler:
-                command = 'mysql -u root -e "' + passwordCMD + '"'
+                command = f'{mysql_cmd} -u root -e "{passwordCMD}"'
                 result = install_utils.call(command, self.distro, command, command, 0, 0, os.EX_OSERR)
                 if result != 0:
                     # If mysql command fails, try mariadb
-                    command = 'mariadb -u root -e "' + passwordCMD + '"'
-                    install_utils.call(command, self.distro, command, command, 0, 0, os.EX_OSERR)
+                    for alt_cmd in ['mariadb', '/usr/bin/mariadb']:
+                        if alt_cmd != mysql_cmd and (os.path.exists(alt_cmd) or self.command_exists(alt_cmd)):
+                            command = f'{alt_cmd} -u root -e "{passwordCMD}"'
+                            result = install_utils.call(command, self.distro, command, command, 0, 0, os.EX_OSERR)
+                            if result == 0:
+                                break
             else:
-                command = 'mariadb -u root -e "' + passwordCMD + '"'
+                command = f'{mysql_cmd} -u root -e "{passwordCMD}"'
                 install_utils.call(command, self.distro, command, command, 0, 0, os.EX_OSERR)
+    
+    def command_exists(self, command):
+        """Check if a command exists in PATH"""
+        try:
+            result = subprocess.run(['which', command], capture_output=True, text=True)
+            return result.returncode == 0
+        except:
+            return False
 
     def startMariaDB(self):
 
@@ -824,16 +904,48 @@ gpgcheck=1
                 self.stdOut("AlmaLinux 9 detected - applying MariaDB fixes", 1)
                 self.fix_almalinux9_mariadb()
             
-            self.manage_service('mariadb', 'start')
+            # Try to start MariaDB service
+            self.stdOut("Starting MariaDB service...", 1)
+            start_result = self.manage_service('mariadb', 'start')
+            
+            if start_result != 0:
+                self.stdOut("MariaDB service start failed, trying alternative approaches...", 1)
+                # Try to start mysqld service as fallback
+                command = 'systemctl start mysqld'
+                result = install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                if result == 0:
+                    self.stdOut("Successfully started mysqld service", 1)
+                else:
+                    self.stdOut("Warning: Could not start MariaDB/MySQL service", 0)
 
             ############## Enable mariadb at system startup ######################
 
+            # Clean up any conflicting service files
             if os.path.exists('/etc/systemd/system/mysqld.service'):
-                os.remove('/etc/systemd/system/mysqld.service')
+                if os.path.islink('/etc/systemd/system/mysqld.service'):
+                    self.stdOut("Removing symlink: /etc/systemd/system/mysqld.service", 1)
+                    os.remove('/etc/systemd/system/mysqld.service')
+                else:
+                    self.stdOut("Removing file: /etc/systemd/system/mysqld.service", 1)
+                    os.remove('/etc/systemd/system/mysqld.service')
+            
             if os.path.exists('/etc/systemd/system/mariadb.service'):
-                os.remove('/etc/systemd/system/mariadb.service')
+                if os.path.islink('/etc/systemd/system/mariadb.service'):
+                    self.stdOut("Removing symlink: /etc/systemd/system/mariadb.service", 1)
+                    os.remove('/etc/systemd/system/mariadb.service')
+                else:
+                    self.stdOut("Removing file: /etc/systemd/system/mariadb.service", 1)
+                    os.remove('/etc/systemd/system/mariadb.service')
 
-            self.manage_service('mariadb', 'enable')
+            # Reload systemd daemon after removing service files
+            os.system('systemctl daemon-reload')
+            
+            # Try to enable MariaDB service
+            enable_result = self.manage_service('mariadb', 'enable')
+            if enable_result != 0:
+                self.stdOut("MariaDB service enable failed, trying mysqld...", 1)
+                command = 'systemctl enable mysqld'
+                install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
     def fixMariaDB(self):
         self.stdOut("Setup MariaDB so it can support Cyberpanel's needs")
