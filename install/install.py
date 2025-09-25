@@ -1737,7 +1737,7 @@ class preFlightsChecks:
         self.install_package("psmisc")
 
 
-    def update_settings_file(self, mysqlPassword, password):
+    def update_settings_file(self, mysqlPassword, password, mysql):
         """
         Update settings.py file with correct passwords (working version approach)
         """
@@ -1994,7 +1994,7 @@ password="%s"
             self.cyberpanel_db_password = password
 
         # Update settings.py with correct passwords (no .env files needed)
-        self.update_settings_file(mysqlPassword, self.cyberpanel_db_password)
+        self.update_settings_file(mysqlPassword, self.cyberpanel_db_password, mysql)
 
         logging.InstallLog.writeToFile("Environment configuration generated successfully!")
 
@@ -5233,7 +5233,7 @@ def main():
     checks.installFirewalld()
     checks.install_default_keys()
 
-    checks.download_install_CyberPanel(checks.cyberpanel_db_password, mysql)
+    checks.download_install_CyberPanel(checks.mysqlpassword, mysql)
     checks.downoad_and_install_raindloop()
     checks.download_install_phpmyadmin()
     checks.setupCLI()
