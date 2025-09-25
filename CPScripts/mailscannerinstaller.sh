@@ -295,7 +295,7 @@ IPADDRESS=$(cat /etc/cyberpanel/machineIP)
 #
 #elif [ "$CENTOSVERSION" = "VERSION_ID=\"8\"" ]; then
 #
-#  rpm -Uvh http://mirror.ghettoforge.net/distributions/gf/el/8/gf/x86_64/gf-release-8-11.gf.el8.noarch.rpm
+#  rpm -Uvh https://mirror.ghettoforge.net/distributions/gf/el/8/gf/x86_64/gf-release-8-11.gf.el8.noarch.rpm
 #  dnf --enablerepo=gf-plus upgrade -y dovecot23*
 #  dnf --enablerepo=gf-plus install -y dovecot23-pigeonhole
 #  dnf install -y net-tools postfix-perl-scripts
