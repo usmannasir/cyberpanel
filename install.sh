@@ -1,198 +1,254 @@
-#!/bin/sh
+#!/bin/bash
 
-# Enhanced CyberPanel Installer Wrapper
-# This script detects the OS and launches the enhanced installer
+# Enhanced CyberPanel Installer with Modular Architecture
+# This installer uses modules for better organization and maintainability
+# Each module is kept under 500 lines for easy management
 
-OUTPUT=$(cat /etc/*release)
-if  echo $OUTPUT | grep -q "CentOS Linux 7" ; then
-        echo "Checking and installing curl and wget"
-yum install curl wget -y 1> /dev/null
-yum update curl wget ca-certificates -y 1> /dev/null
-                SERVER_OS="CentOS7"
-elif echo $OUTPUT | grep -q "CentOS Linux 8" ; then
-        echo -e "\nDetecting CentOS 8...\n"
-        SERVER_OS="CentOS8"
-yum install curl wget -y 1> /dev/null
-yum update curl wget ca-certificates -y 1> /dev/null
-elif echo $OUTPUT | grep -q "CentOS Linux 9" ; then
-        echo -e "\nDetecting CentOS 9...\n"
-        SERVER_OS="CentOS9"
-yum install curl wget -y 1> /dev/null
-yum update curl wget ca-certificates -y 1> /dev/null
-elif echo $OUTPUT | grep -q "CentOS Stream 8" ; then
-        echo -e "\nDetecting CentOS Stream 8...\n"
-        SERVER_OS="CentOSStream8"
-yum install curl wget -y 1> /dev/null
-yum update curl wget ca-certificates -y 1> /dev/null
-elif echo $OUTPUT | grep -q "CentOS Stream 9" ; then
-        echo -e "\nDetecting CentOS Stream 9...\n"
-        SERVER_OS="CentOSStream9"
-yum install curl wget -y 1> /dev/null
-yum update curl wget ca-certificates -y 1> /dev/null
-elif echo $OUTPUT | grep -q "AlmaLinux 8" ; then
-        echo -e "\nDetecting AlmaLinux 8...\n"
-        SERVER_OS="AlmaLinux8"
-yum install curl wget -y 1> /dev/null
-yum update curl wget ca-certificates -y 1> /dev/null
-elif echo $OUTPUT | grep -q "AlmaLinux 9" ; then
-        echo -e "\nDetecting AlmaLinux 9...\n"
-        SERVER_OS="AlmaLinux9"
-        echo "Installing essential packages for AlmaLinux 9..."
-        dnf install curl wget -y 1> /dev/null
-        dnf update curl wget ca-certificates -y 1> /dev/null
-        
-        # Install additional packages needed for AlmaLinux 9
-        echo "Installing additional dependencies for AlmaLinux 9..."
-        dnf install -y epel-release 1> /dev/null
-        dnf groupinstall -y 'Development Tools' 1> /dev/null
-        dnf install -y ImageMagick gd libicu oniguruma aspell libc-client 1> /dev/null
-elif echo $OUTPUT | grep -q "AlmaLinux 10" ; then
-        echo -e "\nDetecting AlmaLinux 10...\n"
-        SERVER_OS="AlmaLinux10"
-dnf install curl wget -y 1> /dev/null
-dnf update curl wget ca-certificates -y 1> /dev/null
-elif echo $OUTPUT | grep -q "CloudLinux 7" ; then
-        echo "Checking and installing curl and wget"
-yum install curl wget -y 1> /dev/null
-yum update curl wget ca-certificates -y 1> /dev/null
-                SERVER_OS="CloudLinux7"
-elif echo $OUTPUT | grep -q "CloudLinux 8" ; then
-        echo "Checking and installing curl and wget"
-yum install curl wget -y 1> /dev/null
-yum update curl wget ca-certificates -y 1> /dev/null
-                SERVER_OS="CloudLinux8"
-elif echo $OUTPUT | grep -q "CloudLinux 9" ; then
-        echo "Checking and installing curl and wget"
-yum install curl wget -y 1> /dev/null
-yum update curl wget ca-certificates -y 1> /dev/null
-                SERVER_OS="CloudLinux9"
-elif echo $OUTPUT | grep -q "Ubuntu 18.04" ; then
-apt install -y -qq wget curl
-                SERVER_OS="Ubuntu1804"
-elif echo $OUTPUT | grep -q "Ubuntu 20.04" ; then
-apt install -y -qq wget curl
-                SERVER_OS="Ubuntu2004"
-elif echo $OUTPUT | grep -q "Ubuntu 20.10" ; then
-apt install -y -qq wget curl
-                SERVER_OS="Ubuntu2010"
-elif echo $OUTPUT | grep -q "Ubuntu 22.04" ; then
-apt install -y -qq wget curl
-                SERVER_OS="Ubuntu2204"
-elif echo $OUTPUT | grep -q "Ubuntu 24.04" ; then
-apt install -y -qq wget curl
-                SERVER_OS="Ubuntu2404"
-elif echo $OUTPUT | grep -q "Ubuntu 24.04.3" ; then
-apt install -y -qq wget curl
-                SERVER_OS="Ubuntu24043"
-elif echo $OUTPUT | grep -q "Debian GNU/Linux 11" ; then
-apt install -y -qq wget curl
-                SERVER_OS="Debian11"
-elif echo $OUTPUT | grep -q "Debian GNU/Linux 12" ; then
-apt install -y -qq wget curl
-                SERVER_OS="Debian12"
-elif echo $OUTPUT | grep -q "Debian GNU/Linux 13" ; then
-apt install -y -qq wget curl
-                SERVER_OS="Debian13"
-elif echo $OUTPUT | grep -q "Rocky Linux 8" ; then
-        echo -e "\nDetecting Rocky Linux 8...\n"
-        SERVER_OS="RockyLinux8"
-yum install curl wget -y 1> /dev/null
-yum update curl wget ca-certificates -y 1> /dev/null
-elif echo $OUTPUT | grep -q "Rocky Linux 9" ; then
-        echo -e "\nDetecting Rocky Linux 9...\n"
-        SERVER_OS="RockyLinux9"
-yum install curl wget -y 1> /dev/null
-yum update curl wget ca-certificates -y 1> /dev/null
-elif echo $OUTPUT | grep -q "Red Hat Enterprise Linux 8" ; then
-        echo -e "\nDetecting RHEL 8...\n"
-        SERVER_OS="RHEL8"
-yum install curl wget -y 1> /dev/null
-yum update curl wget ca-certificates -y 1> /dev/null
-elif echo $OUTPUT | grep -q "Red Hat Enterprise Linux 9" ; then
-        echo -e "\nDetecting RHEL 9...\n"
-        SERVER_OS="RHEL9"
-yum install curl wget -y 1> /dev/null
-yum update curl wget ca-certificates -y 1> /dev/null
-elif echo $OUTPUT | grep -q "openEuler 20.03" ; then
-        echo -e "\nDetecting openEuler 20.03...\n"
-        SERVER_OS="openEuler2003"
-yum install curl wget -y 1> /dev/null
-yum update curl wget ca-certificates -y 1> /dev/null
-elif echo $OUTPUT | grep -q "openEuler 22.03" ; then
-        echo -e "\nDetecting openEuler 22.03...\n"
-        SERVER_OS="openEuler2203"
-yum install curl wget -y 1> /dev/null
-yum update curl wget ca-certificates -y 1> /dev/null
-elif echo $OUTPUT | grep -q "openEuler 24.03" ; then
-        echo -e "\nDetecting openEuler 24.03...\n"
-        SERVER_OS="openEuler2403"
-yum install curl wget -y 1> /dev/null
-yum update curl wget ca-certificates -y 1> /dev/null
-else
+set -e
 
-                echo -e "\nUnable to detect your OS...\n"
-                echo -e "\nCyberPanel is supported on:\n"
-                echo -e "Ubuntu: 18.04, 20.04, 20.10, 22.04, 24.04, 24.04.3\n"
-                echo -e "Debian: 11, 12, 13\n"
-                echo -e "AlmaLinux: 8, 9, 10\n"
-                echo -e "RockyLinux: 8, 9\n"
-                echo -e "RHEL: 8, 9\n"
-                echo -e "CentOS: 7, 8, 9, Stream 8, Stream 9\n"
-                echo -e "CloudLinux: 7, 8, 9\n"
-                echo -e "openEuler: 20.03, 22.03, 24.03\n"
-                exit 1
-fi
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MODULES_DIR="$SCRIPT_DIR/modules"
 
-# Download the enhanced installer
-echo "Downloading Enhanced CyberPanel Installer..."
-curl --silent -o install_enhanced.sh "https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/install_enhanced.sh" 2>/dev/null
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
 
-if [ ! -f "install_enhanced.sh" ]; then
-    echo "Failed to download enhanced installer. Falling back to original installer..."
+# Global variables
+SERVER_OS=""
+OS_FAMILY=""
+PACKAGE_MANAGER=""
+ARCHITECTURE=""
+BRANCH_NAME=""
+
+# Logging function
+log_message() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [MAIN-INSTALLER] $1" | tee -a "/var/log/cyberpanel_install.log" 2>/dev/null || echo "[$(date '+%Y-%m-%d %H:%M:%S')] [MAIN-INSTALLER] $1"
+}
+
+# Print colored output
+print_status() {
+    local color=$1
+    local message=$2
+    echo -e "${color}${message}${NC}"
+    log_message "$message"
+}
+
+# Function to load modules
+load_module() {
+    local module_path="$1"
+    local module_name="$2"
     
-    # Fallback to original installer
-    rm -f cyberpanel.sh
-    rm -f install.tar.gz
-
-    # Check for branch parameter
-    BRANCH_NAME=""
-    if [ "$1" = "-b" ] || [ "$1" = "--branch" ]; then
-        BRANCH_NAME="$2"
-        shift 2
-    fi
-
-    # Download from appropriate source based on branch/commit
-    if [ -n "$BRANCH_NAME" ]; then
-        # Check if it's a commit hash
-        if [[ "$BRANCH_NAME" =~ ^[a-f0-9]{7,40}$ ]]; then
-            echo "Installing CyberPanel from commit: $BRANCH_NAME"
-            curl --silent -o cyberpanel.sh "https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel.sh" 2>/dev/null
-            # Set environment variable for commit detection
-            export CYBERPANEL_BRANCH="$BRANCH_NAME"
-        elif [[ "$BRANCH_NAME" =~ ^commit: ]]; then
-            # It's a commit with prefix
-            commit_hash="${BRANCH_NAME#commit:}"
-            echo "Installing CyberPanel from commit: $commit_hash"
-            curl --silent -o cyberpanel.sh "https://raw.githubusercontent.com/usmannasir/cyberpanel/$commit_hash/cyberpanel.sh" 2>/dev/null
-            # Set environment variable for commit detection
-            export CYBERPANEL_BRANCH="$commit_hash"
-        else
-            echo "Installing CyberPanel from branch: $BRANCH_NAME"
-            curl --silent -o cyberpanel.sh "https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel.sh" 2>/dev/null
-            # Set environment variable for version detection
-            export CYBERPANEL_BRANCH="$BRANCH_NAME"
-        fi
+    if [ -f "$module_path" ]; then
+        source "$module_path"
+        print_status "$GREEN" "✅ Loaded module: $module_name"
+        return 0
     else
-        echo "Installing CyberPanel stable version"
-        curl --silent -o cyberpanel.sh "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null
+        print_status "$RED" "❌ Module not found: $module_path"
+        return 1
     fi
+}
 
-    chmod +x cyberpanel.sh
-    ./cyberpanel.sh $@
-    exit $?
-fi
+# Function to initialize modules
+initialize_modules() {
+    print_status "$BLUE" "🔧 Initializing modules..."
+    
+    # Load OS detection module
+    if ! load_module "$MODULES_DIR/os/detect.sh" "OS Detection"; then
+        print_status "$RED" "❌ Failed to load OS detection module"
+        exit 1
+    fi
+    
+    # Load dependency manager module
+    if ! load_module "$MODULES_DIR/deps/manager.sh" "Dependency Manager"; then
+        print_status "$RED" "❌ Failed to load dependency manager module"
+        exit 1
+    fi
+    
+    # Load CyberPanel installer module
+    if ! load_module "$MODULES_DIR/install/cyberpanel_installer.sh" "CyberPanel Installer"; then
+        print_status "$RED" "❌ Failed to load CyberPanel installer module"
+        exit 1
+    fi
+    
+    # Load fixes module
+    if ! load_module "$MODULES_DIR/fixes/cyberpanel_fixes.sh" "CyberPanel Fixes"; then
+        print_status "$RED" "❌ Failed to load fixes module"
+        exit 1
+    fi
+    
+    print_status "$GREEN" "✅ All modules loaded successfully"
+}
 
-# Make enhanced installer executable and run it
-chmod +x install_enhanced.sh
-echo "Running Enhanced CyberPanel Installer..."
-./install_enhanced.sh $@
+# Function to detect operating system
+detect_operating_system() {
+    print_status "$BLUE" "🔍 Detecting operating system..."
+    
+    if detect_os; then
+        # Get OS information
+        eval $(get_os_info)
+        print_status "$GREEN" "✅ OS detected: $SERVER_OS ($OS_FAMILY)"
+        print_status "$GREEN" "✅ Package manager: $PACKAGE_MANAGER"
+        print_status "$GREEN" "✅ Architecture: $ARCHITECTURE"
+        return 0
+    else
+        print_status "$RED" "❌ Failed to detect operating system"
+        exit 1
+    fi
+}
+
+# Function to install dependencies
+install_dependencies() {
+    print_status "$BLUE" "📦 Installing dependencies..."
+    
+    if manage_dependencies "$SERVER_OS" "$OS_FAMILY" "$PACKAGE_MANAGER"; then
+        print_status "$GREEN" "✅ Dependencies installed successfully"
+        return 0
+    else
+        print_status "$YELLOW" "⚠️  Dependency installation had issues, continuing..."
+        return 1
+    fi
+}
+
+# Function to install CyberPanel
+install_cyberpanel_main() {
+    print_status "$BLUE" "🚀 Installing CyberPanel..."
+    
+    # Prepare installation arguments
+    local install_args=()
+    for arg in "$@"; do
+        install_args+=("$arg")
+    done
+    
+    if install_cyberpanel_main "$SERVER_OS" "$BRANCH_NAME" "${install_args[@]}"; then
+        print_status "$GREEN" "✅ CyberPanel installed successfully"
+        return 0
+    else
+        print_status "$RED" "❌ CyberPanel installation failed"
+        return 1
+    fi
+}
+
+# Function to apply fixes
+apply_fixes() {
+    print_status "$BLUE" "🔧 Applying installation fixes..."
+    
+    if apply_cyberpanel_fixes "$PACKAGE_MANAGER"; then
+        print_status "$GREEN" "✅ All fixes applied successfully"
+        return 0
+    else
+        print_status "$YELLOW" "⚠️  Some fixes had issues, but continuing..."
+        return 1
+    fi
+}
+
+# Function to show firewall information
+show_firewall_info() {
+    echo ""
+    echo "🔥 FIREWALL CONFIGURATION REQUIRED:"
+    echo "═══════════════════════════════════════════════════════════════════════════════════════════════════════════════"
+    echo "If your provider has a network-level firewall, please ensure these ports are open:"
+    echo ""
+    echo "• TCP 8090 - CyberPanel Web Interface"
+    echo "• TCP 80, 443 - Web Server (HTTP/HTTPS)"
+    echo "• TCP 7080 - LiteSpeed Admin Console"
+    echo "• TCP 21, 40110-40210 - FTP Service"
+    echo "• TCP 25, 587, 465, 110, 143, 993 - Mail Services"
+    echo "• TCP/UDP 53 - DNS Service"
+    echo ""
+}
+
+# Function to show final restart prompt
+show_restart_prompt() {
+    echo ""
+    echo "╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╗"
+    echo "║                                                                                                               ║"
+    echo "║                    🔄 SERVER RESTART PROMPT 🔄                                                              ║"
+    echo "║                                                                                                               ║"
+    echo "╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╝"
+    echo ""
+    
+    print_status "$GREEN" "✅ Installation completed! Safe to restart server."
+    echo "Would you like to restart your server now? [Y/n]: "
+    
+    read -r response
+    case "$response" in
+        [yY]|[yY][eE][sS]|"")
+            print_status "$GREEN" "🔄 Restarting server..."
+            shutdown -r now
+            ;;
+        *)
+            print_status "$BLUE" "Server restart cancelled. You can restart manually when ready."
+            ;;
+    esac
+}
+
+# Function to parse command line arguments
+parse_arguments() {
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -b|--branch)
+                BRANCH_NAME="$2"
+                shift 2
+                ;;
+            --debug)
+                set -x
+                shift
+                ;;
+            -h|--help)
+                echo "Usage: $0 [OPTIONS]"
+                echo "Options:"
+                echo "  -b, --branch BRANCH    Install from specific branch/commit"
+                echo "  --debug               Enable debug mode"
+                echo "  -h, --help            Show this help message"
+                exit 0
+                ;;
+            *)
+                print_status "$YELLOW" "Unknown option: $1"
+                shift
+                ;;
+        esac
+    done
+}
+
+# Main installation function
+main() {
+    # Initialize log file
+    mkdir -p /var/log
+    touch "/var/log/cyberpanel_install.log"
+    
+    print_status "$BLUE" "🚀 Enhanced CyberPanel Installer Starting..."
+    print_status "$BLUE" "Log file: /var/log/cyberpanel_install.log"
+    
+    # Parse command line arguments
+    parse_arguments "$@"
+    
+    # Initialize modules
+    initialize_modules
+    
+    # Detect operating system
+    detect_operating_system
+    
+    # Install dependencies
+    install_dependencies
+    
+    # Install CyberPanel
+    install_cyberpanel_main "$@"
+    
+    # Apply fixes
+    apply_fixes
+    
+    # Show firewall information
+    show_firewall_info
+    
+    # Show restart prompt
+    show_restart_prompt
+    
+    print_status "$GREEN" "🎉 CyberPanel installation process completed!"
+}
+
+# Run main function
+main "$@"
