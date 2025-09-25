@@ -445,6 +445,41 @@
         color: var(--text-muted, #64748b);
     }
 
+    /* Export/Import Buttons */
+    .export-import-buttons {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+    }
+
+    .btn-export, .btn-import {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(255, 255, 255, 0.2);
+        color: var(--text-light, white);
+        backdrop-filter: blur(10px);
+    }
+
+    .btn-export:hover, .btn-import:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-export:disabled, .btn-import:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
     .alert {
         padding: 1rem 1.5rem;
         border-radius: 8px;
@@ -877,7 +912,25 @@
                 </div>
                 {% trans "Firewall Rules" %}
             </div>
-            <div ng-show="rulesLoading" class="loading-spinner"></div>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <div ng-show="rulesLoading" class="loading-spinner"></div>
+                <div class="export-import-buttons">
+                    <button type="button" 
+                            ng-click="exportRules()" 
+                            class="btn-export"
+                            ng-disabled="rulesLoading">
+                        <i class="fas fa-download"></i>
+                        {% trans "Export Rules" %}
+                    </button>
+                    <button type="button" 
+                            ng-click="importRules()" 
+                            class="btn-import"
+                            ng-disabled="rulesLoading">
+                        <i class="fas fa-upload"></i>
+                        {% trans "Import Rules" %}
+                    </button>
+                </div>
+            </div>
         </div>
         
         <!-- Add Rule Section -->
