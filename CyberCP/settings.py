@@ -13,14 +13,6 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 import os
 from django.utils.translation import gettext_lazy as _
 
-# Load environment variables from .env file
-try:
-    from dotenv import load_dotenv
-    load_dotenv()
-except ImportError:
-    # dotenv not available, continue without it
-    pass
-
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -28,13 +20,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY', 'xr%j*p!*$0d%(-(e%@-*hyoz4$f%y77coq0u)6pwmjg4)q&19f')
+SECRET_KEY = 'xr%j*p!*$0d%(-(e%@-*hyoz4$f%y77coq0u)6pwmjg4)q&19f'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
+DEBUG = False
 
-# Allow configuration via environment variable, with wildcard fallback for universal compatibility
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -122,19 +113,19 @@ WSGI_APPLICATION = 'CyberCP.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('DB_NAME', 'cyberpanel'),
-        'USER': os.getenv('DB_USER', 'cyberpanel'),
-        'PASSWORD': os.getenv('DB_PASSWORD', 'SLTUIUxqhulwsh'),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
-        'PORT': os.getenv('DB_PORT', '3306'),
+        'NAME': 'cyberpanel',
+        'USER': 'cyberpanel',
+        'PASSWORD': 'SLTUIUxqhulwsh',
+        'HOST': 'localhost',
+        'PORT': ''
     },
     'rootdb': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('ROOT_DB_NAME', 'mysql'),
-        'USER': os.getenv('ROOT_DB_USER', 'root'),
-        'PASSWORD': os.getenv('ROOT_DB_PASSWORD', 'SLTUIUxqhulwsh'),
-        'HOST': os.getenv('ROOT_DB_HOST', 'localhost'),
-        'PORT': os.getenv('ROOT_DB_PORT', '3306'),
+        'NAME': 'mysql',
+        'USER': 'root',
+        'PASSWORD': 'SLTUIUxqhulwsh',
+        'HOST': 'localhost',
+        'PORT': '',
     },
 }
 DATABASE_ROUTERS = ['backup.backupRouter.backupRouter']
