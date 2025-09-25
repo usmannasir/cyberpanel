@@ -63,4 +63,8 @@ urlpatterns = [
     path('litespeed_ent_conf', views.litespeed_ent_conf, name='litespeed_ent_conf'),
     path('fetchlitespeed_conf', views.fetchlitespeed_conf, name='fetchlitespeed_conf'),
     path('saveLitespeed_conf', views.saveLitespeed_conf, name='saveLitespeed_conf'),
+    
+    # Firewall Export/Import
+    path('exportFirewallRules', views.exportFirewallRules, name='exportFirewallRules'),
+    path('importFirewallRules', views.importFirewallRules, name='importFirewallRules'),
 ]

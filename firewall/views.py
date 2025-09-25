@@ -681,3 +681,27 @@ def deleteBannedIP(request):
         return fm.deleteBannedIP(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
+
+
+def exportFirewallRules(request):
+    try:
+        userID = request.session['userID']
+        fm = FirewallManager()
+        return fm.exportFirewallRules(userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def importFirewallRules(request):
+    try:
+        userID = request.session['userID']
+        fm = FirewallManager(request)
+        
+        # Handle file upload
+        if request.method == 'POST' and 'import_file' in request.FILES:
+            return fm.importFirewallRules(userID, None)
+        else:
+            # Handle JSON data
+            return fm.importFirewallRules(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
