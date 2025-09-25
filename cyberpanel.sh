@@ -17,7 +17,9 @@ INSTALLATION_TYPE=""
 
 # Logging function
 log_message() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [CYBERPANEL] $1" | tee -a "/var/log/cyberpanel_install.log" 2>/dev/null || echo "[$(date '+%Y-%m-%d %H:%M:%S')] [CYBERPANEL] $1"
+    # Ensure log directory exists
+    mkdir -p "/var/log/CyberPanel"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [CYBERPANEL] $1" | tee -a "/var/log/CyberPanel/install.log" 2>/dev/null || echo "[$(date '+%Y-%m-%d %H:%M:%S')] [CYBERPANEL] $1"
 }
 
 # Print status
@@ -212,14 +214,24 @@ install_cyberpanel() {
     echo "  🔄 Downloading CyberPanel installer..."
     echo ""
     
-    # Download the original CyberPanel installer
+    # Download the original CyberPanel installer from the official repository
+    local download_url=""
     if [ -n "$BRANCH_NAME" ]; then
-        echo "Downloading from: https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel.sh"
-        curl --silent -o cyberpanel_original.sh "https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel.sh" 2>/dev/null
+        if [[ "$BRANCH_NAME" =~ ^[a-f0-9]{40}$ ]]; then
+            # It's a commit hash
+            echo "Downloading from commit: $BRANCH_NAME"
+            download_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel.sh"
+        else
+            # It's a branch name
+            echo "Downloading from branch: $BRANCH_NAME"
+            download_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel.sh"
+        fi
     else
         echo "Downloading from: https://cyberpanel.sh/?dl&$SERVER_OS"
-        curl --silent -o cyberpanel_original.sh "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null
+        download_url="https://cyberpanel.sh/?dl&$SERVER_OS"
     fi
+    
+    curl --silent -o cyberpanel_original.sh "$download_url" 2>/dev/null
     
     # Check if download was successful
     if [ $? -ne 0 ]; then
@@ -282,7 +294,7 @@ install_cyberpanel() {
     
     # Start the installer in background and monitor progress
     echo "Starting CyberPanel installer with PID tracking..."
-    ./cyberpanel_original.sh $([ "$DEBUG_MODE" = true ] && echo "--debug") > /tmp/cyberpanel_install_output.log 2>&1 &
+    ./cyberpanel_original.sh $([ "$DEBUG_MODE" = true ] && echo "--debug") > /var/log/CyberPanel/install_output.log 2>&1 &
     local install_pid=$!
     
     # Give the process a moment to start
@@ -292,7 +304,7 @@ install_cyberpanel() {
     if ! kill -0 $install_pid 2>/dev/null; then
         print_status "ERROR: CyberPanel installer failed to start or exited immediately"
         echo "Installation log:"
-        cat /tmp/cyberpanel_install_output.log 2>/dev/null || echo "No log file found"
+        cat /var/log/CyberPanel/install_output.log 2>/dev/null || echo "No log file found"
         return 1
     fi
     
@@ -402,11 +414,11 @@ install_cyberpanel() {
         return 0
     else
         print_status "ERROR: CyberPanel installation failed (exit code: $install_status)"
-        print_status "Check /tmp/cyberpanel_install_output.log for details"
+        print_status "Check /var/log/CyberPanel/install_output.log for details"
         echo ""
         echo "Last 20 lines of the installation log:"
         echo "==============================================================================================================="
-        tail -20 /tmp/cyberpanel_install_output.log 2>/dev/null || echo "Log file not found or empty"
+        tail -20 /var/log/CyberPanel/install_output.log 2>/dev/null || echo "Log file not found or empty"
         echo "==============================================================================================================="
         return 1
     fi
@@ -634,14 +646,15 @@ show_fresh_install_menu() {
     echo "   1.  Install Latest Stable Version"
     echo "   2.  Install Development Version (v2.5.5-dev)"
     echo "   3.  Install Specific Version/Branch"
-    echo "   4.  Quick Install (Auto-configure everything)"
-    echo "   5.  Back to Main Menu"
+    echo "   4.  Install from Commit Hash"
+    echo "   5.  Quick Install (Auto-configure everything)"
+    echo "   6.  Back to Main Menu"
     echo ""
     echo "==============================================================================================================="
     echo ""
     
     while true; do
-        echo -n "Select installation option [1-5]: "
+        echo -n "Select installation option [1-6]: "
         read -r choice
         
         case $choice in
@@ -660,21 +673,67 @@ show_fresh_install_menu() {
                 return
                 ;;
             4)
+                show_commit_selection
+                return
+                ;;
+            5)
                 BRANCH_NAME=""
                 AUTO_INSTALL=true
                 start_installation
                 return
                 ;;
-            5)
+            6)
                 show_main_menu
                 return
                 ;;
             *)
                 echo ""
-                echo "ERROR: Invalid choice. Please enter 1-5."
+                echo "ERROR: Invalid choice. Please enter 1-6."
                 echo ""
   ;;
 esac
+    done
+}
+
+# Function to show commit selection
+show_commit_selection() {
+    echo ""
+    echo "==============================================================================================================="
+    echo "                                    COMMIT HASH SELECTION"
+    echo "==============================================================================================================="
+    echo ""
+    echo "Enter a specific commit hash to install from:"
+    echo ""
+    echo "Examples:"
+    echo "  • Latest commit: Leave empty (press Enter)"
+    echo "  • Specific commit: a1b2c3d4e5f6789012345678901234567890abcd"
+    echo "  • Short commit: a1b2c3d (first 7 characters)"
+    echo ""
+    echo "You can find commit hashes at: https://github.com/usmannasir/cyberpanel/commits"
+    echo ""
+    echo "==============================================================================================================="
+    echo ""
+    
+    while true; do
+        echo -n "Enter commit hash (or press Enter for latest): "
+        read -r commit_hash
+        
+        if [ -z "$commit_hash" ]; then
+            echo "Using latest commit..."
+            BRANCH_NAME=""
+            show_installation_preferences
+            return
+        elif [[ "$commit_hash" =~ ^[a-f0-9]{7,40}$ ]]; then
+            echo "Using commit: $commit_hash"
+            BRANCH_NAME="$commit_hash"
+            show_installation_preferences
+            return
+        else
+            echo ""
+            echo "ERROR: Invalid commit hash format."
+            echo "       Please enter a valid Git commit hash (7-40 hexadecimal characters)."
+            echo ""
+        fi
     done
 }
 
@@ -690,13 +749,14 @@ show_version_selection() {
     echo "   1.  Latest Stable (Recommended)"
     echo "   2.  v2.5.5-dev (Development)"
     echo "   3.  v2.5.4 (Previous Stable)"
-    echo "   4.  Custom Branch/Commit"
+    echo "   4.  Custom Branch Name"
+    echo "   5.  Custom Commit Hash"
     echo ""
     echo "==============================================================================================================="
     echo ""
     
     while true; do
-        echo -n "Select version [1-4]: "
+        echo -n "Select version [1-5]: "
         read -r choice
         
         case $choice in
@@ -713,13 +773,38 @@ show_version_selection() {
                 break
                 ;;
             4)
-                echo -n "Enter branch name or commit hash: "
+                echo -n "Enter branch name (e.g., main, v2.5.5-dev): "
                 read -r BRANCH_NAME
+                if [ -z "$BRANCH_NAME" ]; then
+                    echo "ERROR: Branch name cannot be empty."
+                    continue
+                fi
+                # Add v prefix if it's a version number without v
+                if [[ "$BRANCH_NAME" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$ ]]; then
+                    if [[ "$BRANCH_NAME" == *"-"* ]]; then
+                        # Already has suffix like 2.5.5-dev, add v prefix
+                        BRANCH_NAME="v$BRANCH_NAME"
+                    else
+                        # Add v prefix and dev suffix for development versions
+                        BRANCH_NAME="v$BRANCH_NAME-dev"
+                    fi
+                fi
                 break
+                ;;
+            5)
+                echo -n "Enter commit hash (7-40 characters): "
+                read -r commit_hash
+                if [[ "$commit_hash" =~ ^[a-f0-9]{7,40}$ ]]; then
+                    BRANCH_NAME="$commit_hash"
+                    break
+                else
+                    echo "ERROR: Invalid commit hash format."
+                    continue
+                fi
                 ;;
             *)
                 echo ""
-                echo "ERROR: Invalid choice. Please enter 1-4."
+                echo "ERROR: Invalid choice. Please enter 1-5."
                 echo ""
   ;;
 esac
@@ -743,13 +828,19 @@ show_installation_preferences() {
         [yY]|[yY][eE][sS])
             DEBUG_MODE=true
             ;;
+        *)
+            DEBUG_MODE=false
+            ;;
     esac
     
     # Auto-install
-    echo -n "Auto-install without further prompts? (y/n) [n]: "
+    echo -n "Auto-install without further prompts? (y/n) [y]: "
     read -r response
     case $response in
-        [yY]|[yY][eE][sS])
+        [nN]|[nN][oO])
+            AUTO_INSTALL=false
+            ;;
+        *)
             AUTO_INSTALL=true
             ;;
     esac
@@ -812,14 +903,15 @@ show_update_menu() {
     echo ""
     echo "   1.  Update to Latest Stable"
     echo "   2.  Update to Development Version"
-    echo "   3.  Update to Specific Version"
-    echo "   4.  Back to Main Menu"
+    echo "   3.  Update to Specific Version/Branch"
+    echo "   4.  Update from Commit Hash"
+    echo "   5.  Back to Main Menu"
     echo ""
     echo "==============================================================================================================="
     echo ""
     
     while true; do
-        echo -n "Select update option [1-4]: "
+        echo -n "Select update option [1-5]: "
         read -r choice
         
         case $choice in
@@ -836,12 +928,16 @@ show_update_menu() {
                 return
                 ;;
             4)
+                show_commit_selection
+                return
+                ;;
+            5)
                 show_main_menu
                 return
                 ;;
             *)
                 echo ""
-                echo "ERROR: Invalid choice. Please enter 1-4."
+                echo "ERROR: Invalid choice. Please enter 1-5."
                 echo ""
                 ;;
         esac
@@ -895,14 +991,15 @@ show_reinstall_menu() {
     echo ""
     echo "   1.  Reinstall Latest Stable"
     echo "   2.  Reinstall Development Version"
-    echo "   3.  Reinstall Specific Version"
-    echo "   4.  Back to Main Menu"
+    echo "   3.  Reinstall Specific Version/Branch"
+    echo "   4.  Reinstall from Commit Hash"
+    echo "   5.  Back to Main Menu"
     echo ""
     echo "==============================================================================================================="
     echo ""
     
     while true; do
-        echo -n "Select reinstall option [1-4]: "
+        echo -n "Select reinstall option [1-5]: "
         read -r choice
         
         case $choice in
@@ -919,12 +1016,16 @@ show_reinstall_menu() {
                 return
                 ;;
             4)
+                show_commit_selection
+                return
+                ;;
+            5)
                 show_main_menu
                 return
                 ;;
             *)
                 echo ""
-                echo "ERROR: Invalid choice. Please enter 1-4."
+                echo "ERROR: Invalid choice. Please enter 1-5."
                 echo ""
                 ;;
         esac
@@ -1239,13 +1340,23 @@ start_upgrade() {
     
     # Download and run the upgrade script
     echo "Step 3/5: Downloading CyberPanel upgrade script..."
+    local upgrade_url=""
     if [ -n "$BRANCH_NAME" ]; then
-        echo "Downloading from: https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel_upgrade.sh"
-        curl --silent -o cyberpanel_upgrade.sh "https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel_upgrade.sh" 2>/dev/null
+        if [[ "$BRANCH_NAME" =~ ^[a-f0-9]{40}$ ]]; then
+            # It's a commit hash
+            echo "Downloading from commit: $BRANCH_NAME"
+            upgrade_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel_upgrade.sh"
+        else
+            # It's a branch name
+            echo "Downloading from branch: $BRANCH_NAME"
+            upgrade_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel_upgrade.sh"
+        fi
     else
-        echo "Downloading from: https://cyberpanel.sh/?dl&$SERVER_OS"
-        curl --silent -o cyberpanel_upgrade.sh "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null
+        echo "Downloading from: https://raw.githubusercontent.com/usmannasir/cyberpanel/main/cyberpanel_upgrade.sh"
+        upgrade_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/main/cyberpanel_upgrade.sh"
     fi
+    
+    curl --silent -o cyberpanel_upgrade.sh "$upgrade_url" 2>/dev/null
     
     chmod +x cyberpanel_upgrade.sh
     
@@ -1265,7 +1376,7 @@ start_upgrade() {
     echo ""
     
     # Start the upgrade in background and monitor progress
-    ./cyberpanel_upgrade.sh $([ "$DEBUG_MODE" = true ] && echo "--debug") > /tmp/cyberpanel_upgrade_output.log 2>&1 &
+    ./cyberpanel_upgrade.sh $([ "$DEBUG_MODE" = true ] && echo "--debug") > /var/log/CyberPanel/upgrade_output.log 2>&1 &
     local upgrade_pid=$!
     
     # Active progress bar with real-time updates
@@ -1358,7 +1469,7 @@ start_upgrade() {
         print_status "SUCCESS: CyberPanel upgraded successfully"
         return 0
     else
-        print_status "ERROR: CyberPanel upgrade failed. Check /tmp/cyberpanel_upgrade_output.log for details"
+        print_status "ERROR: CyberPanel upgrade failed. Check /var/log/CyberPanel/upgrade_output.log for details"
         return 1
     fi
 }
@@ -1489,7 +1600,7 @@ start_installation() {
     echo ""
     
     # Detect OS
-    echo "Step 1/5: Detecting operating system..."
+    echo "Step 1/6: Detecting operating system..."
     if ! detect_os; then
         print_status "ERROR: Failed to detect operating system"
         exit 1
@@ -1498,12 +1609,12 @@ start_installation() {
     echo ""
     
     # Install dependencies
-    echo "Step 2/5: Installing dependencies..."
+    echo "Step 2/6: Installing dependencies..."
     install_dependencies
     echo ""
     
     # Install CyberPanel
-    echo "Step 3/5: Installing CyberPanel..."
+    echo "Step 3/6: Installing CyberPanel..."
     if ! install_cyberpanel; then
         print_status "ERROR: CyberPanel installation failed"
         exit 1
@@ -1511,12 +1622,17 @@ start_installation() {
     echo ""
     
     # Apply fixes
-    echo "Step 4/5: Applying installation fixes..."
+    echo "Step 4/6: Applying installation fixes..."
     apply_fixes
     echo ""
     
+    # Create standard aliases
+    echo "Step 5/6: Creating standard CyberPanel aliases..."
+    create_standard_aliases
+    echo ""
+    
     # Show status summary
-    echo "Step 5/5: Finalizing installation..."
+    echo "Step 6/6: Finalizing installation..."
     show_status_summary
     
     print_status "SUCCESS: Installation completed successfully!"
@@ -1527,8 +1643,54 @@ parse_arguments() {
     while [[ $# -gt 0 ]]; do
         case $1 in
             -b|--branch)
-                BRANCH_NAME="$2"
-                shift 2
+                if [ -n "$2" ]; then
+                    # Convert version number to branch name if needed
+                    if [[ "$2" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$ ]]; then
+                        if [[ "$2" == *"-"* ]]; then
+                            # Already has suffix like 2.5.5-dev, add v prefix
+                            BRANCH_NAME="v$2"
+                        else
+                            # Add v prefix and dev suffix for development versions
+                            BRANCH_NAME="v$2-dev"
+                        fi
+                    elif [[ "$2" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$ ]]; then
+                        # Already has v prefix, use as is
+                        BRANCH_NAME="$2"
+                    else
+                        # Assume it's already a branch name or commit hash
+                        BRANCH_NAME="$2"
+                    fi
+                    shift 2
+                else
+                    echo "ERROR: -b/--branch requires a version number or branch name"
+                    echo "Example: -b 2.5.5-dev or -b v2.5.5-dev"
+                    exit 1
+                fi
+                ;;
+            -v|--version)
+                if [ -n "$2" ]; then
+                    # Convert version number to branch name if needed
+                    if [[ "$2" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$ ]]; then
+                        if [[ "$2" == *"-"* ]]; then
+                            # Already has suffix like 2.5.5-dev, add v prefix
+                            BRANCH_NAME="v$2"
+                        else
+                            # Add v prefix and dev suffix for development versions
+                            BRANCH_NAME="v$2-dev"
+                        fi
+                    elif [[ "$2" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$ ]]; then
+                        # Already has v prefix, use as is
+                        BRANCH_NAME="$2"
+                    else
+                        # Assume it's already a branch name or commit hash
+                        BRANCH_NAME="$2"
+                    fi
+                    shift 2
+                else
+                    echo "ERROR: -v/--version requires a version number or branch name"
+                    echo "Example: -v 2.5.5-dev or -v v2.5.5-dev"
+                    exit 1
+                fi
                 ;;
             --debug)
                 DEBUG_MODE=true
@@ -1543,6 +1705,7 @@ parse_arguments() {
                 echo "Usage: $0 [OPTIONS]"
                 echo "Options:"
                 echo "  -b, --branch BRANCH    Install from specific branch/commit"
+                echo "  -v, --version VER      Install specific version (auto-adds v prefix)"
                 echo "  --debug               Enable debug mode"
                 echo "  --auto                Auto mode without prompts"
                 echo "  -h, --help            Show this help message"
@@ -1552,6 +1715,15 @@ parse_arguments() {
                 echo "  $0 --debug            # Debug mode installation"
                 echo "  $0 --auto             # Auto installation"
                 echo "  $0 -b v2.5.5-dev      # Install development version"
+                echo "  $0 -v 2.5.5-dev       # Install version 2.5.5-dev"
+                echo "  $0 -v 2.4.3           # Install version 2.4.3"
+                echo "  $0 -b main            # Install from main branch"
+                echo "  $0 -b a1b2c3d4        # Install from specific commit"
+                echo ""
+                echo "Standard CyberPanel Installation Methods:"
+                echo "  sh <(curl https://cyberpanel.net/install.sh)"
+                echo "  bash <(curl https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel_upgrade.sh) -b 2.4.3"
+                echo "  bash <(curl https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel_upgrade.sh) -b 2.5.5-dev"
                 exit 0
                 ;;
             *)
@@ -1562,49 +1734,121 @@ parse_arguments() {
     done
 }
 
+# Function to detect installation mode
+detect_installation_mode() {
+    # Check if this is being called as an upgrade script
+    if [[ "$0" == *"cyberpanel_upgrade.sh"* ]] || [[ "$0" == *"upgrade"* ]]; then
+        INSTALLATION_TYPE="upgrade"
+        return 0
+    fi
+    
+    # Check if this is being called as a pre-upgrade script
+    if [[ "$0" == *"preUpgrade.sh"* ]] || [[ "$0" == *"preupgrade"* ]]; then
+        INSTALLATION_TYPE="preupgrade"
+        return 0
+    fi
+    
+    # Check if this is being called as a standard install script
+    if [[ "$0" == *"install.sh"* ]] || [[ "$0" == *"cyberpanel.sh"* ]]; then
+        INSTALLATION_TYPE="install"
+        return 0
+    fi
+    
+    # Default to install mode
+    INSTALLATION_TYPE="install"
+    return 0
+}
+
+# Function to create standard CyberPanel aliases
+create_standard_aliases() {
+    print_status "Creating standard CyberPanel installation aliases..."
+    
+    # Create symbolic links for standard installation methods
+    local script_dir="/usr/local/bin"
+    local script_name="cyberpanel_enhanced.sh"
+    
+    # Copy this script to /usr/local/bin
+    if cp "$0" "$script_dir/$script_name" 2>/dev/null; then
+        chmod +x "$script_dir/$script_name"
+        
+        # Create aliases for standard CyberPanel methods
+        ln -sf "$script_dir/$script_name" "$script_dir/cyberpanel_upgrade.sh" 2>/dev/null || true
+        ln -sf "$script_dir/$script_name" "$script_dir/preUpgrade.sh" 2>/dev/null || true
+        ln -sf "$script_dir/$script_name" "$script_dir/install.sh" 2>/dev/null || true
+        
+        print_status "✓ Standard CyberPanel aliases created"
+        print_status "  - cyberpanel_upgrade.sh"
+        print_status "  - preUpgrade.sh" 
+        print_status "  - install.sh"
+    else
+        print_status "WARNING: Could not create standard aliases (permission denied)"
+    fi
+}
+
 # Main installation function
 main() {
-    # Initialize log file
-    mkdir -p /var/log
-    touch "/var/log/cyberpanel_install.log"
+    # Initialize log directory and file
+    mkdir -p "/var/log/CyberPanel"
+    touch "/var/log/CyberPanel/install.log"
     
-    print_status "CyberPanel Simple Installer Starting..."
-    print_status "Log file: /var/log/cyberpanel_install.log"
+    print_status "CyberPanel Enhanced Installer Starting..."
+    print_status "Log file: /var/log/CyberPanel/install.log"
+    
+    # Detect installation mode
+    detect_installation_mode
     
     # Parse command line arguments
     parse_arguments "$@"
     
-    # Check if auto mode is requested
-    if [ "$AUTO_INSTALL" = true ]; then
-        # Run auto mode
-        print_status "Starting auto mode..."
-        
-        # Detect OS
-        if ! detect_os; then
-            print_status "ERROR: Failed to detect operating system"
-            exit 1
-        fi
-        
-        # Install dependencies
-        install_dependencies
-        
-        # Install CyberPanel
-        if ! install_cyberpanel; then
-            print_status "ERROR: CyberPanel installation failed"
-            exit 1
-        fi
-        
-        # Apply fixes
-        apply_fixes
-        
-        # Show status summary
-        show_status_summary
-        
-        print_status "SUCCESS: Installation completed successfully!"
-    else
-        # Run interactive mode
-        show_main_menu
-    fi
+    # Handle different installation modes
+    case "$INSTALLATION_TYPE" in
+        "upgrade")
+            print_status "Running in upgrade mode..."
+            if [ -n "$BRANCH_NAME" ]; then
+                print_status "Upgrading to version: $BRANCH_NAME"
+            fi
+            start_upgrade
+            ;;
+        "preupgrade")
+            print_status "Running in pre-upgrade mode..."
+            start_preupgrade
+            ;;
+        "install"|*)
+            if [ "$AUTO_INSTALL" = true ]; then
+                # Run auto mode
+                print_status "Starting auto mode..."
+                
+                # Detect OS
+                if ! detect_os; then
+                    print_status "ERROR: Failed to detect operating system"
+                    exit 1
+                fi
+                
+                # Install dependencies
+                install_dependencies
+                
+                # Install CyberPanel
+                if ! install_cyberpanel; then
+                    print_status "ERROR: CyberPanel installation failed"
+                    exit 1
+                fi
+                
+                # Apply fixes
+                apply_fixes
+                
+                # Create standard aliases
+                create_standard_aliases
+                
+                # Show status summary
+                show_status_summary
+                
+                print_status "SUCCESS: Installation completed successfully!"
+            else
+                # Run interactive mode
+                show_main_menu
+            fi
+            ;;
+    esac
 }
 
 # Run main function
