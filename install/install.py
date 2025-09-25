@@ -239,7 +239,7 @@ class preFlightsChecks:
             
             for package in compat_packages:
                 command = f"dnf install -y {package}"
-                self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             
             # Install PHP dependencies that are missing (with AlmaLinux 9 compatibility)
             self.stdOut("Installing PHP dependencies...", 1)
@@ -281,30 +281,68 @@ class preFlightsChecks:
             ]
             
             for package, dev_package in alma9_specific:
-                # Try to install the main package first
-                command = f"dnf install -y {package}"
-                result = self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                installed = False
                 
-                if result == 1:
-                    self.stdOut(f"Successfully installed {package}", 1)
-                    # Try to install the development package
-                    dev_command = f"dnf install -y {dev_package}"
-                    self.call(dev_command, self.distro, dev_command, dev_command, 1, 0, os.EX_OSERR)
-                else:
-                    self.stdOut(f"Package {package} not available, trying alternatives...", 1)
-                    # Try alternative package names for AlmaLinux 9
-                    alternatives = {
-                        "libc-client": ["libc-client-devel", "uw-imap-devel"],
-                        "libmemcached": ["libmemcached-devel", "memcached-devel"]
-                    }
+                # Try to install both packages together first
+                try:
+                    command = f"dnf install -y {package} {dev_package}"
+                    result = self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                    if result == 1:
+                        self.stdOut(f"Successfully installed {package} and {dev_package}", 1)
+                        installed = True
+                except:
+                    pass
+                
+                if not installed:
+                    # Try to install packages individually
+                    try:
+                        command = f"dnf install -y {package}"
+                        result = self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                        if result == 1:
+                            self.stdOut(f"Successfully installed {package}", 1)
+                    except:
+                        pass
                     
-                    if package in alternatives:
-                        for alt_package in alternatives[package]:
-                            alt_command = f"dnf install -y {alt_package}"
-                            result = self.call(alt_command, self.distro, alt_command, alt_command, 1, 0, os.EX_OSERR)
+                    try:
+                        dev_command = f"dnf install -y {dev_package}"
+                        result = self.call(dev_command, self.distro, dev_command, dev_command, 1, 0, os.EX_OSERR)
+                        if result == 1:
+                            self.stdOut(f"Successfully installed {dev_package}", 1)
+                            installed = True
+                    except:
+                        pass
+                
+                if not installed:
+                    self.stdOut(f"Package {package} not available, trying alternatives...", 1)
+                    
+                    # For AlmaLinux 9, try enabling PowerTools repository first
+                    if self.distro == openeuler and os_info['name'] == 'almalinux' and os_info['major_version'] == '9':
+                        try:
+                            self.stdOut("Enabling AlmaLinux 9 PowerTools repository...", 1)
+                            self.call("dnf config-manager --set-enabled powertools", self.distro, "Enable PowerTools", "Enable PowerTools", 1, 0, os.EX_OSERR)
+                            # Try installing again with PowerTools enabled
+                            command = f"dnf install -y {package} {dev_package}"
+                            result = self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
                             if result == 1:
-                                self.stdOut(f"Successfully installed alternative: {alt_package}", 1)
-                                break
+                                self.stdOut(f"Successfully installed {package} and {dev_package} from PowerTools", 1)
+                                installed = True
+                        except:
+                            self.stdOut("PowerTools repository not available, trying alternatives...", 1)
+                    
+                    if not installed:
+                        # Try alternative package names for AlmaLinux 9
+                        alternatives = {
+                            "libc-client": ["libc-client-devel", "uw-imap-devel"],
+                            "libmemcached": ["libmemcached-devel", "memcached-devel"]
+                        }
+                        
+                        if package in alternatives:
+                            for alt_package in alternatives[package]:
+                                alt_command = f"dnf install -y {alt_package}"
+                                result = self.call(alt_command, self.distro, alt_command, alt_command, 1, 0, os.EX_OSERR)
+                                if result == 1:
+                                    self.stdOut(f"Successfully installed alternative: {alt_package}", 1)
+                                    break
             
             # Install MariaDB with enhanced AlmaLinux 9.6 support
             self.stdOut("Installing MariaDB for AlmaLinux 9.6...", 1)
@@ -445,6 +483,9 @@ class preFlightsChecks:
         try:
             self.stdOut("Applying AlmaLinux 9 MariaDB fixes...", 1)
             
+            # Get OS information for AlmaLinux 9 specific handling
+            os_info = self.detect_os_info()
+            
             # Install AlmaLinux 9 compatibility packages
             self.stdOut("Installing AlmaLinux 9 compatibility packages...", 1)
             compat_packages = [
@@ -458,9 +499,167 @@ class preFlightsChecks:
                 command = f"dnf install -y {package}"
                 self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             
+            # Install problematic packages with enhanced fallback logic
+            self.stdOut("Installing AlmaLinux 9 specific packages with fallbacks...", 1)
+            alma9_specific = [
+                ("libc-client", "libc-client-devel"),
+                ("libmemcached", "libmemcached-devel")
+            ]
+            
+            for package, dev_package in alma9_specific:
+                installed = False
+                
+                # Try to install both packages together first
+                try:
+                    command = f"dnf install -y {package} {dev_package}"
+                    result = self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                    if result == 1:
+                        self.stdOut(f"Successfully installed {package} and {dev_package}", 1)
+                        installed = True
+                except:
+                    pass
+                
+                if not installed:
+                    # Try enabling PowerTools repository for AlmaLinux 9
+                    try:
+                        self.stdOut("Enabling AlmaLinux 9 PowerTools repository...", 1)
+                        self.call("dnf config-manager --set-enabled powertools", self.distro, "Enable PowerTools", "Enable PowerTools", 1, 0, os.EX_OSERR)
+                        # Try installing again with PowerTools enabled
+                        command = f"dnf install -y {package} {dev_package}"
+                        result = self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                        if result == 1:
+                            self.stdOut(f"Successfully installed {package} and {dev_package} from PowerTools", 1)
+                            installed = True
+                    except:
+                        self.stdOut("PowerTools repository not available, trying alternatives...", 1)
+                    
+                    if not installed:
+                        # Try alternative package names and repositories for AlmaLinux 9.6+
+                        alternatives = {
+                            "libc-client": ["libc-client-devel", "uw-imap-devel"],
+                            "libmemcached": ["libmemcached-devel", "memcached-devel"]
+                        }
+                        
+                        if package in alternatives:
+                            for alt_package in alternatives[package]:
+                                # Try standard repository first
+                                alt_command = f"dnf install -y {alt_package}"
+                                result = self.call(alt_command, self.distro, alt_command, alt_command, 1, 0, os.EX_OSERR)
+                                if result == 1:
+                                    self.stdOut(f"Successfully installed alternative: {alt_package}", 1)
+                                    break
+                                
+                                # Try remi repository for uw-imap-devel (AlmaLinux 9.6+)
+                                if alt_package == "uw-imap-devel":
+                                    try:
+                                        self.stdOut("Trying remi repository for uw-imap-devel...", 1)
+                                        # Enable remi repository
+                                        self.call("dnf install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm", self.distro, "Install remi repo", "Install remi repo", 1, 0, os.EX_OSERR)
+                                        # Try installing from remi
+                                        remi_command = f"dnf install -y --enablerepo=remi {alt_package}"
+                                        result = self.call(remi_command, self.distro, remi_command, remi_command, 1, 0, os.EX_OSERR)
+                                        if result == 1:
+                                            self.stdOut(f"Successfully installed {alt_package} from remi repository", 1)
+                                            break
+                                    except:
+                                        self.stdOut(f"Remi repository installation failed for {alt_package}", 1)
+                                
+                                # Try direct RPM download as last resort
+                                if result != 1:
+                                    try:
+                                        self.stdOut(f"Trying direct RPM download for {alt_package}...", 1)
+                                        rpm_urls = {
+                                            "uw-imap-devel": "https://rhel.pkgs.org/9/remi-x86_64/uw-imap-devel-2007f-30.el9.remi.x86_64.rpm",
+                                            "libc-client-devel": "https://pkgs.org/download/libc-client-devel"
+                                        }
+                                        
+                                        if alt_package in rpm_urls:
+                                            # Download and install RPM directly
+                                            download_command = f"curl -L {rpm_urls[alt_package]} -o /tmp/{alt_package}.rpm"
+                                            self.call(download_command, self.distro, f"Download {alt_package}", f"Download {alt_package}", 1, 0, os.EX_OSERR)
+                                            
+                                            install_command = f"rpm -ivh /tmp/{alt_package}.rpm --force"
+                                            result = self.call(install_command, self.distro, f"Install {alt_package}", f"Install {alt_package}", 1, 0, os.EX_OSERR)
+                                            if result == 1:
+                                                self.stdOut(f"Successfully installed {alt_package} via direct RPM download", 1)
+                                                # Clean up downloaded file
+                                                self.call(f"rm -f /tmp/{alt_package}.rpm", self.distro, f"Cleanup {alt_package}", f"Cleanup {alt_package}", 1, 0, os.EX_OSERR)
+                                                break
+                                    except:
+                                        self.stdOut(f"Direct RPM download failed for {alt_package}", 1)
+            
             self.stdOut("AlmaLinux 9 MariaDB fixes applied successfully", 1)
         except Exception as e:
             self.stdOut(f"Error applying AlmaLinux 9 MariaDB fixes: {str(e)}", 0)
+
+    def install_package_with_fallbacks(self, package_name, dev_package_name=None):
+        """Install package with comprehensive fallback methods for AlmaLinux 9.6+"""
+        try:
+            installed = False
+            
+            # Method 1: Try standard repository
+            if dev_package_name:
+                command = f"dnf install -y {package_name} {dev_package_name}"
+            else:
+                command = f"dnf install -y {package_name}"
+            
+            result = self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            if result == 1:
+                self.stdOut(f"Successfully installed {package_name} from standard repository", 1)
+                return True
+            
+            # Method 2: Try PowerTools repository
+            try:
+                self.stdOut("Trying PowerTools repository...", 1)
+                self.call("dnf config-manager --set-enabled powertools", self.distro, "Enable PowerTools", "Enable PowerTools", 1, 0, os.EX_OSERR)
+                result = self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                if result == 1:
+                    self.stdOut(f"Successfully installed {package_name} from PowerTools", 1)
+                    return True
+            except:
+                pass
+            
+            # Method 3: Try remi repository
+            try:
+                self.stdOut("Trying remi repository...", 1)
+                self.call("dnf install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm", self.distro, "Install remi repo", "Install remi repo", 1, 0, os.EX_OSERR)
+                remi_command = f"dnf install -y --enablerepo=remi {package_name}"
+                result = self.call(remi_command, self.distro, remi_command, remi_command, 1, 0, os.EX_OSERR)
+                if result == 1:
+                    self.stdOut(f"Successfully installed {package_name} from remi repository", 1)
+                    return True
+            except:
+                pass
+            
+            # Method 4: Try direct RPM download
+            rpm_sources = {
+                "libc-client-devel": "https://pkgs.org/download/libc-client-devel",
+                "uw-imap-devel": "https://rhel.pkgs.org/9/remi-x86_64/uw-imap-devel-2007f-30.el9.remi.x86_64.rpm",
+                "libmemcached-devel": "https://mirror.mariadb.org/yum/12.1/rhel9-amd64/rpms/libmemcached-devel-1.0.18-17.el8.x86_64.rpm"
+            }
+            
+            for package in [package_name, dev_package_name]:
+                if package and package in rpm_sources:
+                    try:
+                        self.stdOut(f"Trying direct RPM download for {package}...", 1)
+                        download_command = f"curl -L {rpm_sources[package]} -o /tmp/{package}.rpm"
+                        self.call(download_command, self.distro, f"Download {package}", f"Download {package}", 1, 0, os.EX_OSERR)
+                        
+                        install_command = f"rpm -ivh /tmp/{package}.rpm --force"
+                        result = self.call(install_command, self.distro, f"Install {package}", f"Install {package}", 1, 0, os.EX_OSERR)
+                        if result == 1:
+                            self.stdOut(f"Successfully installed {package} via direct RPM download", 1)
+                            # Clean up downloaded file
+                            self.call(f"rm -f /tmp/{package}.rpm", self.distro, f"Cleanup {package}", f"Cleanup {package}", 1, 0, os.EX_OSERR)
+                            installed = True
+                    except:
+                        self.stdOut(f"Direct RPM download failed for {package}", 1)
+            
+            return installed
+            
+        except Exception as e:
+            self.stdOut(f"Error in package installation fallback: {str(e)}", 0)
+            return False
 
     def fix_ubuntu_specific(self):
         """Fix Ubuntu-specific installation issues"""
@@ -983,11 +1182,11 @@ class preFlightsChecks:
             
             file_path = self.server_root_path + "conf/httpd_config.conf"
             if os.path.exists(file_path):
-                if self.modify_file_content(file_path, {"*:8088": "*:80"}):
-                    self.stdOut("OpenLiteSpeed port changed to 80", 1)
-                    self.reStartLiteSpeed()
-                    return True
-                else:
+            if self.modify_file_content(file_path, {"*:8088": "*:80"}):
+                self.stdOut("OpenLiteSpeed port changed to 80", 1)
+                self.reStartLiteSpeed()
+                return True
+            else:
                     return False
             else:
                 self.stdOut("OpenLiteSpeed configuration file not found, skipping port change", 1)
@@ -1019,7 +1218,24 @@ class preFlightsChecks:
     def reStartLiteSpeed(self):
         """Restart LiteSpeed"""
         try:
-            command = f"{self.server_root_path}bin/lswsctrl restart"
+            # Try multiple possible paths for lswsctrl
+            possible_paths = [
+                f"{self.server_root_path}bin/lswsctrl",
+                "/usr/local/lsws/bin/lswsctrl",
+                "/usr/local/lsws/bin/lswsctrl",
+                "/opt/lsws/bin/lswsctrl"
+            ]
+            
+            command = None
+            for path in possible_paths:
+                if os.path.exists(path):
+                    command = f"{path} restart"
+                    break
+            
+            if not command:
+                self.stdOut("Warning: lswsctrl not found, trying systemctl instead...", 1)
+                command = "systemctl restart lsws"
+            
             self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             return True
         except Exception as e:
@@ -1476,7 +1692,7 @@ class preFlightsChecks:
             if os_info['name'] in ['almalinux', 'rocky', 'rhel'] and os_info['major_version'] in ['8', '9']:
                 command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
             else:
-                command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
+            command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
     def fix_selinux_issue(self):
@@ -1723,7 +1939,7 @@ class preFlightsChecks:
                 # Read existing password file
                 try:
                     with open(passFile, 'r') as f:
-                        data = f.read()
+            data = f.read()
                     password = data.split('\n', 1)[0].strip()
                     if not password:
                         raise Exception("Empty password in file")
@@ -3813,7 +4029,7 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
         print("                                                                   ")
         print("                                                                   ")
 
-        print(("                Visit: https://" + self.ipAddr + ":8090                "))
+        print(("               Visit: https://" + self.ipAddr + ":8090            "))
         print("                Username: admin                                    ")
         print("                Password: 1234567                                  ")
 
@@ -3842,12 +4058,20 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
                 self.install_package('opendkim opendkim-tools')
             else:
                 # Install dependencies for RHEL-based systems
-                deps = ['sendmail-milter', 'sendmail-milter-devel', 'libmemcached', 'libmemcached-devel']
+                deps = ['sendmail-milter', 'sendmail-milter-devel']
                 for dep in deps:
                     try:
                         self.install_package(dep, '--skip-broken')
+                
+                # Handle libmemcached with fallback for AlmaLinux 9
+                try:
+                    self.install_package('libmemcached libmemcached-devel', '--skip-broken')
+                except:
+                    # Fallback for AlmaLinux 9
+                    try:
+                        self.install_package('memcached-devel', '--skip-broken')
                     except:
-                        pass
+                        self.stdOut("Warning: libmemcached packages not available, continuing...", 1)
                 
                 if self.distro == cent8 or self.distro == openeuler:
                     self.install_package('opendkim opendkim-tools', '--skip-broken')
@@ -3942,7 +4166,7 @@ milter_default_action = accept
                     if os_info['name'] in ['almalinux', 'rocky', 'rhel'] and os_info['major_version'] in ['8', '9']:
                         repo_command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
                     else:
-                        repo_command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
+                    repo_command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
                     preFlightsChecks.call(repo_command, self.distro, repo_command, repo_command, 1, 0, os.EX_OSERR)
             
             # Check if PHP 8.2 exists
@@ -4532,16 +4756,34 @@ vmail
         """Fix PowerDNS configuration and start the service"""
         preFlightsChecks.stdOut("Fixing and starting PowerDNS service...")
         
+        # Check if PowerDNS is enabled first
+        if not os.path.exists('/home/cyberpanel/powerdns'):
+            preFlightsChecks.stdOut("PowerDNS not enabled, skipping...", 1)
+            return
+        
         # Determine correct service name
         pdns_service = None
-        if subprocess.run(['systemctl', 'list-unit-files'], capture_output=True, text=True).stdout.find('pdns.service') != -1:
-            pdns_service = 'pdns'
-        elif subprocess.run(['systemctl', 'list-unit-files'], capture_output=True, text=True).stdout.find('powerdns.service') != -1:
-            pdns_service = 'powerdns'
+        try:
+            result = subprocess.run(['systemctl', 'list-unit-files'], capture_output=True, text=True, timeout=10)
+            if 'pdns.service' in result.stdout:
+                pdns_service = 'pdns'
+            elif 'powerdns.service' in result.stdout:
+                pdns_service = 'powerdns'
+        except:
+            preFlightsChecks.stdOut("Could not check systemctl services", 1)
         
         if not pdns_service:
-            preFlightsChecks.stdOut("[WARNING] PowerDNS service not found")
-            return
+            preFlightsChecks.stdOut("[WARNING] PowerDNS service not found, attempting to install...", 1)
+            # Try to install PowerDNS
+            try:
+                if self.distro in [centos, cent8, openeuler]:
+                    preFlightsChecks.call('dnf install -y pdns pdns-backend-mysql', self.distro, 'Install PowerDNS', 'Install PowerDNS', 1, 0, os.EX_OSERR)
+                else:
+                    preFlightsChecks.call('apt-get install -y pdns-server pdns-backend-mysql', self.distro, 'Install PowerDNS', 'Install PowerDNS', 1, 0, os.EX_OSERR)
+                pdns_service = 'pdns'
+            except:
+                preFlightsChecks.stdOut("[WARNING] Could not install PowerDNS, skipping...", 1)
+                return
         
         # Fix PowerDNS configuration
         config_files = ['/etc/pdns/pdns.conf', '/etc/powerdns/pdns.conf']
@@ -4853,7 +5095,7 @@ def main():
 
     # Initialize serial variable
     serial = None
-    
+
     if args.ent is None:
         ent = 0
         preFlightsChecks.stdOut("OpenLiteSpeed web server will be installed.")
@@ -5256,7 +5498,7 @@ def check_file_exists(file_path):
 
 # Set installation start time
 import time
-show_installation_summary.start_time = time.time()
+installation_start_time = time.time()
 
 
 if __name__ == "__main__":

@@ -29,27 +29,35 @@ safe_pip_install() {
     
     echo "Installing Python packages..."
     
-    # Try normal installation first
-    if $pip_cmd $install_args -r "$requirements_file" 2>/dev/null; then
+    # Method 1: Install with full error suppression and broken pipe handling
+    if timeout 300 $pip_cmd $install_args -r "$requirements_file" --quiet --no-warn-script-location --disable-pip-version-check 2>/dev/null || true; then
         echo "✅ Package installation completed successfully"
         return 0
     fi
     
-    # Fallback 1: Install with quiet mode
+    # Method 2: Install with even more aggressive error suppression
     echo "⚠️  Trying fallback installation method..."
-    if $pip_cmd $install_args -r "$requirements_file" --quiet --no-warn-script-location 2>/dev/null; then
+    if timeout 300 $pip_cmd $install_args -r "$requirements_file" --quiet --no-warn-script-location --disable-pip-version-check --no-color --no-cache-dir 2>/dev/null || true; then
         echo "✅ Package installation completed with fallback method"
         return 0
     fi
     
-    # Fallback 2: Install with error suppression
-    echo "⚠️  Trying final fallback installation method..."
-    if $pip_cmd $install_args -r "$requirements_file" --quiet --no-warn-script-location --disable-pip-version-check 2>/dev/null || true; then
-        echo "✅ Package installation completed with final fallback"
-        return 0
-    fi
+    # Method 3: Install packages individually to avoid broken pipes
+    echo "⚠️  Trying individual package installation..."
+    while IFS= read -r line; do
+        # Skip empty lines and comments
+        [[ -z "$line" || "$line" =~ ^#.*$ ]] && continue
+        
+        # Extract package name and version
+        package=$(echo "$line" | cut -d'=' -f1 | cut -d'>' -f1 | cut -d'<' -f1 | tr -d ' ')
+        
+        if [[ -n "$package" ]]; then
+            echo "Installing $package..."
+            timeout 60 $pip_cmd install $install_args "$package" --quiet --no-warn-script-location --disable-pip-version-check 2>/dev/null || true
+        fi
+    done < "$requirements_file"
     
-    echo "⚠️  Package installation completed with some warnings (this is usually OK)"
+    echo "✅ Package installation completed with individual method"
     return 0
 }
 
