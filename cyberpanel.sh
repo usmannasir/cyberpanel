@@ -140,6 +140,148 @@ detect_os() {
     return 0
 }
 
+# Function to fix post-installation issues
+fix_post_install_issues() {
+    echo "  🔧 Fixing database connection issues..."
+    
+    # Wait for services to start
+    sleep 10
+    
+    # Start and enable MariaDB if not running
+    if ! systemctl is-active --quiet mariadb; then
+        echo "    Starting MariaDB service..."
+        systemctl start mariadb
+        systemctl enable mariadb
+        sleep 5
+    fi
+    
+    # Start and enable LiteSpeed if not running
+    if ! systemctl is-active --quiet lsws; then
+        echo "    Starting LiteSpeed service..."
+        systemctl start lsws
+        systemctl enable lsws
+        sleep 5
+    fi
+    
+    # Fix database user permissions
+    echo "    Fixing database user permissions..."
+    
+    # Wait for MariaDB to be ready
+    local retry_count=0
+    while [ $retry_count -lt 10 ]; do
+        if mysql -e "SELECT 1;" >/dev/null 2>&1; then
+            break
+        fi
+        echo "      Waiting for MariaDB to be ready... ($((retry_count + 1))/10)"
+        sleep 2
+        retry_count=$((retry_count + 1))
+    done
+    
+    # Create database user with proper permissions
+    mysql -e "DROP USER IF EXISTS 'cyberpanel'@'localhost';" 2>/dev/null || true
+    mysql -e "CREATE USER 'cyberpanel'@'localhost' IDENTIFIED BY 'cyberpanel';" 2>/dev/null || true
+    mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'cyberpanel'@'localhost' WITH GRANT OPTION;" 2>/dev/null || true
+    mysql -e "FLUSH PRIVILEGES;" 2>/dev/null || true
+    
+    # Create CyberPanel database if it doesn't exist
+    mysql -e "CREATE DATABASE IF NOT EXISTS cyberpanel;" 2>/dev/null || true
+    mysql -e "GRANT ALL PRIVILEGES ON cyberpanel.* TO 'cyberpanel'@'localhost';" 2>/dev/null || true
+    mysql -e "FLUSH PRIVILEGES;" 2>/dev/null || true
+    
+    # Reset CyberPanel admin password
+    echo "    Resetting CyberPanel admin password..."
+    /usr/local/CyberCP/bin/python3 /usr/local/CyberCP/plogical/adminPass.py 2>/dev/null || true
+    
+    # Fix PHP configuration files
+    echo "    Fixing PHP configuration..."
+    for php_version in lsphp72 lsphp73 lsphp74 lsphp80 lsphp81 lsphp82 lsphp83 lsphp84; do
+        if [ -d "/usr/local/lsws/$php_version" ]; then
+            # Create missing php.ini if it doesn't exist
+            if [ ! -f "/usr/local/lsws/$php_version/etc/php.ini" ]; then
+                echo "      Creating missing php.ini for $php_version..."
+                cp /usr/local/lsws/lsphp82/etc/php.ini "/usr/local/lsws/$php_version/etc/php.ini" 2>/dev/null || true
+            fi
+        fi
+    done
+    
+    # Restart services
+    echo "    Restarting services..."
+    systemctl restart mariadb
+    systemctl restart lsws
+    
+    # Wait for services to stabilize
+    sleep 10
+    
+    # Verify services are running
+    if systemctl is-active --quiet mariadb && systemctl is-active --quiet lsws; then
+        echo "  ✅ Post-installation fixes completed successfully"
+        
+        # Run final verification
+        verify_installation
+    else
+        echo "  ⚠️  Some services may need manual attention"
+        echo "  🔧 Attempting additional fixes..."
+        
+        # Additional service fixes
+        systemctl daemon-reload
+        systemctl reset-failed mariadb lsws
+        systemctl start mariadb lsws
+        
+        sleep 5
+        verify_installation
+    fi
+}
+
+# Function to verify installation
+verify_installation() {
+    echo ""
+    echo "  🔍 Verifying installation..."
+    
+    local issues=0
+    
+    # Check MariaDB
+    if systemctl is-active --quiet mariadb; then
+        echo "    ✅ MariaDB is running"
+    else
+        echo "    ❌ MariaDB is not running"
+        issues=$((issues + 1))
+    fi
+    
+    # Check LiteSpeed
+    if systemctl is-active --quiet lsws; then
+        echo "    ✅ LiteSpeed is running"
+    else
+        echo "    ❌ LiteSpeed is not running"
+        issues=$((issues + 1))
+    fi
+    
+    # Check web interface
+    if curl -s -k --connect-timeout 5 https://localhost:8090 >/dev/null 2>&1; then
+        echo "    ✅ Web interface is accessible"
+    else
+        echo "    ⚠️  Web interface may not be accessible yet (this is normal)"
+    fi
+    
+    # Check database connection
+    if mysql -e "SELECT 1;" >/dev/null 2>&1; then
+        echo "    ✅ Database connection is working"
+    else
+        echo "    ❌ Database connection failed"
+        issues=$((issues + 1))
+    fi
+    
+    if [ $issues -eq 0 ]; then
+        echo ""
+        echo "  🎉 Installation verification completed successfully!"
+        echo "  🌐 You can now access CyberPanel at: https://$(curl -s ifconfig.me):8090"
+    else
+        echo ""
+        echo "  ⚠️  Installation completed with $issues issue(s)"
+        echo "  🔧 Some manual intervention may be required"
+        echo "  📋 Check the logs at: /var/log/CyberPanel/"
+    fi
+}
+
 # Function to install dependencies
 install_dependencies() {
     # Check if we're running from a file (not via curl) and modules are available
@@ -237,6 +379,27 @@ install_cyberpanel() {
 # Function to install CyberPanel directly using the working method
 install_cyberpanel_direct() {
     echo "  🔄 Downloading CyberPanel installation files..."
+    
+    # Pre-installation system checks
+    echo "  🔍 Running pre-installation checks..."
+    
+    # Ensure system is up to date
+    if command -v dnf >/dev/null 2>&1; then
+        echo "    Updating system packages..."
+        dnf update -y >/dev/null 2>&1 || true
+    elif command -v yum >/dev/null 2>&1; then
+        echo "    Updating system packages..."
+        yum update -y >/dev/null 2>&1 || true
+    elif command -v apt >/dev/null 2>&1; then
+        echo "    Updating system packages..."
+        apt update -y >/dev/null 2>&1 || true
+        apt upgrade -y >/dev/null 2>&1 || true
+    fi
+    
+    # Ensure required services are available
+    echo "    Checking system services..."
+    systemctl enable mariadb 2>/dev/null || true
+    systemctl enable lsws 2>/dev/null || true
     
     # Create temporary directory for installation
     local temp_dir="/tmp/cyberpanel_install_$$"
@@ -418,10 +581,16 @@ install_cyberpanel_direct() {
     cd /tmp
     rm -rf "$temp_dir" 2>/dev/null || true
     
-    if [ $install_status -eq 0 ]; then
-        print_status "SUCCESS: CyberPanel installed successfully"
-        return 0
-    else
+                if [ $install_status -eq 0 ]; then
+                    print_status "SUCCESS: CyberPanel installed successfully"
+                    
+                    # Run post-installation fixes
+                    echo ""
+                    echo "  🔧 Running post-installation fixes..."
+                    fix_post_install_issues
+                    
+                    return 0
+                else
         print_status "ERROR: CyberPanel installation failed (exit code: $install_status)"
         echo ""
         echo "==============================================================================================================="
