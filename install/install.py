@@ -754,6 +754,25 @@ class preFlightsChecks:
             self.stdOut(f"Detected OS: {os_info['name']} {os_info['version']} (family: {os_info['family']})", 1)
             self.stdOut(f"Applying fixes: {', '.join(fixes_needed)}", 1)
             
+            # Try universal OS fixes first
+            try:
+                import sys
+                import os
+                sys.path.append(os.path.dirname(__file__))
+                from universal_os_fixes import UniversalOSFixes
+                
+                self.stdOut("Applying universal OS compatibility fixes...", 1)
+                universal_fixes = UniversalOSFixes()
+                if universal_fixes.run_comprehensive_setup():
+                    self.stdOut("Universal OS fixes applied successfully", 1)
+                    return True
+                else:
+                    self.stdOut("Universal OS fixes failed, falling back to legacy fixes...", 1)
+            except ImportError:
+                self.stdOut("Universal OS fixes not available, using legacy fixes...", 1)
+            except Exception as e:
+                self.stdOut(f"Universal OS fixes error: {str(e)}, falling back to legacy fixes...", 1)
+            
             # Apply common RHEL family fixes first
             if self.is_rhel_family():
                 self.fix_rhel_family_common()
