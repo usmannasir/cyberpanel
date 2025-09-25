@@ -376,9 +376,48 @@ install_cyberpanel() {
     install_cyberpanel_direct
 }
 
+# Function to check if CyberPanel is already installed
+check_cyberpanel_installed() {
+    if [ -d "/usr/local/CyberPanel" ] || [ -d "/usr/local/CyberCP" ] || [ -f "/usr/local/lsws/bin/lswsctrl" ]; then
+        return 0  # CyberPanel is installed
+    else
+        return 1  # CyberPanel is not installed
+    fi
+}
+
+# Function to clean up existing CyberPanel installation
+cleanup_existing_cyberpanel() {
+    echo "  🧹 Cleaning up existing CyberPanel installation..."
+    
+    # Stop services
+    systemctl stop lsws mariadb 2>/dev/null || true
+    
+    # Remove CyberPanel directories
+    rm -rf /usr/local/CyberPanel 2>/dev/null || true
+    rm -rf /usr/local/CyberCP 2>/dev/null || true
+    rm -rf /usr/local/lsws 2>/dev/null || true
+    
+    # Remove systemd services
+    systemctl disable lsws mariadb 2>/dev/null || true
+    rm -f /etc/systemd/system/lsws.service 2>/dev/null || true
+    
+    # Clean up databases
+    mysql -e "DROP DATABASE IF EXISTS cyberpanel;" 2>/dev/null || true
+    mysql -e "DROP USER IF EXISTS 'cyberpanel'@'localhost';" 2>/dev/null || true
+    
+    echo "  ✅ Cleanup completed"
+}
+
 # Function to install CyberPanel directly using the working method
 install_cyberpanel_direct() {
     echo "  🔄 Downloading CyberPanel installation files..."
+    
+    # Check if CyberPanel is already installed
+    if check_cyberpanel_installed; then
+        echo "  ⚠️  CyberPanel is already installed but may not be working properly"
+        echo "  🔧 Cleaning up existing installation and reinstalling..."
+        cleanup_existing_cyberpanel
+    fi
     
     # Pre-installation system checks
     echo "  🔍 Running pre-installation checks..."
@@ -773,16 +812,17 @@ show_main_menu() {
     echo "   1.  Fresh Installation (Recommended)"
     echo "   2.  Update Existing Installation"
     echo "   3.  Reinstall CyberPanel"
-    echo "   4.  Pre-Upgrade (Download latest upgrade script)"
-    echo "   5.  Check System Status"
-    echo "   6.  Advanced Options"
-    echo "   7.  Exit"
+    echo "   4.  Force Reinstall (Clean & Install)"
+    echo "   5.  Pre-Upgrade (Download latest upgrade script)"
+    echo "   6.  Check System Status"
+    echo "   7.  Advanced Options"
+    echo "   8.  Exit"
     echo ""
     echo "==============================================================================================================="
     echo ""
     
     while true; do
-        echo -n "Enter your choice [1-7]: "
+        echo -n "Enter your choice [1-8]: "
         read -r choice
         
         case $choice in
@@ -802,19 +842,23 @@ show_main_menu() {
                 return
                 ;;
             4)
-                start_preupgrade
+                INSTALLATION_TYPE="force_reinstall"
+                start_force_reinstall
                 return
                 ;;
             5)
-                show_system_status
+                start_preupgrade
                 return
                 ;;
             6)
-                show_advanced_menu
+                show_system_status
                 return
                 ;;
             7)
-                echo ""
+                show_advanced_menu
+                return
+                ;;
+            8)
                 echo "Goodbye!"
                 exit 0
                 ;;
@@ -1786,6 +1830,44 @@ start_upgrade() {
         echo ""
         return 1
     fi
+}
+
+# Function to start force reinstall
+start_force_reinstall() {
+    echo ""
+    echo "==============================================================================================================="
+    echo "                                    FORCE REINSTALL CYBERPANEL"
+    echo "==============================================================================================================="
+    echo ""
+    echo "This will completely remove the existing CyberPanel installation and install a fresh copy."
+    echo "All data and configurations will be lost!"
+    echo ""
+    
+    while true; do
+        echo -n "Are you sure you want to proceed? (y/N): "
+        read -r confirm
+        case $confirm in
+            [Yy]*)
+                echo ""
+                echo "Starting force reinstall..."
+                echo ""
+                
+                # Clean up existing installation
+                cleanup_existing_cyberpanel
+                
+                # Start fresh installation
+                start_installation
+                break
+                ;;
+            [Nn]*|"")
+                echo "Force reinstall cancelled."
+                return
+                ;;
+            *)
+                echo "Please answer yes or no."
+                ;;
+        esac
+    done
 }
 
 # Function to start preupgrade
