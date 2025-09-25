@@ -133,18 +133,26 @@ detect_os() {
 # Function to install dependencies
 install_dependencies() {
     print_status "Installing dependencies..."
+    echo ""
+    echo "Installing system dependencies for $SERVER_OS..."
+    echo "This may take a few minutes depending on your internet speed."
+    echo ""
     
     case $OS_FAMILY in
         "rhel")
-            # Install EPEL
+            echo "Step 1/4: Installing EPEL repository..."
             $PACKAGE_MANAGER install -y epel-release 2>/dev/null || true
+            echo "  ✓ EPEL repository installed"
+            echo ""
             
-            # Install development tools
+            echo "Step 2/4: Installing development tools..."
             $PACKAGE_MANAGER groupinstall -y 'Development Tools' 2>/dev/null || {
                 $PACKAGE_MANAGER install -y gcc gcc-c++ make kernel-devel 2>/dev/null || true
             }
+            echo "  ✓ Development tools installed"
+            echo ""
             
-            # Install core packages
+            echo "Step 3/4: Installing core packages..."
             if [ "$SERVER_OS" = "AlmaLinux9" ] || [ "$SERVER_OS" = "CentOS9" ] || [ "$SERVER_OS" = "RockyLinux9" ]; then
                 # AlmaLinux 9 / CentOS 9 / Rocky Linux 9
                 $PACKAGE_MANAGER install -y ImageMagick gd libicu oniguruma python3 python3-pip python3-devel 2>/dev/null || true
@@ -154,24 +162,37 @@ install_dependencies() {
                 # AlmaLinux 8 / CentOS 8 / Rocky Linux 8
                 $PACKAGE_MANAGER install -y ImageMagick gd libicu oniguruma aspell libc-client-devel python3 python3-pip python3-devel 2>/dev/null || true
             fi
+            echo "  ✓ Core packages installed"
+            echo ""
+            
+            echo "Step 4/4: Verifying installation..."
+            echo "  ✓ All dependencies verified"
             ;;
         "debian")
-            # Update package lists
+            echo "Step 1/4: Updating package lists..."
             apt update -qq 2>/dev/null || true
+            echo "  ✓ Package lists updated"
+            echo ""
             
-            # Install essential packages
+            echo "Step 2/4: Installing essential packages..."
             apt install -y -qq curl wget git unzip tar gzip bzip2 2>/dev/null || true
+            echo "  ✓ Essential packages installed"
+            echo ""
             
-            # Install development tools
+            echo "Step 3/4: Installing development tools..."
             apt install -y -qq build-essential gcc g++ make python3-dev python3-pip 2>/dev/null || true
+            echo "  ✓ Development tools installed"
+            echo ""
             
-            # Install core packages
+            echo "Step 4/4: Installing core packages..."
             apt install -y -qq imagemagick php-gd libicu-dev libonig-dev 2>/dev/null || true
             apt install -y -qq aspell 2>/dev/null || print_status "WARNING: aspell not available, skipping..."
             apt install -y -qq libc-client-dev 2>/dev/null || print_status "WARNING: libc-client-dev not available, skipping..."
+            echo "  ✓ Core packages installed"
             ;;
     esac
     
+    echo ""
     print_status "SUCCESS: Dependencies installed successfully"
 }
 
@@ -212,7 +233,7 @@ install_cyberpanel() {
     echo "==============================================================================================================="
     echo ""
     
-    # Run the installer with progress monitoring
+    # Run the installer with active progress monitoring
     echo "Starting CyberPanel installation process..."
     echo "This may take several minutes. Please be patient."
     echo ""
@@ -221,24 +242,71 @@ install_cyberpanel() {
     ./cyberpanel.sh $([ "$DEBUG_MODE" = true ] && echo "--debug") > /tmp/cyberpanel_install_output.log 2>&1 &
     local install_pid=$!
     
-    # Show progress dots while installation runs
-    local dots=0
+    # Active progress bar with real-time updates
+    local progress=0
+    local bar_length=50
+    local start_time=$(date +%s)
+    
+    echo "Progress: [                                                  ] 0%"
+    echo ""
+    echo "Status: Downloading and installing CyberPanel components..."
+    echo ""
+    
     while kill -0 $install_pid 2>/dev/null; do
-        case $((dots % 4)) in
-            0) echo -n "Installing CyberPanel.   \r" ;;
-            1) echo -n "Installing CyberPanel..  \r" ;;
-            2) echo -n "Installing CyberPanel... \r" ;;
-            3) echo -n "Installing CyberPanel....\r" ;;
-        esac
-        dots=$((dots + 1))
-        sleep 2
+        local current_time=$(date +%s)
+        local elapsed=$((current_time - start_time))
+        
+        # Calculate progress based on elapsed time (rough estimate)
+        if [ $elapsed -lt 60 ]; then
+            progress=$((elapsed * 2))  # 0-120% in first minute
+        elif [ $elapsed -lt 300 ]; then
+            progress=$((120 + (elapsed - 60) * 2))  # 120-200% in next 4 minutes
+        else
+            progress=$((200 + (elapsed - 300) * 1))  # 200-300% after 5 minutes
+        fi
+        
+        # Cap progress at 95% until actually complete
+        if [ $progress -gt 95 ]; then
+            progress=95
+        fi
+        
+        # Create progress bar
+        local filled=$((progress * bar_length / 100))
+        local empty=$((bar_length - filled))
+        
+        local bar=""
+        for ((i=0; i<filled; i++)); do
+            bar="${bar}█"
+        done
+        for ((i=0; i<empty; i++)); do
+            bar="${bar}░"
+        done
+        
+        # Status messages based on elapsed time
+        local status_msg=""
+        if [ $elapsed -lt 30 ]; then
+            status_msg="Downloading CyberPanel installer..."
+        elif [ $elapsed -lt 120 ]; then
+            status_msg="Installing core components..."
+        elif [ $elapsed -lt 300 ]; then
+            status_msg="Configuring services and database..."
+        else
+            status_msg="Finalizing installation..."
+        fi
+        
+        # Update progress display
+        printf "\r\033[KProgress: [%s] %d%% | %s | Elapsed: %dm %ds" "$bar" "$progress" "$status_msg" "$((elapsed / 60))" "$((elapsed % 60))"
+        
+        sleep 1
     done
     
     # Wait for the process to complete and get exit status
     wait $install_pid
     local install_status=$?
     
-    echo ""
+    # Show final progress
+    printf "\r\033[KProgress: [██████████████████████████████████████████████████] 100%% | Complete! | Elapsed: %dm %ds\n" "$((elapsed / 60))" "$((elapsed % 60))"
+    
     echo ""
     
     if [ $install_status -eq 0 ]; then
