@@ -621,153 +621,67 @@ install_cyberpanel_direct() {
     echo "==============================================================================================================="
     echo ""
     
-    # Run the installer with active progress monitoring
+    # Run the installer with live progress monitoring
     echo "Starting CyberPanel installation process..."
     echo "This may take several minutes. Please be patient."
     echo ""
     
-    # Start the installer in background and monitor progress
-    echo "Starting CyberPanel installer with PID tracking..."
-    ./cyberpanel_installer.sh $([ "$DEBUG_MODE" = true ] && echo "--debug") > /var/log/CyberPanel/install_output.log 2>&1 &
-    local install_pid=$!
+    # Create log directory
+    mkdir -p /var/log/CyberPanel
     
-    # Give the process a moment to start
-    sleep 2
+    # Run the installer with live output monitoring
+    echo "Starting CyberPanel installer with live progress monitoring..."
+    echo ""
+    echo "==============================================================================================================="
+    echo "                                    LIVE INSTALLATION PROGRESS"
+    echo "==============================================================================================================="
+    echo ""
     
-    # Check if the process is still running
-    if ! kill -0 $install_pid 2>/dev/null; then
-        print_status "ERROR: CyberPanel installer failed to start or exited immediately"
+    # Run installer and show live output
+    if [ "$DEBUG_MODE" = true ]; then
+        ./cyberpanel_installer.sh --debug 2>&1 | tee /var/log/CyberPanel/install_output.log
+    else
+        ./cyberpanel_installer.sh 2>&1 | tee /var/log/CyberPanel/install_output.log
+    fi
+    
+    local install_exit_code=${PIPESTATUS[0]}
+    
+    echo ""
+    echo "==============================================================================================================="
+    echo "                                    INSTALLATION COMPLETED"
+    echo "==============================================================================================================="
+    echo ""
+    
+    # Check if installation was successful
+    if [ $install_exit_code -ne 0 ]; then
+        print_status "ERROR: CyberPanel installation failed with exit code $install_exit_code"
         echo ""
-        echo "Debugging information:"
-        echo "  • Installer file size: $(wc -c < cyberpanel_installer.sh 2>/dev/null || echo 'unknown') bytes"
-        echo "  • File permissions: $(ls -la cyberpanel_installer.sh 2>/dev/null || echo 'file not found')"
-        echo "  • First few lines of installer:"
-        head -3 cyberpanel_installer.sh 2>/dev/null || echo "Could not read file"
+        echo "Installation log (last 50 lines):"
+        echo "==============================================================================================================="
+        tail -50 /var/log/CyberPanel/install_output.log 2>/dev/null || echo "Could not read installation log"
+        echo "==============================================================================================================="
         echo ""
-        echo "Installation log:"
-        cat /var/log/CyberPanel/install_output.log 2>/dev/null || echo "No log file found"
-        echo ""
-        echo "This usually means:"
-        echo "  1. The installer has syntax errors or missing dependencies"
-        echo "  2. The installer requires specific arguments or environment"
-        echo "  3. Missing installation files or directories"
+        echo "Full installation log available at: /var/log/CyberPanel/install_output.log"
         echo ""
         return 1
     fi
-    
-    # Active progress bar with real-time updates
-    local progress=0
-    local bar_length=50
-    local start_time=$(date +%s)
-    local last_progress=0
-    
-    echo "Progress: [                                                  ] 0%"
-    echo ""
-    echo "Status: Downloading and installing CyberPanel components..."
-    echo ""
-    
-    # Monitor the installation process
-    local min_wait_time=30  # Minimum 30 seconds before allowing completion
-    local max_wait_time=1800  # Maximum 30 minutes timeout
-    while true; do
-        # Check if process is still running
-        if ! kill -0 $install_pid 2>/dev/null; then
-            # Process has finished, but wait minimum time
-            if [ $elapsed -ge $min_wait_time ]; then
-                break
-            else
-                # Still within minimum wait time, continue monitoring
-                sleep 2
-                continue
-            fi
-        fi
-        
-        local current_time=$(date +%s)
-        local elapsed=$((current_time - start_time))
-        
-        # Check for timeout
-        if [ $elapsed -gt $max_wait_time ]; then
-            print_status "ERROR: Installation timeout after $((max_wait_time / 60)) minutes"
-            kill $install_pid 2>/dev/null || true
-            break
-        fi
-        
-        # Calculate progress based on elapsed time (conservative and realistic)
-        if [ $elapsed -lt 30 ]; then
-            progress=$((elapsed * 2))  # 0-60% in first 30 seconds
-        elif [ $elapsed -lt 120 ]; then
-            progress=$((60 + (elapsed - 30) * 1))  # 60-150% in next 90 seconds
-        elif [ $elapsed -lt 300 ]; then
-            progress=$((150 + (elapsed - 120) * 1))  # 150-330% in next 3 minutes
-        else
-            progress=$((330 + (elapsed - 300) * 1))  # 330%+ after 5 minutes
-        fi
-        
-        # Cap progress at 95% until actually complete
-        if [ $progress -gt 95 ]; then
-            progress=95
-        fi
-        
-        # Only update display if progress changed significantly
-        if [ $progress -gt $last_progress ]; then
-            # Create progress bar
-            local filled=$((progress * bar_length / 100))
-            local empty=$((bar_length - filled))
-            
-            local bar=""
-            for ((i=0; i<filled; i++)); do
-                bar="${bar}█"
-            done
-            for ((i=0; i<empty; i++)); do
-                bar="${bar}░"
-            done
-            
-            # Status messages based on elapsed time
-            local status_msg=""
-            if [ $elapsed -lt 30 ]; then
-                status_msg="Downloading CyberPanel installer..."
-            elif [ $elapsed -lt 120 ]; then
-                status_msg="Installing core components..."
-            elif [ $elapsed -lt 300 ]; then
-                status_msg="Configuring services and database..."
-            else
-                status_msg="Finalizing installation..."
-            fi
-            
-            # Update progress display
-            printf "\r\033[KProgress: [%s] %d%% | %s | Elapsed: %dm %ds" "$bar" "$progress" "$status_msg" "$((elapsed / 60))" "$((elapsed % 60))"
-            last_progress=$progress
-        fi
-        
-        sleep 2
-    done
-    
-    # Wait for the process to complete and get exit status
-    wait $install_pid
-    local install_status=$?
-    
-    # Show final progress
-    local final_elapsed=$((elapsed / 60))
-    local final_seconds=$((elapsed % 60))
-    printf "\r\033[KProgress: [██████████████████████████████████████████████████] 100%% | Complete! | Elapsed: %dm %ds\n" "$final_elapsed" "$final_seconds"
-    
-    echo ""
     
     # Clean up temporary directory
     cd /tmp
     rm -rf "$temp_dir" 2>/dev/null || true
     
-                if [ $install_status -eq 0 ]; then
-                    print_status "SUCCESS: CyberPanel installed successfully"
-                    
-                    # Run post-installation fixes
-                    echo ""
-                    echo "  🔧 Running post-installation fixes..."
-                    fix_post_install_issues
-                    
-                    return 0
-                else
-        print_status "ERROR: CyberPanel installation failed (exit code: $install_status)"
+    # Check if installation was successful
+    if [ $install_exit_code -eq 0 ]; then
+        print_status "SUCCESS: CyberPanel installed successfully"
+        
+        # Run post-installation fixes
+        echo ""
+        echo "  🔧 Running post-installation fixes..."
+        fix_post_install_issues
+        
+        return 0
+    else
+        print_status "ERROR: CyberPanel installation failed (exit code: $install_exit_code)"
         echo ""
         echo "==============================================================================================================="
         echo "                                    INSTALLATION FAILED"
@@ -1072,12 +986,9 @@ show_fresh_install_menu() {
                 return
                 ;;
             2)
-                echo ""
-                echo "ERROR: v2.5.5-dev is not yet available on GitHub."
-                echo "       Please select 'Latest Stable Version' or 'Custom Branch Name' instead."
-                echo "       The enhanced installer will be available after pushing to GitHub."
-                echo ""
-                continue
+                BRANCH_NAME="v2.5.5-dev"
+                show_installation_preferences
+                return
                 ;;
             3)
                 show_version_selection
@@ -1850,139 +1761,53 @@ start_upgrade() {
     echo "==============================================================================================================="
   echo ""
     
-    # Run the upgrade with progress monitoring
+    # Run the upgrade with live progress monitoring
     echo "Starting CyberPanel upgrade process..."
     echo "This may take several minutes. Please be patient."
     echo ""
     
-    # Start the upgrade in background and monitor progress
-    ./cyberpanel_upgrade.sh $([ "$DEBUG_MODE" = true ] && echo "--debug") > /var/log/CyberPanel/upgrade_output.log 2>&1 &
-    local upgrade_pid=$!
+    # Create log directory
+    mkdir -p /var/log/CyberPanel
     
-    # Active progress bar with real-time updates
-    local progress=0
-    local bar_length=50
-    local start_time=$(date +%s)
-    local last_progress=0
-    
-    echo "Progress: [                                                  ] 0%"
-  echo ""
-    echo "Status: Upgrading CyberPanel components..."
+    # Run the upgrade with live output monitoring
+    echo "Starting CyberPanel upgrade with live progress monitoring..."
+    echo ""
+    echo "==============================================================================================================="
+    echo "                                    LIVE UPGRADE PROGRESS"
+    echo "==============================================================================================================="
     echo ""
     
-    # Monitor the upgrade process
-    while true; do
-        # Check if process is still running
-        if ! kill -0 $upgrade_pid 2>/dev/null; then
-            # Process has finished, break the loop
-            break
-        fi
-        
-        local current_time=$(date +%s)
-        local elapsed=$((current_time - start_time))
-        
-        # Calculate progress based on elapsed time
-        if [ $elapsed -lt 30 ]; then
-            progress=$((elapsed * 3))  # 0-90% in first 30 seconds
-        elif [ $elapsed -lt 120 ]; then
-            progress=$((90 + (elapsed - 30) * 1))  # 90-180% in next 90 seconds
-        elif [ $elapsed -lt 300 ]; then
-            progress=$((180 + (elapsed - 120) * 1))  # 180-360% in next 3 minutes
-        else
-            progress=$((360 + (elapsed - 300) * 1))  # 360%+ after 5 minutes
-        fi
-        
-        # Cap progress at 95% until actually complete
-        if [ $progress -gt 95 ]; then
-            progress=95
-        fi
-        
-        # Only update display if progress changed significantly
-        if [ $progress -gt $last_progress ]; then
-            # Create progress bar
-            local filled=$((progress * bar_length / 100))
-            local empty=$((bar_length - filled))
-            
-            local bar=""
-            for ((i=0; i<filled; i++)); do
-                bar="${bar}█"
-            done
-            for ((i=0; i<empty; i++)); do
-                bar="${bar}░"
-            done
-            
-            # Status messages based on elapsed time
-            local status_msg=""
-            if [ $elapsed -lt 30 ]; then
-                status_msg="Preparing upgrade..."
-            elif [ $elapsed -lt 120 ]; then
-                status_msg="Upgrading core components..."
-            elif [ $elapsed -lt 300 ]; then
-                status_msg="Updating services and database..."
-            else
-                status_msg="Finalizing upgrade..."
-            fi
-            
-            # Update progress display
-            printf "\r\033[KProgress: [%s] %d%% | %s | Elapsed: %dm %ds" "$bar" "$progress" "$status_msg" "$((elapsed / 60))" "$((elapsed % 60))"
-            last_progress=$progress
-        fi
-        
-        sleep 2
-    done
+    # Run upgrade and show live output
+    if [ "$DEBUG_MODE" = true ]; then
+        ./cyberpanel_upgrade.sh --debug 2>&1 | tee /var/log/CyberPanel/upgrade_output.log
+    else
+        ./cyberpanel_upgrade.sh 2>&1 | tee /var/log/CyberPanel/upgrade_output.log
+    fi
     
-    # Wait for the process to complete and get exit status
-    wait $upgrade_pid
-    local upgrade_status=$?
+    local upgrade_exit_code=${PIPESTATUS[0]}
     
-    # Show final progress
-    local final_elapsed=$((elapsed / 60))
-    local final_seconds=$((elapsed % 60))
-    printf "\r\033[KProgress: [██████████████████████████████████████████████████] 100%% | Complete! | Elapsed: %dm %ds\n" "$final_elapsed" "$final_seconds"
-    
+    echo ""
+    echo "==============================================================================================================="
+    echo "                                    UPGRADE COMPLETED"
+    echo "==============================================================================================================="
     echo ""
     
     # Clean up downloaded upgrade script
     rm -f cyberpanel_upgrade.sh 2>/dev/null
     
-    if [ $upgrade_status -eq 0 ]; then
+    # Check if upgrade was successful
+    if [ $upgrade_exit_code -eq 0 ]; then
         print_status "SUCCESS: CyberPanel upgraded successfully"
         return 0
     else
-        print_status "ERROR: CyberPanel upgrade failed"
+        print_status "ERROR: CyberPanel upgrade failed with exit code $upgrade_exit_code"
         echo ""
+        echo "Upgrade log (last 50 lines):"
         echo "==============================================================================================================="
-        echo "                                    UPGRADE FAILED"
-        echo "==============================================================================================================="
-        echo ""
-        echo "The CyberPanel upgrade has failed. Here's how to troubleshoot:"
-        echo ""
-        echo "📋 LOG FILES LOCATION:"
-        echo "  • Main installer log: /var/log/CyberPanel/install.log"
-        echo "  • Upgrade output: /var/log/CyberPanel/upgrade_output.log"
-        echo "  • System logs: /var/log/messages"
-        echo ""
-        echo "🔍 TROUBLESHOOTING STEPS:"
-        echo "  1. Check the upgrade output log for specific errors"
-        echo "  2. Ensure your current installation is working"
-        echo "  3. Check for conflicting services"
-        echo "  4. Verify you have sufficient disk space"
-        echo "  5. Try running the upgrade again"
-        echo ""
-        echo "📄 LAST 30 LINES OF UPGRADE LOG:"
-        echo "==============================================================================================================="
-        if [ -f "/var/log/CyberPanel/upgrade_output.log" ]; then
-            tail -30 /var/log/CyberPanel/upgrade_output.log 2>/dev/null || echo "Could not read upgrade log"
-        else
-            echo "Upgrade log not found at /var/log/CyberPanel/upgrade_output.log"
-        fi
+        tail -50 /var/log/CyberPanel/upgrade_output.log 2>/dev/null || echo "Could not read upgrade log"
         echo "==============================================================================================================="
         echo ""
-        echo "💡 QUICK DEBUG COMMANDS:"
-        echo "  • View full log: cat /var/log/CyberPanel/upgrade_output.log"
-        echo "  • Check CyberPanel status: systemctl status lscpd"
-        echo "  • Check system: free -h && df -h"
-        echo "  • Retry upgrade: Run the installer again"
+        echo "Full upgrade log available at: /var/log/CyberPanel/upgrade_output.log"
         echo ""
         return 1
     fi
