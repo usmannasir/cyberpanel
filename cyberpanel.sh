@@ -584,7 +584,12 @@ install_cyberpanel_direct() {
     
     # Download the install directory
     echo "Downloading installation files..."
-    curl --silent -L -o install_files.tar.gz "https://github.com/usmannasir/cyberpanel/archive/stable.tar.gz" 2>/dev/null
+    local archive_url="https://github.com/usmannasir/cyberpanel/archive/v2.5.5-dev.tar.gz"
+    if [ "$installer_url" = "https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel.sh" ]; then
+        archive_url="https://github.com/usmannasir/cyberpanel/archive/stable.tar.gz"
+    fi
+    
+    curl --silent -L -o install_files.tar.gz "$archive_url" 2>/dev/null
     if [ $? -ne 0 ] || [ ! -s "install_files.tar.gz" ]; then
         print_status "ERROR: Failed to download installation files"
         return 1
@@ -598,8 +603,13 @@ install_cyberpanel_direct() {
     fi
     
     # Copy install directory to current location
-    cp -r cyberpanel-stable/install . 2>/dev/null || true
-    cp -r cyberpanel-stable/install.sh . 2>/dev/null || true
+    if [ "$installer_url" = "https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel.sh" ]; then
+        cp -r cyberpanel-stable/install . 2>/dev/null || true
+        cp -r cyberpanel-stable/install.sh . 2>/dev/null || true
+    else
+        cp -r cyberpanel-v2.5.5-dev/install . 2>/dev/null || true
+        cp -r cyberpanel-v2.5.5-dev/install.sh . 2>/dev/null || true
+    fi
     
     echo "  ✓ CyberPanel installation files downloaded"
     echo "  🔄 Starting CyberPanel installation..."
@@ -1062,9 +1072,12 @@ show_fresh_install_menu() {
                 return
                 ;;
             2)
-                BRANCH_NAME="v2.5.5-dev"
-                show_installation_preferences
-                return
+                echo ""
+                echo "ERROR: v2.5.5-dev is not yet available on GitHub."
+                echo "       Please select 'Latest Stable Version' or 'Custom Branch Name' instead."
+                echo "       The enhanced installer will be available after pushing to GitHub."
+                echo ""
+                continue
                 ;;
             3)
                 show_version_selection
