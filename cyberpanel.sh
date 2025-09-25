@@ -2779,7 +2779,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/lsmcd -d
+ExecStart=/usr/local/lsmcd/bin/lsmcd -d
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=process
 Restart=on-failure
