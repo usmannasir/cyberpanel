@@ -212,16 +212,16 @@ install_cyberpanel() {
     echo "  🔄 Downloading CyberPanel installer..."
     echo ""
     
-    # Download and run the original installer
+    # Download the original CyberPanel installer
     if [ -n "$BRANCH_NAME" ]; then
         echo "Downloading from: https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel.sh"
-        curl --silent -o cyberpanel.sh "https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel.sh" 2>/dev/null
+        curl --silent -o cyberpanel_original.sh "https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel.sh" 2>/dev/null
     else
         echo "Downloading from: https://cyberpanel.sh/?dl&$SERVER_OS"
-        curl --silent -o cyberpanel.sh "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null
+        curl --silent -o cyberpanel_original.sh "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null
     fi
     
-    chmod +x cyberpanel.sh
+    chmod +x cyberpanel_original.sh
     
     echo "  ✓ CyberPanel installer downloaded"
     echo "  🔄 Starting CyberPanel installation..."
@@ -239,30 +239,40 @@ install_cyberpanel() {
     echo ""
     
     # Start the installer in background and monitor progress
-    ./cyberpanel.sh $([ "$DEBUG_MODE" = true ] && echo "--debug") > /tmp/cyberpanel_install_output.log 2>&1 &
+    ./cyberpanel_original.sh $([ "$DEBUG_MODE" = true ] && echo "--debug") > /tmp/cyberpanel_install_output.log 2>&1 &
     local install_pid=$!
     
     # Active progress bar with real-time updates
     local progress=0
     local bar_length=50
     local start_time=$(date +%s)
+    local last_progress=0
     
     echo "Progress: [                                                  ] 0%"
     echo ""
     echo "Status: Downloading and installing CyberPanel components..."
     echo ""
     
-    while kill -0 $install_pid 2>/dev/null; do
+    # Monitor the installation process
+    while true; do
+        # Check if process is still running
+        if ! kill -0 $install_pid 2>/dev/null; then
+            # Process has finished, break the loop
+            break
+        fi
+        
         local current_time=$(date +%s)
         local elapsed=$((current_time - start_time))
         
-        # Calculate progress based on elapsed time (rough estimate)
-        if [ $elapsed -lt 60 ]; then
-            progress=$((elapsed * 2))  # 0-120% in first minute
+        # Calculate progress based on elapsed time (more realistic)
+        if [ $elapsed -lt 30 ]; then
+            progress=$((elapsed * 3))  # 0-90% in first 30 seconds
+        elif [ $elapsed -lt 120 ]; then
+            progress=$((90 + (elapsed - 30) * 1))  # 90-180% in next 90 seconds
         elif [ $elapsed -lt 300 ]; then
-            progress=$((120 + (elapsed - 60) * 2))  # 120-200% in next 4 minutes
+            progress=$((180 + (elapsed - 120) * 1))  # 180-360% in next 3 minutes
         else
-            progress=$((200 + (elapsed - 300) * 1))  # 200-300% after 5 minutes
+            progress=$((360 + (elapsed - 300) * 1))  # 360%+ after 5 minutes
         fi
         
         # Cap progress at 95% until actually complete
@@ -270,34 +280,38 @@ install_cyberpanel() {
             progress=95
         fi
         
-        # Create progress bar
-        local filled=$((progress * bar_length / 100))
-        local empty=$((bar_length - filled))
-        
-        local bar=""
-        for ((i=0; i<filled; i++)); do
-            bar="${bar}█"
-        done
-        for ((i=0; i<empty; i++)); do
-            bar="${bar}░"
-        done
-        
-        # Status messages based on elapsed time
-        local status_msg=""
-        if [ $elapsed -lt 30 ]; then
-            status_msg="Downloading CyberPanel installer..."
-        elif [ $elapsed -lt 120 ]; then
-            status_msg="Installing core components..."
-        elif [ $elapsed -lt 300 ]; then
-            status_msg="Configuring services and database..."
-        else
-            status_msg="Finalizing installation..."
+        # Only update display if progress changed significantly
+        if [ $progress -gt $last_progress ]; then
+            # Create progress bar
+            local filled=$((progress * bar_length / 100))
+            local empty=$((bar_length - filled))
+            
+            local bar=""
+            for ((i=0; i<filled; i++)); do
+                bar="${bar}█"
+            done
+            for ((i=0; i<empty; i++)); do
+                bar="${bar}░"
+            done
+            
+            # Status messages based on elapsed time
+            local status_msg=""
+            if [ $elapsed -lt 30 ]; then
+                status_msg="Downloading CyberPanel installer..."
+            elif [ $elapsed -lt 120 ]; then
+                status_msg="Installing core components..."
+            elif [ $elapsed -lt 300 ]; then
+                status_msg="Configuring services and database..."
+            else
+                status_msg="Finalizing installation..."
+            fi
+            
+            # Update progress display
+            printf "\r\033[KProgress: [%s] %d%% | %s | Elapsed: %dm %ds" "$bar" "$progress" "$status_msg" "$((elapsed / 60))" "$((elapsed % 60))"
+            last_progress=$progress
         fi
         
-        # Update progress display
-        printf "\r\033[KProgress: [%s] %d%% | %s | Elapsed: %dm %ds" "$bar" "$progress" "$status_msg" "$((elapsed / 60))" "$((elapsed % 60))"
-        
-        sleep 1
+        sleep 2
     done
     
     # Wait for the process to complete and get exit status
@@ -305,9 +319,14 @@ install_cyberpanel() {
     local install_status=$?
     
     # Show final progress
-    printf "\r\033[KProgress: [██████████████████████████████████████████████████] 100%% | Complete! | Elapsed: %dm %ds\n" "$((elapsed / 60))" "$((elapsed % 60))"
+    local final_elapsed=$((elapsed / 60))
+    local final_seconds=$((elapsed % 60))
+    printf "\r\033[KProgress: [██████████████████████████████████████████████████] 100%% | Complete! | Elapsed: %dm %ds\n" "$final_elapsed" "$final_seconds"
     
     echo ""
+    
+    # Clean up downloaded installer
+    rm -f cyberpanel_original.sh 2>/dev/null
     
     if [ $install_status -eq 0 ]; then
         print_status "SUCCESS: CyberPanel installed successfully"
@@ -456,15 +475,16 @@ show_main_menu() {
     echo "   1.  Fresh Installation (Recommended)"
     echo "   2.  Update Existing Installation"
     echo "   3.  Reinstall CyberPanel"
-    echo "   4.  Check System Status"
-    echo "   5.  Advanced Options"
-    echo "   6.  Exit"
+    echo "   4.  Pre-Upgrade (Download latest upgrade script)"
+    echo "   5.  Check System Status"
+    echo "   6.  Advanced Options"
+    echo "   7.  Exit"
     echo ""
     echo "==============================================================================================================="
     echo ""
     
     while true; do
-        echo -n "Enter your choice [1-6]: "
+        echo -n "Enter your choice [1-7]: "
         read -r choice
         
         case $choice in
@@ -484,21 +504,25 @@ show_main_menu() {
                 return
                 ;;
             4)
-                show_system_status
+                start_preupgrade
                 return
                 ;;
             5)
-                show_advanced_menu
+                show_system_status
                 return
                 ;;
             6)
+                show_advanced_menu
+                return
+                ;;
+            7)
                 echo ""
                 echo "Goodbye!"
                 exit 0
                 ;;
             *)
                 echo ""
-                echo "ERROR: Invalid choice. Please enter 1-6."
+                echo "ERROR: Invalid choice. Please enter 1-7."
                 echo ""
                 ;;
         esac
@@ -755,7 +779,7 @@ show_update_menu() {
             show_main_menu
             ;;
         *)
-            start_installation
+            start_upgrade
             ;;
     esac
 }
@@ -835,7 +859,7 @@ show_reinstall_menu() {
     read -r response
     case $response in
         [yY]|[yY][eE][sS])
-            start_installation
+            start_reinstall
             ;;
         *)
             show_main_menu
@@ -1114,6 +1138,271 @@ show_diagnostics() {
             show_advanced_menu
             ;;
     esac
+}
+
+# Function to start upgrade
+start_upgrade() {
+    echo ""
+    echo "==============================================================================================================="
+    echo "                                    STARTING UPGRADE"
+    echo "==============================================================================================================="
+    echo ""
+    
+    # Detect OS
+    echo "Step 1/5: Detecting operating system..."
+    if ! detect_os; then
+        print_status "ERROR: Failed to detect operating system"
+        exit 1
+    fi
+    echo "  ✓ Operating system detected successfully"
+    echo ""
+    
+    # Install dependencies
+    echo "Step 2/5: Installing/updating dependencies..."
+    install_dependencies
+    echo ""
+    
+    # Download and run the upgrade script
+    echo "Step 3/5: Downloading CyberPanel upgrade script..."
+    if [ -n "$BRANCH_NAME" ]; then
+        echo "Downloading from: https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel_upgrade.sh"
+        curl --silent -o cyberpanel_upgrade.sh "https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel_upgrade.sh" 2>/dev/null
+    else
+        echo "Downloading from: https://cyberpanel.sh/?dl&$SERVER_OS"
+        curl --silent -o cyberpanel_upgrade.sh "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null
+    fi
+    
+    chmod +x cyberpanel_upgrade.sh
+    
+    echo "  ✓ CyberPanel upgrade script downloaded"
+    echo "  🔄 Starting CyberPanel upgrade..."
+    echo ""
+    echo "IMPORTANT: The upgrade is now running in the background."
+    echo "You will see detailed output from the CyberPanel upgrade script below."
+    echo "This is normal and expected - the upgrade is proceeding!"
+    echo ""
+    echo "==============================================================================================================="
+    echo ""
+    
+    # Run the upgrade with progress monitoring
+    echo "Starting CyberPanel upgrade process..."
+    echo "This may take several minutes. Please be patient."
+    echo ""
+    
+    # Start the upgrade in background and monitor progress
+    ./cyberpanel_upgrade.sh $([ "$DEBUG_MODE" = true ] && echo "--debug") > /tmp/cyberpanel_upgrade_output.log 2>&1 &
+    local upgrade_pid=$!
+    
+    # Active progress bar with real-time updates
+    local progress=0
+    local bar_length=50
+    local start_time=$(date +%s)
+    local last_progress=0
+    
+    echo "Progress: [                                                  ] 0%"
+    echo ""
+    echo "Status: Upgrading CyberPanel components..."
+    echo ""
+    
+    # Monitor the upgrade process
+    while true; do
+        # Check if process is still running
+        if ! kill -0 $upgrade_pid 2>/dev/null; then
+            # Process has finished, break the loop
+            break
+        fi
+        
+        local current_time=$(date +%s)
+        local elapsed=$((current_time - start_time))
+        
+        # Calculate progress based on elapsed time
+        if [ $elapsed -lt 30 ]; then
+            progress=$((elapsed * 3))  # 0-90% in first 30 seconds
+        elif [ $elapsed -lt 120 ]; then
+            progress=$((90 + (elapsed - 30) * 1))  # 90-180% in next 90 seconds
+        elif [ $elapsed -lt 300 ]; then
+            progress=$((180 + (elapsed - 120) * 1))  # 180-360% in next 3 minutes
+        else
+            progress=$((360 + (elapsed - 300) * 1))  # 360%+ after 5 minutes
+        fi
+        
+        # Cap progress at 95% until actually complete
+        if [ $progress -gt 95 ]; then
+            progress=95
+        fi
+        
+        # Only update display if progress changed significantly
+        if [ $progress -gt $last_progress ]; then
+            # Create progress bar
+            local filled=$((progress * bar_length / 100))
+            local empty=$((bar_length - filled))
+            
+            local bar=""
+            for ((i=0; i<filled; i++)); do
+                bar="${bar}█"
+            done
+            for ((i=0; i<empty; i++)); do
+                bar="${bar}░"
+            done
+            
+            # Status messages based on elapsed time
+            local status_msg=""
+            if [ $elapsed -lt 30 ]; then
+                status_msg="Preparing upgrade..."
+            elif [ $elapsed -lt 120 ]; then
+                status_msg="Upgrading core components..."
+            elif [ $elapsed -lt 300 ]; then
+                status_msg="Updating services and database..."
+            else
+                status_msg="Finalizing upgrade..."
+            fi
+            
+            # Update progress display
+            printf "\r\033[KProgress: [%s] %d%% | %s | Elapsed: %dm %ds" "$bar" "$progress" "$status_msg" "$((elapsed / 60))" "$((elapsed % 60))"
+            last_progress=$progress
+        fi
+        
+        sleep 2
+    done
+    
+    # Wait for the process to complete and get exit status
+    wait $upgrade_pid
+    local upgrade_status=$?
+    
+    # Show final progress
+    local final_elapsed=$((elapsed / 60))
+    local final_seconds=$((elapsed % 60))
+    printf "\r\033[KProgress: [██████████████████████████████████████████████████] 100%% | Complete! | Elapsed: %dm %ds\n" "$final_elapsed" "$final_seconds"
+    
+    echo ""
+    
+    # Clean up downloaded upgrade script
+    rm -f cyberpanel_upgrade.sh 2>/dev/null
+    
+    if [ $upgrade_status -eq 0 ]; then
+        print_status "SUCCESS: CyberPanel upgraded successfully"
+        return 0
+    else
+        print_status "ERROR: CyberPanel upgrade failed. Check /tmp/cyberpanel_upgrade_output.log for details"
+        return 1
+    fi
+}
+
+# Function to start preupgrade
+start_preupgrade() {
+    echo ""
+    echo "==============================================================================================================="
+    echo "                                    PRE-UPGRADE SETUP"
+    echo "==============================================================================================================="
+    echo ""
+    
+    echo "This will download the latest CyberPanel upgrade script to /usr/local/"
+    echo "and prepare it for execution."
+    echo ""
+    
+    # Get the latest version
+    echo "Step 1/3: Fetching latest version information..."
+    local latest_version=$(curl -s https://cyberpanel.net/version.txt | sed -e 's|{"version":"||g' -e 's|","build":|.|g' | sed 's:}*$::')
+    local branch_name="v$latest_version"
+    
+    echo "  ✓ Latest version: $latest_version"
+    echo "  ✓ Branch: $branch_name"
+    echo ""
+    
+    # Download the upgrade script
+    echo "Step 2/3: Downloading CyberPanel upgrade script..."
+    local upgrade_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/$branch_name/cyberpanel_upgrade.sh"
+    echo "Downloading from: $upgrade_url"
+    
+    if curl --silent -o /usr/local/cyberpanel_upgrade.sh "$upgrade_url" 2>/dev/null; then
+        chmod 700 /usr/local/cyberpanel_upgrade.sh
+        echo "  ✓ Upgrade script downloaded to /usr/local/cyberpanel_upgrade.sh"
+    else
+        print_status "ERROR: Failed to download upgrade script"
+        return 1
+    fi
+    echo ""
+    
+    # Show instructions
+    echo "Step 3/3: Setup complete!"
+    echo ""
+    echo "The upgrade script is now ready at: /usr/local/cyberpanel_upgrade.sh"
+    echo ""
+    echo "To run the upgrade, you can either:"
+    echo "  1. Use this installer's 'Update Existing Installation' option"
+    echo "  2. Run directly: /usr/local/cyberpanel_upgrade.sh"
+    echo ""
+    echo "==============================================================================================================="
+    echo ""
+    
+    read -p "Press Enter to return to main menu..."
+    show_main_menu
+}
+
+# Function to start reinstall
+start_reinstall() {
+    echo ""
+    echo "==============================================================================================================="
+    echo "                                    STARTING REINSTALL"
+    echo "==============================================================================================================="
+    echo ""
+    
+    echo "WARNING: This will completely remove the existing CyberPanel installation!"
+    echo "All data, websites, and configurations will be lost!"
+    echo ""
+    
+    # Detect OS
+    echo "Step 1/6: Detecting operating system..."
+    if ! detect_os; then
+        print_status "ERROR: Failed to detect operating system"
+        exit 1
+    fi
+    echo "  ✓ Operating system detected successfully"
+    echo ""
+    
+    # Stop services
+    echo "Step 2/6: Stopping CyberPanel services..."
+    systemctl stop lscpd 2>/dev/null || true
+    systemctl stop lsws 2>/dev/null || true
+    systemctl stop mariadb 2>/dev/null || true
+    systemctl stop postfix 2>/dev/null || true
+    systemctl stop dovecot 2>/dev/null || true
+    systemctl stop pure-ftpd 2>/dev/null || true
+    echo "  ✓ Services stopped"
+    echo ""
+    
+    # Remove existing installation
+    echo "Step 3/6: Removing existing CyberPanel installation..."
+    rm -rf /usr/local/CyberCP 2>/dev/null || true
+    rm -rf /usr/local/lsws 2>/dev/null || true
+    rm -rf /home/cyberpanel 2>/dev/null || true
+    rm -rf /var/lib/mysql 2>/dev/null || true
+    rm -rf /var/log/cyberpanel 2>/dev/null || true
+    echo "  ✓ Existing installation removed"
+    echo ""
+    
+    # Install dependencies
+    echo "Step 4/6: Installing dependencies..."
+    install_dependencies
+    echo ""
+    
+    # Install CyberPanel
+    echo "Step 5/6: Installing CyberPanel..."
+    if ! install_cyberpanel; then
+        print_status "ERROR: CyberPanel installation failed"
+        exit 1
+    fi
+    echo ""
+    
+    # Apply fixes
+    echo "Step 6/6: Applying installation fixes..."
+    apply_fixes
+    echo ""
+    
+    # Show status summary
+    show_status_summary
+    
+    print_status "SUCCESS: CyberPanel reinstalled successfully!"
 }
 
 # Function to start installation
