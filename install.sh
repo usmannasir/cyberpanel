@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Enhanced CyberPanel Installer Wrapper
+# This script detects the OS and launches the enhanced installer
+
 OUTPUT=$(cat /etc/*release)
 if  echo $OUTPUT | grep -q "CentOS Linux 7" ; then
         echo "Checking and installing curl and wget"
@@ -140,41 +143,56 @@ else
                 exit 1
 fi
 
-# Check for branch parameter
-BRANCH_NAME=""
-if [ "$1" = "-b" ] || [ "$1" = "--branch" ]; then
-    BRANCH_NAME="$2"
-    shift 2
-fi
+# Download the enhanced installer
+echo "Downloading Enhanced CyberPanel Installer..."
+curl --silent -o install_enhanced.sh "https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/install_enhanced.sh" 2>/dev/null
 
-rm -f cyberpanel.sh
-rm -f install.tar.gz
+if [ ! -f "install_enhanced.sh" ]; then
+    echo "Failed to download enhanced installer. Falling back to original installer..."
+    
+    # Fallback to original installer
+    rm -f cyberpanel.sh
+    rm -f install.tar.gz
 
-# Download from appropriate source based on branch/commit
-if [ -n "$BRANCH_NAME" ]; then
-    # Check if it's a commit hash
-    if [[ "$BRANCH_NAME" =~ ^[a-f0-9]{7,40}$ ]]; then
-        echo "Installing CyberPanel from commit: $BRANCH_NAME"
-        curl --silent -o cyberpanel.sh "https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel.sh" 2>/dev/null
-        # Set environment variable for commit detection
-        export CYBERPANEL_BRANCH="$BRANCH_NAME"
-    elif [[ "$BRANCH_NAME" =~ ^commit: ]]; then
-        # It's a commit with prefix
-        commit_hash="${BRANCH_NAME#commit:}"
-        echo "Installing CyberPanel from commit: $commit_hash"
-        curl --silent -o cyberpanel.sh "https://raw.githubusercontent.com/usmannasir/cyberpanel/$commit_hash/cyberpanel.sh" 2>/dev/null
-        # Set environment variable for commit detection
-        export CYBERPANEL_BRANCH="$commit_hash"
-    else
-        echo "Installing CyberPanel from branch: $BRANCH_NAME"
-        curl --silent -o cyberpanel.sh "https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel.sh" 2>/dev/null
-        # Set environment variable for version detection
-        export CYBERPANEL_BRANCH="$BRANCH_NAME"
+    # Check for branch parameter
+    BRANCH_NAME=""
+    if [ "$1" = "-b" ] || [ "$1" = "--branch" ]; then
+        BRANCH_NAME="$2"
+        shift 2
     fi
-else
-    echo "Installing CyberPanel stable version"
-    curl --silent -o cyberpanel.sh "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null
+
+    # Download from appropriate source based on branch/commit
+    if [ -n "$BRANCH_NAME" ]; then
+        # Check if it's a commit hash
+        if [[ "$BRANCH_NAME" =~ ^[a-f0-9]{7,40}$ ]]; then
+            echo "Installing CyberPanel from commit: $BRANCH_NAME"
+            curl --silent -o cyberpanel.sh "https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel.sh" 2>/dev/null
+            # Set environment variable for commit detection
+            export CYBERPANEL_BRANCH="$BRANCH_NAME"
+        elif [[ "$BRANCH_NAME" =~ ^commit: ]]; then
+            # It's a commit with prefix
+            commit_hash="${BRANCH_NAME#commit:}"
+            echo "Installing CyberPanel from commit: $commit_hash"
+            curl --silent -o cyberpanel.sh "https://raw.githubusercontent.com/usmannasir/cyberpanel/$commit_hash/cyberpanel.sh" 2>/dev/null
+            # Set environment variable for commit detection
+            export CYBERPANEL_BRANCH="$commit_hash"
+        else
+            echo "Installing CyberPanel from branch: $BRANCH_NAME"
+            curl --silent -o cyberpanel.sh "https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel.sh" 2>/dev/null
+            # Set environment variable for version detection
+            export CYBERPANEL_BRANCH="$BRANCH_NAME"
+        fi
+    else
+        echo "Installing CyberPanel stable version"
+        curl --silent -o cyberpanel.sh "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null
+    fi
+
+    chmod +x cyberpanel.sh
+    ./cyberpanel.sh $@
+    exit $?
 fi
 
-chmod +x cyberpanel.sh
-./cyberpanel.sh $@
+# Make enhanced installer executable and run it
+chmod +x install_enhanced.sh
+echo "Running Enhanced CyberPanel Installer..."
+./install_enhanced.sh $@
