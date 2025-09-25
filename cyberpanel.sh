@@ -45,16 +45,17 @@ print_status() {
 # Function to show banner
 show_banner() {
     clear
-    echo -e "${BLUE}╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${BLUE}║${NC}                                                                                                               ${BLUE}║${NC}"
-    echo -e "${BLUE}║${NC} ${WHITE}${BOLD}🚀 CYBERPANEL COMPLETE INSTALLER 🚀${NC}                                                              ${BLUE}║${NC}"
-    echo -e "${BLUE}║${NC}                                                                                                               ${BLUE}║${NC}"
-    echo -e "${BLUE}║${NC} ${CYAN}The Ultimate Web Hosting Control Panel${NC}                                                           ${BLUE}║${NC}"
-    echo -e "${BLUE}║${NC} ${YELLOW}Powered by OpenLiteSpeed • Fast • Secure • Scalable${NC}                                            ${BLUE}║${NC}"
-    echo -e "${BLUE}║${NC}                                                                                                               ${BLUE}║${NC}"
-    echo -e "${BLUE}║${NC} ${GREEN}✨ Interactive Menus • Version Selection • Advanced Options ✨${NC}                                    ${BLUE}║${NC}"
-    echo -e "${BLUE}║${NC}                                                                                                               ${BLUE}║${NC}"
-    echo -e "${BLUE}╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+    echo "╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╗"
+    echo "║                                                                                                               ║"
+    echo "║                    🚀 CYBERPANEL COMPLETE INSTALLER 🚀                                                      ║"
+    echo "║                                                                                                               ║"
+    echo "║                    The Ultimate Web Hosting Control Panel                                                    ║"
+    echo "║                    Powered by OpenLiteSpeed • Fast • Secure • Scalable                                       ║"
+    echo "║                                                                                                               ║"
+    echo "║                    ✨ Interactive Menus • Version Selection • Advanced Options ✨                            ║"
+    echo "║                                                                                                               ║"
+    echo "╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╝"
     echo ""
 }
 
@@ -345,25 +346,22 @@ show_status_summary() {
 show_main_menu() {
     show_banner
     
-    local options=(
-        "🚀 Fresh Installation (Recommended)"
-        "🔄 Update Existing Installation"
-        "🔧 Reinstall CyberPanel"
-        "📊 Check System Status"
-        "🛠️  Advanced Options"
-        "❌ Exit"
-    )
-    
-    echo -e "${WHITE}${BOLD}Select Installation Type:${NC}"
+    echo "═══════════════════════════════════════════════════════════════════════════════════════════════════════════════"
+    echo "                                    SELECT INSTALLATION TYPE"
+    echo "═══════════════════════════════════════════════════════════════════════════════════════════════════════════════"
     echo ""
-    for i in "${!options[@]}"; do
-        local option_num=$((i + 1))
-        echo -e "${BLUE}${option_num}.${NC} ${options[i]}"
-    done
+    echo "   1.  🚀 Fresh Installation (Recommended)"
+    echo "   2.  🔄 Update Existing Installation"
+    echo "   3.  🔧 Reinstall CyberPanel"
+    echo "   4.  📊 Check System Status"
+    echo "   5.  🛠️  Advanced Options"
+    echo "   6.  ❌ Exit"
+    echo ""
+    echo "═══════════════════════════════════════════════════════════════════════════════════════════════════════════════"
     echo ""
     
     while true; do
-        echo -e "${CYAN}Enter your choice${NC} [1-6]: "
+        echo -n "Enter your choice [1-6]: "
         read -r choice
         
         case $choice in
@@ -391,11 +389,14 @@ show_main_menu() {
                 return
                 ;;
             6)
-                echo -e "${GREEN}Goodbye!${NC}"
+                echo ""
+                echo "Goodbye!"
                 exit 0
                 ;;
             *)
-                echo -e "${RED}Invalid choice. Please enter 1-6.${NC}"
+                echo ""
+                echo "❌ Invalid choice. Please enter 1-6."
+                echo ""
                 ;;
         esac
     done
@@ -404,15 +405,17 @@ show_main_menu() {
 # Function to show fresh installation menu
 show_fresh_install_menu() {
     echo ""
-    echo -e "${PURPLE}${BOLD}🚀 Fresh Installation Setup${NC}"
-    echo -e "${PURPLE}═══════════════════════════════════════════════════════════════════════════════════════════════════════════════${NC}"
+    echo "═══════════════════════════════════════════════════════════════════════════════════════════════════════════════"
+    echo "                                    🚀 FRESH INSTALLATION SETUP"
+    echo "═══════════════════════════════════════════════════════════════════════════════════════════════════════════════"
+    echo ""
     
     # Check if CyberPanel is already installed
     if [ -d "/usr/local/CyberCP" ] && [ -f "/usr/local/CyberCP/manage.py" ]; then
-        echo -e "${YELLOW}⚠️  CyberPanel appears to be already installed on this system.${NC}"
-        echo -e "${YELLOW}Consider using 'Update' or 'Reinstall' options instead.${NC}"
+        echo "⚠️  WARNING: CyberPanel appears to be already installed on this system."
+        echo "   Consider using 'Update' or 'Reinstall' options instead."
         echo ""
-        echo -e "${CYAN}Do you want to continue with fresh installation anyway? (y/n)${NC}: "
+        echo -n "Do you want to continue with fresh installation anyway? (y/n): "
         read -r response
         case $response in
             [yY]|[yY][eE][sS])
@@ -424,25 +427,19 @@ show_fresh_install_menu() {
         esac
     fi
     
-    # Show installation options
-    local options=(
-        "📦 Install Latest Stable Version"
-        "🔬 Install Development Version (v2.5.5-dev)"
-        "🏷️  Install Specific Version/Branch"
-        "⚡ Quick Install (Auto-configure everything)"
-        "🔙 Back to Main Menu"
-    )
-    
-    echo -e "${WHITE}${BOLD}Fresh Installation Options:${NC}"
+    echo "Select installation option:"
     echo ""
-    for i in "${!options[@]}"; do
-        local option_num=$((i + 1))
-        echo -e "${BLUE}${option_num}.${NC} ${options[i]}"
-    done
+    echo "   1.  📦 Install Latest Stable Version"
+    echo "   2.  🔬 Install Development Version (v2.5.5-dev)"
+    echo "   3.  🏷️  Install Specific Version/Branch"
+    echo "   4.  ⚡ Quick Install (Auto-configure everything)"
+    echo "   5.  🔙 Back to Main Menu"
+    echo ""
+    echo "═══════════════════════════════════════════════════════════════════════════════════════════════════════════════"
     echo ""
     
     while true; do
-        echo -e "${CYAN}Select installation option${NC} [1-5]: "
+        echo -n "Select installation option [1-5]: "
         read -r choice
         
         case $choice in
@@ -471,7 +468,9 @@ show_fresh_install_menu() {
                 return
                 ;;
             *)
-                echo -e "${RED}Invalid choice. Please enter 1-5.${NC}"
+                echo ""
+                echo "❌ Invalid choice. Please enter 1-5."
+                echo ""
                 ;;
         esac
     done
@@ -480,18 +479,22 @@ show_fresh_install_menu() {
 # Function to show version selection
 show_version_selection() {
     echo ""
-    echo -e "${PURPLE}${BOLD}🏷️  Version Selection${NC}"
-    echo -e "${PURPLE}═══════════════════════════════════════════════════════════════════════════════════════════════════════════════${NC}"
-    
-    echo -e "${WHITE}Available versions:${NC}"
-    echo -e "${BLUE}1.${NC} Latest Stable (Recommended)"
-    echo -e "${BLUE}2.${NC} v2.5.5-dev (Development)"
-    echo -e "${BLUE}3.${NC} v2.5.4 (Previous Stable)"
-    echo -e "${BLUE}4.${NC} Custom Branch/Commit"
+    echo "═══════════════════════════════════════════════════════════════════════════════════════════════════════════════"
+    echo "                                        🏷️  VERSION SELECTION"
+    echo "═══════════════════════════════════════════════════════════════════════════════════════════════════════════════"
+    echo ""
+    echo "Available versions:"
+    echo ""
+    echo "   1.  Latest Stable (Recommended)"
+    echo "   2.  v2.5.5-dev (Development)"
+    echo "   3.  v2.5.4 (Previous Stable)"
+    echo "   4.  Custom Branch/Commit"
+    echo ""
+    echo "═══════════════════════════════════════════════════════════════════════════════════════════════════════════════"
     echo ""
     
     while true; do
-        echo -e "${CYAN}Select version${NC} [1-4]: "
+        echo -n "Select version [1-4]: "
         read -r choice
         
         case $choice in
@@ -508,12 +511,14 @@ show_version_selection() {
                 break
                 ;;
             4)
-                echo -e "${CYAN}Enter branch name or commit hash${NC}: "
+                echo -n "Enter branch name or commit hash: "
                 read -r BRANCH_NAME
                 break
                 ;;
             *)
-                echo -e "${RED}Invalid choice. Please enter 1-4.${NC}"
+                echo ""
+                echo "❌ Invalid choice. Please enter 1-4."
+                echo ""
                 ;;
         esac
     done
@@ -524,11 +529,13 @@ show_version_selection() {
 # Function to show installation preferences
 show_installation_preferences() {
     echo ""
-    echo -e "${PURPLE}${BOLD}⚙️  Installation Preferences${NC}"
-    echo -e "${PURPLE}═══════════════════════════════════════════════════════════════════════════════════════════════════════════════${NC}"
+    echo "═══════════════════════════════════════════════════════════════════════════════════════════════════════════════"
+    echo "                                    ⚙️  INSTALLATION PREFERENCES"
+    echo "═══════════════════════════════════════════════════════════════════════════════════════════════════════════════"
+    echo ""
     
     # Debug mode
-    echo -e "${CYAN}Enable debug mode for detailed logging? (y/n)${NC} [n]: "
+    echo -n "Enable debug mode for detailed logging? (y/n) [n]: "
     read -r response
     case $response in
         [yY]|[yY][eE][sS])
@@ -537,7 +544,7 @@ show_installation_preferences() {
     esac
     
     # Auto-install
-    echo -e "${CYAN}Auto-install without further prompts? (y/n)${NC} [n]: "
+    echo -n "Auto-install without further prompts? (y/n) [n]: "
     read -r response
     case $response in
         [yY]|[yY][eE][sS])
@@ -547,18 +554,18 @@ show_installation_preferences() {
     
     # Show summary
     echo ""
-    echo -e "${BLUE}╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${BLUE}║${NC} ${WHITE}${BOLD}Installation Summary${NC}                                                                                    ${BLUE}║${NC}"
-    echo -e "${BLUE}║${NC}                                                                                                               ${BLUE}║${NC}"
-    echo -e "${BLUE}║${NC} Type: $INSTALLATION_TYPE"
-    echo -e "${BLUE}║${NC} Version: ${BRANCH_NAME:-'Latest Stable'}"
-    echo -e "${BLUE}║${NC} Debug Mode: $DEBUG_MODE"
-    echo -e "${BLUE}║${NC} Auto Install: $AUTO_INSTALL"
-    echo -e "${BLUE}║${NC}                                                                                                               ${BLUE}║${NC}"
-    echo -e "${BLUE}╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
+    echo "╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╗"
+    echo "║                                    INSTALLATION SUMMARY                                    ║"
+    echo "║                                                                                               ║"
+    echo "║   Type: $INSTALLATION_TYPE"
+    echo "║   Version: ${BRANCH_NAME:-'Latest Stable'}"
+    echo "║   Debug Mode: $DEBUG_MODE"
+    echo "║   Auto Install: $AUTO_INSTALL"
+    echo "║                                                                                               ║"
+    echo "╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╝"
     echo ""
     
-    echo -e "${CYAN}Proceed with installation? (y/n)${NC} [y]: "
+    echo -n "Proceed with installation? (y/n) [y]: "
     read -r response
     case $response in
         [nN]|[nN][oO])
