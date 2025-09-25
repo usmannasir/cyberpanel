@@ -59,9 +59,9 @@ initialize_modules() {
     # Load OS detection module
     if ! load_module "$MODULES_DIR/os/detect.sh" "OS Detection"; then
         print_status "$RED" "❌ Failed to load OS detection module"
-        exit 1
-    fi
-    
+                exit 1
+fi
+
     # Load dependency manager module
     if ! load_module "$MODULES_DIR/deps/manager.sh" "Dependency Manager"; then
         print_status "$RED" "❌ Failed to load dependency manager module"
