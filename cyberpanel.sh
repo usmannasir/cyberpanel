@@ -215,23 +215,17 @@ install_cyberpanel() {
     echo ""
     
     # Download the original CyberPanel installer from the official repository
-    local download_url=""
-    if [ -n "$BRANCH_NAME" ]; then
-        if [[ "$BRANCH_NAME" =~ ^[a-f0-9]{40}$ ]]; then
-            # It's a commit hash
-            echo "Downloading from commit: $BRANCH_NAME"
-            download_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel.sh"
-        else
-            # It's a branch name
-            echo "Downloading from branch: $BRANCH_NAME"
-            download_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel.sh"
-        fi
-    else
-        echo "Downloading from: https://cyberpanel.sh/?dl&$SERVER_OS"
-        download_url="https://cyberpanel.sh/?dl&$SERVER_OS"
-    fi
+    echo "Downloading from: https://cyberpanel.sh/?dl&$SERVER_OS"
+    local download_url="https://cyberpanel.sh/?dl&$SERVER_OS"
     
     curl --silent -o cyberpanel_original.sh "$download_url" 2>/dev/null
+    
+    # If download failed or file is too small, try fallback
+    if [ $? -ne 0 ] || [ ! -s "cyberpanel_original.sh" ] || [ $(wc -c < cyberpanel_original.sh 2>/dev/null || echo 0) -lt 1000 ]; then
+        echo "Primary download failed, trying fallback from GitHub main branch..."
+        download_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/main/cyberpanel.sh"
+        curl --silent -o cyberpanel_original.sh "$download_url" 2>/dev/null
+    fi
     
     # Check if download was successful
     if [ $? -ne 0 ]; then
@@ -261,10 +255,22 @@ install_cyberpanel() {
         return 1
     fi
     
+    # Check if this is our enhanced installer (to avoid recursion)
+    if grep -q "CyberPanel Enhanced Installer" cyberpanel_original.sh; then
+        print_status "ERROR: Downloaded file is our enhanced installer, not the original CyberPanel installer"
+        echo "This indicates a problem with the download source."
+        echo "First few lines of downloaded file:"
+        head -5 cyberpanel_original.sh
+        return 1
+    fi
+    
     # Show first few lines of the downloaded file for debugging
     if [ "$DEBUG_MODE" = true ]; then
         echo "First 10 lines of downloaded installer:"
         head -10 cyberpanel_original.sh
+        echo ""
+        echo "File size: $(wc -c < cyberpanel_original.sh) bytes"
+        echo "File type: $(file cyberpanel_original.sh)"
         echo ""
     fi
     
@@ -303,8 +309,21 @@ install_cyberpanel() {
     # Check if the process is still running
     if ! kill -0 $install_pid 2>/dev/null; then
         print_status "ERROR: CyberPanel installer failed to start or exited immediately"
+        echo ""
+        echo "Debugging information:"
+        echo "  • Downloaded file size: $(wc -c < cyberpanel_original.sh 2>/dev/null || echo 'unknown') bytes"
+        echo "  • File permissions: $(ls -la cyberpanel_original.sh 2>/dev/null || echo 'file not found')"
+        echo "  • First few lines of downloaded file:"
+        head -3 cyberpanel_original.sh 2>/dev/null || echo "Could not read file"
+        echo ""
         echo "Installation log:"
         cat /var/log/CyberPanel/install_output.log 2>/dev/null || echo "No log file found"
+        echo ""
+        echo "This usually means:"
+        echo "  1. The downloaded installer is not the original CyberPanel installer"
+        echo "  2. The installer has syntax errors or missing dependencies"
+        echo "  3. The installer requires specific arguments or environment"
+        echo ""
         return 1
     fi
     
