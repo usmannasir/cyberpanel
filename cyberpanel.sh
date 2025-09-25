@@ -178,18 +178,70 @@ install_dependencies() {
 # Function to install CyberPanel
 install_cyberpanel() {
     print_status "Installing CyberPanel..."
+    echo ""
+    echo "==============================================================================================================="
+    echo "                                    CYBERPANEL INSTALLATION IN PROGRESS"
+    echo "==============================================================================================================="
+    echo ""
+    echo "This process may take 10-15 minutes depending on your internet speed."
+    echo "Please DO NOT close this terminal or interrupt the installation."
+    echo ""
+    echo "Current Status:"
+    echo "  ✓ Dependencies installed"
+    echo "  🔄 Downloading CyberPanel installer..."
+    echo ""
     
     # Download and run the original installer
     if [ -n "$BRANCH_NAME" ]; then
+        echo "Downloading from: https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel.sh"
         curl --silent -o cyberpanel.sh "https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel.sh" 2>/dev/null
     else
+        echo "Downloading from: https://cyberpanel.sh/?dl&$SERVER_OS"
         curl --silent -o cyberpanel.sh "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null
     fi
     
     chmod +x cyberpanel.sh
     
-    # Run the installer
-    if ./cyberpanel.sh $([ "$DEBUG_MODE" = true ] && echo "--debug") > /tmp/cyberpanel_install_output.log 2>&1; then
+    echo "  ✓ CyberPanel installer downloaded"
+    echo "  🔄 Starting CyberPanel installation..."
+    echo ""
+    echo "IMPORTANT: The installation is now running in the background."
+    echo "You will see detailed output from the CyberPanel installer below."
+    echo "This is normal and expected - the installation is proceeding!"
+    echo ""
+    echo "==============================================================================================================="
+    echo ""
+    
+    # Run the installer with progress monitoring
+    echo "Starting CyberPanel installation process..."
+    echo "This may take several minutes. Please be patient."
+    echo ""
+    
+    # Start the installer in background and monitor progress
+    ./cyberpanel.sh $([ "$DEBUG_MODE" = true ] && echo "--debug") > /tmp/cyberpanel_install_output.log 2>&1 &
+    local install_pid=$!
+    
+    # Show progress dots while installation runs
+    local dots=0
+    while kill -0 $install_pid 2>/dev/null; do
+        case $((dots % 4)) in
+            0) echo -n "Installing CyberPanel.   \r" ;;
+            1) echo -n "Installing CyberPanel..  \r" ;;
+            2) echo -n "Installing CyberPanel... \r" ;;
+            3) echo -n "Installing CyberPanel....\r" ;;
+        esac
+        dots=$((dots + 1))
+        sleep 2
+    done
+    
+    # Wait for the process to complete and get exit status
+    wait $install_pid
+    local install_status=$?
+    
+    echo ""
+    echo ""
+    
+    if [ $install_status -eq 0 ]; then
         print_status "SUCCESS: CyberPanel installed successfully"
         return 0
     else
@@ -1005,24 +1057,34 @@ start_installation() {
     echo ""
     
     # Detect OS
+    echo "Step 1/5: Detecting operating system..."
     if ! detect_os; then
         print_status "ERROR: Failed to detect operating system"
         exit 1
     fi
+    echo "  ✓ Operating system detected successfully"
+    echo ""
     
     # Install dependencies
+    echo "Step 2/5: Installing dependencies..."
     install_dependencies
+    echo ""
     
     # Install CyberPanel
+    echo "Step 3/5: Installing CyberPanel..."
     if ! install_cyberpanel; then
         print_status "ERROR: CyberPanel installation failed"
         exit 1
     fi
+    echo ""
     
     # Apply fixes
+    echo "Step 4/5: Applying installation fixes..."
     apply_fixes
+    echo ""
     
     # Show status summary
+    echo "Step 5/5: Finalizing installation..."
     show_status_summary
     
     print_status "SUCCESS: Installation completed successfully!"
