@@ -1737,72 +1737,66 @@ class preFlightsChecks:
         self.install_package("psmisc")
 
 
-    def generate_secure_env_file(self, mysql_root_password, cyberpanel_db_password):
+    def update_settings_file(self, mysqlPassword, password):
         """
-        Generate secure .env file with random passwords during installation
+        Update settings.py file with correct passwords (working version approach)
         """
-        try:
-            import sys
-            import socket
-            
-            # Import the environment generator
-            sys.path.append(os.path.join(self.cyberPanelPath, 'install'))
-            from env_generator import create_env_file, create_env_backup
-            
-            # Generate secure credentials
-            credentials = create_env_file(
-                self.cyberPanelPath, 
-                mysql_root_password, 
-                cyberpanel_db_password
-            )
-            
-            # Create backup for recovery
-            create_env_backup(self.cyberPanelPath, credentials)
-            
-            logging.InstallLog.writeToFile("✓ Secure .env file generated successfully")
-            logging.InstallLog.writeToFile("✓ Credentials backup created for recovery")
-            
-            return credentials
-            
-        except Exception as e:
-            logging.InstallLog.writeToFile(f"[ERROR] Failed to generate secure environment file: {str(e)}")
-            # Fallback to original method if environment generation fails
-            self.fallback_settings_update(mysql_root_password, cyberpanel_db_password)
-
-    def fallback_settings_update(self, mysqlPassword, password):
-        """
-        Fallback method to update settings.py directly if environment generation fails
-        """
-        logging.InstallLog.writeToFile("Using fallback method for settings.py update")
+        logging.InstallLog.writeToFile("Updating settings.py!")
         
         path = self.cyberPanelPath + "/CyberCP/settings.py"
+        
         data = open(path, "r").readlines()
+        
         writeDataToFile = open(path, "w")
+        
         counter = 0
-
+        
         for items in data:
             if items.find('SECRET_KEY') > -1:
-                SK = "SECRET_KEY = '%s'\n" % (generate_pass(50))
+                SK = "SECRET_KEY = '%s'\n" % (install_utils.generate_pass(50))
                 writeDataToFile.writelines(SK)
                 continue
-
-            if items.find("'PASSWORD':") > -1:
-                if counter == 0:
-                    writeDataToFile.writelines("        'PASSWORD': '" + mysqlPassword + "'," + "\n")
-                    counter = counter + 1
+            
+            if mysql == 'Two':
+                if items.find("'PASSWORD':") > -1:
+                    if counter == 0:
+                        writeDataToFile.writelines("        'PASSWORD': '" + mysqlPassword + "'," + "\n")
+                        counter = counter + 1
+                    else:
+                        writeDataToFile.writelines("        'PASSWORD': '" + password + "'," + "\n")
                 else:
-                    writeDataToFile.writelines("        'PASSWORD': '" + password + "'," + "\n")
-            elif items.find('127.0.0.1') > -1:
-                writeDataToFile.writelines("        'HOST': 'localhost',\n")
-            elif items.find("'PORT':'3307'") > -1:
-                writeDataToFile.writelines("        'PORT': '',\n")
+                    writeDataToFile.writelines(items)
             else:
-                writeDataToFile.writelines(items)
-
-        if self.distro == ubuntu:
+                if items.find("'PASSWORD':") > -1:
+                    if counter == 0:
+                        writeDataToFile.writelines("        'PASSWORD': '" + mysqlPassword + "'," + "\n")
+                        counter = counter + 1
+                    else:
+                        writeDataToFile.writelines("        'PASSWORD': '" + password + "'," + "\n")
+                elif items.find('127.0.0.1') > -1:
+                    writeDataToFile.writelines("        'HOST': 'localhost',\n")
+                elif items.find("'PORT':'3307'") > -1:
+                    writeDataToFile.writelines("        'PORT': '',\n")
+                else:
+                    writeDataToFile.writelines(items)
+        
+        if self.distro == install_utils.ubuntu:
             os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
-
+        
         writeDataToFile.close()
+        
+        if self.remotemysql == 'ON':
+            command = "sed -i 's|localhost|%s|g' %s" % (self.mysqlhost, path)
+            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            
+            command = "sed -i 's|root|%s|g' %s" % (self.mysqluser, path)
+            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            
+            command = "sed -i \"s|'PORT': ''|'PORT':'%s'|g\" %s" % (self.mysqlport, path)
+            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+        
+        logging.InstallLog.writeToFile("settings.py updated!")
+
 
     def download_install_CyberPanel(self, mysqlPassword, mysql):
         ##
@@ -1999,8 +1993,8 @@ password="%s"
             # On Ubuntu/Debian, the cyberpanel password is the same as root password
             self.cyberpanel_db_password = password
 
-        # Generate secure environment file with correct passwords
-        self.generate_secure_env_file(mysqlPassword, self.cyberpanel_db_password)
+        # Update settings.py with correct passwords (no .env files needed)
+        self.update_settings_file(mysqlPassword, self.cyberpanel_db_password)
 
         logging.InstallLog.writeToFile("Environment configuration generated successfully!")
 

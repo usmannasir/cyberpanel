@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the secure installation process for CyberPanel that eliminates hardcoded passwords and implements environment-based configuration.
+This document describes the secure installation process for CyberPanel that generates secure passwords and updates configuration files directly during installation.
 
 ## Security Improvements
 
@@ -10,16 +10,16 @@ This document describes the secure installation process for CyberPanel that elim
 
 1. **Hardcoded Database Passwords** - Now generated securely during installation
 2. **Hardcoded Django Secret Key** - Now generated using cryptographically secure random generation
-3. **Environment Variables** - All sensitive configuration moved to `.env` file
-4. **File Permissions** - `.env` file set to 600 (owner read/write only)
+3. **Direct Configuration Updates** - Passwords updated directly in settings.py during installation
+4. **File Permissions** - settings.py file set to 640 (owner read/write, group read only)
 
 ### 🔐 **Security Features**
 
 - **Cryptographically Secure Passwords**: Uses Python's `secrets` module for password generation
-- **Environment-based Configuration**: Sensitive data stored in `.env` file, not in code
-- **Secure File Permissions**: Environment files protected with 600 permissions
-- **Credential Backup**: Automatic backup of credentials for recovery
-- **Fallback Security**: Maintains backward compatibility with fallback method
+- **Direct Configuration Updates**: Passwords updated directly in settings.py, no external files needed
+- **Secure File Permissions**: settings.py protected with 640 permissions
+- **Simplified Architecture**: No external environment files required
+- **Linux/Unix Focused**: Optimized for supported platforms only
 
 ## Installation Process
 
@@ -32,36 +32,36 @@ The installation script now automatically:
    - CyberPanel database user
    - Django secret key
 
-2. Creates `.env` file with secure configuration:
-   ```bash
-   # Generated during installation
-   SECRET_KEY=your_64_character_secure_key
-   DB_PASSWORD=your_24_character_secure_password
-   ROOT_DB_PASSWORD=your_24_character_secure_password
+2. Updates `settings.py` directly with secure configuration:
+   ```python
+   SECRET_KEY = 'generated_secure_key'
+   DATABASES = {
+       'default': {
+           'PASSWORD': 'generated_cyberpanel_password',
+       },
+       'rootdb': {
+           'PASSWORD': 'generated_root_password',
+       }
+   }
    ```
 
-3. Creates `.env.backup` file for credential recovery
-4. Sets secure file permissions (600) on all environment files
+3. Sets secure file permissions (640) on settings.py
+4. No external environment files required
 
-### 2. **Manual Installation** (if needed)
+### 2. **Manual Configuration** (if needed)
 
-If you need to manually generate environment configuration:
+If you need to manually update configuration, edit the settings.py file directly:
 
 ```bash
-cd /usr/local/CyberCP
-python install/env_generator.py /usr/local/CyberCP
+nano /usr/local/CyberCP/CyberCP/settings.py
 ```
 
 ## File Structure
 
 ```
 /usr/local/CyberCP/
-├── .env                    # Main environment configuration (600 permissions)
-├── .env.backup            # Credential backup (600 permissions)
-├── .env.template          # Template for manual configuration
-├── .gitignore             # Prevents .env files from being committed
-└── CyberCP/
-    └── settings.py        # Updated to use environment variables
+├── CyberCP/
+│   └── settings.py        # Main configuration file (640 permissions)
 ```
 
 ## Security Best Practices
