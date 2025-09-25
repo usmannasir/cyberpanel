@@ -2050,9 +2050,163 @@ class FirewallManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
+    def exportFirewallRules(self, userID=None):
+        """
+        Export all custom firewall rules to a JSON file, excluding default CyberPanel rules
+        """
+        try:
+            currentACL = ACLManager.loadedACL(userID)
 
+            if currentACL['admin'] == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('exportStatus', 0)
 
+            # Get all firewall rules
+            rules = FirewallRules.objects.all()
+            
+            # Default CyberPanel rules to exclude
+            default_rules = ['CyberPanel Admin', 'SSHCustom']
+            
+            # Filter out default rules
+            custom_rules = []
+            for rule in rules:
+                if rule.name not in default_rules:
+                    custom_rules.append({
+                        'name': rule.name,
+                        'proto': rule.proto,
+                        'port': rule.port,
+                        'ipAddress': rule.ipAddress
+                    })
+            
+            # Create export data with metadata
+            export_data = {
+                'version': '1.0',
+                'exported_at': time.strftime('%Y-%m-%d %H:%M:%S'),
+                'total_rules': len(custom_rules),
+                'rules': custom_rules
+            }
+            
+            # Create JSON response with file download
+            json_content = json.dumps(export_data, indent=2)
+            
+            logging.CyberCPLogFileWriter.writeToFile(f"Firewall rules exported successfully. Total rules: {len(custom_rules)}")
+            
+            # Return file as download
+            response = HttpResponse(json_content, content_type='application/json')
+            response['Content-Disposition'] = f'attachment; filename="firewall_rules_export_{int(time.time())}.json"'
+            
+            return response
 
+        except BaseException as msg:
+            final_dic = {'exportStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def importFirewallRules(self, userID=None, data=None):
+        """
+        Import firewall rules from a JSON file
+        """
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('importStatus', 0)
+
+            # Handle file upload
+            if hasattr(self.request, 'FILES') and 'import_file' in self.request.FILES:
+                import_file = self.request.FILES['import_file']
+                
+                # Read file content
+                import_data = json.loads(import_file.read().decode('utf-8'))
+            else:
+                # Fallback to file path method
+                import_file_path = data.get('import_file_path', '')
+                
+                if not import_file_path or not os.path.exists(import_file_path):
+                    final_dic = {'importStatus': 0, 'error_message': 'Import file not found or invalid path'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+                
+                # Read and parse the import file
+                with open(import_file_path, 'r') as f:
+                    import_data = json.load(f)
+            
+            # Validate the import data structure
+            if 'rules' not in import_data:
+                final_dic = {'importStatus': 0, 'error_message': 'Invalid import file format. Missing rules array.'}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+            
+            imported_count = 0
+            skipped_count = 0
+            error_count = 0
+            errors = []
+            
+            # Default CyberPanel rules to exclude from import
+            default_rules = ['CyberPanel Admin', 'SSHCustom']
+            
+            for rule_data in import_data['rules']:
+                try:
+                    # Skip default rules
+                    if rule_data.get('name', '') in default_rules:
+                        skipped_count += 1
+                        continue
+                    
+                    # Check if rule already exists
+                    existing_rule = FirewallRules.objects.filter(
+                        name=rule_data['name'],
+                        proto=rule_data['proto'],
+                        port=rule_data['port'],
+                        ipAddress=rule_data['ipAddress']
+                    ).first()
+                    
+                    if existing_rule:
+                        skipped_count += 1
+                        continue
+                    
+                    # Add the rule to the system firewall
+                    FirewallUtilities.addRule(
+                        rule_data['proto'], 
+                        rule_data['port'], 
+                        rule_data['ipAddress']
+                    )
+                    
+                    # Add the rule to the database
+                    new_rule = FirewallRules(
+                        name=rule_data['name'],
+                        proto=rule_data['proto'],
+                        port=rule_data['port'],
+                        ipAddress=rule_data['ipAddress']
+                    )
+                    new_rule.save()
+                    
+                    imported_count += 1
+                    
+                except Exception as e:
+                    error_count += 1
+                    errors.append(f"Rule '{rule_data.get('name', 'Unknown')}': {str(e)}")
+                    logging.CyberCPLogFileWriter.writeToFile(f"Error importing rule {rule_data.get('name', 'Unknown')}: {str(e)}")
+            
+            logging.CyberCPLogFileWriter.writeToFile(f"Firewall rules import completed. Imported: {imported_count}, Skipped: {skipped_count}, Errors: {error_count}")
+            
+            final_dic = {
+                'importStatus': 1,
+                'error_message': "None",
+                'imported_count': imported_count,
+                'skipped_count': skipped_count,
+                'error_count': error_count,
+                'errors': errors
+            }
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'importStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
 
 
 
