@@ -138,7 +138,7 @@ The installer is now ready and will provide the **best CyberPanel installation e
 
 When users run:
 ```bash
-bash <(curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/cyberpanel.sh) --debug
+bash <(curl https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel.sh) --debug
 ```
 
 They'll get:
