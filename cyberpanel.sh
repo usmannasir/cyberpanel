@@ -48,6 +48,14 @@ show_banner() {
 
 # Function to detect OS
 detect_os() {
+    # Check if we're running from a file (not via curl) and modules are available
+    if [ -f "modules/os/detect.sh" ]; then
+        # Load the OS detection module for enhanced support
+        source "modules/os/detect.sh"
+        detect_os
+        return $?
+    fi
+    
     print_status "Detecting operating system..."
     
     # Detect architecture
@@ -129,11 +137,19 @@ detect_os() {
         return 1
     fi
     
-                return 0
+    return 0
 }
 
 # Function to install dependencies
 install_dependencies() {
+    # Check if we're running from a file (not via curl) and modules are available
+    if [ -f "modules/deps/manager.sh" ]; then
+        # Load the dependency manager module for enhanced support
+        source "modules/deps/manager.sh"
+        install_dependencies "$SERVER_OS" "$OS_FAMILY" "$PACKAGE_MANAGER"
+        return $?
+    fi
+    
     print_status "Installing dependencies..."
     echo ""
     echo "Installing system dependencies for $SERVER_OS..."
@@ -211,70 +227,52 @@ install_cyberpanel() {
     echo ""
     echo "Current Status:"
     echo "  ✓ Dependencies installed"
-    echo "  🔄 Downloading CyberPanel installer..."
+    echo "  🔄 Starting CyberPanel installation using working method..."
     echo ""
     
-    # Download the original CyberPanel installer from the official repository
-    echo "Downloading from: https://cyberpanel.sh/?dl&$SERVER_OS"
-    local download_url="https://cyberpanel.sh/?dl&$SERVER_OS"
+    # Use the working CyberPanel installation method
+    install_cyberpanel_direct
+}
+
+# Function to install CyberPanel directly using the working method
+install_cyberpanel_direct() {
+    echo "  🔄 Downloading CyberPanel installation files..."
     
-    curl --silent -o cyberpanel_original.sh "$download_url" 2>/dev/null
+    # Create temporary directory for installation
+    local temp_dir="/tmp/cyberpanel_install_$$"
+    mkdir -p "$temp_dir"
+    cd "$temp_dir" || return 1
     
-    # If download failed or file is too small, try fallback
-    if [ $? -ne 0 ] || [ ! -s "cyberpanel_original.sh" ] || [ $(wc -c < cyberpanel_original.sh 2>/dev/null || echo 0) -lt 1000 ]; then
-        echo "Primary download failed, trying fallback from GitHub main branch..."
-        download_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/main/cyberpanel.sh"
-        curl --silent -o cyberpanel_original.sh "$download_url" 2>/dev/null
-    fi
-    
-    # Check if download was successful
-    if [ $? -ne 0 ]; then
+    # Download the working CyberPanel installation files
+    echo "Downloading from: https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel.sh"
+    curl --silent -o cyberpanel_installer.sh "https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel.sh" 2>/dev/null
+    if [ $? -ne 0 ] || [ ! -s "cyberpanel_installer.sh" ]; then
         print_status "ERROR: Failed to download CyberPanel installer"
         return 1
     fi
     
-    chmod +x cyberpanel_original.sh
+    chmod +x cyberpanel_installer.sh
     
-    # Verify the downloaded file
-    if [ ! -f "cyberpanel_original.sh" ] || [ ! -x "cyberpanel_original.sh" ]; then
-        print_status "ERROR: Failed to download or make executable the CyberPanel installer"
+    # Download the install directory
+    echo "Downloading installation files..."
+    curl --silent -L -o install_files.tar.gz "https://github.com/usmannasir/cyberpanel/archive/stable.tar.gz" 2>/dev/null
+    if [ $? -ne 0 ] || [ ! -s "install_files.tar.gz" ]; then
+        print_status "ERROR: Failed to download installation files"
         return 1
     fi
     
-    # Check if the file has content (not empty)
-    if [ ! -s "cyberpanel_original.sh" ]; then
-        print_status "ERROR: Downloaded CyberPanel installer is empty"
+    # Extract the installation files
+    tar -xzf install_files.tar.gz 2>/dev/null
+    if [ $? -ne 0 ]; then
+        print_status "ERROR: Failed to extract installation files"
         return 1
     fi
     
-    # Check if the file is actually a shell script
-    if ! head -1 cyberpanel_original.sh | grep -q "#!/bin/bash"; then
-        print_status "ERROR: Downloaded file is not a valid shell script"
-        echo "First line of downloaded file:"
-        head -1 cyberpanel_original.sh
-        return 1
-    fi
+    # Copy install directory to current location
+    cp -r cyberpanel-stable/install . 2>/dev/null || true
+    cp -r cyberpanel-stable/install.sh . 2>/dev/null || true
     
-    # Check if this is our enhanced installer (to avoid recursion)
-    if grep -q "CyberPanel Enhanced Installer" cyberpanel_original.sh; then
-        print_status "ERROR: Downloaded file is our enhanced installer, not the original CyberPanel installer"
-        echo "This indicates a problem with the download source."
-        echo "First few lines of downloaded file:"
-        head -5 cyberpanel_original.sh
-        return 1
-    fi
-    
-    # Show first few lines of the downloaded file for debugging
-    if [ "$DEBUG_MODE" = true ]; then
-        echo "First 10 lines of downloaded installer:"
-        head -10 cyberpanel_original.sh
-        echo ""
-        echo "File size: $(wc -c < cyberpanel_original.sh) bytes"
-        echo "File type: $(file cyberpanel_original.sh)"
-        echo ""
-    fi
-    
-    echo "  ✓ CyberPanel installer downloaded and verified"
+    echo "  ✓ CyberPanel installation files downloaded"
     echo "  🔄 Starting CyberPanel installation..."
     echo ""
     echo "IMPORTANT: The installation is now running in the background."
@@ -289,18 +287,9 @@ install_cyberpanel() {
     echo "This may take several minutes. Please be patient."
     echo ""
     
-    # Test the installer first
-    echo "Testing CyberPanel installer..."
-    if ! ./cyberpanel_original.sh --help > /dev/null 2>&1; then
-        print_status "ERROR: CyberPanel installer is not working properly"
-        echo "Trying to run installer directly:"
-        ./cyberpanel_original.sh --help 2>&1 || echo "Failed to run installer"
-        return 1
-    fi
-    
     # Start the installer in background and monitor progress
     echo "Starting CyberPanel installer with PID tracking..."
-    ./cyberpanel_original.sh $([ "$DEBUG_MODE" = true ] && echo "--debug") > /var/log/CyberPanel/install_output.log 2>&1 &
+    ./cyberpanel_installer.sh $([ "$DEBUG_MODE" = true ] && echo "--debug") > /var/log/CyberPanel/install_output.log 2>&1 &
     local install_pid=$!
     
     # Give the process a moment to start
@@ -311,18 +300,18 @@ install_cyberpanel() {
         print_status "ERROR: CyberPanel installer failed to start or exited immediately"
         echo ""
         echo "Debugging information:"
-        echo "  • Downloaded file size: $(wc -c < cyberpanel_original.sh 2>/dev/null || echo 'unknown') bytes"
-        echo "  • File permissions: $(ls -la cyberpanel_original.sh 2>/dev/null || echo 'file not found')"
-        echo "  • First few lines of downloaded file:"
-        head -3 cyberpanel_original.sh 2>/dev/null || echo "Could not read file"
+        echo "  • Installer file size: $(wc -c < cyberpanel_installer.sh 2>/dev/null || echo 'unknown') bytes"
+        echo "  • File permissions: $(ls -la cyberpanel_installer.sh 2>/dev/null || echo 'file not found')"
+        echo "  • First few lines of installer:"
+        head -3 cyberpanel_installer.sh 2>/dev/null || echo "Could not read file"
         echo ""
         echo "Installation log:"
         cat /var/log/CyberPanel/install_output.log 2>/dev/null || echo "No log file found"
         echo ""
         echo "This usually means:"
-        echo "  1. The downloaded installer is not the original CyberPanel installer"
-        echo "  2. The installer has syntax errors or missing dependencies"
-        echo "  3. The installer requires specific arguments or environment"
+        echo "  1. The installer has syntax errors or missing dependencies"
+        echo "  2. The installer requires specific arguments or environment"
+        echo "  3. Missing installation files or directories"
         echo ""
         return 1
     fi
@@ -425,8 +414,9 @@ install_cyberpanel() {
     
     echo ""
     
-    # Clean up downloaded installer
-    rm -f cyberpanel_original.sh 2>/dev/null
+    # Clean up temporary directory
+    cd /tmp
+    rm -rf "$temp_dir" 2>/dev/null || true
     
     if [ $install_status -eq 0 ]; then
         print_status "SUCCESS: CyberPanel installed successfully"
@@ -1473,8 +1463,8 @@ start_upgrade() {
             upgrade_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel_upgrade.sh"
         fi
     else
-        echo "Downloading from: https://raw.githubusercontent.com/usmannasir/cyberpanel/main/cyberpanel_upgrade.sh"
-        upgrade_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/main/cyberpanel_upgrade.sh"
+        echo "Downloading from: https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel_upgrade.sh"
+        upgrade_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel_upgrade.sh"
     fi
     
     curl --silent -o cyberpanel_upgrade.sh "$upgrade_url" 2>/dev/null
