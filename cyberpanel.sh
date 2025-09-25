@@ -414,12 +414,45 @@ install_cyberpanel() {
         return 0
     else
         print_status "ERROR: CyberPanel installation failed (exit code: $install_status)"
-        print_status "Check /var/log/CyberPanel/install_output.log for details"
         echo ""
-        echo "Last 20 lines of the installation log:"
         echo "==============================================================================================================="
-        tail -20 /var/log/CyberPanel/install_output.log 2>/dev/null || echo "Log file not found or empty"
+        echo "                                    INSTALLATION FAILED"
         echo "==============================================================================================================="
+        echo ""
+        echo "The CyberPanel installation has failed. Here's how to troubleshoot:"
+        echo ""
+        echo "📋 LOG FILES LOCATION:"
+        echo "  • Main installer log: /var/log/CyberPanel/install.log"
+        echo "  • Installation output: /var/log/CyberPanel/install_output.log"
+        echo "  • System logs: /var/log/messages"
+        echo ""
+        echo "🔍 TROUBLESHOOTING STEPS:"
+        echo "  1. Check the installation output log for specific errors"
+        echo "  2. Verify your system meets the requirements"
+        echo "  3. Ensure you have sufficient disk space and memory"
+        echo "  4. Check your internet connection"
+        echo "  5. Try running the installer again"
+        echo ""
+        echo "📄 LAST 30 LINES OF INSTALLATION LOG:"
+        echo "==============================================================================================================="
+        if [ -f "/var/log/CyberPanel/install_output.log" ]; then
+            tail -30 /var/log/CyberPanel/install_output.log 2>/dev/null || echo "Could not read installation log"
+        else
+            echo "Installation log not found at /var/log/CyberPanel/install_output.log"
+        fi
+        echo "==============================================================================================================="
+        echo ""
+        echo "💡 QUICK DEBUG COMMANDS:"
+        echo "  • View full log: cat /var/log/CyberPanel/install_output.log"
+        echo "  • Check system: free -h && df -h"
+        echo "  • Check network: ping -c 3 google.com"
+        echo "  • Retry installation: Run the installer again"
+        echo ""
+        echo "🆘 NEED HELP?"
+        echo "  • CyberPanel Documentation: https://docs.cyberpanel.net"
+        echo "  • CyberPanel Community: https://forums.cyberpanel.net"
+        echo "  • GitHub Issues: https://github.com/usmannasir/cyberpanel/issues"
+        echo ""
         return 1
     fi
 }
@@ -1126,13 +1159,14 @@ show_advanced_menu() {
     echo "   2.  Clean Installation Files"
     echo "   3.  View Installation Logs"
     echo "   4.  System Diagnostics"
-    echo "   5.  Back to Main Menu"
+    echo "   5.  Show Error Help"
+    echo "   6.  Back to Main Menu"
     echo ""
     echo "==============================================================================================================="
     echo ""
     
     while true; do
-        echo -n "Select advanced option [1-5]: "
+        echo -n "Select advanced option [1-6]: "
         read -r choice
         
         case $choice in
@@ -1153,16 +1187,84 @@ show_advanced_menu() {
                 return
                 ;;
             5)
+                show_error_help
+                return
+                ;;
+            6)
                 show_main_menu
                 return
                 ;;
             *)
                 echo ""
-                echo "ERROR: Invalid choice. Please enter 1-5."
+                echo "ERROR: Invalid choice. Please enter 1-6."
                 echo ""
                 ;;
         esac
     done
+}
+
+# Function to show error help
+show_error_help() {
+    echo ""
+    echo "==============================================================================================================="
+    echo "                                    ERROR TROUBLESHOOTING HELP"
+    echo "==============================================================================================================="
+    echo ""
+    echo "If your CyberPanel installation failed, here's how to troubleshoot:"
+    echo ""
+    echo "📋 LOG FILES LOCATION:"
+    echo "  • Main installer log: /var/log/CyberPanel/install.log"
+    echo "  • Installation output: /var/log/CyberPanel/install_output.log"
+    echo "  • Upgrade output: /var/log/CyberPanel/upgrade_output.log"
+    echo "  • System logs: /var/log/messages"
+    echo ""
+    echo "🔍 COMMON ISSUES & SOLUTIONS:"
+    echo ""
+    echo "1. DEPENDENCY INSTALLATION FAILED:"
+    echo "   • Check internet connection: ping -c 3 google.com"
+    echo "   • Update package lists: yum update -y (RHEL) or apt update (Debian)"
+    echo "   • Check available disk space: df -h"
+    echo ""
+    echo "2. CYBERPANEL DOWNLOAD FAILED:"
+    echo "   • Check internet connectivity"
+    echo "   • Verify GitHub access: curl -I https://github.com"
+    echo "   • Try different branch/version"
+    echo ""
+    echo "3. PERMISSION ERRORS:"
+    echo "   • Ensure running as root: whoami"
+    echo "   • Check file permissions: ls -la /var/log/CyberPanel/"
+    echo ""
+    echo "4. SYSTEM REQUIREMENTS:"
+    echo "   • Minimum 1GB RAM: free -h"
+    echo "   • Minimum 10GB disk space: df -h"
+    echo "   • Supported OS: AlmaLinux 8/9, CentOS 7/8, Ubuntu 18.04+"
+    echo ""
+    echo "5. SERVICE CONFLICTS:"
+    echo "   • Check running services: systemctl list-units --state=running"
+    echo "   • Stop conflicting services: systemctl stop apache2 (if running)"
+    echo ""
+    echo "💡 QUICK DEBUG COMMANDS:"
+    echo "  • View installation log: cat /var/log/CyberPanel/install_output.log"
+    echo "  • Check system resources: free -h && df -h"
+    echo "  • Test network: ping -c 3 google.com"
+    echo "  • Check services: systemctl status lscpd"
+    echo "  • View system logs: tail -50 /var/log/messages"
+    echo ""
+    echo "🆘 GETTING HELP:"
+    echo "  • CyberPanel Documentation: https://docs.cyberpanel.net"
+    echo "  • CyberPanel Community: https://forums.cyberpanel.net"
+    echo "  • GitHub Issues: https://github.com/usmannasir/cyberpanel/issues"
+    echo "  • Discord Support: https://discord.gg/cyberpanel"
+    echo ""
+    echo "🔄 RETRY INSTALLATION:"
+    echo "  • Clean installation: Run installer with 'Clean Installation Files' option"
+    echo "  • Different version: Try stable version instead of development"
+    echo "  • Fresh system: Consider using a clean OS installation"
+    echo ""
+    echo "==============================================================================================================="
+    echo ""
+    read -p "Press Enter to return to main menu..."
+    show_main_menu
 }
 
 # Function to show fix menu
@@ -1469,7 +1571,41 @@ start_upgrade() {
         print_status "SUCCESS: CyberPanel upgraded successfully"
         return 0
     else
-        print_status "ERROR: CyberPanel upgrade failed. Check /var/log/CyberPanel/upgrade_output.log for details"
+        print_status "ERROR: CyberPanel upgrade failed"
+        echo ""
+        echo "==============================================================================================================="
+        echo "                                    UPGRADE FAILED"
+        echo "==============================================================================================================="
+        echo ""
+        echo "The CyberPanel upgrade has failed. Here's how to troubleshoot:"
+        echo ""
+        echo "📋 LOG FILES LOCATION:"
+        echo "  • Main installer log: /var/log/CyberPanel/install.log"
+        echo "  • Upgrade output: /var/log/CyberPanel/upgrade_output.log"
+        echo "  • System logs: /var/log/messages"
+        echo ""
+        echo "🔍 TROUBLESHOOTING STEPS:"
+        echo "  1. Check the upgrade output log for specific errors"
+        echo "  2. Ensure your current installation is working"
+        echo "  3. Check for conflicting services"
+        echo "  4. Verify you have sufficient disk space"
+        echo "  5. Try running the upgrade again"
+        echo ""
+        echo "📄 LAST 30 LINES OF UPGRADE LOG:"
+        echo "==============================================================================================================="
+        if [ -f "/var/log/CyberPanel/upgrade_output.log" ]; then
+            tail -30 /var/log/CyberPanel/upgrade_output.log 2>/dev/null || echo "Could not read upgrade log"
+        else
+            echo "Upgrade log not found at /var/log/CyberPanel/upgrade_output.log"
+        fi
+        echo "==============================================================================================================="
+        echo ""
+        echo "💡 QUICK DEBUG COMMANDS:"
+        echo "  • View full log: cat /var/log/CyberPanel/upgrade_output.log"
+        echo "  • Check CyberPanel status: systemctl status lscpd"
+        echo "  • Check system: free -h && df -h"
+        echo "  • Retry upgrade: Run the installer again"
+        echo ""
         return 1
     fi
 }
@@ -1617,6 +1753,18 @@ start_installation() {
     echo "Step 3/6: Installing CyberPanel..."
     if ! install_cyberpanel; then
         print_status "ERROR: CyberPanel installation failed"
+        echo ""
+        echo "Would you like to see troubleshooting help? (y/n) [y]: "
+        read -r show_help
+        case $show_help in
+            [nN]|[nN][oO])
+                echo "Installation failed. Check logs at /var/log/CyberPanel/"
+                echo "Run the installer again and select 'Advanced Options' → 'Show Error Help' for detailed troubleshooting."
+                ;;
+            *)
+                show_error_help
+                ;;
+        esac
         exit 1
     fi
     echo ""
@@ -1830,6 +1978,17 @@ main() {
                 # Install CyberPanel
                 if ! install_cyberpanel; then
                     print_status "ERROR: CyberPanel installation failed"
+                    echo ""
+                    echo "Would you like to see troubleshooting help? (y/n) [y]: "
+                    read -r show_help
+                    case $show_help in
+                        [nN]|[nN][oO])
+                            echo "Installation failed. Check logs at /var/log/CyberPanel/"
+                            ;;
+                        *)
+                            show_error_help
+                            ;;
+                    esac
                     exit 1
                 fi
                 
