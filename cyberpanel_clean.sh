@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# CyberPanel Simple Installer
-# Ultra-simple version that works reliably in all terminals
+# CyberPanel Clean Installer
+# Simple, clean interface without escape codes
+# This version works reliably in all terminals
 
 set -e
 
@@ -13,6 +14,7 @@ ARCHITECTURE=""
 BRANCH_NAME=""
 DEBUG_MODE=false
 AUTO_INSTALL=false
+INTERACTIVE_MODE=true
 INSTALLATION_TYPE=""
 
 # Logging function
@@ -1043,6 +1045,7 @@ parse_arguments() {
                 ;;
             --auto)
                 AUTO_INSTALL=true
+                INTERACTIVE_MODE=false
                 shift
                 ;;
             -h|--help)
@@ -1074,7 +1077,7 @@ main() {
     mkdir -p /var/log
     touch "/var/log/cyberpanel_install.log"
     
-    print_status "CyberPanel Simple Installer Starting..."
+    print_status "CyberPanel Clean Installer Starting..."
     print_status "Log file: /var/log/cyberpanel_install.log"
     
     # Parse command line arguments
