@@ -1182,11 +1182,11 @@ class preFlightsChecks:
             
             file_path = self.server_root_path + "conf/httpd_config.conf"
             if os.path.exists(file_path):
-            if self.modify_file_content(file_path, {"*:8088": "*:80"}):
-                self.stdOut("OpenLiteSpeed port changed to 80", 1)
-                self.reStartLiteSpeed()
-                return True
-            else:
+                if self.modify_file_content(file_path, {"*:8088": "*:80"}):
+                    self.stdOut("OpenLiteSpeed port changed to 80", 1)
+                    self.reStartLiteSpeed()
+                    return True
+                else:
                     return False
             else:
                 self.stdOut("OpenLiteSpeed configuration file not found, skipping port change", 1)
@@ -1692,7 +1692,7 @@ class preFlightsChecks:
             if os_info['name'] in ['almalinux', 'rocky', 'rhel'] and os_info['major_version'] in ['8', '9']:
                 command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
             else:
-            command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
+                command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
     def fix_selinux_issue(self):
@@ -1939,7 +1939,7 @@ class preFlightsChecks:
                 # Read existing password file
                 try:
                     with open(passFile, 'r') as f:
-            data = f.read()
+                        data = f.read()
                     password = data.split('\n', 1)[0].strip()
                     if not password:
                         raise Exception("Empty password in file")
@@ -4062,6 +4062,8 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
                 for dep in deps:
                     try:
                         self.install_package(dep, '--skip-broken')
+                    except:
+                        pass
                 
                 # Handle libmemcached with fallback for AlmaLinux 9
                 try:
@@ -4166,7 +4168,7 @@ milter_default_action = accept
                     if os_info['name'] in ['almalinux', 'rocky', 'rhel'] and os_info['major_version'] in ['8', '9']:
                         repo_command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
                     else:
-                    repo_command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
+                        repo_command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
                     preFlightsChecks.call(repo_command, self.distro, repo_command, repo_command, 1, 0, os.EX_OSERR)
             
             # Check if PHP 8.2 exists
