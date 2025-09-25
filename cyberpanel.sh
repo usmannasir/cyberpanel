@@ -178,31 +178,145 @@ fix_post_install_issues() {
     done
     
     # Create database user with proper permissions
+    echo "      Dropping existing cyberpanel user..."
     mysql -e "DROP USER IF EXISTS 'cyberpanel'@'localhost';" 2>/dev/null || true
+    mysql -e "DROP USER IF EXISTS 'cyberpanel'@'%';" 2>/dev/null || true
+    
+    echo "      Creating cyberpanel user with correct password..."
     mysql -e "CREATE USER 'cyberpanel'@'localhost' IDENTIFIED BY 'cyberpanel';" 2>/dev/null || true
+    mysql -e "CREATE USER 'cyberpanel'@'%' IDENTIFIED BY 'cyberpanel';" 2>/dev/null || true
+    
+    echo "      Granting privileges..."
     mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'cyberpanel'@'localhost' WITH GRANT OPTION;" 2>/dev/null || true
+    mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'cyberpanel'@'%' WITH GRANT OPTION;" 2>/dev/null || true
     mysql -e "FLUSH PRIVILEGES;" 2>/dev/null || true
+    
+    # Verify the user was created correctly
+    echo "      Verifying database user..."
+    if mysql -u cyberpanel -pcyberpanel -e "SELECT 1;" >/dev/null 2>&1; then
+        echo "      ✅ Database user verification successful"
+    else
+        echo "      ⚠️  Database user verification failed, trying alternative approach..."
+        # Alternative: use root to create the user
+        mysql -e "CREATE OR REPLACE USER 'cyberpanel'@'localhost' IDENTIFIED BY 'cyberpanel';" 2>/dev/null || true
+        mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'cyberpanel'@'localhost' WITH GRANT OPTION;" 2>/dev/null || true
+        mysql -e "FLUSH PRIVILEGES;" 2>/dev/null || true
+    fi
     
     # Create CyberPanel database if it doesn't exist
     mysql -e "CREATE DATABASE IF NOT EXISTS cyberpanel;" 2>/dev/null || true
     mysql -e "GRANT ALL PRIVILEGES ON cyberpanel.* TO 'cyberpanel'@'localhost';" 2>/dev/null || true
     mysql -e "FLUSH PRIVILEGES;" 2>/dev/null || true
     
+    # Set unified password for both CyberPanel and OpenLiteSpeed
+    local unified_password="1234567"
+    echo "    Setting unified password for CyberPanel and OpenLiteSpeed..."
+    echo "    Password: $unified_password"
+    
+    # First, ensure the cyberpanel user exists and has correct password
+    mysql -e "ALTER USER 'cyberpanel'@'localhost' IDENTIFIED BY 'cyberpanel';" 2>/dev/null || true
+    mysql -e "FLUSH PRIVILEGES;" 2>/dev/null || true
+    
+    # Wait a moment for the database to be ready
+    sleep 2
+    
     # Reset CyberPanel admin password
-    echo "    Resetting CyberPanel admin password..."
-    /usr/local/CyberCP/bin/python3 /usr/local/CyberCP/plogical/adminPass.py 2>/dev/null || true
+    echo "      Setting CyberPanel admin password..."
+    /usr/local/CyberCP/bin/python3 /usr/local/CyberCP/plogical/adminPass.py 2>/dev/null || {
+        echo "      Admin password reset failed, trying alternative method..."
+        # Alternative method: directly update the database
+        mysql -u cyberpanel -pcyberpanel cyberpanel -e "UPDATE Administrator SET password = '$unified_password' WHERE id = 1;" 2>/dev/null || true
+    }
+    
+    # Set OpenLiteSpeed admin password
+    echo "      Setting OpenLiteSpeed admin password..."
+    if [ -f "/usr/local/lsws/admin/htpasswd" ]; then
+        # Create OpenLiteSpeed admin user with the same password
+        /usr/local/lsws/admin/misc/admpass.sh -u admin -p "$unified_password" 2>/dev/null || {
+            echo "      OpenLiteSpeed password set via alternative method..."
+            # Alternative method: directly create htpasswd entry
+            echo "admin:$(openssl passwd -apr1 '$unified_password')" > /usr/local/lsws/admin/htpasswd 2>/dev/null || true
+        }
+    fi
     
     # Fix PHP configuration files
     echo "    Fixing PHP configuration..."
-    for php_version in lsphp72 lsphp73 lsphp74 lsphp80 lsphp81 lsphp82 lsphp83 lsphp84; do
-        if [ -d "/usr/local/lsws/$php_version" ]; then
-            # Create missing php.ini if it doesn't exist
-            if [ ! -f "/usr/local/lsws/$php_version/etc/php.ini" ]; then
-                echo "      Creating missing php.ini for $php_version..."
-                cp /usr/local/lsws/lsphp82/etc/php.ini "/usr/local/lsws/$php_version/etc/php.ini" 2>/dev/null || true
-            fi
+    
+    # Find the reference PHP version (usually lsphp82)
+    local reference_php=""
+    for php_version in lsphp82 lsphp81 lsphp80 lsphp84 lsphp83 lsphp74 lsphp73 lsphp72; do
+        if [ -d "/usr/local/lsws/$php_version" ] && [ -f "/usr/local/lsws/$php_version/etc/php.ini" ]; then
+            reference_php="$php_version"
+            echo "      Using $php_version as reference for PHP configuration"
+            break
         fi
     done
+    
+    if [ -n "$reference_php" ]; then
+        for php_version in lsphp72 lsphp73 lsphp74 lsphp80 lsphp81 lsphp82 lsphp83 lsphp84; do
+            if [ -d "/usr/local/lsws/$php_version" ]; then
+                # Create missing php.ini if it doesn't exist
+                if [ ! -f "/usr/local/lsws/$php_version/etc/php.ini" ]; then
+                    echo "      Creating missing php.ini for $php_version..."
+                    cp "/usr/local/lsws/$reference_php/etc/php.ini" "/usr/local/lsws/$php_version/etc/php.ini" 2>/dev/null || true
+                fi
+                
+                # Ensure the directory exists
+                mkdir -p "/usr/local/lsws/$php_version/etc" 2>/dev/null || true
+            fi
+        done
+    else
+        echo "      ⚠️  No reference PHP configuration found, creating basic php.ini files..."
+        for php_version in lsphp72 lsphp73 lsphp74 lsphp80 lsphp81 lsphp82 lsphp83 lsphp84; do
+            if [ -d "/usr/local/lsws/$php_version" ]; then
+                mkdir -p "/usr/local/lsws/$php_version/etc" 2>/dev/null || true
+                if [ ! -f "/usr/local/lsws/$php_version/etc/php.ini" ]; then
+                    echo "      Creating basic php.ini for $php_version..."
+                    cat > "/usr/local/lsws/$php_version/etc/php.ini" << 'EOF'
+[PHP]
+engine = On
+short_open_tag = Off
+precision = 14
+output_buffering = 4096
+zlib.output_compression = Off
+implicit_flush = Off
+unserialize_callback_func =
+serialize_precision = -1
+disable_functions =
+disable_classes =
+zend.enable_gc = On
+expose_php = Off
+max_execution_time = 30
+max_input_time = 60
+memory_limit = 128M
+error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT
+display_errors = Off
+display_startup_errors = Off
+log_errors = On
+log_errors_max_len = 1024
+ignore_repeated_errors = Off
+ignore_repeated_source = Off
+report_memleaks = On
+variables_order = "GPCS"
+request_order = "GP"
+register_argc_argv = Off
+auto_globals_jit = On
+post_max_size = 8M
+auto_prepend_file =
+auto_append_file =
+default_mimetype = "text/html"
+default_charset = "UTF-8"
+file_uploads = On
+upload_max_filesize = 2M
+max_file_uploads = 20
+allow_url_fopen = On
+allow_url_include = Off
+default_socket_timeout = 60
+EOF
+                fi
+            fi
+        done
+    fi
     
     # Restart services
     echo "    Restarting services..."
@@ -273,7 +387,9 @@ verify_installation() {
     if [ $issues -eq 0 ]; then
         echo ""
         echo "  🎉 Installation verification completed successfully!"
-        echo "  🌐 You can now access CyberPanel at: https://$(curl -s ifconfig.me):8090"
+        echo "  🌐 CyberPanel: https://$(curl -s ifconfig.me):8090 (admin/1234567)"
+        echo "  🌐 OpenLiteSpeed: https://$(curl -s ifconfig.me):7080 (admin/1234567)"
+        echo "  🔑 Both services use the same password for convenience"
     else
         echo ""
         echo "  ⚠️  Installation completed with $issues issue(s)"
@@ -447,7 +563,18 @@ install_cyberpanel_direct() {
     
     # Download the working CyberPanel installation files
     echo "Downloading from: https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel.sh"
-    curl --silent -o cyberpanel_installer.sh "https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel.sh" 2>/dev/null
+    # Try development branch first, fallback to stable
+    local installer_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/cyberpanel.sh"
+    
+    # Test if the development branch exists
+    if ! curl -s --head "$installer_url" | grep -q "200 OK"; then
+        echo "    Development branch not available, falling back to stable"
+        installer_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel.sh"
+    else
+        echo "    Using development branch (v2.5.5-dev)"
+    fi
+    
+    curl --silent -o cyberpanel_installer.sh "$installer_url" 2>/dev/null
     if [ $? -ne 0 ] || [ ! -s "cyberpanel_installer.sh" ]; then
         print_status "ERROR: Failed to download CyberPanel installer"
         return 1
@@ -715,6 +842,18 @@ EOF
     systemctl enable lsws
     systemctl start lsws
     
+    # Set OpenLiteSpeed admin password to match CyberPanel
+    local unified_password="1234567"
+    echo "Setting OpenLiteSpeed admin password..."
+    if [ -f "/usr/local/lsws/admin/misc/admpass.sh" ]; then
+        /usr/local/lsws/admin/misc/admpass.sh -u admin -p "$unified_password" 2>/dev/null || {
+            echo "OpenLiteSpeed password set via alternative method..."
+            # Alternative method: directly create htpasswd entry
+            echo "admin:$(openssl passwd -apr1 '$unified_password')" > /usr/local/lsws/admin/htpasswd 2>/dev/null || true
+        }
+        echo "✓ OpenLiteSpeed admin password set to: $unified_password"
+    fi
+    
     # Fix CyberPanel service
     cat > /etc/systemd/system/cyberpanel.service << 'EOF'
 [Unit]
@@ -796,6 +935,10 @@ show_status_summary() {
     echo "Access CyberPanel at: http://your-server-ip:8090"
     echo "Default username: admin"
     echo "Default password: 1234567"
+    echo ""
+    echo "Access OpenLiteSpeed at: http://your-server-ip:7080"
+    echo "Default username: admin"
+    echo "Default password: 1234567 (same as CyberPanel)"
     echo ""
     echo "IMPORTANT: Change the default password immediately!"
     echo ""
