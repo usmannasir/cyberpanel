@@ -127,7 +127,7 @@ detect_os() {
         return 1
     fi
     
-    return 0
+                return 0
 }
 
 # Function to install dependencies
@@ -221,9 +221,42 @@ install_cyberpanel() {
         curl --silent -o cyberpanel_original.sh "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null
     fi
     
+    # Check if download was successful
+    if [ $? -ne 0 ]; then
+        print_status "ERROR: Failed to download CyberPanel installer"
+        return 1
+    fi
+    
     chmod +x cyberpanel_original.sh
     
-    echo "  ✓ CyberPanel installer downloaded"
+    # Verify the downloaded file
+    if [ ! -f "cyberpanel_original.sh" ] || [ ! -x "cyberpanel_original.sh" ]; then
+        print_status "ERROR: Failed to download or make executable the CyberPanel installer"
+        return 1
+    fi
+    
+    # Check if the file has content (not empty)
+    if [ ! -s "cyberpanel_original.sh" ]; then
+        print_status "ERROR: Downloaded CyberPanel installer is empty"
+        return 1
+    fi
+    
+    # Check if the file is actually a shell script
+    if ! head -1 cyberpanel_original.sh | grep -q "#!/bin/bash"; then
+        print_status "ERROR: Downloaded file is not a valid shell script"
+        echo "First line of downloaded file:"
+        head -1 cyberpanel_original.sh
+        return 1
+    fi
+    
+    # Show first few lines of the downloaded file for debugging
+    if [ "$DEBUG_MODE" = true ]; then
+        echo "First 10 lines of downloaded installer:"
+        head -10 cyberpanel_original.sh
+        echo ""
+    fi
+    
+    echo "  ✓ CyberPanel installer downloaded and verified"
     echo "  🔄 Starting CyberPanel installation..."
     echo ""
     echo "IMPORTANT: The installation is now running in the background."
@@ -238,9 +271,30 @@ install_cyberpanel() {
     echo "This may take several minutes. Please be patient."
     echo ""
     
+    # Test the installer first
+    echo "Testing CyberPanel installer..."
+    if ! ./cyberpanel_original.sh --help > /dev/null 2>&1; then
+        print_status "ERROR: CyberPanel installer is not working properly"
+        echo "Trying to run installer directly:"
+        ./cyberpanel_original.sh --help 2>&1 || echo "Failed to run installer"
+        return 1
+    fi
+    
     # Start the installer in background and monitor progress
+    echo "Starting CyberPanel installer with PID tracking..."
     ./cyberpanel_original.sh $([ "$DEBUG_MODE" = true ] && echo "--debug") > /tmp/cyberpanel_install_output.log 2>&1 &
     local install_pid=$!
+    
+    # Give the process a moment to start
+    sleep 2
+    
+    # Check if the process is still running
+    if ! kill -0 $install_pid 2>/dev/null; then
+        print_status "ERROR: CyberPanel installer failed to start or exited immediately"
+        echo "Installation log:"
+        cat /tmp/cyberpanel_install_output.log 2>/dev/null || echo "No log file found"
+        return 1
+    fi
     
     # Active progress bar with real-time updates
     local progress=0
@@ -254,25 +308,40 @@ install_cyberpanel() {
     echo ""
     
     # Monitor the installation process
+    local min_wait_time=30  # Minimum 30 seconds before allowing completion
+    local max_wait_time=1800  # Maximum 30 minutes timeout
     while true; do
         # Check if process is still running
         if ! kill -0 $install_pid 2>/dev/null; then
-            # Process has finished, break the loop
-            break
+            # Process has finished, but wait minimum time
+            if [ $elapsed -ge $min_wait_time ]; then
+                break
+            else
+                # Still within minimum wait time, continue monitoring
+                sleep 2
+                continue
+            fi
         fi
         
         local current_time=$(date +%s)
         local elapsed=$((current_time - start_time))
         
-        # Calculate progress based on elapsed time (more realistic)
+        # Check for timeout
+        if [ $elapsed -gt $max_wait_time ]; then
+            print_status "ERROR: Installation timeout after $((max_wait_time / 60)) minutes"
+            kill $install_pid 2>/dev/null || true
+            break
+        fi
+        
+        # Calculate progress based on elapsed time (conservative and realistic)
         if [ $elapsed -lt 30 ]; then
-            progress=$((elapsed * 3))  # 0-90% in first 30 seconds
+            progress=$((elapsed * 2))  # 0-60% in first 30 seconds
         elif [ $elapsed -lt 120 ]; then
-            progress=$((90 + (elapsed - 30) * 1))  # 90-180% in next 90 seconds
+            progress=$((60 + (elapsed - 30) * 1))  # 60-150% in next 90 seconds
         elif [ $elapsed -lt 300 ]; then
-            progress=$((180 + (elapsed - 120) * 1))  # 180-360% in next 3 minutes
+            progress=$((150 + (elapsed - 120) * 1))  # 150-330% in next 3 minutes
         else
-            progress=$((360 + (elapsed - 300) * 1))  # 360%+ after 5 minutes
+            progress=$((330 + (elapsed - 300) * 1))  # 330%+ after 5 minutes
         fi
         
         # Cap progress at 95% until actually complete
@@ -332,7 +401,13 @@ install_cyberpanel() {
         print_status "SUCCESS: CyberPanel installed successfully"
         return 0
     else
-        print_status "ERROR: CyberPanel installation failed. Check /tmp/cyberpanel_install_output.log for details"
+        print_status "ERROR: CyberPanel installation failed (exit code: $install_status)"
+        print_status "Check /tmp/cyberpanel_install_output.log for details"
+        echo ""
+        echo "Last 20 lines of the installation log:"
+        echo "==============================================================================================================="
+        tail -20 /tmp/cyberpanel_install_output.log 2>/dev/null || echo "Log file not found or empty"
+        echo "==============================================================================================================="
         return 1
     fi
 }
@@ -524,8 +599,8 @@ show_main_menu() {
                 echo ""
                 echo "ERROR: Invalid choice. Please enter 1-7."
                 echo ""
-                ;;
-        esac
+      ;;
+    esac
     done
 }
 
@@ -598,8 +673,8 @@ show_fresh_install_menu() {
                 echo ""
                 echo "ERROR: Invalid choice. Please enter 1-5."
                 echo ""
-                ;;
-        esac
+  ;;
+esac
     done
 }
 
@@ -646,8 +721,8 @@ show_version_selection() {
                 echo ""
                 echo "ERROR: Invalid choice. Please enter 1-4."
                 echo ""
-                ;;
-        esac
+  ;;
+esac
     done
     
     show_installation_preferences
@@ -833,7 +908,7 @@ show_reinstall_menu() {
         case $choice in
             1)
                 BRANCH_NAME=""
-                break
+    break
                 ;;
             2)
                 BRANCH_NAME="v2.5.5-dev"
@@ -1176,13 +1251,13 @@ start_upgrade() {
     
     echo "  ✓ CyberPanel upgrade script downloaded"
     echo "  🔄 Starting CyberPanel upgrade..."
-    echo ""
+  echo ""
     echo "IMPORTANT: The upgrade is now running in the background."
     echo "You will see detailed output from the CyberPanel upgrade script below."
     echo "This is normal and expected - the upgrade is proceeding!"
-    echo ""
+  echo ""
     echo "==============================================================================================================="
-    echo ""
+  echo ""
     
     # Run the upgrade with progress monitoring
     echo "Starting CyberPanel upgrade process..."
@@ -1200,7 +1275,7 @@ start_upgrade() {
     local last_progress=0
     
     echo "Progress: [                                                  ] 0%"
-    echo ""
+  echo ""
     echo "Status: Upgrading CyberPanel components..."
     echo ""
     
@@ -1390,8 +1465,8 @@ start_reinstall() {
     echo "Step 5/6: Installing CyberPanel..."
     if ! install_cyberpanel; then
         print_status "ERROR: CyberPanel installation failed"
-        exit 1
-    fi
+  exit 1
+fi
     echo ""
     
     # Apply fixes
