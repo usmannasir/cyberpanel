@@ -5263,13 +5263,31 @@ def main():
             checks.cyberpanel_db_password = checks.mysql_Root_password
 
         # Create cyberpanel database and user (restored from v2.4.4 installCyberPanel.py)
+        logging.InstallLog.writeToFile(f"Attempting to create cyberpanel database with password length: {len(checks.cyberpanel_db_password)}")
+
         result = mysqlUtilities.mysqlUtilities.createDatabase("cyberpanel", "cyberpanel", checks.cyberpanel_db_password, "localhost")
         if result == 1:
-            logging.InstallLog.writeToFile("Cyberpanel database and user created successfully!")
+            logging.InstallLog.writeToFile("✅ Cyberpanel database and user created successfully!")
             preFlightsChecks.stdOut("Cyberpanel database and user created successfully!", 1)
+
+            # Verify the user was created by testing the connection
+            try:
+                import subprocess
+                test_cmd = f"mysql -u cyberpanel -p{checks.cyberpanel_db_password} -e 'SELECT 1;'"
+                test_result = subprocess.call(test_cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                if test_result == 0:
+                    logging.InstallLog.writeToFile("✅ Verified: cyberpanel user can connect to MySQL")
+                else:
+                    logging.InstallLog.writeToFile("❌ WARNING: cyberpanel user cannot connect to MySQL - authentication may have failed")
+            except Exception as verify_error:
+                logging.InstallLog.writeToFile(f"Could not verify MySQL connection: {str(verify_error)}")
         else:
-            logging.InstallLog.writeToFile("Warning: Cyberpanel database creation returned error code")
-            preFlightsChecks.stdOut("Warning: Database creation issue", 1)
+            error_msg = f"❌ CRITICAL ERROR: Cyberpanel database creation failed (returned {result})"
+            logging.InstallLog.writeToFile(error_msg)
+            preFlightsChecks.stdOut("Database creation failed - installation cannot continue", 1)
+
+            # Don't continue with settings.py update if database creation failed
+            raise Exception("Database creation failed - cyberpanel user does not exist")
     except Exception as e:
         logging.InstallLog.writeToFile(f"Error creating cyberpanel database: {str(e)}")
         preFlightsChecks.stdOut(f"Error: Database creation failed: {str(e)}", 1)
