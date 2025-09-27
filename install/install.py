@@ -5201,6 +5201,35 @@ def main():
     # Install core services in the correct order
     checks.installLiteSpeed(ent, serial)
     checks.installMySQL(mysql)
+
+    # Create cyberpanel database and user immediately after MySQL installation
+    logging.InstallLog.writeToFile("Creating cyberpanel database and user...")
+    preFlightsChecks.stdOut("Creating cyberpanel database and user...", 1)
+
+    try:
+        from . import mysqlUtilities
+        from . import install_utils
+
+        # Generate cyberpanel database password using the same logic as download_install_CyberPanel
+        if checks.distro == centos:
+            # On CentOS, generate a separate password for cyberpanel database
+            checks.cyberpanel_db_password = install_utils.generate_pass()
+        else:
+            # On Ubuntu/Debian, the cyberpanel password is the same as root password
+            checks.cyberpanel_db_password = checks.mysql_Root_password
+
+        # Create cyberpanel database and user (restored from v2.4.4 installCyberPanel.py)
+        result = mysqlUtilities.mysqlUtilities.createDatabase("cyberpanel", "cyberpanel", checks.cyberpanel_db_password, "localhost")
+        if result == 1:
+            logging.InstallLog.writeToFile("Cyberpanel database and user created successfully!")
+            preFlightsChecks.stdOut("Cyberpanel database and user created successfully!", 1)
+        else:
+            logging.InstallLog.writeToFile("Warning: Cyberpanel database creation returned error code")
+            preFlightsChecks.stdOut("Warning: Database creation issue", 1)
+    except Exception as e:
+        logging.InstallLog.writeToFile(f"Error creating cyberpanel database: {str(e)}")
+        preFlightsChecks.stdOut(f"Error: Database creation failed: {str(e)}", 1)
+
     checks.installPowerDNS()
     checks.installPureFTPD()
 
