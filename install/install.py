@@ -1769,31 +1769,42 @@ class preFlightsChecks:
                 writeDataToFile.writelines(SK)
                 continue
 
-            # Track which database section we're in
-            if "'default'" in items and "ENGINE" in data[data.index(items) + 1] if data.index(items) + 1 < len(data) else False:
+            # Track which database section we're in - more robust detection
+            stripped_line = items.strip()
+
+            # Detect database section start
+            if "'default'" in stripped_line and ":" in stripped_line:
                 in_default_db = True
                 in_rootdb = False
-            elif "'rootdb'" in items and "ENGINE" in data[data.index(items) + 1] if data.index(items) + 1 < len(data) else False:
+                logging.InstallLog.writeToFile("Detected 'default' database section")
+            elif "'rootdb'" in stripped_line and ":" in stripped_line:
                 in_default_db = False
                 in_rootdb = True
-            elif items.strip() == "}" or items.strip() == "},":
+                logging.InstallLog.writeToFile("Detected 'rootdb' database section")
+            elif stripped_line in ["},", "}"] or (stripped_line.startswith("}") and len(stripped_line) <= 2):
+                # End of database section
+                if in_default_db or in_rootdb:
+                    logging.InstallLog.writeToFile(f"End of database section (default: {in_default_db}, rootdb: {in_rootdb})")
                 in_default_db = False
                 in_rootdb = False
 
             # Handle password replacement based on current database section
-            if items.find("'PASSWORD':") > -1:
+            if "'PASSWORD':" in items:
                 if in_default_db and not default_db_found:
                     # This is the cyberpanel database password
-                    writeDataToFile.writelines("        'PASSWORD': '" + cyberpanel_password + "'," + "\n")
+                    new_line = "        'PASSWORD': '" + cyberpanel_password + "',\n"
+                    writeDataToFile.writelines(new_line)
                     default_db_found = True
-                    logging.InstallLog.writeToFile(f"Set cyberpanel database password (length: {len(cyberpanel_password)})")
+                    logging.InstallLog.writeToFile(f"✓ Set cyberpanel database password (length: {len(cyberpanel_password)})")
                 elif in_rootdb and not rootdb_found:
                     # This is the root database password
-                    writeDataToFile.writelines("        'PASSWORD': '" + mysqlPassword + "'," + "\n")
+                    new_line = "        'PASSWORD': '" + mysqlPassword + "',\n"
+                    writeDataToFile.writelines(new_line)
                     rootdb_found = True
-                    logging.InstallLog.writeToFile(f"Set root database password (length: {len(mysqlPassword)})")
+                    logging.InstallLog.writeToFile(f"✓ Set root database password (length: {len(mysqlPassword)})")
                 else:
                     # Fallback - write original line
+                    logging.InstallLog.writeToFile(f"⚠ Password line found but not in expected section (default: {in_default_db}, rootdb: {in_rootdb})")
                     writeDataToFile.writelines(items)
             elif mysql == 'Two':
                 # Handle special MySQL Two configuration
@@ -2024,7 +2035,7 @@ password="%s"
             self.cyberpanel_db_password = install_utils.generate_pass()
         else:
             # On Ubuntu/Debian, the cyberpanel password is the same as root password
-            self.cyberpanel_db_password = password
+            self.cyberpanel_db_password = mysqlPassword
 
         # Update settings.py with correct passwords (no .env files needed)
         self.update_settings_file(mysqlPassword, self.cyberpanel_db_password, mysql)
