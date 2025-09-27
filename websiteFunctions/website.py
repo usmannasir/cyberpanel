@@ -3054,7 +3054,8 @@ Require valid-user
                         logging.CyberCPLogFileWriter.writeToFile(f"Failed to create suspension page: {str(e)}")
                         # Try alternative method using echo command
                         try:
-                            command = f'echo "{defaultSuspensionHTML.replace('"', '\\"')}" > {suspensionPagePath}'
+                            escaped_html = defaultSuspensionHTML.replace('"', '\\"')
+                            command = f'echo "{escaped_html}" > {suspensionPagePath}'
                             ProcessUtilities.executioner(command)
                             logging.CyberCPLogFileWriter.writeToFile(f"Created suspension page using echo: {suspensionPagePath}")
                         except Exception as e2:

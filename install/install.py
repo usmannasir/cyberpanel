@@ -1737,65 +1737,98 @@ class preFlightsChecks:
         self.install_package("psmisc")
 
 
-    def update_settings_file(self, mysqlPassword, password, mysql):
+    def update_settings_file(self, mysqlPassword, cyberpanel_password, mysql):
         """
-        Update settings.py file with correct passwords (working version approach)
+        Update settings.py file with correct passwords
+        mysqlPassword: Root MySQL password
+        cyberpanel_password: CyberPanel database user password
         """
         logging.InstallLog.writeToFile("Updating settings.py!")
-        
+
+        # Validate passwords are not empty
+        if not mysqlPassword or not cyberpanel_password:
+            logging.InstallLog.writeToFile("ERROR: Empty passwords provided to update_settings_file")
+            raise Exception("Cannot update settings with empty passwords")
+
         path = self.cyberPanelPath + "/CyberCP/settings.py"
-        
+
         data = open(path, "r").readlines()
-        
+
         writeDataToFile = open(path, "w")
-        
-        counter = 0
-        
+
+        default_db_found = False
+        rootdb_found = False
+
+        in_default_db = False
+        in_rootdb = False
+
         for items in data:
+            # Handle SECRET_KEY generation
             if items.find('SECRET_KEY') > -1:
                 SK = "SECRET_KEY = '%s'\n" % (install_utils.generate_pass(50))
                 writeDataToFile.writelines(SK)
                 continue
-            
-            if mysql == 'Two':
-                if items.find("'PASSWORD':") > -1:
-                    if counter == 0:
-                        writeDataToFile.writelines("        'PASSWORD': '" + mysqlPassword + "'," + "\n")
-                        counter = counter + 1
-                    else:
-                        writeDataToFile.writelines("        'PASSWORD': '" + password + "'," + "\n")
+
+            # Track which database section we're in
+            if "'default'" in items and "ENGINE" in data[data.index(items) + 1] if data.index(items) + 1 < len(data) else False:
+                in_default_db = True
+                in_rootdb = False
+            elif "'rootdb'" in items and "ENGINE" in data[data.index(items) + 1] if data.index(items) + 1 < len(data) else False:
+                in_default_db = False
+                in_rootdb = True
+            elif items.strip() == "}" or items.strip() == "},":
+                in_default_db = False
+                in_rootdb = False
+
+            # Handle password replacement based on current database section
+            if items.find("'PASSWORD':") > -1:
+                if in_default_db and not default_db_found:
+                    # This is the cyberpanel database password
+                    writeDataToFile.writelines("        'PASSWORD': '" + cyberpanel_password + "'," + "\n")
+                    default_db_found = True
+                    logging.InstallLog.writeToFile(f"Set cyberpanel database password (length: {len(cyberpanel_password)})")
+                elif in_rootdb and not rootdb_found:
+                    # This is the root database password
+                    writeDataToFile.writelines("        'PASSWORD': '" + mysqlPassword + "'," + "\n")
+                    rootdb_found = True
+                    logging.InstallLog.writeToFile(f"Set root database password (length: {len(mysqlPassword)})")
                 else:
+                    # Fallback - write original line
                     writeDataToFile.writelines(items)
+            elif mysql == 'Two':
+                # Handle special MySQL Two configuration
+                writeDataToFile.writelines(items)
             else:
-                if items.find("'PASSWORD':") > -1:
-                    if counter == 0:
-                        writeDataToFile.writelines("        'PASSWORD': '" + mysqlPassword + "'," + "\n")
-                        counter = counter + 1
-                    else:
-                        writeDataToFile.writelines("        'PASSWORD': '" + password + "'," + "\n")
-                elif items.find('127.0.0.1') > -1:
+                # Handle host/port replacements for standard MySQL
+                if items.find('127.0.0.1') > -1:
                     writeDataToFile.writelines("        'HOST': 'localhost',\n")
                 elif items.find("'PORT':'3307'") > -1:
                     writeDataToFile.writelines("        'PORT': '',\n")
                 else:
                     writeDataToFile.writelines(items)
-        
+
         if self.distro == install_utils.ubuntu:
             os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
-        
+
         writeDataToFile.close()
-        
+
+        # Verify both passwords were set
+        if not default_db_found or not rootdb_found:
+            error_msg = f"ERROR: Failed to update all database passwords. Default: {default_db_found}, Root: {rootdb_found}"
+            logging.InstallLog.writeToFile(error_msg)
+            raise Exception(error_msg)
+
         if self.remotemysql == 'ON':
             command = "sed -i 's|localhost|%s|g' %s" % (self.mysqlhost, path)
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-            
+
             command = "sed -i 's|root|%s|g' %s" % (self.mysqluser, path)
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-            
+
             command = "sed -i \"s|'PORT': ''|'PORT':'%s'|g\" %s" % (self.mysqlport, path)
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-        
-        logging.InstallLog.writeToFile("settings.py updated!")
+
+        logging.InstallLog.writeToFile("settings.py updated successfully - both database passwords configured!")
 
 
     def download_install_CyberPanel(self, mysqlPassword, mysql):
