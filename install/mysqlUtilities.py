@@ -94,7 +94,6 @@ class mysqlUtilities:
                 return 0
             else:
                 logging.InstallLog.writeToFile(f"✓ User '{dbuser}'@'{host}' created successfully")
-            else:
 
                 # Step 3: Handle special cases and grant privileges
                 if remote:
