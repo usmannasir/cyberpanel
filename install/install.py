@@ -5251,8 +5251,8 @@ def main():
     preFlightsChecks.stdOut("Creating cyberpanel database and user...", 1)
 
     try:
-        from . import mysqlUtilities
-        from . import install_utils
+        import mysqlUtilities
+        import install_utils
 
         # Generate cyberpanel database password using the same logic as download_install_CyberPanel
         if checks.distro == centos:
