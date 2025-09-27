@@ -9,7 +9,7 @@ class mysqlUtilities:
         """
         Create database and user with improved error handling and validation
         """
-        import logging
+        import installLog as logging
 
         # Validate input parameters
         if not dbname or not dbuser or not dbpassword:
@@ -44,7 +44,7 @@ class mysqlUtilities:
 
             logging.InstallLog.writeToFile(f"Executing database creation: CREATE DATABASE IF NOT EXISTS {dbname}")
 
-            if install.preFlightsChecks.debug:
+            if hasattr(install, 'preFlightsChecks') and hasattr(install.preFlightsChecks, 'debug') and install.preFlightsChecks.debug:
                 print(command)
                 time.sleep(10)
 
@@ -71,7 +71,7 @@ class mysqlUtilities:
             command = initCommand + dropUser + '"'
             logging.InstallLog.writeToFile(f"Dropping existing user '{dbuser}'@'{host}' if exists")
 
-            if install.preFlightsChecks.debug:
+            if hasattr(install, 'preFlightsChecks') and hasattr(install.preFlightsChecks, 'debug') and install.preFlightsChecks.debug:
                 print(command)
                 time.sleep(10)
 
@@ -82,7 +82,7 @@ class mysqlUtilities:
             command = initCommand + createUser + '"'
             logging.InstallLog.writeToFile(f"Creating user '{dbuser}'@'{host}' with password")
 
-            if install.preFlightsChecks.debug:
+            if hasattr(install, 'preFlightsChecks') and hasattr(install.preFlightsChecks, 'debug') and install.preFlightsChecks.debug:
                 print(command)
                 time.sleep(10)
 
@@ -104,7 +104,7 @@ class mysqlUtilities:
 
                         logging.InstallLog.writeToFile(f"Applying DigitalOcean MySQL compatibility for '{dbuser}'@'{publicip}'")
 
-                        if install.preFlightsChecks.debug:
+                        if hasattr(install, 'preFlightsChecks') and hasattr(install.preFlightsChecks, 'debug') and install.preFlightsChecks.debug:
                             print(command)
                             time.sleep(10)
 
@@ -128,7 +128,7 @@ class mysqlUtilities:
                 command = initCommand + grantPrivileges + '"'
                 logging.InstallLog.writeToFile(f"Granting privileges on database '{dbname}' to user '{dbuser}'@'{host}'")
 
-                if install.preFlightsChecks.debug:
+                if hasattr(install, 'preFlightsChecks') and hasattr(install.preFlightsChecks, 'debug') and install.preFlightsChecks.debug:
                     print(command)
                     time.sleep(10)
 
