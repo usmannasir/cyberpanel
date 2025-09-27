@@ -1,5 +1,23 @@
 from django.db import models
-from .models import Websites
+from packages.models import Package
+from loginSystem.models import Administrator
+from datetime import datetime
+import time
+
+# Create your models here.
+
+class Websites(models.Model):
+    admin = models.ForeignKey(Administrator, on_delete=models.PROTECT)
+    package = models.ForeignKey(Package, on_delete=models.PROTECT)
+    domain = models.CharField(max_length=255,unique=True)
+    adminEmail = models.CharField(max_length=255)
+    phpSelection = models.CharField(max_length=10)
+    ssl = models.IntegerField()
+    state = models.IntegerField(default=1)
+    externalApp = models.CharField(max_length=30, default=None)
+    config = models.TextField(default='')
+    BackupLock = models.IntegerField(default=0)
+
 class FTPQuota(models.Model):
     """
     FTP User Quota Management
@@ -62,27 +80,6 @@ class BandwidthResetLog(models.Model):
     def __str__(self):
         return f"{self.reset_type} - {self.domain or 'All Domains'} - {self.reset_at}"
 
-# -*- coding: utf-8 -*-
-
-
-from django.db import models
-from packages.models import Package
-from loginSystem.models import Administrator
-from datetime import datetime
-
-# Create your models here.
-
-class Websites(models.Model):
-    admin = models.ForeignKey(Administrator, on_delete=models.PROTECT)
-    package = models.ForeignKey(Package, on_delete=models.PROTECT)
-    domain = models.CharField(max_length=255,unique=True)
-    adminEmail = models.CharField(max_length=255)
-    phpSelection = models.CharField(max_length=10)
-    ssl = models.IntegerField()
-    state = models.IntegerField(default=1)
-    externalApp = models.CharField(max_length=30, default=None)
-    config = models.TextField(default='')
-    BackupLock = models.IntegerField(default=0)
 
 
 class ChildDomains(models.Model):
@@ -210,8 +207,6 @@ class RemoteBackupsites(models.Model):
     owner = models.ForeignKey(RemoteBackupSchedule, on_delete=models.CASCADE)
     WPsites = models.IntegerField(null=True)
     database = models.IntegerField(null=True)
-
-import time
 
 class Backupsv2(models.Model):
     website = models.ForeignKey(Websites, on_delete=models.CASCADE)
