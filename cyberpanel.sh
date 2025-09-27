@@ -636,7 +636,17 @@ install_cyberpanel_direct() {
     echo "                                    LIVE INSTALLATION PROGRESS"
     echo "==============================================================================================================="
     echo ""
-    
+
+    # Set branch environment variable for the installer
+    if [ -n "$BRANCH_NAME" ]; then
+        export CYBERPANEL_BRANCH="$BRANCH_NAME"
+        echo "Setting installation branch to: $BRANCH_NAME"
+    else
+        export CYBERPANEL_BRANCH="stable"
+        echo "Using default stable branch"
+    fi
+    echo ""
+
     # Run installer and show live output
     if [ "$DEBUG_MODE" = true ]; then
         ./cyberpanel_installer.sh --debug 2>&1 | tee /var/log/CyberPanel/install_output.log
