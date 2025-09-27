@@ -46,7 +46,7 @@
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
     "RunOnceActivity.git.unshallow": "true",
     "SHELLCHECK.PATH": "/Users/cyberpersons/Library/Application Support/JetBrains/PyCharm2025.1/plugins/Shell Script/shellcheck",
-    "git-widget-placeholder": "stable",
+    "git-widget-placeholder": "v2.5.5-dev",
     "last_opened_file_path": "/Users/cyberpersons/cyberpanel",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -117,6 +117,7 @@
       <workItem from="1754448353513" duration="2970000" />
       <workItem from="1754511414251" duration="48713000" />
       <workItem from="1756885332634" duration="10552000" />
+      <workItem from="1758956419733" duration="14271000" />
     </task>
     <servers />
   </component>
