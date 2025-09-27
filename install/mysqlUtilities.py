@@ -6,9 +6,21 @@ class mysqlUtilities:
 
     @staticmethod
     def createDatabase(dbname, dbuser, dbpassword, publicip):
+        """
+        Create database and user with improved error handling and validation
+        """
+        import logging
+
+        # Validate input parameters
+        if not dbname or not dbuser or not dbpassword:
+            logging.InstallLog.writeToFile(f"ERROR: Missing required parameters - dbname: {dbname}, dbuser: {dbuser}, password: {'SET' if dbpassword else 'EMPTY'}")
+            return 0
+
+        logging.InstallLog.writeToFile(f"Creating database '{dbname}' and user '{dbuser}' with password length: {len(dbpassword)}")
 
         try:
-            createDB = "CREATE DATABASE " + dbname
+            # Step 1: Create database
+            createDB = "CREATE DATABASE IF NOT EXISTS " + dbname
 
             try:
                 from json import loads
@@ -16,6 +28,7 @@ class mysqlUtilities:
 
                 initCommand = 'mariadb -h %s --port %s -u %s -p%s -e "' % (mysqlData['mysqlhost'], mysqlData['mysqlport'], mysqlData['mysqluser'], mysqlData['mysqlpassword'])
                 remote = 1
+                logging.InstallLog.writeToFile("Using remote MySQL configuration")
             except:
                 passFile = "/etc/cyberpanel/mysqlPassword"
 
@@ -25,9 +38,12 @@ class mysqlUtilities:
 
                 initCommand = 'mariadb -u root -p' + password + ' -e "'
                 remote = 0
+                logging.InstallLog.writeToFile("Using local MySQL configuration")
 
             command = initCommand + createDB + '"'
 
+            logging.InstallLog.writeToFile(f"Executing database creation: CREATE DATABASE IF NOT EXISTS {dbname}")
+
             if install.preFlightsChecks.debug:
                 print(command)
                 time.sleep(10)
@@ -35,15 +51,36 @@ class mysqlUtilities:
             cmd = shlex.split(command)
             res = subprocess.call(cmd)
 
-            if res == 1:
+            if res != 0:
+                logging.InstallLog.writeToFile(f"ERROR: Database creation failed with return code: {res}")
                 return 0
+            else:
+                logging.InstallLog.writeToFile(f"✓ Database '{dbname}' created successfully")
 
+            # Step 2: Create user (drop first if exists to avoid conflicts)
             if remote:
-                createUser = "CREATE USER '" + dbuser + "'@'%s' IDENTIFIED BY '" % (publicip) + dbpassword + "'"
+                dropUser = f"DROP USER IF EXISTS '{dbuser}'@'{publicip}'"
+                createUser = f"CREATE USER '{dbuser}'@'{publicip}' IDENTIFIED BY '{dbpassword}'"
+                host = publicip
             else:
-                createUser = "CREATE USER '" + dbuser + "'@'localhost' IDENTIFIED BY '" + dbpassword + "'"
+                dropUser = f"DROP USER IF EXISTS '{dbuser}'@'localhost'"
+                createUser = f"CREATE USER '{dbuser}'@'localhost' IDENTIFIED BY '{dbpassword}'"
+                host = 'localhost'
 
+            # Drop user if exists
+            command = initCommand + dropUser + '"'
+            logging.InstallLog.writeToFile(f"Dropping existing user '{dbuser}'@'{host}' if exists")
+
+            if install.preFlightsChecks.debug:
+                print(command)
+                time.sleep(10)
+
+            cmd = shlex.split(command)
+            subprocess.call(cmd)  # Ignore return code for DROP USER IF EXISTS
+
+            # Create user
             command = initCommand + createUser + '"'
+            logging.InstallLog.writeToFile(f"Creating user '{dbuser}'@'{host}' with password")
 
             if install.preFlightsChecks.debug:
                 print(command)
@@ -52,37 +89,45 @@ class mysqlUtilities:
             cmd = shlex.split(command)
             res = subprocess.call(cmd)
 
-            if res == 1:
+            if res != 0:
+                logging.InstallLog.writeToFile(f"ERROR: User creation failed with return code: {res}")
                 return 0
             else:
+                logging.InstallLog.writeToFile(f"✓ User '{dbuser}'@'{host}' created successfully")
+            else:
 
+                # Step 3: Handle special cases and grant privileges
                 if remote:
-
-                    ### DO Check
-
+                    ### DigitalOcean MySQL compatibility
                     if mysqlData['mysqlhost'].find('ondigitalocean') > -1:
-
-                        alterUserPassword = "ALTER USER 'cyberpanel'@'%s' IDENTIFIED WITH mysql_native_password BY '%s'" % (
-                        publicip, dbpassword)
+                        alterUserPassword = f"ALTER USER '{dbuser}'@'{publicip}' IDENTIFIED WITH mysql_native_password BY '{dbpassword}'"
                         command = initCommand + alterUserPassword + '"'
+
+                        logging.InstallLog.writeToFile(f"Applying DigitalOcean MySQL compatibility for '{dbuser}'@'{publicip}'")
 
                         if install.preFlightsChecks.debug:
                             print(command)
                             time.sleep(10)
 
                         cmd = shlex.split(command)
-                        subprocess.call(cmd)
+                        res = subprocess.call(cmd)
 
-                    ## RDS Check
+                        if res != 0:
+                            logging.InstallLog.writeToFile(f"WARNING: DigitalOcean ALTER USER failed with return code: {res}")
 
+                    ## RDS vs Standard MySQL permissions
                     if mysqlData['mysqlhost'].find('rds.amazon') == -1:
-                        dropDB = "GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (publicip)
+                        grantPrivileges = f"GRANT ALL PRIVILEGES ON {dbname}.* TO '{dbuser}'@'{publicip}'"
                     else:
-                        dropDB = "GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (publicip)
+                        grantPrivileges = f"GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON {dbname}.* TO '{dbuser}'@'{publicip}'"
+                    host = publicip
                 else:
-                    dropDB = "GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'localhost'"
+                    grantPrivileges = f"GRANT ALL PRIVILEGES ON {dbname}.* TO '{dbuser}'@'localhost'"
+                    host = 'localhost'
 
-                command = initCommand + dropDB + '"'
+                # Grant privileges
+                command = initCommand + grantPrivileges + '"'
+                logging.InstallLog.writeToFile(f"Granting privileges on database '{dbname}' to user '{dbuser}'@'{host}'")
 
                 if install.preFlightsChecks.debug:
                     print(command)
@@ -91,9 +136,29 @@ class mysqlUtilities:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
-                if res == 1:
+                if res != 0:
+                    logging.InstallLog.writeToFile(f"ERROR: Grant privileges failed with return code: {res}")
                     return 0
+                else:
+                    logging.InstallLog.writeToFile(f"✓ Privileges granted successfully")
 
+                # Step 4: Flush privileges
+                flushCommand = initCommand + "FLUSH PRIVILEGES" + '"'
+                logging.InstallLog.writeToFile("Flushing MySQL privileges")
+
+                cmd = shlex.split(flushCommand)
+                res = subprocess.call(cmd)
+
+                if res != 0:
+                    logging.InstallLog.writeToFile(f"WARNING: FLUSH PRIVILEGES failed with return code: {res}")
+                else:
+                    logging.InstallLog.writeToFile("✓ Privileges flushed successfully")
+
+            logging.InstallLog.writeToFile(f"✅ Database '{dbname}' and user '{dbuser}' created successfully!")
             return 1
+
         except BaseException as msg:
+            logging.InstallLog.writeToFile(f"❌ CRITICAL ERROR in createDatabase: {str(msg)}")
+            import traceback
+            logging.InstallLog.writeToFile(f"Full traceback: {traceback.format_exc()}")
             return 0
