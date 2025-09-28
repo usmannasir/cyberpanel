@@ -979,24 +979,62 @@ class preFlightsChecks:
         try:
             if self.remotemysql == 'OFF':
                 passwordCMD = "use mysql;DROP DATABASE IF EXISTS test;DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%%';GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '%s';flush privileges;" % (self.mysql_Root_password)
-                
-                mysql_commands = ['mysql', 'mariadb', '/usr/bin/mysql', '/usr/bin/mariadb']
-                mysql_cmd = None
-                
-                for cmd in mysql_commands:
-                    if os.path.exists(cmd) or self.command_exists(cmd):
-                        mysql_cmd = cmd
-                        break
-                
-                if mysql_cmd:
-                    command = f'{mysql_cmd} -u root -e "{passwordCMD}"'
-                    self.call(command, self.distro, command, command, 0, 0, os.EX_OSERR)
-                
+
+                # Try socket authentication first (for fresh MariaDB installations)
+                socket_commands = ['sudo mysql', 'sudo mariadb', 'sudo /usr/bin/mysql', 'sudo /usr/bin/mariadb']
+                password_commands = ['mysql -u root', 'mariadb -u root', '/usr/bin/mysql -u root', '/usr/bin/mariadb -u root']
+
+                success = False
+
+                # First try socket authentication (common for fresh MariaDB installs)
+                self.stdOut("Attempting to set MySQL root password using socket authentication...", 1)
+                for cmd in socket_commands:
+                    try:
+                        if self.command_exists(cmd.split()[-1]):  # Check if the mysql/mariadb command exists
+                            command = f'{cmd} -e "{passwordCMD}"'
+                            result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=30)
+                            if result.returncode == 0:
+                                self.stdOut(f"Successfully set MySQL root password using: {cmd}", 1)
+                                success = True
+                                break
+                            else:
+                                self.stdOut(f"Socket auth failed with {cmd}: {result.stderr}", 0)
+                    except Exception as e:
+                        self.stdOut(f"Error with socket auth {cmd}: {str(e)}", 0)
+                        continue
+
+                # If socket auth failed, try traditional password-based connection
+                if not success:
+                    self.stdOut("Socket authentication failed, trying traditional connection...", 1)
+                    for cmd in password_commands:
+                        try:
+                            if self.command_exists(cmd.split()[0]):  # Check if command exists
+                                command = f'{cmd} -e "{passwordCMD}"'
+                                result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=30)
+                                if result.returncode == 0:
+                                    self.stdOut(f"Successfully set MySQL root password using: {cmd}", 1)
+                                    success = True
+                                    break
+                                else:
+                                    self.stdOut(f"Traditional auth failed with {cmd}: {result.stderr}", 0)
+                        except Exception as e:
+                            self.stdOut(f"Error with traditional auth {cmd}: {str(e)}", 0)
+                            continue
+
+                if not success:
+                    self.stdOut("Failed to set MySQL root password with all methods. Database may need manual configuration.", 0)
+                    # Still save the password file so manual fix is possible
+                    self.ensure_mysql_password_file()
+                    return False
+
                 # Save MySQL password to file for later use
                 self.ensure_mysql_password_file()
-                
+                self.stdOut("MySQL root password set successfully", 1)
+                return True
+
         except Exception as e:
             self.stdOut(f"Error changing MySQL root password: {str(e)}", 0)
+            return False
 
     def ensure_mysql_password_file(self):
         """Ensure MySQL password file exists and is properly configured"""
