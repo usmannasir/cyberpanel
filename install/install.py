@@ -2106,6 +2106,9 @@ password="%s"
 
         logging.InstallLog.writeToFile("Generating secure environment configuration!")
 
+        # Determine the correct MySQL root password to use
+        mysql_root_password = mysqlPassword if self.remotemysql == 'ON' else self.mysql_Root_password
+
         # For CentOS, we need to get the actual cyberpanel database password
         # which is different from the root password
         if self.distro == centos:
@@ -2113,10 +2116,10 @@ password="%s"
             self.cyberpanel_db_password = install_utils.generate_pass()
         else:
             # On Ubuntu/Debian, the cyberpanel password is the same as root password
-            self.cyberpanel_db_password = mysqlPassword
+            self.cyberpanel_db_password = mysql_root_password
 
         # Update settings.py with correct passwords (no .env files needed)
-        self.update_settings_file(mysqlPassword, self.cyberpanel_db_password, mysql)
+        self.update_settings_file(mysql_root_password, self.cyberpanel_db_password, mysql)
 
         logging.InstallLog.writeToFile("Environment configuration generated successfully!")
 
