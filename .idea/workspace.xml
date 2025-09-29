@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5251c5c9-f2a1-41f2-bc76-10b517091df1" name="Changes" comment="" />
+    <list default="true" id="5251c5c9-f2a1-41f2-bc76-10b517091df1" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/install/install.py" beforeDir="false" afterPath="$PROJECT_DIR$/install/install.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/install/mysqlUtilities.py" beforeDir="false" afterPath="$PROJECT_DIR$/install/mysqlUtilities.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -36,27 +39,27 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Notification.DisplayName-DoNotAsk-DatabaseConfigFileWatcher.found": "Database connection parameters found",
-    "Notification.DoNotAsk-DatabaseConfigFileWatcher.found": "true",
-    "RunOnceActivity.OpenDjangoStructureViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "SHELLCHECK.PATH": "/Users/cyberpersons/Library/Application Support/JetBrains/PyCharm2025.1/plugins/Shell Script/shellcheck",
-    "git-widget-placeholder": "v2.5.5-dev",
-    "last_opened_file_path": "/Users/cyberpersons/cyberpanel",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.pluginManager",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Notification.DisplayName-DoNotAsk-DatabaseConfigFileWatcher.found&quot;: &quot;Database connection parameters found&quot;,
+    &quot;Notification.DoNotAsk-DatabaseConfigFileWatcher.found&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.OpenDjangoStructureViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;SHELLCHECK.PATH&quot;: &quot;/Users/cyberpersons/Library/Application Support/JetBrains/PyCharm2025.1/plugins/Shell Script/shellcheck&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;v2.5.5-dev&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/cyberpersons/cyberpanel&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager">
     <configuration name="cyberpanel" type="Python.DjangoServer" factoryName="Django server">
       <module name="cyberpanel" />
@@ -118,6 +121,7 @@
       <workItem from="1754511414251" duration="48713000" />
       <workItem from="1756885332634" duration="10552000" />
       <workItem from="1758956419733" duration="14271000" />
+      <workItem from="1759011899694" duration="4431000" />
     </task>
     <servers />
   </component>
