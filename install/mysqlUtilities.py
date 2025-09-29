@@ -32,13 +32,21 @@ class mysqlUtilities:
             except:
                 passFile = "/etc/cyberpanel/mysqlPassword"
 
-                f = open(passFile)
-                data = f.read()
-                password = data.split('\n', 1)[0]
+                try:
+                    f = open(passFile)
+                    data = f.read()
+                    password = data.split('\n', 1)[0]
+                    f.close()
 
-                initCommand = 'mariadb -u root -p' + password + ' -e "'
-                remote = 0
-                logging.InstallLog.writeToFile("Using local MySQL configuration")
+                    # Try password-based authentication first
+                    initCommand = 'mariadb -u root -p' + password + ' -e "'
+                    remote = 0
+                    logging.InstallLog.writeToFile("Using local MySQL configuration with password")
+                except:
+                    # Fallback to socket authentication for fresh MariaDB installs
+                    initCommand = 'sudo mariadb -e "'
+                    remote = 0
+                    logging.InstallLog.writeToFile("Using local MySQL configuration with socket authentication")
 
             command = initCommand + createDB + '"'
 
@@ -50,6 +58,14 @@ class mysqlUtilities:
 
             cmd = shlex.split(command)
             res = subprocess.call(cmd)
+
+            # If command failed and we're using password auth, try socket auth as fallback
+            if res != 0 and not remote and 'sudo' not in initCommand:
+                logging.InstallLog.writeToFile(f"Password-based auth failed (code {res}), trying socket authentication...")
+                initCommand = 'sudo mariadb -e "'
+                command = initCommand + createDB + '"'
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
 
             if res != 0:
                 logging.InstallLog.writeToFile(f"ERROR: Database creation failed with return code: {res}")
@@ -88,6 +104,14 @@ class mysqlUtilities:
 
             cmd = shlex.split(command)
             res = subprocess.call(cmd)
+
+            # If user creation failed and we're using password auth, try socket auth as fallback
+            if res != 0 and not remote and 'sudo' not in initCommand:
+                logging.InstallLog.writeToFile(f"User creation with password failed (code {res}), trying socket authentication...")
+                initCommand = 'sudo mariadb -e "'
+                command = initCommand + createUser + '"'
+                cmd = shlex.split(command)
+                res = subprocess.call(cmd)
 
             if res != 0:
                 logging.InstallLog.writeToFile(f"ERROR: User creation failed with return code: {res}")
@@ -135,6 +159,14 @@ class mysqlUtilities:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
+                # If privilege granting failed and we're using password auth, try socket auth as fallback
+                if res != 0 and not remote and 'sudo' not in initCommand:
+                    logging.InstallLog.writeToFile(f"Grant privileges with password failed (code {res}), trying socket authentication...")
+                    initCommand = 'sudo mariadb -e "'
+                    command = initCommand + grantPrivileges + '"'
+                    cmd = shlex.split(command)
+                    res = subprocess.call(cmd)
+
                 if res != 0:
                     logging.InstallLog.writeToFile(f"ERROR: Grant privileges failed with return code: {res}")
                     return 0
@@ -147,6 +179,13 @@ class mysqlUtilities:
 
                 cmd = shlex.split(flushCommand)
                 res = subprocess.call(cmd)
+
+                # If flush failed and we're using password auth, try socket auth as fallback
+                if res != 0 and not remote and 'sudo' not in initCommand:
+                    logging.InstallLog.writeToFile(f"FLUSH PRIVILEGES with password failed (code {res}), trying socket authentication...")
+                    flushCommand = 'sudo mariadb -e "FLUSH PRIVILEGES"'
+                    cmd = shlex.split(flushCommand)
+                    res = subprocess.call(cmd)
 
                 if res != 0:
                     logging.InstallLog.writeToFile(f"WARNING: FLUSH PRIVILEGES failed with return code: {res}")

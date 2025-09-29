@@ -1036,6 +1036,46 @@ class preFlightsChecks:
             self.stdOut(f"Error changing MySQL root password: {str(e)}", 0)
             return False
 
+    def execute_mysql_command(self, sql_command, description="MySQL command"):
+        """Execute MySQL command with proper authentication fallback"""
+        try:
+            # Try password-based authentication first if password file exists
+            try:
+                passFile = "/etc/cyberpanel/mysqlPassword"
+                if os.path.exists(passFile):
+                    with open(passFile, 'r') as f:
+                        password = f.read().split('\n', 1)[0]
+
+                    # Try mariadb first, then mysql
+                    for cmd_base in ['mariadb', 'mysql']:
+                        if self.command_exists(cmd_base):
+                            command = f'{cmd_base} -u root -p{password} -e "{sql_command}"'
+                            result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=30)
+                            if result.returncode == 0:
+                                self.stdOut(f"✓ {description} executed successfully with password auth", 1)
+                                return True
+            except:
+                pass
+
+            # Fallback to socket authentication
+            for cmd_base in ['sudo mariadb', 'sudo mysql']:
+                try:
+                    if self.command_exists(cmd_base.split()[-1]):
+                        command = f'{cmd_base} -e "{sql_command}"'
+                        result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=30)
+                        if result.returncode == 0:
+                            self.stdOut(f"✓ {description} executed successfully with socket auth", 1)
+                            return True
+                except:
+                    continue
+
+            self.stdOut(f"✗ Failed to execute {description}: {sql_command}", 0)
+            return False
+
+        except Exception as e:
+            self.stdOut(f"Error executing MySQL command: {str(e)}", 0)
+            return False
+
     def ensure_mysql_password_file(self):
         """Ensure MySQL password file exists and is properly configured"""
         try:
@@ -4783,21 +4823,22 @@ vmail
             preFlightsChecks.stdOut("Setting up PowerDNS database access...", 1)
             
             # Create PowerDNS database tables if they don't exist
-            db_commands = [
-                "mysql -e \"CREATE DATABASE IF NOT EXISTS powerdns;\"",
-                "mysql -e \"CREATE USER IF NOT EXISTS 'powerdns'@'localhost' IDENTIFIED BY 'cyberpanel';\"",
-                "mysql -e \"GRANT ALL PRIVILEGES ON powerdns.* TO 'powerdns'@'localhost';\"",
-                "mysql -e \"FLUSH PRIVILEGES;\""
+            sql_commands = [
+                ("CREATE DATABASE IF NOT EXISTS powerdns", "PowerDNS database creation"),
+                ("CREATE USER IF NOT EXISTS 'powerdns'@'localhost' IDENTIFIED BY 'cyberpanel'", "PowerDNS user creation"),
+                ("GRANT ALL PRIVILEGES ON powerdns.* TO 'powerdns'@'localhost'", "PowerDNS privileges"),
+                ("FLUSH PRIVILEGES", "PowerDNS privilege flush")
             ]
-            
-            for cmd in db_commands:
-                preFlightsChecks.call(cmd, self.distro, f"PowerDNS DB: {cmd}", cmd, 1, 0, os.EX_OSERR)
-            
+
+            for sql_cmd, desc in sql_commands:
+                if not self.execute_mysql_command(sql_cmd, desc):
+                    self.stdOut(f"Warning: {desc} may have failed", 0)
+
             # Import PowerDNS schema if tables don't exist
-            schema_check = "mysql -e \"USE powerdns; SHOW TABLES;\""
-            result = subprocess.run(schema_check, shell=True, capture_output=True, text=True)
-            
-            if not result.stdout.strip() or 'domains' not in result.stdout:
+            schema_check_success = self.execute_mysql_command("USE powerdns; SHOW TABLES", "PowerDNS schema check")
+
+            # For now, assume schema needs import if we can't check properly
+            if not schema_check_success:
                 preFlightsChecks.stdOut("Importing PowerDNS database schema...", 1)
                 # Try to find and import PowerDNS schema
                 schema_files = [
@@ -5310,13 +5351,19 @@ def main():
 
             # Verify the user was created by testing the connection
             try:
-                import subprocess
-                test_cmd = f"mysql -u cyberpanel -p{checks.cyberpanel_db_password} -e 'SELECT 1;'"
-                test_result = subprocess.call(test_cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                if test_result == 0:
-                    logging.InstallLog.writeToFile("✅ Verified: cyberpanel user can connect to MySQL")
-                else:
-                    logging.InstallLog.writeToFile("❌ WARNING: cyberpanel user cannot connect to MySQL - authentication may have failed")
+                test_success = False
+                # Try mariadb first, then mysql
+                for cmd_base in ['mariadb', 'mysql']:
+                    if checks.command_exists(cmd_base):
+                        test_cmd = f"{cmd_base} -u cyberpanel -p{checks.cyberpanel_db_password} -e 'SELECT 1;'"
+                        test_result = subprocess.call(test_cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                        if test_result == 0:
+                            logging.InstallLog.writeToFile("✅ Verified: cyberpanel user can connect to MySQL")
+                            test_success = True
+                            break
+
+                if not test_success:
+                    logging.InstallLog.writeToFile("⚠️ Warning: Could not verify cyberpanel user connection")
             except Exception as verify_error:
                 logging.InstallLog.writeToFile(f"Could not verify MySQL connection: {str(verify_error)}")
         else:
