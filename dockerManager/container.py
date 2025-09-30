@@ -778,8 +778,8 @@ class ContainerManager(multi.Thread):
             return HttpResponse(json_data)
 
         except Exception as e:
-            secure_log_error(e, \'containerActionStatus\')
-            data_ret = secure_error_response(e, \'Failed to containerActionStatus\')
+            secure_log_error(e, 'containerActionStatus')
+            data_ret = secure_error_response(e, 'Failed to containerActionStatus')
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
