@@ -2149,15 +2149,15 @@ password="%s"
         # Clean any existing migration files first (except __init__.py and excluding virtual environment)
         logging.InstallLog.writeToFile("Cleaning existing migration files...")
         # Only delete migration files from app directories, not from lib/lib64/bin directories
-        command = "find /usr/local/CyberCP -type f -path '*/migrations/0*.py' ! -path '*/lib/*' ! -path '*/lib64/*' ! -path '*/bin/*' -delete 2>/dev/null || true"
+        command = "bash -c \"find /usr/local/CyberCP -type f -path '*/migrations/0*.py' ! -path '*/lib/*' ! -path '*/lib64/*' ! -path '*/bin/*' -delete 2>/dev/null || true\""
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         # Clean any existing migration pyc files (excluding virtual environment)
-        command = "find /usr/local/CyberCP -type f -path '*/migrations/*.pyc' ! -path '*/lib/*' ! -path '*/lib64/*' ! -path '*/bin/*' -delete 2>/dev/null || true"
+        command = "bash -c \"find /usr/local/CyberCP -type f -path '*/migrations/*.pyc' ! -path '*/lib/*' ! -path '*/lib64/*' ! -path '*/bin/*' -delete 2>/dev/null || true\""
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         # Clean __pycache__ directories in migrations folders (excluding virtual environment)
-        command = "find /usr/local/CyberCP -type d -path '*/migrations/__pycache__' ! -path '*/lib/*' ! -path '*/lib64/*' ! -path '*/bin/*' -exec rm -rf {} + 2>/dev/null || true"
+        command = "bash -c \"find /usr/local/CyberCP -type d -path '*/migrations/__pycache__' ! -path '*/lib/*' ! -path '*/lib64/*' ! -path '*/bin/*' -exec rm -rf {} + 2>/dev/null || true\""
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         # Fix baseTemplate migrations - ensure required migration files exist
@@ -2190,8 +2190,13 @@ password="%s"
             preFlightsChecks.stdOut("ERROR: No Python virtual environment found!", 0)
             return False
 
-        # Create all migrations at once - Django will handle dependencies
-        logging.InstallLog.writeToFile("Creating fresh migrations for all apps...")
+        # Create migrations in dependency order - loginSystem first since other apps depend on it
+        logging.InstallLog.writeToFile("Creating migrations for loginSystem first...")
+        command = f"{python_path} manage.py makemigrations loginSystem --noinput"
+        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
+        # Now create migrations for all other apps
+        logging.InstallLog.writeToFile("Creating migrations for all other apps...")
         command = f"{python_path} manage.py makemigrations --noinput"
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 

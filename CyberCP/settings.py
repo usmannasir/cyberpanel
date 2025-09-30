@@ -36,36 +36,48 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'baseTemplate',
+
+    # Core apps (no dependencies on other custom apps)
+    'loginSystem',  # Base app - many apps depend on Administrator model
+    'packages',     # websiteFunctions depends on this
+
+    # Apps with single dependency
+    'websiteFunctions',  # Depends on packages and loginSystem
+    'baseTemplate',      # Depends on loginSystem
+    'userManagment',     # Depends on loginSystem
+    'dns',               # Depends on loginSystem
+
+    # Apps depending on websiteFunctions
+    'databases',         # Depends on websiteFunctions
+    'ftp',              # Depends on websiteFunctions
+    'filemanager',      # Depends on websiteFunctions
+    'mailServer',       # Depends on websiteFunctions, ChildDomains
+
+    # Apps with multiple or complex dependencies
+    'emailPremium',     # Depends on mailServer
+    'emailMarketing',   # Depends on websiteFunctions and loginSystem
+    'cloudAPI',         # Depends on websiteFunctions
+    'containerization', # Depends on websiteFunctions
+    'IncBackups',      # Depends on websiteFunctions and loginSystem
+    'CLManager',       # Depends on packages
+
+    # Apps with dependencies on loginSystem only
+    's3Backups',       # Depends on loginSystem
+    'dockerManager',   # Depends on loginSystem
+    'aiScanner',       # Depends on loginSystem
+
+    # Independent apps (no model dependencies found)
     'firewall',
-    'loginSystem',
-    'packages',
-    'websiteFunctions',
     'tuning',
     'serverStatus',
-    'dns',
-    'ftp',
-    'userManagment',
-    'databases',
-    'mailServer',
     'serverLogs',
     'backup',
     'managePHP',
     'manageSSL',
     'api',
-    'filemanager',
     'manageServices',
     'pluginHolder',
-    'emailPremium',
-    'emailMarketing',
-    'cloudAPI',
     'highAvailability',
-    's3Backups',
-    'dockerManager',
-    'containerization',
-    'CLManager',
-    'IncBackups',
-    'aiScanner',
     #    'WebTerminal'
 ]
 
