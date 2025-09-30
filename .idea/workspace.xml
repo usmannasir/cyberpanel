@@ -4,12 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5251c5c9-f2a1-41f2-bc76-10b517091df1" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/baseTemplate/migrations/0001_initial.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/baseTemplate/migrations/0002_usernotificationpreferences.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/userManagment/migrations/0001_home_directories.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/websiteFunctions/migrations/0002_ftpquota_bandwidthresetlog.py" beforeDir="false" />
-    </list>
+    <list default="true" id="5251c5c9-f2a1-41f2-bc76-10b517091df1" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
