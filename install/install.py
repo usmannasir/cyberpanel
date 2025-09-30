@@ -2400,8 +2400,16 @@ class Migration(migrations.Migration):
         command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin/tmp"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        ## Fix ownership for public static files (must be owned by lscpd for web server access)
-        command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/static"
+        ## Fix ownership and permissions for all public files (must be owned by lscpd for web server access)
+        ## Static files (CSS, JS, images) must NOT have execute permissions - LiteSpeed blocks files with unnecessary execute bits
+        command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/"
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+        ## Set proper permissions: directories get 755, files get 644 (no execute bit for static files!)
+        command = r'find /usr/local/CyberCP/public/ -type d -exec chmod 755 {} \;'
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+        command = r'find /usr/local/CyberCP/public/ -type f -exec chmod 644 {} \;'
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         ## change owner
