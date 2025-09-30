@@ -2148,21 +2148,32 @@ password="%s"
 
         # Clean any existing migration files first (except __init__.py and excluding virtual environment)
         logging.InstallLog.writeToFile("Cleaning existing migration files...")
-        # Only delete migration files from app directories, not from lib/lib64/bin directories
-        command = "bash -c \"find /usr/local/CyberCP -type f -path '*/migrations/0*.py' ! -path '*/lib/*' ! -path '*/lib64/*' ! -path '*/bin/*' -delete 2>/dev/null || true\""
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        # Clean any existing migration pyc files (excluding virtual environment)
-        command = "bash -c \"find /usr/local/CyberCP -type f -path '*/migrations/*.pyc' ! -path '*/lib/*' ! -path '*/lib64/*' ! -path '*/bin/*' -delete 2>/dev/null || true\""
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        # List of apps that have migrations folders
+        apps_with_migrations = [
+            'loginSystem', 'packages', 'websiteFunctions', 'baseTemplate', 'userManagment',
+            'dns', 'databases', 'ftp', 'filemanager', 'mailServer', 'emailPremium',
+            'emailMarketing', 'cloudAPI', 'containerization', 'IncBackups', 'CLManager',
+            's3Backups', 'dockerManager', 'aiScanner', 'firewall', 'tuning', 'serverStatus',
+            'serverLogs', 'backup', 'managePHP', 'manageSSL', 'api', 'manageServices',
+            'pluginHolder', 'highAvailability', 'WebTerminal'
+        ]
 
-        # Clean __pycache__ directories in migrations folders (excluding virtual environment)
-        command = "bash -c \"find /usr/local/CyberCP -type d -path '*/migrations/__pycache__' ! -path '*/lib/*' ! -path '*/lib64/*' ! -path '*/bin/*' -exec rm -rf {} + 2>/dev/null || true\""
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        # Clean migration files for each app specifically
+        for app in apps_with_migrations:
+            migration_dir = f"/usr/local/CyberCP/{app}/migrations"
+            if os.path.exists(migration_dir):
+                # Remove all .py files except __init__.py
+                command = f"bash -c \"find {migration_dir} -name '*.py' ! -name '__init__.py' -delete 2>/dev/null || true\""
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                # Remove all .pyc files
+                command = f"bash -c \"find {migration_dir} -name '*.pyc' -delete 2>/dev/null || true\""
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                # Remove __pycache__ directory
+                command = f"bash -c \"rm -rf {migration_dir}/__pycache__ 2>/dev/null || true\""
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        # Fix baseTemplate migrations - ensure required migration files exist
-        logging.InstallLog.writeToFile("Fixing baseTemplate migrations...")
-        self.fixBaseTemplateMigrations()
+        logging.InstallLog.writeToFile("Migration cleanup completed")
 
         # Ensure virtual environment is properly set up
         logging.InstallLog.writeToFile("Ensuring virtual environment is properly set up...")
