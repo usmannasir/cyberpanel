@@ -2189,6 +2189,14 @@ password="%s"
             preFlightsChecks.stdOut("ERROR: No Python virtual environment found!", 0)
             return False
 
+        # Clean up old migration files before creating new ones (excluding virtual environment)
+        logging.InstallLog.writeToFile("Cleaning up old migration files...")
+        cleanup_command1 = 'find /usr/local/CyberCP -path "*/lib/*" -prune -o -path "*/lib64/*" -prune -o -path "*/bin/*" -prune -o -path "*/migrations/*.py" -not -name "__init__.py" -print -delete'
+        preFlightsChecks.call(cleanup_command1, self.distro, cleanup_command1, cleanup_command1, 1, 1, os.EX_OSERR)
+
+        cleanup_command2 = 'find /usr/local/CyberCP -path "*/lib/*" -prune -o -path "*/lib64/*" -prune -o -path "*/bin/*" -prune -o -path "*/migrations/*.pyc" -print -delete'
+        preFlightsChecks.call(cleanup_command2, self.distro, cleanup_command2, cleanup_command2, 1, 1, os.EX_OSERR)
+
         # Create all migrations at once - Django will handle dependencies
         logging.InstallLog.writeToFile("Creating fresh migrations for all apps...")
         command = f"{python_path} manage.py makemigrations --noinput"

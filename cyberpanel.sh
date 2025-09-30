@@ -685,9 +685,9 @@ install_cyberpanel_direct() {
         print_status "SUCCESS: CyberPanel installed successfully"
         
         # Run post-installation fixes
-        echo ""
-        echo "  🔧 Running post-installation fixes..."
-        fix_post_install_issues
+        # echo ""
+        # echo "  🔧 Running post-installation fixes..."
+        # fix_post_install_issues
         
         return 0
     else
