@@ -202,17 +202,7 @@
     <!-- Components theme -->
 
     <!-- JS Core -->
-
-    <script type="text/javascript" src="{% static 'baseTemplate/assets/js-core/jquery-core.min.js' %}"></script>
-
-    <script type="text/javascript">
-        $(window).load(function () {
-            setTimeout(function () {
-                $('#loading').fadeOut(400, "linear");
-            }, 300);
-        });
-    </script>
-
+    <!-- jQuery moved to bottom of page to load before other scripts -->
     <!-- JS Ends -->
 
     <style type="text/css">
@@ -383,10 +373,46 @@
         </div>
     </div>
 </div>
+<!-- Ensure jQuery is loaded first -->
+<script type="text/javascript" src="{% static 'baseTemplate/assets/js-core/jquery-core.min.js' %}"></script>
+<!-- Then Angular -->
 <script src="https://code.angularjs.org/1.6.5/angular.min.js"></script>
 <script src="https://code.angularjs.org/1.6.5/angular-route.min.js"></script>
+<!-- Then our custom scripts that depend on jQuery and Angular -->
 <script src="{% static 'loginSystem/login-system.js' %}"></script>
-<script src="{% static 'loginSystem/webauthn.js' %}"></script>
+<!-- Optional: WebAuthn script (handle 403 gracefully) -->
+<script>
+    // Try to load webauthn.js, but don't fail if it's not available
+    (function() {
+        var script = document.createElement('script');
+        script.src = '{% static "loginSystem/webauthn.js" %}';
+        script.onerror = function() {
+            console.warn('WebAuthn script not available, continuing without it');
+        };
+        document.head.appendChild(script);
+    })();
+</script>
+<!-- Loading animation (requires jQuery) -->
+<script type="text/javascript">
+    // Ensure jQuery is loaded before using it
+    if (typeof jQuery !== 'undefined') {
+        jQuery(window).on('load', function () {
+            setTimeout(function () {
+                jQuery('#loading').fadeOut(400, "linear");
+            }, 300);
+        });
+    } else {
+        // Fallback if jQuery isn't loaded
+        window.addEventListener('load', function() {
+            setTimeout(function () {
+                var loadingEl = document.getElementById('loading');
+                if (loadingEl) {
+                    loadingEl.style.display = 'none';
+                }
+            }, 300);
+        });
+    }
+</script>
 <script>
 // Initialize WebAuthn login functionality
 document.addEventListener('DOMContentLoaded', function() {
