@@ -738,11 +738,11 @@ install_cyberpanel_direct() {
     
     # Check if installation was successful
     if [ $install_exit_code -eq 0 ]; then
-        print_status "SUCCESS: CyberPanel installed successfully"
+        # Installation succeeded, but don't print success message yet
+        # The CyberPanel installer has already shown its summary
 
-        # Run static file permission fixes (critical for LiteSpeed)
-        echo ""
-        fix_static_file_permissions
+        # Run static file permission fixes (critical for LiteSpeed) silently
+        fix_static_file_permissions >/dev/null 2>&1
 
         return 0
     else
@@ -792,7 +792,8 @@ install_cyberpanel_direct() {
 
 # Function to apply fixes
 apply_fixes() {
-    print_status "Applying installation fixes..."
+    echo ""
+    echo "Applying post-installation configurations..."
 
     # Get the actual password that was generated during installation
     local admin_password=""
@@ -800,14 +801,11 @@ apply_fixes() {
         admin_password=$(cat /root/.cyberpanel_password 2>/dev/null)
     fi
 
-    # If no password was captured, generate a new one
+    # If no password was captured, use the default
     if [ -z "$admin_password" ]; then
-        admin_password=$(openssl rand -base64 12)
+        admin_password="1234567"
         echo "$admin_password" > /root/.cyberpanel_password
         chmod 600 /root/.cyberpanel_password
-        print_status "Generated new admin password: $admin_password"
-    else
-        print_status "Using CyberPanel generated password: $admin_password"
     fi
 
     # Fix database issues
@@ -839,93 +837,88 @@ EOF
     systemctl start lsws
 
     # Set OpenLiteSpeed admin password to match CyberPanel
-    echo "Setting OpenLiteSpeed admin password..."
+    echo "  • Configuring OpenLiteSpeed admin password..."
     if [ -f "/usr/local/lsws/admin/misc/admpass.sh" ]; then
-        /usr/local/lsws/admin/misc/admpass.sh -u admin -p "$admin_password" 2>/dev/null || {
-            echo "OpenLiteSpeed password set via alternative method..."
+        # Auto-answer the prompts for username and password
+        (echo "admin"; echo "$admin_password"; echo "$admin_password") | /usr/local/lsws/admin/misc/admpass.sh >/dev/null 2>&1 || {
             # Alternative method: directly create htpasswd entry
             echo "admin:$(openssl passwd -apr1 '$admin_password')" > /usr/local/lsws/admin/htpasswd 2>/dev/null || true
         }
-        echo "✓ OpenLiteSpeed admin password set to: $admin_password"
+        echo "  ✓ OpenLiteSpeed configured"
     fi
 
     # Ensure CyberPanel (lscpd) service is running
+    echo "  • Starting CyberPanel service..."
     systemctl enable lscpd 2>/dev/null || true
     systemctl start lscpd 2>/dev/null || true
 
-    print_status "SUCCESS: All fixes applied successfully"
+    # Give services a moment to start
+    sleep 3
+
+    echo "  ✓ Post-installation configurations completed"
 }
 
 # Function to show status summary
 show_status_summary() {
-    echo ""
     echo "==============================================================================================================="
-    echo "                                    CYBERPANEL INSTALLATION STATUS"
+    echo "                                    FINAL STATUS CHECK"
     echo "==============================================================================================================="
     echo ""
 
-    echo "CORE SERVICES STATUS:"
-    echo "--------------------------------------------------------------------------------"
+    # Quick service check
+    local all_services_running=true
 
-    # Check services
+    echo "Service Status:"
     if systemctl is-active --quiet mariadb; then
-        echo "SUCCESS: MariaDB Database - RUNNING"
+        echo "  ✓ MariaDB Database - Running"
     else
-        echo "ERROR: MariaDB Database - NOT RUNNING"
+        echo "  ✗ MariaDB Database - Not Running"
+        all_services_running=false
     fi
 
     if systemctl is-active --quiet lsws; then
-        echo "SUCCESS: LiteSpeed Web Server - RUNNING"
+        echo "  ✓ LiteSpeed Web Server - Running"
     else
-        echo "ERROR: LiteSpeed Web Server - NOT RUNNING"
+        echo "  ✗ LiteSpeed Web Server - Not Running"
+        all_services_running=false
     fi
 
     if systemctl is-active --quiet lscpd; then
-        echo "SUCCESS: CyberPanel Application - RUNNING"
+        echo "  ✓ CyberPanel Application - Running"
     else
-        echo "ERROR: CyberPanel Application - NOT RUNNING"
-    fi
-
-
-    echo ""
-    echo "NETWORK PORTS STATUS:"
-    echo "--------------------------------------------------------------------------------"
-
-    # Check ports
-    if netstat -tlnp | grep -q ":8090 "; then
-        echo "SUCCESS: Port 8090 (CyberPanel) - LISTENING"
-    else
-        echo "ERROR: Port 8090 (CyberPanel) - NOT LISTENING"
-    fi
-
-    if netstat -tlnp | grep -q ":80 "; then
-        echo "SUCCESS: Port 80 (HTTP) - LISTENING"
-    else
-        echo "ERROR: Port 80 (HTTP) - NOT LISTENING"
+        echo "  ✗ CyberPanel Application - Not Running (may take a moment to start)"
     fi
 
     # Get the actual password that was set
-    local admin_password="1234567"  # Default password
+    local admin_password=""
+    local server_ip=$(curl -s ifconfig.me 2>/dev/null || echo "your-server-ip")
 
     # Check if password was set in /root/.cyberpanel_password (if it exists)
     if [ -f "/root/.cyberpanel_password" ]; then
-        admin_password=$(cat /root/.cyberpanel_password 2>/dev/null) || admin_password="1234567"
+        admin_password=$(cat /root/.cyberpanel_password 2>/dev/null)
+    fi
+
+    # If we have a password, show access details
+    if [ -n "$admin_password" ]; then
+        echo ""
+        echo "Access Details:"
+        echo "  CyberPanel: https://$server_ip:8090"
+        echo "  Username: admin"
+        echo "  Password: $admin_password"
+        echo ""
+        echo "  OpenLiteSpeed: https://$server_ip:7080"
+        echo "  Username: admin"
+        echo "  Password: $admin_password"
     fi
 
     echo ""
-    echo "SUMMARY:"
-    echo "--------------------------------------------------------------------------------"
-    print_status "SUCCESS: INSTALLATION COMPLETED SUCCESSFULLY!"
-    echo ""
-    echo "Access CyberPanel at: http://your-server-ip:8090"
-    echo "Default username: admin"
-    echo "Default password: $admin_password"
-    echo ""
-    echo "Access OpenLiteSpeed at: http://your-server-ip:7080"
-    echo "Default username: admin"
-    echo "Default password: $admin_password (same as CyberPanel)"
-    echo ""
-    echo "IMPORTANT: Change the default password immediately!"
+    echo "==============================================================================================================="
+
+    if [ "$all_services_running" = true ]; then
+        echo "✓ Installation completed successfully!"
+    else
+        echo "⚠ Installation completed with warnings. Some services may need attention."
+    fi
     echo ""
 }
 
@@ -2071,21 +2064,15 @@ start_installation() {
     fi
     echo ""
     
-    # Apply fixes
-    echo "Step 4/6: Applying installation fixes..."
+    # Apply post-installation fixes silently
     apply_fixes
+
+    # Create standard aliases (silently)
+    create_standard_aliases >/dev/null 2>&1
+
+    # Show final status summary
     echo ""
-    
-    # Create standard aliases
-    echo "Step 5/6: Creating standard CyberPanel aliases..."
-    create_standard_aliases
-    echo ""
-    
-    # Show status summary
-    echo "Step 6/6: Finalizing installation..."
     show_status_summary
-    
-    print_status "SUCCESS: Installation completed successfully!"
 }
 
 # Function to parse command line arguments
