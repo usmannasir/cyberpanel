@@ -2229,16 +2229,6 @@ password="%s"
         command = 'mv static /usr/local/CyberCP/public/'
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-        ## Set proper permissions for static files
-        command = 'chown -R lscpd:lscpd /usr/local/CyberCP/public/static'
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = r'find /usr/local/CyberCP/public/static -type d -exec chmod 755 {} \;'
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = r'find /usr/local/CyberCP/public/static -type f -exec chmod 644 {} \;'
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
         try:
             path = "/usr/local/CyberCP/version.txt"
             writeToFile = open(path, 'w')
@@ -2400,12 +2390,12 @@ class Migration(migrations.Migration):
         command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin/tmp"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        ## Fix ownership and permissions for all public files (must be owned by lscpd for web server access)
-        ## Static files (CSS, JS, images) must NOT have execute permissions - LiteSpeed blocks files with unnecessary execute bits
+        ## CRITICAL FIX: Restore public directory ownership after root:root override
+        ## The public directory MUST be owned by lscpd for web server to serve files
         command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        ## Set proper permissions: directories get 755, files get 644 (no execute bit for static files!)
+        ## Ensure correct permissions: directories 755, files 644 (NO execute bit on static files!)
         command = r'find /usr/local/CyberCP/public/ -type d -exec chmod 755 {} \;'
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 

@@ -140,6 +140,42 @@ detect_os() {
     return 0
 }
 
+# Function to fix static file permissions (critical for LiteSpeed)
+fix_static_file_permissions() {
+    echo "  🔧 Fixing static file permissions for web server access..."
+
+    # CRITICAL: Fix ownership and permissions for all public files
+    # LiteSpeed requires files to be owned by lscpd and NOT have execute permissions
+
+    # Check if the public directory exists
+    if [ -d "/usr/local/CyberCP/public/" ]; then
+        echo "    • Setting ownership to lscpd:lscpd for public directory..."
+        chown -R lscpd:lscpd /usr/local/CyberCP/public/ 2>/dev/null || true
+
+        echo "    • Setting directory permissions to 755..."
+        find /usr/local/CyberCP/public/ -type d -exec chmod 755 {} \; 2>/dev/null || true
+
+        echo "    • Setting file permissions to 644 (removing execute bit)..."
+        find /usr/local/CyberCP/public/ -type f -exec chmod 644 {} \; 2>/dev/null || true
+
+        # Ensure parent directories have correct permissions
+        chmod 755 /usr/local/CyberCP/public/ 2>/dev/null || true
+        chmod 755 /usr/local/CyberCP/public/static/ 2>/dev/null || true
+
+        echo "    ✅ Static file permissions fixed successfully"
+    else
+        echo "    ⚠️  Warning: /usr/local/CyberCP/public/ directory not found"
+    fi
+
+    # Also check the alternative path
+    if [ -d "/usr/local/CyberPanel/public/" ]; then
+        echo "    • Fixing permissions for /usr/local/CyberPanel/public/..."
+        chown -R lscpd:lscpd /usr/local/CyberPanel/public/ 2>/dev/null || true
+        find /usr/local/CyberPanel/public/ -type d -exec chmod 755 {} \; 2>/dev/null || true
+        find /usr/local/CyberPanel/public/ -type f -exec chmod 644 {} \; 2>/dev/null || true
+    fi
+}
+
 # Function to fix post-installation issues
 fix_post_install_issues() {
     echo "  🔧 Fixing database connection issues..."
@@ -683,12 +719,11 @@ install_cyberpanel_direct() {
     # Check if installation was successful
     if [ $install_exit_code -eq 0 ]; then
         print_status "SUCCESS: CyberPanel installed successfully"
-        
-        # Run post-installation fixes
-        # echo ""
-        # echo "  🔧 Running post-installation fixes..."
-        # fix_post_install_issues
-        
+
+        # Run static file permission fixes (critical for LiteSpeed)
+        echo ""
+        fix_static_file_permissions
+
         return 0
     else
         print_status "ERROR: CyberPanel installation failed (exit code: $install_exit_code)"
