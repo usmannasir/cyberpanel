@@ -4,6 +4,7 @@ import shutil
 import installLog as logging
 import argparse
 import os
+import errno
 import shlex
 from firewallUtilities import FirewallUtilities
 import time
@@ -1160,41 +1161,126 @@ class preFlightsChecks:
         """Install PowerDNS"""
         try:
             self.stdOut("Installing PowerDNS...", 1)
-            
+
             if self.distro == ubuntu:
                 # Stop and disable systemd-resolved
                 self.manage_service('systemd-resolved', 'stop')
                 self.manage_service('systemd-resolved.service', 'disable')
-                
+
                 # Create temporary resolv.conf
                 try:
                     os.rename('/etc/resolv.conf', '/etc/resolv.conf.bak')
                 except:
                     pass
-                
+
                 with open('/etc/resolv.conf', 'w') as f:
                     f.write('nameserver 8.8.8.8\n')
                     f.write('nameserver 8.8.4.4\n')
-                
+
                 # Install PowerDNS
                 command = "DEBIAN_FRONTEND=noninteractive apt-get update"
                 self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
-                
+
                 command = "DEBIAN_FRONTEND=noninteractive apt-get -y install pdns-server pdns-backend-mysql"
                 self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
-                
+
                 command = 'systemctl stop pdns || true'
                 self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR, True)
-                
+
             else:
                 # RHEL-based PowerDNS installation
                 self.install_package('pdns pdns-backend-mysql')
-            
+
+            # Configure PowerDNS after installation
+            self.installPowerDNSConfigurations()
+
             self.stdOut("PowerDNS installed successfully", 1)
             return True
-            
+
         except Exception as e:
             self.stdOut(f"Error installing PowerDNS: {str(e)}", 0)
+            return False
+
+    def installPowerDNSConfigurations(self):
+        """Configure PowerDNS with MySQL backend"""
+        try:
+            self.stdOut("Configuring PowerDNS...", 1)
+
+            # Get the MySQL password
+            mysqlPassword = getattr(self, 'mysql_Root_password', 'cyberpanel')
+
+            # Determine the correct config path based on distribution
+            if self.distro in [centos, cent8, openeuler]:
+                dnsPath = "/etc/pdns/pdns.conf"
+            else:
+                dnsPath = "/etc/powerdns/pdns.conf"
+                # Ensure directory exists for Ubuntu
+                dnsDir = os.path.dirname(dnsPath)
+                if not os.path.exists(dnsDir):
+                    try:
+                        os.makedirs(dnsDir, mode=0o755)
+                    except OSError as e:
+                        if e.errno != errno.EEXIST:
+                            raise
+
+            # Copy the PowerDNS configuration file
+            source_file = os.path.join(self.cwd, "dns-one", "pdns.conf")
+            if not os.path.exists(source_file):
+                # Try alternative location
+                source_file = os.path.join(self.cwd, "dns", "pdns.conf")
+
+            if os.path.exists(source_file):
+                import shutil
+                shutil.copy2(source_file, dnsPath)
+                self.stdOut(f"PowerDNS config copied to {dnsPath}", 1)
+            else:
+                self.stdOut(f"[WARNING] PowerDNS config source not found, creating basic config...", 1)
+                # Create a basic configuration if source doesn't exist
+                with open(dnsPath, 'w') as f:
+                    f.write("# PowerDNS MySQL Backend Configuration\n")
+                    f.write("launch=gmysql\n")
+                    f.write("gmysql-host=localhost\n")
+                    f.write("gmysql-port=3306\n")
+                    f.write("gmysql-user=cyberpanel\n")
+                    f.write(f"gmysql-password={mysqlPassword}\n")
+                    f.write("gmysql-dbname=cyberpanel\n")
+                    f.write("\n# Basic PowerDNS settings\n")
+                    f.write("daemon=no\n")
+                    f.write("guardian=no\n")
+                    f.write("setgid=pdns\n")
+                    f.write("setuid=pdns\n")
+
+            # Update the MySQL password in the config file
+            if os.path.exists(dnsPath):
+                with open(dnsPath, 'r') as f:
+                    data = f.readlines()
+
+                writeDataToFile = open(dnsPath, 'w')
+                for line in data:
+                    if line.find("gmysql-password") > -1:
+                        writeDataToFile.write(f"gmysql-password={mysqlPassword}\n")
+                    else:
+                        writeDataToFile.write(line)
+                writeDataToFile.close()
+
+                # Set proper permissions
+                if self.distro in [centos, cent8, openeuler]:
+                    command = f'chown root:pdns {dnsPath}'
+                    self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                    command = f'chmod 640 {dnsPath}'
+                    self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                else:
+                    command = f'chown root:pdns {dnsPath}'
+                    self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                    command = f'chmod 640 {dnsPath}'
+                    self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+                self.stdOut("PowerDNS configuration completed", 1)
+                return True
+
+        except Exception as e:
+            self.stdOut(f"Error configuring PowerDNS: {str(e)}", 0)
+            logging.InstallLog.writeToFile(f'[ERROR] Failed to configure PowerDNS: {str(e)}')
             return False
 
     def installPureFTPD(self):
@@ -4955,41 +5041,76 @@ vmail
                 preFlightsChecks.stdOut("[WARNING] Could not install PowerDNS, skipping...", 1)
                 return
         
-        # Fix PowerDNS configuration
+        # Fix PowerDNS configuration - first check if config exists, if not copy it
         config_files = ['/etc/pdns/pdns.conf', '/etc/powerdns/pdns.conf']
+        config_found = False
         for config_file in config_files:
             if os.path.exists(config_file):
-                preFlightsChecks.stdOut(f"Configuring PowerDNS: {config_file}")
-                
-                # Read existing content
-                try:
-                    with open(config_file, 'r') as f:
-                        content = f.read()
-                except:
-                    content = ""
-                
-                # Add missing configuration if not present
-                config_additions = []
-                if 'gmysql-password=' not in content:
-                    config_additions.append('gmysql-password=cyberpanel')
-                if 'launch=' not in content:
-                    config_additions.append('launch=gmysql')
-                if 'gmysql-host=' not in content:
-                    config_additions.append('gmysql-host=localhost')
-                if 'gmysql-user=' not in content:
-                    config_additions.append('gmysql-user=cyberpanel')
-                if 'gmysql-dbname=' not in content:
-                    config_additions.append('gmysql-dbname=cyberpanel')
-                
-                if config_additions:
-                    with open(config_file, 'a') as f:
-                        f.write('\n# CyberPanel configuration\n')
-                        for config in config_additions:
-                            f.write(config + '\n')
-                
-                # Ensure proper permissions
-                os.chmod(config_file, 0o644)
+                config_found = True
+                preFlightsChecks.stdOut(f"Found PowerDNS config at: {config_file}")
                 break
+
+        if not config_found:
+            # No config file found, need to copy it
+            preFlightsChecks.stdOut("PowerDNS config not found, copying from template...")
+
+            # Determine the correct config path based on distribution
+            if self.distro in [centos, cent8, openeuler]:
+                dnsPath = "/etc/pdns/pdns.conf"
+                os.makedirs("/etc/pdns", exist_ok=True)
+            else:
+                dnsPath = "/etc/powerdns/pdns.conf"
+                os.makedirs("/etc/powerdns", exist_ok=True)
+
+            # Copy the PowerDNS configuration file
+            source_file = os.path.join(self.cwd, "dns-one", "pdns.conf")
+            if not os.path.exists(source_file):
+                source_file = os.path.join(self.cwd, "dns", "pdns.conf")
+
+            if os.path.exists(source_file):
+                import shutil
+                shutil.copy2(source_file, dnsPath)
+                preFlightsChecks.stdOut(f"PowerDNS config copied to {dnsPath}")
+                config_file = dnsPath
+            else:
+                preFlightsChecks.stdOut("[ERROR] PowerDNS template not found", 1)
+                return
+
+        # Now configure the existing or newly copied file
+        if os.path.exists(config_file):
+            preFlightsChecks.stdOut(f"Configuring PowerDNS: {config_file}")
+
+            # Get MySQL password
+            mysqlPassword = getattr(self, 'mysql_Root_password', 'cyberpanel')
+
+            # Read existing content
+            try:
+                with open(config_file, 'r') as f:
+                    content = f.read()
+            except:
+                content = ""
+
+            # Add missing configuration if not present
+            config_additions = []
+            if 'gmysql-password=' not in content:
+                config_additions.append(f'gmysql-password={mysqlPassword}')
+            if 'launch=' not in content:
+                config_additions.append('launch=gmysql')
+            if 'gmysql-host=' not in content:
+                config_additions.append('gmysql-host=localhost')
+            if 'gmysql-user=' not in content:
+                config_additions.append('gmysql-user=cyberpanel')
+            if 'gmysql-dbname=' not in content:
+                config_additions.append('gmysql-dbname=cyberpanel')
+
+            if config_additions:
+                with open(config_file, 'a') as f:
+                    f.write('\n# CyberPanel configuration\n')
+                    for config in config_additions:
+                        f.write(config + '\n')
+
+            # Ensure proper permissions
+            os.chmod(config_file, 0o644)
         
         # Ensure PowerDNS can connect to database
         self.ensurePowerDNSDatabaseAccess()
