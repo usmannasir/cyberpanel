@@ -3343,18 +3343,6 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin/tmp"
             Upgrade.executioner(command, 'chown core code', 0)
 
-            ## Fix ownership and permissions for all public files (must be owned by lscpd for web server access)
-            ## Static files (CSS, JS, images) must NOT have execute permissions - LiteSpeed blocks files with unnecessary execute bits
-            command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/"
-            Upgrade.executioner(command, 'Fix public directory ownership', 0)
-
-            ## Set proper permissions: directories get 755, files get 644 (no execute bit for static files!)
-            command = "find /usr/local/CyberCP/public/ -type d -exec chmod 755 {} \;"
-            Upgrade.executioner(command, 'Fix public directory permissions', 0)
-
-            command = "find /usr/local/CyberCP/public/ -type f -exec chmod 644 {} \;"
-            Upgrade.executioner(command, 'Fix public file permissions', 0)
-
             ## change owner
 
             command = "chown -R root:root /usr/local/lscp"
