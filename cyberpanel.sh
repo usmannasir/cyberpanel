@@ -244,8 +244,20 @@ fix_post_install_issues() {
     mysql -e "GRANT ALL PRIVILEGES ON cyberpanel.* TO 'cyberpanel'@'localhost';" 2>/dev/null || true
     mysql -e "FLUSH PRIVILEGES;" 2>/dev/null || true
     
-    # Set unified password for both CyberPanel and OpenLiteSpeed
-    local unified_password="1234567"
+    # Get or set unified password for both CyberPanel and OpenLiteSpeed
+    local unified_password=""
+    if [ -f "/root/.cyberpanel_password" ]; then
+        unified_password=$(cat /root/.cyberpanel_password 2>/dev/null)
+    fi
+
+    # If no password was captured from installation, use default
+    if [ -z "$unified_password" ]; then
+        unified_password="1234567"
+        # Save password to file for later retrieval
+        echo "$unified_password" > /root/.cyberpanel_password 2>/dev/null || true
+        chmod 600 /root/.cyberpanel_password 2>/dev/null || true
+    fi
+
     echo "    Setting unified password for CyberPanel and OpenLiteSpeed..."
     echo "    Password: $unified_password"
     
@@ -683,14 +695,22 @@ install_cyberpanel_direct() {
     fi
     echo ""
 
-    # Run installer and show live output
+    # Run installer and show live output, capturing the password
     if [ "$DEBUG_MODE" = true ]; then
         ./cyberpanel_installer.sh --debug 2>&1 | tee /var/log/CyberPanel/install_output.log
     else
         ./cyberpanel_installer.sh 2>&1 | tee /var/log/CyberPanel/install_output.log
     fi
-    
+
     local install_exit_code=${PIPESTATUS[0]}
+
+    # Extract the generated password from the installation output
+    local generated_password=$(grep "Panel password:" /var/log/CyberPanel/install_output.log | awk '{print $NF}')
+    if [ -n "$generated_password" ]; then
+        echo "Captured CyberPanel password: $generated_password"
+        echo "$generated_password" > /root/.cyberpanel_password
+        chmod 600 /root/.cyberpanel_password
+    fi
     
     echo ""
     echo "==============================================================================================================="
@@ -773,20 +793,27 @@ install_cyberpanel_direct() {
 # Function to apply fixes
 apply_fixes() {
     print_status "Applying installation fixes..."
-    
+
+    # Get the actual password that was generated during installation
+    local admin_password=""
+    if [ -f "/root/.cyberpanel_password" ]; then
+        admin_password=$(cat /root/.cyberpanel_password 2>/dev/null)
+    fi
+
+    # If no password was captured, generate a new one
+    if [ -z "$admin_password" ]; then
+        admin_password=$(openssl rand -base64 12)
+        echo "$admin_password" > /root/.cyberpanel_password
+        chmod 600 /root/.cyberpanel_password
+        print_status "Generated new admin password: $admin_password"
+    else
+        print_status "Using CyberPanel generated password: $admin_password"
+    fi
+
     # Fix database issues
     systemctl start mariadb 2>/dev/null || true
     systemctl enable mariadb 2>/dev/null || true
-    mysqladmin -u root password '1234567' 2>/dev/null || true
-    
-    # Create cyberpanel database user
-    mysql -u root -p1234567 -e "
-    CREATE DATABASE IF NOT EXISTS cyberpanel;
-    CREATE USER IF NOT EXISTS 'cyberpanel'@'localhost' IDENTIFIED BY 'cyberpanel';
-    GRANT ALL PRIVILEGES ON cyberpanel.* TO 'cyberpanel'@'localhost';
-    FLUSH PRIVILEGES;
-    " 2>/dev/null || true
-    
+
     # Fix LiteSpeed service
     cat > /etc/systemd/system/lsws.service << 'EOF'
 [Unit]
@@ -806,46 +833,26 @@ RestartSec=5
 [Install]
 WantedBy=multi-user.target
 EOF
-    
+
     systemctl daemon-reload
     systemctl enable lsws
     systemctl start lsws
-    
+
     # Set OpenLiteSpeed admin password to match CyberPanel
-    local unified_password="1234567"
     echo "Setting OpenLiteSpeed admin password..."
     if [ -f "/usr/local/lsws/admin/misc/admpass.sh" ]; then
-        /usr/local/lsws/admin/misc/admpass.sh -u admin -p "$unified_password" 2>/dev/null || {
+        /usr/local/lsws/admin/misc/admpass.sh -u admin -p "$admin_password" 2>/dev/null || {
             echo "OpenLiteSpeed password set via alternative method..."
             # Alternative method: directly create htpasswd entry
-            echo "admin:$(openssl passwd -apr1 '$unified_password')" > /usr/local/lsws/admin/htpasswd 2>/dev/null || true
+            echo "admin:$(openssl passwd -apr1 '$admin_password')" > /usr/local/lsws/admin/htpasswd 2>/dev/null || true
         }
-        echo "✓ OpenLiteSpeed admin password set to: $unified_password"
+        echo "✓ OpenLiteSpeed admin password set to: $admin_password"
     fi
-    
-    # Fix CyberPanel service
-    cat > /etc/systemd/system/cyberpanel.service << 'EOF'
-[Unit]
-Description=CyberPanel Web Interface
-After=network.target mariadb.service
 
-[Service]
-Type=simple
-User=root
-Group=root
-WorkingDirectory=/usr/local/CyberCP
-ExecStart=/usr/local/CyberPanel-venv/bin/python manage.py runserver 0.0.0.0:8000
-Restart=always
-RestartSec=5
-Environment=DJANGO_SETTINGS_MODULE=CyberCP.settings
+    # Ensure CyberPanel (lscpd) service is running
+    systemctl enable lscpd 2>/dev/null || true
+    systemctl start lscpd 2>/dev/null || true
 
-[Install]
-WantedBy=multi-user.target
-EOF
-    
-    systemctl daemon-reload
-    systemctl enable cyberpanel
-    
     print_status "SUCCESS: All fixes applied successfully"
 }
 
@@ -856,46 +863,55 @@ show_status_summary() {
     echo "                                    CYBERPANEL INSTALLATION STATUS"
     echo "==============================================================================================================="
     echo ""
-    
+
     echo "CORE SERVICES STATUS:"
     echo "--------------------------------------------------------------------------------"
-    
+
     # Check services
     if systemctl is-active --quiet mariadb; then
         echo "SUCCESS: MariaDB Database - RUNNING"
     else
         echo "ERROR: MariaDB Database - NOT RUNNING"
     fi
-    
+
     if systemctl is-active --quiet lsws; then
         echo "SUCCESS: LiteSpeed Web Server - RUNNING"
     else
         echo "ERROR: LiteSpeed Web Server - NOT RUNNING"
     fi
-    
-    if systemctl is-active --quiet cyberpanel; then
+
+    if systemctl is-active --quiet lscpd; then
         echo "SUCCESS: CyberPanel Application - RUNNING"
     else
         echo "ERROR: CyberPanel Application - NOT RUNNING"
     fi
-    
+
+
     echo ""
     echo "NETWORK PORTS STATUS:"
     echo "--------------------------------------------------------------------------------"
-    
+
     # Check ports
     if netstat -tlnp | grep -q ":8090 "; then
         echo "SUCCESS: Port 8090 (CyberPanel) - LISTENING"
     else
         echo "ERROR: Port 8090 (CyberPanel) - NOT LISTENING"
     fi
-    
+
     if netstat -tlnp | grep -q ":80 "; then
         echo "SUCCESS: Port 80 (HTTP) - LISTENING"
     else
         echo "ERROR: Port 80 (HTTP) - NOT LISTENING"
     fi
-    
+
+    # Get the actual password that was set
+    local admin_password="1234567"  # Default password
+
+    # Check if password was set in /root/.cyberpanel_password (if it exists)
+    if [ -f "/root/.cyberpanel_password" ]; then
+        admin_password=$(cat /root/.cyberpanel_password 2>/dev/null) || admin_password="1234567"
+    fi
+
     echo ""
     echo "SUMMARY:"
     echo "--------------------------------------------------------------------------------"
@@ -903,11 +919,11 @@ show_status_summary() {
     echo ""
     echo "Access CyberPanel at: http://your-server-ip:8090"
     echo "Default username: admin"
-    echo "Default password: 1234567"
+    echo "Default password: $admin_password"
     echo ""
     echo "Access OpenLiteSpeed at: http://your-server-ip:7080"
     echo "Default username: admin"
-    echo "Default password: 1234567 (same as CyberPanel)"
+    echo "Default password: $admin_password (same as CyberPanel)"
     echo ""
     echo "IMPORTANT: Change the default password immediately!"
     echo ""
@@ -1448,7 +1464,7 @@ show_system_status() {
         echo "  ERROR: LiteSpeed - Not Running"
     fi
     
-    if systemctl is-active --quiet cyberpanel; then
+    if systemctl is-active --quiet lscpd; then
         echo "  SUCCESS: CyberPanel - Running"
     else
         echo "  ERROR: CyberPanel - Not Running"
