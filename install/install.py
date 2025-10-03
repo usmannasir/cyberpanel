@@ -5441,13 +5441,20 @@ def main():
     distro = get_distro()
     checks = preFlightsChecks("/usr/local/lsws/", args.publicip, "/usr/local", cwd, "/usr/local/CyberCP", distro,
                               remotemysql, mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport)
-    
+
+    # Check Python version early
+    checks.checkPythonVersion()
+
+    # Setup CyberPanel account early before other operations
+    preFlightsChecks.stdOut("Setting up CyberPanel system account...")
+    checks.setup_account_cyberpanel()
+
     # Apply OS-specific fixes early in the installation process
     checks.apply_os_specific_fixes()
-    
+
     # Ensure MySQL password file is created early to prevent FileNotFoundError
     checks.ensure_mysql_password_file()
-    
+
     checks.mountTemp()
     checks.installQuota()
 
@@ -5463,8 +5470,6 @@ def main():
         mysql = args.mysql
         preFlightsChecks.stdOut("Dobule MySQL instance version will be installed.")
 
-    checks.checkPythonVersion()
-    checks.setup_account_cyberpanel()
     checks.installCyberPanelRepo()
 
     # Note: OS-specific fixes are now applied earlier in the installation process
