@@ -1089,15 +1089,38 @@ class preFlightsChecks:
                 with open(passFile, 'r') as f:
                     content = f.read().strip()
                 if content:
-                    self.stdOut("MySQL password file already exists and has content", 1)
+                    # Fix permissions on existing file
+                    import pwd, grp
+                    try:
+                        uid = pwd.getpwnam('root').pw_uid
+                        gid = grp.getgrnam('cyberpanel').gr_gid
+                        os.chown(passFile, uid, gid)
+                        os.chmod(passFile, 0o640)
+                        self.stdOut("MySQL password file exists - fixed permissions (root:cyberpanel 640)", 1)
+                    except KeyError:
+                        # If cyberpanel group doesn't exist yet, keep current permissions
+                        self.stdOut("MySQL password file already exists and has content", 1)
                     return
             
             # Create or update the password file
             if hasattr(self, 'mysql_Root_password') and self.mysql_Root_password:
                 with open(passFile, 'w') as f:
                     f.write(self.mysql_Root_password)
-                os.chmod(passFile, 0o600)
-                self.stdOut("MySQL password saved to /etc/cyberpanel/mysqlPassword", 1)
+
+                # Set proper ownership and permissions
+                # root:cyberpanel with 640 permissions so cyberpanel group can read
+                import pwd, grp
+                try:
+                    uid = pwd.getpwnam('root').pw_uid
+                    gid = grp.getgrnam('cyberpanel').gr_gid
+                    os.chown(passFile, uid, gid)
+                    os.chmod(passFile, 0o640)  # rw-r----- (owner read/write, group read)
+                    self.stdOut("MySQL password saved with proper permissions (root:cyberpanel 640)", 1)
+                except KeyError as e:
+                    # If cyberpanel group doesn't exist yet, fall back to root-only access
+                    os.chmod(passFile, 0o600)
+                    self.stdOut("MySQL password saved (cyberpanel group not found, using root-only permissions)", 1)
+
                 logging.InstallLog.writeToFile("MySQL password file created successfully")
             else:
                 raise Exception("No MySQL root password available to save")
