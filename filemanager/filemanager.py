@@ -386,9 +386,9 @@ class FileManager:
 
                 command = 'touch %s/public_html/hello.txt' % (self.homePath)
                 result = ProcessUtilities.outputExecutioner(command)
+                result_lower = result.lower()
 
-
-                if result.find('cannot touch') > -1:
+                if 'cannot touch' in result_lower or 'no such file or directory' in result_lower:
                     RemoveOK = 0
 
                     command = 'chattr -R -i %s' % (self.homePath)
@@ -454,8 +454,9 @@ class FileManager:
 
                 command = 'touch %s/public_html/hello.txt' % (self.homePath)
                 result = ProcessUtilities.outputExecutioner(command)
+                result_lower = result.lower()
 
-                if result.find('cannot touch') > -1:
+                if 'cannot touch' in result_lower or 'no such file or directory' in result_lower:
                     RemoveOK = 0
 
                     command = 'chattr -R -i %s' % (self.homePath)
