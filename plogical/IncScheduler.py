@@ -1166,6 +1166,68 @@ Automatic backup failed for %s on %s.
 
             except BaseException as msg:
                 logging.writeToFile('%s. [CalculateAndUpdateDiskUsage:753]' % (str(msg)))
+                
+    @staticmethod
+    def CalculateAndUpdateDiskUsageDomain(domainName):
+
+            website = Websites.objects.get(domain=domainName)
+            try:
+                try:
+                    config = json.loads(website.config)
+                except:
+                    config = {}
+
+                eDomains = website.domains_set.all()
+
+                for eDomain in eDomains:
+                    for email in eDomain.eusers_set.all():
+                        emailPath = '/home/vmail/%s/%s' % (website.domain, email.email.split('@')[0])
+                        email.DiskUsage = virtualHostUtilities.getDiskUsageofPath(emailPath)
+                        email.save()
+                        print('Disk Usage of %s is %s' % (email.email, email.DiskUsage))
+
+                config['DiskUsage'], config['DiskUsagePercentage'] = virtualHostUtilities.getDiskUsage(
+                    "/home/" + website.domain, website.package.diskSpace)
+
+                if website.package.enforceDiskLimits:
+                    spaceString = f'{website.package.diskSpace}M {website.package.diskSpace}M'
+                    command = f'setquota -u {website.externalApp} {spaceString} 0 0 /'
+                    ProcessUtilities.executioner(command)
+                    if config['DiskUsagePercentage'] >= 100:
+                        command = 'chattr -R +i /home/%s/' % (website.domain)
+                        ProcessUtilities.executioner(command)
+                                        
+                        command = 'chattr -R -i /home/%s/logs/' % (website.domain)
+                        ProcessUtilities.executioner(command)
+                        
+                        command = 'chattr -R -i /home/%s/.trash/' % (website.domain)
+                        ProcessUtilities.executioner(command)
+                
+                        command = 'chattr -R -i /home/%s/backup/' % (website.domain)
+                        ProcessUtilities.executioner(command)
+                
+                        command = 'chattr -R -i /home/%s/incbackup/' % (website.domain)
+                        ProcessUtilities.executioner(command)
+                
+                        command = 'chattr -R -i /home/%s/lscache/' % (website.domain)
+                        ProcessUtilities.executioner(command)
+                
+                        command = 'chattr -R -i /home/%s/.cagefs/' % (website.domain)
+                        ProcessUtilities.executioner(command)
+                    else:
+                        command = 'chattr -R -i /home/%s/' % (website.domain)
+                        ProcessUtilities.executioner(command)
+
+                ## Calculate bw usage
+
+                from plogical.vhost import vhost
+                config['bwInMB'], config['bwUsage'] = vhost.findDomainBW(website.domain, int(website.package.bandwidth))
+
+                website.config = json.dumps(config)
+                website.save()
+
+            except BaseException as msg:
+                logging.writeToFile('%s. [CalculateAndUpdateDiskUsage:753]' % (str(msg)))
 
     @staticmethod
     def WPUpdates():
@@ -1743,12 +1805,20 @@ def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
     parser.add_argument('function', help='Specific a function to call!')
     parser.add_argument('--planName', help='Plan name for AWS!')
+    parser.add_argument('--domainName', help='Domain name for Updating Disk Usage Forcefully!')
     args = parser.parse_args()
 
     if args.function == 'UpdateDiskUsageForce':
         IncScheduler.CalculateAndUpdateDiskUsage()
         return 0
-
+        
+    if args.function == 'UpdateDiskUsageForceDomain':
+        if args.domainName:
+            IncScheduler.CalculateAndUpdateDiskUsageDomain(args.domainName)
+        else:
+            print("Error: --domainName is required for UpdateDiskUsageForceDomain")
+        return 0
+        
     if args.function == '30 Minutes' or args.function == '1 Hour' or args.function == '6 Hours' or args.function == '12 Hours' or args.function == '1 Day' or args.function == '3 Days' or args.function == '1 Week':
         # IncScheduler.refresh_access_token()
 
