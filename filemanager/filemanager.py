@@ -320,6 +320,10 @@ class FileManager:
                 command = "touch " + self.returnPathEnclosed(self.data['fileName'])
                 ProcessUtilities.executioner(command, website.externalApp)
                 self.changeOwner(self.returnPathEnclosed(self.data['fileName']))
+                
+                command = "/usr/local/CyberCP/bin/python  /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                ProcessUtilities.executioner(command)                               
+
             except:
                 homePath = '/'
 
@@ -329,6 +333,9 @@ class FileManager:
                 command = "touch " + self.returnPathEnclosed(self.data['fileName'])
                 ProcessUtilities.executioner(command)
                 self.changeOwner(self.returnPathEnclosed(self.data['fileName']))
+                
+                command = "/usr/local/CyberCP/bin/python  /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                ProcessUtilities.executioner(command)                               
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
@@ -352,6 +359,10 @@ class FileManager:
                 ProcessUtilities.executioner(command, website.externalApp)
 
                 self.changeOwner(self.returnPathEnclosed(self.data['folderName']))
+                
+                command = "/usr/local/CyberCP/bin/python  /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                ProcessUtilities.executioner(command)                               
+
             except:
                 homePath = '/'
 
@@ -363,6 +374,9 @@ class FileManager:
 
                 self.changeOwner(self.returnPathEnclosed(self.data['folderName']))
 
+                
+                command = "/usr/local/CyberCP/bin/python  /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                ProcessUtilities.executioner(command)                               
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
@@ -420,6 +434,9 @@ class FileManager:
 
                         command = 'mv %s %s' % (self.returnPathEnclosed(self.data['path'] + '/' + item), trashPath)
                         ProcessUtilities.executioner(command, website.externalApp)
+                
+                command = "/usr/local/CyberCP/bin/python  /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                ProcessUtilities.executioner(command)                               
 
                 if RemoveOK == 0:
                     command = 'chattr -R +i %s' % (self.homePath)
@@ -458,6 +475,9 @@ class FileManager:
                         command = 'rm -rf ' + self.returnPathEnclosed(self.data['path'] + '/' + item)
                         ProcessUtilities.executioner(command)
 
+                
+                command = "/usr/local/CyberCP/bin/python  /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                ProcessUtilities.executioner(command)                               
 
                 if RemoveOK == 0:
                     command = 'chattr -R +i %s' % (self.homePath)
@@ -498,6 +518,9 @@ class FileManager:
                 ProcessUtilities.executioner(command, website.externalApp)
 
                 tItem.delete()
+                
+                command = "/usr/local/CyberCP/bin/python  /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                ProcessUtilities.executioner(command)                               
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
@@ -547,6 +570,10 @@ class FileManager:
                     ProcessUtilities.executioner(command, website.externalApp)
 
                 self.changeOwner(self.data['newPath'])
+                
+                command = "/usr/local/CyberCP/bin/python  /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                ProcessUtilities.executioner(command)                               
+
             except:
 
 
@@ -583,6 +610,9 @@ class FileManager:
                     ProcessUtilities.executioner(command)
 
                 self.changeOwner(self.data['newPath'])
+                
+                command = "/usr/local/CyberCP/bin/python  /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                ProcessUtilities.executioner(command)                               
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
@@ -618,6 +648,9 @@ class FileManager:
                         self.data['basePath'] + '/' + item) + ' ' + self.returnPathEnclosed(
                         self.data['newPath'] + '/' + item)
                     ProcessUtilities.executioner(command, website.externalApp)
+                
+                command = "/usr/local/CyberCP/bin/python  /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                ProcessUtilities.executioner(command)                               
 
                 #self.changeOwner(self.data['newPath'])
 
@@ -647,6 +680,9 @@ class FileManager:
                     ProcessUtilities.executioner(command)
 
                 self.changeOwner(self.data['newPath'])
+                
+                command = "/usr/local/CyberCP/bin/python  /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                ProcessUtilities.executioner(command)                               
 
 
             json_data = json.dumps(finalData)
@@ -838,6 +874,10 @@ class FileManager:
                     os.remove(UploadPath + RanddomFileName)
                 except:
                     pass
+                
+                command = "/usr/local/CyberCP/bin/python  /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                ProcessUtilities.executioner(command)                               
+
             except:
                 pathCheck = '/'
                 command = 'ls -la %s' % (self.data['completePath'])
@@ -860,6 +900,9 @@ class FileManager:
                     os.remove(UploadPath + RanddomFileName)
                 except:
                     pass
+                
+                command = "/usr/local/CyberCP/bin/python  /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                ProcessUtilities.executioner(command)                               
 
 
 
@@ -901,6 +944,9 @@ class FileManager:
                         self.data['fileToExtract']) + ' -C ' + self.returnPathEnclosed(self.data['extractionLocation'])
 
                 ProcessUtilities.executioner(command, website.externalApp)
+                
+                command = "/usr/local/CyberCP/bin/python  /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                ProcessUtilities.executioner(command)                               
 
                 #self.fixPermissions(domainName)
             except:
@@ -922,6 +968,9 @@ class FileManager:
                         self.data['fileToExtract']) + ' -C ' + self.returnPathEnclosed(self.data['extractionLocation'])
 
                 ProcessUtilities.executioner(command)
+                
+                command = "/usr/local/CyberCP/bin/python  /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                ProcessUtilities.executioner(command)                               
 
 
             json_data = json.dumps(finalData)
@@ -963,6 +1012,10 @@ class FileManager:
                 ProcessUtilities.executioner(finalCommand, website.externalApp)
 
                 self.changeOwner(self.data['compressedFileName'])
+                
+                command = "/usr/local/CyberCP/bin/python  /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                ProcessUtilities.executioner(command)                               
+
             except:
                 if self.data['compressionType'] == 'zip':
                     compressedFileName = self.returnPathEnclosed(
@@ -988,6 +1041,9 @@ class FileManager:
                 logging.writeToFile("compress file res %s"%res)
 
                 self.changeOwner(self.data['compressedFileName'])
+                
+                command = "/usr/local/CyberCP/bin/python  /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                ProcessUtilities.executioner(command)                               
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
