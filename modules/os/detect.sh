@@ -206,17 +206,35 @@ detect_ubuntu() {
         PACKAGE_MANAGER="apt"
         print_status "$GREEN" "Detected: Ubuntu 22.04"
         return 0
-    elif echo $OUTPUT | grep -q "Ubuntu 24.04" ; then
-        SERVER_OS="Ubuntu2404"
+    elif echo $OUTPUT | grep -q "Ubuntu 25.10" ; then
+        SERVER_OS="Ubuntu2510"
         OS_FAMILY="debian"
         PACKAGE_MANAGER="apt"
-        print_status "$GREEN" "Detected: Ubuntu 24.04"
+        print_status "$GREEN" "Detected: Ubuntu 25.10"
+        return 0
+    elif echo $OUTPUT | grep -q "Ubuntu 25.04" ; then
+        SERVER_OS="Ubuntu2504"
+        OS_FAMILY="debian"
+        PACKAGE_MANAGER="apt"
+        print_status "$GREEN" "Detected: Ubuntu 25.04"
         return 0
     elif echo $OUTPUT | grep -q "Ubuntu 24.04.3" ; then
         SERVER_OS="Ubuntu24043"
         OS_FAMILY="debian"
         PACKAGE_MANAGER="apt"
         print_status "$GREEN" "Detected: Ubuntu 24.04.3"
+        return 0
+    elif echo $OUTPUT | grep -q "Ubuntu 22.04.5" ; then
+        SERVER_OS="Ubuntu22045"
+        OS_FAMILY="debian"
+        PACKAGE_MANAGER="apt"
+        print_status "$GREEN" "Detected: Ubuntu 22.04.5"
+        return 0
+    elif echo $OUTPUT | grep -q "Ubuntu 24.04" ; then
+        SERVER_OS="Ubuntu2404"
+        OS_FAMILY="debian"
+        PACKAGE_MANAGER="apt"
+        print_status "$GREEN" "Detected: Ubuntu 24.04"
         return 0
     fi
     return 1
@@ -311,7 +329,7 @@ detect_os() {
     else
         print_status "$RED" "❌ Unable to detect your OS..."
         print_status "$YELLOW" "Supported operating systems:"
-        echo -e "• Ubuntu: 18.04, 20.04, 20.10, 22.04, 24.04, 24.04.3"
+        echo -e "• Ubuntu: 18.04, 20.04, 20.10, 22.04, 22.04.5, 24.04, 24.04.3, 25.04, 25.10"
         echo -e "• Debian: 11, 12, 13"
         echo -e "• AlmaLinux: 8, 9, 10"
         echo -e "• RockyLinux: 8, 9"

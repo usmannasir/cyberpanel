@@ -10,10 +10,30 @@ if echo $OUTPUT | grep -q "AlmaLinux 9" ; then
     echo -e "\nDetecting AlmaLinux 9...\n"
     SERVER_OS="AlmaLinux9"
     PKG_MGR="dnf"
+elif echo $OUTPUT | grep -q "AlmaLinux 10" ; then
+    echo -e "\nDetecting AlmaLinux 10...\n"
+    SERVER_OS="AlmaLinux10"
+    PKG_MGR="dnf"
 elif echo $OUTPUT | grep -q "AlmaLinux 8" ; then
     echo -e "\nDetecting AlmaLinux 8...\n"
     SERVER_OS="AlmaLinux8"
     PKG_MGR="yum"
+elif echo $OUTPUT | grep -q "Ubuntu 25.10" ; then
+    echo -e "\nDetecting Ubuntu 25.10...\n"
+    SERVER_OS="Ubuntu2510"
+    PKG_MGR="apt"
+elif echo $OUTPUT | grep -q "Ubuntu 25.04" ; then
+    echo -e "\nDetecting Ubuntu 25.04...\n"
+    SERVER_OS="Ubuntu2504"
+    PKG_MGR="apt"
+elif echo $OUTPUT | grep -q "Ubuntu 24.04.3" ; then
+    echo -e "\nDetecting Ubuntu 24.04.3...\n"
+    SERVER_OS="Ubuntu24043"
+    PKG_MGR="apt"
+elif echo $OUTPUT | grep -q "Ubuntu 22.04.5" ; then
+    echo -e "\nDetecting Ubuntu 22.04.5...\n"
+    SERVER_OS="Ubuntu22045"
+    PKG_MGR="apt"
 elif echo $OUTPUT | grep -q "Ubuntu 22.04" ; then
     echo -e "\nDetecting Ubuntu 22.04...\n"
     SERVER_OS="Ubuntu2204"
@@ -28,8 +48,8 @@ elif echo $OUTPUT | grep -q "CentOS Linux 8" ; then
     PKG_MGR="yum"
 else
     echo -e "\nUnsupported OS detected. This script supports:\n"
-    echo -e "AlmaLinux: 8, 9\n"
-    echo -e "Ubuntu: 20.04, 22.04\n"
+    echo -e "AlmaLinux: 8, 9, 10\n"
+    echo -e "Ubuntu: 20.04, 22.04, 22.04.5, 24.04.3, 25.04, 25.10\n"
     echo -e "CentOS: 8\n"
     exit 1
 fi
