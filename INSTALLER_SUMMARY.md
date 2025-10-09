@@ -92,11 +92,10 @@ bash <(curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/c
 
 ## 🔧 **Fixed Issues:**
 
-### **✅ AlmaLinux 9/10 Support**
+### **✅ AlmaLinux 9 Support**
 - Fixed `aspell` and `libc-client` dependency issues
-- Proper package handling for AlmaLinux 9/10
+- Proper package handling for AlmaLinux 9
 - Smart fallback for missing packages
-- Comprehensive AlmaLinux 10 compatibility fixes
 
 ### **✅ Modular Architecture**
 - Each module under 500 lines (as requested)
