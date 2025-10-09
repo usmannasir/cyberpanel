@@ -1174,6 +1174,42 @@ Automatic backup failed for %s on %s.
                 logging.writeToFile('%s. [CalculateAndUpdateDiskUsage:753]' % (str(msg)))
 
     @staticmethod
+    def CalculateAndUpdateDiskUsageDomain(domainName):
+        """Calculate and update disk usage for a specific domain"""
+        try:
+            website = Websites.objects.get(domain=domainName)
+            try:
+                config = json.loads(website.config)
+            except:
+                config = {}
+
+            # Calculate email disk usage
+            eDomains = website.domains_set.all()
+            for eDomain in eDomains:
+                for email in eDomain.eusers_set.all():
+                    emailPath = '/home/vmail/%s/%s' % (website.domain, email.email.split('@')[0])
+                    email.DiskUsage = virtualHostUtilities.getDiskUsageofPath(emailPath)
+                    email.save()
+                    print('Disk Usage of %s is %s' % (email.email, email.DiskUsage))
+
+            # Calculate website disk usage
+            config['DiskUsage'], config['DiskUsagePercentage'] = virtualHostUtilities.getDiskUsage(
+                "/home/" + website.domain, website.package.diskSpace)
+
+            # Calculate bandwidth usage
+            from plogical.vhost import vhost
+            config['bwInMB'], config['bwUsage'] = vhost.findDomainBW(website.domain, int(website.package.bandwidth))
+
+            # Save configuration
+            website.config = json.dumps(config)
+            website.save()
+
+            return 1
+        except BaseException as msg:
+            logging.writeToFile('Failed to update disk usage for %s: %s. [CalculateAndUpdateDiskUsageDomain]' % (domainName, str(msg)))
+            return 0
+
+    @staticmethod
     def WPUpdates():
         from cloudAPI.models import WPDeployments
         for wp in WPDeployments.objects.all():
@@ -1749,10 +1785,18 @@ def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
     parser.add_argument('function', help='Specific a function to call!')
     parser.add_argument('--planName', help='Plan name for AWS!')
+    parser.add_argument('--domainName', help='Domain name for UpdateDiskUsageForceDomain')
     args = parser.parse_args()
 
     if args.function == 'UpdateDiskUsageForce':
         IncScheduler.CalculateAndUpdateDiskUsage()
+        return 0
+
+    if args.function == 'UpdateDiskUsageForceDomain':
+        if args.domainName:
+            IncScheduler.CalculateAndUpdateDiskUsageDomain(args.domainName)
+        else:
+            print('Error: --domainName argument is required for UpdateDiskUsageForceDomain')
         return 0
 
     if args.function == '30 Minutes' or args.function == '1 Hour' or args.function == '6 Hours' or args.function == '12 Hours' or args.function == '1 Day' or args.function == '3 Days' or args.function == '1 Week':
