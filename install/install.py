@@ -169,11 +169,6 @@ class preFlightsChecks:
         os_info = self.detect_os_info()
         return os_info['name'] == 'almalinux' and os_info['major_version'] == 9
 
-    def is_almalinux10(self):
-        """Check if running on AlmaLinux 10"""
-        os_info = self.detect_os_info()
-        return os_info['name'] == 'almalinux' and os_info['major_version'] == 10
-
     def is_ubuntu(self):
         """Check if running on Ubuntu"""
         os_info = self.detect_os_info()
@@ -197,7 +192,7 @@ class preFlightsChecks:
         if os_info['name'] == 'almalinux' and os_info['major_version'] == 9:
             fixes.extend(['mariadb', 'services', 'litespeed', 'mysql_gpg'])
         elif os_info['name'] == 'almalinux' and os_info['major_version'] == 10:
-            fixes.extend(['mariadb', 'services', 'litespeed', 'mysql_gpg'])
+            fixes.extend(['mariadb', 'services', 'litespeed'])
         elif os_info['name'] == 'rocky' and os_info['major_version'] >= 8:
             fixes.extend(['mariadb', 'services'])
         elif os_info['name'] == 'rhel' and os_info['major_version'] >= 8:
@@ -321,10 +316,10 @@ class preFlightsChecks:
                 if not installed:
                     self.stdOut(f"Package {package} not available, trying alternatives...", 1)
                     
-                    # For AlmaLinux 9/10, try enabling PowerTools repository first
-                    if self.distro == openeuler and os_info['name'] == 'almalinux' and os_info['major_version'] in ['9', '10']:
+                    # For AlmaLinux 9, try enabling PowerTools repository first
+                    if self.distro == openeuler and os_info['name'] == 'almalinux' and os_info['major_version'] == '9':
                         try:
-                            self.stdOut("Enabling AlmaLinux 9/10 PowerTools repository...", 1)
+                            self.stdOut("Enabling AlmaLinux 9 PowerTools repository...", 1)
                             self.call("dnf config-manager --set-enabled powertools", self.distro, "Enable PowerTools", "Enable PowerTools", 1, 0, os.EX_OSERR)
                             # Try installing again with PowerTools enabled
                             command = f"dnf install -y {package} {dev_package}"
@@ -750,92 +745,6 @@ class preFlightsChecks:
         except Exception as e:
             self.stdOut(f"Error in fix_debian_specific: {str(e)}", 0)
             return False
-
-    def fix_almalinux10_comprehensive(self):
-        """Apply comprehensive AlmaLinux 10 fixes"""
-        if not self.is_almalinux10():
-            return
-        
-        self.stdOut("Applying comprehensive AlmaLinux 10 fixes...", 1)
-        
-        try:
-            # Update system packages
-            self.stdOut("Updating system packages...", 1)
-            command = "dnf update -y"
-            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-            
-            # Install essential build tools and dependencies
-            self.stdOut("Installing essential build tools...", 1)
-            command = "dnf groupinstall -y 'Development Tools'"
-            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-            
-            command = "dnf install -y epel-release"
-            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-            
-            # Install AlmaLinux 10 compatibility packages (same as AlmaLinux 9)
-            self.stdOut("Installing AlmaLinux 10 compatibility packages...", 1)
-            compat_packages = [
-                "libxcrypt-compat",
-                "libnsl",
-                "compat-openssl11",
-                "compat-openssl11-devel"
-            ]
-            
-            for package in compat_packages:
-                command = f"dnf install -y {package}"
-                self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-            
-            # Install PHP dependencies that are missing (with AlmaLinux 10 compatibility)
-            self.stdOut("Installing PHP dependencies...", 1)
-            
-            # Base packages that should work on all systems
-            base_deps = [
-                "ImageMagick", "ImageMagick-devel",
-                "gd", "gd-devel",
-                "libicu", "libicu-devel",
-                "oniguruma", "oniguruma-devel",
-                "aspell", "aspell-devel",
-                "freetype-devel",
-                "libjpeg-turbo-devel",
-                "libpng-devel",
-                "libwebp-devel",
-                "libXpm-devel",
-                "libzip-devel",
-                "libxml2-devel",
-                "openssl-devel",
-                "curl-devel",
-                "libxslt-devel",
-                "sqlite-devel",
-                "readline-devel",
-                "libedit-devel",
-                "pcre2-devel",
-                "re2c",
-                "libargon2-devel",
-                "libsodium-devel"
-            ]
-            
-            for package in base_deps:
-                command = f"dnf install -y {package}"
-                self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-            
-            # Install MariaDB development packages
-            self.stdOut("Installing MariaDB development packages...", 1)
-            mariadb_deps = [
-                "mariadb-devel",
-                "mariadb-connector-c-devel"
-            ]
-            
-            for package in mariadb_deps:
-                command = f"dnf install -y {package}"
-                self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-            
-            self.stdOut("✅ AlmaLinux 10 fixes applied successfully", 1)
-            
-        except Exception as e:
-            self.stdOut(f"❌ Error applying AlmaLinux 10 fixes: {e}", 1)
-            return False
-        
-        return True
 
     def apply_os_specific_fixes(self):
         """Apply OS-specific fixes based on detected OS"""
@@ -1986,7 +1895,7 @@ class preFlightsChecks:
             # Use compatible repository version for RHEL-based systems
             # AlmaLinux 9 is compatible with el8 repositories
             os_info = self.detect_os_info()
-            if os_info['name'] in ['almalinux', 'rocky', 'rhel'] and os_info['major_version'] in ['8', '9', '10']:
+            if os_info['name'] in ['almalinux', 'rocky', 'rhel'] and os_info['major_version'] in ['8', '9']:
                 command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
             else:
                 command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
@@ -4532,7 +4441,7 @@ milter_default_action = accept
                     # Use compatible repository version for RHEL-based systems
                     # AlmaLinux 9 is compatible with el8 repositories
                     os_info = self.detect_os_info()
-                    if os_info['name'] in ['almalinux', 'rocky', 'rhel'] and os_info['major_version'] in ['8', '9', '10']:
+                    if os_info['name'] in ['almalinux', 'rocky', 'rhel'] and os_info['major_version'] in ['8', '9']:
                         repo_command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
                     else:
                         repo_command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
@@ -5589,11 +5498,9 @@ def main():
     # Note: OS-specific fixes are now applied earlier in the installation process
     # The installCyberPanel.Main() functionality has been integrated into the main installation flow
 
-    # Apply AlmaLinux 9/10 comprehensive fixes first if needed
+    # Apply AlmaLinux 9 comprehensive fixes first if needed
     if checks.is_almalinux9():
         checks.fix_almalinux9_comprehensive()
-    elif checks.is_almalinux10():
-        checks.fix_almalinux10_comprehensive()
 
     # Install core services in the correct order
     checks.installLiteSpeed(ent, serial)
