@@ -660,16 +660,21 @@ install_cyberpanel_direct() {
     cd "$temp_dir" || return 1
     
     # Download the working CyberPanel installation files
-    echo "Downloading from: https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/cyberpanel.sh"
-    # Try development branch first, fallback to stable
-    local installer_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/cyberpanel.sh"
+    echo "Downloading from: https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel.sh"
+    # Default to stable branch, but use development if BRANCH_NAME is set
+    local installer_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel.sh"
     
-    # Test if the development branch exists by trying to download a small file
-    if curl -s -f -o /dev/null "https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/README.md"; then
-        echo "    Using development branch (v2.5.5-dev)"
+    # If BRANCH_NAME is set to v2.5.5-dev, try to use it
+    if [ "$BRANCH_NAME" = "v2.5.5-dev" ]; then
+        echo "    Attempting to use development branch (v2.5.5-dev)..."
+        if curl -s -f -o /dev/null "https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/README.md"; then
+            echo "    Using development branch (v2.5.5-dev)"
+            installer_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/cyberpanel.sh"
+        else
+            echo "    Development branch not available, falling back to stable"
+        fi
     else
-        echo "    Development branch not available, falling back to stable"
-        installer_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel.sh"
+        echo "    Using stable branch"
     fi
     
     curl --silent -o cyberpanel_installer.sh "$installer_url" 2>/dev/null
@@ -682,9 +687,9 @@ install_cyberpanel_direct() {
     
     # Download the install directory
     echo "Downloading installation files..."
-    local archive_url="https://github.com/usmannasir/cyberpanel/archive/v2.5.5-dev.tar.gz"
-    if [ "$installer_url" = "https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel.sh" ]; then
-        archive_url="https://github.com/usmannasir/cyberpanel/archive/stable.tar.gz"
+    local archive_url="https://github.com/usmannasir/cyberpanel/archive/stable.tar.gz"
+    if [ "$BRANCH_NAME" = "v2.5.5-dev" ] && [ "$installer_url" = "https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/cyberpanel.sh" ]; then
+        archive_url="https://github.com/usmannasir/cyberpanel/archive/v2.5.5-dev.tar.gz"
     fi
     
     curl --silent -L -o install_files.tar.gz "$archive_url" 2>/dev/null
@@ -701,12 +706,12 @@ install_cyberpanel_direct() {
     fi
     
     # Copy install directory to current location
-    if [ "$installer_url" = "https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel.sh" ]; then
-        cp -r cyberpanel-stable/install . 2>/dev/null || true
-        cp -r cyberpanel-stable/install.sh . 2>/dev/null || true
-    else
+    if [ "$BRANCH_NAME" = "v2.5.5-dev" ] && [ "$installer_url" = "https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/cyberpanel.sh" ]; then
         cp -r cyberpanel-v2.5.5-dev/install . 2>/dev/null || true
         cp -r cyberpanel-v2.5.5-dev/install.sh . 2>/dev/null || true
+    else
+        cp -r cyberpanel-stable/install . 2>/dev/null || true
+        cp -r cyberpanel-stable/install.sh . 2>/dev/null || true
     fi
     
     echo "  ✓ CyberPanel installation files downloaded"
