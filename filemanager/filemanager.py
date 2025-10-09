@@ -320,6 +320,10 @@ class FileManager:
                 command = "touch " + self.returnPathEnclosed(self.data['fileName'])
                 ProcessUtilities.executioner(command, website.externalApp)
                 self.changeOwner(self.returnPathEnclosed(self.data['fileName']))
+
+                ## Update disk usage in background
+                command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                ProcessUtilities.popenExecutioner(command)
             except:
                 homePath = '/'
 
@@ -352,6 +356,10 @@ class FileManager:
                 ProcessUtilities.executioner(command, website.externalApp)
 
                 self.changeOwner(self.returnPathEnclosed(self.data['folderName']))
+
+                ## Update disk usage in background
+                command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                ProcessUtilities.popenExecutioner(command)
             except:
                 homePath = '/'
 
@@ -431,6 +439,10 @@ class FileManager:
                             if result.find('cannot') > -1 or result.find('Permission denied') > -1:
                                 return self.ajaxPre(0, f'Failed to delete {item}: {result}')
                         logging.CyberCPLogFileWriter.writeToFile(f"Successfully deleted: {itemPath}")
+
+                        ## Update disk usage in background
+                        command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                        ProcessUtilities.popenExecutioner(command)
                     else:
                         # Move to trash
                         trashPath = '%s/.trash' % (self.homePath)
@@ -460,6 +472,10 @@ class FileManager:
                             if result.find('cannot') > -1 or result.find('Permission denied') > -1:
                                 return self.ajaxPre(0, f'Failed to move {item} to trash: {result}')
                         logging.CyberCPLogFileWriter.writeToFile(f"Successfully moved to trash: {itemPath}")
+
+                        ## Update disk usage in background
+                        command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                        ProcessUtilities.popenExecutioner(command)
 
                 if RemoveOK == 0:
                     logging.CyberCPLogFileWriter.writeToFile(f"Restoring chattr +i flags for {self.homePath}")
@@ -590,6 +606,10 @@ class FileManager:
 
                 tItem.delete()
 
+            ## Update disk usage in background
+            command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+            ProcessUtilities.popenExecutioner(command)
+
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
 
@@ -622,6 +642,11 @@ class FileManager:
                         self.data['newPath'])
                     ProcessUtilities.executioner(command, website.externalApp)
                     self.changeOwner(self.data['newPath'])
+
+                    ## Update disk usage in background
+                    command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                    ProcessUtilities.popenExecutioner(command)
+
                     json_data = json.dumps(finalData)
                     return HttpResponse(json_data)
 
@@ -638,6 +663,10 @@ class FileManager:
                     ProcessUtilities.executioner(command, website.externalApp)
 
                 self.changeOwner(self.data['newPath'])
+
+                ## Update disk usage in background
+                command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                ProcessUtilities.popenExecutioner(command)
             except:
 
 
@@ -657,6 +686,11 @@ class FileManager:
                         self.data['newPath'])
                     ProcessUtilities.executioner(command,)
                     self.changeOwner(self.data['newPath'])
+
+                    ## Update disk usage in background
+                    command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                    ProcessUtilities.popenExecutioner(command)
+
                     json_data = json.dumps(finalData)
                     return HttpResponse(json_data)
 
@@ -674,6 +708,10 @@ class FileManager:
                     ProcessUtilities.executioner(command)
 
                 self.changeOwner(self.data['newPath'])
+
+                ## Update disk usage in background
+                command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                ProcessUtilities.popenExecutioner(command)
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
@@ -710,6 +748,10 @@ class FileManager:
                         self.data['newPath'] + '/' + item)
                     ProcessUtilities.executioner(command, website.externalApp)
 
+                ## Update disk usage in background
+                command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                ProcessUtilities.popenExecutioner(command)
+
                 #self.changeOwner(self.data['newPath'])
 
                 #self.fixPermissions(domainName)
@@ -738,6 +780,10 @@ class FileManager:
                     ProcessUtilities.executioner(command)
 
                 self.changeOwner(self.data['newPath'])
+
+                ## Update disk usage in background
+                command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                ProcessUtilities.popenExecutioner(command)
 
 
             json_data = json.dumps(finalData)
@@ -925,6 +971,11 @@ class FileManager:
                 ProcessUtilities.executioner(command, website.externalApp)
 
                 self.changeOwner(self.returnPathEnclosed(self.data['completePath'] + '/' + myfile.name))
+
+                ## Update disk usage in background
+                command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                ProcessUtilities.popenExecutioner(command)
+
                 try:
                     os.remove(UploadPath + RanddomFileName)
                 except:
@@ -947,6 +998,11 @@ class FileManager:
                 ProcessUtilities.executioner(command)
 
                 self.changeOwner(self.returnPathEnclosed(self.data['completePath'] + '/' + myfile.name))
+
+                ## Update disk usage in background
+                command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                ProcessUtilities.popenExecutioner(command)
+
                 try:
                     os.remove(UploadPath + RanddomFileName)
                 except:
@@ -993,6 +1049,10 @@ class FileManager:
 
                 ProcessUtilities.executioner(command, website.externalApp)
 
+                ## Update disk usage in background
+                command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                ProcessUtilities.popenExecutioner(command)
+
                 #self.fixPermissions(domainName)
             except:
 
@@ -1013,6 +1073,10 @@ class FileManager:
                         self.data['fileToExtract']) + ' -C ' + self.returnPathEnclosed(self.data['extractionLocation'])
 
                 ProcessUtilities.executioner(command)
+
+                ## Update disk usage in background
+                command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                ProcessUtilities.popenExecutioner(command)
 
 
             json_data = json.dumps(finalData)
@@ -1054,6 +1118,10 @@ class FileManager:
                 ProcessUtilities.executioner(finalCommand, website.externalApp)
 
                 self.changeOwner(self.data['compressedFileName'])
+
+                ## Update disk usage in background
+                command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                ProcessUtilities.popenExecutioner(command)
             except:
                 if self.data['compressionType'] == 'zip':
                     compressedFileName = self.returnPathEnclosed(
@@ -1079,6 +1147,10 @@ class FileManager:
                 logging.writeToFile("compress file res %s"%res)
 
                 self.changeOwner(self.data['compressedFileName'])
+
+                ## Update disk usage in background
+                command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
+                ProcessUtilities.popenExecutioner(command)
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
