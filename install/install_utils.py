@@ -34,6 +34,8 @@ def FetchCloudLinuxAlmaVersionVersion():
             return 'al-87'
         elif (data.find('AlmaLinux') > -1 or data.find('almalinux') > -1) and (data.find('9.4') > -1 or data.find('9.3') > -1 or data.find('Shamrock Pampas') > -1 or data.find('Seafoam Ocelot') > -1 or data.find('VERSION="9.') > -1):
             return 'al-93'
+        elif (data.find('AlmaLinux') > -1 or data.find('almalinux') > -1) and (data.find('10.0') > -1 or data.find('Purple Lion') > -1 or data.find('VERSION="10.') > -1):
+            return 'al-10'
         elif data.find('CentOS Stream 9') > -1:
             return 'el-9'
         elif data.find('CentOS Linux 9') > -1:
@@ -42,8 +44,6 @@ def FetchCloudLinuxAlmaVersionVersion():
             return 'el-9'
         elif data.find('Red Hat Enterprise Linux 9') > -1:
             return 'el-9'
-        elif (data.find('AlmaLinux') > -1 or data.find('almalinux') > -1) and (data.find('10.0') > -1 or data.find('Purple Lion') > -1 or data.find('VERSION="10.') > -1):
-            return 'al-100'
     else:
         return -1
 

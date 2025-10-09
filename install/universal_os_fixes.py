@@ -21,7 +21,7 @@ class UniversalOSFixes:
         
         # Supported OS matrix
         self.supported_os = {
-            'ubuntu': ['24.04', '22.04', '20.04'],
+            'ubuntu': ['25.10', '25.04', '24.04.3', '24.04', '22.04.5', '22.04', '20.04'],
             'debian': ['13', '12', '11'],
             'almalinux': ['10', '9', '8'],
             'rocky': ['9', '8'],
