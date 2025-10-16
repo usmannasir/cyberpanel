@@ -180,6 +180,48 @@ app.controller('modifyUser', function ($scope, $http) {
         }
     };
     
+    $scope.regenerateSecret = function() {
+        if (!$scope.accountUsername) {
+            alert('Please select a user first.');
+            return;
+        }
+        
+        if (!confirm('Are you sure you want to regenerate the 2FA secret? This will generate a new secret key and you will need to update your authenticator app.')) {
+            return;
+        }
+        
+        var url = "/users/regenerateTwoFASecret";
+        var data = {
+            accountUsername: $scope.accountUsername
+        };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        
+        $http.post(url, data, config).then(function(response) {
+            if (response.data.status === 1) {
+                // Update the secret key and formatted version
+                $scope.secretKey = response.data.secretKey;
+                $scope.formattedSecretKey = response.data.secretKey.match(/.{1,4}/g).join(' ');
+                
+                // Update the QR code with new provisioning URI
+                qrCode.set({
+                    value: response.data.otpauth
+                });
+                
+                // Show success message
+                alert('2FA secret has been successfully regenerated! Please update your authenticator app with the new QR code or secret key.');
+            } else {
+                alert('Error regenerating 2FA secret: ' + response.data.error_message);
+            }
+        }, function(error) {
+            console.error('Error regenerating 2FA secret:', error);
+            alert('Failed to regenerate 2FA secret. Please try again.');
+        });
+    };
+    
     // WebAuthn Functions
     $scope.loadWebAuthnData = function() {
         if (!$scope.accountUsername) return;
