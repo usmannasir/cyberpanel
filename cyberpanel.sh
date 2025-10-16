@@ -572,31 +572,6 @@ cleanup_existing_cyberpanel() {
     echo "  ✅ Cleanup completed"
 }
 
-# Function to install CyberPanel from local repository
-install_cyberpanel_local() {
-    echo "  🔄 Using local CyberPanel repository..."
-    
-    # Check if we're running from a cloned repository
-    if [ -d "install" ] && [ -f "install/install.py" ]; then
-        echo "  ✓ Found local installation files"
-        echo "  🔄 Starting CyberPanel installation from local repository..."
-        echo ""
-        
-        # Run the Python installer directly
-        if [ "$DEBUG_MODE" = true ]; then
-            python3 install/install.py --debug
-        else
-            python3 install/install.py
-        fi
-        
-        return $?
-    else
-        echo "  ⚠️  Local installation files not found"
-        echo "  🔄 Falling back to download method..."
-        install_cyberpanel_direct
-    fi
-}
-
 # Function to install CyberPanel directly using the working method
 install_cyberpanel_direct() {
     echo "  🔄 Downloading CyberPanel installation files..."
@@ -636,20 +611,15 @@ install_cyberpanel_direct() {
     
     # Download the working CyberPanel installation files
     echo "Downloading from: https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel.sh"
-    # Default to stable branch, but use development if BRANCH_NAME is set
-    local installer_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel.sh"
+    # Try development branch first, fallback to stable
+    local installer_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/cyberpanel.sh"
     
-    # If BRANCH_NAME is set to v2.5.5-dev, try to use it
-    if [ "$BRANCH_NAME" = "v2.5.5-dev" ]; then
-        echo "    Attempting to use development branch (v2.5.5-dev)..."
-        if curl -s -f -o /dev/null "https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/README.md"; then
-            echo "    Using development branch (v2.5.5-dev)"
-            installer_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/cyberpanel.sh"
-        else
-            echo "    Development branch not available, falling back to stable"
-        fi
+    # Test if the development branch exists
+    if ! curl -s --head "$installer_url" | grep -q "200 OK"; then
+        echo "    Development branch not available, falling back to stable"
+        installer_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel.sh"
     else
-        echo "    Using stable branch"
+        echo "    Using development branch (v2.5.5-dev)"
     fi
     
     curl --silent -o cyberpanel_installer.sh "$installer_url" 2>/dev/null
@@ -662,9 +632,9 @@ install_cyberpanel_direct() {
     
     # Download the install directory
     echo "Downloading installation files..."
-    local archive_url="https://github.com/usmannasir/cyberpanel/archive/stable.tar.gz"
-    if [ "$BRANCH_NAME" = "v2.5.5-dev" ] && [ "$installer_url" = "https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/cyberpanel.sh" ]; then
-        archive_url="https://github.com/usmannasir/cyberpanel/archive/v2.5.5-dev.tar.gz"
+    local archive_url="https://github.com/usmannasir/cyberpanel/archive/v2.5.5-dev.tar.gz"
+    if [ "$installer_url" = "https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel.sh" ]; then
+        archive_url="https://github.com/usmannasir/cyberpanel/archive/stable.tar.gz"
     fi
     
     curl --silent -L -o install_files.tar.gz "$archive_url" 2>/dev/null
@@ -681,12 +651,12 @@ install_cyberpanel_direct() {
     fi
     
     # Copy install directory to current location
-    if [ "$BRANCH_NAME" = "v2.5.5-dev" ] && [ "$installer_url" = "https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/cyberpanel.sh" ]; then
-        cp -r cyberpanel-v2.5.5-dev/install . 2>/dev/null || true
-        cp -r cyberpanel-v2.5.5-dev/install.sh . 2>/dev/null || true
-    else
+    if [ "$installer_url" = "https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel.sh" ]; then
         cp -r cyberpanel-stable/install . 2>/dev/null || true
         cp -r cyberpanel-stable/install.sh . 2>/dev/null || true
+    else
+        cp -r cyberpanel-v2.5.5-dev/install . 2>/dev/null || true
+        cp -r cyberpanel-v2.5.5-dev/install.sh . 2>/dev/null || true
     fi
     
     echo "  ✓ CyberPanel installation files downloaded"
@@ -727,9 +697,9 @@ install_cyberpanel_direct() {
 
     # Run installer and show live output, capturing the password
     if [ "$DEBUG_MODE" = true ]; then
-        ./cyberpanel_installer.sh --debug --branch "$BRANCH_NAME" 2>&1 | tee /var/log/CyberPanel/install_output.log
+        ./cyberpanel_installer.sh --debug 2>&1 | tee /var/log/CyberPanel/install_output.log
     else
-        ./cyberpanel_installer.sh --branch "$BRANCH_NAME" 2>&1 | tee /var/log/CyberPanel/install_output.log
+        ./cyberpanel_installer.sh 2>&1 | tee /var/log/CyberPanel/install_output.log
     fi
 
     local install_exit_code=${PIPESTATUS[0]}
@@ -2035,17 +2005,10 @@ start_reinstall() {
     
     # Install CyberPanel
     echo "Step 5/6: Installing CyberPanel..."
-    # Try local installation first if available
-    if [ -d "install" ] && [ -f "install/install.py" ]; then
-        install_cyberpanel_local
-    else
-        install_cyberpanel_direct
-    fi
-    
-    if [ $? -ne 0 ]; then
+    if ! install_cyberpanel; then
         print_status "ERROR: CyberPanel installation failed"
-        exit 1
-    fi
+  exit 1
+fi
     echo ""
     
     # Apply fixes
@@ -2083,14 +2046,7 @@ start_installation() {
     
     # Install CyberPanel
     echo "Step 3/6: Installing CyberPanel..."
-    # Try local installation first if available
-    if [ -d "install" ] && [ -f "install/install.py" ]; then
-        install_cyberpanel_local
-    else
-        install_cyberpanel_direct
-    fi
-    
-    if [ $? -ne 0 ]; then
+    if ! install_cyberpanel; then
         print_status "ERROR: CyberPanel installation failed"
         echo ""
         echo "Would you like to see troubleshooting help? (y/n) [y]: "
@@ -2309,14 +2265,7 @@ main() {
                 install_dependencies
                 
                 # Install CyberPanel
-                # Try local installation first if available
-                if [ -d "install" ] && [ -f "install/install.py" ]; then
-                    install_cyberpanel_local
-                else
-                    install_cyberpanel_direct
-                fi
-                
-                if [ $? -ne 0 ]; then
+                if ! install_cyberpanel; then
                     print_status "ERROR: CyberPanel installation failed"
                     echo ""
                     echo "Would you like to see troubleshooting help? (y/n) [y]: "
