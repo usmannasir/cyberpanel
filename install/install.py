@@ -4503,6 +4503,17 @@ milter_default_action = accept
                     command = 'DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp85 lsphp85-*'
                 
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+            # Install PHP 8.6
+            if not os.path.exists('/usr/local/lsws/lsphp86/bin/php'):
+                logging.InstallLog.writeToFile("[setupPHPSymlink] PHP 8.6 not found, ensuring it's installed...")
+                
+                if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
+                    command = 'dnf install lsphp86 lsphp86-* -y --skip-broken --nobest'
+                else:
+                    command = 'DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp86 lsphp86-*'
+                
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             
             # Remove existing PHP symlink if it exists
             if os.path.exists('/usr/bin/php'):
@@ -4510,8 +4521,8 @@ milter_default_action = accept
 
             # Create symlink to the best available PHP version
             # Try to find and use the best available PHP version
-            # Priority: 85 (beta), 84, 83, 82, 81, 80, 74 (newest to oldest)
-            php_versions = ['85', '84', '83', '82', '81', '80', '74']
+            # Priority: 86, 85, 84, 83, 82, 81, 80, 74 (newest to oldest, 7.4+ only for AlmaLinux 8+ compatibility)
+            php_versions = ['86', '85', '84', '83', '82', '81', '80', '74']
             php_symlink_source = None
             
             for php_ver in php_versions:
@@ -4561,8 +4572,8 @@ milter_default_action = accept
                 logging.InstallLog.writeToFile("[setup_lsphp_symlink] Removed existing lsphp file/symlink")
 
             # Try to find and use the best available PHP version
-            # Priority: 85 (beta), 84, 83, 82, 81, 80, 74 (newest to oldest)
-            php_versions = ['85', '84', '83', '82', '81', '80', '74']
+            # Priority: 86, 85, 84, 83, 82, 81, 80, 74 (newest to oldest)
+            php_versions = ['86', '85', '84', '83', '82', '81', '80', '74']
             lsphp_source = None
 
             for php_ver in php_versions:
