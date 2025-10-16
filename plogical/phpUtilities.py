@@ -372,7 +372,10 @@ class phpUtilities:
                 centOSPHP = 'php85'
                 ubuntuPHP = 'php8.5'
 
-
+            phpPath = ApacheVhost.DecidePHPPath('86', virtualHostName)
+            if os.path.exists(phpPath):
+                centOSPHP = 'php86'
+                ubuntuPHP = 'php8.6'
 
             ######
 
