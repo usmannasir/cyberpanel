@@ -3630,19 +3630,16 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                     content = f.read()
                     if 'release 9' in content or 'release 10' in content:
                         Upgrade.stdOut("AlmaLinux 9+ detected - checking available PHP versions", 1)
-                        # AlmaLinux 9+ doesn't have PHP 7.1, 7.2, 7.3
-                        php_versions = ['74', '80', '81', '82', '83', '84', '85']
+                        # AlmaLinux 9+ and 8+ only support PHP 7.4+
+                        php_versions = ['74', '80', '81', '82', '83', '84', '85', '86']
                     else:
-                        php_versions = ['71', '72', '73', '74', '80', '81', '82', '83', '84', '85']
+                        php_versions = ['74', '80', '81', '82', '83', '84', '85', '86']
             except:
-                php_versions = ['71', '72', '73', '74', '80', '81', '82', '83', '84', '85']
+                php_versions = ['74', '80', '81', '82', '83', '84', '85', '86']
         else:
-            # Check other OS versions
+            # Check other OS versions - all modern systems support PHP 7.4+
             os_info = Upgrade.findOperatingSytem()
-            if os_info in [Ubuntu24, CENTOS8, Debian13]:
-                php_versions = ['74', '80', '81', '82', '83', '84', '85']
-            else:
-                php_versions = ['71', '72', '73', '74', '80', '81', '82', '83', '84', '85']
+            php_versions = ['74', '80', '81', '82', '83', '84', '85', '86']
         
         # Check availability of each version
         available_versions = []
@@ -4119,8 +4116,8 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                             package_list = f"lsphp{version} " + " ".join([f"lsphp{version}-{ext}" for ext in extensions])
                             command = f"yum install -y {package_list}"
                             Upgrade.executioner(command, f'Install PHP {version}', 0)
-                    elif version in ['80', '81', '82', '83', '84', '85']:
-                        # PHP 8.x versions (including 8.5 beta)
+                    elif version in ['80', '81', '82', '83', '84', '85', '86']:
+                        # PHP 8.x versions (including 8.5 and 8.6)
                         if Upgrade.installedOutput.find(f'lsphp{version}') == -1:
                             command = f"yum install lsphp{version}* -y"
                             subprocess.call(command, shell=True)
@@ -4153,6 +4150,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             os.system(command)
 
             command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp85*'
+            os.system(command)
+
+            command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp86*'
             os.system(command)
 
         CentOSPath = '/etc/redhat-release'
@@ -4726,8 +4726,8 @@ slowlog = /var/log/php{version}-fpm-slow.log
         This ensures that ImunifyAV/Imunify360 installation will work properly.
         """
         try:
-            # Define all possible PHP versions
-            php_versions = ['5.4', '5.5', '5.6', '7.0', '7.1', '7.2', '7.3', '7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5']
+            # Define all possible PHP versions (7.4+ for AlmaLinux 8+ compatibility)
+            php_versions = ['7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5', '8.6']
             
             restarted_count = 0
             total_count = 0
@@ -4774,8 +4774,8 @@ slowlog = /var/log/php{version}-fpm-slow.log
     def setupPHPSymlink():
         try:
             # Try to find available PHP version (prioritize modern stable versions)
-            # Priority: 8.3 (recommended), 8.2, 8.4, 8.5, 8.1, 8.0, then older versions
-            php_versions = ['83', '82', '84', '85', '81', '80', '74', '73', '72', '71']
+            # Priority: 8.3 (recommended), 8.2, 8.6, 8.5, 8.4, 8.1, 8.0, 7.4 (AlmaLinux 8+ compatible only)
+            php_versions = ['83', '82', '86', '85', '84', '81', '80', '74']
             selected_php = None
             
             for version in php_versions:
@@ -4995,8 +4995,8 @@ slowlog = /var/log/php{version}-fpm-slow.log
         except:
             pass
 
-        # Try to find available PHP binary in order of preference (modern stable first)
-        php_versions = ['83', '82', '84', '85', '81', '80', '74', '73', '72', '71']
+        # Try to find available PHP binary in order of preference (modern stable first, AlmaLinux 8+ compatible)
+        php_versions = ['83', '82', '86', '85', '84', '81', '80', '74']
         php_binary_found = False
         
         for version in php_versions:
