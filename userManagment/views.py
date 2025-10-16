@@ -504,11 +504,22 @@ def saveModifications(request):
             user.lastName = lastName
             user.email = email
             user.type = 0
+            
+            # Check if 2FA is being enabled (transition from 0 to 1)
+            was_2fa_disabled = user.twoFA == 0
             user.twoFA = twofa
 
             # If 2FA is being disabled, clear the secret key
             if twofa == 0:
                 user.secretKey = 'None'
+            # If 2FA is being enabled (transition from disabled to enabled), always generate a new secret
+            elif twofa == 1 and was_2fa_disabled:
+                import pyotp
+                user.secretKey = pyotp.random_base32()
+                
+                # Log the secret regeneration for security audit
+                from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+                logging.writeToFile(f'2FA secret auto-regenerated for user: {accountUsername} by admin: {val}')
 
             if securityLevel == 'LOW':
                 user.securityLevel = secMiddleware.LOW
@@ -1134,5 +1145,75 @@ def disable2FA(request):
     except Exception as e:
         secure_log_error(e, 'disable2FA', request.session.get('userID', 'Unknown'))
         data_ret = secure_error_response(e, 'Failed to disable 2FA')
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+
+def regenerateTwoFASecret(request):
+    """
+    Manually regenerate 2FA secret for a specific user
+    """
+    try:
+        val = request.session['userID']
+        currentACL = ACLManager.loadedACL(val)
+        
+        if currentACL['admin'] != 1:
+            data_ret = {'status': 0, 'error_message': 'Unauthorized access. Admin privileges required.'}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+        
+        if request.method == 'POST':
+            data = json.loads(request.body)
+            accountUsername = data.get('accountUsername')
+            
+            if not accountUsername:
+                data_ret = {'status': 0, 'error_message': 'Username is required.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            
+            try:
+                user = Administrator.objects.get(userName=accountUsername)
+                
+                # Check if user has 2FA enabled
+                if not user.twoFA:
+                    data_ret = {'status': 0, 'error_message': '2FA is not enabled for this user.'}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+                
+                # Generate new secret key
+                import pyotp
+                new_secret = pyotp.random_base32()
+                user.secretKey = new_secret
+                user.save()
+                
+                # Generate new QR code provisioning URI
+                otpauth = pyotp.totp.TOTP(new_secret).provisioning_uri(user.email, issuer_name="CyberPanel")
+                
+                # Log the secret regeneration for security audit
+                from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+                logging.writeToFile(f'2FA secret manually regenerated for user: {accountUsername} by admin: {val}')
+                
+                data_ret = {
+                    'status': 1, 
+                    'error_message': '2FA secret successfully regenerated.',
+                    'message': f'Two-factor authentication secret has been regenerated for user {accountUsername}.',
+                    'secretKey': new_secret,
+                    'otpauth': otpauth
+                }
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+                
+            except Administrator.DoesNotExist:
+                data_ret = {'status': 0, 'error_message': 'User not found.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+        
+        data_ret = {'status': 0, 'error_message': 'Invalid request method.'}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+        
+    except Exception as e:
+        secure_log_error(e, 'regenerateTwoFASecret', request.session.get('userID', 'Unknown'))
+        data_ret = secure_error_response(e, 'Failed to regenerate 2FA secret')
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
