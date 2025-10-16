@@ -58,7 +58,7 @@ class PHPManager:
             # Method 2: Check system-wide PHP installations
             try:
                 # Check for system PHP versions
-                system_php_versions = ['7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5', '8.6']
+                system_php_versions = ['7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5']
                 for version in system_php_versions:
                     formatted_version = f'PHP {version}'
                     if formatted_version not in finalPHPVersions:
@@ -117,7 +117,7 @@ class PHPManager:
 
             # Method 4: Fallback to checking common PHP versions
             if not finalPHPVersions:
-                fallback_versions = ['PHP 7.4', 'PHP 8.0', 'PHP 8.1', 'PHP 8.2', 'PHP 8.3', 'PHP 8.4', 'PHP 8.5', 'PHP 8.6']
+                fallback_versions = ['PHP 7.4', 'PHP 8.0', 'PHP 8.1', 'PHP 8.2', 'PHP 8.3', 'PHP 8.4', 'PHP 8.5']
                 for version in fallback_versions:
                     try:
                         phpString = PHPManager.getPHPString(version)
@@ -145,12 +145,12 @@ class PHPManager:
                 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
                 logging.writeToFile(f'Final PHP versions found: {finalPHPVersions}')
 
-            return finalPHPVersions if finalPHPVersions else ['PHP 7.4', 'PHP 8.0', 'PHP 8.1', 'PHP 8.2', 'PHP 8.3', 'PHP 8.4', 'PHP 8.5', 'PHP 8.6']
+            return finalPHPVersions if finalPHPVersions else ['PHP 7.4', 'PHP 8.0', 'PHP 8.1', 'PHP 8.2', 'PHP 8.3', 'PHP 8.4', 'PHP 8.5']
 
         except BaseException as msg:
             from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
             logging.writeToFile(f'Error while finding php versions on system: {str(msg)}')
-            return ['PHP 7.4', 'PHP 8.0', 'PHP 8.1', 'PHP 8.2', 'PHP 8.3', 'PHP 8.4', 'PHP 8.5', 'PHP 8.6']
+            return ['PHP 7.4', 'PHP 8.0', 'PHP 8.1', 'PHP 8.2', 'PHP 8.3', 'PHP 8.4', 'PHP 8.5']
 
     @staticmethod
     def findApachePHPVersions():
@@ -222,7 +222,7 @@ class PHPManager:
         except BaseException as msg:
             from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
             logging.writeToFile(f'Error while finding php versions on system: {str(msg)}')
-            return ['PHP 7.4', 'PHP 8.0', 'PHP 8.1', 'PHP 8.2', 'PHP 8.3', 'PHP 8.4', 'PHP 8.5', 'PHP 8.6']
+            return ['PHP 7.0', 'PHP 7.1', 'PHP 7.2', 'PHP 7.3', 'PHP 7.4', 'PHP 8.0', 'PHP 8.1', 'PHP 8.2', 'PHP 8.3', 'PHP 8.4', 'PHP 8.5']
 
     @staticmethod
     def getPHPString(phpVersion):
@@ -338,7 +338,7 @@ class PHPManager:
                 return 'PHP 8.3'  # Default recommendation
             
             # Priority order for recommendations
-            recommended_order = ['PHP 8.3', 'PHP 8.2', 'PHP 8.4', 'PHP 8.5', 'PHP 8.6', 'PHP 8.1', 'PHP 8.0', 'PHP 7.4']
+            recommended_order = ['PHP 8.3', 'PHP 8.2', 'PHP 8.4', 'PHP 8.5', 'PHP 8.1', 'PHP 8.0', 'PHP 7.4']
             
             for recommended in recommended_order:
                 if recommended in all_versions:
