@@ -107,7 +107,7 @@ log_info "Debug log file: $DEBUG_LOG_FILE"
 #Check_Argument() ---> parse argument and go to Argument_Mode() or Interactive_Mode() respectively
 #Pre_Install_Setup_Repository() ---> setup/install repositories for CentOS and openEuler system.
 #go to Pre_Install_Setup_CN_Repository() if server is within China.
-#Pre_Install_Setup_Git_URL() --->  form up github URL , use Gitee for servers within China.
+#Pre_Install_Setup_Git_URL() --->  form up github URL , use Gitee for servers within China and Iran.
 #Pre_Install_Required_Components() --->  install required softwares and git clone it
 #Pre_Install_System_Tweak() ---> set up SWAP and apply some system tweak depends on providers
 #Main_Installation() --->  change some code within python files for CN servers and start to install
@@ -2263,7 +2263,7 @@ chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib64 || true
 }
 
 Pre_Install_Setup_Git_URL() {
-if [[ $Server_Country != "CN" ]] ; then
+if [[ "$Server_Country" != "CN" && "$Server_Country" != "IR" ]]; then
   Git_User="usmannasir"
   Git_Content_URL="https://raw.githubusercontent.com/${Git_User}/cyberpanel"
   Git_Clone_URL="https://github.com/${Git_User}/cyberpanel.git"
