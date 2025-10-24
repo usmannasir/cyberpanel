@@ -489,7 +489,7 @@ Server_IP=$(curl --silent --max-time 30 -4 https://cyberpanel.sh/?ip)
 
 echo -e "\nChecking server location...\n"
 
-if [[ "$Server_Country" != "CN" ]] ; then
+if [[ "$Server_Country" != "CN" && "$Server_Country" != "IR" ]] ; then
   Server_Country=$(curl --silent --max-time 10 -4 https://cyberpanel.sh/?country)
   if [[ ${#Server_Country} != "2" ]] ; then
    Server_Country="Unknow"
@@ -1255,7 +1255,7 @@ if [[ "$Server_Country" = "CN" ]] ; then
   Debug_Log2 "Setting up repositories for CN server...,1"
 fi
 
-if [[ "$Server_Country" = "CN" ]] || [[ "$Server_Provider" = "Alibaba Cloud" ]] || [[ "$Server_Provider" = "Tencent Cloud" ]]; then
+if [[ "$Server_Country" = "CN" ]] || [[ "$Server_Country" = "IR" ]] || [[ "$Server_Provider" = "Alibaba Cloud" ]] || [[ "$Server_Provider" = "Tencent Cloud" ]]; then
   Setup_Pip
 fi
 
@@ -1819,7 +1819,7 @@ sed -i 's|git clone https://github.com/usmannasir/cyberpanel|echo downloaded|g' 
 sed -i 's|mirror.cyberpanel.net|cyberpanel.sh|g' install.py
 
 
-if [[ $Server_Country = "CN" ]] ; then
+if [[ "$Server_Country" = "CN" || "$Server_Country" = "IR" ]] ; then
   Pre_Install_CN_Replacement
 else
   sed -i 's|wget -O -  https://get.acme.sh \| sh|echo acme|g' install.py
@@ -2263,7 +2263,7 @@ chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib64 || true
 }
 
 Pre_Install_Setup_Git_URL() {
-if [[ $Server_Country != "CN" ]] ; then
+if [[ "$Server_Country" != "CN" && "$Server_Country" != "IR" ]] ; then
   Git_User="usmannasir"
   Git_Content_URL="https://raw.githubusercontent.com/${Git_User}/cyberpanel"
   Git_Clone_URL="https://github.com/${Git_User}/cyberpanel.git"
@@ -2394,7 +2394,7 @@ echo -e "Cleaning up...\n"
 log_info "Cleaning up temporary installation files"
 rm -rf /root/cyberpanel
 
-if [[ "$Server_Country" = "CN" ]] ; then
+if [[ "$Server_Country" = "CN" || "$Server_Country" = "IR" ]] ; then
 Post_Install_CN_Replacement
 fi
 
