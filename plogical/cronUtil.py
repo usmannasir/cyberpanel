@@ -267,6 +267,37 @@ class CronUtil:
         except Exception as e:
             print(f"-1,Error checking cron status: {str(e)}")
 
+    @staticmethod
+    def restartCronService():
+        """
+        Restart the cron service to apply changes immediately.
+        Works across all distributions (Ubuntu/Debian/CentOS/AlmaLinux).
+        
+        Returns:
+            tuple: (success_bool, error_message)
+        """
+        try:
+            # Determine which cron service command to use based on distribution
+            distro = ProcessUtilities.decideDistro()
+            
+            if distro == ProcessUtilities.centos or distro == ProcessUtilities.cent8:
+                # CentOS/AlmaLinux uses 'crond'
+                command = 'systemctl restart crond'
+            else:
+                # Ubuntu/Debian uses 'cron'
+                command = 'systemctl restart cron'
+            
+            # Execute the restart command with root privileges
+            ProcessUtilities.executioner(command, 'root')
+            
+            # Return success
+            return (True, None)
+            
+        except BaseException as msg:
+            error_msg = f"Failed to restart cron service: {str(msg)}"
+            print(f"0,{error_msg}")
+            return (False, error_msg)
+
 
 
 def main():

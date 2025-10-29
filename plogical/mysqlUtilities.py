@@ -129,7 +129,7 @@ class mysqlUtilities:
 
             if dbcreate:
 
-                query = "CREATE DATABASE `%s`" % (dbname)
+                query = "CREATE DATABASE %s" % (dbname)
 
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.CyberCPLogFileWriter.writeToFile(query)
@@ -139,15 +139,11 @@ class mysqlUtilities:
             ## create user
 
             if mysqlUtilities.REMOTEHOST.find('ondigitalocean') > -1:
-                safe_dbuser = dbuser.replace("'", "''")
-                safe_dbpassword = dbpassword.replace("'", "''")
                 query = "CREATE USER '%s'@'%s' IDENTIFIED WITH mysql_native_password BY '%s'" % (
-                safe_dbuser, HostToUse, safe_dbpassword)
+                dbuser, HostToUse, dbpassword)
             else:
-                safe_dbuser = dbuser.replace("'", "''")
-                safe_dbpassword = dbpassword.replace("'", "''")
-                query = "CREATE USER '" + safe_dbuser + "'@'%s' IDENTIFIED BY '" % (
-                    HostToUse) + safe_dbpassword + "'"
+                query = "CREATE USER '" + dbuser + "'@'%s' IDENTIFIED BY '" % (
+                    HostToUse) + dbpassword + "'"
 
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.CyberCPLogFileWriter.writeToFile(query)
@@ -155,14 +151,14 @@ class mysqlUtilities:
             cursor.execute(query)
 
             if mysqlUtilities.RDS == 0:
-                cursor.execute("GRANT ALL PRIVILEGES ON `" + dbname + "`.* TO '" + dbuser + "'@'%s'" % (HostToUse))
+                cursor.execute("GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (HostToUse))
                 if os.path.exists(ProcessUtilities.debugPath):
-                    logging.CyberCPLogFileWriter.writeToFile("GRANT ALL PRIVILEGES ON `" + dbname + "`.* TO '" + dbuser + "'@'%s'" % (HostToUse))
+                    logging.CyberCPLogFileWriter.writeToFile("GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (HostToUse))
             else:
                 cursor.execute(
-                    "GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON `" + dbname + "`.* TO '" + dbuser + "'@'%s'" % (HostToUse))
+                    "GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (HostToUse))
                 if os.path.exists(ProcessUtilities.debugPath):
-                    logging.CyberCPLogFileWriter.writeToFile("GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON `" + dbname + "`.* TO '" + dbuser + "'@'%s'" % (HostToUse))
+                    logging.CyberCPLogFileWriter.writeToFile("GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (HostToUse))
 
             connection.close()
 
@@ -185,10 +181,8 @@ class mysqlUtilities:
             if connection == 0:
                 return 0
 
-            cursor.execute("CREATE DATABASE `" + dbuser + "`")
-            safe_dbuser = dbuser.replace("'", "''")
-            safe_dbpassword = dbpassword.replace("'", "''")
-            cursor.execute("CREATE USER '" + safe_dbuser + "'@'%s' IDENTIFIED BY '" % (mysqlUtilities.LOCALHOST) + safe_dbpassword + "'")
+            cursor.execute("CREATE DATABASE " + dbuser)
+            cursor.execute("CREATE USER '" + dbuser + "'@'%s' IDENTIFIED BY '" % (mysqlUtilities.LOCALHOST) + dbpassword + "'")
 
             return 1
 
@@ -206,9 +200,9 @@ class mysqlUtilities:
                 return 0
 
             if mysqlUtilities.RDS == 0:
-                cursor.execute("GRANT ALL PRIVILEGES ON `" + dbName + "`.* TO '" + globalUser + "'@'%s'" % (mysqlUtilities.LOCALHOST))
+                cursor.execute("GRANT ALL PRIVILEGES ON " + dbName + ".* TO '" + globalUser + "'@'%s'" % (mysqlUtilities.LOCALHOST))
             else:
-                cursor.execute("GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON `" + dbName + "`.* TO '" + globalUser + "'@'%s'" % (
+                cursor.execute("GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON " + dbName + ".* TO '" + globalUser + "'@'%s'" % (
                     mysqlUtilities.LOCALHOST))
 
             connection.close()
@@ -241,13 +235,11 @@ class mysqlUtilities:
 
             ## Try deleting all user who had priviliges on db
 
-            cursor.execute("select user,host from mysql.db where db=%s", (dbname,))
+            cursor.execute("select user,host from mysql.db where db='%s'" % (dbname))
             databaseUsers = cursor.fetchall()
 
             for databaseUser in databaseUsers:
-                safe_db_user = databaseUser[0].replace("'", "''")
-                safe_db_host = databaseUser[1].replace("'", "''")
-                cursor.execute("DROP USER '%s'@'%s'" % (safe_db_user, safe_db_host))
+                cursor.execute("DROP USER '"+databaseUser[0]+"'@'%s'" % (databaseUser[1]))
             connection.close()
 
             return 1
@@ -748,7 +740,7 @@ password=%s
             data = {}
             data['status'] = 1
 
-            cursor.execute("use `" + name['databaseName'] + "`")
+            cursor.execute("use " + name['databaseName'])
             cursor.execute("SHOW TABLE STATUS")
             result = cursor.fetchall()
 
@@ -794,8 +786,8 @@ password=%s
             data = {}
             data['status'] = 1
 
-            cursor.execute("use `" + name['databaseName'] + "`")
-            cursor.execute("DROP TABLE `" + name['tableName'] + "`")
+            cursor.execute("use " + name['databaseName'])
+            cursor.execute("DROP TABLE " + name['tableName'])
 
             return data
 
@@ -820,14 +812,14 @@ password=%s
 
             ##
 
-            cursor.execute("use `" + name['databaseName'] + "`")
-            cursor.execute("select count(*) from `" + name['tableName'] + "`")
+            cursor.execute("use " + name['databaseName'])
+            cursor.execute("select count(*) from " + name['tableName'])
             rows = cursor.fetchall()[0][0]
 
 
             ##
 
-            cursor.execute("desc `" + name['tableName'] + "`")
+            cursor.execute("desc " + name['tableName'])
             result = cursor.fetchall()
 
             data['completeData'] = '<thead><tr>'
@@ -844,7 +836,7 @@ password=%s
             data['pagination'] = mysqlUtilities.getPagination(rows, recordsToShow)
             endPageNumber, finalPageNumber = mysqlUtilities.recordsPointer(page, recordsToShow)
 
-            cursor.execute("select * from `" + name['tableName'] + "`")
+            cursor.execute("select * from " + name['tableName'])
             result = cursor.fetchall()
 
             for items in result[finalPageNumber:endPageNumber]:
@@ -872,8 +864,8 @@ password=%s
             if connection == 0:
                 return 0
 
-            cursor.execute("use `" + name['databaseName'] + "`")
-            cursor.execute("desc `" + name['tableName'] + "`")
+            cursor.execute("use " + name['databaseName'])
+            cursor.execute("desc " + name['tableName'])
             result = cursor.fetchall()
 
             ## Columns List
@@ -932,18 +924,12 @@ password=%s
             if encrypt == None:
                 try:
                     dbuser = DBUsers.objects.get(user=userName)
-                    safe_userName = userName.replace("'", "''")
-                    safe_dbPassword = dbPassword.replace("'", "''")
-                    query = "SET PASSWORD FOR '" + safe_userName + "'@'%s' = PASSWORD('" % (LOCALHOST) + safe_dbPassword + "')"
+                    query = "SET PASSWORD FOR '" + userName + "'@'%s' = PASSWORD('" % (LOCALHOST) + dbPassword + "')"
                 except:
                     userName = mysqlUtilities.fetchuser(userName)
-                    safe_userName = userName.replace("'", "''")
-                    safe_dbPassword = dbPassword.replace("'", "''")
-                    query = "SET PASSWORD FOR '" + safe_userName + "'@'%s' = PASSWORD('" % (LOCALHOST) + safe_dbPassword + "')"
+                    query = "SET PASSWORD FOR '" + userName + "'@'%s' = PASSWORD('" % (LOCALHOST) + dbPassword + "')"
             else:
-                safe_userName = userName.replace("'", "''")
-                safe_dbPassword = dbPassword.replace("'", "''")
-                query = "SET PASSWORD FOR '" + safe_userName + "'@'%s' = '" % (LOCALHOST) + safe_dbPassword + "'"
+                query = "SET PASSWORD FOR '" + userName + "'@'%s' = '" % (LOCALHOST) + dbPassword + "'"
 
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.CyberCPLogFileWriter.writeToFile(query)
@@ -965,11 +951,12 @@ password=%s
             cursor.execute("use mysql")
             database = Databases.objects.get(dbName=databaseName)
             databaseName = databaseName.replace('_', '\_')
+            query = "select user from db where db = '%s'" % (databaseName)
 
             if connection == 0:
                 return 0
 
-            cursor.execute("select user from db where db = %s", (databaseName,))
+            cursor.execute(query)
             rows = cursor.fetchall()
             counter = 0
 
@@ -1060,18 +1047,14 @@ bind-address=%s
 
             if createUser:
                 try:
-                    safe_user = user.replace("'", "''")
-                    safe_password = password.replace("'", "''")
                     cursor.execute(
-                        "CREATE USER '" + safe_user + "'@'%s' IDENTIFIED BY '" % (mysqlUtilities.LOCALHOST) + safe_password + "'")
+                        "CREATE USER '" + user + "'@'%s' IDENTIFIED BY '" % (mysqlUtilities.LOCALHOST) + password + "'")
                 except BaseException as msg:
                     logging.CyberCPLogFileWriter.writeToFile('%s [addUserToDB:937]' % (str(msg)))
                     try:
-                        safe_user = user.replace("'", "''")
-                        cursor.execute("DROP USER '%s'@'%s'" % (safe_user, mysqlUtilities.LOCALHOST))
-                        safe_password = password.replace("'", "''")
+                        cursor.execute("DROP USER '%s'@'%s'" % (user, mysqlUtilities.LOCALHOST))
                         cursor.execute(
-                            "CREATE USER '" + safe_user + "'@'%s' IDENTIFIED BY '" % (mysqlUtilities.LOCALHOST) + safe_password + "'")
+                            "CREATE USER '" + user + "'@'%s' IDENTIFIED BY '" % (mysqlUtilities.LOCALHOST) + password + "'")
                     except BaseException as msg:
                         logging.CyberCPLogFileWriter.writeToFile('%s [addUserToDB:943]'  % (str(msg)))
 
@@ -1079,11 +1062,11 @@ bind-address=%s
 
             if mysqlUtilities.RDS == 0:
                 cursor.execute(
-                    "GRANT ALL PRIVILEGES ON `" + database + "`.* TO '" + user + "'@'%s'" % (mysqlUtilities.LOCALHOST))
+                    "GRANT ALL PRIVILEGES ON " + database + ".* TO '" + user + "'@'%s'" % (mysqlUtilities.LOCALHOST))
             else:
                 try:
                     cursor.execute(
-                        "GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON `" + database + "`.* TO '" + user + "'@'%s'" % (mysqlUtilities.LOCALHOST))
+                        "GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON " + database + ".* TO '" + user + "'@'%s'" % (mysqlUtilities.LOCALHOST))
                 except BaseException as msg:
                     logging.CyberCPLogFileWriter.writeToFile('%s [addUserToDB:953]' % (str(msg)))
 
@@ -1106,9 +1089,8 @@ bind-address=%s
             if connection == 0:
                 return 0
 
-            cursor.execute("use `%s`" % (dbname))
-            safe_password = password.replace("'", "''")
-            cursor.execute("UPDATE `wp_users` SET `user_pass`= MD5('%s') WHERE `user_login`='usman'" % (safe_password))
+            cursor.execute("use %s" % (dbname))
+            cursor.execute("UPDATE `wp_users` SET `user_pass`= MD5('%s') WHERE `user_login`='usman'" % (password))
             connection.close()
 
             return 1
