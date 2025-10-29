@@ -4667,6 +4667,15 @@ context /cyberpanel_suspension_page.html {
             CronUtil.CronPrem(0)
 
             if output.find("1,") > -1:
+                # Restart cron service to apply changes immediately
+                restart_success, restart_error = CronUtil.restartCronService()
+                
+                if not restart_success:
+                    # Strict mode: return error response if restart fails
+                    dic = {'getWebsiteCron': 0, 'error_message': f'Cron job modified but service restart failed: {restart_error}. Please manually restart cron service.'}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
+                
                 data_ret = {"getWebsiteCron": 1,
                             "user": website.externalApp,
                             "cron": finalCron,
@@ -4708,6 +4717,15 @@ context /cyberpanel_suspension_page.html {
             CronUtil.CronPrem(0)
 
             if output.find("1,") > -1:
+                # Restart cron service to apply changes immediately
+                restart_success, restart_error = CronUtil.restartCronService()
+                
+                if not restart_success:
+                    # Strict mode: return error response if restart fails
+                    dic = {'remCronbyLine': 0, 'error_message': f'Cron job removed but service restart failed: {restart_error}. Please manually restart cron service.'}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
+                
                 data_ret = {"remCronbyLine": 1,
                             "user": website.externalApp,
                             "removeLine": output.split(',')[1],
@@ -4764,16 +4782,22 @@ context /cyberpanel_suspension_page.html {
             execPath = execPath + " addNewCron --externalApp " + website.externalApp + " --finalCron '" + finalCron + "'"
             output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
 
+            # Set proper permissions for Ubuntu/Debian
             if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
                 command = 'chmod 600 %s' % (cronPath)
-                ProcessUtilities.executioner(command)
-
-                command = 'systemctl restart cron'
                 ProcessUtilities.executioner(command)
 
             CronUtil.CronPrem(0)
 
             if output.find("1,") > -1:
+                # Restart cron service to apply changes immediately (all distributions)
+                restart_success, restart_error = CronUtil.restartCronService()
+                
+                if not restart_success:
+                    # Strict mode: return error response if restart fails
+                    dic = {'addNewCron': 0, 'error_message': f'Cron job added but service restart failed: {restart_error}. Please manually restart cron service.'}
+                    json_data = json.dumps(dic)
+                    return HttpResponse(json_data)
 
                 data_ret = {"addNewCron": 1,
                             "user": website.externalApp,
