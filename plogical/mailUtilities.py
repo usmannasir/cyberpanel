@@ -51,6 +51,31 @@ class mailUtilities:
             print("Successfully sent email")
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
+    
+    @staticmethod
+    def isPostfixInstalled():
+        """
+        Check if Postfix is actually installed and available
+        Returns True if postfix is installed, False otherwise
+        """
+        try:
+            # Check if postfix binary exists
+            if not (os.path.exists('/usr/sbin/postfix') or 
+                    os.path.exists('/usr/bin/postfix')):
+                return False
+            
+            # Check if postfix main.cf exists
+            if not os.path.exists('/etc/postfix/main.cf'):
+                return False
+            
+            # Check if postfix service is available
+            command = 'systemctl list-unit-files postfix.service'
+            result = ProcessUtilities.outputExecutioner(command)
+            
+            return 'postfix.service' in result
+        except:
+            return False
+    
     @staticmethod
     def AfterEffects(domain):
         path = "/usr/local/CyberCP/install/rainloop/cyberpanel.net.ini"
