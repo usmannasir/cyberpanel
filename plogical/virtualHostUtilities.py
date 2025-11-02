@@ -658,9 +658,33 @@ local_name %s {
             postfixPath = '/home/cyberpanel/postfix'
 
             if os.path.exists(postfixPath):
-                retValues = mailUtilities.setupDKIM(virtualHostName)
-                if retValues[0] == 0:
-                    raise BaseException(retValues[1])
+                # Verify postfix is actually installed before attempting DKIM
+                if (os.path.exists('/etc/postfix/main.cf') and 
+                    (os.path.exists('/usr/sbin/postfix') or os.path.exists('/usr/bin/postfix'))):
+                    try:
+                        retValues = mailUtilities.setupDKIM(virtualHostName)
+                        if retValues[0] == 0:
+                            # Log warning but don't fail website creation
+                            logging.CyberCPLogFileWriter.statusWriter(
+                                tempStatusPath,
+                                'Warning: DKIM setup failed, continuing without mail...'
+                            )
+                    except Exception as e:
+                        # Log error but don't fail website creation
+                        logging.CyberCPLogFileWriter.statusWriter(
+                            tempStatusPath,
+                            f'Warning: DKIM error: {str(e)}, continuing without mail...'
+                        )
+                else:
+                    # Postfix marker exists but postfix not installed - clean up marker
+                    logging.CyberCPLogFileWriter.statusWriter(
+                        tempStatusPath,
+                        'Removing stale postfix marker file...'
+                    )
+                    try:
+                        os.remove(postfixPath)
+                    except:
+                        pass
 
             retValues = vhost.createDirectoryForVirtualHost(virtualHostName, administratorEmail,
                                                             virtualHostUser, phpVersion, openBasedir)

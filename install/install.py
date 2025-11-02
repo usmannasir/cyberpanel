@@ -4695,26 +4695,57 @@ milter_default_action = accept
     def enableDisableEmail(state):
         try:
             servicePath = '/home/cyberpanel/postfix'
-
+            
             if state == 'off':
-
-                command = 'sudo systemctl stop postfix'
-                subprocess.call(shlex.split(command))
-
-                command = 'sudo systemctl disable postfix'
-                subprocess.call(shlex.split(command))
-
+                # Stop and disable postfix service if it exists
                 try:
-                    os.remove(servicePath)
+                    command = 'systemctl stop postfix'
+                    subprocess.call(shlex.split(command), 
+                                  stdout=subprocess.DEVNULL, 
+                                  stderr=subprocess.DEVNULL)
+                    
+                    command = 'systemctl disable postfix'
+                    subprocess.call(shlex.split(command),
+                                  stdout=subprocess.DEVNULL,
+                                  stderr=subprocess.DEVNULL)
                 except:
                     pass
-
-            else:
-                writeToFile = open(servicePath, 'w+')
-                writeToFile.close()
-
+                
+                # Remove marker file if it exists
+                if os.path.exists(servicePath):
+                    try:
+                        os.remove(servicePath)
+                        logging.InstallLog.writeToFile(
+                            'Removed postfix marker file (mail services disabled)'
+                        )
+                    except Exception as e:
+                        logging.InstallLog.writeToFile(
+                            f'Warning: Could not remove postfix marker: {str(e)}'
+                        )
+            
+            else:  # state == 'on'
+                # Only create marker if postfix is actually installed
+                if (os.path.exists('/usr/sbin/postfix') or 
+                    os.path.exists('/usr/bin/postfix')):
+                    # Ensure /home/cyberpanel exists
+                    if not os.path.exists('/home/cyberpanel'):
+                        os.makedirs('/home/cyberpanel', mode=0o755)
+                    
+                    # Create marker file
+                    with open(servicePath, 'w+') as f:
+                        f.write('')
+                    logging.InstallLog.writeToFile(
+                        'Created postfix marker file (mail services enabled)'
+                    )
+                else:
+                    logging.InstallLog.writeToFile(
+                        'Skipping postfix marker creation (postfix not installed)'
+                    )
+        
         except OSError as msg:
-            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [enableDisableEmail]")
+            logging.InstallLog.writeToFile(
+                '[ERROR] ' + str(msg) + " [enableDisableEmail]"
+            )
             return 0
 
     @staticmethod
@@ -5574,14 +5605,22 @@ def main():
             checks.cyberpanel_db_password = checks.mysql_Root_password
         checks.setup_email_Passwords(checks.cyberpanel_db_password, mysql)
         checks.setup_postfix_dovecot_config(mysql)
+        # Create marker immediately after successful install
+        checks.enableDisableEmail('on')
+    elif args.postfix == 'ON':
+        checks.install_postfix_dovecot()
+        # Ensure cyberpanel_db_password is set before calling setup_email_Passwords
+        if not hasattr(checks, 'cyberpanel_db_password') or checks.cyberpanel_db_password is None:
+            checks.cyberpanel_db_password = checks.mysql_Root_password
+        checks.setup_email_Passwords(checks.cyberpanel_db_password, mysql)
+        checks.setup_postfix_dovecot_config(mysql)
+        # Create marker immediately after successful install
+        checks.enableDisableEmail('on')
     else:
-        if args.postfix == 'ON':
-            checks.install_postfix_dovecot()
-            # Ensure cyberpanel_db_password is set before calling setup_email_Passwords
-            if not hasattr(checks, 'cyberpanel_db_password') or checks.cyberpanel_db_password is None:
-                checks.cyberpanel_db_password = checks.mysql_Root_password
-            checks.setup_email_Passwords(checks.cyberpanel_db_password, mysql)
-            checks.setup_postfix_dovecot_config(mysql)
+        # User explicitly disabled postfix
+        preFlightsChecks.stdOut("Skipping Postfix/Mail services installation as requested.")
+        # Ensure marker doesn't exist
+        checks.enableDisableEmail('off')
 
     checks.install_unzip()
     checks.install_zip()
@@ -5606,10 +5645,12 @@ def main():
     if args.postfix is None:
         checks.installOpenDKIM()
         checks.configureOpenDKIM()
+    elif args.postfix == 'ON':
+        checks.installOpenDKIM()
+        checks.configureOpenDKIM()
     else:
-        if args.postfix == 'ON':
-            checks.installOpenDKIM()
-            checks.configureOpenDKIM()
+        # Skip OpenDKIM when postfix is disabled
+        preFlightsChecks.stdOut("Skipping OpenDKIM installation (mail services disabled).")
 
     checks.modSecPreReqs()
     checks.installLSCPD()
@@ -5620,12 +5661,6 @@ def main():
 
     if args.redis is not None:
         checks.installRedis()
-
-    if args.postfix is not None:
-        checks.enableDisableEmail(args.postfix.lower())
-    else:
-        preFlightsChecks.stdOut("Postfix will be installed and enabled.")
-        checks.enableDisableEmail('on')
 
     if args.powerdns is not None:
         checks.enableDisableDNS(args.powerdns.lower())
@@ -5638,6 +5673,26 @@ def main():
     else:
         preFlightsChecks.stdOut("Pure-FTPD will be installed and enabled.")
         checks.enableDisableFTP('on', distro)
+
+    # Validate service marker files match actual installations
+    logging.InstallLog.writeToFile("Validating service markers...")
+    
+    # Check postfix marker
+    postfix_marker = '/home/cyberpanel/postfix'
+    postfix_installed = (os.path.exists('/etc/postfix/main.cf') and 
+                         (os.path.exists('/usr/sbin/postfix') or 
+                          os.path.exists('/usr/bin/postfix')))
+    
+    if os.path.exists(postfix_marker) and not postfix_installed:
+        logging.InstallLog.writeToFile(
+            'Warning: Postfix marker exists but postfix not installed. Removing marker.'
+        )
+        os.remove(postfix_marker)
+    elif not os.path.exists(postfix_marker) and postfix_installed:
+        logging.InstallLog.writeToFile(
+            'Warning: Postfix installed but marker missing. Creating marker.'
+        )
+        checks.enableDisableEmail('on')
 
     checks.installCLScripts()
     # checks.disablePackegeUpdates()
