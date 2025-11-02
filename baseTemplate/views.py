@@ -174,7 +174,7 @@ def getSystemStatus(request):
             
             # Convert MB to GB for display
             total_disk_used_gb = round(total_disk_used / 1024, 2)
-            total_disk_limit_gb = total_disk_limit if total_disk_limit > 0 else 100  # Default 100GB if no limit
+            total_disk_limit_gb = round(total_disk_limit / 1024, 2) if total_disk_limit > 0 else 100  # Default 100GB if no limit
             disk_free_gb = max(0, total_disk_limit_gb - total_disk_used_gb)
             disk_usage_percent = min(100, int((total_disk_used_gb / total_disk_limit_gb) * 100)) if total_disk_limit_gb > 0 else 0
             
@@ -185,7 +185,7 @@ def getSystemStatus(request):
                 if website.package:
                     bandwidth_limit += website.package.bandwidth
             
-            bandwidth_limit_gb = bandwidth_limit if bandwidth_limit > 0 else 1000  # Default 1000GB if no limit
+            bandwidth_limit_gb = round(bandwidth_limit / 1024, 2) if bandwidth_limit > 0 else 1000  # Default 1000GB if no limit
             bandwidth_usage_percent = 0  # You can implement actual bandwidth tracking here
             
             # Count resources
