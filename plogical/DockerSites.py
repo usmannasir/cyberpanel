@@ -1395,7 +1395,7 @@ services:
         }
 
         n8n_config = {
-            'image': 'docker.n8n.io/n8nio/n8n:1.86.1',
+            'image': 'docker.n8n.io/n8nio/n8n',
             'user': 'root',
             'healthcheck': {
                 'test': ["CMD", "wget", "--spider", "http://localhost:5678"],
