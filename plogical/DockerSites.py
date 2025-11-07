@@ -321,6 +321,7 @@ context / {{
   websocket               1
 
   extraHeaders            <<<END_extraHeaders
+  RequestHeader unset X-Forwarded-For
   RequestHeader set X-Forwarded-For $ip
   RequestHeader set X-Forwarded-Proto https
   RequestHeader set X-Forwarded-Host "{domain}"
@@ -1394,7 +1395,7 @@ services:
         }
 
         n8n_config = {
-            'image': 'docker.n8n.io/n8nio/n8n',
+            'image': 'docker.n8n.io/n8nio/n8n:1.86.1',
             'user': 'root',
             'healthcheck': {
                 'test': ["CMD", "wget", "--spider", "http://localhost:5678"],
@@ -1409,7 +1410,7 @@ services:
                 'DB_POSTGRESDB_DATABASE': self.data['MySQLDBName'],
                 'DB_POSTGRESDB_USER': 'postgres',
                 'DB_POSTGRESDB_PASSWORD': self.data['MySQLPassword'],
-                'N8N_HOST': '0.0.0.0',
+                'N8N_HOST': f"{self.data['finalURL']}",
                 'N8N_PORT': '5678',
                 'NODE_ENV': 'development',  # Required for OpenLiteSpeed compatibility - OLS cannot override browser Origin headers which n8n v1.87.0+ validates in production mode
                 'N8N_EDITOR_BASE_URL': f"https://{self.data['finalURL']}",
@@ -1421,7 +1422,10 @@ services:
                 'N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS': 'true',
                 'DB_POSTGRESDB_SCHEMA': 'public',
                 'N8N_PROTOCOL': 'https',
-                'N8N_SECURE_COOKIE': 'true'
+                'N8N_SECURE_COOKIE': 'true',
+                'N8N_PROXY_HOPS': '1',
+                'N8N_ALLOWED_ORIGINS': f"https://{self.data['finalURL']}",
+                'N8N_ALLOW_CONNECTIONS_FROM': '*'
             }
         }
 
