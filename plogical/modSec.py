@@ -12,6 +12,7 @@ from plogical.virtualHostUtilities import virtualHostUtilities
 import os
 import tarfile
 import shutil
+import time
 from plogical.mailUtilities import mailUtilities
 from plogical.processUtilities import ProcessUtilities
 from plogical.installUtilities import installUtilities
@@ -105,11 +106,166 @@ class modSec:
             return False
 
     @staticmethod
-    def installModSec():
+    def isCustomOLSBinaryInstalled():
+        """Detect if custom OpenLiteSpeed binary is installed"""
         try:
+            OLS_BINARY_PATH = "/usr/local/lsws/bin/openlitespeed"
 
+            if not os.path.exists(OLS_BINARY_PATH):
+                return False
+
+            # Check for PHPConfig function signature in binary
+            command = f'strings {OLS_BINARY_PATH}'
+            result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=10)
+
+            if result.returncode == 0:
+                # Look for custom binary markers
+                return 'set_php_config_value' in result.stdout or 'PHPConfig LSIAPI' in result.stdout
+
+            return False
+
+        except Exception as msg:
+            logging.CyberCPLogFileWriter.writeToFile(f"WARNING: Could not detect OLS binary type: {msg}")
+            return False
+
+    @staticmethod
+    def detectBinarySuffix():
+        """Detect which binary suffix to use based on OS distribution"""
+        try:
+            # Check if we're on RHEL/CentOS/AlmaLinux 8+ (uses libcrypt.so.2)
+            if os.path.exists('/etc/os-release'):
+                with open('/etc/os-release', 'r') as f:
+                    os_release = f.read().lower()
+
+                # AlmaLinux 9+, Rocky 9+, RHEL 9+, CentOS Stream 9+
+                if any(x in os_release for x in ['almalinux', 'rocky', 'rhel']) and 'version="9' in os_release:
+                    return 'rhel'
+                elif 'centos stream 9' in os_release:
+                    return 'rhel'
+
+            # Check CentOS/RHEL path
+            if os.path.exists('/etc/redhat-release'):
+                data = open('/etc/redhat-release', 'r').read()
+                # CentOS/AlmaLinux/Rocky 8+ → rhel suffix
+                if 'release 8' in data or 'release 9' in data:
+                    return 'rhel'
+
+            # Default to ubuntu
+            return 'ubuntu'
+
+        except Exception as msg:
+            logging.CyberCPLogFileWriter.writeToFile(f"Error detecting OS: {msg}, defaulting to Ubuntu binaries")
+            return 'ubuntu'
+
+    @staticmethod
+    def installCompatibleModSecurity():
+        """Install ModSecurity compatible with custom OpenLiteSpeed binary"""
+        try:
             mailUtilities.checkHome()
 
+            with open(modSec.installLogPath, 'w') as f:
+                f.write("Installing ModSecurity compatible with custom OpenLiteSpeed binary...\n")
+
+            MODSEC_PATH = "/usr/local/lsws/modules/mod_security.so"
+
+            # Detect OS and select appropriate ModSecurity binary
+            binary_suffix = modSec.detectBinarySuffix()
+
+            if binary_suffix == 'rhel':
+                MODSEC_URL = "https://cyberpanel.net/mod_security-compatible-rhel.so"
+                EXPECTED_SHA256 = "db580afc431fda40d46bdae2249ac74690d9175ff6d8b1843f2837d86f8d602f"
+            else:  # ubuntu
+                MODSEC_URL = "https://cyberpanel.net/mod_security-compatible-ubuntu.so"
+                EXPECTED_SHA256 = "115971fcd44b74bc7c7b097b9cec33ddcfb0fb07bb9b562ec9f4f0691c388a6b"
+
+            # Download to temp location
+            tmp_modsec = "/tmp/mod_security_custom.so"
+
+            with open(modSec.installLogPath, 'a') as f:
+                f.write(f"Downloading compatible ModSecurity for {binary_suffix}...\n")
+
+            command = f'wget -q --show-progress {MODSEC_URL} -O {tmp_modsec}'
+            result = subprocess.call(shlex.split(command))
+
+            if result != 0 or not os.path.exists(tmp_modsec):
+                with open(modSec.installLogPath, 'a') as f:
+                    f.write("ERROR: Failed to download ModSecurity\n")
+                    f.write("Can not be installed.[404]\n")
+                logging.CyberCPLogFileWriter.writeToFile("[Could not download compatible ModSecurity]")
+                return 0
+
+            # Verify checksum
+            with open(modSec.installLogPath, 'a') as f:
+                f.write("Verifying checksum...\n")
+
+            result = subprocess.run(f'sha256sum {tmp_modsec}', shell=True, capture_output=True, text=True)
+            actual_sha256 = result.stdout.split()[0]
+
+            if actual_sha256 != EXPECTED_SHA256:
+                with open(modSec.installLogPath, 'a') as f:
+                    f.write(f"ERROR: Checksum verification failed\n")
+                    f.write(f"  Expected: {EXPECTED_SHA256}\n")
+                    f.write(f"  Got: {actual_sha256}\n")
+                    f.write("Can not be installed.[404]\n")
+                os.remove(tmp_modsec)
+                logging.CyberCPLogFileWriter.writeToFile("[ModSecurity checksum verification failed]")
+                return 0
+
+            # Backup existing ModSecurity if present
+            if os.path.exists(MODSEC_PATH):
+                backup_path = f"{MODSEC_PATH}.backup.{int(time.time())}"
+                shutil.copy2(MODSEC_PATH, backup_path)
+                with open(modSec.installLogPath, 'a') as f:
+                    f.write(f"Backed up existing ModSecurity to: {backup_path}\n")
+
+            # Stop OpenLiteSpeed
+            subprocess.run(['/usr/local/lsws/bin/lswsctrl', 'stop'], timeout=30)
+            time.sleep(2)
+
+            # Install compatible ModSecurity
+            os.makedirs(os.path.dirname(MODSEC_PATH), exist_ok=True)
+            shutil.copy2(tmp_modsec, MODSEC_PATH)
+            os.chmod(MODSEC_PATH, 0o755)
+            os.remove(tmp_modsec)
+
+            # Start OpenLiteSpeed
+            subprocess.run(['/usr/local/lsws/bin/lswsctrl', 'start'], timeout=30)
+
+            with open(modSec.installLogPath, 'a') as f:
+                f.write("Compatible ModSecurity installed successfully\n")
+                f.write("ModSecurity Installed (ABI-compatible version).[200]\n")
+
+            logging.CyberCPLogFileWriter.writeToFile("[Compatible ModSecurity installed successfully]")
+            return 1
+
+        except subprocess.TimeoutExpired:
+            with open(modSec.installLogPath, 'a') as f:
+                f.write("ERROR: Timeout during OpenLiteSpeed restart\n")
+                f.write("Can not be installed.[404]\n")
+            logging.CyberCPLogFileWriter.writeToFile("[Timeout during ModSecurity installation]")
+            return 0
+        except Exception as msg:
+            with open(modSec.installLogPath, 'a') as f:
+                f.write(f"ERROR: {str(msg)}\n")
+                f.write("Can not be installed.[404]\n")
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installCompatibleModSecurity]")
+            return 0
+
+    @staticmethod
+    def installModSec():
+        try:
+            mailUtilities.checkHome()
+
+            # Check if custom OLS binary is installed
+            if modSec.isCustomOLSBinaryInstalled():
+                # Install compatible ModSecurity for custom OLS
+                with open(modSec.installLogPath, 'w') as f:
+                    f.write("Detected custom OpenLiteSpeed binary\n")
+                    f.write("Installing ABI-compatible ModSecurity...\n")
+
+                return modSec.installCompatibleModSecurity()
+
+            # Stock OLS binary - use package manager as usual
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 command = 'sudo yum install ols-modsecurity -y'
             else:
