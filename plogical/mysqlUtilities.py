@@ -916,13 +916,16 @@ password=%s
 
             cursor.execute("use mysql")
 
-            if host != None:
+            resolved_user, resolved_host = mysqlUtilities._resolve_mysql_account(userName, cursor)
+
+            LOCALHOST = mysqlUtilities.LOCALHOST
+
+            if host is not None:
                 LOCALHOST = host
-            else:
-                LOCALHOST = mysqlUtilities.LOCALHOST
+            elif resolved_host:
+                LOCALHOST = resolved_host
 
             password_value = '' if dbPassword is None else str(dbPassword)
-            resolved_user = mysqlUtilities.resolve_mysql_username(userName, cursor)
             sanitized_user = mysqlUtilities._sanitize_mysql_identifier(resolved_user)
             sanitized_host = mysqlUtilities._sanitize_mysql_identifier(LOCALHOST)
 
@@ -950,6 +953,10 @@ password=%s
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.CyberCPLogFileWriter.writeToFile(query)
 
+            logging.CyberCPLogFileWriter.writeToFile(
+                "Resolved MySQL account %s@%s for identifier %s. [mysqlUtilities.changePassword]" % (
+                    sanitized_user, sanitized_host, userName))
+
             cursor.execute(query)
 
             connection.close()
@@ -964,32 +971,33 @@ password=%s
     def fetchuser(databaseName):
         try:
             connection, cursor = mysqlUtilities.setupConnection()
-            cursor.execute("use mysql")
-            database = Databases.objects.get(dbName=databaseName)
-            databaseName = databaseName.replace('_', '\_')
-            query = "select user from db where db = '%s'" % (databaseName)
 
             if connection == 0:
                 return 0
 
-            cursor.execute(query)
-            rows = cursor.fetchall()
-            counter = 0
+            cursor.execute("use mysql")
+            resolved_user, resolved_host = mysqlUtilities._resolve_mysql_account(databaseName, cursor)
 
-            for row in rows:
-                if row[0].find('_') > -1:
-                    database.dbUser = row[0]
-                    database.save()
+            database = Databases.objects.get(dbName=databaseName)
 
-                    try:
-                        connection.close()
-                    except:
-                        pass
-                    message = 'Detected databaser user is %s for database %s.' % (row[0], databaseName)
-                    logging.CyberCPLogFileWriter.writeToFile(message)
-                    return row[0]
-                else:
-                    counter = counter + 1
+            if resolved_user and resolved_user.find('_') > -1:
+                database.dbUser = resolved_user
+                database.save()
+
+                host_message = resolved_host if resolved_host else mysqlUtilities.LOCALHOST
+                message = 'Detected database user %s@%s for database %s.' % (
+                    resolved_user,
+                    host_message,
+                    databaseName
+                )
+                logging.CyberCPLogFileWriter.writeToFile(message)
+
+                try:
+                    connection.close()
+                except:
+                    pass
+
+                return resolved_user
 
             connection.close()
 
@@ -1004,6 +1012,101 @@ password=%s
         if value is None:
             return ''
         return str(value).replace("'", "''").strip()
+
+    @staticmethod
+    def _pick_host(host_candidates, fallback_host=None):
+        hosts = []
+        if host_candidates:
+            for host in host_candidates:
+                if host is None:
+                    continue
+                host_value = str(host).strip()
+                if host_value:
+                    hosts.append(host_value)
+
+        priority = []
+        if fallback_host:
+            priority.append(str(fallback_host).strip())
+        priority.extend([mysqlUtilities.LOCALHOST, 'localhost', '127.0.0.1'])
+
+        for candidate in priority:
+            if candidate and candidate in hosts:
+                return candidate
+
+        if '%' in hosts:
+            return '%'
+
+        if hosts:
+            return hosts[0]
+
+        if fallback_host:
+            return fallback_host
+
+        return mysqlUtilities.LOCALHOST
+
+    @staticmethod
+    def _resolve_mysql_account(identifier, cursor=None):
+        resolved_user = mysqlUtilities.resolve_mysql_username(identifier, cursor)
+        identifier_value = '' if identifier is None else str(identifier).strip()
+        host_candidates = []
+
+        try:
+            if DBUsers:
+                query = DBUsers.objects.filter(user=resolved_user)
+                for entry in query:
+                    if getattr(entry, 'host', None):
+                        host_candidates.append(entry.host)
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile('%s [mysqlUtilities._resolve_mysql_account.dbusers]' % (str(msg)))
+
+        def _query_mysql_db(column, value):
+            hosts = []
+            updated_user = resolved_user
+
+            if cursor is None or not value:
+                return hosts, updated_user
+
+            try:
+                query = "SELECT user, host FROM mysql.db WHERE {0} = %s".format(column)
+                cursor.execute(query, (value,))
+                rows = cursor.fetchall() or []
+
+                for row in rows:
+                    user_value = None
+                    host_value = None
+
+                    if len(row) > 0:
+                        user_value = row[0]
+
+                    if len(row) > 1:
+                        host_value = row[1]
+
+                    if host_value:
+                        if user_value:
+                            updated_user = user_value
+                        hosts.append(host_value)
+
+                return hosts, updated_user
+            except BaseException as msg:
+                logging.CyberCPLogFileWriter.writeToFile('%s [mysqlUtilities._resolve_mysql_account.%s]' % (str(msg), column))
+                return hosts, updated_user
+
+        if not host_candidates:
+            hosts, resolved_user = _query_mysql_db('user', resolved_user)
+            host_candidates.extend(hosts)
+
+        if not host_candidates and identifier_value:
+            hosts, resolved_user = _query_mysql_db('db', identifier_value)
+            host_candidates.extend(hosts)
+
+        selected_host = mysqlUtilities._pick_host(host_candidates, mysqlUtilities.LOCALHOST)
+
+        if not host_candidates:
+            logging.CyberCPLogFileWriter.writeToFile(
+                'Host resolution fallback in use for MySQL user %s (identifier: %s).'
+                ' [mysqlUtilities._resolve_mysql_account]' % (resolved_user, identifier_value if identifier_value else resolved_user))
+
+        return resolved_user, selected_host
 
     @staticmethod
     def resolve_mysql_username(identifier, cursor=None):
