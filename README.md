@@ -7,7 +7,7 @@
 **Web Hosting Control Panel powered by OpenLiteSpeed**
 Fast • Secure • Scalable — Simplify hosting management with style.
 
-**Version**: 2.5.5 • **Updated**: September 24, 2025
+**Version**: 2.5.5-dev • **Updated**: November 15, 2025
 
 [![GitHub](https://img.shields.io/badge/GitHub-Repo-000?style=flat-square\&logo=github)](https://github.com/usmannasir/cyberpanel)
 [![Docs](https://img.shields.io/badge/Docs-Read-green?style=flat-square\&logo=gitbook)](https://cyberpanel.net/KnowledgeBase/)
@@ -70,13 +70,13 @@ Fast • Secure • Scalable — Simplify hosting management with style.
 
 | OS family                  | Recommended / Supported |
 | -------------------------- | ----------------------: |
-| Ubuntu 24.04, 22.04, 20.04 |           ✅ Recommended |
-| Debian 13, 12, 11          |             ✅ Supported |
-| AlmaLinux 10, 9, 8         |             ✅ Supported |
-| RockyLinux 9, 8            |             ✅ Supported |
-| RHEL 9, 8                  |             ✅ Supported |
-| CloudLinux 9, 8            |             ✅ Supported |
-| CentOS 7                   |         ⚠️ Legacy — EOL |
+| Ubuntu 24.04, 22.04, 20.04 |          ✅ Recommended |
+| Debian 13, 12, 11          |            ✅ Supported |
+| AlmaLinux 10, 9, 8         |            ✅ Supported |
+| RockyLinux 9, 8            |            ✅ Supported |
+| RHEL 9, 8                  |            ✅ Supported |
+| CloudLinux 9, 8            |            ✅ Supported |
+| CentOS 7                   |      ⚠️ Legacy — EOL |
 
 > CyberPanel targets x86\_64 only. Test the unsupported OS in staging first.
 
@@ -142,6 +142,12 @@ journalctl -u lscpd -f
 
 ---
 
+## Recent fixes
+
+* **15.11.2025** — Hardened MySQL password rotation: `mysqlUtilities.changePassword` now auto-resolves the backing MySQL account (user + host) even when `DBUsers` metadata is missing, preventing the historical `[mysqlUtilities.changePassword] can only concatenate str (not "int")` error. Regression tests live under `Test/mysqlUtilities/`, and you should restart `lscpd` after deploying the patch so the helper reloads.
+
+---
+
 ## Resources
 
 * Official site: [https://cyberpanel.net](https://cyberpanel.net)
@@ -149,6 +155,7 @@ journalctl -u lscpd -f
 * Community forum: [https://community.cyberpanel.net](https://community.cyberpanel.net)
 * GitHub: [https://github.com/usmannasir/cyberpanel](https://github.com/usmannasir/cyberpanel)
 * Guides folder:  [guides](https://github.com/usmannasir/cyberpanel/blob/stable/guides/INDEX.md) (API, INSTALLATION, UPGRADE, TROUBLESHOOTING)
+
 ---
 
 <div align="center">
