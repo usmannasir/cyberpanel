@@ -250,6 +250,30 @@ pattern_to_watch = ^/home/.+?/(public_html|public_ftp|private_html)(/.*)?$
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, str(msg) + ' [404].', 1)
 
     @staticmethod
+    def _ensure_imunifyav_assets(statusFile):
+        try:
+            commands = [
+                'mkdir -p /etc/sysconfig/imunify360/generic',
+                'mkdir -p /usr/local/CyberCP/public/imunifyav',
+                'chown -R lscpd:lscpd /usr/local/CyberCP/public/imunifyav 2>/dev/null || true',
+                'chmod 755 /usr/local/CyberCP/public/imunifyav 2>/dev/null || true',
+                'chown -R lscpd:lscpd /etc/sysconfig/imunify360 2>/dev/null || true'
+            ]
+
+            for command in commands:
+                ServerStatusUtil.executioner(command, statusFile)
+
+            if os.path.exists('/etc/redhat-release'):
+                pkg_cmd = 'yum install -y imunify-ui-generic imunify-antivirus || yum reinstall -y imunify-ui-generic'
+            else:
+                pkg_cmd = 'apt-get update -y >/dev/null 2>&1 && apt-get install -y imunify-antivirus || true'
+
+            ServerStatusUtil.executioner(pkg_cmd, statusFile)
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                      f"ImunifyAV asset verification warning: {str(msg)}\n", 1)
+
+    @staticmethod
     def submitinstallImunifyAV():
         try:
             mailUtilities.checkHome()
@@ -326,6 +350,8 @@ ui_path_owner = lscpd:lscpd
 
             command = 'bash imav-deploy.sh --yes'
             ServerStatusUtil.executioner(command, statusFile)
+
+            CageFS._ensure_imunifyav_assets(statusFile)
 
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
                                                       "ImunifyAV reinstalled..\n", 1)

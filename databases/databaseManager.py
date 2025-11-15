@@ -8,6 +8,7 @@ sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 from django.http import HttpResponse
+from django.db.models import Q
 import json
 from plogical.acl import ACLManager
 import plogical.CyberCPLogFileWriter as logging
@@ -227,19 +228,26 @@ class DatabaseManager:
                 return ACLManager.loadErrorJson('changePasswordStatus', 0)
 
             userName = data['dbUserName']
-            dbPassword = data['dbPassword']
+            dbPassword = str(data['dbPassword']) if data['dbPassword'] is not None else ''
 
-            db = Databases.objects.filter(dbUser=userName)
+            db_queryset = Databases.objects.filter(Q(dbUser=userName) | Q(dbName=userName))
+            if not db_queryset.exists():
+                data_ret = {'status': 0, 'changePasswordStatus': 0,
+                            'error_message': "Database or database user could not be found."}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            database_obj = db_queryset.first()
 
             admin = Administrator.objects.get(pk=userID)
 
-            if ACLManager.checkOwnership(db[0].website.domain, admin, currentACL) == 1:
+            if ACLManager.checkOwnership(database_obj.website.domain, admin, currentACL) == 1:
                 pass
             else:
                 return ACLManager.loadErrorJson()
 
             try:
-                meta = DBMeta.objects.get(database=db[0], key=DatabaseManager.REMOTE_ACCESS)
+                meta = DBMeta.objects.get(database=database_obj, key=DatabaseManager.REMOTE_ACCESS)
                 host = json.loads(meta.value)['remoteIP']
             except:
                 host = None

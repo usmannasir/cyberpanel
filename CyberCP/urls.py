@@ -15,10 +15,13 @@ Including another URLconf
 """
 from django.urls import path, re_path, include
 from django.contrib import admin
+from firewall import views as firewall_views
 
 urlpatterns = [
     path('base/', include('baseTemplate.urls')),
     path('', include('loginSystem.urls')),
+    path('imunifyav/', firewall_views.imunifyAV, name='imunifyav_root'),
+    path('ImunifyAV/', firewall_views.imunifyAV, name='imunifyav_root_legacy'),
     path('packages/', include('packages.urls')),
     path('websites/', include('websiteFunctions.urls')),
     path('tuning/', include('tuning.urls')),

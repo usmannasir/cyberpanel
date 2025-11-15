@@ -216,6 +216,34 @@ fix_missing_dependencies() {
     print_status "$GREEN" "✅ Missing dependencies fixed"
 }
 
+ensure_imunify_av_assets() {
+    local package_manager=$1
+
+    print_status "$BLUE" "🔐 Ensuring ImunifyAV UI assets are installed..."
+
+    mkdir -p /etc/sysconfig/imunify360/generic 2>/dev/null || true
+    mkdir -p /usr/local/CyberCP/public/imunifyav 2>/dev/null || true
+
+    case $package_manager in
+        "yum"|"dnf")
+            if ! $package_manager install -y imunify-ui-generic imunify-antivirus >/dev/null 2>&1; then
+                print_status "$YELLOW" "⚠️  Unable to install Imunify packages via $package_manager (will continue)."
+            fi
+            ;;
+        "apt")
+            apt-get update -y >/dev/null 2>&1 || true
+            if ! apt-get install -y imunify-antivirus >/dev/null 2>&1; then
+                print_status "$YELLOW" "⚠️  imunify-antivirus package not available in APT repositories."
+            fi
+            ;;
+    esac
+
+    chown -R lscpd:lscpd /usr/local/CyberCP/public/imunifyav 2>/dev/null || true
+    chown -R lscpd:lscpd /etc/sysconfig/imunify360 2>/dev/null || true
+
+    print_status "$GREEN" "✅ ImunifyAV assets verified"
+}
+
 # Function to check service status
 check_service_status() {
     local service_name=$1
@@ -352,6 +380,9 @@ apply_cyberpanel_fixes() {
     
     # Fix missing dependencies
     fix_missing_dependencies "$package_manager"
+
+    # Ensure ImunifyAV UI assets are always present
+    ensure_imunify_av_assets "$package_manager"
     
     print_status "$GREEN" "✅ All CyberPanel fixes applied successfully"
     
