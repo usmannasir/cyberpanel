@@ -921,15 +921,31 @@ password=%s
             else:
                 LOCALHOST = mysqlUtilities.LOCALHOST
 
-            if encrypt == None:
-                try:
-                    dbuser = DBUsers.objects.get(user=userName)
-                    query = "SET PASSWORD FOR '" + userName + "'@'%s' = PASSWORD('" % (LOCALHOST) + dbPassword + "')"
-                except:
-                    userName = mysqlUtilities.fetchuser(userName)
-                    query = "SET PASSWORD FOR '" + userName + "'@'%s' = PASSWORD('" % (LOCALHOST) + dbPassword + "')"
+            password_value = '' if dbPassword is None else str(dbPassword)
+            resolved_user = mysqlUtilities.resolve_mysql_username(userName, cursor)
+            sanitized_user = mysqlUtilities._sanitize_mysql_identifier(resolved_user)
+            sanitized_host = mysqlUtilities._sanitize_mysql_identifier(LOCALHOST)
+
+            try:
+                literal_password = connection.literal(password_value)
+                if isinstance(literal_password, bytes):
+                    literal_password = literal_password.decode('utf-8')
+            except BaseException as msg:
+                logging.CyberCPLogFileWriter.writeToFile('%s [mysqlUtilities.changePassword.literal]' % (str(msg)))
+                return 0
+
+            if encrypt is None:
+                query = "SET PASSWORD FOR '{user}'@'{host}' = PASSWORD({password})".format(
+                    user=sanitized_user,
+                    host=sanitized_host,
+                    password=literal_password
+                )
             else:
-                query = "SET PASSWORD FOR '" + userName + "'@'%s' = '" % (LOCALHOST) + dbPassword + "'"
+                query = "SET PASSWORD FOR '{user}'@'{host}' = {password}".format(
+                    user=sanitized_user,
+                    host=sanitized_host,
+                    password=literal_password
+                )
 
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.CyberCPLogFileWriter.writeToFile(query)
@@ -982,6 +998,56 @@ password=%s
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[mysqlUtilities.fetchuser]")
             return 0
+
+    @staticmethod
+    def _sanitize_mysql_identifier(value):
+        if value is None:
+            return ''
+        return str(value).replace("'", "''").strip()
+
+    @staticmethod
+    def resolve_mysql_username(identifier, cursor=None):
+        """
+        Resolve the actual MySQL username backing the supplied identifier.
+        Handles DBUsers records, Databases ORM mappings and falls back to mysql.db lookups.
+        """
+        candidate = '' if identifier is None else str(identifier).strip()
+
+        if len(candidate) == 0:
+            return candidate
+
+        try:
+            if DBUsers:
+                db_user = DBUsers.objects.get(user=candidate)
+                return db_user.user
+        except BaseException:
+            pass
+
+        try:
+            if Databases:
+                database = Databases.objects.get(dbUser=candidate)
+                return database.dbUser
+        except BaseException:
+            pass
+
+        try:
+            if Databases:
+                database = Databases.objects.get(dbName=candidate)
+                if database.dbUser:
+                    return database.dbUser
+        except BaseException:
+            pass
+
+        if cursor is not None:
+            try:
+                cursor.execute("SELECT user FROM mysql.db WHERE db = %s LIMIT 1", (candidate,))
+                row = cursor.fetchone()
+                if row and row[0]:
+                    return row[0]
+            except BaseException as msg:
+                logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[mysqlUtilities.resolve_mysql_username]")
+
+        return candidate
 
     @staticmethod
     def allowRemoteAccess(dbName, userName, remoteIP):
