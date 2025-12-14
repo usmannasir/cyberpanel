@@ -292,7 +292,7 @@ def FileManagerRoot(request):
             if(Status == 1):
                 template = 'baseTemplate/FileManager.html'
             else:
-              return  redirect("https://cyberpanel.net/cyberpanel-addons")
+              return  redirect("https://raw.githubusercontent.com/die2mrw007/cyberpanel/stable/cyberpanel-addons")
         else:
             template = 'baseTemplate/FileManager.html'
     except BaseException as msg:

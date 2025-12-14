@@ -455,7 +455,7 @@ sudo rm -f /home/cyberpanel/plugins/testPlugin
 ### Plugin Support
 - **GitHub Issues**: https://github.com/cyberpanel/testPlugin/issues
 - **CyberPanel Forums**: https://forums.cyberpanel.net/
-- **Documentation**: https://cyberpanel.net/docs/
+- **Documentation**: https://raw.githubusercontent.com/die2mrw007/cyberpanel/stable/docs/
 
 ---
 

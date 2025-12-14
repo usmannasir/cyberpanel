@@ -3461,7 +3461,7 @@ context /cyberpanel_suspension_page.html {
                 command = f'setquota -u {modifyWeb.externalApp} {spaceString} 0 0 /'
                 ProcessUtilities.executioner(command)
 
-            ## Fix https://github.com/usmannasir/cyberpanel/issues/998
+            ## Fix https://github.com/die2mrw007/cyberpanel/issues/998
 
             # from plogical.IncScheduler import IncScheduler
             # isPU = IncScheduler('CalculateAndUpdateDiskUsage', {})

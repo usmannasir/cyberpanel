@@ -1936,7 +1936,7 @@ protocol sieve {
                 if (Status == 1):
                     template = 'mailServer/EmailLimits.html'
                 else:
-                    return redirect("https://cyberpanel.net/cyberpanel-addons")
+                    return redirect("https://raw.githubusercontent.com/die2mrw007/cyberpanel/stable/cyberpanel-addons")
             else:
                 template = 'mailServer/EmailLimits.html'
         except BaseException as msg:

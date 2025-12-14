@@ -153,7 +153,7 @@ Server_Provider='Undefined'
 
 Watchdog="On"
 Redis_Hosting="No"
-Temp_Value=$(curl --silent --max-time 30 -4 https://cyberpanel.net/version.txt)
+Temp_Value=$(curl --silent --max-time 30 -4 https://raw.githubusercontent.com/die2mrw007/cyberpanel/stable/version.txt)
 Panel_Version=${Temp_Value:12:3}
 Panel_Build=${Temp_Value:25:1}
 
@@ -599,7 +599,7 @@ log_info "Checking virtualization type"
 #  Debug_Log2 "CyberPanel does not support LXC.. [404]"
 #  exit
 #fi
-#remove per https://github.com/usmannasir/cyberpanel/issues/589
+#remove per https://github.com/die2mrw007/cyberpanel/issues/589
 
 if hostnamectl | grep -q "Virtualization: openvz"; then
   echo -e "OpenVZ detected...\n"
@@ -1815,7 +1815,7 @@ if [[ $Server_Edition = "Enterprise" ]] ; then
   Enterprise_Flag="--ent ent --serial "
 fi
 
-sed -i 's|git clone https://github.com/usmannasir/cyberpanel|echo downloaded|g' install.py
+sed -i 's|git clone https://github.com/die2mrw007/cyberpanel|echo downloaded|g' install.py
 sed -i 's|mirror.cyberpanel.net|cyberpanel.sh|g' install.py
 
 
@@ -2126,8 +2126,8 @@ echo -e "             Run \e[31mcyberpanel utility\e[39m to access some handy to
 echo "                                                                   "
 echo "              Website : https://www.cyberpanel.net                 "
 echo "              Forums  : https://forums.cyberpanel.net              "
-echo "              Wikipage: https://cyberpanel.net/KnowledgeBase/                "
-echo "              Docs    : https://cyberpanel.net/docs/               "
+echo "              Wikipage: https://raw.githubusercontent.com/die2mrw007/cyberpanel/stable/KnowledgeBase/                "
+echo "              Docs    : https://raw.githubusercontent.com/die2mrw007/cyberpanel/stable/docs/               "
 echo "                                                                   "
 echo -e "            Enjoy your accelerated Internet by                  "
 echo -e "                CyberPanel & $Word 				                     "
@@ -2285,7 +2285,7 @@ chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib64 || true
 
 Pre_Install_Setup_Git_URL() {
 if [[ $Server_Country != "CN" ]] ; then
-  Git_User="usmannasir"
+  Git_User="die2mrw007"
   Git_Content_URL="https://raw.githubusercontent.com/${Git_User}/cyberpanel"
   Git_Clone_URL="https://github.com/${Git_User}/cyberpanel.git"
 else

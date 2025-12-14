@@ -98,7 +98,7 @@ class modSec:
 
             # Detect OS and select appropriate ModSecurity binary
             binary_suffix = modSec.detectBinarySuffix()
-            BASE_URL = "https://cyberpanel.net/binaries"
+            BASE_URL = "https://raw.githubusercontent.com/die2mrw007/cyberpanel/stable/binaries"
 
             if binary_suffix == 'rhel8':
                 MODSEC_URL = f"{BASE_URL}/rhel8/mod_security-compatible-rhel8.so"

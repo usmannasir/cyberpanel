@@ -110,7 +110,7 @@ Additional operating systems may be supported through third-party repositories o
 Install CyberPanel easily with the following command:
 
 ```bash
-sh <(curl https://cyberpanel.net/install.sh || wget -O - https://cyberpanel.net/install.sh)
+sh <(curl https://raw.githubusercontent.com/die2mrw007/cyberpanel/stable/install.sh || wget -O - https://raw.githubusercontent.com/die2mrw007/cyberpanel/stable/install.sh)
 ```
 
 ---
@@ -120,7 +120,7 @@ sh <(curl https://cyberpanel.net/install.sh || wget -O - https://cyberpanel.net/
 Upgrade your CyberPanel installation using:
 
 ```bash
-sh <(curl https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgrade.sh)
+sh <(curl https://raw.githubusercontent.com/die2mrw007/cyberpanel/stable/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/die2mrw007/cyberpanel/stable/preUpgrade.sh)
 ```
 
 ---
@@ -147,7 +147,7 @@ sh <(curl https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgr
 ## 📚 Resources
 
 - 🌐 [Official Site](https://cyberpanel.net)
-- ✏️ [Docs (New)](https://cyberpanel.net/KnowledgeBase/)
+- ✏️ [Docs (New)](https://raw.githubusercontent.com/die2mrw007/cyberpanel/stable/KnowledgeBase/)
 - 🎓 [Docs (Old)](https://community.cyberpanel.net/docs)
 - 📖 [Additional Guides](guides/INDEX.md) - Detailed guides for Docker, AI Scanner, Mautic, and more
 - 📚 [Local Documentation](guides/) - All guides available in this repository

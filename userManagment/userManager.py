@@ -31,7 +31,7 @@ class UserManager(multi.Thread):
             from loginSystem.models import Administrator
             admin = Administrator.objects.get(pk=self.extraArgs['user'].pk)
 
-            ## ref https://github.com/usmannasir/cyberpanel/issues/1336
+            ## ref https://github.com/die2mrw007/cyberpanel/issues/1336
             ## if current user is admin but not the main admin user then don't suspend all sites only suspend the sites owned by the user
 
             if self.extraArgs['currentACL']['admin'] and admin.userName != 'admin':

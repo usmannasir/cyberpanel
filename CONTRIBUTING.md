@@ -50,7 +50,7 @@ CyberPanel uses a structured branching strategy to manage development and releas
 
 2. **Add Upstream Remote**
    ```bash
-   git remote add upstream https://github.com/usmannasir/cyberpanel.git
+   git remote add upstream https://github.com/die2mrw007/cyberpanel.git
    ```
 
 3. **Create Development Branch**
@@ -226,7 +226,7 @@ CyberPanel follows semantic versioning (MAJOR.MINOR.PATCH):
 
 ### **Getting Help**
 
-- 📚 [Documentation](https://cyberpanel.net/KnowledgeBase/)
+- 📚 [Documentation](https://raw.githubusercontent.com/die2mrw007/cyberpanel/stable/KnowledgeBase/)
 - 💬 [Discord](https://discord.gg/g8k8Db3)
 - 📢 [Forums](https://community.cyberpanel.net)
 - 📵 [Facebook Group](https://www.facebook.com/groups/cyberpanel)

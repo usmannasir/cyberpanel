@@ -107,7 +107,7 @@ class DatabaseManager:
                 if (Status == 1):
                     template = 'baseTemplate/FileManager.html'
                 else:
-                    return redirect("https://cyberpanel.net/cyberpanel-addons")
+                    return redirect("https://raw.githubusercontent.com/die2mrw007/cyberpanel/stable/cyberpanel-addons")
             else:
                 template = 'databases/mysqlmanager.html'
         except BaseException as msg:

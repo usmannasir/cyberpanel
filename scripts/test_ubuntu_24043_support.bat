@@ -76,6 +76,6 @@ echo - All required packages and dependencies are available
 echo - Installation and upgrade scripts are compatible
 echo.
 echo For installation on Ubuntu 24.04.3, run:
-echo sh ^<(curl https://cyberpanel.net/install.sh ^|^| wget -O - https://cyberpanel.net/install.sh^)
+echo sh ^<(curl https://raw.githubusercontent.com/die2mrw007/cyberpanel/stable/install.sh ^|^| wget -O - https://raw.githubusercontent.com/die2mrw007/cyberpanel/stable/install.sh^)
 echo.
 pause

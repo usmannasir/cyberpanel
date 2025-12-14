@@ -4,8 +4,8 @@
 export LC_CTYPE=en_US.UTF-8
 SUDO_TEST=$(set)
 BRANCH_NAME="stable"
-GIT_URL="github.com/usmannasir/cyberpanel"
-GIT_CONTENT_URL="raw.githubusercontent.com/usmannasir/cyberpanel"
+GIT_URL="github.com/die2mrw007/cyberpanel"
+GIT_CONTENT_URL="raw.githubusercontent.com/die2mrw007/cyberpanel"
 
 check_OS() {
 	if [[ ! -f /etc/os-release ]] ; then

@@ -268,7 +268,7 @@
             {% if Notecheck %}
             <div class="alert alert-warning">
                 <i class="fas fa-exclamation-triangle"></i>
-                <span>{% trans "Note: Latest commit does not match, please upgrade CyberPanel." %} <a href="https://cyberpanel.net/KnowledgeBase/home/upgrading-cyberpanel/">Learn how to upgrade CyberPanel.</a></span>
+                <span>{% trans "Note: Latest commit does not match, please upgrade CyberPanel." %} <a href="https://raw.githubusercontent.com/die2mrw007/cyberpanel/stable/KnowledgeBase/home/upgrading-cyberpanel/">Learn how to upgrade CyberPanel.</a></span>
             </div>
             {% endif %}
 
@@ -371,7 +371,7 @@
         }
 
         // Call the function to get all branches
-        getBranches('https://api.github.com/repos/usmannasir/cyberpanel/branches', [], 1);
+        getBranches('https://api.github.com/repos/die2mrw007/cyberpanel/branches', [], 1);
 
         function upgradeCyberPanel() {
             try {

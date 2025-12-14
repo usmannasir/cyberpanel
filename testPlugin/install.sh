@@ -116,7 +116,7 @@ check_root() {
 check_cyberpanel() {
     if [ ! -d "$CYBERPANEL_DIR" ]; then
         print_error "CyberPanel is not installed at $CYBERPANEL_DIR"
-        print_error "Please install CyberPanel first: https://cyberpanel.net/docs/"
+        print_error "Please install CyberPanel first: https://raw.githubusercontent.com/die2mrw007/cyberpanel/stable/docs/"
         exit 1
     fi
     

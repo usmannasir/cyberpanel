@@ -905,7 +905,7 @@ clamav {
             wirtedata.close()
 
 
-            ### disable dkim signing in rspamd in ref to https://github.com/usmannasir/cyberpanel/issues/1176
+            ### disable dkim signing in rspamd in ref to https://github.com/die2mrw007/cyberpanel/issues/1176
 
             DKIMPath = '/etc/rspamd/local.d/dkim_signing.conf'
 
@@ -1613,7 +1613,7 @@ LogFile /var/log/clamav/clamav.log
         try:
             import requests
 
-            fetchURLs = requests.get('https://cyberpanel.net/dnsServers.txt')
+            fetchURLs = requests.get('https://raw.githubusercontent.com/die2mrw007/cyberpanel/stable/dnsServers.txt')
 
             if fetchURLs.status_code == 200:
 

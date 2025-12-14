@@ -273,13 +273,13 @@ free -h
 ## 📚 Additional Resources
 
 ### Documentation
-- [CyberPanel Official Docs](https://cyberpanel.net/docs/)
+- [CyberPanel Official Docs](https://raw.githubusercontent.com/die2mrw007/cyberpanel/stable/docs/)
 - [Debian 13 Release Notes](https://www.debian.org/releases/bookworm/releasenotes)
 - [Apache2 Configuration Guide](https://httpd.apache.org/docs/2.4/)
 
 ### Community Support
 - [CyberPanel Community Forum](https://forums.cyberpanel.net/)
-- [GitHub Issues](https://github.com/usmannasir/cyberpanel/issues)
+- [GitHub Issues](https://github.com/die2mrw007/cyberpanel/issues)
 - [Discord Server](https://discord.gg/cyberpanel)
 
 ### Testing Compatibility

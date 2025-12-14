@@ -800,7 +800,7 @@ class Upgrade:
             Upgrade.stdOut(f"Detected OS type: using '{binary_suffix}' binaries", 0)
 
             # URLs for custom binaries with OS-specific paths
-            BASE_URL = "https://cyberpanel.net/binaries"
+            BASE_URL = "https://raw.githubusercontent.com/die2mrw007/cyberpanel/stable/binaries"
 
             # Set URLs based on OS type
             if binary_suffix == 'rhel8':
@@ -936,7 +936,7 @@ class Upgrade:
 
             # Detect OS and select appropriate ModSecurity binary
             binary_suffix = Upgrade.detectBinarySuffix()
-            BASE_URL = "https://cyberpanel.net/binaries"
+            BASE_URL = "https://raw.githubusercontent.com/die2mrw007/cyberpanel/stable/binaries"
 
             if binary_suffix == 'rhel8':
                 MODSEC_URL = f"{BASE_URL}/rhel8/mod_security-compatible-rhel8.so"
@@ -1099,7 +1099,7 @@ module cyberpanel_ols {
 
             Upgrade.stdOut("Installing phpMyAdmin...", 0)
             
-            command = 'wget -q -O /usr/local/CyberCP/public/phpmyadmin.zip https://github.com/usmannasir/cyberpanel/raw/stable/phpmyadmin.zip'
+            command = 'wget -q -O /usr/local/CyberCP/public/phpmyadmin.zip https://github.com/die2mrw007/cyberpanel/raw/stable/phpmyadmin.zip'
             Upgrade.executioner_silent(command, 'Download phpMyAdmin')
 
             command = 'unzip -q /usr/local/CyberCP/public/phpmyadmin.zip -d /usr/local/CyberCP/public/'
@@ -3245,7 +3245,7 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
 
             # Clone the new repository directly to CyberCP
             Upgrade.stdOut("Cloning fresh CyberPanel repository...")
-            command = 'git clone https://github.com/usmannasir/cyberpanel CyberCP'
+            command = 'git clone https://github.com/die2mrw007/cyberpanel CyberCP'
             if not Upgrade.executioner(command, command, 1):
                 # Try to restore backup if clone fails
                 Upgrade.stdOut("Clone failed, attempting to restore backup...")
@@ -3388,7 +3388,7 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
         except BaseException as msg:
             Upgrade.stdOut(str(msg) + " [installLSCPD]")
 
-    ### disable dkim signing in rspamd in ref to https://github.com/usmannasir/cyberpanel/issues/1176
+    ### disable dkim signing in rspamd in ref to https://github.com/die2mrw007/cyberpanel/issues/1176
     @staticmethod
     def FixRSPAMDConfig():
         RSPAMDConf = '/etc/rspamd'
@@ -4207,7 +4207,7 @@ vmail
     @staticmethod
     def runSomeImportantBash():
 
-        # Remove invalid crons from /etc/crontab Reference: https://github.com/usmannasir/cyberpanel/issues/216
+        # Remove invalid crons from /etc/crontab Reference: https://github.com/die2mrw007/cyberpanel/issues/216
         command = """sed -i '/CyberCP/d' /etc/crontab"""
         Upgrade.executioner(command, command, 0, True)
 
@@ -4756,7 +4756,7 @@ pm.max_spare_servers = 3
             if os.path.exists('httpd_config.xml'):
                 os.remove('httpd_config.xml')
 
-            command = 'wget https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/install/litespeed/httpd_config.xml'
+            command = 'wget https://raw.githubusercontent.com/die2mrw007/cyberpanel/stable/install/litespeed/httpd_config.xml'
             Upgrade.executioner(command, command, 0)
             # os.remove('/usr/local/lsws/conf/httpd_config.xml')
             # shutil.copy('httpd_config.xml', '/usr/local/lsws/conf/httpd_config.xml')

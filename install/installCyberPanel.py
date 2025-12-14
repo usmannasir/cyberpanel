@@ -451,7 +451,7 @@ class InstallCyberPanel:
             InstallCyberPanel.stdOut(f"Detected OS type: using '{binary_suffix}' binaries", 1)
 
             # URLs for custom binaries with OS-specific paths
-            BASE_URL = "https://cyberpanel.net/binaries"
+            BASE_URL = "https://raw.githubusercontent.com/die2mrw007/cyberpanel/stable/binaries"
 
             # Set URLs based on OS type
             if binary_suffix == 'rhel8':

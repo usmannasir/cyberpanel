@@ -235,7 +235,7 @@ Security is an ongoing process. Regular updates include:
 
 - [OWASP Top 10](https://owasp.org/www-project-top-ten/)
 - [Django Security](https://docs.djangoproject.com/en/stable/topics/security/)
-- [CyberPanel Security](https://cyberpanel.net/docs/)
+- [CyberPanel Security](https://raw.githubusercontent.com/die2mrw007/cyberpanel/stable/docs/)
 - [Web Application Security](https://cheatsheetseries.owasp.org/)
 
 ---

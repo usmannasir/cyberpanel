@@ -1258,7 +1258,7 @@ def Rspamd(request):
                         {'checkIfRspamdInstalled': checkIfRspamdInstalled, 'ipAddress': ipAddress}, 'admin')
         return proc.render()
     else:
-        return redirect("https://cyberpanel.net/cyberpanel-addons")
+        return redirect("https://raw.githubusercontent.com/die2mrw007/cyberpanel/stable/cyberpanel-addons")
 
 def installRspamd(request):
     try:
@@ -1909,7 +1909,7 @@ def EmailDebugger(request):
                         {'websiteList': websitesName}, 'admin')
         return proc.render()
     else:
-        return redirect("https://cyberpanel.net/cyberpanel-addons")
+        return redirect("https://raw.githubusercontent.com/die2mrw007/cyberpanel/stable/cyberpanel-addons")
 
 def RunServerLevelEmailChecks(request):
     try:

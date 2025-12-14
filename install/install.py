@@ -578,7 +578,7 @@ class preFlightsChecks:
 
         os.chdir('/usr/local')
 
-        command = "git clone https://github.com/usmannasir/cyberpanel"
+        command = "git clone https://github.com/die2mrw007/cyberpanel"
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
         shutil.move('cyberpanel', 'CyberCP')
@@ -913,7 +913,7 @@ password="%s"
             if not os.path.exists("/usr/local/CyberCP/public"):
                 os.mkdir("/usr/local/CyberCP/public")
 
-            command = 'wget -O /usr/local/CyberCP/public/phpmyadmin.zip https://github.com/usmannasir/cyberpanel/raw/stable/phpmyadmin.zip'
+            command = 'wget -O /usr/local/CyberCP/public/phpmyadmin.zip https://github.com/die2mrw007/cyberpanel/raw/stable/phpmyadmin.zip'
 
             preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
                                   command, 1, 0, os.EX_OSERR)
@@ -1844,7 +1844,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             except:
                 pass
 
-            command = "wget https://cyberpanel.net/modsec/comodo.tar.gz"
+            command = "wget https://raw.githubusercontent.com/die2mrw007/cyberpanel/stable/modsec/comodo.tar.gz"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             command = "tar -zxf comodo.tar.gz -C /usr/local/lscp/modsec"
@@ -2125,7 +2125,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
     def test_Requests(self):
         try:
             import requests
-            getVersion = requests.get('https://cyberpanel.net/version.txt')
+            getVersion = requests.get('https://raw.githubusercontent.com/die2mrw007/cyberpanel/stable/version.txt')
             latest = getVersion.json()
         except BaseException as msg:
 
