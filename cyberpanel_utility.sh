@@ -175,6 +175,52 @@ curl --silent https://cyberpanel.sh/misc/faq.sh | sudo -u nobody bash | less -r
 exit
 }
 
+detect_default_php() {
+	# Detect default PHP version dynamically
+	# Priority: Check symlink, then find highest available version
+	
+	local php_version=""
+	local php_version_formatted=""
+	
+	# Method 1: Check default PHP symlink
+	if [[ -L /usr/local/lscp/fcgi-bin/lsphp ]]; then
+		local default_php_path=$(readlink -f /usr/local/lscp/fcgi-bin/lsphp 2>/dev/null)
+		if [[ -n "$default_php_path" ]]; then
+			# Extract version from path like /usr/local/lsws/lsphp82/bin/lsphp
+			# Use sed for better portability (works on all systems)
+			php_version=$(echo "$default_php_path" | sed -n 's|.*/lsphp\([0-9][0-9]\)/.*|\1|p')
+			if [[ -n "$php_version" ]] && [[ ${#php_version} -ge 2 ]]; then
+				php_version_formatted="${php_version:0:1}.${php_version:1}"
+			fi
+		fi
+	fi
+	
+	# Method 2: Find highest available PHP version (fallback)
+	if [[ -z "$php_version" ]]; then
+		# Priority: 85, 84, 83, 82, 81, 80, 74, 73, 72 (newest to oldest, supporting 7.4-8.5)
+		local php_versions=('85' '84' '83' '82' '81' '80' '74' '73' '72')
+		for ver in "${php_versions[@]}"; do
+			if [[ -d "/usr/local/lsws/lsphp${ver}" ]] && [[ -f "/usr/local/lsws/lsphp${ver}/bin/lsphp" ]]; then
+				php_version="$ver"
+				if [[ ${#ver} -ge 2 ]]; then
+					php_version_formatted="${ver:0:1}.${ver:1}"
+				fi
+				break
+			fi
+		done
+	fi
+	
+	# Fallback to PHP 7.4 if nothing found (backwards compatibility)
+	if [[ -z "$php_version" ]]; then
+		if [[ -d "/usr/local/lsws/lsphp74" ]]; then
+			php_version="74"
+			php_version_formatted="7.4"
+		fi
+	fi
+	
+	echo "$php_version|$php_version_formatted"
+}
+
 addons() {
 	echo -e "\nPlease choose:"
 	echo -e "\n1. Install Memcached extension for PHP."
@@ -205,29 +251,49 @@ addons() {
 }
 
 phpmyadmin_limits() {
-	echo -e "This will change following parameters for PHP 7.3:"
+	# Detect default PHP version dynamically
+	local php_info=$(detect_default_php)
+	local php_version=$(echo "$php_info" | cut -d'|' -f1)
+	local php_version_formatted=$(echo "$php_info" | cut -d'|' -f2)
+	
+	if [[ -z "$php_version" ]] || [[ -z "$php_version_formatted" ]]; then
+		echo -e "\nError: Could not detect PHP version. Please ensure PHP is installed."
+		exit 1
+	fi
+	
+	echo -e "This will change following parameters for PHP ${php_version_formatted}:"
 	echo -e "Post Max Size from default 8M to 500M"
 	echo -e "Upload Max Filesize from default 2M to 500M"
 	echo -e "Memory Limit from default 128M to 768M"
 	echo -e "Max Execution Time from default 30 to 600"
-	echo -e "\nPlease note this will also apply to all sites use PHP 7.3"
+	echo -e "\nPlease note this will also apply to all sites using PHP ${php_version_formatted}"
 	printf "%s" "Please confirm to proceed: [Y/n]: "
 	read TMP_YN
 	if [[ $TMP_YN == "Y" ]] || [[ $TMP_YN == "y" ]] ; then 
 	
+		local php_ini_path=""
+		
+		# Determine php.ini path based on OS and PHP version
 		if [[ "$SERVER_OS" == "CentOS" ]] || [[ "$SERVER_OS" == "openEuler" ]] ; then 
-			php_ini_path="/usr/local/lsws/lsphp73/etc/php.ini"
-		fi 
-
-		if [[ "$SERVER_OS" == "Ubuntu" ]] ; then 
-			php_ini_path="/usr/local/lsws/lsphp73/etc/php/7.3/litespeed/php.ini"
-		fi 
-			sed -i 's|post_max_size = 8M|post_max_size = 500M|g' $php_ini_path
-			sed -i 's|upload_max_filesize = 2M|upload_max_filesize = 500M |g' $php_ini_path
-			sed -i 's|memory_limit = 128M|memory_limit = 768M|g' $php_ini_path
-			sed -i 's|max_execution_time = 30|max_execution_time = 600|g' $php_ini_path
-			systemctl restart lscpd
-			echo "Change applied..."
+			php_ini_path="/usr/local/lsws/lsphp${php_version}/etc/php.ini"
+		elif [[ "$SERVER_OS" == "Ubuntu" ]] ; then 
+			php_ini_path="/usr/local/lsws/lsphp${php_version}/etc/php/${php_version_formatted}/litespeed/php.ini"
+		fi
+		
+		# Verify php.ini file exists
+		if [[ ! -f "$php_ini_path" ]]; then
+			echo -e "\nError: PHP configuration file not found at: $php_ini_path"
+			echo -e "Please verify PHP ${php_version_formatted} is properly installed."
+			exit 1
+		fi
+		
+		# Apply changes
+		sed -i 's|post_max_size = 8M|post_max_size = 500M|g' "$php_ini_path"
+		sed -i 's|upload_max_filesize = 2M|upload_max_filesize = 500M |g' "$php_ini_path"
+		sed -i 's|memory_limit = 128M|memory_limit = 768M|g' "$php_ini_path"
+		sed -i 's|max_execution_time = 30|max_execution_time = 600|g' "$php_ini_path"
+		systemctl restart lscpd
+		echo "Change applied to PHP ${php_version_formatted} configuration..."
   else 
 		echo -e "Please enter Y or n."
 		exit 
@@ -235,14 +301,21 @@ phpmyadmin_limits() {
 }
 
 install_php_redis() {
+	# Install Redis extension for PHP 7.4-8.5 (backwards compatible)
 	if [[ $SERVER_OS == "CentOS" ]] ; then
-		yum install -y lsphp74-redis lsphp73-redis lsphp72-redis lsphp71-redis lsphp70-redis lsphp56-redis lsphp55-redis lsphp54-redis
+		yum install -y lsphp85-redis lsphp84-redis lsphp83-redis lsphp82-redis lsphp81-redis lsphp80-redis lsphp74-redis lsphp73-redis lsphp72-redis lsphp71-redis lsphp70-redis lsphp56-redis lsphp55-redis lsphp54-redis 2>/dev/null || \
+		yum install -y lsphp84-redis lsphp83-redis lsphp82-redis lsphp81-redis lsphp80-redis lsphp74-redis lsphp73-redis lsphp72-redis lsphp71-redis lsphp70-redis lsphp56-redis lsphp55-redis lsphp54-redis 2>/dev/null || \
+		yum install -y lsphp83-redis lsphp82-redis lsphp81-redis lsphp80-redis lsphp74-redis lsphp73-redis lsphp72-redis lsphp71-redis lsphp70-redis lsphp56-redis lsphp55-redis lsphp54-redis
 	fi
 	if [[ $SERVER_OS == "Ubuntu" ]] ; then
-		DEBIAN_FRONTEND=noninteractive apt install -y lsphp74-redis lsphp73-redis lsphp72-redis lsphp71-redis lsphp70-redis
+		DEBIAN_FRONTEND=noninteractive apt install -y lsphp85-redis lsphp84-redis lsphp83-redis lsphp82-redis lsphp81-redis lsphp80-redis lsphp74-redis lsphp73-redis lsphp72-redis lsphp71-redis lsphp70-redis 2>/dev/null || \
+		DEBIAN_FRONTEND=noninteractive apt install -y lsphp84-redis lsphp83-redis lsphp82-redis lsphp81-redis lsphp80-redis lsphp74-redis lsphp73-redis lsphp72-redis lsphp71-redis lsphp70-redis 2>/dev/null || \
+		DEBIAN_FRONTEND=noninteractive apt install -y lsphp83-redis lsphp82-redis lsphp81-redis lsphp80-redis lsphp74-redis lsphp73-redis lsphp72-redis lsphp71-redis lsphp70-redis
 	fi
 	if [[ $SERVER_OS == "openEuler" ]] ; then
-		dnf install -y lsphp74-redis lsphp73-redis lsphp72-redis lsphp71-redis
+		dnf install -y lsphp85-redis lsphp84-redis lsphp83-redis lsphp82-redis lsphp81-redis lsphp80-redis lsphp74-redis lsphp73-redis lsphp72-redis lsphp71-redis 2>/dev/null || \
+		dnf install -y lsphp84-redis lsphp83-redis lsphp82-redis lsphp81-redis lsphp80-redis lsphp74-redis lsphp73-redis lsphp72-redis lsphp71-redis 2>/dev/null || \
+		dnf install -y lsphp83-redis lsphp82-redis lsphp81-redis lsphp80-redis lsphp74-redis lsphp73-redis lsphp72-redis lsphp71-redis
 	fi
 	echo -e "\nRedis extension for PHP has been installed..."
 	exit
@@ -359,14 +432,21 @@ read TMP_YN
 }
 
 install_php_memcached() {
+	# Install Memcached extension for PHP 7.4-8.5 (backwards compatible)
 	if [[ $SERVER_OS == "CentOS" ]] ; then
-	yum install -y lsphp74-memcached lsphp73-memcached lsphp72-memcached lsphp71-memcached lsphp70-memcached lsphp56-pecl-memcached lsphp55-pecl-memcached lsphp54-pecl-memcached
+		yum install -y lsphp85-memcached lsphp84-memcached lsphp83-memcached lsphp82-memcached lsphp81-memcached lsphp80-memcached lsphp74-memcached lsphp73-memcached lsphp72-memcached lsphp71-memcached lsphp70-memcached lsphp56-pecl-memcached lsphp55-pecl-memcached lsphp54-pecl-memcached 2>/dev/null || \
+		yum install -y lsphp84-memcached lsphp83-memcached lsphp82-memcached lsphp81-memcached lsphp80-memcached lsphp74-memcached lsphp73-memcached lsphp72-memcached lsphp71-memcached lsphp70-memcached lsphp56-pecl-memcached lsphp55-pecl-memcached lsphp54-pecl-memcached 2>/dev/null || \
+		yum install -y lsphp83-memcached lsphp82-memcached lsphp81-memcached lsphp80-memcached lsphp74-memcached lsphp73-memcached lsphp72-memcached lsphp71-memcached lsphp70-memcached lsphp56-pecl-memcached lsphp55-pecl-memcached lsphp54-pecl-memcached
 	fi
 	if [[ $SERVER_OS == "Ubuntu" ]] ; then
-	DEBIAN_FRONTEND=noninteractive apt install -y lsphp74-memcached lsphp73-memcached lsphp72-memcached lsphp71-memcached lsphp70-memcached
+		DEBIAN_FRONTEND=noninteractive apt install -y lsphp85-memcached lsphp84-memcached lsphp83-memcached lsphp82-memcached lsphp81-memcached lsphp80-memcached lsphp74-memcached lsphp73-memcached lsphp72-memcached lsphp71-memcached lsphp70-memcached 2>/dev/null || \
+		DEBIAN_FRONTEND=noninteractive apt install -y lsphp84-memcached lsphp83-memcached lsphp82-memcached lsphp81-memcached lsphp80-memcached lsphp74-memcached lsphp73-memcached lsphp72-memcached lsphp71-memcached lsphp70-memcached 2>/dev/null || \
+		DEBIAN_FRONTEND=noninteractive apt install -y lsphp83-memcached lsphp82-memcached lsphp81-memcached lsphp80-memcached lsphp74-memcached lsphp73-memcached lsphp72-memcached lsphp71-memcached lsphp70-memcached
 	fi
 	if [[ $SERVER_OS == "openEuler" ]] ; then
-	dnf install -y lsphp74-memcached lsphp73-memcached lsphp72-memcached lsphp71-memcached
+		dnf install -y lsphp85-memcached lsphp84-memcached lsphp83-memcached lsphp82-memcached lsphp81-memcached lsphp80-memcached lsphp74-memcached lsphp73-memcached lsphp72-memcached lsphp71-memcached 2>/dev/null || \
+		dnf install -y lsphp84-memcached lsphp83-memcached lsphp82-memcached lsphp81-memcached lsphp80-memcached lsphp74-memcached lsphp73-memcached lsphp72-memcached lsphp71-memcached 2>/dev/null || \
+		dnf install -y lsphp83-memcached lsphp82-memcached lsphp81-memcached lsphp80-memcached lsphp74-memcached lsphp73-memcached lsphp72-memcached lsphp71-memcached
 	fi
 	echo -e "\nMemcached extension for PHP has been installed..."
 	exit
