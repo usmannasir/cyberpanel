@@ -124,8 +124,14 @@ class virtualHostUtilities:
         else:
             try:
                 rDNS = mailUtilities.reverse_dns_lookup(serverIP)
+                # Check if rDNS lookup returned empty results (indicating lookup failure)
+                if not rDNS or len(rDNS) == 0:
+                    message = f'Failed to perform reverse DNS lookup for server IP {serverIP}. The DNS lookup service may be unavailable or the IP address may not have rDNS configured. Please verify your rDNS settings with your hosting provider or check the "Skip rDNS/PTR Check" option if you do not need email services. [404]'
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, message)
+                    logging.CyberCPLogFileWriter.writeToFile(message)
+                    return 0
             except Exception as e:
-                message = f'Failed to perform reverse DNS lookup: {str(e)} [404]'
+                message = f'Failed to perform reverse DNS lookup for server IP {serverIP}: {str(e)}. Please verify your rDNS settings with your hosting provider or check the "Skip rDNS/PTR Check" option if you do not need email services. [404]'
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, message)
                 logging.CyberCPLogFileWriter.writeToFile(message)
                 return 0
@@ -329,9 +335,22 @@ class virtualHostUtilities:
 
             #first check if hostname is already configured as rDNS, if not return error
 
+            # Validate that we have rDNS results before checking
+            if not rDNS or len(rDNS) == 0:
+                message = f'Reverse DNS lookup failed for server IP {serverIP}. Unable to verify if domain "{Domain}" is configured as rDNS. Please check your rDNS configuration with your hosting provider or select "Skip rDNS/PTR Check" if you do not need email services. [404]'
+                print(message)
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, message)
+                logging.CyberCPLogFileWriter.writeToFile(message)
+                config['hostname'] = Domain
+                config['onboarding'] = 3
+                config['skipRDNSCheck'] = skipRDNSCheck
+                admin.config = json.dumps(config)
+                admin.save()
+                return 0
 
             if Domain not in rDNS:
-                message = 'Domain that you have provided is not configured as rDNS for your server IP. [404]'
+                rDNS_list_str = ', '.join(rDNS) if rDNS else 'none'
+                message = f'Domain "{Domain}" that you have provided is not configured as rDNS for your server IP {serverIP}. Current rDNS records: {rDNS_list_str}. Please configure rDNS (PTR record) for your IP address to point to "{Domain}" with your hosting provider, or select "Skip rDNS/PTR Check" if you do not need email services. [404]'
                 print(message)
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, message)
                 logging.CyberCPLogFileWriter.writeToFile(message)

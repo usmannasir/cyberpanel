@@ -2563,11 +2563,12 @@ Require valid-user
             childDomains = []
 
             for web in websites:
-                for child in web.childdomains_set.filter(alais=0):
-                    if child.domain == f'mail.{web.domain}':
-                        pass
-                    else:
-                        childDomains.append(child)
+                for child in web.childdomains_set.all():
+                    if child.alais == 0:
+                        if child.domain == f'mail.{web.domain}':
+                            pass
+                        else:
+                            childDomains.append(child)
 
             pagination = self.getPagination(len(childDomains), recordsToShow)
             json_data = self.findChildsListJson(childDomains[finalPageNumber:endPageNumber])
@@ -2577,6 +2578,8 @@ Require valid-user
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
         except BaseException as msg:
+            import traceback
+            logging.CyberCPLogFileWriter.writeToFile(f"fetchChildDomainsMain error for userID {userID}: {str(msg)}\n{traceback.format_exc()}")
             dic = {'status': 1, 'listWebSiteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
