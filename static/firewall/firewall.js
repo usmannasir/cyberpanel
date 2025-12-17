@@ -1285,28 +1285,36 @@ app.controller('modSecRulesPack', function ($scope, $http, $timeout, $window) {
                     if (response.data.owaspInstalled === 1) {
                         $('#owaspInstalled').bootstrapToggle('on');
                         $scope.owaspDisable = false;
+                        owaspInstalled = true;
                     } else {
                         $('#owaspInstalled').bootstrapToggle('off');
                         $scope.owaspDisable = true;
+                        owaspInstalled = false;
                     }
                     if (response.data.comodoInstalled === 1) {
                         $('#comodoInstalled').bootstrapToggle('on');
                         $scope.comodoDisable = false;
+                        comodoInstalled = true;
                     } else {
                         $('#comodoInstalled').bootstrapToggle('off');
                         $scope.comodoDisable = true;
+                        comodoInstalled = false;
                     }
                 } else {
 
                     if (response.data.owaspInstalled === 1) {
                         $scope.owaspDisable = false;
+                        owaspInstalled = true;
                     } else {
                         $scope.owaspDisable = true;
+                        owaspInstalled = false;
                     }
                     if (response.data.comodoInstalled === 1) {
                         $scope.comodoDisable = false;
+                        comodoInstalled = true;
                     } else {
                         $scope.comodoDisable = true;
+                        comodoInstalled = false;
                     }
                 }
 

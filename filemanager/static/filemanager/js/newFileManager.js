@@ -976,12 +976,25 @@ function findFileExtension(fileName) {
         
         var extractionLocation = $scope.extractionLocation;
         var fileToExtract = allFilesAndFolders[0];
+        var extractionType = "";
+        var fileExt = findFileExtension(fileToExtract);
+        
+        if (fileExt == "gz") {
+            extractionType = "tar.gz";
+        } else if (fileExt == "7z") {
+            extractionType = "7z";
+        } else if (fileExt == "rar") {
+            extractionType = "rar";
+        } else {
+            extractionType = "zip";
+        }
         
         var data = {
             method: "extract",
             domainRandomSeed: domainRandomSeed,
             domainName: domainName,
             fileToExtract: fileToExtract,
+            extractionType: extractionType,
             extractionLocation: extractionLocation,
             completeStartingPath: $scope.completeStartingPath
         };
