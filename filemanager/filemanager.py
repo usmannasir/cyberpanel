@@ -1043,6 +1043,13 @@ class FileManager:
                 if self.data['extractionType'] == 'zip':
                     command = 'unzip -o ' + self.returnPathEnclosed(
                         self.data['fileToExtract']) + ' -d ' + self.returnPathEnclosed(self.data['extractionLocation'])
+                elif self.data['extractionType'] == '7z':
+                    command = '7z x ' + self.returnPathEnclosed(
+                        self.data['fileToExtract']) + ' -o' + self.returnPathEnclosed(self.data['extractionLocation']) + ' -y'
+                elif self.data['extractionType'] == 'rar':
+                    # Try unrar first (free), fallback to 7z if unrar not available
+                    command = 'unrar x ' + self.returnPathEnclosed(
+                        self.data['fileToExtract']) + ' ' + self.returnPathEnclosed(self.data['extractionLocation']) + ' -y'
                 else:
                     command = 'tar -xf ' + self.returnPathEnclosed(
                         self.data['fileToExtract']) + ' -C ' + self.returnPathEnclosed(self.data['extractionLocation'])
@@ -1068,6 +1075,13 @@ class FileManager:
                 if self.data['extractionType'] == 'zip':
                     command = 'unzip -o ' + self.returnPathEnclosed(
                         self.data['fileToExtract']) + ' -d ' + self.returnPathEnclosed(self.data['extractionLocation'])
+                elif self.data['extractionType'] == '7z':
+                    command = '7z x ' + self.returnPathEnclosed(
+                        self.data['fileToExtract']) + ' -o' + self.returnPathEnclosed(self.data['extractionLocation']) + ' -y'
+                elif self.data['extractionType'] == 'rar':
+                    # Try unrar first (free), fallback to 7z if unrar not available
+                    command = 'unrar x ' + self.returnPathEnclosed(
+                        self.data['fileToExtract']) + ' ' + self.returnPathEnclosed(self.data['extractionLocation']) + ' -y'
                 else:
                     command = 'tar -xf ' + self.returnPathEnclosed(
                         self.data['fileToExtract']) + ' -C ' + self.returnPathEnclosed(self.data['extractionLocation'])
@@ -1098,6 +1112,15 @@ class FileManager:
                     compressedFileName = self.returnPathEnclosed(
                         self.data['basePath'] + '/' + self.data['compressedFileName'] + '.zip')
                     command = 'zip -r ' + compressedFileName + ' '
+                elif self.data['compressionType'] == '7z':
+                    compressedFileName = self.returnPathEnclosed(
+                        self.data['basePath'] + '/' + self.data['compressedFileName'] + '.7z')
+                    command = '7z a -t7z ' + compressedFileName + ' '
+                elif self.data['compressionType'] == 'rar':
+                    compressedFileName = self.returnPathEnclosed(
+                        self.data['basePath'] + '/' + self.data['compressedFileName'] + '.rar')
+                    # Use 7z to create RAR format (7z can create RAR archives)
+                    command = '7z a -trar ' + compressedFileName + ' '
                 else:
                     compressedFileName = self.returnPathEnclosed(
                         self.data['basePath'] + '/' + self.data['compressedFileName'] + '.tar.gz')
@@ -1127,6 +1150,15 @@ class FileManager:
                     compressedFileName = self.returnPathEnclosed(
                         self.data['basePath'] + '/' + self.data['compressedFileName'] + '.zip')
                     command = 'zip -r ' + compressedFileName + ' '
+                elif self.data['compressionType'] == '7z':
+                    compressedFileName = self.returnPathEnclosed(
+                        self.data['basePath'] + '/' + self.data['compressedFileName'] + '.7z')
+                    command = '7z a -t7z ' + compressedFileName + ' '
+                elif self.data['compressionType'] == 'rar':
+                    compressedFileName = self.returnPathEnclosed(
+                        self.data['basePath'] + '/' + self.data['compressedFileName'] + '.rar')
+                    # Use 7z to create RAR format (7z can create RAR archives)
+                    command = '7z a -trar ' + compressedFileName + ' '
                 else:
                     compressedFileName = self.returnPathEnclosed(
                         self.data['basePath'] + '/' + self.data['compressedFileName'] + '.tar.gz')

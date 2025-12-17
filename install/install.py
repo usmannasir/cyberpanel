@@ -794,6 +794,274 @@ class preFlightsChecks:
             self.stdOut(f"Error applying OS-specific fixes: {str(e)}", 0)
             return False
 
+    def detectArchitecture(self):
+        """Detect system architecture - custom binaries only for x86_64"""
+        try:
+            import platform
+            arch = platform.machine()
+            return arch == "x86_64"
+        except Exception as msg:
+            self.stdOut(str(msg) + " [detectArchitecture]", 0)
+            return False
+
+    def detectPlatform(self):
+        """Detect OS platform for binary selection (rhel8, rhel9, ubuntu)"""
+        try:
+            # Check for Ubuntu
+            if os.path.exists('/etc/lsb-release'):
+                with open('/etc/lsb-release', 'r') as f:
+                    content = f.read()
+                    if 'Ubuntu' in content or 'ubuntu' in content:
+                        return 'ubuntu'
+
+            # Check for RHEL-based distributions
+            if os.path.exists('/etc/os-release'):
+                with open('/etc/os-release', 'r') as f:
+                    content = f.read().lower()
+
+                    # Check for version 8.x (RHEL, AlmaLinux, Rocky, CloudLinux, CentOS 8)
+                    if 'version="8.' in content or 'version_id="8.' in content:
+                        if any(distro in content for distro in ['red hat', 'almalinux', 'rocky', 'cloudlinux', 'centos']):
+                            return 'rhel8'
+
+                    # Check for version 9.x
+                    if 'version="9.' in content or 'version_id="9.' in content:
+                        if any(distro in content for distro in ['red hat', 'almalinux', 'rocky', 'cloudlinux', 'centos']):
+                            return 'rhel9'
+
+            # Default to rhel9 if can't detect (safer default for newer systems)
+            self.stdOut("WARNING: Could not detect platform, defaulting to rhel9", 1)
+            return 'rhel9'
+
+        except Exception as msg:
+            self.stdOut(f"ERROR detecting platform: {msg}, defaulting to rhel9", 0)
+            return 'rhel9'
+
+    def downloadCustomBinary(self, url, destination, expected_sha256=None):
+        """Download custom binary file with optional checksum verification"""
+        try:
+            self.stdOut(f"Downloading {os.path.basename(destination)}...", 1)
+
+            # Use wget for better progress display
+            command = f'wget -q --show-progress {url} -O {destination}'
+            res = self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+            # Check if file was downloaded successfully by verifying it exists and has reasonable size
+            if os.path.exists(destination):
+                file_size = os.path.getsize(destination)
+                # Verify file size is reasonable (at least 10KB to avoid error pages/empty files)
+                if file_size > 10240:  # 10KB
+                    if file_size > 1048576:  # 1MB
+                        self.stdOut(f"Downloaded successfully ({file_size / (1024*1024):.2f} MB)", 1)
+                    else:
+                        self.stdOut(f"Downloaded successfully ({file_size / 1024:.2f} KB)", 1)
+
+                    # Verify checksum if provided
+                    if expected_sha256:
+                        self.stdOut("Verifying checksum...", 1)
+                        import hashlib
+                        sha256_hash = hashlib.sha256()
+                        with open(destination, "rb") as f:
+                            for byte_block in iter(lambda: f.read(4096), b""):
+                                sha256_hash.update(byte_block)
+                        actual_sha256 = sha256_hash.hexdigest()
+
+                        if actual_sha256 == expected_sha256:
+                            self.stdOut("Checksum verified successfully", 1)
+                            return True
+                        else:
+                            self.stdOut(f"ERROR: Checksum mismatch!", 1)
+                            self.stdOut(f"Expected: {expected_sha256}", 1)
+                            self.stdOut(f"Got:      {actual_sha256}", 1)
+                            return False
+                    else:
+                        return True
+                else:
+                    self.stdOut(f"ERROR: Downloaded file too small ({file_size} bytes)", 1)
+                    return False
+            else:
+                self.stdOut("ERROR: Download failed - file not found", 1)
+                return False
+
+        except Exception as msg:
+            self.stdOut(f"ERROR: {msg} [downloadCustomBinary]", 0)
+            return False
+
+    def installCustomOLSBinaries(self):
+        """Install custom OpenLiteSpeed binaries with PHP config support"""
+        try:
+            self.stdOut("Installing Custom OpenLiteSpeed Binaries", 1)
+            self.stdOut("=" * 50, 1)
+
+            # Check architecture
+            if not self.detectArchitecture():
+                self.stdOut("WARNING: Custom binaries only available for x86_64", 1)
+                self.stdOut("Skipping custom binary installation", 1)
+                self.stdOut("Standard OLS will be used", 1)
+                return True  # Not a failure, just skip
+
+            # Detect platform
+            platform = self.detectPlatform()
+            self.stdOut(f"Detected platform: {platform}", 1)
+
+            # Platform-specific URLs and checksums (OpenLiteSpeed v1.8.4.1 - v2.0.5 Static Build)
+            BINARY_CONFIGS = {
+                'rhel8': {
+                    'url': 'https://cyberpanel.net/openlitespeed-phpconfig-x86_64-rhel8-static',
+                    'sha256': '6ce688a237615102cc1603ee1999b3cede0ff3482d31e1f65705e92396d34b3a',
+                    'module_url': None,  # RHEL 8 doesn't have module (use RHEL 9 if needed)
+                    'module_sha256': None
+                },
+                'rhel9': {
+                    'url': 'https://cyberpanel.net/openlitespeed-phpconfig-x86_64-rhel9-static',
+                    'sha256': '90468fb38767505185013024678d9144ae13100d2355097657f58719d98fbbc4',
+                    'module_url': 'https://cyberpanel.net/cyberpanel_ols_x86_64_rhel.so',
+                    'module_sha256': '127227db81bcbebf80b225fc747b69cfcd4ad2f01cea486aa02d5c9ba6c18109'
+                },
+                'ubuntu': {
+                    'url': 'https://cyberpanel.net/openlitespeed-phpconfig-x86_64-ubuntu-static',
+                    'sha256': '89aaf66474e78cb3c1666784e0e7a417550bd317e6ab148201bdc318d36710cb',
+                    'module_url': 'https://cyberpanel.net/cyberpanel_ols_x86_64_ubuntu.so',
+                    'module_sha256': 'e7734f1e6226c2a0a8e00c1f6534ea9f577df9081b046736a774b1c52c28e7e5'
+                }
+            }
+
+            config = BINARY_CONFIGS.get(platform)
+            if not config:
+                self.stdOut(f"ERROR: No binaries available for platform {platform}", 1)
+                self.stdOut("Skipping custom binary installation", 1)
+                return True  # Not fatal
+
+            OLS_BINARY_URL = config['url']
+            OLS_BINARY_SHA256 = config['sha256']
+            MODULE_URL = config['module_url']
+            MODULE_SHA256 = config['module_sha256']
+            OLS_BINARY_PATH = "/usr/local/lsws/bin/openlitespeed"
+            MODULE_PATH = "/usr/local/lsws/modules/cyberpanel_ols.so"
+
+            # Create backup
+            from datetime import datetime
+            timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+            backup_dir = f"/usr/local/lsws/backup-{timestamp}"
+
+            try:
+                os.makedirs(backup_dir, exist_ok=True)
+                if os.path.exists(OLS_BINARY_PATH):
+                    shutil.copy2(OLS_BINARY_PATH, f"{backup_dir}/openlitespeed.backup")
+                    self.stdOut(f"Backup created at: {backup_dir}", 1)
+            except Exception as e:
+                self.stdOut(f"WARNING: Could not create backup: {e}", 1)
+
+            # Download binaries to temp location
+            tmp_binary = "/tmp/openlitespeed-custom"
+            tmp_module = "/tmp/cyberpanel_ols.so"
+
+            self.stdOut("Downloading custom binaries...", 1)
+
+            # Download OpenLiteSpeed binary with checksum verification
+            if not self.downloadCustomBinary(OLS_BINARY_URL, tmp_binary, OLS_BINARY_SHA256):
+                self.stdOut("ERROR: Failed to download or verify OLS binary", 1)
+                self.stdOut("Continuing with standard OLS", 1)
+                return True  # Not fatal, continue with standard OLS
+
+            # Download module with checksum verification (if available)
+            module_downloaded = False
+            if MODULE_URL and MODULE_SHA256:
+                if not self.downloadCustomBinary(MODULE_URL, tmp_module, MODULE_SHA256):
+                    self.stdOut("ERROR: Failed to download or verify module", 1)
+                    self.stdOut("Continuing with standard OLS", 1)
+                    return True  # Not fatal, continue with standard OLS
+                module_downloaded = True
+            else:
+                self.stdOut("Note: No CyberPanel module for this platform", 1)
+
+            # Install OpenLiteSpeed binary
+            self.stdOut("Installing custom binaries...", 1)
+
+            try:
+                shutil.move(tmp_binary, OLS_BINARY_PATH)
+                os.chmod(OLS_BINARY_PATH, 0o755)
+                self.stdOut("Installed OpenLiteSpeed binary", 1)
+            except Exception as e:
+                self.stdOut(f"ERROR: Failed to install binary: {e}", 1)
+                return False
+
+            # Install module (if downloaded)
+            if module_downloaded:
+                try:
+                    os.makedirs(os.path.dirname(MODULE_PATH), exist_ok=True)
+                    shutil.move(tmp_module, MODULE_PATH)
+                    os.chmod(MODULE_PATH, 0o644)
+                    self.stdOut("Installed CyberPanel module", 1)
+                except Exception as e:
+                    self.stdOut(f"ERROR: Failed to install module: {e}", 1)
+                    return False
+
+            # Verify installation
+            if os.path.exists(OLS_BINARY_PATH):
+                if not module_downloaded or os.path.exists(MODULE_PATH):
+                    self.stdOut("=" * 50, 1)
+                    self.stdOut("Custom Binaries Installed Successfully", 1)
+                    self.stdOut("Features enabled:", 1)
+                    self.stdOut("  - Static-linked cross-platform binary", 1)
+                    if module_downloaded:
+                        self.stdOut("  - Apache-style .htaccess support", 1)
+                        self.stdOut("  - php_value/php_flag directives", 1)
+                        self.stdOut("  - Enhanced header control", 1)
+                    self.stdOut(f"Backup: {backup_dir}", 1)
+                    self.stdOut("=" * 50, 1)
+                    # Configure module after installation
+                    self.configureCustomModule()
+                    return True
+
+            self.stdOut("ERROR: Installation verification failed", 1)
+            return False
+
+        except Exception as msg:
+            self.stdOut(f"ERROR: {msg} [installCustomOLSBinaries]", 0)
+            self.stdOut("Continuing with standard OLS", 1)
+            return True  # Non-fatal error, continue
+
+    def configureCustomModule(self):
+        """Configure CyberPanel module in OpenLiteSpeed config"""
+        try:
+            self.stdOut("Configuring CyberPanel module...", 1)
+
+            CONFIG_FILE = "/usr/local/lsws/conf/httpd_config.conf"
+
+            if not os.path.exists(CONFIG_FILE):
+                self.stdOut("WARNING: Config file not found", 1)
+                self.stdOut("Module will be auto-loaded", 1)
+                return True
+
+            # Check if module is already configured
+            with open(CONFIG_FILE, 'r') as f:
+                content = f.read()
+                if 'cyberpanel_ols' in content:
+                    self.stdOut("Module already configured", 1)
+                    return True
+
+            # Add module configuration
+            module_config = """
+module cyberpanel_ols {
+  ls_enabled          1
+}
+"""
+            # Backup config
+            shutil.copy2(CONFIG_FILE, f"{CONFIG_FILE}.backup")
+
+            # Append module config
+            with open(CONFIG_FILE, 'a') as f:
+                f.write(module_config)
+
+            self.stdOut("Module configured successfully", 1)
+            return True
+
+        except Exception as msg:
+            self.stdOut(f"WARNING: Module configuration failed: {msg}", 1)
+            self.stdOut("Module may still work via auto-load", 1)
+            return True  # Non-fatal
+
     def installLiteSpeed(self, ent, serial):
         """Install LiteSpeed Web Server (OpenLiteSpeed or Enterprise)"""
         try:
@@ -806,6 +1074,10 @@ class preFlightsChecks:
                     self.install_package('openlitespeed')
                 else:
                     self.install_package('openlitespeed')
+                
+                # Install custom binaries with PHP config support
+                # This replaces the standard binary with enhanced version
+                self.installCustomOLSBinaries()
                 
                 # Configure OpenLiteSpeed
                 self.fix_ols_configs()
