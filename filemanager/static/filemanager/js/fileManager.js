@@ -1251,9 +1251,14 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
         var completeFileToExtract = pathbase + "/" + allFilesAndFolders[0];
         var extractionType = "";
+        var fileExt = findFileExtension(completeFileToExtract);
 
-        if (findFileExtension(completeFileToExtract) == "gz") {
+        if (fileExt == "gz") {
             extractionType = "tar.gz";
+        } else if (fileExt == "7z") {
+            extractionType = "7z";
+        } else if (fileExt == "rar") {
+            extractionType = "rar";
         } else {
             extractionType = "zip";
         }

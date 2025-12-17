@@ -825,6 +825,191 @@
             top: 130px;
         }
         
+        /* .htaccess Feature Banner */
+        .htaccess-feature-banner {
+            position: fixed;
+            top: 80px;
+            left: 260px;
+            right: 0;
+            background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
+            border-bottom: 2px solid #065f46;
+            padding: 18px 30px;
+            z-index: 997;
+            box-shadow: 0 6px 25px rgba(16, 185, 129, 0.3);
+            animation: slideDown 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            display: none;
+        }
+
+        .htaccess-feature-banner.show {
+            display: block;
+        }
+
+        .htaccess-content {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .htaccess-icon {
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 14px;
+            padding: 14px;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .htaccess-icon i {
+            color: white;
+            font-size: 1.75rem;
+            display: block;
+        }
+
+        .htaccess-text {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .htaccess-main-text {
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 700;
+            line-height: 1.4;
+            letter-spacing: 0.3px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .htaccess-sub-text {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .htaccess-sub-text span {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .htaccess-sub-text i {
+            font-size: 0.75rem;
+        }
+
+        .htaccess-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .htaccess-btn {
+            background: white;
+            color: #047857;
+            padding: 14px 28px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+            border: 2px solid transparent;
+        }
+
+        .htaccess-btn:hover {
+            background: #f0fdf4;
+            color: #065f46;
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            text-decoration: none;
+            border-color: white;
+        }
+
+        .htaccess-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(16, 185, 129, 0.1);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
+        }
+
+        .htaccess-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .htaccess-btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .htaccess-btn i {
+            font-size: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .htaccess-close {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(12px);
+        }
+
+        .htaccess-close:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.1) rotate(90deg);
+        }
+
+        /* Adjust main content when .htaccess banner is shown */
+        .htaccess-shown #main-content {
+            padding-top: 190px;
+        }
+
+        /* Multiple banners adjustments */
+        .notification-shown.htaccess-shown #main-content {
+            padding-top: 240px;
+        }
+
+        .ai-scanner-shown.htaccess-shown #main-content {
+            padding-top: 270px;
+        }
+
+        .notification-shown.ai-scanner-shown.htaccess-shown #main-content {
+            padding-top: 320px;
+        }
+
+        .notification-shown .htaccess-feature-banner {
+            top: 130px;
+        }
+
+        .ai-scanner-shown .htaccess-feature-banner {
+            top: 160px;
+        }
+
+        .notification-shown.ai-scanner-shown .htaccess-feature-banner {
+            top: 210px;
+        }
+        
         /* Mobile responsive styles for AI Scanner banner */
         @media (max-width: 768px) {
             .ai-scanner-banner {
@@ -1832,6 +2017,32 @@
         </div>
     </div>
     
+    <!-- .htaccess Feature Announcement -->
+    <div id="htaccess-notification" class="htaccess-feature-banner">
+        <div class="htaccess-content">
+            <div class="htaccess-icon">
+                <i class="fas fa-magic"></i>
+            </div>
+            <div class="htaccess-text">
+                <span class="htaccess-main-text">✨ Revolutionary .htaccess Support Now Live!</span>
+                <span class="htaccess-sub-text">
+                    <span><i class="fas fa-check-circle"></i> Full .htaccess support</span>
+                    <span><i class="fas fa-check-circle"></i> PHP configuration now works</span>
+                    <span><i class="fas fa-check-circle"></i> Zero rule rewrites needed</span>
+                </span>
+            </div>
+            <div class="htaccess-actions">
+                <a href="https://cyberpanel.net/cyberpanel-htaccess-module" target="_blank" rel="noopener" class="htaccess-btn">
+                    <i class="fas fa-book-open"></i>
+                    <span>Learn More</span>
+                </a>
+            </div>
+            <button class="htaccess-close" onclick="dismissHtaccessNotification()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+    
     <!-- Main Content -->
     <div id="main-content">
         {% block content %}{% endblock %}
@@ -2053,11 +2264,49 @@
             });
         }
         
-        // Check both notification statuses when page loads
+        // .htaccess Feature Notification Functions
+        function checkHtaccessStatus() {
+            // Check if user has dismissed the notification permanently (localStorage for longer persistence)
+            if (localStorage.getItem('htaccessNotificationDismissed') === 'true') {
+                return;
+            }
+
+            // Check if notification has been shown today
+            const lastShown = localStorage.getItem('htaccessNotificationLastShown');
+            const today = new Date().toDateString();
+
+            if (lastShown === today) {
+                return;
+            }
+
+            // Show the notification
+            showHtaccessNotification();
+            localStorage.setItem('htaccessNotificationLastShown', today);
+        }
+
+        function showHtaccessNotification() {
+            const banner = document.getElementById('htaccess-notification');
+            const body = document.body;
+            banner.classList.add('show');
+            body.classList.add('htaccess-shown');
+        }
+
+        function dismissHtaccessNotification() {
+            const banner = document.getElementById('htaccess-notification');
+            const body = document.body;
+            banner.classList.remove('show');
+            body.classList.remove('htaccess-shown');
+            // Remember dismissal permanently
+            localStorage.setItem('htaccessNotificationDismissed', 'true');
+        }
+        
+        // Check all notification statuses when page loads
         document.addEventListener('DOMContentLoaded', function() {
             checkBackupStatus();
             // Show AI Scanner notification with a slight delay for better UX
             setTimeout(checkAIScannerStatus, 1000);
+            // Show .htaccess notification with additional delay for staggered effect
+            setTimeout(checkHtaccessStatus, 1500);
             
             // Set active menu state based on current URL
             setActiveMenuState();

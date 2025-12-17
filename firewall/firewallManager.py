@@ -1040,6 +1040,25 @@ class FirewallManager:
                         elif items.find('modsec/owasp') > -1 or items.find('owasp-modsecurity-crs') > -1:
                             owaspInstalled = 1
 
+                        if owaspInstalled == 1 and comodoInstalled == 1:
+                            break
+
+                    # Also check rules.conf for manual OWASP installations (case-insensitive)
+                    if owaspInstalled == 0:
+                        rulesConfPath = os.path.join(virtualHostUtilities.Server_root, "conf/modsec/rules.conf")
+                        if os.path.exists(rulesConfPath):
+                            try:
+                                command = "sudo cat " + rulesConfPath
+                                rulesConfig = ProcessUtilities.outputExecutioner(command).splitlines()
+                                for items in rulesConfig:
+                                    # Check for OWASP includes in rules.conf (case-insensitive)
+                                    if ('owasp' in items.lower() or 'crs-setup' in items.lower()) and \
+                                       ('include' in items.lower() or 'modsecurity_rules_file' in items.lower()):
+                                        owaspInstalled = 1
+                                        break
+                            except:
+                                pass
+
                     # Additional check: verify OWASP files actually exist
                     if owaspInstalled == 0:
                         owaspPath = os.path.join(virtualHostUtilities.Server_root, "conf/modsec/owasp-modsecurity-crs-4.18.0")
