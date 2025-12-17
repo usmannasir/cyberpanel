@@ -829,13 +829,196 @@ class preFlightsChecks:
                         if any(distro in content for distro in ['red hat', 'almalinux', 'rocky', 'cloudlinux', 'centos']):
                             return 'rhel9'
 
-            # Default to rhel9 if can't detect (safer default for newer systems)
-            self.stdOut("WARNING: Could not detect platform, defaulting to rhel9", 1)
-            return 'rhel9'
+            # Default to rhel8 if can't detect (safer default - rhel9 binaries may require GLIBC 2.35)
+            self.stdOut("WARNING: Could not detect platform, defaulting to rhel8", 1)
+            return 'rhel8'
 
         except Exception as msg:
-            self.stdOut(f"ERROR detecting platform: {msg}, defaulting to rhel9", 0)
-            return 'rhel9'
+            self.stdOut(f"ERROR detecting platform: {msg}, defaulting to rhel8", 0)
+            return 'rhel8'
+
+    def getSystemGLIBCVersion(self):
+        """Get the system's GLIBC version"""
+        try:
+            import subprocess
+            # Try to get GLIBC version from ldd
+            result = subprocess.run(['ldd', '--version'], capture_output=True, text=True, timeout=5)
+            if result.returncode == 0:
+                # ldd --version output format: "ldd (GNU libc) 2.34"
+                for line in result.stdout.split('\n'):
+                    if 'GNU libc' in line or 'glibc' in line.lower():
+                        import re
+                        version_match = re.search(r'(\d+)\.(\d+)', line)
+                        if version_match:
+                            major = int(version_match.group(1))
+                            minor = int(version_match.group(2))
+                            return (major, minor)
+            
+            # Fallback: try to read from libc.so.6
+            try:
+                result = subprocess.run(['/lib64/libc.so.6'], capture_output=True, text=True, timeout=5)
+                if result.returncode != 0 and 'version' in result.stderr.lower():
+                    import re
+                    version_match = re.search(r'(\d+)\.(\d+)', result.stderr)
+                    if version_match:
+                        major = int(version_match.group(1))
+                        minor = int(version_match.group(2))
+                        return (major, minor)
+            except:
+                pass
+            
+            # If we can't detect, assume a safe minimum
+            self.stdOut("WARNING: Could not detect GLIBC version, assuming 2.34", 1)
+            return (2, 34)
+        except Exception as msg:
+            self.stdOut(f"WARNING: Error detecting GLIBC version: {msg}, assuming 2.34", 0)
+            return (2, 34)
+
+    def checkBinaryGLIBCRequirements(self, binary_path):
+        """Check GLIBC version requirements of a binary file"""
+        try:
+            import subprocess
+            import re
+            
+            # Use objdump to check GLIBC version requirements
+            # objdump -T shows dynamic symbols and their GLIBC version requirements
+            result = subprocess.run(['objdump', '-T', binary_path], capture_output=True, text=True, timeout=10)
+            
+            if result.returncode != 0:
+                # objdump might not be available, try readelf
+                result = subprocess.run(['readelf', '-d', binary_path], capture_output=True, text=True, timeout=10)
+                if result.returncode != 0:
+                    self.stdOut("WARNING: Could not check binary GLIBC requirements (objdump/readelf not available)", 1)
+                    return None
+            
+            # Look for GLIBC version requirements in the output
+            # Format: GLIBC_2.35, GLIBC_2.34, etc.
+            max_version = None
+            for line in result.stdout.split('\n') + result.stderr.split('\n'):
+                # Look for GLIBC version symbols
+                matches = re.findall(r'GLIBC_(\d+)\.(\d+)', line)
+                for match in matches:
+                    major = int(match[0])
+                    minor = int(match[1])
+                    if max_version is None or (major, minor) > max_version:
+                        max_version = (major, minor)
+            
+            return max_version
+            
+        except FileNotFoundError:
+            # objdump/readelf not available
+            self.stdOut("WARNING: objdump/readelf not available, skipping GLIBC check", 1)
+            return None
+        except Exception as msg:
+            self.stdOut(f"WARNING: Error checking binary GLIBC requirements: {msg}", 0)
+            return None
+
+    def verifyBinaryCompatibility(self, binary_path):
+        """Verify that a binary is compatible with the system's GLIBC version"""
+        try:
+            system_glibc = self.getSystemGLIBCVersion()
+            binary_glibc = self.checkBinaryGLIBCRequirements(binary_path)
+            
+            if binary_glibc is None:
+                # Can't check, but we can try a test run
+                self.stdOut("Cannot verify GLIBC requirements, performing test run...", 1)
+                return self.testBinaryExecution(binary_path)
+            
+            self.stdOut(f"System GLIBC: {system_glibc[0]}.{system_glibc[1]}", 1)
+            self.stdOut(f"Binary requires GLIBC: {binary_glibc[0]}.{binary_glibc[1]}", 1)
+            
+            # Check if binary requires newer GLIBC than system has
+            if binary_glibc > system_glibc:
+                self.stdOut(f"ERROR: Binary requires GLIBC {binary_glibc[0]}.{binary_glibc[1]}, but system has {system_glibc[0]}.{system_glibc[1]}", 1)
+                return False
+            
+            self.stdOut("GLIBC compatibility check passed", 1)
+            return True
+            
+        except Exception as msg:
+            self.stdOut(f"WARNING: Error verifying binary compatibility: {msg}", 0)
+            # If we can't verify, try test execution
+            return self.testBinaryExecution(binary_path)
+
+    def testBinaryExecution(self, binary_path):
+        """Test if binary can execute (checks GLIBC compatibility indirectly)"""
+        try:
+            import subprocess
+            # Try to run the binary with --version or -v flag
+            # This will fail immediately if GLIBC is incompatible
+            # The error format is: "./binary: /lib64/libc.so.6: version `GLIBC_X.Y' not found"
+            result = subprocess.run([binary_path, '--version'], capture_output=True, text=True, timeout=5)
+            
+            # Check both stdout and stderr for GLIBC errors
+            output = result.stdout + result.stderr
+            
+            # Look for GLIBC version not found errors
+            if 'GLIBC' in output and ('not found' in output or 'version' in output.lower()):
+                # Extract the required GLIBC version from error message
+                import re
+                glibc_match = re.search(r"GLIBC_(\d+)\.(\d+)'?\s+not found", output)
+                if glibc_match:
+                    required_major = int(glibc_match.group(1))
+                    required_minor = int(glibc_match.group(2))
+                    self.stdOut(f"ERROR: Binary requires GLIBC {required_major}.{required_minor} which is not available", 1)
+                else:
+                    self.stdOut(f"ERROR: Binary GLIBC compatibility test failed: {output[:200]}", 1)
+                return False
+            
+            # If binary executed (even with non-zero return code for --version), it's compatible
+            if result.returncode == 0 or len(result.stdout) > 0:
+                return True
+            
+            # If we get here, binary might not support --version, try -v
+            result = subprocess.run([binary_path, '-v'], capture_output=True, text=True, timeout=5)
+            output = result.stdout + result.stderr
+            
+            if 'GLIBC' in output and ('not found' in output or 'version' in output.lower()):
+                import re
+                glibc_match = re.search(r"GLIBC_(\d+)\.(\d+)'?\s+not found", output)
+                if glibc_match:
+                    required_major = int(glibc_match.group(1))
+                    required_minor = int(glibc_match.group(2))
+                    self.stdOut(f"ERROR: Binary requires GLIBC {required_major}.{required_minor} which is not available", 1)
+                else:
+                    self.stdOut(f"ERROR: Binary GLIBC compatibility test failed: {output[:200]}", 1)
+                return False
+            
+            # If no GLIBC error and we got some output, assume compatible
+            if len(output) > 0:
+                return True
+            
+            # If binary doesn't support --version/-v, try to check if it's executable
+            # by checking file type
+            try:
+                result = subprocess.run(['file', binary_path], capture_output=True, text=True, timeout=5)
+                if 'ELF' in result.stdout and 'executable' in result.stdout:
+                    self.stdOut("WARNING: Cannot test binary execution, but file appears valid", 1)
+                    return True
+            except:
+                pass
+            
+            # Conservative approach: if we can't verify, assume incompatible to be safe
+            self.stdOut("WARNING: Could not verify binary execution, skipping installation for safety", 1)
+            return False
+            
+        except subprocess.TimeoutExpired:
+            self.stdOut("WARNING: Binary test timed out, assuming compatible", 1)
+            return True
+        except FileNotFoundError as e:
+            # Binary file not found or command not found
+            self.stdOut(f"ERROR: Binary test failed - file or command not found: {e}", 1)
+            return False
+        except Exception as msg:
+            # Check if it's a GLIBC error in the exception itself
+            error_str = str(msg)
+            if 'GLIBC' in error_str and 'not found' in error_str:
+                self.stdOut(f"ERROR: Binary GLIBC compatibility test failed: {error_str}", 1)
+                return False
+            
+            self.stdOut(f"WARNING: Could not test binary execution: {msg}", 0)
+            # Conservative approach: if we can't test, assume incompatible to be safe
+            return False
 
     def downloadCustomBinary(self, url, destination, expected_sha256=None):
         """Download custom binary file with optional checksum verification"""
@@ -964,6 +1147,23 @@ class preFlightsChecks:
                 self.stdOut("Continuing with standard OLS", 1)
                 return True  # Not fatal, continue with standard OLS
 
+            # CRITICAL: Verify GLIBC compatibility before installation
+            self.stdOut("Verifying GLIBC compatibility...", 1)
+            if not self.verifyBinaryCompatibility(tmp_binary):
+                self.stdOut("=" * 50, 1)
+                self.stdOut("ERROR: Binary GLIBC requirements incompatible with system", 1)
+                self.stdOut("This binary would cause OpenLiteSpeed to fail to start", 1)
+                self.stdOut("Skipping custom binary installation to preserve system stability", 1)
+                self.stdOut("Standard OLS binary from package manager will be used", 1)
+                self.stdOut("=" * 50, 1)
+                # Clean up downloaded binary
+                try:
+                    if os.path.exists(tmp_binary):
+                        os.remove(tmp_binary)
+                except:
+                    pass
+                return True  # Not fatal, continue with standard OLS
+
             # Download module with checksum verification (if available)
             module_downloaded = False
             if MODULE_URL and MODULE_SHA256:
@@ -979,11 +1179,31 @@ class preFlightsChecks:
             self.stdOut("Installing custom binaries...", 1)
 
             try:
+                # Make binary executable before moving
+                os.chmod(tmp_binary, 0o755)
+                
+                # Final compatibility test before installation
+                if not self.testBinaryExecution(tmp_binary):
+                    self.stdOut("ERROR: Final binary compatibility test failed", 1)
+                    self.stdOut("Skipping installation to prevent OpenLiteSpeed failure", 1)
+                    try:
+                        if os.path.exists(tmp_binary):
+                            os.remove(tmp_binary)
+                    except:
+                        pass
+                    return True  # Not fatal, continue with standard OLS
+                
                 shutil.move(tmp_binary, OLS_BINARY_PATH)
-                os.chmod(OLS_BINARY_PATH, 0o755)
                 self.stdOut("Installed OpenLiteSpeed binary", 1)
             except Exception as e:
                 self.stdOut(f"ERROR: Failed to install binary: {e}", 1)
+                # Try to restore backup if installation failed
+                try:
+                    if os.path.exists(f"{backup_dir}/openlitespeed.backup"):
+                        shutil.copy2(f"{backup_dir}/openlitespeed.backup", OLS_BINARY_PATH)
+                        self.stdOut("Restored original binary from backup", 1)
+                except:
+                    pass
                 return False
 
             # Install module (if downloaded)
