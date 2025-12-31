@@ -938,25 +938,32 @@ class Upgrade:
             platform = Upgrade.detectPlatform()
             Upgrade.stdOut(f"Detected platform: {platform}", 0)
 
-            # Platform-specific URLs and checksums (OpenLiteSpeed v1.8.4.1 - v2.0.5 Static Build)
+            # Platform-specific URLs and checksums (OpenLiteSpeed v1.8.4.1 with PHPConfig + Header unset fix + Static Linking)
+            # Module Build Date: December 28, 2025 - v2.2.0 Brute Force with Progressive Throttle
             BINARY_CONFIGS = {
                 'rhel8': {
                     'url': 'https://cyberpanel.net/openlitespeed-phpconfig-x86_64-rhel8-static',
                     'sha256': '6ce688a237615102cc1603ee1999b3cede0ff3482d31e1f65705e92396d34b3a',
-                    'module_url': None,  # RHEL 8 doesn't have module (use RHEL 9 if needed)
-                    'module_sha256': None
+                    'module_url': 'https://cyberpanel.net/binaries/rhel8/cyberpanel_ols.so',
+                    'module_sha256': '7c33d89c7fbcd3ed7b0422fee3f49b5e041713c2c2b7316a5774f6defa147572',
+                    'modsec_url': 'https://cyberpanel.net/mod_security-compatible-rhel8.so',
+                    'modsec_sha256': 'bbbf003bdc7979b98f09b640dffe2cbbe5f855427f41319e4c121403c05837b2'
                 },
                 'rhel9': {
                     'url': 'https://cyberpanel.net/openlitespeed-phpconfig-x86_64-rhel9-static',
-                    'sha256': '90468fb38767505185013024678d9144ae13100d2355097657f58719d98fbbc4',
-                    'module_url': 'https://cyberpanel.net/cyberpanel_ols_x86_64_rhel.so',
-                    'module_sha256': '127227db81bcbebf80b225fc747b69cfcd4ad2f01cea486aa02d5c9ba6c18109'
+                    'sha256': '709093d99d5d3e789134c131893614968e17eefd9ade2200f811d9b076b2f02e',
+                    'module_url': 'https://cyberpanel.net/binaries/rhel9/cyberpanel_ols.so',
+                    'module_sha256': 'ae65337e2d13babc0c675bb4264d469daffa2efb7627c9bf39ac59e42e3ebede',
+                    'modsec_url': 'https://cyberpanel.net/mod_security-compatible-rhel.so',
+                    'modsec_sha256': '19deb2ffbaf1334cf4ce4d46d53f747a75b29e835bf5a01f91ebcc0c78e98629'
                 },
                 'ubuntu': {
                     'url': 'https://cyberpanel.net/openlitespeed-phpconfig-x86_64-ubuntu-static',
                     'sha256': '89aaf66474e78cb3c1666784e0e7a417550bd317e6ab148201bdc318d36710cb',
-                    'module_url': 'https://cyberpanel.net/cyberpanel_ols_x86_64_ubuntu.so',
-                    'module_sha256': 'e7734f1e6226c2a0a8e00c1f6534ea9f577df9081b046736a774b1c52c28e7e5'
+                    'module_url': 'https://cyberpanel.net/binaries/ubuntu/cyberpanel_ols.so',
+                    'module_sha256': '62978ede1f174dd2885e5227a3d9cc463d0c27acd77cfc23743d7309ee0c54ea',
+                    'modsec_url': 'https://cyberpanel.net/mod_security-compatible-ubuntu.so',
+                    'modsec_sha256': 'ed02c813136720bd4b9de5925f6e41bdc8392e494d7740d035479aaca6d1e0cd'
                 }
             }
 
@@ -970,8 +977,11 @@ class Upgrade:
             OLS_BINARY_SHA256 = config['sha256']
             MODULE_URL = config['module_url']
             MODULE_SHA256 = config['module_sha256']
+            MODSEC_URL = config.get('modsec_url')
+            MODSEC_SHA256 = config.get('modsec_sha256')
             OLS_BINARY_PATH = "/usr/local/lsws/bin/openlitespeed"
             MODULE_PATH = "/usr/local/lsws/modules/cyberpanel_ols.so"
+            MODSEC_PATH = "/usr/local/lsws/modules/mod_security.so"
 
             # Create backup
             from datetime import datetime
@@ -983,12 +993,16 @@ class Upgrade:
                 if os.path.exists(OLS_BINARY_PATH):
                     shutil.copy2(OLS_BINARY_PATH, f"{backup_dir}/openlitespeed.backup")
                     Upgrade.stdOut(f"Backup created at: {backup_dir}", 0)
+                # Also backup existing ModSecurity if it exists
+                if os.path.exists(MODSEC_PATH):
+                    shutil.copy2(MODSEC_PATH, f"{backup_dir}/mod_security.so.backup")
             except Exception as e:
                 Upgrade.stdOut(f"WARNING: Could not create backup: {e}", 0)
 
             # Download binaries to temp location
             tmp_binary = "/tmp/openlitespeed-custom"
             tmp_module = "/tmp/cyberpanel_ols.so"
+            tmp_modsec = "/tmp/mod_security.so"
 
             Upgrade.stdOut("Downloading custom binaries...", 0)
 
@@ -1025,6 +1039,18 @@ class Upgrade:
                 module_downloaded = True
             else:
                 Upgrade.stdOut("Note: No CyberPanel module for this platform", 0)
+
+            # Download compatible ModSecurity if existing ModSecurity is installed
+            # This prevents ABI incompatibility crashes (Signal 11/SIGSEGV)
+            modsec_downloaded = False
+            if os.path.exists(MODSEC_PATH) and MODSEC_URL and MODSEC_SHA256:
+                Upgrade.stdOut("Existing ModSecurity detected - downloading compatible version...", 0)
+                if Upgrade.downloadCustomBinary(MODSEC_URL, tmp_modsec, MODSEC_SHA256):
+                    modsec_downloaded = True
+                else:
+                    Upgrade.stdOut("WARNING: Failed to download compatible ModSecurity", 0)
+                    Upgrade.stdOut("ModSecurity may crash due to ABI incompatibility", 0)
+                    Upgrade.stdOut("Consider manually updating ModSecurity after upgrade", 0)
 
             # Install OpenLiteSpeed binary
             Upgrade.stdOut("Installing custom binaries...", 0)
@@ -1067,6 +1093,16 @@ class Upgrade:
                 except Exception as e:
                     Upgrade.stdOut(f"ERROR: Failed to install module: {e}", 0)
                     return False
+
+            # Install compatible ModSecurity (if downloaded)
+            if modsec_downloaded:
+                try:
+                    shutil.move(tmp_modsec, MODSEC_PATH)
+                    os.chmod(MODSEC_PATH, 0o644)
+                    Upgrade.stdOut("Installed compatible ModSecurity module", 0)
+                except Exception as e:
+                    Upgrade.stdOut(f"WARNING: Failed to install ModSecurity: {e}", 0)
+                    # Non-fatal, continue
 
             # Verify installation
             if os.path.exists(OLS_BINARY_PATH):
@@ -2490,6 +2526,19 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
   KEY `emailPremium_emaillogs_email_id_9ef49552_fk_e_users_email` (`email_id`),
   CONSTRAINT `emailPremium_emaillogs_email_id_9ef49552_fk_e_users_email` FOREIGN KEY (`email_id`) REFERENCES `e_users` (`email`)
 )"""
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            # Email Filtering Tables - Catch-All, Plus-Addressing, Pattern Forwarding
+            query = """CREATE TABLE IF NOT EXISTS `e_catchall` (
+  `domain_id` varchar(50) NOT NULL,
+  `destination` varchar(255) NOT NULL,
+  `enabled` tinyint(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`domain_id`),
+  CONSTRAINT `fk_catchall_domain` FOREIGN KEY (`domain_id`) REFERENCES `e_domains` (`domain`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"""
             try:
                 cursor.execute(query)
             except:
