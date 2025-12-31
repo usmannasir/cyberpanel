@@ -81,49 +81,52 @@ class tuning:
     def saveTuningDetails(maxConnections,maxSSLConnections,connectionTimeOut,keepAliveTimeOut,cacheSizeInMemory,gzipCompression):
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             try:
-                datas = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
-                writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf","w")
-
-                if gzipCompression == "Enable":
-                    gzip = 1
-                else:
-                    gzip = 0
-
-
-                for items in datas:
-                    if items.find("maxConnections") > -1:
-                        data = "  maxConnections          "+str(maxConnections)+"\n"
-                        writeDataToFile.writelines(data)
-                        continue
-
-                    elif items.find("maxSSLConnections") > -1:
-                        data = "  maxSSLConnections       "+str(maxSSLConnections) + "\n"
-                        writeDataToFile.writelines(data)
-                        continue
-
-                    elif items.find("connTimeout") > -1:
-                        data ="  connTimeout             "+str(connectionTimeOut)+"\n"
-                        writeDataToFile.writelines(data)
-                        continue
-
-                    elif items.find("keepAliveTimeout") > -1:
-                        data = "  keepAliveTimeout        " + str(keepAliveTimeOut) + "\n"
-                        writeDataToFile.writelines(data)
-                        continue
-
-                    elif items.find("totalInMemCacheSize") > -1:
-                        data = "  totalInMemCacheSize     " + str(cacheSizeInMemory) + "\n"
-                        writeDataToFile.writelines(data)
-                        continue
-
-                    elif items.find("enableGzipCompress") > -1:
-                        data = "  enableGzipCompress      " + str(gzip) + "\n"
-                        writeDataToFile.writelines(data)
-                        continue
+                from plogical import installUtilities
+                
+                def modify_config(lines):
+                    """Modify tuning parameters in config"""
+                    modified = []
+                    
+                    if gzipCompression == "Enable":
+                        gzip = 1
                     else:
-                        writeDataToFile.writelines(items)
-
-                writeDataToFile.close()
+                        gzip = 0
+                    
+                    for line in lines:
+                        if line.find("maxConnections") > -1:
+                            modified.append("  maxConnections          "+str(maxConnections)+"\n")
+                            continue
+                        elif line.find("maxSSLConnections") > -1:
+                            modified.append("  maxSSLConnections       "+str(maxSSLConnections) + "\n")
+                            continue
+                        elif line.find("connTimeout") > -1:
+                            modified.append("  connTimeout             "+str(connectionTimeOut)+"\n")
+                            continue
+                        elif line.find("keepAliveTimeout") > -1:
+                            modified.append("  keepAliveTimeout        " + str(keepAliveTimeOut) + "\n")
+                            continue
+                        elif line.find("totalInMemCacheSize") > -1:
+                            modified.append("  totalInMemCacheSize     " + str(cacheSizeInMemory) + "\n")
+                            continue
+                        elif line.find("enableGzipCompress") > -1:
+                            modified.append("  enableGzipCompress      " + str(gzip) + "\n")
+                            continue
+                        else:
+                            modified.append(line)
+                    
+                    return modified
+                
+                # Use safe modification with backup and validation
+                success, error = installUtilities.installUtilities.safeModifyHttpdConfig(
+                    modify_config,
+                    "Update tuning parameters (maxConnections, maxSSLConnections, etc.)"
+                )
+                
+                if not success:
+                    error_msg = error if error else "Unknown error"
+                    logging.writeToFile(f"[saveTuningDetails] Failed: {error_msg}")
+                    print(f"0,{error_msg}")
+                    return
 
                 print("1,None")
             except BaseException as msg:

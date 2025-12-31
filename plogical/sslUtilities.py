@@ -518,22 +518,36 @@ context /.well-known/acme-challenge {
                 else:
 
                     if sslUtilities.checkIfSSLMap(virtualHostName) == 0:
-
-                        data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
-                        writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'w')
-                        sslCheck = 0
-
-                        for items in data:
-                            if items.find("listener") > -1 and items.find("SSL") > -1:
-                                sslCheck = 1
-
-                            if (sslCheck == 1):
-                                writeDataToFile.writelines(items)
-                                writeDataToFile.writelines(map)
-                                sslCheck = 0
-                            else:
-                                writeDataToFile.writelines(items)
-                        writeDataToFile.close()
+                        from plogical import installUtilities
+                        
+                        def modify_config(lines):
+                            """Add SSL map entry to existing SSL listener"""
+                            modified = []
+                            sslCheck = 0
+                            
+                            for line in lines:
+                                if line.find("listener") > -1 and line.find("SSL") > -1:
+                                    sslCheck = 1
+                                
+                                if (sslCheck == 1):
+                                    modified.append(line)
+                                    modified.append(map)
+                                    sslCheck = 0
+                                else:
+                                    modified.append(line)
+                            
+                            return modified
+                        
+                        # Use safe modification with backup and validation
+                        success, error = installUtilities.installUtilities.safeModifyHttpdConfig(
+                            modify_config,
+                            f"Add SSL map entry for {virtualHostName}"
+                        )
+                        
+                        if not success:
+                            error_msg = error if error else "Unknown error"
+                            logging.writeToFile(f"[sslUtilities] Failed to add SSL map entry: {error_msg}")
+                            raise BaseException(f"Failed to add SSL map entry: {error_msg}")
 
                     ###################### Write per host Configs for SSL ###################
 

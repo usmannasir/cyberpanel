@@ -322,21 +322,31 @@ class vhost:
     @staticmethod
     def createNONSSLMapEntry(virtualHostName):
         try:
-            data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
-            writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'w')
-
-            map = "  map                     " + virtualHostName + " " + virtualHostName + "\n"
-
-            mapchecker = 1
-
-            for items in data:
-                if (mapchecker == 1 and (items.find("listener") > -1 and items.find("Default") > -1)):
-                    writeDataToFile.writelines(items)
-                    writeDataToFile.writelines(map)
-                    mapchecker = 0
-                else:
-                    writeDataToFile.writelines(items)
-
+            def modify_config(lines):
+                map_entry = "  map                     " + virtualHostName + " " + virtualHostName + "\n"
+                modified = []
+                mapchecker = 1
+                
+                for line in lines:
+                    if (mapchecker == 1 and (line.find("listener") > -1 and line.find("Default") > -1)):
+                        modified.append(line)
+                        modified.append(map_entry)
+                        mapchecker = 0
+                    else:
+                        modified.append(line)
+                
+                return modified
+            
+            success, error = installUtilities.installUtilities.safeModifyHttpdConfig(
+                modify_config,
+                f"Add NON-SSL map entry for {virtualHostName}"
+            )
+            
+            if not success:
+                error_msg = error if error else "Unknown error"
+                logging.writeToFile(f"[createNONSSLMapEntry] Failed: {error_msg}")
+                return 0
+            
             return 1
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
@@ -581,35 +591,47 @@ class vhost:
                 if os.path.exists(confPath):
                     shutil.rmtree(confPath)
 
-                data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
+                def modify_config(lines):
+                    """Remove virtual host entries from config"""
+                    modified = []
+                    check = 1
+                    sslCheck = 1
 
-                writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'w')
-
-                check = 1
-                sslCheck = 1
-
-                for items in data:
-                    if numberOfSites == 1:
-                        if (items.find(' ' + virtualHostName) > -1 and items.find("  map                     " + virtualHostName) > -1):
-                            continue
-                        if (items.find(' ' + virtualHostName) > -1 and (items.find("virtualHost") > -1 or items.find("virtualhost") > -1)):
-                            check = 0
-                        if items.find("listener") > -1 and items.find("SSL") > -1:
-                            sslCheck = 0
-                        if (check == 1 and sslCheck == 1):
-                            writeDataToFile.writelines(items)
-                        if (items.find("}") > -1 and (check == 0 or sslCheck == 0)):
-                            check = 1
-                            sslCheck = 1
-                    else:
-                        if (items.find(' ' + virtualHostName) > -1 and items.find("  map                     " + virtualHostName) > -1):
-                            continue
-                        if (items.find(' ' + virtualHostName) > -1 and (items.find("virtualHost") > -1 or items.find("virtualhost") > -1)):
-                            check = 0
-                        if (check == 1):
-                            writeDataToFile.writelines(items)
-                        if (items.find("}") > -1 and check == 0):
-                            check = 1
+                    for line in lines:
+                        if numberOfSites == 1:
+                            if (line.find(' ' + virtualHostName) > -1 and line.find("  map                     " + virtualHostName) > -1):
+                                continue
+                            if (line.find(' ' + virtualHostName) > -1 and (line.find("virtualHost") > -1 or line.find("virtualhost") > -1)):
+                                check = 0
+                            if line.find("listener") > -1 and line.find("SSL") > -1:
+                                sslCheck = 0
+                            if (check == 1 and sslCheck == 1):
+                                modified.append(line)
+                            if (line.find("}") > -1 and (check == 0 or sslCheck == 0)):
+                                check = 1
+                                sslCheck = 1
+                        else:
+                            if (line.find(' ' + virtualHostName) > -1 and line.find("  map                     " + virtualHostName) > -1):
+                                continue
+                            if (line.find(' ' + virtualHostName) > -1 and (line.find("virtualHost") > -1 or line.find("virtualhost") > -1)):
+                                check = 0
+                            if (check == 1):
+                                modified.append(line)
+                            if (line.find("}") > -1 and check == 0):
+                                check = 1
+                    
+                    return modified
+                
+                # Use safe modification with backup and validation
+                success, error = installUtilities.installUtilities.safeModifyHttpdConfig(
+                    modify_config,
+                    f"Remove virtual host {virtualHostName} from config"
+                )
+                
+                if not success:
+                    error_msg = error if error else "Unknown error"
+                    logging.writeToFile(f"[deleteCoreConf] Failed to remove vhost config: {error_msg}")
+                    raise BaseException(f"Failed to remove vhost config: {error_msg}")
 
                 ## Delete Apache Conf
 

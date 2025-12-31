@@ -5737,6 +5737,12 @@ StrictHostKeyChecking no
                 if os.path.exists(finalConfPath):
 
                     phpPath = ApacheVhost.whichPHPExists(self.domain)
+                    if phpPath is None:
+                        # If PHP path is not found, return error response
+                        data_ret = {'status': 0, 'saveStatus': 0, 'error_message': 'PHP configuration file not found for this domain'}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
+                    
                     command = 'sudo cat ' + phpPath
                     phpConf = ProcessUtilities.outputExecutioner(command).splitlines()
                     pmMaxChildren = phpConf[8].split(' ')[2]

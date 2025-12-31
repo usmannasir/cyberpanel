@@ -234,36 +234,49 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
 
                 confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
-                confData = open(confFile).readlines()
-                conf = open(confFile, 'w')
-
-                for items in confData:
-
-                    if items.find('modsecurity ') > -1:
-                        conf.writelines(data[0])
-                        continue
-                    elif items.find('SecAuditEngine ') > -1:
-                        conf.writelines(data[1])
-                        continue
-                    elif items.find('SecRuleEngine ') > -1:
-                        conf.writelines(data[2])
-                        continue
-                    elif items.find('SecDebugLogLevel') > -1:
-                        conf.writelines(data[3])
-                        continue
-                    elif items.find('SecAuditLogRelevantStatus ') > -1:
-                        conf.writelines(data[5])
-                        continue
-                    elif items.find('SecAuditLogParts ') > -1:
-                        conf.writelines(data[4])
-                        continue
-                    elif items.find('SecAuditLogType ') > -1:
-                        conf.writelines(data[6])
-                        continue
-                    else:
-                        conf.writelines(items)
-
-                conf.close()
+                
+                def modify_config(lines):
+                    """Update ModSecurity configuration parameters"""
+                    modified = []
+                    
+                    for line in lines:
+                        if line.find('modsecurity ') > -1:
+                            modified.append(data[0])
+                            continue
+                        elif line.find('SecAuditEngine ') > -1:
+                            modified.append(data[1])
+                            continue
+                        elif line.find('SecRuleEngine ') > -1:
+                            modified.append(data[2])
+                            continue
+                        elif line.find('SecDebugLogLevel') > -1:
+                            modified.append(data[3])
+                            continue
+                        elif line.find('SecAuditLogRelevantStatus ') > -1:
+                            modified.append(data[5])
+                            continue
+                        elif line.find('SecAuditLogParts ') > -1:
+                            modified.append(data[4])
+                            continue
+                        elif line.find('SecAuditLogType ') > -1:
+                            modified.append(data[6])
+                            continue
+                        else:
+                            modified.append(line)
+                    
+                    return modified
+                
+                # Use safe modification with backup and validation
+                success, error = installUtilities.installUtilities.safeModifyHttpdConfig(
+                    modify_config,
+                    "Update ModSecurity configuration parameters"
+                )
+                
+                if not success:
+                    error_msg = error if error else "Unknown error"
+                    logging.writeToFile(f"[saveModSecConfigs] Failed: {error_msg}")
+                    print(f"0,{error_msg}")
+                    return
 
                 installUtilities.reStartLiteSpeed()
 
