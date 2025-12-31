@@ -1109,7 +1109,13 @@ for version in $(ls /usr/local/lsws | grep lsphp);
 		./configure --with-php-config=/usr/local/lsws/${version}/bin/php-config${version2}
 		make
 		make install
-		echo "extension=timezonedb.so" > /usr/local/lsws/${version}/etc/php/${version2}/mods-available/20-timezone.ini
+		# Only create .ini file if extension was successfully installed
+		# Check if timezonedb.so exists in the extension directory
+		ext_dir=$(/usr/local/lsws/${version}/bin/php-config${version2} --extension-dir)
+		if [[ -f "${ext_dir}/timezonedb.so" ]] ; then
+			mkdir -p /usr/local/lsws/${version}/etc/php/${version2}/mods-available
+			echo "extension=timezonedb.so" > /usr/local/lsws/${version}/etc/php/${version2}/mods-available/20-timezone.ini
+		fi
 		make clean
 	fi
 done
