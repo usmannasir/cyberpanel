@@ -1268,6 +1268,122 @@ def installExtensions(request):
                 phpExtension.save()
         except:
             pass
+        
+        try:
+            newPHP82 = PHP(phpVers="php82")
+            newPHP82.save()
+
+            php82Path = ''
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                php82Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'php82.xml')
+            else:
+                php82Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp82.xml')
+
+            php82 = ElementTree.parse(php82Path)
+
+            php82Extensions = php82.findall('extension')
+
+            for extension in php82Extensions:
+                extensionName = extension.find('extensionName').text
+                extensionDescription = extension.find('extensionDescription').text
+                status = int(extension.find('status').text)
+
+                phpExtension = installedPackages(phpVers=newPHP82,
+                                                 extensionName=extensionName,
+                                                 description=extensionDescription,
+                                                 status=status)
+
+                phpExtension.save()
+        except:
+            pass
+        
+        try:
+            newPHP83 = PHP(phpVers="php83")
+            newPHP83.save()
+
+            php83Path = ''
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                php83Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'php83.xml')
+            else:
+                php83Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp83.xml')
+
+            php83 = ElementTree.parse(php83Path)
+
+            php83Extensions = php83.findall('extension')
+
+            for extension in php83Extensions:
+                extensionName = extension.find('extensionName').text
+                extensionDescription = extension.find('extensionDescription').text
+                status = int(extension.find('status').text)
+
+                phpExtension = installedPackages(phpVers=newPHP83,
+                                                 extensionName=extensionName,
+                                                 description=extensionDescription,
+                                                 status=status)
+
+                phpExtension.save()
+        except:
+            pass
+        
+        try:
+            newPHP84 = PHP(phpVers="php84")
+            newPHP84.save()
+
+            php84Path = ''
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                php84Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'php84.xml')
+            else:
+                php84Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp84.xml')
+
+            php84 = ElementTree.parse(php84Path)
+
+            php84Extensions = php84.findall('extension')
+
+            for extension in php84Extensions:
+                extensionName = extension.find('extensionName').text
+                extensionDescription = extension.find('extensionDescription').text
+                status = int(extension.find('status').text)
+
+                phpExtension = installedPackages(phpVers=newPHP84,
+                                                 extensionName=extensionName,
+                                                 description=extensionDescription,
+                                                 status=status)
+
+                phpExtension.save()
+        except:
+            pass
+        
+        try:
+            newPHP85 = PHP(phpVers="php85")
+            newPHP85.save()
+
+            php85Path = ''
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                php85Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'php85.xml')
+            else:
+                php85Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp85.xml')
+
+            php85 = ElementTree.parse(php85Path)
+
+            php85Extensions = php85.findall('extension')
+
+            for extension in php85Extensions:
+                extensionName = extension.find('extensionName').text
+                extensionDescription = extension.find('extensionDescription').text
+                status = int(extension.find('status').text)
+
+                phpExtension = installedPackages(phpVers=newPHP85,
+                                                 extensionName=extensionName,
+                                                 description=extensionDescription,
+                                                 status=status)
+
+                phpExtension.save()
+        except:
+            pass
 
         apache = ApacheController.checkIfApacheInstalled()
 
