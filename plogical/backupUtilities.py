@@ -382,7 +382,8 @@ class backupUtilities:
             #copytree('/home/%s/public_html' % domainName, '%s/%s' % (tempStoragePath, 'public_html'))
             #command = f'cp -R /home/{domainName}/public_html {tempStoragePath}/public_html'
             ### doing backup of whole dir and keeping it in public_html folder will restore from here - ref https://github.com/usmannasir/cyberpanel/issues/1196
-            command = f"rsync -av --ignore-errors --exclude=.wp-cli --exclude=logs --exclude=backup --exclude=lscache /home/{domainName}/ {tempStoragePath}/public_html/"
+            ### Using leading slash for exclude patterns to only exclude top-level directories, not all directories with these names - ref https://github.com/usmannasir/cyberpanel/issues/1615
+            command = f"rsync -av --ignore-errors --exclude=.wp-cli --exclude=/logs --exclude=/backup --exclude=lscache /home/{domainName}/ {tempStoragePath}/public_html/"
             ProcessUtilities.normalExecutioner(command)
             # if ProcessUtilities.normalExecutioner(command) == 0:
             #      raise BaseException(f'Failed to run cp command during backup generation.')
