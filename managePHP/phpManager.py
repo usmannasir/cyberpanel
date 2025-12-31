@@ -177,10 +177,18 @@ class PHPManager:
                 php_versions = []
                 for entry in lsphp_lines:
                     # Find substring starting with 'php' and extract the version part
-                    version = entry.split('php')[1]
-                    # Format version as PHP X.Y
-                    formatted_version = f"PHP {version[0]}.{version[1]}"
-                    php_versions.append(formatted_version)
+                    try:
+                        if 'php' not in entry:
+                            continue
+                        parts = entry.split('php')
+                        if len(parts) < 2 or len(parts[1]) < 2:
+                            continue
+                        version = parts[1]
+                        # Format version as PHP X.Y
+                        formatted_version = f"PHP {version[0]}.{version[1]}"
+                        php_versions.append(formatted_version)
+                    except (IndexError, ValueError):
+                        continue
             else:
 
                 lsphp_lines = [line for line in result.split('\n')]

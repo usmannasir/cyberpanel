@@ -6,6 +6,7 @@ import pexpect
 import os
 import shlex
 from plogical.processUtilities import ProcessUtilities
+from datetime import datetime
 
 class installUtilities:
 
@@ -220,24 +221,145 @@ class installUtilities:
         return 1
 
     @staticmethod
+    def safeModifyHttpdConfig(config_modifier, description="config modification"):
+        """
+        Safely modify httpd_config.conf with backup, validation, and rollback on failure.
+        Prevents corrupted configs that cause OpenLiteSpeed to fail binding ports 80/443.
+        
+        Args:
+            config_modifier: A function that takes file content (list of lines) and returns modified content
+            description: Description of the modification for logging
+        
+        Returns:
+            tuple: (success: bool, error_message: str or None)
+        
+        Reference: https://github.com/usmannasir/cyberpanel/issues/1609
+        """
+        config_file = "/usr/local/lsws/conf/httpd_config.conf"
+        
+        if not os.path.exists(config_file):
+            error_msg = f"Config file not found: {config_file}"
+            logging.writeToFile(f"[safeModifyHttpdConfig] {error_msg}")
+            return False, error_msg
+        
+        # Create backup with timestamp
+        try:
+            timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+            backup_file = f"{config_file}.backup-{timestamp}"
+            shutil.copy2(config_file, backup_file)
+            logging.writeToFile(f"[safeModifyHttpdConfig] Created backup: {backup_file} for {description}")
+        except Exception as e:
+            error_msg = f"Failed to create backup: {str(e)}"
+            logging.writeToFile(f"[safeModifyHttpdConfig] {error_msg}")
+            return False, error_msg
+        
+        # Read current config
+        try:
+            with open(config_file, 'r') as f:
+                original_content = f.readlines()
+        except Exception as e:
+            error_msg = f"Failed to read config file: {str(e)}"
+            logging.writeToFile(f"[safeModifyHttpdConfig] {error_msg}")
+            return False, error_msg
+        
+        # Modify config using callback
+        try:
+            modified_content = config_modifier(original_content)
+            if not isinstance(modified_content, list):
+                error_msg = "Config modifier must return a list of lines"
+                logging.writeToFile(f"[safeModifyHttpdConfig] {error_msg}")
+                return False, error_msg
+        except Exception as e:
+            error_msg = f"Config modifier function failed: {str(e)}"
+            logging.writeToFile(f"[safeModifyHttpdConfig] {error_msg}")
+            return False, error_msg
+        
+        # Write modified config
+        try:
+            with open(config_file, 'w') as f:
+                f.writelines(modified_content)
+        except Exception as e:
+            error_msg = f"Failed to write modified config: {str(e)}"
+            logging.writeToFile(f"[safeModifyHttpdConfig] {error_msg}")
+            # Restore backup
+            try:
+                shutil.copy2(backup_file, config_file)
+                logging.writeToFile(f"[safeModifyHttpdConfig] Restored backup due to write failure")
+            except:
+                pass
+            return False, error_msg
+        
+        # Validate config using openlitespeed -t
+        try:
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                validate_cmd = ['/usr/local/lsws/bin/openlitespeed', '-t', '-f', config_file]
+            else:
+                # For LiteSpeed Enterprise, use lswsctrl
+                validate_cmd = ['/usr/local/lsws/bin/lswsctrl', '-t', '-f', config_file]
+            
+            result = subprocess.run(validate_cmd, capture_output=True, text=True, timeout=30)
+            
+            if result.returncode != 0:
+                error_msg = f"Config validation failed: {result.stderr}"
+                logging.writeToFile(f"[safeModifyHttpdConfig] {error_msg}")
+                # Restore backup
+                try:
+                    shutil.copy2(backup_file, config_file)
+                    logging.writeToFile(f"[safeModifyHttpdConfig] Restored backup due to validation failure")
+                except Exception as restore_error:
+                    logging.writeToFile(f"[safeModifyHttpdConfig] CRITICAL: Failed to restore backup: {str(restore_error)}")
+                return False, error_msg
+        except subprocess.TimeoutExpired:
+            error_msg = "Config validation timed out"
+            logging.writeToFile(f"[safeModifyHttpdConfig] {error_msg}")
+            # Restore backup
+            try:
+                shutil.copy2(backup_file, config_file)
+                logging.writeToFile(f"[safeModifyHttpdConfig] Restored backup due to validation timeout")
+            except:
+                pass
+            return False, error_msg
+        except Exception as e:
+            error_msg = f"Config validation error: {str(e)}"
+            logging.writeToFile(f"[safeModifyHttpdConfig] {error_msg}")
+            # Restore backup
+            try:
+                shutil.copy2(backup_file, config_file)
+                logging.writeToFile(f"[safeModifyHttpdConfig] Restored backup due to validation error")
+            except:
+                pass
+            return False, error_msg
+        
+        logging.writeToFile(f"[safeModifyHttpdConfig] Successfully modified and validated config: {description}")
+        return True, None
+
+    @staticmethod
     def changePortTo80():
         try:
-            data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
-            writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'w')
-
-            for items in data:
-                if (items.find("*:8088") > -1):
-                    writeDataToFile.writelines(items.replace("*:8088","*:80"))
-                else:
-                    writeDataToFile.writelines(items)
-
-            writeDataToFile.close()
-
-        except IOError as msg:
+            def modify_config(lines):
+                modified = []
+                for line in lines:
+                    if "*:8088" in line:
+                        modified.append(line.replace("*:8088", "*:80"))
+                    else:
+                        modified.append(line)
+                return modified
+            
+            success, error = installUtilities.safeModifyHttpdConfig(
+                modify_config, 
+                "Change port from 8088 to 80"
+            )
+            
+            if not success:
+                error_msg = error if error else "Unknown error"
+                logging.writeToFile(f"[changePortTo80] Failed: {error_msg}")
+                return 0
+            
+            return installUtilities.reStartLiteSpeed()
+            
+        except Exception as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [changePortTo80]")
             return 0
-
-        return installUtilities.reStartLiteSpeed()
 
 
     @staticmethod

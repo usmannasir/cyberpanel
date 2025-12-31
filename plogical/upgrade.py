@@ -10,6 +10,7 @@ import re
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 from plogical.errorSanitizer import ErrorSanitizer
+from plogical.installUtilities import installUtilities
 import shlex
 import subprocess
 import shutil
@@ -3481,6 +3482,7 @@ class Migration(migrations.Migration):
         critical_files = [
             '/usr/local/CyberCP/CyberCP/settings.py',
             '/usr/local/CyberCP/.git/config',  # Git configuration
+            '/usr/local/lsws/conf/httpd_config.conf',  # OpenLiteSpeed config - critical for preventing port binding failures
         ]
         
         # Also backup any custom configurations
@@ -6397,15 +6399,15 @@ extprocessor proxyApacheBackendSSL {
             lsws_config = "/usr/local/lsws/conf/httpd_config.conf"
             
             if os.path.exists(lsws_config):
-                with open(lsws_config, 'r') as f:
-                    lsws_content = f.read()
-                
-                modified = False
-                
-                # Check for apachebackend extprocessor
-                if 'extprocessor apachebackend' not in lsws_content:
-                    # Add apachebackend configuration
-                    backend_config = '''
+                def modify_apache_backends(lines):
+                    """Modify config to add Apache proxy backends if missing"""
+                    content = ''.join(lines)
+                    modified_lines = lines[:]
+                    
+                    # Check for apachebackend extprocessor
+                    if 'extprocessor apachebackend' not in content:
+                        # Add apachebackend configuration
+                        backend_config = '''
 extprocessor apachebackend {
   type                    proxy
   address                 127.0.0.1:8082
@@ -6415,14 +6417,13 @@ extprocessor apachebackend {
   respBuffer              0
 }
 '''
-                    lsws_content += backend_config
-                    modified = True
-                    print("Added apachebackend extprocessor configuration")
-                
-                # Check for proxyApacheBackendSSL extprocessor
-                if 'extprocessor proxyApacheBackendSSL' not in lsws_content:
-                    # Add proxyApacheBackendSSL configuration
-                    ssl_backend_config = '''
+                        modified_lines.append(backend_config)
+                        print("Added apachebackend extprocessor configuration")
+                    
+                    # Check for proxyApacheBackendSSL extprocessor
+                    if 'extprocessor proxyApacheBackendSSL' not in content:
+                        # Add proxyApacheBackendSSL configuration
+                        ssl_backend_config = '''
 extprocessor proxyApacheBackendSSL {
   type                    proxy
   address                 https://127.0.0.1:8083
@@ -6432,14 +6433,22 @@ extprocessor proxyApacheBackendSSL {
   respBuffer              0
 }
 '''
-                    lsws_content += ssl_backend_config
-                    modified = True
-                    print("Added proxyApacheBackendSSL extprocessor configuration")
+                        modified_lines.append(ssl_backend_config)
+                        print("Added proxyApacheBackendSSL extprocessor configuration")
+                    
+                    return modified_lines
                 
-                if modified:
-                    with open(lsws_config, 'w') as f:
-                        f.write(lsws_content)
+                # Use safe modification with backup and validation
+                success, error = installUtilities.safeModifyHttpdConfig(
+                    modify_apache_backends,
+                    "Add Apache proxy backend configurations"
+                )
+                
+                if success:
                     print("Updated OpenLiteSpeed configuration with Apache proxy backends")
+                else:
+                    print(f"WARNING: Failed to update OpenLiteSpeed configuration: {error}")
+                    Upgrade.stdOut(f"Failed to update OpenLiteSpeed config: {error}", 0)
             
             # Fix 3: Create/Update .htaccess files ONLY for domains actually using Apache
             print("Creating/Updating .htaccess files for Apache domains...")
