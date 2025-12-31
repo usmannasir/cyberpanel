@@ -262,6 +262,33 @@ def SaveEmailLimitsNew(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+def fetchCatchAllConfig(request):
+    try:
+        msM = MailServerManager(request)
+        return msM.fetchCatchAllConfig()
+    except KeyError as msg:
+        data_ret = {'fetchStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def saveCatchAllConfig(request):
+    try:
+        msM = MailServerManager(request)
+        return msM.saveCatchAllConfig()
+    except KeyError as msg:
+        data_ret = {'saveStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def deleteCatchAllConfig(request):
+    try:
+        msM = MailServerManager(request)
+        return msM.deleteCatchAllConfig()
+    except KeyError as msg:
+        data_ret = {'deleteStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
 def refreshEmailDiskUsage(request):
     try:
         msM = MailServerManager(request)

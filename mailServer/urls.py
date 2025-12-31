@@ -38,4 +38,9 @@ urlpatterns = [
     
     ### disk usage refresh
     re_path(r'^refreshEmailDiskUsage$', views.refreshEmailDiskUsage, name='refreshEmailDiskUsage'),
+    
+    ## Catch-All Email
+    re_path(r'^fetchCatchAllConfig$', views.fetchCatchAllConfig, name='fetchCatchAllConfig'),
+    re_path(r'^saveCatchAllConfig$', views.saveCatchAllConfig, name='saveCatchAllConfig'),
+    re_path(r'^deleteCatchAllConfig$', views.deleteCatchAllConfig, name='deleteCatchAllConfig'),
 ]
