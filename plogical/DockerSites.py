@@ -291,24 +291,26 @@ extprocessor docker{port} {{
 
     @staticmethod
     def SetupN8NVhost(domain, port):
-        """Setup n8n vhost with proper proxy configuration including Origin header"""
+        """Setup n8n vhost with proper proxy configuration for OpenLiteSpeed"""
         try:
             vhost_path = f'/usr/local/lsws/conf/vhosts/{domain}/vhost.conf'
-            
+
             if not os.path.exists(vhost_path):
                 logging.writeToFile(f"Error: Vhost file not found at {vhost_path}")
                 return False
-            
+
             # Read existing vhost configuration
             with open(vhost_path, 'r') as f:
                 content = f.read()
-            
+
             # Check if context already exists
             if 'context / {' in content:
                 logging.writeToFile("Context already exists, skipping...")
                 return True
-            
+
             # Add proxy context with proper headers for n8n
+            # NOTE: Do NOT include "RequestHeader set Origin" - OpenLiteSpeed cannot override
+            # browser Origin headers, which is why NODE_ENV=development is required
             proxy_context = f'''
 
 # N8N Proxy Configuration
@@ -322,7 +324,6 @@ context / {{
   RequestHeader set X-Forwarded-For $ip
   RequestHeader set X-Forwarded-Proto https
   RequestHeader set X-Forwarded-Host "{domain}"
-  RequestHeader set Origin "{domain}, {domain}"
   RequestHeader set Host "{domain}"
   END_extraHeaders
 }}
@@ -1370,7 +1371,7 @@ services:
                 'DB_POSTGRESDB_PASSWORD': self.data['MySQLPassword'],
                 'N8N_HOST': '0.0.0.0',
                 'N8N_PORT': '5678',
-                'NODE_ENV': 'production',
+                'NODE_ENV': 'development',  # Required for OpenLiteSpeed compatibility - OLS cannot override browser Origin headers which n8n v1.87.0+ validates in production mode
                 'N8N_EDITOR_BASE_URL': f"https://{self.data['finalURL']}",
                 'WEBHOOK_URL': f"https://{self.data['finalURL']}",
                 'WEBHOOK_TUNNEL_URL': f"https://{self.data['finalURL']}",

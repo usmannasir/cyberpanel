@@ -49,3 +49,17 @@ class Transport(models.Model):
 class Pipeprograms(models.Model):
     source = models.CharField(max_length=80)
     destination = models.TextField()
+
+    class Meta:
+        db_table = 'e_pipeprograms'
+
+
+class CatchAllEmail(models.Model):
+    """Stores catch-all email configuration per domain"""
+    domain = models.OneToOneField(Domains, on_delete=models.CASCADE, primary_key=True, db_column='domain_id')
+    destination = models.CharField(max_length=255)
+    enabled = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'e_catchall'
+        managed = False
