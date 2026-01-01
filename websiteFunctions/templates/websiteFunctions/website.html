@@ -2535,7 +2535,8 @@
 {% block footer_scripts %}
 {{ block.super }}
 <!-- Add Chart.js and resource monitoring script -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Note: Chart.js is already loaded in base template, but kept here for specific page functionality -->
+<script src="{% static 'baseTemplate/custom-js/chart.umd.min.js' %}"></script>
 <script src="{% static 'websiteFunctions/js/resource-monitoring.js' %}"></script>
 
 <!-- Fix modal functionality -->
