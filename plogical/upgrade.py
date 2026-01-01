@@ -1608,6 +1608,66 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             return 0
 
     @staticmethod
+    def downloadCDNLibraries():
+        """
+        Download CDN libraries (qrious, chart.js) locally to eliminate tracking prevention warnings.
+        These files are downloaded before collectstatic runs so they're included in the static files.
+        Tries latest version first, falls back to hardcoded version if latest fails.
+        """
+        try:
+            custom_js_dir = '/usr/local/CyberCP/baseTemplate/static/baseTemplate/custom-js'
+            
+            # Ensure directory exists
+            if not os.path.exists(custom_js_dir):
+                os.makedirs(custom_js_dir, mode=0o755)
+            
+            # Download qrious.min.js - try latest first, fallback to known working version
+            qrious_path = os.path.join(custom_js_dir, 'qrious.min.js')
+            qrious_urls = [
+                'https://cdn.jsdelivr.net/npm/qrious@latest/dist/qrious.min.js',  # Try latest first
+                'https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js'   # Fallback to known working version
+            ]
+            qrious_downloaded = False
+            for qrious_url in qrious_urls:
+                command = f'wget -q --timeout=30 {qrious_url} -O {qrious_path}'
+                result = subprocess.call(shlex.split(command))
+                if result == 0 and os.path.exists(qrious_path) and os.path.getsize(qrious_path) > 1000:  # At least 1KB
+                    os.chmod(qrious_path, 0o644)
+                    version_info = "latest" if "latest" in qrious_url else "4.0.2"
+                    Upgrade.stdOut(f"Downloaded qrious.min.js ({version_info})", 0)
+                    qrious_downloaded = True
+                    break
+            if not qrious_downloaded:
+                Upgrade.stdOut("Warning: Failed to download qrious.min.js, continuing anyway", 0)
+            
+            # Download chart.js - try latest first, fallback to known working version
+            chartjs_path = os.path.join(custom_js_dir, 'chart.umd.min.js')
+            chartjs_urls = [
+                'https://cdn.jsdelivr.net/npm/chart.js@latest/dist/chart.umd.min.js',  # Try latest first
+                'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js'   # Fallback to known working version
+            ]
+            chartjs_downloaded = False
+            for chartjs_url in chartjs_urls:
+                command = f'wget -q --timeout=30 {chartjs_url} -O {chartjs_path}'
+                result = subprocess.call(shlex.split(command))
+                if result == 0 and os.path.exists(chartjs_path) and os.path.getsize(chartjs_path) > 100000:  # At least 100KB
+                    os.chmod(chartjs_path, 0o644)
+                    version_info = "latest" if "latest" in chartjs_url else "4.4.1"
+                    Upgrade.stdOut(f"Downloaded chart.umd.min.js ({version_info})", 0)
+                    chartjs_downloaded = True
+                    # Create copy for chart.js compatibility (some code may expect chart.js name)
+                    chartjs_compat_path = os.path.join(custom_js_dir, 'chart.js')
+                    if not os.path.exists(chartjs_compat_path):
+                        shutil.copy2(chartjs_path, chartjs_compat_path)
+                    break
+            if not chartjs_downloaded:
+                Upgrade.stdOut("Warning: Failed to download chart.umd.min.js, continuing anyway", 0)
+                
+        except BaseException as msg:
+            ErrorSanitizer.log_error_securely(msg, 'downloadCDNLibraries')
+            Upgrade.stdOut(f"Warning: Error downloading CDN libraries: {str(msg)}, continuing anyway", 0)
+
+    @staticmethod
     def staticContent():
 
         command = "rm -rf /usr/local/CyberCP/public/static"
@@ -1617,6 +1677,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
         if not os.path.exists("/usr/local/CyberCP/public"):
             os.mkdir("/usr/local/CyberCP/public")
+
+        # Download CDN libraries before collectstatic runs
+        Upgrade.downloadCDNLibraries()
 
         cwd = os.getcwd()
 
