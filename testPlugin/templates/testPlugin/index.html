@@ -1,0 +1,71 @@
+{% extends "baseTemplate/base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}
+    Test Plugin - {% trans "CyberPanel" %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-cog"></i>
+                        {% trans "Test Plugin Dashboard" %}
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-box">
+                                <span class="info-box-icon bg-info">
+                                    <i class="fas fa-info-circle"></i>
+                                </span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">{% trans "Plugin Name" %}</span>
+                                    <span class="info-box-number">{{ plugin_name }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-box">
+                                <span class="info-box-icon bg-success">
+                                    <i class="fas fa-tag"></i>
+                                </span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">{% trans "Version" %}</span>
+                                    <span class="info-box-number">{{ version }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <h4><i class="icon fa fa-info"></i> {% trans "Plugin Information" %}</h4>
+                        <p>{{ description }}</p>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-check-circle"></i>
+                                {% trans "Test Plugin Status" %}
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-success">
+                                <i class="fas fa-check"></i>
+                                {% trans "Test Plugin is working correctly!" %}
+                            </div>
+                            <p>{% trans "This is a test plugin created for testing CyberPanel plugin functionality." %}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,165 @@
+{% extends "baseTemplate/index.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}
+    Test Plugin Settings - {% trans "CyberPanel" %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-cog"></i>
+                        {% trans "Test Plugin Settings" %}
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>{% trans "Plugin Information" %}</strong>
+                        <ul class="mb-0 mt-2">
+                            <li><strong>{% trans "Name" %}:</strong> {{ plugin_name }}</li>
+                            <li><strong>{% trans "Version" %}:</strong> {{ version }}</li>
+                            <li><strong>{% trans "Status" %}:</strong> <span class="badge badge-success">{% trans "Active" %}</span></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-sliders-h"></i>
+                                {% trans "Configuration Options" %}
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" action="">
+                                {% csrf_token %}
+                                
+                                <div class="form-group">
+                                    <label for="test_setting_1">
+                                        <i class="fas fa-toggle-on"></i>
+                                        {% trans "Enable Test Feature" %}
+                                    </label>
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="test_setting_1" name="test_setting_1" checked>
+                                        <label class="custom-control-label" for="test_setting_1">
+                                            {% trans "Enable this test feature" %}
+                                        </label>
+                                    </div>
+                                    <small class="form-text text-muted">
+                                        {% trans "This is a test setting for demonstration purposes." %}
+                                    </small>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="test_setting_2">
+                                        <i class="fas fa-text-width"></i>
+                                        {% trans "Test Text Input" %}
+                                    </label>
+                                    <input type="text" class="form-control" id="test_setting_2" name="test_setting_2" placeholder="{% trans 'Enter test value' %}" value="Test Value">
+                                    <small class="form-text text-muted">
+                                        {% trans "This is a test text input field." %}
+                                    </small>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="test_setting_3">
+                                        <i class="fas fa-list"></i>
+                                        {% trans "Test Select Option" %}
+                                    </label>
+                                    <select class="form-control" id="test_setting_3" name="test_setting_3">
+                                        <option value="option1">{% trans "Option 1" %}</option>
+                                        <option value="option2" selected>{% trans "Option 2" %}</option>
+                                        <option value="option3">{% trans "Option 3" %}</option>
+                                    </select>
+                                    <small class="form-text text-muted">
+                                        {% trans "Select a test option from the dropdown." %}
+                                    </small>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i>
+                                        {% trans "Save Settings" %}
+                                    </button>
+                                    <button type="reset" class="btn btn-secondary">
+                                        <i class="fas fa-undo"></i>
+                                        {% trans "Reset" %}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-check-circle"></i>
+                                {% trans "Plugin Status" %}
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-success">
+                                <i class="fas fa-check"></i>
+                                <strong>{% trans "Plugin is Active" %}</strong>
+                                <p class="mb-0 mt-2">{% trans "The Test Plugin is installed and working correctly." %}</p>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="info-box">
+                                        <span class="info-box-icon bg-info">
+                                            <i class="fas fa-info-circle"></i>
+                                        </span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">{% trans "Plugin Name" %}</span>
+                                            <span class="info-box-number">{{ plugin_name }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-box">
+                                        <span class="info-box-icon bg-success">
+                                            <i class="fas fa-tag"></i>
+                                        </span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">{% trans "Version" %}</span>
+                                            <span class="info-box-number">{{ version }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-question-circle"></i>
+                                {% trans "About This Plugin" %}
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <p>{{ description }}</p>
+                            <p>{% trans "This is a test plugin created for testing CyberPanel plugin functionality. You can use this plugin to verify that the plugin system is working correctly." %}</p>
+                            
+                            <h5>{% trans "Features" %}</h5>
+                            <ul>
+                                <li>{% trans "Enable/disable functionality" %}</li>
+                                <li>{% trans "Test button" %}</li>
+                                <li>{% trans "Popup messages" %}</li>
+                                <li>{% trans "Inline integration" %}</li>
+                                <li>{% trans "Settings page" %}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
