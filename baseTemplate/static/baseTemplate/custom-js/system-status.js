@@ -944,12 +944,19 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
             $scope.loadingSSHLogins = false;
             if (response.data && response.data.logins) {
                 $scope.sshLogins = response.data.logins;
+                // Debug: Log first login to see structure
+                if ($scope.sshLogins.length > 0) {
+                    console.log('First SSH login object:', $scope.sshLogins[0]);
+                    console.log('IP field:', $scope.sshLogins[0].ip);
+                    console.log('All keys:', Object.keys($scope.sshLogins[0]));
+                }
             } else {
                 $scope.sshLogins = [];
             }
         }, function (err) {
             $scope.loadingSSHLogins = false;
             $scope.errorSSHLogins = 'Failed to load SSH logins.';
+            console.error('Failed to load SSH logins:', err);
         });
     };
 
@@ -1552,28 +1559,419 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     $scope.loadingSSHActivity = false;
     $scope.errorSSHActivity = '';
     
-    $scope.viewSSHActivity = function(login) {
+    $scope.viewSSHActivity = function(login, event) {
         $scope.showSSHActivityModal = true;
         $scope.sshActivity = { processes: [], w: [] };
         $scope.sshActivityUser = login.user;
+        
+        // Extract IP from multiple sources - comprehensive extraction for IPv4 and IPv6
+        var extractedIP = '';
+        
+        // Method 1: Direct property access (highest priority - from backend)
+        if (login && login.ip) {
+            extractedIP = login.ip.toString().trim();
+        } else if (login && login['ip']) {
+            extractedIP = login['ip'].toString().trim();
+        }
+        
+        // Method 2: Alternative field names
+        if (!extractedIP && login) {
+            if (login.ipAddress) extractedIP = login.ipAddress.toString().trim();
+            else if (login['IP Address']) extractedIP = login['IP Address'].toString().trim();
+            else if (login['IP']) extractedIP = login['IP'].toString().trim();
+        }
+        
+        // Method 3: Extract from raw line using regex (IPv4 and IPv6)
+        if (!extractedIP && login && login.raw) {
+            // Try IPv4 first (most common)
+            var ipv4Match = login.raw.match(/\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b/);
+            if (ipv4Match && ipv4Match[1]) {
+                var ipv4 = ipv4Match[1].trim();
+                if (ipv4 !== '127.0.0.1' && ipv4 !== '0.0.0.0') {
+                    extractedIP = ipv4;
+                }
+            }
+            
+            // If no valid IPv4, try IPv6
+            if (!extractedIP) {
+                // IPv6 pattern: matches full IPv6 addresses and compressed forms
+                var ipv6Pattern = /([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}/;
+                var ipv6Match = login.raw.match(ipv6Pattern);
+                if (ipv6Match && ipv6Match[0]) {
+                    var ipv6 = ipv6Match[0].trim();
+                    if (ipv6 !== '::1' && ipv6.length > 0) {
+                        extractedIP = ipv6;
+                    }
+                }
+            }
+        }
+        
+        // Method 4: Try to get from event target data attribute as fallback
+        if (!extractedIP && event && event.currentTarget) {
+            var dataIP = event.currentTarget.getAttribute('data-ip');
+            if (dataIP) extractedIP = dataIP.toString().trim();
+        }
+        
+        // Final fallback: search entire raw line for any IP
+        if (!extractedIP && login && login.raw) {
+            // Try all IPv4 addresses
+            var allIPv4s = login.raw.match(/\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b/g);
+            if (allIPv4s && allIPv4s.length > 0) {
+                for (var i = 0; i < allIPv4s.length; i++) {
+                    var ip = allIPv4s[i].trim();
+                    if (ip !== '127.0.0.1' && ip !== '0.0.0.0' && ip.length > 0) {
+                        extractedIP = ip;
+                        break;
+                    }
+                }
+            }
+            // If no IPv4, try all IPv6 addresses
+            if (!extractedIP) {
+                var allIPv6s = login.raw.match(/([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}/g);
+                if (allIPv6s && allIPv6s.length > 0) {
+                    for (var j = 0; j < allIPv6s.length; j++) {
+                        var ip6 = allIPv6s[j].trim();
+                        if (ip6 !== '::1' && ip6.length > 0) {
+                            extractedIP = ip6;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Final cleanup
+        $scope.sshActivityIP = (extractedIP || '').toString().trim();
+        $scope.sshActivityTTY = ''; // Store TTY for kill session
+        // Check both 'session' and 'activity' fields for status
+        $scope.sshActivityStatus = login.session || login.activity || '';
+        
+        // Use backend is_active field if available (most reliable)
+        // Fallback to checking session text if is_active is not set
+        // IMPORTANT: Check for both boolean true and string 'true' (JSON might serialize differently)
+        if (login.is_active !== undefined && login.is_active !== null) {
+            // Backend explicitly set is_active
+            $scope.isActiveSession = (login.is_active === true || login.is_active === 'true' || login.is_active === 1 || login.is_active === '1');
+            console.log('Using backend is_active field:', login.is_active, '-> isActiveSession:', $scope.isActiveSession);
+        } else {
+            // Fallback: check session text
+            var sessionStatus = ($scope.sshActivityStatus || '').toLowerCase();
+            $scope.isActiveSession = (sessionStatus.indexOf('still logged in') !== -1);
+            console.log('Using fallback session text check:', sessionStatus, '-> isActiveSession:', $scope.isActiveSession);
+        }
+        
+        // If IP is still empty, try one more time with more aggressive extraction
+        if (!$scope.sshActivityIP && login) {
+            console.log('IP still empty, trying aggressive extraction...');
+            // Try every possible field name variation
+            var possibleIPFields = ['ip', 'IP', 'ipAddress', 'IP Address', 'ip_address', 'IP_ADDRESS', 'client_ip', 'clientIP', 'source_ip', 'sourceIP'];
+            for (var k = 0; k < possibleIPFields.length; k++) {
+                if (login[possibleIPFields[k]]) {
+                    var testIP = login[possibleIPFields[k]].toString().trim();
+                    // Validate it looks like an IP (IPv4 or IPv6)
+                    if (testIP.match(/^(\d{1,3}\.){3}\d{1,3}$/) || testIP.match(/^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$/)) {
+                        if (testIP !== '127.0.0.1' && testIP !== '0.0.0.0' && testIP !== '::1') {
+                            $scope.sshActivityIP = testIP;
+                            console.log('Found IP in field', possibleIPFields[k], ':', $scope.sshActivityIP);
+                            break;
+                        }
+                    }
+                }
+            }
+            // Last resort: check if IP is in the table cell itself (from DOM)
+            if (!$scope.sshActivityIP && event && event.currentTarget) {
+                try {
+                    var row = event.currentTarget.closest('tr');
+                    if (row) {
+                        // Try different column positions (IP could be in different positions)
+                        var cells = row.querySelectorAll('td');
+                        for (var cellIdx = 0; cellIdx < cells.length; cellIdx++) {
+                            var cellText = cells[cellIdx].textContent.trim();
+                            // Check if this cell contains an IP address
+                            var ipMatch = cellText.match(/^(\d{1,3}\.){3}\d{1,3}$/) || cellText.match(/^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$/);
+                            if (ipMatch && cellText !== '127.0.0.1' && cellText !== '0.0.0.0' && cellText !== '::1') {
+                                $scope.sshActivityIP = cellText;
+                                console.log('Found IP from table cell (column ' + cellIdx + '):', $scope.sshActivityIP);
+                                break;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.log('Error extracting IP from DOM:', e);
+                }
+            }
+        }
+        
+        // Debug logging - detailed inspection
+        console.log('View SSH Activity - Login object:', login);
+        console.log('Login keys:', Object.keys(login));
+        console.log('login.ip:', login.ip);
+        console.log('login.is_active:', login.is_active);
+        console.log('Extracted IP:', $scope.sshActivityIP);
+        console.log('Session status:', $scope.sshActivityStatus);
+        console.log('Is active session:', $scope.isActiveSession);
+        $scope.showFullJSON = false; // Collapsible JSON view
         $scope.loadingSSHActivity = true;
         $scope.errorSSHActivity = '';
+        $scope.killingProcess = null;
+        $scope.killingSession = false;
         var tty = '';
         // Try to extract tty from login.raw or login.session if available
         if (login.raw) {
             var match = login.raw.match(/(pts\/[0-9]+)/);
-            if (match) tty = match[1];
+            if (match) {
+                tty = match[1];
+                $scope.sshActivityTTY = tty;
+            }
         }
-        $http.post('/base/getSSHUserActivity', { user: login.user, tty: tty }).then(function(response) {
+        // Also try to extract from session field or raw line
+        if (!tty && login.session) {
+            var sessionMatch = login.session.match(/(pts\/[0-9]+)/);
+            if (sessionMatch) {
+                tty = sessionMatch[1];
+                $scope.sshActivityTTY = tty;
+            }
+        }
+        // Also check raw line for TTY
+        if (!tty && login.raw) {
+            var rawMatch = login.raw.match(/(pts\/[0-9]+)/);
+            if (rawMatch) {
+                tty = rawMatch[1];
+                $scope.sshActivityTTY = tty;
+            }
+        }
+        // Make API call with IP included - reduced timeout for faster response
+        var requestData = { 
+            user: login.user, 
+            tty: tty,
+            ip: $scope.sshActivityIP
+        };
+        
+        // Set shorter timeout for faster feedback
+        var timeoutPromise = $timeout(function() {
+            $scope.loadingSSHActivity = false;
+            $scope.errorSSHActivity = 'Request timed out. The user may not have any active processes.';
+            $scope.sshActivity = { processes: [], w: [] };
+        }, 5000); // 5 second timeout (reduced from 10)
+        
+        $http.post('/base/getSSHUserActivity', requestData, { timeout: 3000 }).then(function(response) {
+            $timeout.cancel(timeoutPromise); // Cancel timeout on success
             $scope.loadingSSHActivity = false;
             if (response.data) {
-                $scope.sshActivity = response.data;
+                // Check if response has error field
+                if (response.data.error) {
+                    $scope.errorSSHActivity = response.data.error;
+                    $scope.sshActivity = { processes: [], w: [] };
+                } else {
+                    $scope.sshActivity = response.data;
+                    // Ensure all expected fields exist
+                    if (!$scope.sshActivity.processes) $scope.sshActivity.processes = [];
+                    if (!$scope.sshActivity.w) $scope.sshActivity.w = [];
+                    if (!$scope.sshActivity.process_tree) $scope.sshActivity.process_tree = [];
+                    if (!$scope.sshActivity.shell_history) $scope.sshActivity.shell_history = [];
+                    
+                    // Try to extract TTY from processes if not already set
+                    if (!$scope.sshActivityTTY && response.data.processes && response.data.processes.length > 0) {
+                        var firstProcess = response.data.processes[0];
+                        if (firstProcess.tty) {
+                            $scope.sshActivityTTY = firstProcess.tty;
+                        }
+                    }
+                    // Update active session status - prioritize backend is_active field
+                    // The backend already determined if session is active, so trust that first
+                    // Only update if we have additional evidence (processes/w output)
+                    var hasProcesses = response.data.processes && response.data.processes.length > 0;
+                    var hasActiveW = response.data.w && response.data.w.length > 0;
+                    
+                    // If backend says it's active, keep it active (don't override)
+                    // If backend says inactive but we find processes/w, mark as active
+                    if ($scope.isActiveSession === true) {
+                        // Backend already marked as active, keep it that way
+                        // (processes might not have loaded yet, but session is still active)
+                    } else if (hasProcesses || hasActiveW) {
+                        // Backend said inactive, but we found evidence it's active
+                        $scope.isActiveSession = true;
+                    }
+                    // If backend said inactive and no processes found, keep as inactive
+                    
+                    // Debug logging
+                    console.log('SSH Activity loaded:', {
+                        processes: response.data.processes ? response.data.processes.length : 0,
+                        w: response.data.w ? response.data.w.length : 0,
+                        hasProcesses: hasProcesses,
+                        hasActiveW: hasActiveW,
+                        originalStatus: $scope.sshActivityStatus,
+                        isActiveSession: $scope.isActiveSession,
+                        ip: $scope.sshActivityIP
+                    });
+                }
             } else {
                 $scope.sshActivity = { processes: [], w: [] };
+                $scope.errorSSHActivity = 'No data returned from server.';
             }
         }, function(err) {
+            $timeout.cancel(timeoutPromise); // Cancel timeout on error
             $scope.loadingSSHActivity = false;
-            $scope.errorSSHActivity = (err.data && err.data.error) ? err.data.error : 'Failed to fetch activity.';
+            var errorMsg = 'Failed to fetch activity.';
+            
+            // Handle different error scenarios
+            if (err.data) {
+                // Server returned error data
+                if (err.data.error) {
+                    errorMsg = err.data.error;
+                } else if (typeof err.data === 'string') {
+                    errorMsg = err.data;
+                } else if (err.data.message) {
+                    errorMsg = err.data.message;
+                }
+            } else if (err.status === 0 || err.status === -1) {
+                errorMsg = 'Network error. Please check your connection and try again.';
+            } else if (err.status >= 500) {
+                errorMsg = 'Server error (HTTP ' + err.status + '). Please try again later.';
+            } else if (err.status === 404) {
+                errorMsg = 'Endpoint not found. Please refresh the page.';
+            } else if (err.status === 403) {
+                errorMsg = 'Access denied. Admin privileges required.';
+            } else if (err.status === 400) {
+                errorMsg = 'Invalid request. Please check the user information.';
+            } else if (err.status) {
+                errorMsg = 'Request failed with status ' + err.status + '.';
+            } else if (err.message) {
+                errorMsg = err.message;
+            }
+            
+            $scope.errorSSHActivity = errorMsg;
+            // Set empty activity data so modal can still display
+            $scope.sshActivity = { 
+                processes: [], 
+                w: [],
+                process_tree: [],
+                shell_history: [],
+                disk_usage: '',
+                geoip: {}
+            };
+            
+            // Log error for debugging
+            console.error('SSH Activity fetch error:', err);
+        });
+    };
+    
+    // Kill individual process
+    $scope.killProcess = function(pid, user) {
+        if (!confirm('Are you sure you want to force kill process ' + pid + '? This action cannot be undone.')) {
+            return;
+        }
+        
+        $scope.killingProcess = pid;
+        
+        var data = {
+            pid: pid,
+            user: user
+        };
+        
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        
+        $http.post('/base/killSSHProcess', data, config).then(function(response) {
+            $scope.killingProcess = null;
+            if (response.data && response.data.success) {
+                new PNotify({
+                    title: 'Process Killed',
+                    text: response.data.message || 'Process ' + pid + ' has been terminated.',
+                    type: 'success',
+                    delay: 3000
+                });
+                // Refresh activity to update process list
+                $scope.viewSSHActivity({ user: user, ip: $scope.sshActivityIP, raw: '', session: '' });
+            } else {
+                new PNotify({
+                    title: 'Error',
+                    text: (response.data && response.data.error) || 'Failed to kill process.',
+                    type: 'error',
+                    delay: 5000
+                });
+            }
+        }, function(err) {
+            $scope.killingProcess = null;
+            var errorMsg = 'Failed to kill process.';
+            if (err.data && err.data.error) {
+                errorMsg = err.data.error;
+            } else if (err.data && err.data.message) {
+                errorMsg = err.data.message;
+            }
+            new PNotify({
+                title: 'Error',
+                text: errorMsg,
+                type: 'error',
+                delay: 5000
+            });
+        });
+    };
+    
+    // Kill entire SSH session
+    $scope.killSSHSession = function(user, tty) {
+        var confirmMsg = 'Are you sure you want to kill all processes for user ' + user;
+        if (tty) {
+            confirmMsg += ' on terminal ' + tty;
+        }
+        confirmMsg += '? This will terminate their SSH session.';
+        
+        if (!confirm(confirmMsg)) {
+            return;
+        }
+        
+        $scope.killingSession = true;
+        
+        var data = {
+            user: user,
+            tty: tty || ''
+        };
+        
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        
+        $http.post('/base/killSSHSession', data, config).then(function(response) {
+            $scope.killingSession = false;
+            if (response.data && response.data.success) {
+                new PNotify({
+                    title: 'Session Terminated',
+                    text: response.data.message || 'SSH session has been terminated successfully.',
+                    type: 'success',
+                    delay: 3000
+                });
+                // Close modal and refresh page after a delay
+                setTimeout(function() {
+                    $scope.closeSSHActivityModal();
+                    location.reload();
+                }, 1500);
+            } else {
+                new PNotify({
+                    title: 'Error',
+                    text: (response.data && response.data.error) || 'Failed to kill session.',
+                    type: 'error',
+                    delay: 5000
+                });
+            }
+        }, function(err) {
+            $scope.killingSession = false;
+            var errorMsg = 'Failed to kill session.';
+            if (err.data && err.data.error) {
+                errorMsg = err.data.error;
+            } else if (err.data && err.data.message) {
+                errorMsg = err.data.message;
+            }
+            new PNotify({
+                title: 'Error',
+                text: errorMsg,
+                type: 'error',
+                delay: 5000
+            });
         });
     };
     
@@ -1581,8 +1979,15 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
         $scope.showSSHActivityModal = false;
         $scope.sshActivity = { processes: [], w: [] };
         $scope.sshActivityUser = '';
+        $scope.sshActivityIP = ''; // Clear IP when closing modal
+        $scope.sshActivityTTY = ''; // Clear TTY when closing modal
+        $scope.sshActivityStatus = ''; // Clear activity status
+        $scope.isActiveSession = false; // Reset active session flag
+        $scope.showFullJSON = false; // Reset JSON view
         $scope.loadingSSHActivity = false;
         $scope.errorSSHActivity = '';
+        $scope.killingProcess = null;
+        $scope.killingSession = false;
     };
 
     // Close modal when clicking backdrop
