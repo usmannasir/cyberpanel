@@ -20,6 +20,7 @@ class pluginInstaller:
         Generate URL pattern compatible with both Django 2.x and 3.x+
         Django 2.x uses url() with regex patterns
         Django 3.x+ prefers path() with simpler patterns
+        Plugins are routed under /plugins/pluginName/ to match meta.xml URLs
         """
         try:
             django_version = django.get_version()
@@ -28,17 +29,17 @@ class pluginInstaller:
             pluginInstaller.stdOut(f"Django version detected: {django_version}")
             
             if major_version >= 3:
-                # Django 3.x+ - use path() syntax
+                # Django 3.x+ - use path() syntax with /plugins/ prefix
                 pluginInstaller.stdOut(f"Using path() syntax for Django 3.x+ compatibility")
-                return "    path('" + pluginName + "/',include('" + pluginName + ".urls')),\n"
+                return "    path('plugins/" + pluginName + "/',include('" + pluginName + ".urls')),\n"
             else:
-                # Django 2.x - use url() syntax with regex
+                # Django 2.x - use url() syntax with regex and /plugins/ prefix
                 pluginInstaller.stdOut(f"Using url() syntax for Django 2.x compatibility")
-                return "    url(r'^" + pluginName + "/',include('" + pluginName + ".urls')),\n"
+                return "    url(r'^plugins/" + pluginName + "/',include('" + pluginName + ".urls')),\n"
         except Exception as e:
             # Fallback to modern path() syntax if version detection fails
             pluginInstaller.stdOut(f"Django version detection failed: {str(e)}, using path() syntax as fallback")
-            return "    path('" + pluginName + "/',include('" + pluginName + ".urls')),\n"
+            return "    path('plugins/" + pluginName + "/',include('" + pluginName + ".urls')),\n"
 
     @staticmethod
     def stdOut(message):
@@ -59,8 +60,14 @@ class pluginInstaller:
     @staticmethod
     def extractPlugin(pluginName):
         pathToPlugin = pluginName + '.zip'
-        command = 'unzip ' + pathToPlugin + ' -d /usr/local/CyberCP'
-        subprocess.call(shlex.split(command))
+        command = 'unzip -o ' + pathToPlugin + ' -d /usr/local/CyberCP'
+        result = subprocess.run(shlex.split(command), capture_output=True, text=True)
+        if result.returncode != 0:
+            raise Exception(f"Failed to extract plugin {pluginName}: {result.stderr}")
+        # Verify extraction succeeded
+        pluginPath = '/usr/local/CyberCP/' + pluginName
+        if not os.path.exists(pluginPath):
+            raise Exception(f"Plugin extraction failed: {pluginPath} does not exist after extraction")
 
     @staticmethod
     def upgradingSettingsFile(pluginName):
@@ -78,15 +85,37 @@ class pluginInstaller:
 
     @staticmethod
     def upgradingURLs(pluginName):
+        """
+        Add plugin URL pattern to urls.py
+        Plugin URLs must be inserted BEFORE the generic 'plugins/' line
+        to ensure proper route matching (more specific routes first)
+        """
         data = open("/usr/local/CyberCP/CyberCP/urls.py", 'r').readlines()
         writeToFile = open("/usr/local/CyberCP/CyberCP/urls.py", 'w')
+        urlPatternAdded = False
 
         for items in data:
-            if items.find("manageservices") > -1:
+            # Insert plugin URL BEFORE the generic 'plugins/' line
+            # This ensures more specific routes are matched first
+            if items.find("path('plugins/', include('pluginHolder.urls'))") > -1 or items.find("path(\"plugins/\", include('pluginHolder.urls'))") > -1:
+                if not urlPatternAdded:
+                    writeToFile.writelines(pluginInstaller.getUrlPattern(pluginName))
+                    urlPatternAdded = True
                 writeToFile.writelines(items)
-                writeToFile.writelines(pluginInstaller.getUrlPattern(pluginName))
             else:
                 writeToFile.writelines(items)
+
+        # Fallback: if 'plugins/' line not found, insert after 'manageservices'
+        if not urlPatternAdded:
+            pluginInstaller.stdOut(f"Warning: 'plugins/' line not found, using fallback insertion after 'manageservices'")
+            writeToFile.close()
+            writeToFile = open("/usr/local/CyberCP/CyberCP/urls.py", 'w')
+            for items in data:
+                if items.find("manageservices") > -1:
+                    writeToFile.writelines(items)
+                    writeToFile.writelines(pluginInstaller.getUrlPattern(pluginName))
+                else:
+                    writeToFile.writelines(items)
 
         writeToFile.close()
 

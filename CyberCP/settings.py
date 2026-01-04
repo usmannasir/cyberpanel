@@ -54,7 +54,9 @@ INSTALLED_APPS = [
     'mailServer',       # Depends on websiteFunctions, ChildDomains
 
     # Apps with multiple or complex dependencies
-    'emailPremium',     # Depends on mailServer
+    'emailPremium',
+    'discordWebhooks',     # Depends on mailServer
+    'testPlugin',       # Test plugin
     'emailMarketing',   # Depends on websiteFunctions and loginSystem
     'cloudAPI',         # Depends on websiteFunctions
     'containerization', # Depends on websiteFunctions
@@ -126,7 +128,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'cyberpanel',
         'USER': 'cyberpanel',
-        'PASSWORD': 'SLTUIUxqhulwsh',
+        'PASSWORD': '1XTy1XOV0BZPnM',
         'HOST': 'localhost',
         'PORT': ''
     },
@@ -134,7 +136,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'mysql',
         'USER': 'root',
-        'PASSWORD': 'SLTUIUxqhulwsh',
+        'PASSWORD': '1XTy1XOV0BZPnM',
         'HOST': 'localhost',
         'PORT': '',
     },
@@ -210,6 +212,10 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 2147483648
 
 # Security settings
 X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+# Login URL - CyberPanel uses root path for login
+LOGIN_URL = '/'
+LOGIN_REDIRECT_URL = '/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field

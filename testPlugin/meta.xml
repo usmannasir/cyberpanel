@@ -2,8 +2,8 @@
 <plugin>
     <name>Test Plugin</name>
     <type>Utility</type>
-    <description>A comprehensive test plugin for CyberPanel with enable/disable functionality, test button, popup messages, and inline integration</description>
     <version>1.0.0</version>
+    <description>A comprehensive test plugin for CyberPanel with enable/disable functionality, test button, popup messages, and inline integration</description>
     <author>CyberPanel Development Team</author>
     <website>https://github.com/cyberpanel/testPlugin</website>
     <license>MIT</license>
@@ -21,4 +21,6 @@
         <popup_messages>true</popup_messages>
         <inline_integration>true</inline_integration>
     </settings>
+    <url>/plugins/testPlugin/</url>
+    <settings_url>/plugins/testPlugin/settings/</settings_url>
 </plugin>

@@ -43,6 +43,9 @@ Welcome to the CyberPanel documentation hub! This folder contains all guides, tu
 ### 🎨 Customization & Design
 - **[Custom CSS Guide](CUSTOM_CSS_GUIDE.md)** - Complete guide for creating custom CSS that works with CyberPanel 2.5.5-dev design system
 
+### 🔌 Plugins & Extensions
+- **[Plugin System Guide](PLUGINS.md)** - Complete guide to CyberPanel plugin system, development, testPlugin reference, and plugin management
+
 ### 🔐 Security & Authentication
 - **[2FA Authentication Guide](2FA_AUTHENTICATION_GUIDE.md)** - Complete guide for Two-Factor Authentication and WebAuthn/Passkey setup
 
@@ -99,6 +102,7 @@ Welcome to the CyberPanel documentation hub! This folder contains all guides, tu
 - **Email Marketing**: [Mautic Installation Guide](MAUTIC_INSTALLATION_GUIDE.md)
 - **Storage Management**: [Home Directory Management Guide](HOME_DIRECTORY_MANAGEMENT_GUIDE.md)
 - **Customization & Design**: [Custom CSS Guide](CUSTOM_CSS_GUIDE.md)
+- **Plugin System**: [Plugin System Guide](PLUGINS.md)
 - **Command Line Interface**: [CLI Command Reference](CLI_COMMAND_REFERENCE.md)
 - **Development**: [Contributing Guide](CONTRIBUTING.md)
 
