@@ -713,25 +713,57 @@ def getRecentSSHLogins(request):
             date_match = re.search(r'([A-Za-z]{3} [A-Za-z]{3} +\d+ [\d:]+)', line)
             date_str = date_match.group(1) if date_match else ''
             session_info = ''
-            if '-' in line:
-                # Session ended
-                session_info = line.split('-')[-1].strip()
-            elif 'still logged in' in line:
+            is_active = False
+            if 'still logged in' in line:
                 session_info = 'still logged in'
-            # GeoIP lookup (cache per request)
+                is_active = True
+            elif '-' in line:
+                # Session ended - parse the end time and duration
+                # Format: "Tue May 27 11:34 - 13:47  (02:13)" or "crash (00:40)"
+                end_part = line.split('-')[-1].strip()
+                # Check if it's a crash or normal logout
+                if 'crash' in end_part.lower():
+                    # Extract crash duration if available
+                    crash_match = re.search(r'crash\s*\(([^)]+)\)', end_part, re.IGNORECASE)
+                    if crash_match:
+                        session_info = f"crash ({crash_match.group(1)})"
+                    else:
+                        session_info = 'crash'
+                else:
+                    # Normal session end - try to extract duration
+                    duration_match = re.search(r'\(([^)]+)\)', end_part)
+                    if duration_match:
+                        session_info = f"ended ({duration_match.group(1)})"
+                    else:
+                        # Just show the end time
+                        time_match = re.search(r'([A-Za-z]{3}\s+[A-Za-z]{3}\s+\d+\s+[\d:]+)', end_part)
+                        if time_match:
+                            session_info = f"ended at {time_match.group(1)}"
+                        else:
+                            session_info = 'ended'
+                is_active = False
+            # GeoIP lookup (cache per request) - support both IPv4 and IPv6
             country = flag = ''
-            if re.match(r'\d+\.\d+\.\d+\.\d+', ip) and ip != '127.0.0.1':
+            # Check if IP is IPv4
+            is_ipv4 = re.match(r'^\d+\.\d+\.\d+\.\d+$', ip)
+            # Check if IP is IPv6 (simplified check)
+            is_ipv6 = ':' in ip and not is_ipv4
+            
+            if is_ipv4 and ip != '127.0.0.1':
                 if ip in ip_cache:
                     country, flag = ip_cache[ip]
                 else:
                     try:
-                        geo = requests.get(f'http://ip-api.com/json/{ip}', timeout=2).json()
+                        geo = requests.get(f'http://ip-api.com/json/{ip}', timeout=1).json()
                         country = geo.get('countryCode', '')
                         flag = f"https://flagcdn.com/24x18/{country.lower()}.png" if country else ''
                         ip_cache[ip] = (country, flag)
                     except Exception:
                         country, flag = '', ''
-            elif ip == '127.0.0.1':
+            elif is_ipv6 and ip != '::1':
+                # IPv6 - set flag to indicate IPv6 (GeoIP API may not support IPv6 well)
+                country, flag = 'IPv6', ''
+            elif ip == '127.0.0.1' or ip == '::1':
                 country, flag = 'Local', ''
             logins.append({
                 'user': user,
@@ -740,6 +772,7 @@ def getRecentSSHLogins(request):
                 'flag': flag,
                 'date': date_str,
                 'session': session_info,
+                'is_active': is_active,
                 'raw': line
             })
         return HttpResponse(json.dumps({'logins': logins}), content_type='application/json')
@@ -1254,115 +1287,63 @@ def getSSHUserActivity(request):
         login_ip = data.get('ip', '')
         if not user:
             return HttpResponse(json.dumps({'error': 'Missing user'}), content_type='application/json', status=400)
-        # Get processes for the user
-        ps_cmd = f"ps -u {user} -o pid,ppid,tty,time,cmd --no-headers"
-        try:
-            ps_output = ProcessUtilities.outputExecutioner(ps_cmd)
-        except Exception as e:
-            ps_output = ''
-        processes = []
-        pid_map = {}
-        if ps_output:
-            for line in ps_output.strip().split('\n'):
-                parts = line.split(None, 4)
-                if len(parts) == 5:
-                    pid, ppid, tty_val, time_val, cmd = parts
-                    if tty and tty not in tty_val:
-                        continue
-                    # Try to get CWD
-                    cwd = ''
-                    try:
-                        cwd_path = f"/proc/{pid}/cwd"
-                        if os.path.islink(cwd_path):
-                            cwd = os.readlink(cwd_path)
-                    except Exception:
-                        cwd = ''
-                    proc = {
-                        'pid': pid,
-                        'ppid': ppid,
-                        'tty': tty_val,
-                        'time': time_val,
-                        'cmd': cmd,
-                        'cwd': cwd
-                    }
-                    processes.append(proc)
-                    pid_map[pid] = proc
-        # Build process tree
-        tree = []
-        def build_tree(parent_pid, level=0):
-            for proc in processes:
-                if proc['ppid'] == parent_pid:
-                    proc_copy = proc.copy()
-                    proc_copy['level'] = level
-                    tree.append(proc_copy)
-                    build_tree(proc['pid'], level+1)
-        build_tree('1', 0)  # Start from init
-        # Find main shell process for history
-        shell_history = []
-        try:
-            try:
-                website = Websites.objects.get(externalApp=user)
-                shell_home = f'/home/{website.domain}'
-            except Exception:
-                shell_home = pwd.getpwnam(user).pw_dir
-        except Exception:
-            shell_home = f"/home/{user}"
-        history_file = ''
-        for shell in ['.bash_history', '.zsh_history']:
-            path = os.path.join(shell_home, shell)
-            if os.path.exists(path):
-                history_file = path
-                break
-        if history_file:
-            try:
-                with open(history_file, 'r') as f:
-                    lines = f.readlines()
-                    shell_history = [l.strip() for l in lines[-10:]]
-            except Exception:
-                shell_history = []
-        # Disk usage
-        disk_usage = ''
-        if os.path.exists(shell_home):
-            try:
-                du_out = ProcessUtilities.outputExecutioner(f'du -sh {shell_home}')
-                disk_usage = du_out.strip().split('\t')[0] if du_out else ''
-            except Exception:
-                disk_usage = ''
-        else:
-            disk_usage = 'Home directory does not exist'
-        # GeoIP details
-        geoip = {}
-        if login_ip and login_ip not in ['127.0.0.1', 'localhost']:
-            try:
-                geo = requests.get(f'http://ip-api.com/json/{login_ip}?fields=status,message,country,regionName,city,isp,org,as,query', timeout=2).json()
-                if geo.get('status') == 'success':
-                    geoip = {
-                        'country': geo.get('country'),
-                        'region': geo.get('regionName'),
-                        'city': geo.get('city'),
-                        'isp': geo.get('isp'),
-                        'org': geo.get('org'),
-                        'as': geo.get('as'),
-                        'ip': geo.get('query')
-                    }
-            except Exception:
-                geoip = {}
-        # Optionally, get 'w' output for more info
-        w_cmd = f"w -h {user}"
-        try:
-            w_output = ProcessUtilities.outputExecutioner(w_cmd)
-        except Exception as e:
-            w_output = ''
+        # Get 'w' output first (fastest, most important for session status)
         w_lines = []
-        if w_output:
-            for line in w_output.strip().split('\n'):
-                w_lines.append(line)
+        try:
+            w_cmd = f"w -h {user} 2>/dev/null | head -10"
+            w_output = ProcessUtilities.outputExecutioner(w_cmd)
+            if w_output:
+                for line in w_output.strip().split('\n'):
+                    if line.strip():
+                        w_lines.append(line)
+        except Exception:
+            w_lines = []
+        
+        # Get processes for the user (limit to 50 for speed)
+        # If TTY is specified, filter by TTY; otherwise get all user processes
+        processes = []
+        try:
+            if tty:
+                # Filter by specific TTY
+                ps_cmd = f"ps -u {user} -o pid,ppid,tty,time,cmd --no-headers 2>/dev/null | grep '{tty}' | head -50"
+            else:
+                # Get all processes for user
+                ps_cmd = f"ps -u {user} -o pid,ppid,tty,time,cmd --no-headers 2>/dev/null | head -50"
+            ps_output = ProcessUtilities.outputExecutioner(ps_cmd)
+            if ps_output:
+                for line in ps_output.strip().split('\n'):
+                    if not line.strip():
+                        continue
+                    parts = line.split(None, 4)
+                    if len(parts) >= 5:
+                        pid, ppid, tty_val, time_val, cmd = parts[0], parts[1], parts[2], parts[3], parts[4]
+                        # Additional TTY check if tty was specified
+                        if tty and tty not in tty_val:
+                            continue
+                        # Skip CWD lookup for speed
+                        proc = {
+                            'pid': pid,
+                            'ppid': ppid,
+                            'tty': tty_val,
+                            'time': time_val,
+                            'cmd': cmd[:200] if len(cmd) > 200 else cmd,  # Limit command length
+                            'cwd': ''  # Skip for speed
+                        }
+                        processes.append(proc)
+        except Exception:
+            processes = []
+        
+        # Skip slow operations for fast response:
+        # - Process tree (can be computed client-side if needed)
+        # - Shell history (not critical for initial load)
+        # - Disk usage (not critical for initial load)
+        # - GeoIP (can be fetched async later if needed)
         return HttpResponse(json.dumps({
             'processes': processes,
-            'process_tree': tree,
-            'shell_history': shell_history,
-            'disk_usage': disk_usage,
-            'geoip': geoip,
+            'process_tree': [],  # Empty for speed
+            'shell_history': [],  # Empty for speed
+            'disk_usage': '',  # Empty for speed
+            'geoip': {},  # Empty for speed
             'w': w_lines
         }), content_type='application/json')
     except Exception as e:
