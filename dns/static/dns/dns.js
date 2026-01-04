@@ -807,10 +807,12 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http, $window
     $scope.recordAdded = true;
     $scope.couldNotConnect = true;
     $scope.recordsLoading = true;
+    $scope.loadingRecords = true;
     $scope.recordDeleted = true;
     $scope.couldNotDeleteRecords = true;
     $scope.couldNotAddRecord = true;
     $scope.recordValueDefault = false;
+    $scope.records = [];
 
     // Hide records boxes
     $(".aaaaRecord").hide();
@@ -981,7 +983,7 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http, $window
     };
 
     function populateCurrentRecords() {
-
+        $scope.loadingRecords = true;
         var selectedZone = $scope.selectedZone;
 
         url = "/dns/getCurrentRecordsForDomainCloudFlare";
@@ -1002,6 +1004,7 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http, $window
 
 
         function ListInitialDatas(response) {
+            $scope.loadingRecords = false;
             if (response.data.fetchStatus === 1) {
 
                 $scope.records = JSON.parse(response.data.data);
@@ -1028,6 +1031,7 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http, $window
                 $scope.couldNotConnect = true;
                 $scope.recordsLoading = true;
                 $scope.couldNotAddRecord = true;
+                $scope.records = [];
 
                 $scope.errorMessage = response.data.error_message;
             }
@@ -1035,7 +1039,7 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http, $window
         }
 
         function cantLoadInitialDatas(response) {
-
+            $scope.loadingRecords = false;
             $scope.addRecordsBox = true;
             $scope.currentRecords = true;
             $scope.canNotFetchRecords = true;
@@ -1044,6 +1048,7 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http, $window
             $scope.recordAdded = true;
             $scope.couldNotConnect = false;
             $scope.couldNotAddRecord = true;
+            $scope.records = [];
 
 
         }
