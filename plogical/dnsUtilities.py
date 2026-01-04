@@ -220,6 +220,15 @@ class DNS:
 
                     DNS.createDNSRecord(zone, topLevelDomain, "A", ipAddress, 0, 3600)
 
+                    # AAAA Record (IPv6) - Required for mail delivery to Google, Outlook, etc.
+                    try:
+                        from plogical.acl import ACLManager
+                        ipv6Address = ACLManager.GetServerIPv6()
+                        if ipv6Address:
+                            DNS.createDNSRecord(zone, topLevelDomain, "AAAA", ipv6Address, 0, 3600)
+                    except Exception as e:
+                        logging.CyberCPLogFileWriter.writeToFile(f'Error creating AAAA record for {topLevelDomain}: {str(e)}')
+
                     # CNAME Records.
 
                     cNameValue = "www." + topLevelDomain
@@ -281,6 +290,15 @@ class DNS:
                     # record.save()
 
                     DNS.createDNSRecord(zone, mxValue, "A", ipAddress, 0, 3600)
+
+                    # AAAA Record for mail (IPv6) - Required for mail delivery
+                    try:
+                        from plogical.acl import ACLManager
+                        ipv6Address = ACLManager.GetServerIPv6()
+                        if ipv6Address:
+                            DNS.createDNSRecord(zone, mxValue, "AAAA", ipv6Address, 0, 3600)
+                    except Exception as e:
+                        logging.CyberCPLogFileWriter.writeToFile(f'Error creating AAAA record for mail {mxValue}: {str(e)}')
 
                     ## TXT Records for mail
 
@@ -365,6 +383,15 @@ class DNS:
 
                     DNS.createDNSRecord(zone, topLevelDomain, "A", ipAddress, 0, 3600)
 
+                    # AAAA Record (IPv6) - Required for mail delivery to Google, Outlook, etc.
+                    try:
+                        from plogical.acl import ACLManager
+                        ipv6Address = ACLManager.GetServerIPv6()
+                        if ipv6Address:
+                            DNS.createDNSRecord(zone, topLevelDomain, "AAAA", ipv6Address, 0, 3600)
+                    except Exception as e:
+                        logging.CyberCPLogFileWriter.writeToFile(f'Error creating AAAA record for {topLevelDomain}: {str(e)}')
+
                     # CNAME Records.
 
                     cNameValue = "www." + topLevelDomain
@@ -427,6 +454,15 @@ class DNS:
 
                     DNS.createDNSRecord(zone, mxValue, "A", ipAddress, 0, 3600)
 
+                    # AAAA Record for mail (IPv6) - Required for mail delivery
+                    try:
+                        from plogical.acl import ACLManager
+                        ipv6Address = ACLManager.GetServerIPv6()
+                        if ipv6Address:
+                            DNS.createDNSRecord(zone, mxValue, "AAAA", ipv6Address, 0, 3600)
+                    except Exception as e:
+                        logging.CyberCPLogFileWriter.writeToFile(f'Error creating AAAA record for mail {mxValue}: {str(e)}')
+
                     ## TXT Records for mail
 
                     # record = Records(domainOwner=zone,
@@ -478,10 +514,27 @@ class DNS:
 
                 DNS.createDNSRecord(zone, actualSubDomain, "A", ipAddress, 0, 3600)
 
+                # AAAA Record for subdomain (IPv6)
+                try:
+                    from plogical.acl import ACLManager
+                    ipv6Address = ACLManager.GetServerIPv6()
+                    if ipv6Address:
+                        DNS.createDNSRecord(zone, actualSubDomain, "AAAA", ipv6Address, 0, 3600)
+                except Exception as e:
+                    logging.CyberCPLogFileWriter.writeToFile(f'Error creating AAAA record for subdomain {actualSubDomain}: {str(e)}')
+
                 ## Mail Record
 
                 if ('mail.%s' % (actualSubDomain)).find('mail.mail') == -1:
                     DNS.createDNSRecord(zone, 'mail.' + actualSubDomain, "A", ipAddress, 0, 3600)
+                    # AAAA Record for mail subdomain (IPv6) - Required for mail delivery
+                    try:
+                        from plogical.acl import ACLManager
+                        ipv6Address = ACLManager.GetServerIPv6()
+                        if ipv6Address:
+                            DNS.createDNSRecord(zone, 'mail.' + actualSubDomain, "AAAA", ipv6Address, 0, 3600)
+                    except Exception as e:
+                        logging.CyberCPLogFileWriter.writeToFile(f'Error creating AAAA record for mail subdomain {actualSubDomain}: {str(e)}')
 
                 # CNAME Records.
 
@@ -656,17 +709,31 @@ class DNS:
             return 0
 
     @staticmethod
-    def createDNSRecordCloudFlare(cf, zone, name, type, value, priority, ttl):
+    def createDNSRecordCloudFlare(cf, zone, name, type, value, priority, ttl, proxied=None):
         try:
 
             if value.find('DKIM') > -1:
                 value = value.replace('\n\t', '')
                 value = value.replace('"', '')
 
+            # Only A and CNAME records can be proxied in CloudFlare
+            # Determine if proxy should be enabled (default: True for A/CNAME, except for mail domains)
+            if proxied is None and type in ['A', 'CNAME']:
+                # Check if this is a mail domain (starts with 'mail.' or contains 'mail.')
+                is_mail_domain = name.lower().startswith('mail.') or '.mail.' in name.lower()
+                proxied = not is_mail_domain
+            elif type not in ['A', 'CNAME']:
+                # AAAA, MX, TXT, etc. cannot be proxied
+                proxied = False
+
             if ttl > 0:
                 dns_record = {'name': name, 'type': type, 'content': value, 'ttl': ttl, 'priority': priority}
             else:
                 dns_record = {'name': name, 'type': type, 'content': value, 'priority': priority}
+            
+            # Only add proxied parameter for A and CNAME records
+            if type in ['A', 'CNAME']:
+                dns_record['proxied'] = proxied
 
             cf.zones.dns_records.post(zone, data=dns_record)
         except BaseException as msg:

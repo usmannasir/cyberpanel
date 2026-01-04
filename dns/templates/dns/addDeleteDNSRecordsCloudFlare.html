@@ -472,41 +472,60 @@
             }
         }
         
-        .proxy-toggle {
-            appearance: none;
-            width: 48px;
-            height: 24px;
-            background: #e8e9ff;
-            border-radius: 24px;
-            position: relative;
-            cursor: pointer;
-            transition: all 0.3s ease;
+        input.proxy-toggle[type="checkbox"] {
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            appearance: none !important;
+            width: 50px !important;
+            height: 26px !important;
+            min-width: 50px !important;
+            min-height: 26px !important;
+            max-width: 50px !important;
+            max-height: 26px !important;
+            background: #ccc !important;
+            border-radius: 13px !important;
+            position: relative !important;
+            cursor: pointer !important;
+            transition: background 0.3s ease !important;
+            border: none !important;
+            outline: none !important;
+            display: inline-block !important;
+            vertical-align: middle !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            box-sizing: border-box !important;
         }
         
-        .proxy-toggle:checked {
-            background: #5b5fcf;
+        input.proxy-toggle[type="checkbox"]:checked {
+            background: #5b5fcf !important;
         }
         
-        .proxy-toggle::after {
-            content: '';
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            width: 20px;
-            height: 20px;
-            background: var(--bg-primary, white);
-            border-radius: 50%;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        input.proxy-toggle[type="checkbox"]::before {
+            content: '' !important;
+            position: absolute !important;
+            width: 22px !important;
+            height: 22px !important;
+            border-radius: 50% !important;
+            background: white !important;
+            top: 2px !important;
+            left: 2px !important;
+            transition: left 0.3s ease, transform 0.3s ease !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+            display: block !important;
         }
         
-        .proxy-toggle:checked::after {
-            left: 26px;
+        input.proxy-toggle[type="checkbox"]:checked::before {
+            left: 26px !important;
         }
         
-        .proxy-toggle:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        input.proxy-toggle[type="checkbox"]:disabled {
+            opacity: 0.5 !important;
+            cursor: not-allowed !important;
+        }
+        
+        input.proxy-toggle[type="checkbox"]:focus {
+            outline: 2px solid rgba(91, 95, 207, 0.3) !important;
+            outline-offset: 2px !important;
         }
     </style>
 
@@ -876,7 +895,7 @@
                                                         <input class="proxy-toggle" 
                                                                ng-click="enableProxy(record.name, record.proxy)" 
                                                                ng-disabled="!record.proxiable" 
-                                                               ng-checked="record.proxy" 
+                                                               ng-checked="record.proxy"
                                                                type="checkbox">
                                                     </td>
                                                     <td style="text-align: center;">
