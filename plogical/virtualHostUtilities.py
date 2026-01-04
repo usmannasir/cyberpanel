@@ -1834,6 +1834,22 @@ local_name %s {
             vhost.deleteCoreConf(virtualHostName, numberOfWebsites)
             delWebsite = ChildDomains.objects.get(domain=virtualHostName)
 
+            # Get admin user name before deletion for CloudFlare cleanup
+            adminUserName = None
+            try:
+                adminUserName = delWebsite.master.admin.userName
+            except:
+                pass
+
+            # Delete CloudFlare DNS records for this domain
+            try:
+                from plogical.dnsUtilities import DNS
+                DNS.deleteCloudFlareDNSRecords(virtualHostName, adminUserName)
+            except Exception as cfError:
+                # Log error but don't fail domain deletion if CloudFlare deletion fails
+                logging.CyberCPLogFileWriter.writeToFile(
+                    f'CloudFlare DNS deletion failed for {virtualHostName}: {str(cfError)}')
+
             if DeleteDocRoot:
                 command = 'rm -rf %s' % (delWebsite.path)
                 ProcessUtilities.executioner(command)
