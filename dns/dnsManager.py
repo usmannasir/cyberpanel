@@ -649,7 +649,10 @@ class DNSManager:
 
         if os.path.exists(cfPath):
             CloudFlare = 1
-            domainsList = ACLManager.findAllDomains(currentACL, userID)
+            allDomains = ACLManager.findAllDomains(currentACL, userID)
+            # Filter to only show main domains (domains with exactly one dot, e.g., "example.com")
+            # Sub-domains have two or more dots (e.g., "subdomain.example.com")
+            domainsList = [domain for domain in allDomains if domain.count('.') == 1]
             self.admin = admin
             self.loadCFKeys()
             data = {"domainsList": domainsList, "status": status, 'CloudFlare': CloudFlare, 'cfEmail': self.email,

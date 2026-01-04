@@ -398,6 +398,12 @@ class vhost:
                 delWebsite = Websites.objects.get(domain=virtualHostName)
                 externalApp = delWebsite.externalApp
 
+                # Get admin user name for CloudFlare cleanup
+                adminUserName = None
+                try:
+                    adminUserName = delWebsite.admin.userName
+                except:
+                    pass
 
                 ##
 
@@ -410,6 +416,14 @@ class vhost:
                 for items in childDomains:
                     numberOfSites = Websites.objects.count() + ChildDomains.objects.count()
                     vhost.deleteCoreConf(items.domain, numberOfSites)
+
+                    # Delete CloudFlare DNS records for child domain
+                    try:
+                        DNS.deleteCloudFlareDNSRecords(items.domain, adminUserName)
+                    except Exception as cfError:
+                        # Log error but don't fail deletion if CloudFlare deletion fails
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            f'CloudFlare DNS deletion failed for child domain {items.domain}: {str(cfError)}')
 
                     ### Delete ACME Folder
 
@@ -454,6 +468,14 @@ class vhost:
 
                     for items in databases:
                         mysqlUtilities.deleteDatabase(items.dbName, items.dbUser)
+
+                    # Delete CloudFlare DNS records for main domain before deletion
+                    try:
+                        DNS.deleteCloudFlareDNSRecords(virtualHostName, adminUserName)
+                    except Exception as cfError:
+                        # Log error but don't fail deletion if CloudFlare deletion fails
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            f'CloudFlare DNS deletion failed for {virtualHostName}: {str(cfError)}')
 
                     delWebsite.delete()
 

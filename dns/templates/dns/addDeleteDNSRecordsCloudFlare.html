@@ -310,32 +310,100 @@
             overflow: hidden;
             border: 1px solid var(--border-primary, #e8e9ff);
             margin-top: 2rem;
+            display: table;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        
+        .records-table th,
+        .records-table td {
+            display: table-cell !important;
+        }
+        
+        .records-table tr {
+            display: table-row !important;
         }
         
         .records-table thead {
-            background: var(--bg-secondary, #f8f9ff);
+            display: table-header-group !important;
+            background: linear-gradient(135deg, #5b5fcf 0%, #4a4fc7 100%);
+        }
+        
+        .records-table tbody {
+            display: table-row-group !important;
         }
         
         .records-table th {
-            padding: 1rem;
             text-align: left;
-            font-weight: 600;
-            color: var(--text-primary, #1e293b);
-            font-size: 0.875rem;
+            padding: 14px 12px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #ffffff;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            border-bottom: 1px solid var(--border-primary, #e8e9ff);
+            letter-spacing: 0.8px;
+            border-bottom: 2px solid rgba(91, 95, 207, 0.3);
+            background: linear-gradient(135deg, #5b5fcf 0%, #4a4fc7 100%);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            vertical-align: middle;
+            white-space: nowrap;
         }
         
-        .records-table td {
-            padding: 1rem;
-            color: var(--text-secondary, #64748b);
-            font-size: 0.875rem;
-            border-bottom: 1px solid var(--border-light, #f3f4f6);
+        .records-table tbody tr {
+            border-bottom: 1px solid var(--border-color, #f0f0ff);
         }
         
         .records-table tbody tr:hover {
-            background: var(--bg-secondary, #f8f9ff);
+            background: var(--bg-hover, #f8f9ff);
+        }
+        
+        .records-table td {
+            padding: 12px 12px;
+            font-size: 13px;
+            color: var(--text-primary, #2f3640);
+            border-bottom: 1px solid var(--border-color, #f0f0ff);
+            vertical-align: middle;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        
+        .records-table td:nth-child(1) {
+            min-width: 200px;
+            max-width: 300px;
+        }
+        
+        .records-table td:nth-child(2) {
+            min-width: 80px;
+            max-width: 120px;
+        }
+        
+        .records-table td:nth-child(3) {
+            min-width: 80px;
+            max-width: 120px;
+        }
+        
+        .records-table td:nth-child(4) {
+            min-width: 150px;
+            max-width: 300px;
+        }
+        
+        .records-table td:nth-child(5) {
+            min-width: 80px;
+            max-width: 120px;
+        }
+        
+        .records-table td:nth-child(6) {
+            min-width: 80px;
+            max-width: 120px;
+            text-align: center;
+        }
+        
+        .records-table td:nth-child(7) {
+            min-width: 80px;
+            max-width: 120px;
+            text-align: center;
         }
         
         .delete-icon {
@@ -767,14 +835,21 @@
 
                                     
                                     <!-- DNS Records Table -->
-
-                                    <div ng-hide="currentRecords" style="margin-top: 3rem;">
+                                    <div style="margin-top: 3rem;">
                                         <h4 class="mb-3" style="color: var(--text-primary, #1e293b); font-weight: 600;">
                                             <i class="fas fa-list"></i>
                                             {% trans "DNS Records" %}
                                         </h4>
                                         
-                                        <table class="records-table">
+                                        <div ng-if="loadingRecords" style="text-align: center; padding: 20px; color: #8893a7;">
+                                            Loading DNS records...
+                                        </div>
+                                        
+                                        <div ng-if="!loadingRecords && records.length === 0" style="text-align: center; padding: 20px; color: #8893a7;">
+                                            No DNS records found.
+                                        </div>
+                                        
+                                        <table class="records-table activity-table" ng-if="!loadingRecords && records.length > 0">
                                             <thead>
                                                 <tr>
                                                     <th>{% trans "Name" %}</th>
@@ -788,7 +863,7 @@
                                             </thead>
                                             <tbody>
                                                 <tr ng-repeat="record in records track by $index">
-                                                    <td ng-bind="record.name"></td>
+                                                    <td><strong ng-bind="record.name"></strong></td>
                                                     <td>
                                                         <span style="padding: 0.25rem 0.75rem; background: var(--bg-hover, #f0f1ff); color: #5b5fcf; border-radius: 4px; font-weight: 500; font-size: 0.75rem;">
                                                             {{ record.type }}
@@ -806,17 +881,40 @@
                                                     </td>
                                                     <td style="text-align: center;">
                                                         <i class="fas fa-trash delete-icon" 
-                                                           style="color: #ef4444;" 
+                                                           style="color: #ef4444; cursor: pointer;" 
                                                            ng-click="deleteRecord(record.id)"
                                                            title="{% trans 'Delete Record' %}"></i>
                                                     </td>
                                                 </tr>
                                             </tbody>
                                         </table>
+                                        
+                                        <!-- Loading placeholder table -->
+                                        <table class="records-table activity-table" ng-if="loadingRecords">
+                                            <thead>
+                                                <tr>
+                                                    <th>{% trans "Name" %}</th>
+                                                    <th>{% trans "Type" %}</th>
+                                                    <th>{% trans "TTL" %}</th>
+                                                    <th>{% trans "Value" %}</th>
+                                                    <th>{% trans "Priority" %}</th>
+                                                    <th>{% trans "Proxy" %}</th>
+                                                    <th style="text-align: center;">{% trans "Actions" %}</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr ng-repeat="i in [1,2,3,4,5]">
+                                                    <td>Loading...</td>
+                                                    <td>Loading...</td>
+                                                    <td>Loading...</td>
+                                                    <td>Loading...</td>
+                                                    <td>Loading...</td>
+                                                    <td>Loading...</td>
+                                                    <td>Loading...</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
                                     </div>
-
-                                    
-                                    <!-- DNS Records Table -->
 
 
                                 </div>

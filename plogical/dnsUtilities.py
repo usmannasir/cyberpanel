@@ -840,6 +840,102 @@ class DNS:
             pass
 
     @staticmethod
+    def deleteCloudFlareDNSRecords(domainName, adminUserName=None):
+        """
+        Delete all CloudFlare DNS records for a domain when domain is removed from CyberPanel.
+        This function is called automatically when domains/sub-domains are deleted.
+        """
+        try:
+            # Check if CloudFlare is configured for this admin user
+            if adminUserName:
+                cfFile = '%s%s' % (DNS.CFPath, adminUserName)
+            else:
+                # Try to find admin user from domain
+                try:
+                    from loginSystem.models import Administrator
+                    from websiteFunctions.models import Websites, ChildDomains
+                    try:
+                        website = Websites.objects.get(domain=domainName)
+                        adminUserName = website.admin.userName
+                    except:
+                        try:
+                            childDomain = ChildDomains.objects.get(domain=domainName)
+                            adminUserName = childDomain.master.admin.userName
+                        except:
+                            return 0, "Could not find admin user for domain"
+                    cfFile = '%s%s' % (DNS.CFPath, adminUserName)
+                except:
+                    return 0, "Could not determine admin user"
+
+            if not os.path.exists(cfFile):
+                # CloudFlare not configured for this user, skip deletion
+                return 1, "CloudFlare not configured"
+
+            # Load CloudFlare credentials
+            data = open(cfFile, 'r').readlines()
+            email = data[0].rstrip('\n')
+            token = data[1].rstrip('\n')
+
+            # Initialize CloudFlare API
+            cf = CloudFlare.CloudFlare(email=email, token=token)
+
+            try:
+                # Find the zone for this domain
+                params = {'name': domainName, 'per_page': 50}
+                zones = cf.zones.get(params=params)
+
+                for zone in sorted(zones, key=lambda v: v['name']):
+                    if zone['name'] == domainName:
+                        zone_id = zone['id']
+
+                        # Get all DNS records for this zone
+                        try:
+                            dns_records = cf.zones.dns_records.get(zone_id)
+                            
+                            # Delete all DNS records
+                            deleted_count = 0
+                            for record in dns_records:
+                                try:
+                                    cf.zones.dns_records.delete(zone_id, record['id'])
+                                    deleted_count += 1
+                                except Exception as e:
+                                    logging.CyberCPLogFileWriter.writeToFile(
+                                        f'Error deleting CloudFlare DNS record {record["id"]} for {domainName}: {str(e)}')
+
+                            if deleted_count > 0:
+                                logging.CyberCPLogFileWriter.writeToFile(
+                                    f'Deleted {deleted_count} CloudFlare DNS records for {domainName}')
+                                return 1, f"Deleted {deleted_count} DNS records"
+                            else:
+                                return 1, "No DNS records found to delete"
+
+                        except CloudFlare.exceptions.CloudFlareAPIError as e:
+                            logging.CyberCPLogFileWriter.writeToFile(
+                                f'CloudFlare API error deleting DNS records for {domainName}: {str(e)}')
+                            return 0, str(e)
+                        except Exception as e:
+                            logging.CyberCPLogFileWriter.writeToFile(
+                                f'Error getting CloudFlare DNS records for {domainName}: {str(e)}')
+                            return 0, str(e)
+
+                # Zone not found in CloudFlare
+                return 1, "Domain not found in CloudFlare"
+
+            except CloudFlare.exceptions.CloudFlareAPIError as e:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    f'CloudFlare API error for {domainName}: {str(e)}')
+                return 0, str(e)
+            except Exception as e:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    f'Error deleting CloudFlare DNS records for {domainName}: {str(e)}')
+                return 0, str(e)
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                f'Error in deleteCloudFlareDNSRecords for {domainName}: {str(msg)}')
+            return 0, str(msg)
+
+    @staticmethod
     def createDNSZone(virtualHostName, admin):
         try:
             zone = Domains(admin=admin, name=virtualHostName, type="NATIVE")
