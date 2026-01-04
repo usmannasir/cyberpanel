@@ -1049,6 +1049,38 @@ class ACLManager:
         return ipData.split('\n', 1)[0]
 
     @staticmethod
+    def GetServerIPv6():
+        """
+        Get the server's primary IPv6 address (non-link-local, non-loopback)
+        Returns None if no IPv6 address is found
+        """
+        try:
+            import subprocess
+            # Get IPv6 addresses, exclude link-local (fe80::) and loopback (::1)
+            result = subprocess.run(
+                ['ip', '-6', 'addr', 'show'],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            
+            if result.returncode == 0:
+                lines = result.stdout.split('\n')
+                for line in lines:
+                    if 'inet6' in line and '::1' not in line and 'fe80::' not in line:
+                        # Extract IPv6 address (format: inet6 2a02:c207:2139:8929::1/64)
+                        parts = line.strip().split()
+                        if len(parts) >= 2:
+                            ipv6 = parts[1].split('/')[0]
+                            # Validate it's a real IPv6 (not link-local)
+                            if not ipv6.startswith('fe80::'):
+                                return ipv6
+        except Exception as e:
+            logging.CyberCPLogFileWriter.writeToFile(f'Error getting IPv6 address: {str(e)}')
+        
+        return None
+
+    @staticmethod
     def CheckForPremFeature(feature):
         try:
 
