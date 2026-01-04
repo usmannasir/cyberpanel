@@ -1,0 +1,17 @@
+# CyberPanel Secure Package Versions
+# Generated: $(date +'%Y-%m-%d %H:%M:%S')
+# Purpose: Pin secure versions to prevent future vulnerabilities
+
+# Critical Security Updates (Post-Vulnerability Fix)
+tornado>=6.4.2
+requests>=2.32.4
+cryptography>=43.0.1
+
+# Additional Security Packages
+PyJWT>=2.10.1
+psutil>=7.2.0
+
+# Note: These minimum versions address:
+# - CVE-2024-52804, CVE-2025-47287 (Tornado)
+# - CVE-2024-47081 (Requests)
+# - CVE-2024-12797, PVE-2024-73711 (Cryptography)
