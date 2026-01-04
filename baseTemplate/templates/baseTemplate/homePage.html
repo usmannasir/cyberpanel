@@ -839,7 +839,12 @@
                     <tr ng-repeat="login in sshLogins">
                         <td>{$ login.user $}</td>
                         <td>{$ login.ip $}</td>
-                        <td>{$ login.country $}</td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <img ng-if="login.flag" ng-src="{$ login.flag $}" alt="{$ login.country $}" style="width: 24px; height: 18px; border: 1px solid #e8e9ff; border-radius: 2px;" />
+                                <span>{$ login.country $}</span>
+                            </div>
+                        </td>
                         <td>{$ login.date $}</td>
                         <td>
                             <span ng-if="login.is_active" class="session-status active-session">
@@ -1103,6 +1108,43 @@
             </div>
             
             <div ng-if="!loadingSSHActivity && !errorSSHActivity">
+                <!-- Session Status Info -->
+                <div style="background: #f8f9ff; border-left: 4px solid #5b5fcf; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <i class="fas fa-info-circle" style="color: #5b5fcf;"></i>
+                        <strong style="color: #2f3640;">Session Status:</strong>
+                        <span ng-if="isActiveSession && sshActivity.processes && sshActivity.processes.length > 0" style="color: #10b981; font-weight: 600;">
+                            <i class="fas fa-circle" style="font-size: 8px;"></i> ACTIVE - User is logged in with running processes
+                        </span>
+                        <span ng-if="isActiveSession && (!sshActivity.processes || sshActivity.processes.length === 0) && sshActivity.w && sshActivity.w.length > 0" style="color: #f59e0b; font-weight: 600;">
+                            <i class="fas fa-circle" style="font-size: 8px;"></i> IDLE - User is logged in but no processes running (shell waiting)
+                        </span>
+                        <span ng-if="isActiveSession && (!sshActivity.processes || sshActivity.processes.length === 0) && (!sshActivity.w || sshActivity.w.length === 0)" style="color: #ef4444; font-weight: 600;">
+                            <i class="fas fa-circle" style="font-size: 8px;"></i> INCONSISTENT - Marked as active but no processes or sessions found
+                        </span>
+                        <span ng-if="!isActiveSession" style="color: #ef4444; font-weight: 600;">
+                            <i class="fas fa-circle" style="font-size: 8px;"></i> INACTIVE - Session has ended
+                        </span>
+                    </div>
+                    <div style="font-size: 12px; color: #64748b; margin-left: 24px;">
+                        <div ng-if="sshActivityStatus">
+                            <strong>Login Status:</strong> {$ sshActivityStatus $}
+                        </div>
+                        <div ng-if="sshActivity.processes && sshActivity.processes.length > 0" style="margin-top: 4px;">
+                            <strong>Running Processes:</strong> {$ sshActivity.processes.length $} process(es) found
+                        </div>
+                        <div ng-if="sshActivity.w && sshActivity.w.length > 0" style="margin-top: 4px;">
+                            <strong>Active Sessions (w command):</strong> {$ sshActivity.w.length $} session(s) detected
+                        </div>
+                        <div ng-if="(!sshActivity.processes || sshActivity.processes.length === 0) && sshActivity.w && sshActivity.w.length > 0" style="margin-top: 4px; color: #f59e0b;">
+                            <em>⚠️ User is logged in (detected by 'w' command) but no processes found. This usually means the shell is idle, waiting for input.</em>
+                        </div>
+                        <div ng-if="(!sshActivity.processes || sshActivity.processes.length === 0) && (!sshActivity.w || sshActivity.w.length === 0)" style="margin-top: 4px; color: #ef4444;">
+                            <em>⚠️ No processes or active sessions found. The session may have just ended or the user logged out.</em>
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- Processes List -->
                 <div ng-if="sshActivity.processes && sshActivity.processes.length > 0" class="process-list">
                     <h4 style="font-size: 14px; font-weight: 600; color: #2f3640; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
@@ -1166,17 +1208,19 @@
                         <!-- Only show Kill Session button for active sessions -->
                         <button class="kill-session-btn" 
                                 ng-click="killSSHSession(sshActivityUser, sshActivityTTY)"
-                                ng-disabled="killingSession || !isActiveSession"
-                                ng-if="isActiveSession"
+                                ng-disabled="killingSession || !isActiveSession || !sshActivity.processes || sshActivity.processes.length === 0"
+                                ng-if="isActiveSession && sshActivity.processes && sshActivity.processes.length > 0"
                                 title="Kill All Processes for This Active Session">
                             <i class="fas fa-power-off" ng-if="!killingSession"></i>
                             <i class="fas fa-spinner fa-spin" ng-if="killingSession"></i>
                             <span ng-if="!killingSession">Kill Session</span>
                             <span ng-if="killingSession">Killing...</span>
                         </button>
-                        <div ng-if="!isActiveSession" style="color: #94a3b8; font-size: 13px; padding: 10px 20px; display: inline-flex; align-items: center; gap: 8px;">
+                        <div ng-if="!isActiveSession || (isActiveSession && (!sshActivity.processes || sshActivity.processes.length === 0))" style="color: #94a3b8; font-size: 13px; padding: 10px 20px; display: inline-flex; align-items: center; gap: 8px;">
                             <i class="fas fa-info-circle"></i>
-                            <span>Session is not active (no processes running)</span>
+                            <span ng-if="!isActiveSession">Session is inactive - cannot kill an ended session</span>
+                            <span ng-if="isActiveSession && (!sshActivity.processes || sshActivity.processes.length === 0) && sshActivity.w && sshActivity.w.length > 0">User is logged in but idle (no processes to kill) - shell is waiting for input</span>
+                            <span ng-if="isActiveSession && (!sshActivity.processes || sshActivity.processes.length === 0) && (!sshActivity.w || sshActivity.w.length === 0)">No processes or sessions found - session may have just ended</span>
                         </div>
                     </div>
                     <div class="modal-actions-right">

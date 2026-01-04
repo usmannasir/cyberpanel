@@ -714,13 +714,34 @@ def getRecentSSHLogins(request):
             date_str = date_match.group(1) if date_match else ''
             session_info = ''
             is_active = False
-            if '-' in line:
-                # Session ended
-                session_info = line.split('-')[-1].strip()
-                is_active = False
-            elif 'still logged in' in line:
+            if 'still logged in' in line:
                 session_info = 'still logged in'
                 is_active = True
+            elif '-' in line:
+                # Session ended - parse the end time and duration
+                # Format: "Tue May 27 11:34 - 13:47  (02:13)" or "crash (00:40)"
+                end_part = line.split('-')[-1].strip()
+                # Check if it's a crash or normal logout
+                if 'crash' in end_part.lower():
+                    # Extract crash duration if available
+                    crash_match = re.search(r'crash\s*\(([^)]+)\)', end_part, re.IGNORECASE)
+                    if crash_match:
+                        session_info = f"crash ({crash_match.group(1)})"
+                    else:
+                        session_info = 'crash'
+                else:
+                    # Normal session end - try to extract duration
+                    duration_match = re.search(r'\(([^)]+)\)', end_part)
+                    if duration_match:
+                        session_info = f"ended ({duration_match.group(1)})"
+                    else:
+                        # Just show the end time
+                        time_match = re.search(r'([A-Za-z]{3}\s+[A-Za-z]{3}\s+\d+\s+[\d:]+)', end_part)
+                        if time_match:
+                            session_info = f"ended at {time_match.group(1)}"
+                        else:
+                            session_info = 'ended'
+                is_active = False
             # GeoIP lookup (cache per request) - support both IPv4 and IPv6
             country = flag = ''
             # Check if IP is IPv4
@@ -1279,9 +1300,15 @@ def getSSHUserActivity(request):
             w_lines = []
         
         # Get processes for the user (limit to 50 for speed)
+        # If TTY is specified, filter by TTY; otherwise get all user processes
         processes = []
         try:
-            ps_cmd = f"ps -u {user} -o pid,ppid,tty,time,cmd --no-headers 2>/dev/null | head -50"
+            if tty:
+                # Filter by specific TTY
+                ps_cmd = f"ps -u {user} -o pid,ppid,tty,time,cmd --no-headers 2>/dev/null | grep '{tty}' | head -50"
+            else:
+                # Get all processes for user
+                ps_cmd = f"ps -u {user} -o pid,ppid,tty,time,cmd --no-headers 2>/dev/null | head -50"
             ps_output = ProcessUtilities.outputExecutioner(ps_cmd)
             if ps_output:
                 for line in ps_output.strip().split('\n'):
@@ -1290,6 +1317,7 @@ def getSSHUserActivity(request):
                     parts = line.split(None, 4)
                     if len(parts) >= 5:
                         pid, ppid, tty_val, time_val, cmd = parts[0], parts[1], parts[2], parts[3], parts[4]
+                        # Additional TTY check if tty was specified
                         if tty and tty not in tty_val:
                             continue
                         # Skip CWD lookup for speed
