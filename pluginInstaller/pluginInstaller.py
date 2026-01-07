@@ -246,16 +246,17 @@ class pluginInstaller:
 
     @staticmethod
     def removeFromURLs(pluginName):
-        data = open("/usr/local/CyberCP/CyberCP/urls.py", 'r').readlines()
-        writeToFile = open("/usr/local/CyberCP/CyberCP/urls.py", 'w')
+        path = "/usr/local/CyberCP/CyberCP/urls.py"
+        pattern = re.compile(rf"\bpath\([^)]*{re.escape(pluginName)}[^)]*\)")
 
-        for items in data:
-            if items.find(pluginName) > -1:
+        removed = False
+        for line in fileinput.input(path, inplace=True, backup=".bak", encoding="utf-8"):
+            if (not removed) and pattern.search(line):
+                removed = True
                 continue
-            else:
-                writeToFile.writelines(items)
+            print(line, end="")
 
-        writeToFile.close()
+        return removed
 
     @staticmethod
     def informCyberPanelRemoval(pluginName):
