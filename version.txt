@@ -1,1 +1,1 @@
-{"version":"2.4","build":3}
+{"version":"1.0.0","build":1,"name":"Mindset","codename":"laravel-native"}
