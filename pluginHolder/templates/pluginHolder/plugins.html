@@ -1021,6 +1021,11 @@
                     </div>
                     <div class="notice-content">
                         <p>{% trans "The versions displayed here represent the latest plugins from the CyberPanel Plugin Store repository. They may or may not represent the latest available versions. Additionally, the plugin repository may only contain plugins released within the last few months." %}</p>
+                        <p style="color: var(--text-secondary, #64748b); font-size: 13px; margin-top: 10px; padding: 10px; background: var(--bg-secondary, #f8f9ff); border-radius: 6px; border-left: 3px solid #5856d6;">
+                            <i class="fas fa-info-circle" style="color: #5856d6;"></i>
+                            <strong>{% trans "Cache Information:" %}</strong>
+                            {% trans "Plugin store data is cached for 1 hour to improve performance and reduce GitHub API rate limits. New plugins may take up to 1 hour to appear after being published." %}
+                        </p>
                         <p class="warning-text">
                             <i class="fas fa-exclamation-triangle"></i>
                             <strong>{% trans "Use at Your Own Risk" %}</strong>
