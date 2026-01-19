@@ -1363,7 +1363,7 @@ function installFromStore(pluginName) {
 }
 
 function uninstallPluginFromStore(pluginName) {
-    if (!confirm(`Uninstall ${pluginName}? This will remove the plugin from your system.`)) {
+    if (!confirm(`Are you sure you want to uninstall ${pluginName}? All data from this plugin will be deleted.`)) {
         return;
     }
     
@@ -1474,7 +1474,7 @@ function installPlugin(pluginName) {
 }
 
 function uninstallPlugin(pluginName) {
-    if (!confirm(`Uninstall ${pluginName}? This will remove the plugin from your system.`)) {
+    if (!confirm(`Are you sure you want to uninstall ${pluginName}? All data from this plugin will be deleted.`)) {
         return;
     }
     
