@@ -2163,12 +2163,33 @@
             }
         });
         
+        // Helper function to check if notification was dismissed within last 24 hours
+        function isNotificationDismissed(notificationKey) {
+            const dismissedTime = localStorage.getItem(notificationKey + '_dismissed_time');
+            if (!dismissedTime) {
+                return false;
+            }
+            
+            const now = new Date().getTime();
+            const dismissed = parseInt(dismissedTime, 10);
+            const hours24 = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+            
+            // If dismissed within last 24 hours, return true
+            return (now - dismissed) < hours24;
+        }
+        
+        // Helper function to dismiss notification for 24 hours
+        function dismissNotificationFor24Hours(notificationKey) {
+            const now = new Date().getTime();
+            localStorage.setItem(notificationKey + '_dismissed_time', now.toString());
+        }
+        
         // Backup notification banner logic
         function checkBackupStatus() {
-            // Check if user has dismissed the notification permanently (from server-side context)
-            {% if backup_notification_dismissed %}
-                return; // Notification already dismissed permanently
-            {% endif %}
+            // Check if notification was dismissed within last 24 hours
+            if (isNotificationDismissed('backup-notification')) {
+                return;
+            }
             
             // Check if user has backup configured (you'll need to implement this API)
             // For now, we'll show it by default unless they have a backup plan
@@ -2196,33 +2217,17 @@
             banner.classList.remove('show');
             body.classList.remove('notification-shown');
             
-            // Dismiss permanently via API
-            fetch('/base/dismiss_backup_notification', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 1) {
-                    console.log('Backup notification dismissed permanently');
-                } else {
-                    console.error('Failed to dismiss backup notification:', data.error);
-                }
-            })
-            .catch(error => {
-                console.error('Error dismissing backup notification:', error);
-            });
+            // Dismiss for 24 hours using localStorage
+            dismissNotificationFor24Hours('backup-notification');
+            console.log('Backup notification dismissed for 24 hours');
         }
         
         // AI Scanner Notification Functions
         function checkAIScannerStatus() {
-            // Check if user has dismissed the notification permanently (from server-side context)
-            {% if ai_scanner_notification_dismissed %}
-                return; // Notification already dismissed permanently
-            {% endif %}
+            // Check if notification was dismissed within last 24 hours
+            if (isNotificationDismissed('ai-scanner-notification')) {
+                return;
+            }
             
             // Check if we're not already on the AI Scanner page
             if (!window.location.href.includes('aiscanner')) {
@@ -2243,45 +2248,20 @@
             banner.classList.remove('show');
             body.classList.remove('ai-scanner-shown');
             
-            // Dismiss permanently via API
-            fetch('/base/dismiss_ai_scanner_notification', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 1) {
-                    console.log('AI scanner notification dismissed permanently');
-                } else {
-                    console.error('Failed to dismiss AI scanner notification:', data.error);
-                }
-            })
-            .catch(error => {
-                console.error('Error dismissing AI scanner notification:', error);
-            });
+            // Dismiss for 24 hours using localStorage
+            dismissNotificationFor24Hours('ai-scanner-notification');
+            console.log('AI scanner notification dismissed for 24 hours');
         }
         
         // .htaccess Feature Notification Functions
         function checkHtaccessStatus() {
-            // Check if user has dismissed the notification permanently (localStorage for longer persistence)
-            if (localStorage.getItem('htaccessNotificationDismissed') === 'true') {
-                return;
-            }
-
-            // Check if notification has been shown today
-            const lastShown = localStorage.getItem('htaccessNotificationLastShown');
-            const today = new Date().toDateString();
-
-            if (lastShown === today) {
+            // Check if notification was dismissed within last 24 hours
+            if (isNotificationDismissed('htaccess-notification')) {
                 return;
             }
 
             // Show the notification
             showHtaccessNotification();
-            localStorage.setItem('htaccessNotificationLastShown', today);
         }
 
         function showHtaccessNotification() {
@@ -2296,8 +2276,10 @@
             const body = document.body;
             banner.classList.remove('show');
             body.classList.remove('htaccess-shown');
-            // Remember dismissal permanently
-            localStorage.setItem('htaccessNotificationDismissed', 'true');
+            
+            // Dismiss for 24 hours using localStorage
+            dismissNotificationFor24Hours('htaccess-notification');
+            console.log('htaccess notification dismissed for 24 hours');
         }
         
         // Check all notification statuses when page loads
