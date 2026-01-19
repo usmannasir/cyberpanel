@@ -741,11 +741,23 @@ def install_from_store(request, plugin_name):
                 logging.writeToFile(f"Installing plugin using pluginInstaller")
                 
                 # Install using pluginInstaller
-                pluginInstaller.installPlugin(plugin_name)
+                # pluginInstaller.installPlugin() may raise exceptions, catch them
+                try:
+                    pluginInstaller.installPlugin(plugin_name)
+                except Exception as install_error:
+                    error_msg = str(install_error)
+                    logging.writeToFile(f"pluginInstaller.installPlugin raised exception: {error_msg}")
+                    raise Exception(f'Plugin installation failed: {error_msg}')
                 
                 # Verify plugin was actually installed
                 pluginInstalled = '/usr/local/CyberCP/' + plugin_name
                 if not os.path.exists(pluginInstalled):
+                    # Check if extraction created it in wrong location
+                    logging.writeToFile(f"Plugin directory not found at {pluginInstalled}")
+                    # List what was extracted
+                    if os.path.exists('/usr/local/CyberCP'):
+                        extracted = os.listdir('/usr/local/CyberCP')
+                        logging.writeToFile(f"Contents of /usr/local/CyberCP: {extracted[:20]}")
                     raise Exception(f'Plugin installation failed: {pluginInstalled} does not exist after installation')
                 
                 logging.writeToFile(f"Plugin {plugin_name} installed successfully")
