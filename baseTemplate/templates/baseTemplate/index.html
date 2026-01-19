@@ -362,6 +362,7 @@
             color: var(--accent-color);
             flex-shrink: 0;
             min-width: 1.25rem;
+            display: inline-block;
         }
         
         .notification-center-item-title .dismissed-badge {
@@ -477,18 +478,18 @@
             transition: all 0.3s ease;
             white-space: nowrap;
             box-sizing: border-box;
-            max-width: 100%;
-            overflow: hidden;
+            min-width: fit-content;
             cursor: pointer;
             position: relative;
         }
         
         .notification-center-item-link-secondary > span {
-            overflow: hidden;
-            text-overflow: ellipsis;
+            display: inline-block;
             white-space: nowrap;
             font-weight: 600;
             font-size: 0.9rem;
+            color: inherit;
+            flex-shrink: 0;
         }
         
         .notification-center-item-link-secondary:hover {
