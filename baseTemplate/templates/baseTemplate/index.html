@@ -2735,6 +2735,11 @@
                         linkIcon = '<i class="fas fa-rocket"></i>';
                     } else if (notif.linkText.includes('Learn')) {
                         linkIcon = '<i class="fas fa-book-open"></i>';
+                    } else if (notif.linkText.includes('View') || notif.linkText.includes('Details')) {
+                        linkIcon = '<i class="fas fa-external-link-alt"></i>';
+                    } else {
+                        // Default icon for any other button
+                        linkIcon = '<i class="fas fa-arrow-right"></i>';
                     }
                     
                     // Determine if primary link is external
