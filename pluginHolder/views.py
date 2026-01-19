@@ -101,8 +101,6 @@ def installed(request):
                     # No meta.xml found in either location - skip silently
                     continue
                 
-                processed_plugins.add(plugin)
-                
                 pluginMetaData = ElementTree.parse(metaXmlPath)
                 root = pluginMetaData.getroot()
                 
