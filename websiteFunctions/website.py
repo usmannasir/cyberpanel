@@ -4116,13 +4116,22 @@ context /cyberpanel_suspension_page.html {
                         continue
                     
                     # Parse log entry: format is "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\""
-                    # Actual format when split by space: [0]="IP", [1]="-", [2]="-", [3]="[timestamp]", [4]="\"GET", [5]="/path?params", [6]="HTTP/2\"", [7]="status", [8]="size", [9]="\"referer\"", [10+]="\"user-agent\""
+                    # When split by space: [0]="IP, [1]=-, [2]=-, [3]=[timestamp_part1, [4]=timestamp_part2], [5]="GET, [6]=/path?params, [7]=HTTP/2", [8]=status, [9]=size, [10]="referer", [11+]="user-agent"
                     ipAddress = logData[0].strip('"')
-                    time = (logData[3]).strip("[").strip("]")
-                    # Resource path is in field 5 (remove quotes)
-                    resource = logData[5].strip('"') if len(logData) > 5 else ""
-                    # Size is in field 8
-                    size = logData[8].replace('"', '') if len(logData) > 8 else "0"
+                    # Reconstruct timestamp from fields 3 and 4
+                    time = (logData[3] + " " + logData[4]).strip("[").strip("]") if len(logData) > 4 else logData[3].strip("[").strip("]")
+                    # Resource path starts at field 6, reconstruct until we hit HTTP/version field
+                    if len(logData) > 6:
+                        resource_parts = []
+                        i = 6
+                        while i < len(logData) and not logData[i].startswith('HTTP/'):
+                            resource_parts.append(logData[i])
+                            i += 1
+                        resource = " ".join(resource_parts).strip('"')
+                    else:
+                        resource = ""
+                    # Size is typically in field 9 (after status code in field 8)
+                    size = logData[9].replace('"', '') if len(logData) > 9 else "0"
                     
                     # Note: Log format doesn't include domain name, so domain is determined by which log file is read
                     # We already ensured we're reading from the correct domain's log file above
