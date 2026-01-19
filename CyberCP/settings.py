@@ -55,7 +55,6 @@ INSTALLED_APPS = [
 
     # Apps with multiple or complex dependencies
     'emailPremium',
-    'discordWebhooks',     # Depends on mailServer
     'testPlugin',       # Test plugin
     'emailMarketing',   # Depends on websiteFunctions and loginSystem
     'cloudAPI',         # Depends on websiteFunctions
@@ -82,6 +81,11 @@ INSTALLED_APPS = [
     'highAvailability',
     #    'WebTerminal'
 ]
+
+# Add plugins that are installed (plugin installer handles adding/removing)
+# discordWebhooks is added by plugin installer when plugin is installed
+if os.path.exists('/usr/local/CyberCP/discordWebhooks/__init__.py'):
+    INSTALLED_APPS.append('discordWebhooks')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
