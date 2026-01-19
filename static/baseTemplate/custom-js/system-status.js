@@ -118,9 +118,18 @@ function getWebsiteName(domain) {
 
 app.controller('systemStatusInfo', function ($scope, $http, $timeout) {
 
+    // Initialize all variables with defaults
     $scope.uptimeLoaded = false;
     $scope.uptime = 'Loading...';
+    $scope.cpuUsage = 0;
+    $scope.ramUsage = 0;
+    $scope.diskUsage = 0;
+    $scope.cpuCores = 0;
+    $scope.ramTotalMB = 0;
+    $scope.diskTotalGB = 0;
+    $scope.diskFreeGB = 0;
     
+    // Load data immediately
     getStuff();
     
     $scope.getSystemStatus = function() {
@@ -135,36 +144,57 @@ app.controller('systemStatusInfo', function ($scope, $http, $timeout) {
 
 
         function ListInitialData(response) {
+            // Ensure we have valid data
+            if (!response || !response.data) {
+                console.error('Invalid response from getSystemStatus');
+                cantLoadInitialData(response);
+                return;
+            }
 
-            $scope.cpuUsage = response.data.cpuUsage;
-            $scope.ramUsage = response.data.ramUsage;
-            $scope.diskUsage = response.data.diskUsage;
+            // Set all values with defaults if missing
+            $scope.cpuUsage = response.data.cpuUsage || 0;
+            $scope.ramUsage = response.data.ramUsage || 0;
+            $scope.diskUsage = response.data.diskUsage || 0;
             
             // Total system information
-            $scope.cpuCores = response.data.cpuCores;
-            $scope.ramTotalMB = response.data.ramTotalMB;
-            $scope.diskTotalGB = response.data.diskTotalGB;
-            $scope.diskFreeGB = response.data.diskFreeGB;
+            $scope.cpuCores = response.data.cpuCores || 0;
+            $scope.ramTotalMB = response.data.ramTotalMB || 0;
+            $scope.diskTotalGB = response.data.diskTotalGB || 0;
+            $scope.diskFreeGB = response.data.diskFreeGB || 0;
             
             // Get uptime if available
             if (response.data.uptime) {
                 $scope.uptime = response.data.uptime;
                 $scope.uptimeLoaded = true;
             } else {
-                // Fallback: try to get uptime separately
-                $http.get("/base/getUptime").then(function(uptimeResponse) {
-                    if (uptimeResponse.data.uptime) {
-                        $scope.uptime = uptimeResponse.data.uptime;
-                        $scope.uptimeLoaded = true;
-                    }
-                });
+                // Set default if uptime not available
+                $scope.uptime = 'N/A';
+                $scope.uptimeLoaded = true;
             }
-
+            
+            // Force AngularJS to update the view
+            if (!$scope.$$phase && !$scope.$root.$$phase) {
+                $scope.$apply();
+            }
         }
 
         function cantLoadInitialData(response) {
+            console.error('Failed to load system status:', response);
+            // Set default values
+            $scope.cpuUsage = 0;
+            $scope.ramUsage = 0;
+            $scope.diskUsage = 0;
+            $scope.cpuCores = 0;
+            $scope.ramTotalMB = 0;
+            $scope.diskTotalGB = 0;
+            $scope.diskFreeGB = 0;
             $scope.uptime = 'Unavailable';
             $scope.uptimeLoaded = true;
+            
+            // Force AngularJS to update the view
+            if (!$scope.$$phase && !$scope.$root.$$phase) {
+                $scope.$apply();
+            }
         }
 
         $timeout(getStuff, 60000); // Update every minute
@@ -1091,7 +1121,7 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
 
     function pollDashboardStats() {
         $http.get('/base/getDashboardStats').then(function(response) {
-            if (response.data && response.data.status === 1) {
+            if (response && response.data && response.data.status === 1) {
                 $scope.totalUsers = response.data.total_users || 0;
                 $scope.totalSites = response.data.total_sites || 0;
                 $scope.totalWPSites = response.data.total_wp_sites || 0;
@@ -1107,6 +1137,11 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                 $scope.totalEmails = 0;
                 $scope.totalFTPUsers = 0;
             }
+            
+            // Force AngularJS to update the view
+            if (!$scope.$$phase && !$scope.$root.$$phase) {
+                $scope.$apply();
+            }
         }, function(error) {
             console.error('Error loading dashboard stats:', error);
             // Set defaults on error
@@ -1116,6 +1151,11 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
             $scope.totalDBs = 0;
             $scope.totalEmails = 0;
             $scope.totalFTPUsers = 0;
+            
+            // Force AngularJS to update the view
+            if (!$scope.$$phase && !$scope.$root.$$phase) {
+                $scope.$apply();
+            }
         });
     }
 
