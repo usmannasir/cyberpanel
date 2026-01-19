@@ -45,7 +45,6 @@ urlpatterns = [
     path('emailPremium/', include('emailPremium.urls')),
     path('manageservices/', include('manageServices.urls')),
     path('plugins/testPlugin/', include('testPlugin.urls')),
-    path('plugins/discordWebhooks/', include('discordWebhooks.urls')),
     path('plugins/', include('pluginHolder.urls')),
     path('emailMarketing/', include('emailMarketing.urls')),
     path('cloudAPI/', include('cloudAPI.urls')),
