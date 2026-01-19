@@ -14,6 +14,28 @@ function getCookie(name) {
     return cookieValue;
 }
 
+// JavaScript function to convert bytes to a human-readable format
+function bytesToHumanReadable(bytes, suffix = 'B') {
+    let units = ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z'];
+    let i = 0;
+    while (Math.abs(bytes) >= 1024 && i < units.length - 1) {
+        bytes /= 1024;
+        ++i;
+    }
+    return bytes.toFixed(1) + units[i] + suffix;
+}
+
+// JavaScript function to convert kilobytes to a human-readable format
+function kilobytesToHumanReadable(kilobytes, suffix = 'KB') {
+    let units = ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    let i = 0;
+    while (Math.abs(kilobytes) >= 1024 && i < units.length - 1) {
+        kilobytes /= 1024;
+        ++i;
+    }
+    return kilobytes.toFixed(2) + ' ' + units[i];
+}
+
 var fileManager = angular.module('fileManager', ['angularFileUpload']);
 
 fileManager.config(['$interpolateProvider', function ($interpolateProvider) {
@@ -61,13 +83,12 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         $('#uploadBox').modal('show');
     };
 
-    $scope.showHTMLEditorModal = function () {
+    $scope.showHTMLEditorModal = function (MainFM= 0) {
         $scope.htmlEditorLoading = false;
         $scope.errorMessageEditor = true;
         $('#showHTMLEditor').modal('show');
         $scope.fileInEditor = allFilesAndFolders[0];
-        $scope.getFileContents();
-
+        $scope.getFileContents(MainFM);
     };
 
 
@@ -636,7 +657,6 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
             if (functionName === "startPoint") {
                 completePathToFile = $scope.currentRPath;
             } else if (functionName === "doubleClick") {
-
                 completePathToFile = $scope.currentRPath + "/" + node.innerHTML;
             } else if (functionName === "homeFetch") {
                 completePathToFile = homeRPathBack;
@@ -654,6 +674,16 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         } else {
             if (functionName === "startPoint") {
                 completePathToFile = $scope.currentPath;
+                // check if there is any path in QS
+
+                const urlParams = new URLSearchParams(window.location.search);
+                QSPath = urlParams.get('path')
+
+                if (QSPath !== null) {
+                    completePathToFile = QSPath
+                }
+
+                //
             } else if (functionName === "doubleClick") {
                 completePathToFile = $scope.currentPath + "/" + node.innerHTML;
             } else if (functionName === "homeFetch") {
@@ -713,10 +743,11 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
                     } else {
                         var fileName = filesData[keys[i]][0];
                         var lastModified = filesData[keys[i]][2];
-                        var fileSize = filesData[keys[i]][3];
+                        var fileSizeBytes = parseInt(filesData[keys[i]][3], 10); // Assuming this is the size in kilobytes
+            			var fileSize = kilobytesToHumanReadable(fileSizeBytes); // Convert to human-readable format
                         var permissions = filesData[keys[i]][4];
                         var dirCheck = filesData[keys[i]][5];
-                        console.log(fileName);
+                        // console.log(fileName);
                         if (fileName === "..filemanagerkey") {
 
                             continue;
@@ -746,10 +777,16 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
     // html editor
 
-    $scope.getFileContents = function () {
+    $scope.getFileContents = function (MainFM = 0) {
 
-        var completePathForFile = $scope.currentPath + "/" + allFilesAndFolders[0];
 
+        // console.log("selectedfile"+ allFilesAndFolders)
+        // console.log("currentpath"+ $scope.currentRPath)
+        if(MainFM === 1){
+            var completePathForFile = $scope.currentPath + "/" + allFilesAndFolders[0];
+        }else {
+            var completePathForFile = $scope.currentRPath + "/" + allFilesAndFolders[0];
+        }
 
         var data = {
             fileName: completePathForFile,
@@ -797,7 +834,16 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         $scope.saveSuccess = true;
         $scope.errorMessageEditor = true;
 
-        var completePathForFile = $scope.currentPath + "/" + allFilesAndFolders[0];
+        var completePathForFile;
+        if (domainName === "") {
+            completePathForFile = $scope.currentRPath + "/" + allFilesAndFolders[0];
+            $scope.errorMessageFile = true;
+        } else {
+            completePathForFile = $scope.currentPath + "/" + allFilesAndFolders[0];
+            $scope.errorMessageFile = true;
+        }
+
+        //var completePathForFile = $scope.currentPath + "/" + allFilesAndFolders[0];
 
         var data = {
             fileName: completePathForFile,
@@ -849,7 +895,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
     $scope.errorMessage = true;
     var uploader;
-    if (domainName == "") {
+    if (domainName === "") {
         uploader = $scope.uploader = new FileUploader({
             url: "/filemanager/upload",
             headers: {
@@ -871,7 +917,6 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
                 "home": homePathBack
             }]
         });
-
     }
 
 
@@ -1202,14 +1247,18 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         }
 
 
-
         $scope.extractionLoading = false;
 
         var completeFileToExtract = pathbase + "/" + allFilesAndFolders[0];
         var extractionType = "";
+        var fileExt = findFileExtension(completeFileToExtract);
 
-        if (findFileExtension(completeFileToExtract) == "gz") {
+        if (fileExt == "gz") {
             extractionType = "tar.gz";
+        } else if (fileExt == "7z") {
+            extractionType = "7z";
+        } else if (fileExt == "rar") {
+            extractionType = "rar";
         } else {
             extractionType = "zip";
         }
