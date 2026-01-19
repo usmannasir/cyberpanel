@@ -362,7 +362,10 @@
             color: var(--accent-color);
             flex-shrink: 0;
             min-width: 1.25rem;
-            display: inline-block;
+            width: 1.25rem;
+            display: inline-block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
         }
         
         .notification-center-item-title .dismissed-badge {
@@ -510,8 +513,19 @@
         }
         
         .notification-center-item-link-secondary i {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            display: inline-block !important;
+            visibility: visible !important;
+        }
+        
+        .notification-center-item-link-secondary i.fa-info-circle {
+            margin-right: 0.25rem;
+        }
+        
+        .notification-center-item-link-secondary i.fa-arrow-right {
+            margin-left: 0.25rem;
             font-size: 0.75rem;
-            opacity: 0.8;
         }
         
         .notification-center-empty {
@@ -2730,7 +2744,7 @@
                     return `
                     <div class="notification-center-item ${notif.dismissed ? 'dismissed' : ''}">
                         <div class="notification-center-item-title">
-                            <i class="${notif.icon}"></i>
+                            <i class="${notif.icon}" style="display: inline-block !important; visibility: visible !important;"></i>
                             <span>${notif.title}</span>
                             ${notif.dismissed ? '<span class="dismissed-badge">Dismissed</span>' : ''}
                         </div>
@@ -2742,6 +2756,7 @@
                             </a>
                             ${notif.learnMoreLink ? `
                             <a href="${notif.learnMoreLink}" class="notification-center-item-link-secondary" ${learnMoreExternal ? 'target="_blank" rel="noopener"' : ''}>
+                                <i class="fas fa-info-circle"></i>
                                 <span>Learn More</span>
                                 <i class="fas fa-arrow-right"></i>
                             </a>
