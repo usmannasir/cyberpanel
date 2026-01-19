@@ -3,7 +3,6 @@
  */
 
 
-
 /* Java script code to start/stop litespeed */
 app.controller('litespeedStatus', function ($scope, $http) {
 
@@ -424,6 +423,87 @@ app.controller('readCyberCPLogFile', function ($scope, $http) {
 
 /* Services */
 
+
+app.controller('securityrule', function ($scope, $http) {
+
+    $scope.securityruleLoading = true;
+
+
+    $scope.ActivateTags = ['Agents', 'AppsInitialization', 'Backdoor', 'Bruteforce', 'CWAF', 'Domains', 'Drupal', 'FilterASP',
+        'FilterGen', 'FilterInFarme', 'FilterOther', 'FilterPHP', 'FiltersEnd', 'FilterSQL', 'Generic', 'HTTP', 'HTTPDoS',
+        'Incoming', 'Initialzation', 'JComponent', 'Joomla', 'Other', 'OtherApps', 'PHPGen', 'Protocol', 'Request', 'RoRGen',
+        'SQLi', 'WHMCS', 'WordPress', 'WPPlugin', 'XSS']
+
+    $scope.DeactivatedTags = []
+
+
+    $scope.toggleActivation = function (tag) {
+        var index = $scope.ActivateTags.indexOf(tag);
+        if (index > -1) {
+            $scope.ActivateTags.splice(index, 1);
+            $scope.DeactivatedTags.push(tag);
+        } else {
+            index = $scope.DeactivatedTags.indexOf(tag);
+            if (index > -1) {
+                $scope.DeactivatedTags.splice(index, 1);
+                $scope.ActivateTags.push(tag);
+            }
+        }
+    };
+
+
+    $scope.applychanges = function () {
+
+        $scope.securityruleLoading = false;
+        url = "/serverstatus/securityruleUpdate";
+
+        var data = {
+            ActivateTags: $scope.ActivateTags,
+            DeactivatedTags: $scope.DeactivatedTags,
+            RuleID: $scope.ruleID,
+            Regular_expressions: $scope.Regular_expressions
+
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.securityruleLoading = true;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Done',
+                    text: "Changes Applied",
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.securityruleLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+    }
+});
+
 app.controller('servicesManager', function ($scope, $http) {
 
     $scope.services = false;
@@ -698,6 +778,95 @@ app.controller('lswsSwitch', function ($scope, $http, $timeout, $window) {
 
 });
 
+/* Controller for switching back to OpenLiteSpeed */
+app.controller('switchToOLS', function ($scope, $http, $timeout, $window) {
+
+    $scope.cyberPanelLoading = true;
+    $scope.installBoxGen = true;
+
+    $scope.switchToOLS = function () {
+        $scope.cyberPanelLoading = false;
+        $scope.installBoxGen = true;
+
+        url = "/serverstatus/switchToOLS";
+
+        var data = {};
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.status === 1) {
+                $scope.installBoxGen = false;
+                getRequestStatus();
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+    };
+
+    function getRequestStatus() {
+        $scope.cyberPanelLoading = false;
+
+        url = "/serverstatus/switchToOLSStatus";
+
+        var data = {};
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            if (response.data.abort === 0) {
+                $scope.requestData = response.data.requestStatus;
+                $timeout(getRequestStatus, 1000);
+            } else {
+                // Notifications
+                $scope.cyberPanelLoading = true;
+                $timeout.cancel();
+                $scope.requestData = response.data.requestStatus;
+                if (response.data.installed === 1) {
+                    $timeout(function () {
+                        $window.location.reload();
+                    }, 3000);
+                }
+            }
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+    }
+});
+
 app.controller('topProcesses', function ($scope, $http, $timeout) {
 
     $scope.cyberPanelLoading = true;
@@ -761,7 +930,7 @@ app.controller('topProcesses', function ($scope, $http, $timeout) {
                 $scope.stoppedProcesses = response.data.stoppedProcesses;
                 $scope.zombieProcesses = response.data.zombieProcesses;
 
-                $timeout($scope.topProcessesStatus, 3000);
+                // Auto-refresh removed - user can manually refresh using the button
             } else {
                 new PNotify({
                     title: 'Operation Failed!',
@@ -1073,10 +1242,10 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
 
 app.controller('changePort', function ($scope, $http, $timeout) {
 
-    $scope.cyberpanelLoading = true;
+    $scope.cyberpanelLoading = false;
 
     $scope.changeCPPort = function () {
-        $scope.cyberpanelLoading = false;
+        $scope.cyberpanelLoading = true;
 
         var config = {
             headers: {
@@ -1093,7 +1262,7 @@ app.controller('changePort', function ($scope, $http, $timeout) {
         $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
 
         function ListInitialData(response) {
-            $scope.cyberpanelLoading = true;
+            $scope.cyberpanelLoading = false;
             if (response.data.status === 1) {
                 new PNotify({
                     title: 'Success!',
@@ -1110,11 +1279,11 @@ app.controller('changePort', function ($scope, $http, $timeout) {
         }
 
         function cantLoadInitialData(response) {
-            $scope.cyberpanelLoading = true;
+            $scope.cyberpanelLoading = false;
             new PNotify({
-                title: 'Success!',
-                text: 'Port changed, open CyberPanel on new port.',
-                type: 'success'
+                title: 'Error!',
+                text: 'Could not connect to server, please try again.',
+                type: 'error'
             });
         }
 
