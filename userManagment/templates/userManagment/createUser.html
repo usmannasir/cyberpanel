@@ -353,8 +353,8 @@
                 </select>
                 <p class="help-text">{% trans "Choose the home directory for this user's files" %}</p>
                 <div ng-show="selectedHomeDirectoryInfo" class="alert alert-info" style="margin-top: 10px;">
-                    <strong>{{selectedHomeDirectoryInfo.name}}:</strong> {{selectedHomeDirectoryInfo.description || 'No description available'}}<br>
-                    <small>Available Space: {{selectedHomeDirectoryInfo.available_space | filesize}} | Users: {{selectedHomeDirectoryInfo.user_count}}</small>
+                    <strong>{$ selectedHomeDirectoryInfo.name $}:</strong> {$ selectedHomeDirectoryInfo.description || 'No description available' $}<br>
+                    <small>Available Space: {$ selectedHomeDirectoryInfo.available_space | filesize $} | Users: {$ selectedHomeDirectoryInfo.user_count $}</small>
                 </div>
             </div>
 

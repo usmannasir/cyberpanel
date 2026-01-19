@@ -482,7 +482,7 @@
                         <div class="info-box-content">
                             <div class="info-box-title">{{selectedHomeDirectoryInfo.name}}</div>
                             <div class="info-box-text">
-                                {{selectedHomeDirectoryInfo.description || 'No description available'}}<br>
+                                {$ selectedHomeDirectoryInfo.description || 'No description available' $}<br>
                                 <small>Available Space: {{selectedHomeDirectoryInfo.available_space | filesize}} | Users: {{selectedHomeDirectoryInfo.user_count}}</small>
                             </div>
                         </div>
