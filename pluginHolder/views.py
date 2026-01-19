@@ -167,6 +167,7 @@ def installed(request):
                         data['manage_url'] = None
 
                 pluginList.append(data)
+                processed_plugins.add(plugin)  # Mark as processed
             except ElementTree.ParseError as e:
                 errorPlugins.append({'name': plugin, 'error': f'XML parse error: {str(e)}'})
                 logging.writeToFile(f"Plugin {plugin}: XML parse error - {str(e)}")
@@ -174,6 +175,82 @@ def installed(request):
             except Exception as e:
                 errorPlugins.append({'name': plugin, 'error': f'Error loading plugin: {str(e)}'})
                 logging.writeToFile(f"Plugin {plugin}: Error loading - {str(e)}")
+                continue
+    
+    # Also check for installed plugins that don't have source directories
+    # This handles plugins installed from the store that may not be in /home/cyberpanel/plugins/
+    if os.path.exists(installedPath):
+        for plugin in os.listdir(installedPath):
+            # Skip if already processed
+            if plugin in processed_plugins:
+                continue
+            
+            # Only check directories that look like plugins (have meta.xml)
+            pluginInstalledDir = os.path.join(installedPath, plugin)
+            if not os.path.isdir(pluginInstalledDir):
+                continue
+            
+            metaXmlPath = os.path.join(pluginInstalledDir, 'meta.xml')
+            if not os.path.exists(metaXmlPath):
+                continue
+            
+            # This is an installed plugin without a source directory - process it
+            try:
+                data = {}
+                pluginMetaData = ElementTree.parse(metaXmlPath)
+                root = pluginMetaData.getroot()
+                
+                # Validate required fields
+                name_elem = root.find('name')
+                type_elem = root.find('type')
+                desc_elem = root.find('description')
+                version_elem = root.find('version')
+                
+                if name_elem is None or desc_elem is None or version_elem is None:
+                    continue
+                
+                if name_elem.text is None or desc_elem.text is None or version_elem.text is None:
+                    continue
+                
+                data['name'] = name_elem.text
+                data['type'] = type_elem.text if type_elem is not None and type_elem.text is not None else 'Plugin'
+                data['desc'] = desc_elem.text
+                data['version'] = version_elem.text
+                data['plugin_dir'] = plugin
+                data['installed'] = True  # This is an installed plugin
+                data['enabled'] = _is_plugin_enabled(plugin)
+                
+                # Get modify date from installed location
+                modify_date = 'N/A'
+                try:
+                    if os.path.exists(metaXmlPath):
+                        modify_time = os.path.getmtime(metaXmlPath)
+                        modify_date = datetime.fromtimestamp(modify_time).strftime('%Y-%m-%d %H:%M:%S')
+                except Exception:
+                    modify_date = 'N/A'
+                
+                data['modify_date'] = modify_date
+                
+                # Extract settings URL or main URL
+                settings_url_elem = root.find('settings_url')
+                url_elem = root.find('url')
+                
+                if settings_url_elem is not None and settings_url_elem.text:
+                    data['manage_url'] = settings_url_elem.text
+                elif url_elem is not None and url_elem.text:
+                    data['manage_url'] = url_elem.text
+                else:
+                    data['manage_url'] = f'/plugins/{plugin}/'
+                
+                pluginList.append(data)
+                
+            except ElementTree.ParseError as e:
+                errorPlugins.append({'name': plugin, 'error': f'XML parse error: {str(e)}'})
+                logging.writeToFile(f"Installed plugin {plugin}: XML parse error - {str(e)}")
+                continue
+            except Exception as e:
+                errorPlugins.append({'name': plugin, 'error': f'Error loading installed plugin: {str(e)}'})
+                logging.writeToFile(f"Installed plugin {plugin}: Error loading - {str(e)}")
                 continue
 
     proc = httpProc(request, 'pluginHolder/plugins.html',
