@@ -708,6 +708,7 @@ def install_from_store(request, plugin_name):
             logging.writeToFile(f"Found {len(plugin_files)} files for plugin {plugin_name}")
             
             # Create plugin ZIP file
+            # pluginInstaller expects the ZIP to contain plugin_name/ directory structure
             plugin_zip = zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED)
             
             for file_path in plugin_files:
@@ -715,7 +716,9 @@ def install_from_store(request, plugin_name):
                 relative_path = file_path[len(plugin_prefix):]
                 if relative_path:  # Skip directories
                     file_data = repo_zip.read(file_path)
-                    plugin_zip.writestr(relative_path, file_data)
+                    # Add plugin name as directory prefix (pluginInstaller expects this)
+                    zip_entry_path = f'{plugin_name}/{relative_path}'
+                    plugin_zip.writestr(zip_entry_path, file_data)
             
             plugin_zip.close()
             
