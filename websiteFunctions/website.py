@@ -4085,6 +4085,18 @@ context /cyberpanel_suspension_page.html {
                 {'status': 0, 'logstatus': 0,
                  'error_message': "Symlink attack."})
             return HttpResponse(final_json)
+        
+        # Check if log file exists, if not, try master domain's log file as fallback
+        # (for existing sub-domains that haven't been fixed yet)
+        if not os.path.exists(fileName) or os.path.getsize(fileName) == 0:
+            try:
+                child_domain = ChildDomains.objects.get(domain=self.domain)
+                master_domain = child_domain.master.domain
+                fallback_log_file = f"/home/{master_domain}/logs/{master_domain}.access_log" if logType == 1 else f"/home/{master_domain}/logs/{master_domain}.error_log"
+                if os.path.exists(fallback_log_file):
+                    fileName = fallback_log_file
+            except ChildDomains.DoesNotExist:
+                pass
 
         ## get Logs
         website = Websites.objects.get(domain=self.domain)
@@ -4106,25 +4118,38 @@ context /cyberpanel_suspension_page.html {
 
         for items in reversed(data):
             if len(items) > 10:
-                logData = items.split(" ")
-                domain = logData[5].strip('"')
-                ipAddress = logData[0].strip('"')
-                time = (logData[3]).strip("[").strip("]")
-                resource = logData[6].strip('"')
-                size = logData[9].replace('"', '')
+                try:
+                    logData = items.split(" ")
+                    if len(logData) < 10:
+                        continue
+                    
+                    log_domain = logData[5].strip('"')
+                    ipAddress = logData[0].strip('"')
+                    time = (logData[3]).strip("[").strip("]")
+                    resource = logData[6].strip('"')
+                    size = logData[9].replace('"', '')
+                    
+                    # Filter logs by domain: only show entries for the requested domain
+                    # This handles cases where vhost config hasn't been updated yet
+                    # and multiple sub-domains are logging to the same file
+                    if log_domain != self.domain and log_domain != f"www.{self.domain}":
+                        continue
 
-                dic = {'domain': domain,
-                       'ipAddress': ipAddress,
-                       'time': time,
-                       'resource': resource,
-                       'size': size,
-                       }
+                    dic = {'domain': log_domain,
+                           'ipAddress': ipAddress,
+                           'time': time,
+                           'resource': resource,
+                           'size': size,
+                           }
 
-                if checker == 0:
-                    json_data = json_data + json.dumps(dic)
-                    checker = 1
-                else:
-                    json_data = json_data + ',' + json.dumps(dic)
+                    if checker == 0:
+                        json_data = json_data + json.dumps(dic)
+                        checker = 1
+                    else:
+                        json_data = json_data + ',' + json.dumps(dic)
+                except (IndexError, ValueError) as e:
+                    # Skip malformed log entries
+                    continue
 
         json_data = json_data + ']'
         final_json = json.dumps({'status': 1, 'logstatus': 1, 'error_message': "None", "data": json_data})
