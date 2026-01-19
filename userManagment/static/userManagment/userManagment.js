@@ -6,6 +6,48 @@
 /* Java script code to create account */
 app.controller('createUserCtr', function ($scope, $http) {
 
+    // Home directory functionality
+    $scope.homeDirectories = [];
+    $scope.selectedHomeDirectory = '';
+    $scope.selectedHomeDirectoryInfo = null;
+    
+    // Load home directories on page load
+    $scope.loadHomeDirectories = function() {
+        var url = '/users/getUserHomeDirectories';
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post(url, {}, config)
+            .then(function(response) {
+                if (response.data && response.data.status === 1) {
+                    $scope.homeDirectories = response.data.directories || [];
+                } else {
+                    console.error('Error loading home directories:', response.data);
+                    $scope.homeDirectories = [];
+                }
+            })
+            .catch(function(error) {
+                console.error('Error loading home directories:', error);
+                $scope.homeDirectories = [];
+            });
+    };
+    
+    // Update home directory info when selection changes
+    $scope.updateHomeDirectoryInfo = function() {
+        if ($scope.selectedHomeDirectory) {
+            $scope.selectedHomeDirectoryInfo = $scope.homeDirectories.find(function(dir) {
+                return dir.id == $scope.selectedHomeDirectory;
+            });
+        } else {
+            $scope.selectedHomeDirectoryInfo = null;
+        }
+    };
+    
+    // Initialize home directories
+    $scope.loadHomeDirectories();
+
     $scope.acctsLimit = true;
     $scope.webLimits = true;
     $scope.userCreated = true;
@@ -43,7 +85,8 @@ app.controller('createUserCtr', function ($scope, $http) {
             websitesLimit: websitesLimits,
             userName: userName,
             password: password,
-            securityLevel: $scope.securityLevel
+            securityLevel: $scope.securityLevel,
+            selectedHomeDirectory: $scope.selectedHomeDirectory || ''
         };
 
         var config = {
