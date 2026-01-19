@@ -230,10 +230,10 @@
             right: 0;
             background: white;
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-            width: 400px;
-            max-height: 500px;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            width: 520px;
+            max-height: 600px;
             overflow-y: auto;
             z-index: 10000;
             display: none;
@@ -241,84 +241,181 @@
         
         .notification-center-dropdown.show {
             display: block;
+            animation: slideDownFade 0.3s ease-out;
+        }
+        
+        @keyframes slideDownFade {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .notification-center-header {
-            padding: 1rem;
+            padding: 1.25rem 1.5rem;
             border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
             background: var(--bg-secondary);
+            border-radius: 16px 16px 0 0;
         }
         
         .notification-center-header h3 {
             margin: 0;
-            font-size: 1.1rem;
-            font-weight: 600;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-color);
+            letter-spacing: -0.02em;
+        }
+        
+        .notification-center-header button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            padding: 0.25rem;
+            line-height: 1;
+            transition: all 0.2s ease;
+            border-radius: 4px;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .notification-center-header button:hover {
+            background: rgba(0, 0, 0, 0.05);
             color: var(--text-color);
         }
         
         .notification-center-list {
-            padding: 0.5rem;
+            padding: 1rem;
         }
         
         .notification-center-item {
-            padding: 1rem;
-            border-bottom: 1px solid var(--border-color);
-            cursor: pointer;
-            transition: background 0.2s ease;
-            border-radius: 8px;
-            margin-bottom: 0.5rem;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            background: white;
+            transition: all 0.2s ease;
+            cursor: default;
         }
         
         .notification-center-item:hover {
             background: var(--bg-secondary);
+            border-color: var(--accent-color);
+            box-shadow: 0 4px 12px rgba(88, 86, 214, 0.1);
+            transform: translateY(-2px);
         }
         
         .notification-center-item:last-child {
-            border-bottom: none;
             margin-bottom: 0;
         }
         
+        .notification-center-item.dismissed {
+            opacity: 0.7;
+            background: #f9fafb;
+        }
+        
         .notification-center-item-title {
-            font-weight: 600;
+            font-weight: 700;
             color: var(--text-color);
-            margin-bottom: 0.25rem;
-            font-size: 0.95rem;
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.75rem;
+            line-height: 1.3;
+        }
+        
+        .notification-center-item-title i {
+            font-size: 1.25rem;
+            color: var(--accent-color);
+            flex-shrink: 0;
+        }
+        
+        .notification-center-item-title .dismissed-badge {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-left: auto;
+            font-weight: 500;
+            padding: 0.25rem 0.5rem;
+            background: #f3f4f6;
+            border-radius: 6px;
         }
         
         .notification-center-item-text {
             color: var(--text-secondary);
-            font-size: 0.85rem;
-            line-height: 1.4;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            word-wrap: break-word;
         }
         
         .notification-center-item-actions {
-            margin-top: 0.5rem;
+            margin-top: 1rem;
             display: flex;
-            gap: 0.5rem;
+            gap: 0.75rem;
         }
         
         .notification-center-item-link {
-            color: var(--accent-color);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: white;
+            background: var(--accent-color);
             text-decoration: none;
-            font-size: 0.85rem;
-            font-weight: 500;
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 0.625rem 1.25rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
         }
         
         .notification-center-item-link:hover {
-            text-decoration: underline;
+            background: #6d6bd4;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(88, 86, 214, 0.3);
+            text-decoration: none;
+        }
+        
+        .notification-center-item-link i {
+            font-size: 0.85rem;
         }
         
         .notification-center-empty {
-            padding: 2rem;
+            padding: 3rem 2rem;
             text-align: center;
             color: var(--text-secondary);
-            font-size: 0.9rem;
+            font-size: 1rem;
+        }
+        
+        /* Custom scrollbar for notification center */
+        .notification-center-dropdown::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .notification-center-dropdown::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 0 0 16px 0;
+        }
+        
+        .notification-center-dropdown::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        
+        .notification-center-dropdown::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
         }
         
         #header-right .social-links a {
@@ -2490,19 +2587,34 @@
             if (notifications.length === 0) {
                 list.innerHTML = '<div class="notification-center-empty">No notifications available</div>';
             } else {
-                list.innerHTML = notifications.map(notif => `
+                list.innerHTML = notifications.map(notif => {
+                    // Extract icon class from linkText if it contains one
+                    let linkIcon = '';
+                    if (notif.linkText.includes('Configure')) {
+                        linkIcon = '<i class="fas fa-cog"></i>';
+                    } else if (notif.linkText.includes('Start')) {
+                        linkIcon = '<i class="fas fa-rocket"></i>';
+                    } else if (notif.linkText.includes('Learn')) {
+                        linkIcon = '<i class="fas fa-book-open"></i>';
+                    }
+                    
+                    return `
                     <div class="notification-center-item ${notif.dismissed ? 'dismissed' : ''}">
                         <div class="notification-center-item-title">
                             <i class="${notif.icon}"></i>
-                            ${notif.title}
-                            ${notif.dismissed ? '<span style="font-size: 0.75rem; color: #6b7280; margin-left: auto;">(Dismissed)</span>' : ''}
+                            <span>${notif.title}</span>
+                            ${notif.dismissed ? '<span class="dismissed-badge">Dismissed</span>' : ''}
                         </div>
                         <div class="notification-center-item-text">${notif.text}</div>
                         <div class="notification-center-item-actions">
-                            <a href="${notif.link}" class="notification-center-item-link" ${notif.link.startsWith('http') ? 'target="_blank" rel="noopener"' : ''}>${notif.linkText}</a>
+                            <a href="${notif.link}" class="notification-center-item-link" ${notif.link.startsWith('http') ? 'target="_blank" rel="noopener"' : ''}>
+                                ${linkIcon}
+                                <span>${notif.linkText}</span>
+                            </a>
                         </div>
                     </div>
-                `).join('');
+                `;
+                }).join('');
             }
             
             // Update badge count (show count of non-dismissed notifications)
