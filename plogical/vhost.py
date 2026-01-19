@@ -1075,6 +1075,7 @@ class vhost:
                 currentConf = vhostConfs.olsChildConf
                 currentConf = currentConf.replace('{path}', path)
                 currentConf = currentConf.replace('{masterDomain}', masterDomain)
+                currentConf = currentConf.replace('{virtualHostName}', domain)
                 currentConf = currentConf.replace('{adminEmails}', administratorEmail)
                 currentConf = currentConf.replace('{externalApp}', externalApp)
                 currentConf = currentConf.replace('{externalAppMaster}', virtualHostUser)
@@ -1087,6 +1088,30 @@ class vhost:
                     currentConf = currentConf.replace('{open_basedir}', 'php_admin_value open_basedir "/tmp:$VH_ROOT"')
                 else:
                     currentConf = currentConf.replace('{open_basedir}', '')
+                
+                # Ensure log directory exists in master domain's home directory
+                masterLogDir = f"/home/{masterDomain}/logs"
+                try:
+                    if not os.path.exists(masterLogDir):
+                        os.makedirs(masterLogDir, exist_ok=True)
+                        command = f"chown -R {virtualHostUser}:{virtualHostUser} {masterLogDir}"
+                        ProcessUtilities.executioner(command)
+                    
+                    # Create empty log files for the child domain
+                    error_log_path = f"{masterLogDir}/{domain}.error_log"
+                    access_log_path = f"{masterLogDir}/{domain}.access_log"
+                    
+                    for log_path in [error_log_path, access_log_path]:
+                        if not os.path.exists(log_path):
+                            with open(log_path, 'w') as f:
+                                f.write('')
+                            command = f"chown {virtualHostUser}:{virtualHostUser} {log_path}"
+                            ProcessUtilities.executioner(command)
+                            command = f"chmod 644 {log_path}"
+                            ProcessUtilities.executioner(command)
+                except Exception as logErr:
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        f'Error creating log files for child domain {domain}: {str(logErr)}')
 
                 confFile = open(vhFile, "w+")
                 confFile.write(currentConf)
@@ -1116,6 +1141,30 @@ class vhost:
                     confFile.write(currentConf)
 
                     confFile.close()
+                    
+                    # Ensure log directory exists in master domain's home directory and create log files
+                    masterLogDir = f"/home/{masterDomain}/logs"
+                    try:
+                        if not os.path.exists(masterLogDir):
+                            os.makedirs(masterLogDir, exist_ok=True)
+                            command = f"chown -R {virtualHostUser}:{virtualHostUser} {masterLogDir}"
+                            ProcessUtilities.executioner(command)
+                        
+                        # Create empty log files for the child domain
+                        error_log_path = f"{masterLogDir}/{domain}.error_log"
+                        access_log_path = f"{masterLogDir}/{domain}.access_log"
+                        
+                        for log_path in [error_log_path, access_log_path]:
+                            if not os.path.exists(log_path):
+                                with open(log_path, 'w') as f:
+                                    f.write('')
+                                command = f"chown {virtualHostUser}:{virtualHostUser} {log_path}"
+                                ProcessUtilities.executioner(command)
+                                command = f"chmod 644 {log_path}"
+                                ProcessUtilities.executioner(command)
+                    except Exception as logErr:
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            f'Error creating log files for child domain {domain}: {str(logErr)}')
 
                 else:
 
@@ -1134,6 +1183,28 @@ class vhost:
 
                     command = 'redis-cli set %s' % (currentConf)
                     ProcessUtilities.executioner(command)
+                    
+                    # Ensure log directory exists in master domain's home directory and create log files
+                    masterLogDir = f"/home/{masterDomain}/logs"
+                    try:
+                        if not os.path.exists(masterLogDir):
+                            os.makedirs(masterLogDir, exist_ok=True)
+                            command = f"chown -R {virtualHostUser}:{virtualHostUser} {masterLogDir}"
+                            ProcessUtilities.executioner(command)
+                        
+                        # Create empty log files for the child domain (non-www)
+                        access_log_path = f"{masterLogDir}/{domain}.access_log"
+                        
+                        if not os.path.exists(access_log_path):
+                            with open(access_log_path, 'w') as f:
+                                f.write('')
+                            command = f"chown {virtualHostUser}:{virtualHostUser} {access_log_path}"
+                            ProcessUtilities.executioner(command)
+                            command = f"chmod 644 {access_log_path}"
+                            ProcessUtilities.executioner(command)
+                    except Exception as logErr:
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            f'Error creating log files for child domain {domain} (redis non-www): {str(logErr)}')
 
                     ## www
 
@@ -1150,6 +1221,9 @@ class vhost:
 
                     command = 'redis-cli set %s' % (currentConf)
                     ProcessUtilities.executioner(command)
+                    
+                    # Note: Log files already created for non-www version above
+                    # The www version shares the same log files
 
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
