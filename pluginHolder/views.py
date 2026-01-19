@@ -715,6 +715,10 @@ def install_from_store(request, plugin_name):
                 # Install using pluginInstaller (direct call, not via command line)
                 pluginInstaller.installPlugin(plugin_name)
                 
+                # Wait a moment for file system to sync and service to restart
+                import time
+                time.sleep(2)
+                
                 # Verify plugin was actually installed
                 pluginInstalled = '/usr/local/CyberCP/' + plugin_name
                 if not os.path.exists(pluginInstalled):
