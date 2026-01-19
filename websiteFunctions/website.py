@@ -4086,17 +4086,9 @@ context /cyberpanel_suspension_page.html {
                  'error_message': "Symlink attack."})
             return HttpResponse(final_json)
         
-        # Check if log file exists, if not, try master domain's log file as fallback
-        # (for existing sub-domains that haven't been fixed yet)
-        if not os.path.exists(fileName) or os.path.getsize(fileName) == 0:
-            try:
-                child_domain = ChildDomains.objects.get(domain=self.domain)
-                master_domain = child_domain.master.domain
-                fallback_log_file = f"/home/{master_domain}/logs/{master_domain}.access_log" if logType == 1 else f"/home/{master_domain}/logs/{master_domain}.error_log"
-                if os.path.exists(fallback_log_file):
-                    fileName = fallback_log_file
-            except ChildDomains.DoesNotExist:
-                pass
+        # Only read from the specific domain's log file - don't fallback to master domain
+        # This ensures we only show logs for the requested domain, not mixed logs from other domains
+        # If the log file doesn't exist or is empty, we'll return empty results
 
         ## get Logs
         website = Websites.objects.get(domain=self.domain)
@@ -4123,19 +4115,19 @@ context /cyberpanel_suspension_page.html {
                     if len(logData) < 10:
                         continue
                     
-                    log_domain = logData[5].strip('"')
+                    # Parse log entry: format is "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\""
+                    # Actual format when split by space: [0]="IP", [1]="-", [2]="-", [3]="[timestamp]", [4]="\"GET", [5]="/path?params", [6]="HTTP/2\"", [7]="status", [8]="size", [9]="\"referer\"", [10+]="\"user-agent\""
                     ipAddress = logData[0].strip('"')
                     time = (logData[3]).strip("[").strip("]")
-                    resource = logData[6].strip('"')
-                    size = logData[9].replace('"', '')
+                    # Resource path is in field 5 (remove quotes)
+                    resource = logData[5].strip('"') if len(logData) > 5 else ""
+                    # Size is in field 8
+                    size = logData[8].replace('"', '') if len(logData) > 8 else "0"
                     
-                    # Filter logs by domain: only show entries for the requested domain
-                    # This handles cases where vhost config hasn't been updated yet
-                    # and multiple sub-domains are logging to the same file
-                    if log_domain != self.domain and log_domain != f"www.{self.domain}":
-                        continue
+                    # Note: Log format doesn't include domain name, so domain is determined by which log file is read
+                    # We already ensured we're reading from the correct domain's log file above
 
-                    dic = {'domain': log_domain,
+                    dic = {'domain': self.domain,  # Use requested domain since it's determined by log file
                            'ipAddress': ipAddress,
                            'time': time,
                            'resource': resource,
