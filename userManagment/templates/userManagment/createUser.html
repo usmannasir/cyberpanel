@@ -347,8 +347,8 @@
                 <label class="form-label">{% trans "Home Directory" %}</label>
                 <select ng-model="selectedHomeDirectory" class="form-control" ng-change="updateHomeDirectoryInfo()">
                     <option value="">{% trans "Auto-select (Best Available)" %}</option>
-                    <option ng-repeat="dir in homeDirectories" value="{{dir.id}}">
-                        {{dir.name}} ({{dir.path}}) - {{dir.available_space | filesize}} available
+                    <option ng-repeat="dir in homeDirectories" value="{$ dir.id $}">
+                        {$ dir.name $} ({$ dir.path $}) - {$ dir.available_space | filesize $} available
                     </option>
                 </select>
                 <p class="help-text">{% trans "Choose the home directory for this user's files" %}</p>
@@ -392,14 +392,24 @@
         
         // Load home directories on page load
         $scope.loadHomeDirectories = function() {
-            $http.post('/userManagement/getUserHomeDirectories/', {})
+            var url = '/users/getUserHomeDirectories';
+            var config = {
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            };
+            $http.post(url, {}, config)
                 .then(function(response) {
-                    if (response.data.status === 1) {
-                        $scope.homeDirectories = response.data.directories;
+                    if (response.data && response.data.status === 1) {
+                        $scope.homeDirectories = response.data.directories || [];
+                    } else {
+                        console.error('Error loading home directories:', response.data);
+                        $scope.homeDirectories = [];
                     }
                 })
                 .catch(function(error) {
                     console.error('Error loading home directories:', error);
+                    $scope.homeDirectories = [];
                 });
         };
         
@@ -448,33 +458,41 @@
             $scope.couldNotConnect = true;
             $scope.combinedLength = true;
 
-            if ($scope.createUser.$valid) {
-                if ($scope.firstName.length + $scope.lastName.length > 20) {
-                    $scope.combinedLength = false;
-                    return;
-                }
-
-                $http.post('/userManagement/submitUserCreation/', {
-                    'firstName': $scope.firstName,
-                    'lastName': $scope.lastName,
-                    'email': $scope.email,
-                    'userName': $scope.userName,
-                    'password': $scope.password,
-                    'websitesLimit': $scope.websitesLimits,
-                    'selectedACL': $scope.selectedACL,
-                    'securityLevel': $scope.securityLevel,
-                    'selectedHomeDirectory': $scope.selectedHomeDirectory
-                }).then(function (data) {
-                    if (data.data.createStatus === 1) {
-                        $scope.userCreated = false;
-                    } else {
-                        $scope.userCreationFailed = false;
-                        $scope.errorMessage = data.data.error_message;
-                    }
-                }, function (data) {
-                    $scope.couldNotConnect = false;
-                });
+            if ($scope.firstName && $scope.lastName && ($scope.firstName.length + $scope.lastName.length > 20)) {
+                $scope.combinedLength = false;
+                return;
             }
+
+            var url = '/users/submitUserCreation';
+            var data = {
+                firstName: $scope.firstName,
+                lastName: $scope.lastName,
+                email: $scope.email,
+                userName: $scope.userName,
+                password: $scope.password,
+                websitesLimit: $scope.websitesLimits,
+                selectedACL: $scope.selectedACL,
+                securityLevel: $scope.securityLevel,
+                selectedHomeDirectory: $scope.selectedHomeDirectory || ''
+            };
+            var config = {
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            };
+
+            $http.post(url, data, config).then(function (response) {
+                if (response.data && response.data.createStatus === 1) {
+                    $scope.userCreated = false;
+                    $scope.userName = $scope.userName;
+                } else {
+                    $scope.userCreationFailed = false;
+                    $scope.errorMessage = response.data.error_message || 'Unknown error occurred';
+                }
+            }, function (error) {
+                $scope.couldNotConnect = false;
+                console.error('Error creating user:', error);
+            });
         };
     });
     </script>
