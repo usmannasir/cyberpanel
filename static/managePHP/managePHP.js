@@ -63,8 +63,7 @@ app.controller('installExtensions', function ($scope, $http, $timeout) {
                 $scope.canNotPerform = true;
 
 
-            }
-            else {
+            } else {
                 $scope.canNotPerform = false;
                 $scope.errorMessage = response.data.error_message;
             }
@@ -121,8 +120,7 @@ app.controller('installExtensions', function ($scope, $http, $timeout) {
                 $scope.canNotPerform = true;
 
 
-            }
-            else {
+            } else {
                 $scope.canNotPerform = false;
                 $scope.errorMessage = response.data.error_message;
             }
@@ -145,7 +143,16 @@ app.controller('installExtensions', function ($scope, $http, $timeout) {
 
         var phpSelection = $scope.phpSelection;
 
-        url = "/managephp/getExtensionsInformation";
+        var queryString = window.location.search;
+        var searchParams = new URLSearchParams(queryString);
+
+        var param3Value = searchParams.get('apache');
+        if (param3Value === null) {
+            url = "/managephp/getExtensionsInformation";
+            console.log('Nothing found')
+        } else {
+            url = "/managephp/getExtensionsInformation?apache=apache";
+        }
 
         var data = {
             phpSelection: phpSelection,
@@ -175,8 +182,7 @@ app.controller('installExtensions', function ($scope, $http, $timeout) {
                 $scope.couldNotConnect = true;
 
 
-            }
-            else {
+            } else {
                 $scope.errorMessage = response.data.error_message;
                 $scope.canNotFetch = false;
                 $scope.couldNotConnect = true;
@@ -227,16 +233,14 @@ app.controller('installExtensions', function ($scope, $http, $timeout) {
                     $scope.goback = false;
                     $timeout.cancel();
 
-                }
-                else {
+                } else {
                     size = Number(response.data.size);
                     $scope.requestData = response.data.requestStatus;
                     $timeout(getRequestStatus, 1000);
                 }
 
 
-            }
-            else {
+            } else {
 
 
             }
@@ -297,19 +301,38 @@ app.controller('editPHPConfig', function ($scope, $http, $timeout) {
 
 
     $scope.fetchPHPDetails = function () {
+        var phpSelection = $scope.phpSelection;
+        if (!phpSelection) {
+            return;
+        }
+
         $scope.loadingPHP = false;
         $scope.canNotFetch = true;
         $scope.detailsSaved = true;
 
 
-        $('#allow_url_fopen').bootstrapToggle('off');
-        $('#display_errors').bootstrapToggle('off');
-        $('#file_uploads').bootstrapToggle('off');
-        $('#allow_url_include').bootstrapToggle('off');
+        $('#allow_url_fopen').prop('checked', false);
+        $('#display_errors').prop('checked', false);
+        $('#file_uploads').prop('checked', false);
+        $('#allow_url_include').prop('checked', false);
 
-        url = "/managephp/getCurrentPHPConfig";
+        // Reset variables
+        allow_url_fopen = false;
+        display_errors = false;
+        file_uploads = false;
+        allow_url_include = false;
 
-        var phpSelection = $scope.phpSelection;
+
+        var queryString = window.location.search;
+        var searchParams = new URLSearchParams(queryString);
+
+        var param3Value = searchParams.get('apache');
+        if (param3Value === null) {
+            url = "/managephp/getCurrentPHPConfig";
+            console.log('Nothing found')
+        } else {
+            url = "/managephp/getCurrentPHPConfig?apache=apache";
+        }
 
         var data = {
             phpSelection: phpSelection,
@@ -334,16 +357,20 @@ app.controller('editPHPConfig', function ($scope, $http, $timeout) {
 
 
                 if (response.data.allow_url_fopen === "1") {
-                    $('#allow_url_fopen').bootstrapToggle('on');
+                    $('#allow_url_fopen').prop('checked', true);
+                    allow_url_fopen = true;
                 }
                 if (response.data.display_errors === "1") {
-                    $('#display_errors').bootstrapToggle('on');
+                    $('#display_errors').prop('checked', true);
+                    display_errors = true;
                 }
                 if (response.data.file_uploads === "1") {
-                    $('#file_uploads').bootstrapToggle('on');
+                    $('#file_uploads').prop('checked', true);
+                    file_uploads = true;
                 }
                 if (response.data.allow_url_include === "1") {
-                    $('#allow_url_include').bootstrapToggle('on');
+                    $('#allow_url_include').prop('checked', true);
+                    allow_url_include = true;
                 }
 
                 $scope.loadingPHP = true;
@@ -357,8 +384,7 @@ app.controller('editPHPConfig', function ($scope, $http, $timeout) {
                 $scope.phpDetailsBox = false;
 
 
-            }
-            else {
+            } else {
 
                 $scope.errorMessage = response.data.error_message;
                 $scope.canNotFetch = false;
@@ -384,7 +410,16 @@ app.controller('editPHPConfig', function ($scope, $http, $timeout) {
 
         var phpSelection = $scope.phpSelection;
 
-        url = "/managephp/savePHPConfigBasic";
+        var queryString = window.location.search;
+        var searchParams = new URLSearchParams(queryString);
+
+        var param3Value = searchParams.get('apache');
+        if (param3Value === null) {
+            url = "/managephp/savePHPConfigBasic";
+            console.log('Nothing found')
+        } else {
+            url = "/managephp/savePHPConfigBasic?apache=apache";
+        }
 
         var data = {
             phpSelection: phpSelection,
@@ -417,8 +452,7 @@ app.controller('editPHPConfig', function ($scope, $http, $timeout) {
                 $scope.detailsSaved = false;
                 $scope.loadingPHP = true;
 
-            }
-            else {
+            } else {
                 $scope.errorMessage = response.data.error_message;
                 $scope.canNotFetch = false;
                 $scope.couldNotConnect = true;
@@ -440,13 +474,24 @@ app.controller('editPHPConfig', function ($scope, $http, $timeout) {
     };
 
     $scope.fetchAdvancePHPDetails = function () {
+        var phpSelection = $scope.phpSelection;
+        if (!phpSelection) {
+            return;
+        }
+
         $scope.loadingPHP = false;
         $scope.savebtnAdvance = true;
 
+        var queryString = window.location.search;
+        var searchParams = new URLSearchParams(queryString);
 
-        url = "/managephp/getCurrentAdvancedPHPConfig";
-
-        var phpSelection = $scope.phpSelection;
+        var param3Value = searchParams.get('apache');
+        if (param3Value === null) {
+            url = "/managephp/getCurrentAdvancedPHPConfig";
+            console.log('Nothing found')
+        } else {
+            url = "/managephp/getCurrentAdvancedPHPConfig?apache=apache";
+        }
 
         var data = {
             phpSelection: phpSelection,
@@ -476,8 +521,7 @@ app.controller('editPHPConfig', function ($scope, $http, $timeout) {
                 $scope.savebtnAdvance = false;
 
 
-            }
-            else {
+            } else {
                 $scope.canNotFetchAdvanced = false;
                 $scope.detailsSavedAdvanced = true;
                 $scope.loadingPHP = true;
@@ -506,7 +550,17 @@ app.controller('editPHPConfig', function ($scope, $http, $timeout) {
 
         var phpSelection = $scope.phpSelection;
 
-        url = "/managephp/savePHPConfigAdvance";
+        var queryString = window.location.search;
+        var searchParams = new URLSearchParams(queryString);
+
+        var param3Value = searchParams.get('apache');
+        if (param3Value === null) {
+            url = "/managephp/savePHPConfigAdvance";
+            console.log('Nothing found')
+        } else {
+            url = "/managephp/savePHPConfigAdvance?apache=apache";
+        }
+
 
         var data = {
             phpSelection: phpSelection,
@@ -531,8 +585,7 @@ app.controller('editPHPConfig', function ($scope, $http, $timeout) {
                 $scope.detailsSavedAdvanced = false;
                 $scope.loadingPHP = true;
 
-            }
-            else {
+            } else {
                 $scope.errorMessage = response.data.error_message;
                 $scope.canNotFetchAdvanced = false;
                 $scope.couldNotConnect = true;

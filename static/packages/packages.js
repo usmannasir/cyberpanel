@@ -331,7 +331,7 @@ app.controller('modifyPackages', function ($scope, $http) {
 /* Java script code to Modify Pacakge ends here */
 
 
-app.controller('listPackageTables', function ($scope, $http) {
+app.controller('listPackageTables', function ($scope, $http, $timeout) {
 
     $scope.cyberpanelLoading = true;
 
@@ -453,6 +453,17 @@ app.controller('listPackageTables', function ($scope, $http) {
         $scope.allowFullDomain = allowFullDomain;
         $scope.allowFullDomain = allowFullDomain === 1;
         $scope.enforceDiskLimits = enforceDiskLimits === 1;
+    };
+
+    $scope.confirmDelete = function (packageName) {
+        $scope.packageToDelete = packageName;
+        // Force Angular to update the view
+        $scope.$applyAsync(function() {
+            // Use timeout to ensure DOM is ready
+            $timeout(function() {
+                $('#deletePackageModal').modal('show');
+            }, 0);
+        });
     };
 
     $scope.saveChanges = function () {

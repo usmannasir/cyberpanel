@@ -179,6 +179,146 @@
         #header-right .social-links {
             display: flex;
             gap: 15px;
+            position: relative;
+        }
+        
+        /* Notification Center Button */
+        .notification-center-btn {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 18px;
+        }
+        
+        .notification-center-btn:hover {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(88,86,214,0.3);
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #dc2626;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: bold;
+            padding: 0.15rem 0.4rem;
+            border-radius: 10px;
+            min-width: 1.2rem;
+            text-align: center;
+            line-height: 1.2;
+            border: 2px solid white;
+        }
+        
+        /* Notification Center Dropdown */
+        .notification-center-dropdown {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            width: 400px;
+            max-height: 500px;
+            overflow-y: auto;
+            z-index: 10000;
+            display: none;
+        }
+        
+        .notification-center-dropdown.show {
+            display: block;
+        }
+        
+        .notification-center-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-secondary);
+        }
+        
+        .notification-center-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        
+        .notification-center-list {
+            padding: 0.5rem;
+        }
+        
+        .notification-center-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.2s ease;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .notification-center-item:hover {
+            background: var(--bg-secondary);
+        }
+        
+        .notification-center-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        
+        .notification-center-item-title {
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 0.25rem;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .notification-center-item-text {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+        
+        .notification-center-item-actions {
+            margin-top: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .notification-center-item-link {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .notification-center-item-link:hover {
+            text-decoration: underline;
+        }
+        
+        .notification-center-empty {
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
         }
         
         #header-right .social-links a {
@@ -1211,7 +1351,20 @@
         
         <div id="header-right">
             <div class="info-text">Connect with us — Watch tutorials, <a href="https://community.cyberpanel.net/" target="_blank" rel="noopener" style="color: inherit; text-decoration: underline;">Join discussions</a>, and <a href="https://platform.cyberpersons.com/" target="_blank" rel="noopener" style="color: inherit; text-decoration: underline;">get support</a>.</div>
-            <div class="social-links">
+            <div class="social-links" style="position: relative;">
+                <button id="notification-center-btn" class="notification-center-btn" title="Notifications" onclick="toggleNotificationCenter()">
+                    <i class="fas fa-bell"></i>
+                    <span id="notification-badge" class="notification-badge" style="display: none;">0</span>
+                </button>
+                <div id="notification-center-dropdown" class="notification-center-dropdown">
+                    <div class="notification-center-header">
+                        <h3>Notifications</h3>
+                        <button onclick="toggleNotificationCenter()" style="background: none; border: none; cursor: pointer; font-size: 1.2rem; color: #6b7280;">&times;</button>
+                    </div>
+                    <div id="notification-center-list" class="notification-center-list">
+                        <div class="notification-center-empty">Loading notifications...</div>
+                    </div>
+                </div>
                 <a href="https://web.facebook.com/groups/cyberpanel" target="_blank" rel="noopener" title="Facebook">
                     <i class="fab fa-facebook-f"></i>
                 </a>
@@ -2282,6 +2435,98 @@
             console.log('htaccess notification dismissed for 24 hours');
         }
         
+        // Notification Center Functions
+        function toggleNotificationCenter() {
+            const dropdown = document.getElementById('notification-center-dropdown');
+            if (dropdown) {
+                dropdown.classList.toggle('show');
+                if (dropdown.classList.contains('show')) {
+                    loadNotificationCenter();
+                }
+            }
+        }
+        
+        function loadNotificationCenter() {
+            const list = document.getElementById('notification-center-list');
+            if (!list) return;
+            
+            // Get all available notifications (even if dismissed)
+            const notifications = [];
+            
+            // Backup notification
+            notifications.push({
+                id: 'backup',
+                title: 'Backup Security',
+                icon: 'fas fa-shield-alt',
+                text: 'Looks like your websites are not secured with automatic backups.',
+                link: '/OneClickBackups',
+                linkText: 'Configure now',
+                dismissed: isNotificationDismissed('backup-notification')
+            });
+            
+            // AI Scanner notification
+            notifications.push({
+                id: 'ai-scanner',
+                title: 'AI Security Scanner',
+                icon: 'fas fa-brain',
+                text: 'Secure your websites with AI-powered malware detection. Advanced threat detection • Real-time scanning • Zero false positives',
+                link: '/aiscanner/',
+                linkText: 'Start AI Security Scan',
+                dismissed: isNotificationDismissed('ai-scanner-notification')
+            });
+            
+            // .htaccess notification
+            notifications.push({
+                id: 'htaccess',
+                title: '.htaccess Support',
+                icon: 'fas fa-magic',
+                text: 'Revolutionary .htaccess Support Now Live! Full .htaccess support • PHP configuration now works • Zero rule rewrites needed',
+                link: 'https://cyberpanel.net/cyberpanel-htaccess-module',
+                linkText: 'Learn More',
+                dismissed: isNotificationDismissed('htaccess-notification')
+            });
+            
+            // Render notifications
+            if (notifications.length === 0) {
+                list.innerHTML = '<div class="notification-center-empty">No notifications available</div>';
+            } else {
+                list.innerHTML = notifications.map(notif => `
+                    <div class="notification-center-item ${notif.dismissed ? 'dismissed' : ''}">
+                        <div class="notification-center-item-title">
+                            <i class="${notif.icon}"></i>
+                            ${notif.title}
+                            ${notif.dismissed ? '<span style="font-size: 0.75rem; color: #6b7280; margin-left: auto;">(Dismissed)</span>' : ''}
+                        </div>
+                        <div class="notification-center-item-text">${notif.text}</div>
+                        <div class="notification-center-item-actions">
+                            <a href="${notif.link}" class="notification-center-item-link" ${notif.link.startsWith('http') ? 'target="_blank" rel="noopener"' : ''}>${notif.linkText}</a>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            // Update badge count (show count of non-dismissed notifications)
+            const activeCount = notifications.filter(n => !n.dismissed).length;
+            const badge = document.getElementById('notification-badge');
+            if (badge) {
+                if (activeCount > 0) {
+                    badge.textContent = activeCount;
+                    badge.style.display = 'block';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+        
+        // Close notification center when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('notification-center-dropdown');
+            const button = document.getElementById('notification-center-btn');
+            if (dropdown && button && !dropdown.contains(event.target) && !button.contains(event.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+        
         // Check all notification statuses when page loads
         document.addEventListener('DOMContentLoaded', function() {
             checkBackupStatus();
@@ -2289,6 +2534,9 @@
             setTimeout(checkAIScannerStatus, 1000);
             // Show .htaccess notification with additional delay for staggered effect
             setTimeout(checkHtaccessStatus, 1500);
+            
+            // Update notification badge on load
+            setTimeout(loadNotificationCenter, 2000);
             
             // Set active menu state based on current URL
             setActiveMenuState();
