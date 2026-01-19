@@ -151,13 +151,8 @@ app.controller('systemStatusInfo', function ($scope, $http, $timeout) {
                 $scope.uptime = response.data.uptime;
                 $scope.uptimeLoaded = true;
             } else {
-                // Fallback: try to get uptime separately
-                $http.get("/base/getUptime").then(function(uptimeResponse) {
-                    if (uptimeResponse.data.uptime) {
-                        $scope.uptime = uptimeResponse.data.uptime;
-                        $scope.uptimeLoaded = true;
-                    }
-                });
+                $scope.uptime = 'N/A';
+                $scope.uptimeLoaded = true;
             }
 
         }
@@ -904,6 +899,8 @@ app.controller('OnboardingCP', function ($scope, $http, $timeout, $window) {
 });
 
 app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
+    console.log('dashboardStatsController initialized');
+    
     // Card values
     $scope.totalUsers = 0;
     $scope.totalSites = 0;
@@ -1090,15 +1087,59 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     var maxPoints = 30;
 
     function pollDashboardStats() {
-        $http.get('/base/getDashboardStats').then(function(response) {
-            if (response.data.status === 1) {
-                $scope.totalUsers = response.data.total_users;
-                $scope.totalSites = response.data.total_sites;
-                $scope.totalWPSites = response.data.total_wp_sites;
-                $scope.totalDBs = response.data.total_dbs;
-                $scope.totalEmails = response.data.total_emails;
-                $scope.totalFTPUsers = response.data.total_ftp_users;
+        console.log('[dashboardStatsController] pollDashboardStats() called');
+        console.log('[dashboardStatsController] Fetching dashboard stats from /base/getDashboardStats');
+        $http({
+            method: 'GET',
+            url: '/base/getDashboardStats',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCookie('csrftoken')
             }
+        }).then(function(response) {
+            console.log('[dashboardStatsController] pollDashboardStats SUCCESS callback called');
+            console.log('[dashboardStatsController] Dashboard stats response received:', response);
+            console.log('[dashboardStatsController] Response status:', response.status);
+            console.log('[dashboardStatsController] Response data:', response.data);
+            if (response.data && response.data.status === 1) {
+                $scope.totalUsers = response.data.total_users || 0;
+                $scope.totalSites = response.data.total_sites || 0;
+                $scope.totalWPSites = response.data.total_wp_sites || 0;
+                $scope.totalDBs = response.data.total_dbs || 0;
+                $scope.totalEmails = response.data.total_emails || 0;
+                $scope.totalFTPUsers = response.data.total_ftp_users || 0;
+                console.log('[dashboardStatsController] Dashboard stats updated:', {
+                    users: $scope.totalUsers,
+                    sites: $scope.totalSites,
+                    wp: $scope.totalWPSites,
+                    dbs: $scope.totalDBs,
+                    emails: $scope.totalEmails,
+                    ftp: $scope.totalFTPUsers
+                });
+                // No $apply needed - $http already triggers digest cycle
+            } else {
+                // Set default values if request fails
+                console.error('[dashboardStatsController] Failed to load dashboard stats - invalid response:', response.data);
+                $scope.$apply(function() {
+                    $scope.totalUsers = 0;
+                    $scope.totalSites = 0;
+                    $scope.totalWPSites = 0;
+                    $scope.totalDBs = 0;
+                    $scope.totalEmails = 0;
+                    $scope.totalFTPUsers = 0;
+                });
+            }
+        }, function(error) {
+            console.error('[dashboardStatsController] Error loading dashboard stats:', error);
+            console.error('[dashboardStatsController] Error status:', error.status);
+            console.error('[dashboardStatsController] Error data:', error.data);
+            // Set default values on error (no $apply needed - error callback also triggers digest)
+            $scope.totalUsers = 0;
+            $scope.totalSites = 0;
+            $scope.totalWPSites = 0;
+            $scope.totalDBs = 0;
+            $scope.totalEmails = 0;
+            $scope.totalFTPUsers = 0;
         });
     }
 
@@ -1521,7 +1562,12 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
         });
     }
 
-    // Initial setup
+    // Initial setup - fetch stats immediately
+    pollDashboardStats();
+    $scope.refreshTopProcesses();
+    $scope.refreshSSHLogins();
+    $scope.refreshSSHLogs();
+    
     $timeout(function() {
         // Check if user is admin before setting up charts
         $http.get('/base/getAdminStatus').then(function(response) {
@@ -1535,12 +1581,7 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
             $scope.hideSystemCharts = true;
         });
         
-        // Immediately poll once so stats are updated on first load
-        pollDashboardStats();
-        pollTraffic();
-        pollDiskIO();
-        pollCPU();
-        // Start polling
+        // Start polling for all stats
         function pollAll() {
             pollDashboardStats();
             pollTraffic();
