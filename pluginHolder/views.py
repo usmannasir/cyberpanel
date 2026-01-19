@@ -132,8 +132,8 @@ def installed(request):
                 else:
                     data['enabled'] = False
                 
-                # Get modify date from GitHub (last commit date) or local file as fallback
-                # Use local file by default to avoid API timeouts during page load
+                # Get modify date from local file (fast, no API calls)
+                # GitHub commit dates are fetched in the plugin store, not here to avoid timeouts
                 modify_date = 'N/A'
                 try:
                     if os.path.exists(metaXmlPath):
@@ -141,30 +141,6 @@ def installed(request):
                         modify_date = datetime.fromtimestamp(modify_time).strftime('%Y-%m-%d %H:%M:%S')
                 except Exception:
                     modify_date = 'N/A'
-                
-                # Optionally try GitHub API (disabled by default to prevent timeouts)
-                # Uncomment below to enable GitHub commit date fetching
-                # try:
-                #     commits_url = f"{GITHUB_COMMITS_API}?path={plugin}&per_page=1"
-                #     commits_req = urllib.request.Request(
-                #         commits_url,
-                #         headers={
-                #             'User-Agent': 'CyberPanel-Plugin-Store/1.0',
-                #             'Accept': 'application/vnd.github.v3+json'
-                #         }
-                #     )
-                #     with urllib.request.urlopen(commits_req, timeout=2) as commits_response:
-                #         commits_data = json.loads(commits_response.read().decode('utf-8'))
-                #         if commits_data and len(commits_data) > 0:
-                #             commit_date = commits_data[0].get('commit', {}).get('author', {}).get('date', '')
-                #             if commit_date:
-                #                 try:
-                #                     dt = datetime.fromisoformat(commit_date.replace('Z', '+00:00'))
-                #                     modify_date = dt.strftime('%Y-%m-%d %H:%M:%S')
-                #                 except Exception:
-                #                     modify_date = commit_date[:19].replace('T', ' ')
-                # except Exception:
-                #     pass  # Silently fallback to local file modification time
                 
                 data['modify_date'] = modify_date
                 
@@ -707,7 +683,6 @@ def install_from_store(request, plugin_name):
             logging.writeToFile(f"Found {len(plugin_files)} files for plugin {plugin_name}")
             
             # Create plugin ZIP file
-            # pluginInstaller expects the ZIP to contain plugin_name/ directory structure
             plugin_zip = zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED)
             
             for file_path in plugin_files:
@@ -715,9 +690,7 @@ def install_from_store(request, plugin_name):
                 relative_path = file_path[len(plugin_prefix):]
                 if relative_path:  # Skip directories
                     file_data = repo_zip.read(file_path)
-                    # Add plugin name as directory prefix (pluginInstaller expects this)
-                    zip_entry_path = f'{plugin_name}/{relative_path}'
-                    plugin_zip.writestr(zip_entry_path, file_data)
+                    plugin_zip.writestr(relative_path, file_data)
             
             plugin_zip.close()
             
@@ -739,24 +712,12 @@ def install_from_store(request, plugin_name):
                 
                 logging.writeToFile(f"Installing plugin using pluginInstaller")
                 
-                # Install using pluginInstaller
-                # pluginInstaller.installPlugin() may raise exceptions, catch them
-                try:
-                    pluginInstaller.installPlugin(plugin_name)
-                except Exception as install_error:
-                    error_msg = str(install_error)
-                    logging.writeToFile(f"pluginInstaller.installPlugin raised exception: {error_msg}")
-                    raise Exception(f'Plugin installation failed: {error_msg}')
+                # Install using pluginInstaller (direct call, not via command line)
+                pluginInstaller.installPlugin(plugin_name)
                 
                 # Verify plugin was actually installed
                 pluginInstalled = '/usr/local/CyberCP/' + plugin_name
                 if not os.path.exists(pluginInstalled):
-                    # Check if extraction created it in wrong location
-                    logging.writeToFile(f"Plugin directory not found at {pluginInstalled}")
-                    # List what was extracted
-                    if os.path.exists('/usr/local/CyberCP'):
-                        extracted = os.listdir('/usr/local/CyberCP')
-                        logging.writeToFile(f"Contents of /usr/local/CyberCP: {extracted[:20]}")
                     raise Exception(f'Plugin installation failed: {pluginInstalled} does not exist after installation')
                 
                 logging.writeToFile(f"Plugin {plugin_name} installed successfully")
