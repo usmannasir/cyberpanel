@@ -690,38 +690,38 @@
     <!-- Overview Section -->
     <div class="overview-section">
         <h2 class="section-title">OVERVIEW</h2>
-        <div class="stats-grid" ng-controller="systemStatusInfo">
+        <div class="stats-grid" ng-controller="systemStatusInfo" ng-cloak>
             <div class="stat-card">
                 <div class="stat-card-header">
                     <span class="stat-card-title">CPU USAGE</span>
-                    <span class="stat-card-value">({$ cpuUsage $}%)</span>
+                    <span class="stat-card-value" ng-bind="cpuUsage || 0">0</span><span>%</span>
                 </div>
                 <div class="progress-bar-container">
-                    <div class="progress-bar" style="width: {$ cpuUsage $}%;"></div>
+                    <div class="progress-bar" ng-style="{'width': (cpuUsage || 0) + '%'}"></div>
                 </div>
-                <div class="stat-card-info">You've {$ cpuCores $} Core(s) CPU.</div>
+                <div class="stat-card-info">You've <span ng-bind="cpuCores || 0">0</span> Core(s) CPU.</div>
             </div>
             
             <div class="stat-card">
                 <div class="stat-card-header">
                     <span class="stat-card-title">MEMORY USAGE</span>
-                    <span class="stat-card-value">({$ ramUsage $}%)</span>
+                    <span class="stat-card-value" ng-bind="ramUsage || 0">0</span><span>%</span>
                 </div>
                 <div class="progress-bar-container">
-                    <div class="progress-bar" style="width: {$ ramUsage $}%;"></div>
+                    <div class="progress-bar" ng-style="{'width': (ramUsage || 0) + '%'}"></div>
                 </div>
-                <div class="stat-card-info">You've {$ ramTotalMB $} MB Memory.</div>
+                <div class="stat-card-info">You've <span ng-bind="ramTotalMB || 0">0</span> MB Memory.</div>
             </div>
             
             <div class="stat-card">
                 <div class="stat-card-header">
                     <span class="stat-card-title">DISK USAGE</span>
-                    <span class="stat-card-value">({$ diskUsage $}%)</span>
+                    <span class="stat-card-value" ng-bind="diskUsage || 0">0</span><span>%</span>
                 </div>
                 <div class="progress-bar-container">
-                    <div class="progress-bar" style="width: {$ diskUsage $}%;"></div>
+                    <div class="progress-bar" ng-style="{'width': (diskUsage || 0) + '%'}"></div>
                 </div>
-                <div class="stat-card-info">You've {$ diskFreeGB $} GB remaining out of {$ diskTotalGB $} GB.</div>
+                <div class="stat-card-info">You've <span ng-bind="diskFreeGB || 0">0</span> GB remaining out of <span ng-bind="diskTotalGB || 0">0</span> GB.</div>
             </div>
         </div>
     </div>
@@ -729,12 +729,12 @@
     <!-- Insights Section -->
     <div class="insights-section">
         <h2 class="section-title">INSIGHTS</h2>
-        <div class="insights-grid">
+        <div class="insights-grid" ng-cloak>
             <div class="insight-card">
                 <div class="insight-icon">
                     <i class="fas fa-users"></i>
                 </div>
-                <div class="insight-value">{$ totalUsers || 0 $}</div>
+                <div class="insight-value" ng-bind="totalUsers || 0">0</div>
                 <div class="insight-label">Users</div>
             </div>
             
@@ -742,7 +742,7 @@
                 <div class="insight-icon">
                     <i class="fas fa-globe"></i>
                 </div>
-                <div class="insight-value">{$ totalSites || 0 $}</div>
+                <div class="insight-value" ng-bind="totalSites || 0">0</div>
                 <div class="insight-label">Websites</div>
             </div>
             
@@ -750,7 +750,7 @@
                 <div class="insight-icon" style="background: #5b87da;">
                     <i class="fab fa-wordpress"></i>
                 </div>
-                <div class="insight-value">{$ totalWPSites || 0 $}</div>
+                <div class="insight-value" ng-bind="totalWPSites || 0">0</div>
                 <div class="insight-label">WordPress</div>
             </div>
             
@@ -758,7 +758,7 @@
                 <div class="insight-icon">
                     <i class="fas fa-database"></i>
                 </div>
-                <div class="insight-value">{$ totalDBs || 0 $}</div>
+                <div class="insight-value" ng-bind="totalDBs || 0">0</div>
                 <div class="insight-label">Databases</div>
             </div>
             
@@ -766,7 +766,7 @@
                 <div class="insight-icon">
                     <i class="fas fa-envelope"></i>
                 </div>
-                <div class="insight-value">{$ totalEmails || 0 $}</div>
+                <div class="insight-value" ng-bind="totalEmails || 0">0</div>
                 <div class="insight-label">Emails</div>
             </div>
             
@@ -774,7 +774,7 @@
                 <div class="insight-icon">
                     <i class="fas fa-folder"></i>
                 </div>
-                <div class="insight-value">{$ totalFTPUsers || 0 $}</div>
+                <div class="insight-value" ng-bind="totalFTPUsers || 0">0</div>
                 <div class="insight-label">FTP Users</div>
             </div>
         </div>

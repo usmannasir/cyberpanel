@@ -1647,7 +1647,7 @@
                 <div class="info-line">
                     <strong>Uptime:</strong> 
                     <span ng-show="!uptimeLoaded">Loading...</span>
-                    <span ng-show="uptimeLoaded">{$ uptime $}</span>
+                    <span ng-show="uptimeLoaded" ng-bind="uptime">N/A</span>
                 </div>
             </div>
         </div>
