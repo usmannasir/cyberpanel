@@ -655,12 +655,130 @@ def fetch_plugin_store(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def install_from_store(request, plugin_name):
-    """Install plugin from store"""
+    """Install plugin from GitHub store"""
     mailUtilities.checkHome()
-    return JsonResponse({
-        'success': False,
-        'error': 'Plugin store installation not implemented'
-    }, status=501)
+    
+    try:
+        # Check if already installed
+        pluginInstalled = '/usr/local/CyberCP/' + plugin_name
+        if os.path.exists(pluginInstalled):
+            return JsonResponse({
+                'success': False,
+                'error': f'Plugin already installed: {plugin_name}'
+            }, status=400)
+        
+        # Download plugin from GitHub
+        import tempfile
+        import shutil
+        import zipfile
+        import io
+        
+        logging.writeToFile(f"Starting installation of {plugin_name} from GitHub store")
+        
+        # Create temporary directory
+        temp_dir = tempfile.mkdtemp()
+        zip_path = os.path.join(temp_dir, plugin_name + '.zip')
+        
+        try:
+            # Download repository as ZIP
+            repo_zip_url = 'https://github.com/master3395/cyberpanel-plugins/archive/refs/heads/main.zip'
+            logging.writeToFile(f"Downloading plugin from: {repo_zip_url}")
+            
+            repo_req = urllib.request.Request(
+                repo_zip_url,
+                headers={
+                    'User-Agent': 'CyberPanel-Plugin-Store/1.0',
+                    'Accept': 'application/zip'
+                }
+            )
+            
+            with urllib.request.urlopen(repo_req, timeout=30) as repo_response:
+                repo_zip_data = repo_response.read()
+            
+            # Extract plugin directory from repository ZIP
+            repo_zip = zipfile.ZipFile(io.BytesIO(repo_zip_data))
+            
+            # Find plugin directory in ZIP
+            plugin_prefix = f'cyberpanel-plugins-main/{plugin_name}/'
+            plugin_files = [f for f in repo_zip.namelist() if f.startswith(plugin_prefix)]
+            
+            if not plugin_files:
+                raise Exception(f'Plugin {plugin_name} not found in GitHub repository')
+            
+            logging.writeToFile(f"Found {len(plugin_files)} files for plugin {plugin_name}")
+            
+            # Create plugin ZIP file
+            plugin_zip = zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED)
+            
+            for file_path in plugin_files:
+                # Remove the repository root prefix
+                relative_path = file_path[len(plugin_prefix):]
+                if relative_path:  # Skip directories
+                    file_data = repo_zip.read(file_path)
+                    plugin_zip.writestr(relative_path, file_data)
+            
+            plugin_zip.close()
+            
+            # Verify ZIP was created
+            if not os.path.exists(zip_path):
+                raise Exception(f'Failed to create plugin ZIP file')
+            
+            logging.writeToFile(f"Created plugin ZIP: {zip_path}")
+            
+            # Copy ZIP to current directory (pluginInstaller expects it in cwd)
+            original_cwd = os.getcwd()
+            os.chdir(temp_dir)
+            
+            try:
+                # Verify zip file exists in current directory
+                zip_file = plugin_name + '.zip'
+                if not os.path.exists(zip_file):
+                    raise Exception(f'Zip file {zip_file} not found in temp directory')
+                
+                logging.writeToFile(f"Installing plugin using pluginInstaller")
+                
+                # Install using pluginInstaller
+                pluginInstaller.installPlugin(plugin_name)
+                
+                # Verify plugin was actually installed
+                pluginInstalled = '/usr/local/CyberCP/' + plugin_name
+                if not os.path.exists(pluginInstalled):
+                    raise Exception(f'Plugin installation failed: {pluginInstalled} does not exist after installation')
+                
+                logging.writeToFile(f"Plugin {plugin_name} installed successfully")
+                
+                # Set plugin to enabled by default after installation
+                _set_plugin_state(plugin_name, True)
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': f'Plugin {plugin_name} installed successfully from store'
+                })
+            finally:
+                os.chdir(original_cwd)
+                
+        finally:
+            # Cleanup
+            shutil.rmtree(temp_dir, ignore_errors=True)
+            
+    except urllib.error.HTTPError as e:
+        error_msg = f'Failed to download plugin from GitHub: HTTP {e.code}'
+        if e.code == 404:
+            error_msg = f'Plugin {plugin_name} not found in GitHub repository'
+        logging.writeToFile(f"Error installing {plugin_name}: {error_msg}")
+        return JsonResponse({
+            'success': False,
+            'error': error_msg
+        }, status=500)
+    except Exception as e:
+        logging.writeToFile(f"Error installing plugin {plugin_name}: {str(e)}")
+        import traceback
+        error_details = traceback.format_exc()
+        logging.writeToFile(f"Traceback: {error_details}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
 
 def plugin_help(request, plugin_name):
     """Plugin-specific help page"""
