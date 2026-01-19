@@ -4023,6 +4023,43 @@ context /cyberpanel_suspension_page.html {
                             {"error": 1, "domain": "This child domain does not exists"})
             return proc.render()
 
+    def _get_log_file_path(self, domain_name, log_type):
+        """
+        Get the correct log file path for a domain.
+        For child domains (sub-domains), logs are stored in the master domain's log directory.
+        
+        Args:
+            domain_name: The domain name (could be a child domain)
+            log_type: 1 for access log, 0 for error log
+            
+        Returns:
+            str: The full path to the log file
+        """
+        try:
+            # Check if this is a child domain
+            try:
+                child_domain = ChildDomains.objects.get(domain=domain_name)
+                master_domain = child_domain.master.domain
+                log_dir = f"/home/{master_domain}/logs"
+            except ChildDomains.DoesNotExist:
+                # Not a child domain, use standard path
+                log_dir = f"/home/{domain_name}/logs"
+            
+            # Construct log file path
+            if log_type == 1:
+                log_file = f"{domain_name}.access_log"
+            else:
+                log_file = f"{domain_name}.error_log"
+            
+            return f"{log_dir}/{log_file}"
+        except Exception as e:
+            # Fallback to standard path if anything fails
+            logging.CyberCPLogFileWriter.writeToFile(f'Error determining log path for {domain_name}: {str(e)}')
+            if log_type == 1:
+                return f"/home/{domain_name}/logs/{domain_name}.access_log"
+            else:
+                return f"/home/{domain_name}/logs/{domain_name}.error_log"
+
     def getDataFromLogFile(self, userID=None, data=None):
 
         currentACL = ACLManager.loadedACL(userID)
@@ -4037,10 +4074,8 @@ context /cyberpanel_suspension_page.html {
         else:
             return ACLManager.loadErrorJson('logstatus', 0)
 
-        if logType == 1:
-            fileName = "/home/" + self.domain + "/logs/" + self.domain + ".access_log"
-        else:
-            fileName = "/home/" + self.domain + "/logs/" + self.domain + ".error_log"
+        # Use helper method to get correct log file path (handles child domains)
+        fileName = self._get_log_file_path(self.domain, logType)
 
         command = 'ls -la %s' % fileName
         result = ProcessUtilities.outputExecutioner(command)
@@ -4108,7 +4143,9 @@ context /cyberpanel_suspension_page.html {
         else:
             return ACLManager.loadErrorJson('logstatus', 0)
 
-        fileName = "/home/" + self.domain + "/logs/" + self.domain + ".error_log"
+        # Use helper method to get correct log file path (handles child domains)
+        # log_type 0 = error log
+        fileName = self._get_log_file_path(self.domain, 0)
 
         command = 'ls -la %s' % fileName
         result = ProcessUtilities.outputExecutioner(command)
