@@ -133,39 +133,38 @@ def installed(request):
                     data['enabled'] = False
                 
                 # Get modify date from GitHub (last commit date) or local file as fallback
+                # Use local file by default to avoid API timeouts during page load
                 modify_date = 'N/A'
                 try:
-                    # Try to get last commit date from GitHub API
-                    plugin_name_for_api = plugin.replace('Plugin', '').lower() if 'Plugin' in plugin else plugin.lower()
-                    commits_url = f"{GITHUB_COMMITS_API}?path={plugin}&per_page=1"
-                    commits_req = urllib.request.Request(
-                        commits_url,
-                        headers={
-                            'User-Agent': 'CyberPanel-Plugin-Store/1.0',
-                            'Accept': 'application/vnd.github.v3+json'
-                        }
-                    )
-                    
-                    with urllib.request.urlopen(commits_req, timeout=5) as commits_response:
-                        commits_data = json.loads(commits_response.read().decode('utf-8'))
-                        if commits_data and len(commits_data) > 0:
-                            commit_date = commits_data[0].get('commit', {}).get('author', {}).get('date', '')
-                            if commit_date:
-                                try:
-                                    dt = datetime.fromisoformat(commit_date.replace('Z', '+00:00'))
-                                    modify_date = dt.strftime('%Y-%m-%d %H:%M:%S')
-                                except Exception:
-                                    modify_date = commit_date[:19].replace('T', ' ')
-                except Exception as e:
-                    # Fallback to local file modification time
-                    try:
-                        if os.path.exists(metaXmlPath):
-                            modify_time = os.path.getmtime(metaXmlPath)
-                            modify_date = datetime.fromtimestamp(modify_time).strftime('%Y-%m-%d %H:%M:%S')
-                        else:
-                            modify_date = 'N/A'
-                    except Exception:
-                        modify_date = 'N/A'
+                    if os.path.exists(metaXmlPath):
+                        modify_time = os.path.getmtime(metaXmlPath)
+                        modify_date = datetime.fromtimestamp(modify_time).strftime('%Y-%m-%d %H:%M:%S')
+                except Exception:
+                    modify_date = 'N/A'
+                
+                # Optionally try GitHub API (disabled by default to prevent timeouts)
+                # Uncomment below to enable GitHub commit date fetching
+                # try:
+                #     commits_url = f"{GITHUB_COMMITS_API}?path={plugin}&per_page=1"
+                #     commits_req = urllib.request.Request(
+                #         commits_url,
+                #         headers={
+                #             'User-Agent': 'CyberPanel-Plugin-Store/1.0',
+                #             'Accept': 'application/vnd.github.v3+json'
+                #         }
+                #     )
+                #     with urllib.request.urlopen(commits_req, timeout=2) as commits_response:
+                #         commits_data = json.loads(commits_response.read().decode('utf-8'))
+                #         if commits_data and len(commits_data) > 0:
+                #             commit_date = commits_data[0].get('commit', {}).get('author', {}).get('date', '')
+                #             if commit_date:
+                #                 try:
+                #                     dt = datetime.fromisoformat(commit_date.replace('Z', '+00:00'))
+                #                     modify_date = dt.strftime('%Y-%m-%d %H:%M:%S')
+                #                 except Exception:
+                #                     modify_date = commit_date[:19].replace('T', ' ')
+                # except Exception:
+                #     pass  # Silently fallback to local file modification time
                 
                 data['modify_date'] = modify_date
                 
