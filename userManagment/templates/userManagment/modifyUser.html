@@ -394,8 +394,8 @@
                                                     <input type="text" class="form-control form-control-sm" ng-model="cred.name" 
                                                            ng-blur="updateCredentialName(cred.id, cred.name)" style="max-width: 200px;">
                                                 </td>
-                                                <td>{{ cred.created_at | date:'short' }}</td>
-                                                <td>{{ cred.last_used | date:'short' || 'Never' }}</td>
+                                                <td>{$ cred.created_at | date:'short' $}</td>
+                                                <td>{$ cred.last_used | date:'short' || 'Never' $}</td>
                                                 <td>
                                                     <button type="button" class="btn btn-sm btn-danger" ng-click="deleteCredential(cred.id)">
                                                         <i class="fa fa-trash"></i> {% trans "Delete" %}
