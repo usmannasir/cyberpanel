@@ -487,6 +487,8 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            font-weight: 600;
+            font-size: 0.9rem;
         }
         
         .notification-center-item-link-secondary:hover {
@@ -497,13 +499,18 @@
             text-decoration: none;
         }
         
+        .notification-center-item-link-secondary:hover > span {
+            color: white;
+        }
+        
         .notification-center-item-link-secondary:active {
             transform: translateY(0);
             box-shadow: 0 2px 8px rgba(88, 86, 214, 0.2);
         }
         
         .notification-center-item-link-secondary i {
-            font-size: 0.85rem;
+            font-size: 0.75rem;
+            opacity: 0.8;
         }
         
         .notification-center-empty {
@@ -2670,7 +2677,7 @@
                 title: 'Backup Security',
                 icon: 'fas fa-shield-alt',
                 text: 'Looks like your websites are not secured with automatic backups.',
-                link: '/OneClickBackups',
+                link: '/backup/OneClickBackups',
                 linkText: 'Configure now',
                 learnMoreLink: 'https://cyberpanel.net/docs/backup',
                 dismissed: isNotificationDismissed('backup-notification')
@@ -2695,7 +2702,7 @@
                 icon: 'fas fa-magic',
                 text: 'Revolutionary .htaccess Support Now Live! Full .htaccess support • PHP configuration now works • Zero rule rewrites needed',
                 link: 'https://cyberpanel.net/cyberpanel-htaccess-module',
-                linkText: 'Learn More',
+                linkText: 'View Details',
                 learnMoreLink: 'https://cyberpanel.net/cyberpanel-htaccess-module',
                 dismissed: isNotificationDismissed('htaccess-notification')
             });
@@ -2734,8 +2741,8 @@
                             </a>
                             ${notif.learnMoreLink ? `
                             <a href="${notif.learnMoreLink}" class="notification-center-item-link-secondary" ${learnMoreExternal ? 'target="_blank" rel="noopener"' : ''}>
-                                <i class="fas fa-info-circle"></i>
                                 <span>Learn More</span>
+                                <i class="fas fa-arrow-right"></i>
                             </a>
                             ` : ''}
                         </div>
