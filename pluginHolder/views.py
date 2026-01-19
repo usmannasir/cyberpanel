@@ -69,9 +69,12 @@ def help_page(request):
 def installed(request):
     mailUtilities.checkHome()
     pluginPath = '/home/cyberpanel/plugins'
+    installedPath = '/usr/local/CyberCP'
     pluginList = []
     errorPlugins = []
+    processed_plugins = set()  # Track which plugins we've already processed
 
+    # First, process plugins from source directory
     if os.path.exists(pluginPath):
         for plugin in os.listdir(pluginPath):
             # Skip files (like .zip files) - only process directories
@@ -81,7 +84,7 @@ def installed(request):
             
             data = {}
             # Try installed location first, then fallback to source location
-            completePath = '/usr/local/CyberCP/' + plugin + '/meta.xml'
+            completePath = installedPath + '/' + plugin + '/meta.xml'
             sourcePath = os.path.join(pluginDir, 'meta.xml')
             
             # Determine which meta.xml to use
@@ -97,6 +100,8 @@ def installed(request):
                 if metaXmlPath is None:
                     # No meta.xml found in either location - skip silently
                     continue
+                
+                processed_plugins.add(plugin)
                 
                 pluginMetaData = ElementTree.parse(metaXmlPath)
                 root = pluginMetaData.getroot()
