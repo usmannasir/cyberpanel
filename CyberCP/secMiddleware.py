@@ -39,7 +39,7 @@ class secMiddleware:
         webhook_pattern = re.compile(r'^/websites/[^/]+/(webhook|gitNotify)/?$')
         
         if pathActual == "/backup/localInitiate" or  pathActual == '/' or pathActual == '/verifyLogin' or pathActual == '/logout' or pathActual.startswith('/api')\
-                or webhook_pattern.match(pathActual) or pathActual.startswith('/cloudAPI'):
+                or webhook_pattern.match(pathActual) or pathActual.startswith('/cloudAPI') or pathActual.startswith('/static/'):
             pass
         else:
             # Session check logging removed
