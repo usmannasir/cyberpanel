@@ -37,6 +37,26 @@ function randomPassword(length) {
 
 var app = angular.module('CyberCP', []);
 
+// Filesize filter for formatting bytes to human-readable format
+app.filter('filesize', function() {
+    return function(bytes) {
+        if (bytes === null || bytes === undefined || isNaN(bytes)) {
+            return '0 B';
+        }
+        bytes = parseInt(bytes, 10);
+        if (bytes === 0) {
+            return '0 B';
+        }
+        var k = 1024;
+        var sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+        var i = Math.floor(Math.log(bytes) / Math.log(k));
+        var size = (bytes / Math.pow(k, i)).toFixed(2);
+        // Remove trailing zeros
+        size = parseFloat(size).toString();
+        return size + ' ' + sizes[i];
+    };
+});
+
 var globalScope;
 
 function GlobalRespSuccess(response) {
