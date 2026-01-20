@@ -497,9 +497,11 @@ urlpatterns = [
         
         <h3>{% trans "3. Templates" %}</h3>
         <p>{% trans "Always extend baseTemplate/index.html:" %}</p>
+        {% verbatim %}
         <pre><code>{% extends "baseTemplate/index.html" %}
 {% load static %}
 {% load i18n %}</code></pre>
+        {% endverbatim %}
         
         <h2 id="advanced">{% trans "Advanced Features" %}</h2>
         <h3>{% trans "Database Models" %}</h3>
