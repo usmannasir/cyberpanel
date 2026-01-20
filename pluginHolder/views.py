@@ -167,7 +167,11 @@ def installed(request):
                     if plugin == 'emailMarketing':
                         data['manage_url'] = '/emailMarketing/'
                     elif os.path.exists(completePath):
-                        data['manage_url'] = f'/plugins/{plugin}/settings/'
+                        # Check if settings route exists, otherwise use main plugin URL
+                        settings_route = f'/plugins/{plugin}/settings/'
+                        main_route = f'/plugins/{plugin}/'
+                        # Default to main route - most plugins have a main route even if no settings
+                        data['manage_url'] = main_route
                     else:
                         data['manage_url'] = None
                 
@@ -258,8 +262,12 @@ def installed(request):
                     data['manage_url'] = url_elem.text
                 else:
                     # Default to /plugins/{plugin}/ for regular plugins
-                    # But emailMarketing is already handled above
-                    data['manage_url'] = f'/plugins/{plugin}/' if plugin != 'emailMarketing' else '/emailMarketing/'
+                    # Special handling for emailMarketing
+                    if plugin == 'emailMarketing':
+                        data['manage_url'] = '/emailMarketing/'
+                    else:
+                        # Default to main plugin route (most plugins work from main route)
+                        data['manage_url'] = f'/plugins/{plugin}/'
                 
                 # Extract author information
                 author_elem = root.find('author')
