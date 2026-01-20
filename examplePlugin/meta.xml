@@ -4,4 +4,5 @@
     <type>plugin</type>
     <description>This is an example plugin</description>
     <version>1.0</version>
+    <author>usmannasir</author>
 </cyberpanelPluginConfig>

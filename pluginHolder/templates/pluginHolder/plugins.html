@@ -708,6 +708,17 @@
         box-shadow: 0 4px 8px rgba(255,193,7,0.3);
     }
     
+    .btn-settings {
+        background: #5856d6;
+        color: white;
+    }
+    
+    .btn-settings:hover {
+        background: #4a48c4;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(88,86,214,0.3);
+    }
+    
     .btn-action:disabled {
         opacity: 0.6;
         cursor: not-allowed;
@@ -883,6 +894,11 @@
                     <div class="plugin-footer">
                         <div class="plugin-actions">
                             {% if plugin.installed %}
+                                {% if plugin.manage_url %}
+                                    <a href="{{ plugin.manage_url }}" class="btn-action btn-settings btn-small" title="{% trans 'Plugin Settings' %}">
+                                        <i class="fas fa-cog"></i> {% trans "Settings" %}
+                                    </a>
+                                {% endif %}
                                 {% if plugin.enabled %}
                                     <button class="btn-action btn-deactivate btn-small" onclick="deactivatePlugin('{{ plugin.plugin_dir }}')">
                                         <i class="fas fa-toggle-on"></i> {% trans "Deactivate" %}
@@ -954,6 +970,11 @@
                                 <td>
                                     <div class="plugin-actions">
                                         {% if plugin.installed %}
+                                            {% if plugin.manage_url %}
+                                                <a href="{{ plugin.manage_url }}" class="btn-action btn-settings" title="{% trans 'Plugin Settings' %}">
+                                                    <i class="fas fa-cog"></i> {% trans "Settings" %}
+                                                </a>
+                                            {% endif %}
                                             {% if plugin.enabled %}
                                                 <button class="btn-action btn-deactivate" onclick="deactivatePlugin('{{ plugin.plugin_dir }}')">
                                                     <i class="fas fa-toggle-on"></i> {% trans "Deactivate" %}

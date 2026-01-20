@@ -152,7 +152,11 @@ def installed(request):
                 url_elem = root.find('url')
                 
                 # Priority: settings_url > url > default pattern
-                if settings_url_elem is not None and settings_url_elem.text:
+                # Special handling for core plugins that don't use /plugins/ prefix
+                if plugin == 'emailMarketing':
+                    # emailMarketing is a core CyberPanel plugin, uses /emailMarketing/ not /plugins/emailMarketing/
+                    data['manage_url'] = '/emailMarketing/'
+                elif settings_url_elem is not None and settings_url_elem.text:
                     data['manage_url'] = settings_url_elem.text
                 elif url_elem is not None and url_elem.text:
                     data['manage_url'] = url_elem.text
@@ -163,6 +167,13 @@ def installed(request):
                         data['manage_url'] = f'/plugins/{plugin}/settings/'
                     else:
                         data['manage_url'] = None
+                
+                # Extract author information
+                author_elem = root.find('author')
+                if author_elem is not None and author_elem.text:
+                    data['author'] = author_elem.text
+                else:
+                    data['author'] = 'Unknown'
 
                 pluginList.append(data)
                 processed_plugins.add(plugin)  # Mark as processed
@@ -233,12 +244,24 @@ def installed(request):
                 settings_url_elem = root.find('settings_url')
                 url_elem = root.find('url')
                 
-                if settings_url_elem is not None and settings_url_elem.text:
+                # Priority: settings_url > url > default pattern
+                # Special handling for core plugins that don't use /plugins/ prefix
+                if plugin == 'emailMarketing':
+                    # emailMarketing is a core CyberPanel plugin, uses /emailMarketing/ not /plugins/emailMarketing/
+                    data['manage_url'] = '/emailMarketing/'
+                elif settings_url_elem is not None and settings_url_elem.text:
                     data['manage_url'] = settings_url_elem.text
                 elif url_elem is not None and url_elem.text:
                     data['manage_url'] = url_elem.text
                 else:
                     data['manage_url'] = f'/plugins/{plugin}/'
+                
+                # Extract author information
+                author_elem = root.find('author')
+                if author_elem is not None and author_elem.text:
+                    data['author'] = author_elem.text
+                else:
+                    data['author'] = 'Unknown'
                 
                 pluginList.append(data)
                 
