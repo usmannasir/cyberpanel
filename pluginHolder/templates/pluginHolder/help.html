@@ -322,6 +322,7 @@
                 <li><a href="#architecture">{% trans "Plugin Architecture Overview" %}</a></li>
                 <li><a href="#first-plugin">{% trans "Creating Your First Plugin" %}</a></li>
                 <li><a href="#structure">{% trans "Plugin Structure & Files" %}</a></li>
+                <li><a href="#versioning">{% trans "Version Numbering (Semantic Versioning)" %}</a></li>
                 <li><a href="#components">{% trans "Core Components" %}</a></li>
                 <li><a href="#advanced">{% trans "Advanced Features" %}</a></li>
                 <li><a href="#best-practices">{% trans "Best Practices" %}</a></li>
@@ -475,6 +476,35 @@ def main_view(request):
             <li><code>templates/</code> - <span class="badge badge-optional">{% trans "Optional" %}</span> - {% trans "HTML templates" %}</li>
             <li><code>static/</code> - <span class="badge badge-optional">{% trans "Optional" %}</span> - {% trans "CSS, JS, images" %}</li>
         </ul>
+        
+        <h2 id="versioning">{% trans "Version Numbering (Semantic Versioning)" %}</h2>
+        <p>{% trans "CyberPanel plugins use semantic versioning (SemVer) with a three-number format (X.Y.Z) to help users understand the impact of each update:" %}</p>
+        
+        <div style="margin: 25px 0; padding: 20px; background: var(--bg-secondary, #f8f9ff); border-radius: 8px; border-left: 4px solid #5856d6;">
+            <h3 style="margin-top: 0; color: var(--text-primary, #2f3640);">{% trans "Major Version (X.0.0)" %} <span style="color: #dc2626;">▼</span></h3>
+            <p style="margin-bottom: 0;">{% trans "Breaking changes that may require action from users. New major features, complete redesigns, or changes that break existing functionality." %}</p>
+            <p style="margin-top: 8px; color: var(--text-secondary, #64748b); font-size: 14px;"><strong>{% trans "Example" %}:</strong> 2.8.0 → 3.0.0</p>
+        </div>
+        
+        <div style="margin: 25px 0; padding: 20px; background: var(--bg-secondary, #f8f9ff); border-radius: 8px; border-left: 4px solid #3b82f6;">
+            <h3 style="margin-top: 0; color: var(--text-primary, #2f3640);">{% trans "Minor Version (0.X.0)" %} <span style="color: #2563eb;">▼</span></h3>
+            <p style="margin-bottom: 0;">{% trans "New features added in a backward-compatible manner. Enhancements and improvements that don't break existing functionality." %}</p>
+            <p style="margin-top: 8px; color: var(--text-secondary, #64748b); font-size: 14px;"><strong>{% trans "Example" %}:</strong> 3.0.0 → 3.1.0</p>
+        </div>
+        
+        <div style="margin: 25px 0; padding: 20px; background: var(--bg-secondary, #f8f9ff); border-radius: 8px; border-left: 4px solid #10b981;">
+            <h3 style="margin-top: 0; color: var(--text-primary, #2f3640);">{% trans "Patch Version (0.0.X)" %} <span style="color: #059669;">▼</span></h3>
+            <p style="margin-bottom: 0;">{% trans "Bug fixes and minor improvements. Backward-compatible fixes that address issues without adding new features." %}</p>
+            <p style="margin-top: 8px; color: var(--text-secondary, #64748b); font-size: 14px;"><strong>{% trans "Example" %}:</strong> 3.1.0 → 3.1.1</p>
+        </div>
+        
+        <div class="alert alert-info" style="margin-top: 25px;">
+            <strong>{% trans "Important" %}:</strong> {% trans "Always use the three-number format (X.Y.Z) in your meta.xml file. This makes it easier to track updates and understand the scope of changes. Start with version 1.0.0 for your first release." %}
+        </div>
+        
+        <h3>{% trans "Version Format in meta.xml" %}</h3>
+        <pre><code>&lt;version&gt;1.0.0&lt;/version&gt;</code></pre>
+        <p>{% trans "Never use formats like '1.0' or 'v1.0'. Always use the full semantic version: '1.0.0'" %}</p>
         
         <h2 id="components">{% trans "Core Components" %}</h2>
         <h3>{% trans "1. Authentication & Security" %}</h3>
