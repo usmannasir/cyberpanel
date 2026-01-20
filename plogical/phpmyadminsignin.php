@@ -7,12 +7,16 @@ try {
     define('PMA_SIGNON_SESSIONNAME', 'SignonSession');
     define('PMA_DISABLE_SSL_PEER_VALIDATION', TRUE);
 
-    if (isset($_POST['token'])) {
+    // Handle both GET and POST parameters for token and username
+    $token = isset($_POST['token']) ? $_POST['token'] : (isset($_GET['token']) ? $_GET['token'] : null);
+    $username = isset($_POST['username']) ? $_POST['username'] : (isset($_GET['username']) ? $_GET['username'] : null);
+
+    if ($token && $username) {
 
         ### Get credentials using the token
 
-        $token = htmlspecialchars($_POST['token'], ENT_QUOTES, 'UTF-8');
-        $username = htmlspecialchars($_POST['username'], ENT_QUOTES, 'UTF-8');
+        $token = htmlspecialchars($token, ENT_QUOTES, 'UTF-8');
+        $username = htmlspecialchars($username, ENT_QUOTES, 'UTF-8');
 
         //$url = "/dataBases/fetchDetailsPHPMYAdmin?token=" . $token . '&username=' . $username;
         $url = "/dataBases/fetchDetailsPHPMYAdmin";
@@ -27,7 +31,7 @@ try {
         echo '</form>';
         echo '<script>document.getElementById("redirectForm").submit();</script>';
 
-    } else if (isset($_POST['logout'])) {
+    } else if (isset($_POST['logout']) || isset($_GET['logout'])) {
         $params = session_get_cookie_params();
         setcookie(session_name(), '', time() - 86400, $params["path"], $params["domain"], $params["secure"], $params["httponly"]);
         session_destroy();
