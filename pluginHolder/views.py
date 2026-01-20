@@ -959,21 +959,41 @@ def plugin_help(request, plugin_name):
     else:
         # Convert markdown to HTML (basic conversion)
         import re
-        # Basic markdown to HTML conversion
+        # Convert linked images first (badges): [![alt](img_url)](link_url)
+        help_content = re.sub(
+            r'\[!\[([^\]]*)\]\(([^\)]+)\)\]\(([^\)]+)\)',
+            r'<a href="\3" target="_blank" rel="noopener noreferrer"><img src="\2" alt="\1" style="display:inline-block;margin:0 4px;vertical-align:middle;"></a>',
+            help_content
+        )
+        # Convert regular images: ![alt](img_url)
+        help_content = re.sub(
+            r'!\[([^\]]*)\]\(([^\)]+)\)',
+            r'<img src="\2" alt="\1" style="display:inline-block;margin:4px 0;max-width:100%;">',
+            help_content
+        )
+        # Convert regular links: [text](url)
+        help_content = re.sub(
+            r'\[([^\]]+)\]\(([^\)]+)\)',
+            r'<a href="\2" target="_blank" rel="noopener noreferrer">\1</a>',
+            help_content
+        )
+        # Convert headings
         help_content = re.sub(r'^### (.*?)$', r'<h3>\1</h3>', help_content, flags=re.MULTILINE)
         help_content = re.sub(r'^## (.*?)$', r'<h2>\1</h2>', help_content, flags=re.MULTILINE)
         help_content = re.sub(r'^# (.*?)$', r'<h1>\1</h1>', help_content, flags=re.MULTILINE)
+        # Convert formatting
         help_content = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', help_content)
         help_content = re.sub(r'\*(.*?)\*', r'<em>\1</em>', help_content)
         help_content = re.sub(r'`([^`]+)`', r'<code>\1</code>', help_content)
+        # Convert lists
         help_content = re.sub(r'^\- (.*?)$', r'<li>\1</li>', help_content, flags=re.MULTILINE)
         help_content = re.sub(r'^(\d+)\. (.*?)$', r'<li>\2</li>', help_content, flags=re.MULTILINE)
-        # Wrap paragraphs
+        # Wrap paragraphs (but preserve HTML tags and images)
         lines = help_content.split('\n')
         processed_lines = []
         for line in lines:
             line = line.strip()
-            if line and not line.startswith('<'):
+            if line and not line.startswith('<') and not line.startswith('http') and not '<img' in line and not '<a' in line:
                 processed_lines.append(f'<p>{line}</p>')
             elif line:
                 processed_lines.append(line)
