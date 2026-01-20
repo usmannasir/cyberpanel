@@ -909,6 +909,38 @@ def plugin_help(request, plugin_name):
             except Exception as e:
                 logging.writeToFile(f"Error reading changelog for {plugin_name}: {str(e)}")
     
+    # If no local changelog, try fetching from GitHub (non-blocking)
+    if not changelog_content:
+        try:
+            github_changelog_url = f'{GITHUB_RAW_BASE}/{plugin_name}/CHANGELOG.md'
+            try:
+                with urllib.request.urlopen(github_changelog_url, timeout=3) as response:
+                    if response.getcode() == 200:
+                        changelog_content = response.read().decode('utf-8')
+                        logging.writeToFile(f"Fetched CHANGELOG.md from GitHub for {plugin_name}")
+            except (urllib.error.HTTPError, urllib.error.URLError, Exception):
+                # Silently fail - GitHub fetch is optional
+                pass
+        except Exception:
+            # Silently fail - GitHub fetch is optional
+            pass
+    
+    # If no help content and no local README, try fetching README.md from GitHub
+    if not help_content:
+        try:
+            github_readme_url = f'{GITHUB_RAW_BASE}/{plugin_name}/README.md'
+            try:
+                with urllib.request.urlopen(github_readme_url, timeout=3) as response:
+                    if response.getcode() == 200:
+                        help_content = response.read().decode('utf-8')
+                        logging.writeToFile(f"Fetched README.md from GitHub for {plugin_name}")
+            except (urllib.error.HTTPError, urllib.error.URLError, Exception):
+                # Silently fail - GitHub fetch is optional
+                pass
+        except Exception:
+            # Silently fail - GitHub fetch is optional
+            pass
+    
     # If no help content found, create default content from meta.xml
     if not help_content:
         help_content = f"""
