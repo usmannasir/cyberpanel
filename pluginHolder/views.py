@@ -840,6 +840,137 @@ def install_from_store(request, plugin_name):
         }, status=500)
 
 def plugin_help(request, plugin_name):
-    """Plugin-specific help page"""
+    """Plugin-specific help page - shows plugin information, version history, and help content"""
     mailUtilities.checkHome()
-    return redirect('/plugins/help/')
+    
+    # Paths for the plugin
+    plugin_path = '/usr/local/CyberCP/' + plugin_name
+    meta_xml_path = os.path.join(plugin_path, 'meta.xml')
+    
+    # Check if plugin exists
+    if not os.path.exists(plugin_path) or not os.path.exists(meta_xml_path):
+        proc = httpProc(request, 'pluginHolder/plugin_not_found.html', {
+            'plugin_name': plugin_name
+        }, 'admin')
+        return proc.render()
+    
+    # Parse meta.xml
+    try:
+        plugin_meta = ElementTree.parse(meta_xml_path)
+        root = plugin_meta.getroot()
+        
+        # Extract plugin information
+        plugin_display_name = root.find('name').text if root.find('name') is not None else plugin_name
+        plugin_description = root.find('description').text if root.find('description') is not None else ''
+        plugin_version = root.find('version').text if root.find('version') is not None else 'Unknown'
+        plugin_author = root.find('author').text if root.find('author') is not None else 'Unknown'
+        plugin_type = root.find('type').text if root.find('type') is not None else 'Plugin'
+        
+        # Check if plugin is installed
+        installed = os.path.exists(plugin_path)
+        
+    except Exception as e:
+        logging.writeToFile(f"Error parsing meta.xml for {plugin_name}: {str(e)}")
+        proc = httpProc(request, 'pluginHolder/plugin_not_found.html', {
+            'plugin_name': plugin_name
+        }, 'admin')
+        return proc.render()
+    
+    # Look for help content files (README.md, CHANGELOG.md, HELP.md, etc.)
+    help_content = ''
+    changelog_content = ''
+    
+    # Check for README.md or HELP.md
+    help_files = ['HELP.md', 'README.md', 'docs/HELP.md', 'docs/README.md']
+    help_file_path = None
+    for help_file in help_files:
+        potential_path = os.path.join(plugin_path, help_file)
+        if os.path.exists(potential_path):
+            help_file_path = potential_path
+            break
+    
+    if help_file_path:
+        try:
+            with open(help_file_path, 'r', encoding='utf-8') as f:
+                help_content = f.read()
+        except Exception as e:
+            logging.writeToFile(f"Error reading help file for {plugin_name}: {str(e)}")
+            help_content = ''
+    
+    # Check for CHANGELOG.md
+    changelog_paths = ['CHANGELOG.md', 'changelog.md', 'CHANGELOG.txt', 'docs/CHANGELOG.md']
+    for changelog_file in changelog_paths:
+        potential_path = os.path.join(plugin_path, changelog_file)
+        if os.path.exists(potential_path):
+            try:
+                with open(potential_path, 'r', encoding='utf-8') as f:
+                    changelog_content = f.read()
+                break
+            except Exception as e:
+                logging.writeToFile(f"Error reading changelog for {plugin_name}: {str(e)}")
+    
+    # If no help content found, create default content from meta.xml
+    if not help_content:
+        help_content = f"""
+<h2>Plugin Information</h2>
+<p><strong>Name:</strong> {plugin_display_name}</p>
+<p><strong>Type:</strong> {plugin_type}</p>
+<p><strong>Version:</strong> {plugin_version}</p>
+<p><strong>Author:</strong> {plugin_author}</p>
+
+<h2>Description</h2>
+<p>{plugin_description}</p>
+
+<h2>Usage</h2>
+<p>For detailed information about this plugin, please visit the GitHub repository or check the plugin's documentation.</p>
+"""
+    else:
+        # Convert markdown to HTML (basic conversion)
+        import re
+        # Basic markdown to HTML conversion
+        help_content = re.sub(r'^### (.*?)$', r'<h3>\1</h3>', help_content, flags=re.MULTILINE)
+        help_content = re.sub(r'^## (.*?)$', r'<h2>\1</h2>', help_content, flags=re.MULTILINE)
+        help_content = re.sub(r'^# (.*?)$', r'<h1>\1</h1>', help_content, flags=re.MULTILINE)
+        help_content = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', help_content)
+        help_content = re.sub(r'\*(.*?)\*', r'<em>\1</em>', help_content)
+        help_content = re.sub(r'`([^`]+)`', r'<code>\1</code>', help_content)
+        help_content = re.sub(r'^\- (.*?)$', r'<li>\1</li>', help_content, flags=re.MULTILINE)
+        help_content = re.sub(r'^(\d+)\. (.*?)$', r'<li>\2</li>', help_content, flags=re.MULTILINE)
+        # Wrap paragraphs
+        lines = help_content.split('\n')
+        processed_lines = []
+        for line in lines:
+            line = line.strip()
+            if line and not line.startswith('<'):
+                processed_lines.append(f'<p>{line}</p>')
+            elif line:
+                processed_lines.append(line)
+        help_content = '\n'.join(processed_lines)
+    
+    # Add changelog if available
+    if changelog_content:
+        # Convert changelog markdown to HTML
+        import re
+        changelog_html = changelog_content
+        changelog_html = re.sub(r'^## (.*?)$', r'<h3>\1</h3>', changelog_html, flags=re.MULTILINE)
+        changelog_html = re.sub(r'^### (.*?)$', r'<h4>\1</h4>', changelog_html, flags=re.MULTILINE)
+        changelog_html = re.sub(r'^\- (.*?)$', r'<li>\1</li>', changelog_html, flags=re.MULTILINE)
+        changelog_html = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', changelog_html)
+        # Wrap in pre for code-like formatting
+        changelog_html = f'<div class="changelog-content"><h2>Version History</h2><pre>{changelog_html}</pre></div>'
+        help_content += changelog_html
+    
+    # Context for template
+    context = {
+        'plugin_name': plugin_display_name,
+        'plugin_name_dir': plugin_name,
+        'plugin_description': plugin_description,
+        'plugin_version': plugin_version,
+        'plugin_author': plugin_author,
+        'plugin_type': plugin_type,
+        'installed': installed,
+        'help_content': help_content,
+    }
+    
+    proc = httpProc(request, 'pluginHolder/plugin_help.html', context, 'admin')
+    return proc.render()
