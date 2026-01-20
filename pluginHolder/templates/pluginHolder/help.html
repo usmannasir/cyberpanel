@@ -437,21 +437,22 @@ def main_view(request):
         
         <h3>{% trans "Step 5: Create Templates" %}</h3>
         <p>{% trans "Templates must extend baseTemplate/index.html:" %}</p>
-        <pre><code>&lt;!-- Example template code (replace {% with HTML entities) --&gt;
-{%% extends "baseTemplate/index.html" %%}
-{%% load static %%}
-{%% load i18n %%}
+        {% verbatim %}
+        <pre><code>{% extends "baseTemplate/index.html" %}
+{% load static %}
+{% load i18n %}
 
-{%% block title %%}
-    My First Plugin - {%% trans "CyberPanel" %%}
-{%% endblock %%}
+{% block title %}
+    My First Plugin - {% trans "CyberPanel" %}
+{% endblock %}
 
-{%% block content %%}
-    &lt;div class="container"&gt;
-        &lt;h1&gt;{{ plugin_name }}&lt;/h1&gt;
-        &lt;p&gt;Version {{ version }}&lt;/p&gt;
-    &lt;/div&gt;
-{%% endblock %%}</code></pre>
+{% block content %}
+    <div class="container">
+        <h1>{{ plugin_name }}</h1>
+        <p>Version {{ version }}</p>
+    </div>
+{% endblock %}</code></pre>
+        {% endverbatim %}
         
         <div class="alert alert-info">
             <strong>{% trans "Important" %}:</strong> {% trans "Always use the @cyberpanel_login_required decorator for all views to ensure users are authenticated." %}
