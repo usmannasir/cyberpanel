@@ -817,7 +817,7 @@
             <h2 class="section-title">{% trans "Plugins" %}</h2>
             
             <!-- View Toggle (always shown at top) -->
-            <div class="view-toggle" style="{% if not plugins %}margin-top: 0;{% endif %}">
+            <div id="plugins-view-toggle" class="view-toggle" style="{% if not plugins %}margin-top: 0;{% endif %}">
                 <button class="view-btn {% if plugins %}active{% else %}{% endif %}" onclick="toggleView('grid')">
                     <i class="fas fa-th-large"></i>
                     {% trans "Grid View" %}
@@ -1148,7 +1148,9 @@ function toggleView(view) {
     const gridView = document.getElementById('gridView');
     const tableView = document.getElementById('tableView');
     const storeView = document.getElementById('storeView');
-    const viewBtns = document.querySelectorAll('.view-btn');
+    // Only select view buttons from the main view-toggle (prevent duplicates)
+    const viewToggle = document.getElementById('plugins-view-toggle');
+    const viewBtns = viewToggle ? viewToggle.querySelectorAll('.view-btn') : document.querySelectorAll('.view-btn');
     
     viewBtns.forEach(btn => btn.classList.remove('active'));
     
