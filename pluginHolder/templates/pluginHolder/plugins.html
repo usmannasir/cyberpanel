@@ -1706,6 +1706,19 @@ if (localStorage.getItem('pluginStoreNoticeDismissed') === 'true') {
 
 // Initialize view on page load
 document.addEventListener('DOMContentLoaded', function() {
+    // Remove any duplicate view-toggle divs (keep only the one with id='plugins-view-toggle')
+    const mainViewToggle = document.getElementById('plugins-view-toggle');
+    if (mainViewToggle) {
+        const allViewToggles = document.querySelectorAll('.view-toggle');
+        allViewToggles.forEach(toggle => {
+            if (toggle !== mainViewToggle && toggle.id !== 'plugins-view-toggle') {
+                // This is a duplicate, remove it
+                console.log('Removing duplicate view-toggle div');
+                toggle.remove();
+            }
+        });
+    }
+    
     // Default to grid view if plugins exist, otherwise show store
     const gridView = document.getElementById('gridView');
     const storeView = document.getElementById('storeView');
