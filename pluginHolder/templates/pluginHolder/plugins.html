@@ -816,6 +816,26 @@
         <div class="content-section">
             <h2 class="section-title">{% trans "Plugins" %}</h2>
             
+            <!-- View Toggle (always shown at top) -->
+            <div class="view-toggle" style="{% if not plugins %}margin-top: 0;{% endif %}">
+                <button class="view-btn {% if plugins %}active{% else %}{% endif %}" onclick="toggleView('grid')">
+                    <i class="fas fa-th-large"></i>
+                    {% trans "Grid View" %}
+                </button>
+                <button class="view-btn {% if not plugins %}active{% endif %}" onclick="toggleView('table')">
+                    <i class="fas fa-list"></i>
+                    {% trans "Table View" %}
+                </button>
+                <button class="view-btn {% if not plugins %}active{% endif %}" onclick="toggleView('store')">
+                    <i class="fas fa-store"></i>
+                    {% trans "CyberPanel Plugin Store" %}
+                </button>
+                <a href="/plugins/help/" class="view-btn" style="text-decoration: none;">
+                    <i class="fas fa-book"></i>
+                    {% trans "Plugin Development Guide" %}
+                </a>
+            </div>
+            
             {% if plugins %}
             <!-- Grid View -->
             <div id="gridView" class="plugins-grid">
@@ -1024,27 +1044,6 @@
                 <p class="empty-description">{% trans "You haven't installed any plugins yet. Plugins extend CyberPanel's functionality with additional features." %}</p>
             </div>
             {% endif %}
-            
-            <!-- View Toggle (always shown, even when no plugins installed) -->
-            <div class="view-toggle" style="{% if not plugins %}margin-top: 25px;{% endif %}">
-                <button class="view-btn {% if plugins %}active{% else %}{% endif %}" onclick="toggleView('grid')">
-                    <i class="fas fa-th-large"></i>
-                    {% trans "Grid View" %}
-                </button>
-                <button class="view-btn {% if not plugins %}active{% endif %}" onclick="toggleView('table')">
-                    <i class="fas fa-list"></i>
-                    {% trans "Table View" %}
-                </button>
-                <button class="view-btn {% if not plugins %}active{% endif %}" onclick="toggleView('store')">
-                    <i class="fas fa-store"></i>
-                    {% trans "CyberPanel Plugin Store" %}
-                </button>
-                <a href="/plugins/help/" class="view-btn" style="text-decoration: none;">
-                    <i class="fas fa-book"></i>
-                    {% trans "Plugin Development Guide" %}
-                </a>
-            </div>
-            
             
             <!-- CyberPanel Plugin Store (always available) -->
             <div id="storeView" style="display: {% if not plugins %}block{% else %}none{% endif %};">
