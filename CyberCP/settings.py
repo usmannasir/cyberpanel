@@ -55,7 +55,6 @@ INSTALLED_APPS = [
 
     # Apps with multiple or complex dependencies
     'emailPremium',
-    'discordWebhooks',     # Depends on mailServer
     'testPlugin',       # Test plugin
     'emailMarketing',   # Depends on websiteFunctions and loginSystem
     'cloudAPI',         # Depends on websiteFunctions
@@ -82,6 +81,15 @@ INSTALLED_APPS = [
     'highAvailability',
     #    'WebTerminal'
 ]
+
+# Add plugins that are installed (plugin installer handles adding/removing)
+# Plugins are added by plugin installer when plugins are installed
+if os.path.exists('/usr/local/CyberCP/discordWebhooks/__init__.py'):
+    INSTALLED_APPS.append('discordWebhooks')
+if os.path.exists('/usr/local/CyberCP/fail2ban/__init__.py'):
+    INSTALLED_APPS.append('fail2ban')
+if os.path.exists('/usr/local/CyberCP/pm2Manager/__init__.py'):
+    INSTALLED_APPS.append('pm2Manager')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -130,7 +138,7 @@ DATABASES = {
         'USER': 'cyberpanel',
         'PASSWORD': '1XTy1XOV0BZPnM',
         'HOST': 'localhost',
-        'PORT': ''
+        'PORT':''
     },
     'rootdb': {
         'ENGINE': 'django.db.backends.mysql',

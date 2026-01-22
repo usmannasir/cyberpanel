@@ -22,7 +22,7 @@ class VersionFetcher:
     
     # Fallback versions in case API is unavailable
     FALLBACK_VERSIONS = {
-        'phpmyadmin': '5.2.2',
+        'phpmyadmin': '5.2.3',
         'snappymail': '2.38.2'
     }
     

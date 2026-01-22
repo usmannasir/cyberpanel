@@ -342,21 +342,6 @@
                 <p class="help-text">{% trans "Choose the security level for this account" %}</p>
             </div>
 
-            <div class="form-group">
-                <label class="form-label">{% trans "Home Directory" %}</label>
-                <select ng-model="selectedHomeDirectory" class="form-control" ng-change="updateHomeDirectoryInfo()">
-                    <option value="">{% trans "Auto-select (Best Available)" %}</option>
-                    <option ng-repeat="dir in homeDirectories" value="{{dir.id}}">
-                        {{dir.name}} ({{dir.path}}) - {{dir.available_space | filesize}} available
-                    </option>
-                </select>
-                <p class="help-text">{% trans "Choose the home directory for this user's files" %}</p>
-                <div ng-show="selectedHomeDirectoryInfo" class="alert alert-info" style="margin-top: 10px;">
-                    <strong>{{selectedHomeDirectoryInfo.name}}:</strong> {{selectedHomeDirectoryInfo.description || 'No description available'}}<br>
-                    <small>Available Space: {{selectedHomeDirectoryInfo.available_space | filesize}} | Users: {{selectedHomeDirectoryInfo.user_count}}</small>
-                </div>
-            </div>
-
             <div class="form-group" style="margin-top: 2rem;">
                 <button type="button" ng-click="createUserFunc()" class="btn-primary">
                     <i class="fa fa-user-plus"></i> {% trans "Create User" %}
@@ -382,100 +367,5 @@
         </div>
       </div>
     </div>
-
-    <script>
-    app.controller('createUserCtr', function ($scope, $http, $timeout) {
-        $scope.homeDirectories = [];
-        $scope.selectedHomeDirectory = '';
-        $scope.selectedHomeDirectoryInfo = null;
-        
-        // Load home directories on page load
-        $scope.loadHomeDirectories = function() {
-            $http.post('/userManagement/getUserHomeDirectories/', {})
-                .then(function(response) {
-                    if (response.data.status === 1) {
-                        $scope.homeDirectories = response.data.directories;
-                    }
-                })
-                .catch(function(error) {
-                    console.error('Error loading home directories:', error);
-                });
-        };
-        
-        // Update home directory info when selection changes
-        $scope.updateHomeDirectoryInfo = function() {
-            if ($scope.selectedHomeDirectory) {
-                $scope.selectedHomeDirectoryInfo = $scope.homeDirectories.find(function(dir) {
-                    return dir.id == $scope.selectedHomeDirectory;
-                });
-            } else {
-                $scope.selectedHomeDirectoryInfo = null;
-            }
-        };
-        
-        // Initialize
-        $scope.loadHomeDirectories();
-        
-        // Existing controller code...
-        $scope.firstName = '';
-        $scope.lastName = '';
-        $scope.email = '';
-        $scope.userName = '';
-        $scope.password = '';
-        $scope.websitesLimits = 0;
-        $scope.selectedACL = 'user';
-        $scope.securityLevel = 'HIGH';
-        $scope.userCreated = true;
-        $scope.userCreationFailed = true;
-        $scope.couldNotConnect = true;
-        $scope.combinedLength = true;
-        $scope.generatedPasswordView = true;
-        $scope.errorMessage = '';
-
-        $scope.generatePassword = function () {
-            $scope.password = Math.random().toString(36).slice(-10);
-            $scope.generatedPasswordView = false;
-        };
-
-        $scope.usePassword = function () {
-            $scope.generatedPasswordView = true;
-        };
-
-        $scope.createUserFunc = function () {
-            $scope.userCreated = true;
-            $scope.userCreationFailed = true;
-            $scope.couldNotConnect = true;
-            $scope.combinedLength = true;
-
-            if ($scope.createUser.$valid) {
-                if ($scope.firstName.length + $scope.lastName.length > 20) {
-                    $scope.combinedLength = false;
-                    return;
-                }
-
-                $http.post('/userManagement/submitUserCreation/', {
-                    'firstName': $scope.firstName,
-                    'lastName': $scope.lastName,
-                    'email': $scope.email,
-                    'userName': $scope.userName,
-                    'password': $scope.password,
-                    'websitesLimit': $scope.websitesLimits,
-                    'selectedACL': $scope.selectedACL,
-                    'securityLevel': $scope.securityLevel,
-                    'selectedHomeDirectory': $scope.selectedHomeDirectory
-                }).then(function (data) {
-                    if (data.data.createStatus === 1) {
-                        $scope.userCreated = false;
-                    } else {
-                        $scope.userCreationFailed = false;
-                        $scope.errorMessage = data.data.error_message;
-                    }
-                }, function (data) {
-                    $scope.couldNotConnect = false;
-                });
-            }
-        };
-    });
-    </script>
 
 {% endblock %}

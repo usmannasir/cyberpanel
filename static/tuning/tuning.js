@@ -16,6 +16,14 @@ $("#tunePHPLoading").hide();
 
 app.controller('litespeedTuning', function($scope,$http) {
 
+                // Initialize with default values to prevent type errors
+                $scope.maxConnections = 0;
+                $scope.maxSSLConnections = 0;
+                $scope.connectionTimeOut = 0;
+                $scope.keepAliveTimeOut = 0;
+                $scope.cacheSizeInMemory = 0;
+                $scope.gzipStatus = "Loading...";
+                $scope.gzipCompression = "Enable";
 
                 url = "/tuning/tuneLitespeed";
 
@@ -41,11 +49,11 @@ app.controller('litespeedTuning', function($scope,$http) {
 
                         var currentTuningData = JSON.parse(response.data.tuning_data);
 
-                        $scope.maxConnections = currentTuningData.maxConnections;
-                        $scope.maxSSLConnections = currentTuningData.maxSSLConnections;
-                        $scope.connectionTimeOut = currentTuningData.connTimeout;
-                        $scope.keepAliveTimeOut = currentTuningData.keepAliveTimeout;
-                        $scope.cacheSizeInMemory = currentTuningData.totalInMemCacheSize;
+                        $scope.maxConnections = parseInt(currentTuningData.maxConnections) || 0;
+                        $scope.maxSSLConnections = parseInt(currentTuningData.maxSSLConnections) || 0;
+                        $scope.connectionTimeOut = parseInt(currentTuningData.connTimeout) || 0;
+                        $scope.keepAliveTimeOut = parseInt(currentTuningData.keepAliveTimeout) || 0;
+                        $scope.cacheSizeInMemory = parseInt(currentTuningData.totalInMemCacheSize) || 0;
 
                         if(currentTuningData.enableGzipCompress == 1)
                             $scope.gzipStatus = "Enable"
@@ -70,11 +78,11 @@ app.controller('litespeedTuning', function($scope,$http) {
                     $("#tuningLoading").fadeIn();
                     $('#tuned').hide();
 
-                    var maxConn = $scope.maxConnections;
-                    var maxSSLConn = $scope.maxSSLConnections;
-                    var connTime = $scope.connectionTimeOut;
-                    var keepAlive = $scope.keepAliveTimeOut;
-                    var inMemCache = $scope.cacheSizeInMemory;
+                    var maxConn = parseInt($scope.maxConnections) || 0;
+                    var maxSSLConn = parseInt($scope.maxSSLConnections) || 0;
+                    var connTime = parseInt($scope.connectionTimeOut) || 0;
+                    var keepAlive = parseInt($scope.keepAliveTimeOut) || 0;
+                    var inMemCache = parseInt($scope.cacheSizeInMemory) || 0;
                     var gzipCompression = $scope.gzipCompression;
 
                     url = "/tuning/tuneLitespeed";
@@ -155,80 +163,19 @@ $('#canNotTune').hide();
 app.controller('tunePHP', function($scope,$http) {
 
                 $scope.hideDetails = true;
-
-
-                $scope.fetchPHPDetails = function() {
-
-                    $("#tunePHPLoading").fadeIn();
-
-
-                    url = "/tuning/tunePHP";
-
-
-                    var data = {
-                        status: "fetch",
-                        domainSelection: $scope.domainSelection,
-                    };
-
-                    var config = {
-                        headers: {
-                            'X-CSRFToken': getCookie('csrftoken')
-                        }
-                    };
-
-                    $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
-
-
-                    function ListInitialDatas(response) {
-
-
-                        if (response.data.fetch_status == 1) {
-
-                            $("#tunePHPLoading").hide();
-                            $('#canNotFetch').hide();
-                            $('#successfullyTuned').hide();
-                            $('#canNotTune').hide();
-
-
-                            $('#successfullyFetched').fadeIn();
-
-                            var phpData = JSON.parse(response.data.tuning_data);
-
-                            $scope.initTimeout = Number(phpData.initTimeout);
-                            $scope.maxConns = Number(phpData.maxConns);
-                            $scope.memSoftLimit = phpData.memSoftLimit;
-                            $scope.memHardLimit = phpData.memHardLimit;
-                            $scope.procSoftLimit = Number(phpData.procSoftLimit);
-                            $scope.procHardLimit = Number(phpData.procHardLimit);
-
-
-                            if (phpData.persistConn == "1")
-                                $scope.persistStatus = "Enabled";
-                            else
-                                $scope.persistStatus = "Disabled";
-
-                            $scope.hideDetails = false;
-
-
-                        }
-
-
-                    }
-
-                    function cantLoadInitialDatas(response) {
-                        $errMessage = response.data.error_message;
-                        $('#canNotFetch').fadeIn();
-                        $('#successfullyFetched').hide();
-                        $('#successfullyTuned').hide();
-                        $('#canNotTune').hide();
-                    }
-                };
+                
+                // Initialize persistConn with a default value
+                $scope.persistConn = 'Disable';
 
 
 
                 $scope.fetchPHPDetails = function(){
-
-
+                    
+                    // Check if domainSelection is valid before making the API call
+                    if (!$scope.domainSelection || $scope.domainSelection === '') {
+                        // Don't make the API call if no domain is selected
+                        return;
+                    }
 
                     $("#tunePHPLoading").fadeIn();
 
@@ -274,10 +221,14 @@ app.controller('tunePHP', function($scope,$http) {
                             $scope.procHardLimit = Number(phpData.procHardLimit);
 
 
-                            if (phpData.persistConn == "1")
+                            if (phpData.persistConn == "1") {
+                                $scope.persistConn = "Enable";
                                 $scope.persistStatus = "Enabled";
-                            else
+                            }
+                            else {
+                                $scope.persistConn = "Disable";
                                 $scope.persistStatus = "Disabled";
+                            }
 
                             $scope.hideDetails = false;
 
@@ -288,7 +239,8 @@ app.controller('tunePHP', function($scope,$http) {
                     }
 
                     function cantLoadInitialDatas(response) {
-                        $errMessage = response.data.error_message;
+                        $scope.errorMessage = response.data.error_message;
+                        $("#tunePHPLoading").hide();
                         $('#canNotFetch').fadeIn();
                         $('#successfullyFetched').hide();
                         $('#successfullyTuned').hide();
