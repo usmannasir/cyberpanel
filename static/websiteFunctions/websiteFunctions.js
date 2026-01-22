@@ -5,7 +5,14 @@
 // Ensure app is available (get existing module or create reference)
 // This ensures compatibility with the global app variable from system-status.js
 if (typeof app === 'undefined') {
-    app = angular.module('CyberCP');
+    // First try to get window.app (set by system-status.js)
+    if (typeof window !== 'undefined' && typeof window.app !== 'undefined') {
+        app = window.app;
+    } else {
+        // If window.app doesn't exist, get the existing CyberCP module
+        // This works because system-status.js should have already created it
+        app = angular.module('CyberCP');
+    }
 }
 
 // Global function for deleting staging sites
