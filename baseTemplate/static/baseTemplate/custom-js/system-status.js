@@ -35,7 +35,9 @@ function randomPassword(length) {
 
 /* Java script code to monitor system status */
 
-var app = angular.module('CyberCP', []);
+// Create global app reference for CyberCP module so other scripts can access it
+window.app = angular.module('CyberCP', []);
+var app = window.app; // Local reference for this file
 
 var globalScope;
 
