@@ -2,6 +2,12 @@
  * Created by usman on 7/26/17.
  */
 
+// Ensure app is available (get existing module or create reference)
+// This ensures compatibility with the global app variable from system-status.js
+if (typeof app === 'undefined') {
+    app = angular.module('CyberCP');
+}
+
 // Global function for deleting staging sites
 function deleteStagingGlobal(stagingId) {
     if (confirm("Are you sure you want to delete this staging site? This action cannot be undone.")) {

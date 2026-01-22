@@ -35,27 +35,9 @@ function randomPassword(length) {
 
 /* Java script code to monitor system status */
 
-var app = angular.module('CyberCP', []);
-
-// Filesize filter for formatting bytes to human-readable format
-app.filter('filesize', function() {
-    return function(bytes) {
-        if (bytes === null || bytes === undefined || isNaN(bytes)) {
-            return '0 B';
-        }
-        bytes = parseInt(bytes, 10);
-        if (bytes === 0) {
-            return '0 B';
-        }
-        var k = 1024;
-        var sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-        var i = Math.floor(Math.log(bytes) / Math.log(k));
-        var size = (bytes / Math.pow(k, i)).toFixed(2);
-        // Remove trailing zeros
-        size = parseFloat(size).toString();
-        return size + ' ' + sizes[i];
-    };
-});
+// Create global app reference for CyberCP module so other scripts can access it
+window.app = angular.module('CyberCP', []);
+var app = window.app; // Local reference for this file
 
 var globalScope;
 
@@ -138,18 +120,9 @@ function getWebsiteName(domain) {
 
 app.controller('systemStatusInfo', function ($scope, $http, $timeout) {
 
-    // Initialize all variables with defaults
     $scope.uptimeLoaded = false;
     $scope.uptime = 'Loading...';
-    $scope.cpuUsage = 0;
-    $scope.ramUsage = 0;
-    $scope.diskUsage = 0;
-    $scope.cpuCores = 0;
-    $scope.ramTotalMB = 0;
-    $scope.diskTotalGB = 0;
-    $scope.diskFreeGB = 0;
     
-    // Load data immediately
     getStuff();
     
     $scope.getSystemStatus = function() {
@@ -164,57 +137,31 @@ app.controller('systemStatusInfo', function ($scope, $http, $timeout) {
 
 
         function ListInitialData(response) {
-            // Ensure we have valid data
-            if (!response || !response.data) {
-                console.error('Invalid response from getSystemStatus');
-                cantLoadInitialData(response);
-                return;
-            }
 
-            // Set all values with defaults if missing
-            $scope.cpuUsage = response.data.cpuUsage || 0;
-            $scope.ramUsage = response.data.ramUsage || 0;
-            $scope.diskUsage = response.data.diskUsage || 0;
+            $scope.cpuUsage = response.data.cpuUsage;
+            $scope.ramUsage = response.data.ramUsage;
+            $scope.diskUsage = response.data.diskUsage;
             
             // Total system information
-            $scope.cpuCores = response.data.cpuCores || 0;
-            $scope.ramTotalMB = response.data.ramTotalMB || 0;
-            $scope.diskTotalGB = response.data.diskTotalGB || 0;
-            $scope.diskFreeGB = response.data.diskFreeGB || 0;
+            $scope.cpuCores = response.data.cpuCores;
+            $scope.ramTotalMB = response.data.ramTotalMB;
+            $scope.diskTotalGB = response.data.diskTotalGB;
+            $scope.diskFreeGB = response.data.diskFreeGB;
             
             // Get uptime if available
             if (response.data.uptime) {
                 $scope.uptime = response.data.uptime;
                 $scope.uptimeLoaded = true;
             } else {
-                // Set default if uptime not available
                 $scope.uptime = 'N/A';
                 $scope.uptimeLoaded = true;
             }
-            
-            // Force AngularJS to update the view
-            if (!$scope.$$phase && !$scope.$root.$$phase) {
-                $scope.$apply();
-            }
+
         }
 
         function cantLoadInitialData(response) {
-            console.error('Failed to load system status:', response);
-            // Set default values
-            $scope.cpuUsage = 0;
-            $scope.ramUsage = 0;
-            $scope.diskUsage = 0;
-            $scope.cpuCores = 0;
-            $scope.ramTotalMB = 0;
-            $scope.diskTotalGB = 0;
-            $scope.diskFreeGB = 0;
             $scope.uptime = 'Unavailable';
             $scope.uptimeLoaded = true;
-            
-            // Force AngularJS to update the view
-            if (!$scope.$$phase && !$scope.$root.$$phase) {
-                $scope.$apply();
-            }
         }
 
         $timeout(getStuff, 60000); // Update every minute
@@ -954,6 +901,8 @@ app.controller('OnboardingCP', function ($scope, $http, $timeout, $window) {
 });
 
 app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
+    console.log('dashboardStatsController initialized');
+    
     // Card values
     $scope.totalUsers = 0;
     $scope.totalSites = 0;
@@ -965,6 +914,126 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     // Hide system charts for non-admin users
     $scope.hideSystemCharts = false;
 
+    // Pagination settings - 10 entries per page
+    var ITEMS_PER_PAGE = 10;
+    
+    // Pagination state for each section
+    $scope.pagination = {
+        sshLogins: { currentPage: 1, itemsPerPage: ITEMS_PER_PAGE },
+        sshLogs: { currentPage: 1, itemsPerPage: ITEMS_PER_PAGE },
+        topProcesses: { currentPage: 1, itemsPerPage: ITEMS_PER_PAGE },
+        traffic: { currentPage: 1, itemsPerPage: ITEMS_PER_PAGE },
+        diskIO: { currentPage: 1, itemsPerPage: ITEMS_PER_PAGE },
+        cpuUsage: { currentPage: 1, itemsPerPage: ITEMS_PER_PAGE }
+    };
+    
+    // Input fields for "go to page"
+    $scope.gotoPageInput = {
+        sshLogins: 1,
+        sshLogs: 1,
+        topProcesses: 1,
+        traffic: 1,
+        diskIO: 1,
+        cpuUsage: 1
+    };
+    
+    // Expose Math to template
+    $scope.Math = Math;
+    
+    // Pagination helper functions
+    $scope.getTotalPages = function(section) {
+        var items = [];
+        if (section === 'sshLogins') items = $scope.sshLogins || [];
+        else if (section === 'sshLogs') items = $scope.sshLogs || [];
+        else if (section === 'topProcesses') items = $scope.topProcesses || [];
+        else if (section === 'traffic') items = $scope.trafficLabels || [];
+        else if (section === 'diskIO') items = $scope.diskLabels || [];
+        else if (section === 'cpuUsage') items = $scope.cpuLabels || [];
+        return Math.max(1, Math.ceil((items.length || 0) / ITEMS_PER_PAGE));
+    };
+    
+    $scope.getPaginatedItems = function(section) {
+        // Initialize pagination if it doesn't exist
+        if (!$scope.pagination) {
+            $scope.pagination = {};
+        }
+        if (!$scope.pagination[section]) {
+            $scope.pagination[section] = { currentPage: 1, itemsPerPage: ITEMS_PER_PAGE };
+            console.log('[getPaginatedItems] Initialized pagination for section:', section);
+        }
+        
+        var items = [];
+        if (section === 'sshLogins') items = $scope.sshLogins || [];
+        else if (section === 'sshLogs') items = $scope.sshLogs || [];
+        else if (section === 'topProcesses') items = $scope.topProcesses || [];
+        else if (section === 'traffic') items = $scope.trafficLabels || [];
+        else if (section === 'diskIO') items = $scope.diskLabels || [];
+        else if (section === 'cpuUsage') items = $scope.cpuLabels || [];
+        
+        // Ensure currentPage is a valid number
+        var currentPage = parseInt($scope.pagination[section].currentPage) || 1;
+        if (currentPage < 1 || isNaN(currentPage)) currentPage = 1;
+        
+        var start = (currentPage - 1) * ITEMS_PER_PAGE;
+        var end = start + ITEMS_PER_PAGE;
+        
+        var result = items.slice(start, end);
+        console.log('[getPaginatedItems] Section:', section, 'Total items:', items.length, 'Page:', currentPage, 'Start:', start, 'End:', end, 'Paginated count:', result.length);
+        
+        if (result.length > 0) {
+            console.log('[getPaginatedItems] First item:', result[0]);
+        } else if (items.length > 0) {
+            console.warn('[getPaginatedItems] No items returned but total items > 0. Items:', items.length, 'Page:', currentPage, 'Start:', start, 'End:', end);
+        }
+        
+        return result;
+    };
+    
+    $scope.goToPage = function(section, page) {
+        var totalPages = $scope.getTotalPages(section);
+        if (page >= 1 && page <= totalPages) {
+            $scope.pagination[section].currentPage = parseInt(page);
+            $scope.gotoPageInput[section] = parseInt(page);
+        }
+    };
+    
+    $scope.nextPage = function(section) {
+        var totalPages = $scope.getTotalPages(section);
+        if ($scope.pagination[section].currentPage < totalPages) {
+            $scope.pagination[section].currentPage++;
+            $scope.gotoPageInput[section] = $scope.pagination[section].currentPage;
+        }
+    };
+    
+    $scope.prevPage = function(section) {
+        if ($scope.pagination[section].currentPage > 1) {
+            $scope.pagination[section].currentPage--;
+            $scope.gotoPageInput[section] = $scope.pagination[section].currentPage;
+        }
+    };
+    
+    $scope.getPageNumbers = function(section) {
+        var totalPages = $scope.getTotalPages(section);
+        var current = $scope.pagination[section].currentPage;
+        var pages = [];
+        var maxVisible = 5; // Show max 5 page numbers
+        
+        if (totalPages <= maxVisible) {
+            for (var i = 1; i <= totalPages; i++) {
+                pages.push(i);
+            }
+        } else {
+            if (current <= 3) {
+                for (var i = 1; i <= 5; i++) pages.push(i);
+            } else if (current >= totalPages - 2) {
+                for (var i = totalPages - 4; i <= totalPages; i++) pages.push(i);
+            } else {
+                for (var i = current - 2; i <= current + 2; i++) pages.push(i);
+            }
+        }
+        return pages;
+    };
+
     // Top Processes
     $scope.topProcesses = [];
     $scope.loadingTopProcesses = true;
@@ -975,6 +1044,9 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
             $scope.loadingTopProcesses = false;
             if (response.data && response.data.status === 1 && response.data.processes) {
                 $scope.topProcesses = response.data.processes;
+                // Reset to first page when data refreshes
+                $scope.pagination.topProcesses.currentPage = 1;
+                $scope.gotoPageInput.topProcesses = 1;
             } else {
                 $scope.topProcesses = [];
             }
@@ -994,14 +1066,34 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
             $scope.loadingSSHLogins = false;
             if (response.data && response.data.logins) {
                 $scope.sshLogins = response.data.logins;
+                console.log('[refreshSSHLogins] Loaded', $scope.sshLogins.length, 'SSH logins');
+                // Ensure pagination is initialized
+                if (!$scope.pagination) {
+                    $scope.pagination = {};
+                }
+                if (!$scope.pagination.sshLogins) {
+                    $scope.pagination.sshLogins = { currentPage: 1, itemsPerPage: ITEMS_PER_PAGE };
+                }
+                // Reset to first page when data refreshes
+                $scope.pagination.sshLogins.currentPage = 1;
+                if (!$scope.gotoPageInput) {
+                    $scope.gotoPageInput = {};
+                }
+                $scope.gotoPageInput.sshLogins = 1;
+                
+                // Debug: Log paginated items
+                var paginated = $scope.getPaginatedItems('sshLogins');
+                console.log('[refreshSSHLogins] Paginated items count:', paginated.length, 'Items:', paginated);
+                
                 // Debug: Log first login to see structure
                 if ($scope.sshLogins.length > 0) {
-                    console.log('First SSH login object:', $scope.sshLogins[0]);
-                    console.log('IP field:', $scope.sshLogins[0].ip);
-                    console.log('All keys:', Object.keys($scope.sshLogins[0]));
+                    console.log('[refreshSSHLogins] First SSH login object:', $scope.sshLogins[0]);
+                    console.log('[refreshSSHLogins] IP field:', $scope.sshLogins[0].ip);
+                    console.log('[refreshSSHLogins] All keys:', Object.keys($scope.sshLogins[0]));
                 }
             } else {
                 $scope.sshLogins = [];
+                console.log('[refreshSSHLogins] No logins found in response');
             }
         }, function (err) {
             $scope.loadingSSHLogins = false;
@@ -1022,6 +1114,9 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
             $scope.loadingSSHLogs = false;
             if (response.data && response.data.logs) {
                 $scope.sshLogs = response.data.logs;
+                // Reset to first page when data refreshes
+                $scope.pagination.sshLogs.currentPage = 1;
+                $scope.gotoPageInput.sshLogs = 1;
                 // Analyze logs for security issues
                 $scope.analyzeSSHSecurity();
             } else {
@@ -1129,53 +1224,127 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
 
     // Chart.js chart objects
     var trafficChart, diskIOChart, cpuChart;
-    // Data arrays for live graphs
-    var trafficLabels = [], rxData = [], txData = [];
-    var diskLabels = [], readData = [], writeData = [];
-    var cpuLabels = [], cpuUsageData = [];
+    // Data arrays for live graphs - expose to scope for pagination
+    $scope.trafficLabels = [];
+    $scope.rxData = [];
+    $scope.txData = [];
+    $scope.diskLabels = [];
+    $scope.readData = [];
+    $scope.writeData = [];
+    $scope.cpuLabels = [];
+    $scope.cpuUsageData = [];
+    // Internal references for backward compatibility
+    var trafficLabels = $scope.trafficLabels;
+    var rxData = $scope.rxData;
+    var txData = $scope.txData;
+    var diskLabels = $scope.diskLabels;
+    var readData = $scope.readData;
+    var writeData = $scope.writeData;
+    var cpuLabels = $scope.cpuLabels;
+    var cpuUsageData = $scope.cpuUsageData;
     // For rate calculation
     var lastRx = null, lastTx = null, lastDiskRead = null, lastDiskWrite = null, lastCPU = null;
     var lastCPUTimes = null;
     var pollInterval = 2000; // ms
     var maxPoints = 30;
+    
+    // Watch pagination changes and update charts accordingly
+    $scope.$watch('pagination.traffic.currentPage', function() {
+        updateTrafficChartData();
+    });
+    $scope.$watch('pagination.diskIO.currentPage', function() {
+        updateDiskIOChartData();
+    });
+    $scope.$watch('pagination.cpuUsage.currentPage', function() {
+        updateCPUChartData();
+    });
+    
+    function updateTrafficChartData() {
+        if (!trafficChart || !$scope.trafficLabels || $scope.trafficLabels.length === 0) return;
+        var startIdx = ($scope.pagination.traffic.currentPage - 1) * ITEMS_PER_PAGE;
+        var endIdx = startIdx + ITEMS_PER_PAGE;
+        
+        trafficChart.data.labels = $scope.trafficLabels.slice(startIdx, endIdx);
+        trafficChart.data.datasets[0].data = $scope.rxData.slice(startIdx, endIdx);
+        trafficChart.data.datasets[1].data = $scope.txData.slice(startIdx, endIdx);
+        trafficChart.update();
+    }
+    
+    function updateDiskIOChartData() {
+        if (!diskIOChart || !$scope.diskLabels || $scope.diskLabels.length === 0) return;
+        var startIdx = ($scope.pagination.diskIO.currentPage - 1) * ITEMS_PER_PAGE;
+        var endIdx = startIdx + ITEMS_PER_PAGE;
+        
+        diskIOChart.data.labels = $scope.diskLabels.slice(startIdx, endIdx);
+        diskIOChart.data.datasets[0].data = $scope.readData.slice(startIdx, endIdx);
+        diskIOChart.data.datasets[1].data = $scope.writeData.slice(startIdx, endIdx);
+        diskIOChart.update();
+    }
+    
+    function updateCPUChartData() {
+        if (!cpuChart || !$scope.cpuLabels || $scope.cpuLabels.length === 0) return;
+        var startIdx = ($scope.pagination.cpuUsage.currentPage - 1) * ITEMS_PER_PAGE;
+        var endIdx = startIdx + ITEMS_PER_PAGE;
+        
+        cpuChart.data.labels = $scope.cpuLabels.slice(startIdx, endIdx);
+        cpuChart.data.datasets[0].data = $scope.cpuUsageData.slice(startIdx, endIdx);
+        cpuChart.update();
+    }
 
     function pollDashboardStats() {
-        $http.get('/base/getDashboardStats').then(function(response) {
-            if (response && response.data && response.data.status === 1) {
+        console.log('[dashboardStatsController] pollDashboardStats() called');
+        console.log('[dashboardStatsController] Fetching dashboard stats from /base/getDashboardStats');
+        $http({
+            method: 'GET',
+            url: '/base/getDashboardStats',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        }).then(function(response) {
+            console.log('[dashboardStatsController] pollDashboardStats SUCCESS callback called');
+            console.log('[dashboardStatsController] Dashboard stats response received:', response);
+            console.log('[dashboardStatsController] Response status:', response.status);
+            console.log('[dashboardStatsController] Response data:', response.data);
+            if (response.data && response.data.status === 1) {
                 $scope.totalUsers = response.data.total_users || 0;
                 $scope.totalSites = response.data.total_sites || 0;
                 $scope.totalWPSites = response.data.total_wp_sites || 0;
                 $scope.totalDBs = response.data.total_dbs || 0;
                 $scope.totalEmails = response.data.total_emails || 0;
                 $scope.totalFTPUsers = response.data.total_ftp_users || 0;
+                console.log('[dashboardStatsController] Dashboard stats updated:', {
+                    users: $scope.totalUsers,
+                    sites: $scope.totalSites,
+                    wp: $scope.totalWPSites,
+                    dbs: $scope.totalDBs,
+                    emails: $scope.totalEmails,
+                    ftp: $scope.totalFTPUsers
+                });
+                // No $apply needed - $http already triggers digest cycle
             } else {
-                // Set defaults if status is not 1
-                $scope.totalUsers = 0;
-                $scope.totalSites = 0;
-                $scope.totalWPSites = 0;
-                $scope.totalDBs = 0;
-                $scope.totalEmails = 0;
-                $scope.totalFTPUsers = 0;
-            }
-            
-            // Force AngularJS to update the view
-            if (!$scope.$$phase && !$scope.$root.$$phase) {
-                $scope.$apply();
+                // Set default values if request fails
+                console.error('[dashboardStatsController] Failed to load dashboard stats - invalid response:', response.data);
+                $scope.$apply(function() {
+                    $scope.totalUsers = 0;
+                    $scope.totalSites = 0;
+                    $scope.totalWPSites = 0;
+                    $scope.totalDBs = 0;
+                    $scope.totalEmails = 0;
+                    $scope.totalFTPUsers = 0;
+                });
             }
         }, function(error) {
-            console.error('Error loading dashboard stats:', error);
-            // Set defaults on error
+            console.error('[dashboardStatsController] Error loading dashboard stats:', error);
+            console.error('[dashboardStatsController] Error status:', error.status);
+            console.error('[dashboardStatsController] Error data:', error.data);
+            // Set default values on error (no $apply needed - error callback also triggers digest)
             $scope.totalUsers = 0;
             $scope.totalSites = 0;
             $scope.totalWPSites = 0;
             $scope.totalDBs = 0;
             $scope.totalEmails = 0;
             $scope.totalFTPUsers = 0;
-            
-            // Force AngularJS to update the view
-            if (!$scope.$$phase && !$scope.$root.$$phase) {
-                $scope.$apply();
-            }
         });
     }
 
@@ -1598,15 +1767,12 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
         });
     }
 
-    // Immediately poll dashboard stats on controller init (no delay)
+    // Initial setup - fetch stats immediately
     pollDashboardStats();
-    
-    // Immediately load activity board data
+    $scope.refreshTopProcesses();
     $scope.refreshSSHLogins();
     $scope.refreshSSHLogs();
-    $scope.refreshTopProcesses();
     
-    // Initial setup
     $timeout(function() {
         // Check if user is admin before setting up charts
         $http.get('/base/getAdminStatus').then(function(response) {
@@ -1620,11 +1786,7 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
             $scope.hideSystemCharts = true;
         });
         
-        // Poll other stats
-        pollTraffic();
-        pollDiskIO();
-        pollCPU();
-        // Start polling
+        // Start polling for all stats
         function pollAll() {
             pollDashboardStats();
             pollTraffic();
