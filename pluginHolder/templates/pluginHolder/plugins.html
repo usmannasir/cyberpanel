@@ -817,26 +817,6 @@
             <h2 class="section-title">{% trans "Plugins" %}</h2>
             
             {% if plugins %}
-            <!-- View Toggle -->
-            <div class="view-toggle">
-                <button class="view-btn active" onclick="toggleView('grid')">
-                    <i class="fas fa-th-large"></i>
-                    {% trans "Grid View" %}
-                </button>
-                <button class="view-btn" onclick="toggleView('table')">
-                    <i class="fas fa-list"></i>
-                    {% trans "Table View" %}
-                </button>
-                <button class="view-btn" onclick="toggleView('store')">
-                    <i class="fas fa-store"></i>
-                    {% trans "CyberPanel Plugin Store" %}
-                </button>
-                <a href="/plugins/help/" class="view-btn" style="text-decoration: none;">
-                    <i class="fas fa-book"></i>
-                    {% trans "Plugin Development Guide" %}
-                </a>
-            </div>
-            
             <!-- Grid View -->
             <div id="gridView" class="plugins-grid">
                 {% for plugin in plugins %}
@@ -1064,6 +1044,7 @@
                     {% trans "Plugin Development Guide" %}
                 </a>
             </div>
+            
             
             <!-- CyberPanel Plugin Store (always available) -->
             <div id="storeView" style="display: {% if not plugins %}block{% else %}none{% endif %};">
