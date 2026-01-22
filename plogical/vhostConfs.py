@@ -204,7 +204,7 @@ context /.well-known/acme-challenge {
     SuexecUserGroup {externalApp} {externalApp}
     DocumentRoot {path}
     Alias /.well-known/acme-challenge /usr/local/lsws/Example/html/.well-known/acme-challenge
-    CustomLog /home/{virtualHostName}/logs/{virtualHostName}.access_log combined
+    CustomLog /home/{masterDomain}/logs/{virtualHostName}.access_log combined
     AddHandler application/x-httpd-php{php} .php .php7 .phtml
     <IfModule LiteSpeed>
         CacheRoot lscache
@@ -474,7 +474,7 @@ pm.max_spare_servers = {pmMaxSpareServers}
     "phpVersion": {php},
     "custom_conf": {
     ServerAdmin {administratorEmail}
-    CustomLog /home/{virtualHostName}/logs/{virtualHostName}.access_log combined
+    CustomLog /home/{masterDomain}/logs/{virtualHostName}.access_log combined
     <IfModule LiteSpeed>
         CacheRoot /home/{masterDomain}/lscache
     </IfModule>
@@ -489,7 +489,7 @@ pm.max_spare_servers = {pmMaxSpareServers}
     "phpVersion": {php},
     "custom_conf": {
     ServerAdmin {administratorEmail}
-    CustomLog /home/{virtualHostName}/logs/{virtualHostName}.access_log combined
+    CustomLog /home/{masterDomain}/logs/{virtualHostName}.access_log combined
     <IfModule LiteSpeed>
         CacheRoot /home/{masterDomain}/lscache
     </IfModule>

@@ -15,11 +15,15 @@ Including another URLconf
 """
 from django.urls import path, re_path, include
 from django.contrib import admin
+from django.conf import settings
+from django.conf.urls.static import static
+from django.views.static import serve
 from firewall import views as firewall_views
 
 urlpatterns = [
+    # Serve static files first (before catch-all routes)
+    re_path(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
     path('base/', include('baseTemplate.urls')),
-    path('', include('loginSystem.urls')),
     path('imunifyav/', firewall_views.imunifyAV, name='imunifyav_root'),
     path('ImunifyAV/', firewall_views.imunifyAV, name='imunifyav_root_legacy'),
     path('packages/', include('packages.urls')),
@@ -40,8 +44,8 @@ urlpatterns = [
     path('filemanager/', include('filemanager.urls')),
     path('emailPremium/', include('emailPremium.urls')),
     path('manageservices/', include('manageServices.urls')),
-    path('plugins/testPlugin/', include('testPlugin.urls')),        path('plugins/discordWebhooks/',include('discordWebhooks.urls')),
-path('plugins/', include('pluginHolder.urls')),
+    path('plugins/testPlugin/', include('testPlugin.urls')),
+    path('plugins/', include('pluginHolder.urls')),
     path('emailMarketing/', include('emailMarketing.urls')),
     path('cloudAPI/', include('cloudAPI.urls')),
     path('docker/', include('dockerManager.urls')),
@@ -50,4 +54,5 @@ path('plugins/', include('pluginHolder.urls')),
     path('IncrementalBackups/', include('IncBackups.urls')),
     path('aiscanner/', include('aiScanner.urls')),
     # path('Terminal/', include('WebTerminal.urls')),
+    path('', include('loginSystem.urls')),
 ]

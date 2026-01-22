@@ -213,6 +213,20 @@ def getSystemStatus(request):
             json_data = json.dumps(user_data)
             return HttpResponse(json_data)
             
+    except KeyError as e:
+        logging.CyberCPLogFileWriter.writeToFile(f'[getSystemStatus] KeyError - No session userID: {str(e)}')
+        # Return default values on error
+        default_data = {
+            'cpuUsage': 0,
+            'ramUsage': 0,
+            'diskUsage': 0,
+            'cpuCores': 2,
+            'ramTotalMB': 4096,
+            'diskTotalGB': 100,
+            'diskFreeGB': 100,
+            'uptime': 'N/A'
+        }
+        return HttpResponse(json.dumps(default_data))
     except Exception as e:
         # Return default values on error
         default_data = {

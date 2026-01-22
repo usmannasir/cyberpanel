@@ -930,7 +930,7 @@ app.controller('topProcesses', function ($scope, $http, $timeout) {
                 $scope.stoppedProcesses = response.data.stoppedProcesses;
                 $scope.zombieProcesses = response.data.zombieProcesses;
 
-                $timeout($scope.topProcessesStatus, 3000);
+                // Auto-refresh removed - user can manually refresh using the button
             } else {
                 new PNotify({
                     title: 'Operation Failed!',
