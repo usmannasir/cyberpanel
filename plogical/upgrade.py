@@ -1185,7 +1185,7 @@ module cyberpanel_ols {
                 pass
 
             # Try to fetch latest phpMyAdmin version from GitHub
-            phpmyadmin_version = '5.2.2'  # Fallback version
+            phpmyadmin_version = '5.2.3'  # Fallback version
             try:
                 from plogical.versionFetcher import get_latest_phpmyadmin_version
                 latest_version = get_latest_phpmyadmin_version()
