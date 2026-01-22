@@ -861,6 +861,12 @@
                             <span class="plugin-type">{{ plugin.type }}</span>
                                 <span class="plugin-version-number">v{{ plugin.version }}</span>
                             </div>
+                            {% if plugin.author %}
+                            <div class="plugin-author" style="margin-top: 8px; font-size: 13px; color: var(--text-secondary, #64748b);">
+                                <i class="fas fa-user" style="margin-right: 5px;"></i>
+                                <span>{% trans "Author:" %} {{ plugin.author }}</span>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                     
@@ -937,6 +943,7 @@
                         <thead>
                             <tr>
                                 <th>{% trans "Plugin Name" %}</th>
+                                <th>{% trans "Author" %}</th>
                                 <th>{% trans "Version" %}</th>
                                 <th>{% trans "Modify Date" %}</th>
                                 <th>{% trans "Status" %}</th>
@@ -951,6 +958,11 @@
                             <tr>
                                 <td>
                                     <strong>{{ plugin.name }}</strong>
+                                </td>
+                                <td>
+                                    <span style="color: var(--text-secondary, #64748b); font-size: 13px;">
+                                        {{ plugin.author|default:"Unknown" }}
+                                    </span>
                                 </td>
                                 <td>
                                     <span class="plugin-version-number">{{ plugin.version }}</span>
@@ -1106,6 +1118,7 @@
                             <thead>
                                 <tr>
                                     <th>{% trans "Plugin Name" %}</th>
+                                    <th>{% trans "Author" %}</th>
                                     <th>{% trans "Version" %}</th>
                                     <th>{% trans "Modify Date" %}</th>
                                     <th>{% trans "Status" %}</th>
@@ -1232,7 +1245,7 @@ function displayStorePlugins() {
     tbody.innerHTML = '';
     
     if (!storePlugins || storePlugins.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px; color: var(--text-secondary, #64748b);">No plugins available in store</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 20px; color: var(--text-secondary, #64748b);">No plugins available in store</td></tr>';
         return;
     }
     
@@ -1310,10 +1323,14 @@ function displayStorePlugins() {
         // Modify Date column - show N/A for store plugins (they're from GitHub, not local)
         const modifyDateHtml = plugin.modify_date ? `<small style="color: var(--text-secondary, #64748b);">${escapeHtml(plugin.modify_date)}</small>` : '<small style="color: var(--text-secondary, #64748b);">N/A</small>';
         
+        // Author column
+        const authorHtml = plugin.author ? `<span style="color: var(--text-secondary, #64748b); font-size: 13px;">${escapeHtml(plugin.author)}</span>` : '<span style="color: var(--text-secondary, #64748b); font-size: 13px;">Unknown</span>';
+        
         row.innerHTML = `
             <td>
                 <strong>${escapeHtml(plugin.name)}</strong>
             </td>
+            <td>${authorHtml}</td>
             <td>${escapeHtml(plugin.version)}</td>
             <td>${modifyDateHtml}</td>
             <td>${statusHtml}</td>
