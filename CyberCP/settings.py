@@ -83,9 +83,13 @@ INSTALLED_APPS = [
 ]
 
 # Add plugins that are installed (plugin installer handles adding/removing)
-# discordWebhooks is added by plugin installer when plugin is installed
+# Plugins are added by plugin installer when plugins are installed
 if os.path.exists('/usr/local/CyberCP/discordWebhooks/__init__.py'):
     INSTALLED_APPS.append('discordWebhooks')
+if os.path.exists('/usr/local/CyberCP/fail2ban/__init__.py'):
+    INSTALLED_APPS.append('fail2ban')
+if os.path.exists('/usr/local/CyberCP/pm2Manager/__init__.py'):
+    INSTALLED_APPS.append('pm2Manager')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
