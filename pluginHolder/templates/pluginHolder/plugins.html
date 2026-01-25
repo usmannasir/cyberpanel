@@ -206,6 +206,32 @@
         border: 1px solid #ffeaa7;
     }
     
+    /* NEW and Stale badges */
+    .plugin-status-badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-left: 8px;
+        vertical-align: middle;
+        cursor: help;
+        position: relative;
+    }
+    
+    .plugin-status-badge.new {
+        background: #ffc107;
+        color: #000;
+        box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.3);
+    }
+    
+    .plugin-status-badge.stale {
+        background: #dc3545;
+        color: white;
+        box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.3);
+    }
+    
     .paid-badge {
         display: inline-block;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -1249,7 +1275,7 @@
 </div>
 
 <script>
-// Cache-busting version: 2026-01-25-v5 - Fixed is_paid boolean type enforcement and consistent rendering
+// Cache-busting version: 2026-01-25-v7 - Added NEW/Stale badges, removed Author/Status/Active columns, fixed intermittent display
 // Force browser to reload this script by changing version number
 let storePlugins = [];
 let currentFilter = 'all';
@@ -1347,8 +1373,9 @@ function escapeHtml(text) {
 }
 
 function displayStorePlugins() {
-    // Version: 2026-01-25-v5 - Store view: Removed Status column, always show Free/Paid badges, fixed boolean handling
-    // CRITICAL: This function MUST create exactly 7 columns (no Status, no Deactivate/Uninstall)
+    // Version: 2026-01-25-v7 - Store view: 8 columns (Icon, Plugin Name, Version, Pricing, Modify Date, Action, Help, About)
+    // CRITICAL: NO Author, NO Status, NO Active columns - these are for Grid/Table views only
+    // Store view shows: Icon | Plugin Name (with NEW/Stale badges) | Version | Pricing | Modify Date | Action (Installed/Install) | Help | About
     const tbody = document.getElementById('storeTableBody');
     if (!tbody) {
         console.error('storeTableBody not found!');
@@ -1360,6 +1387,9 @@ function displayStorePlugins() {
         tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px; color: var(--text-secondary, #64748b);">No plugins available in store</td></tr>';
         return;
     }
+    
+    // CRITICAL: Clear any old cached table structure that might have Author/Status/Active columns
+    // Force the correct 8-column structure
     
     let filteredPlugins = storePlugins;
     
@@ -1434,11 +1464,22 @@ function displayStorePlugins() {
             ? '<span class="plugin-pricing-badge paid">Paid</span>'
             : '<span class="plugin-pricing-badge free">Free</span>';
         
-        // Version: 2026-01-25-v5 - Added plugin icons to Store view (8 columns: Icon, Plugin Name, Version, Pricing, Modify Date, Action, Help, About)
+        // NEW and Stale badges
+        let statusBadges = '';
+        if (plugin.is_new === true) {
+            statusBadges += '<span class="plugin-status-badge new" title="This plugin was released/updated within the last 3 months">NEW</span>';
+        }
+        if (plugin.is_stale === true) {
+            statusBadges += '<span class="plugin-status-badge stale" title="This plugin is marked \'Stale\' (Last release over two years ago). This means it may work fine, but it has not had any recent development. Use your own discretion when using this plugin!">STALE</span>';
+        }
+        
+        // Version: 2026-01-25-v7 - Store view: 8 columns only (Icon, Plugin Name, Version, Pricing, Modify Date, Action, Help, About)
+        // NO Author, NO Status, NO Active columns - these are removed from Store view
+        // Plugin Name includes NEW/Stale badges
         row.innerHTML = `
             <td style="text-align: center;">${iconHtml}</td>
             <td>
-                <strong>${escapeHtml(plugin.name)}</strong>
+                <strong>${escapeHtml(plugin.name)}</strong>${statusBadges}
             </td>
             <td><span class="plugin-version-number">${escapeHtml(plugin.version)}</span></td>
             <td>${pricingBadge}</td>
@@ -1447,6 +1488,14 @@ function displayStorePlugins() {
             <td>${helpHtml}</td>
             <td>${aboutHtml}</td>
         `;
+        
+        // Ensure row has exactly 8 cells (no more, no less)
+        if (row.cells.length !== 8) {
+            console.warn(`Plugin ${plugin.name} row has ${row.cells.length} cells, expected 8. Rebuilding...`);
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = row.innerHTML;
+            row.parentNode.replaceChild(newRow, row);
+        }
         
         tbody.appendChild(row);
     });
