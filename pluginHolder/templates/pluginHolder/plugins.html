@@ -182,6 +182,103 @@
         color: var(--text-secondary, #64748b);
     }
     
+    .plugin-pricing-badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-left: 6px;
+        vertical-align: middle;
+    }
+    
+    .plugin-pricing-badge.free {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .plugin-pricing-badge.paid {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+    }
+    
+    .paid-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-left: 8px;
+        vertical-align: middle;
+    }
+    
+    .paid-badge i {
+        margin-right: 4px;
+    }
+    
+    .subscription-warning {
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        border-radius: 8px;
+        padding: 12px;
+        margin-top: 10px;
+        font-size: 12px;
+        color: #856404;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .subscription-warning-content {
+        display: flex;
+        align-items: center;
+        flex: 1;
+    }
+    
+    .subscription-warning i {
+        margin-right: 6px;
+        color: #ffc107;
+    }
+    
+    .subscription-warning-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        background: linear-gradient(135deg, #f96854 0%, #f96854 100%);
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+        box-shadow: 0 2px 4px rgba(249, 104, 84, 0.3);
+    }
+    
+    .subscription-warning-button:hover {
+        background: linear-gradient(135deg, #e55a47 0%, #e55a47 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(249, 104, 84, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .subscription-warning-button i {
+        margin-right: 0;
+        color: white;
+    }
+    
     .plugin-description {
         font-size: 13px;
         color: var(--text-secondary, #64748b);
@@ -816,20 +913,35 @@
         <div class="content-section">
             <h2 class="section-title">{% trans "Plugins" %}</h2>
             
-            <!-- View Toggle -->
-            <div id="plugins-view-toggle" class="view-toggle" style="{% if not plugins %}margin-top: 0;{% endif %}">
-                <button class="view-btn {% if plugins %}active{% else %}{% endif %}" onclick="toggleView('grid')">
+            <!-- View Toggle (always shown) -->
+            <div class="view-toggle">
+                {% if plugins %}
+                <button class="view-btn active" onclick="toggleView('grid')">
                     <i class="fas fa-th-large"></i>
                     {% trans "Grid View" %}
                 </button>
-                <button class="view-btn {% if not plugins %}active{% endif %}" onclick="toggleView('table')">
+                <button class="view-btn" onclick="toggleView('table')">
                     <i class="fas fa-list"></i>
                     {% trans "Table View" %}
                 </button>
-                <button class="view-btn {% if not plugins %}active{% endif %}" onclick="toggleView('store')">
+                <button class="view-btn" onclick="toggleView('store')">
                     <i class="fas fa-store"></i>
                     {% trans "CyberPanel Plugin Store" %}
                 </button>
+                {% else %}
+                <button class="view-btn" onclick="toggleView('grid')">
+                    <i class="fas fa-th-large"></i>
+                    {% trans "Grid View" %}
+                </button>
+                <button class="view-btn" onclick="toggleView('table')">
+                    <i class="fas fa-list"></i>
+                    {% trans "Table View" %}
+                </button>
+                <button class="view-btn active" onclick="toggleView('store')">
+                    <i class="fas fa-store"></i>
+                    {% trans "CyberPanel Plugin Store" %}
+                </button>
+                {% endif %}
                 <a href="/plugins/help/" class="view-btn" style="text-decoration: none;">
                     <i class="fas fa-book"></i>
                     {% trans "Plugin Development Guide" %}
@@ -837,6 +949,7 @@
             </div>
             
             {% if plugins %}
+            
             <!-- Grid View -->
             <div id="gridView" class="plugins-grid">
                 {% for plugin in plugins %}
@@ -856,22 +969,35 @@
                             {% endif %}
                         </div>
                         <div class="plugin-info">
-                            <h3 class="plugin-name">{{ plugin.name }}</h3>
+                            <h3 class="plugin-name">{{ plugin.name }}{% if plugin.is_paid|default:False|default_if_none:False %} <span class="paid-badge" title="{% trans 'Paid Plugin - Patreon Subscription Required' %}"><i class="fas fa-crown"></i> {% trans "Premium" %}</span>{% endif %}</h3>
                             <div class="plugin-meta">
-                            <span class="plugin-type">{{ plugin.type }}</span>
+                                <span class="plugin-type">{{ plugin.type }}</span>
                                 <span class="plugin-version-number">v{{ plugin.version }}</span>
+                                {% if plugin.is_paid|default:False|default_if_none:False %}
+                                    <span class="plugin-pricing-badge paid">{% trans "Paid" %}</span>
+                                {% else %}
+                                    <span class="plugin-pricing-badge free">{% trans "Free" %}</span>
+                                {% endif %}
                             </div>
-                            {% if plugin.author %}
-                            <div class="plugin-author" style="margin-top: 8px; font-size: 13px; color: var(--text-secondary, #64748b);">
-                                <i class="fas fa-user" style="margin-right: 5px;"></i>
-                                <span>{% trans "Author:" %} {{ plugin.author }}</span>
-                            </div>
-                            {% endif %}
                         </div>
                     </div>
                     
                     <div class="plugin-description">
                         {{ plugin.desc }}
+                        {% if plugin.is_paid|default:False|default_if_none:False %}
+                        <div class="subscription-warning">
+                            <div class="subscription-warning-content">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <strong>{% trans "Paid Plugin:" %}</strong> {% trans "Requires Patreon subscription to" %} "{{ plugin.patreon_tier|default:'CyberPanel Paid Plugin' }}"
+                            </div>
+                            {% if plugin.patreon_url %}
+                            <a href="{{ plugin.patreon_url }}" target="_blank" rel="noopener noreferrer" class="subscription-warning-button">
+                                <i class="fab fa-patreon"></i>
+                                {% trans "Subscribe on Patreon" %}
+                            </a>
+                            {% endif %}
+                        </div>
+                        {% endif %}
                     </div>
                     
                     <div class="plugin-status-section">
@@ -943,7 +1069,6 @@
                         <thead>
                             <tr>
                                 <th>{% trans "Plugin Name" %}</th>
-                                <th>{% trans "Author" %}</th>
                                 <th>{% trans "Version" %}</th>
                                 <th>{% trans "Modify Date" %}</th>
                                 <th>{% trans "Status" %}</th>
@@ -960,12 +1085,12 @@
                                     <strong>{{ plugin.name }}</strong>
                                 </td>
                                 <td>
-                                    <span style="color: var(--text-secondary, #64748b); font-size: 13px;">
-                                        {{ plugin.author|default:"Unknown" }}
-                                    </span>
-                                </td>
-                                <td>
                                     <span class="plugin-version-number">{{ plugin.version }}</span>
+                                    {% if plugin.is_paid|default:False|default_if_none:False %}
+                                        <span class="plugin-pricing-badge paid">{% trans "Paid" %}</span>
+                                    {% else %}
+                                        <span class="plugin-pricing-badge free">{% trans "Free" %}</span>
+                                    {% endif %}
                                 </td>
                                 <td>
                                     <small style="color: var(--text-secondary, #64748b);">
@@ -1097,13 +1222,12 @@
                         <table class="store-table">
                             <thead>
                                 <tr>
+                                    <th>{% trans "Icon" %}</th>
                                     <th>{% trans "Plugin Name" %}</th>
-                                    <th>{% trans "Author" %}</th>
                                     <th>{% trans "Version" %}</th>
+                                    <th>{% trans "Pricing" %}</th>
                                     <th>{% trans "Modify Date" %}</th>
-                                    <th>{% trans "Status" %}</th>
                                     <th>{% trans "Action" %}</th>
-                                    <th>{% trans "Active" %}</th>
                                     <th>{% trans "Help" %}</th>
                                     <th>{% trans "About" %}</th>
                                 </tr>
@@ -1125,6 +1249,8 @@
 </div>
 
 <script>
+// Cache-busting version: 2026-01-25-v5 - Fixed is_paid boolean type enforcement and consistent rendering
+// Force browser to reload this script by changing version number
 let storePlugins = [];
 let currentFilter = 'all';
 
@@ -1148,9 +1274,7 @@ function toggleView(view) {
     const gridView = document.getElementById('gridView');
     const tableView = document.getElementById('tableView');
     const storeView = document.getElementById('storeView');
-    // Only select view buttons from the main view-toggle (prevent duplicates)
-    const viewToggle = document.getElementById('plugins-view-toggle');
-    const viewBtns = viewToggle ? viewToggle.querySelectorAll('.view-btn') : document.querySelectorAll('.view-btn');
+    const viewBtns = document.querySelectorAll('.view-btn');
     
     viewBtns.forEach(btn => btn.classList.remove('active'));
     
@@ -1223,11 +1347,17 @@ function escapeHtml(text) {
 }
 
 function displayStorePlugins() {
+    // Version: 2026-01-25-v5 - Store view: Removed Status column, always show Free/Paid badges, fixed boolean handling
+    // CRITICAL: This function MUST create exactly 7 columns (no Status, no Deactivate/Uninstall)
     const tbody = document.getElementById('storeTableBody');
+    if (!tbody) {
+        console.error('storeTableBody not found!');
+        return;
+    }
     tbody.innerHTML = '';
     
     if (!storePlugins || storePlugins.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 20px; color: var(--text-secondary, #64748b);">No plugins available in store</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px; color: var(--text-secondary, #64748b);">No plugins available in store</td></tr>';
         return;
     }
     
@@ -1239,55 +1369,36 @@ function displayStorePlugins() {
         );
     }
     
-    filteredPlugins.forEach(plugin => {
+        filteredPlugins.forEach(plugin => {
         const row = document.createElement('tr');
         
-        // Status column
-        let statusHtml = '';
-        if (plugin.installed) {
-            statusHtml = '<span class="status-installed">Installed</span>';
-        } else {
-            statusHtml = '<span class="status-not-installed">Not Installed</span>';
+        // Plugin icon - based on plugin type (same logic as Grid/Table views)
+        const pluginType = (plugin.type || 'Plugin').toLowerCase();
+        let iconClass = 'fas fa-puzzle-piece'; // Default icon
+        if (pluginType.includes('security')) {
+            iconClass = 'fas fa-shield-alt';
+        } else if (pluginType.includes('performance')) {
+            iconClass = 'fas fa-rocket';
+        } else if (pluginType.includes('utility')) {
+            iconClass = 'fas fa-tools';
+        } else if (pluginType.includes('backup')) {
+            iconClass = 'fas fa-save';
         }
+        const iconHtml = `<div class="plugin-icon" style="width: 40px; height: 40px; background: var(--bg-secondary, #f8f9ff); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #5856d6; margin: 0 auto;">
+            <i class="${iconClass}"></i>
+        </div>`;
         
-        // Action column
+        // Action column - Store view only shows Install/Installed (no Deactivate/Uninstall)
+        // NOTE: Store view should NOT show Deactivate/Uninstall buttons - users manage from Grid/Table views
         let actionHtml = '';
         if (plugin.installed) {
-            if (plugin.enabled) {
-                actionHtml = `<div class="plugin-actions">
-                    <button class="btn-action btn-deactivate" onclick="deactivatePlugin('${plugin.plugin_dir}')">
-                        <i class="fas fa-toggle-on"></i> Deactivate
-                    </button>
-                    <button class="btn-action btn-uninstall" onclick="uninstallPluginFromStore('${plugin.plugin_dir}')">
-                        <i class="fas fa-trash"></i> Uninstall
-                    </button>
-                </div>`;
-            } else {
-                actionHtml = `<div class="plugin-actions">
-                    <button class="btn-action btn-activate" onclick="activatePlugin('${plugin.plugin_dir}')">
-                        <i class="fas fa-toggle-off"></i> Activate
-                    </button>
-                    <button class="btn-action btn-uninstall" onclick="uninstallPluginFromStore('${plugin.plugin_dir}')">
-                        <i class="fas fa-trash"></i> Uninstall
-                    </button>
-                </div>`;
-            }
+            // Show "Installed" text
+            actionHtml = '<span class="status-installed">Installed</span>';
         } else {
+            // Show Install button
             actionHtml = `<button class="btn-action btn-install" onclick="installFromStore('${plugin.plugin_dir}')">
                 <i class="fas fa-download"></i> Install
             </button>`;
-        }
-        
-        // Active column
-        let activeHtml = '';
-        if (plugin.installed) {
-            if (plugin.enabled) {
-                activeHtml = '<span class="active-status active-yes"><i class="fas fa-check-circle"></i></span>';
-            } else {
-                activeHtml = '<span class="active-status active-no"><i class="fas fa-times-circle"></i></span>';
-            }
-        } else {
-            activeHtml = '<span class="active-status active-na">-</span>';
         }
         
         // Help column - always use consistent help URL
@@ -1305,19 +1416,34 @@ function displayStorePlugins() {
         // Modify Date column - show N/A for store plugins (they're from GitHub, not local)
         const modifyDateHtml = plugin.modify_date ? `<small style="color: var(--text-secondary, #64748b);">${escapeHtml(plugin.modify_date)}</small>` : '<small style="color: var(--text-secondary, #64748b);">N/A</small>';
         
-        // Author column
-        const authorHtml = plugin.author ? `<span style="color: var(--text-secondary, #64748b); font-size: 13px;">${escapeHtml(plugin.author)}</span>` : '<span style="color: var(--text-secondary, #64748b); font-size: 13px;">Unknown</span>';
+        // Pricing badge - ALWAYS show a badge (default to Free if is_paid is missing/undefined/null)
+        // Version: 2026-01-25-v5 - Normalize is_paid to handle all possible values, force boolean
+        let isPaid = false;
+        if (plugin.is_paid !== undefined && plugin.is_paid !== null) {
+            const isPaidValue = plugin.is_paid;
+            // Handle all possible true values (boolean, string, number)
+            if (isPaidValue === true || isPaidValue === 'true' || isPaidValue === 'True' || isPaidValue === 1 || isPaidValue === '1' || String(isPaidValue).toLowerCase() === 'true') {
+                isPaid = true;
+            } else {
+                isPaid = false; // Explicitly set to false for any other value
+            }
+        }
+        // Force boolean type
+        isPaid = Boolean(isPaid);
+        const pricingBadge = isPaid 
+            ? '<span class="plugin-pricing-badge paid">Paid</span>'
+            : '<span class="plugin-pricing-badge free">Free</span>';
         
+        // Version: 2026-01-25-v5 - Added plugin icons to Store view (8 columns: Icon, Plugin Name, Version, Pricing, Modify Date, Action, Help, About)
         row.innerHTML = `
+            <td style="text-align: center;">${iconHtml}</td>
             <td>
                 <strong>${escapeHtml(plugin.name)}</strong>
             </td>
-            <td>${authorHtml}</td>
-            <td>${escapeHtml(plugin.version)}</td>
+            <td><span class="plugin-version-number">${escapeHtml(plugin.version)}</span></td>
+            <td>${pricingBadge}</td>
             <td>${modifyDateHtml}</td>
-            <td>${statusHtml}</td>
             <td>${actionHtml}</td>
-            <td class="active-column">${activeHtml}</td>
             <td>${helpHtml}</td>
             <td>${aboutHtml}</td>
         `;
@@ -1706,19 +1832,6 @@ if (localStorage.getItem('pluginStoreNoticeDismissed') === 'true') {
 
 // Initialize view on page load
 document.addEventListener('DOMContentLoaded', function() {
-    // Remove any duplicate view-toggle divs (keep only the one with id='plugins-view-toggle')
-    const mainViewToggle = document.getElementById('plugins-view-toggle');
-    if (mainViewToggle) {
-        const allViewToggles = document.querySelectorAll('.view-toggle');
-        allViewToggles.forEach(toggle => {
-            if (toggle !== mainViewToggle && toggle.id !== 'plugins-view-toggle') {
-                // This is a duplicate, remove it
-                console.log('Removing duplicate view-toggle div');
-                toggle.remove();
-            }
-        });
-    }
-    
     // Default to grid view if plugins exist, otherwise show store
     const gridView = document.getElementById('gridView');
     const storeView = document.getElementById('storeView');
