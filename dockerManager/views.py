@@ -179,13 +179,39 @@ def runContainer(request):
         return redirect(loadLoginPage)
 
 @preDockerRun
-def listContainers(request):
+def listContainersPage(request):
+    """
+    GET /docker/containers: Render HTML page only. Separate URL avoids
+    cache/proxy ever serving JSON (listContainers used to return JSON).
+    """
     try:
         userID = request.session['userID']
         cm = ContainerManager()
-        return cm.listContainers(request, userID)
+        resp = cm.listContainers(request, userID)
+        resp['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        resp['Pragma'] = 'no-cache'
+        resp['Expires'] = '0'
+        return resp
     except KeyError:
         return redirect(loadLoginPage)
+
+
+@preDockerRun
+def listContainers(request):
+    """
+    GET: Redirect to /docker/containers (HTML). POST: 405.
+    listContainers URL historically returned JSON; caches may serve stale JSON.
+    Use /docker/containers for the page to avoid that.
+    """
+    try:
+        request.session['userID']  # ensure logged in
+    except KeyError:
+        return redirect(loadLoginPage)
+
+    if request.method != 'GET':
+        return HttpResponse('Method Not Allowed', status=405)
+    from django.urls import reverse
+    return redirect(reverse('listContainersPage'))
 
 @preDockerRun
 def getContainerLogs(request):
@@ -743,27 +769,6 @@ def getContainerEnv(request):
             'success': 0,
             'message': str(e)
         }), content_type='application/json')
-    except KeyError:
-        return redirect(loadLoginPage)
-
-@preDockerRun
-def listContainers(request):
-    """
-    Get list of all Docker containers
-    """
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadErrorJson()
-
-        cm = ContainerManager()
-        coreResult = cm.listContainers(userID)
-
-        return coreResult
     except KeyError:
         return redirect(loadLoginPage)
 
