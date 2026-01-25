@@ -1,8 +1,8 @@
 {% load i18n %}
 {% get_current_language as LANGUAGE_CODE %}
-{% with CP_VERSION="2.4.4.1" %}
+{% with CP_VERSION="2.5.5-dev-fix" %}
 <!DOCTYPE html>
-<html lang="en" ng-app="CyberCP">
+<html lang="en" ng-app="CyberCP" {% if cosmetic.MainDashboardCSS %}data-dynamic-css="{{ cosmetic.MainDashboardCSS|escape }}"{% endif %}>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,30 +17,39 @@
     
     <!-- Custom CSS -->
     <style>
-        {{ cosmetic.MainDashboardCSS | safe }}
+        /* Custom dashboard CSS - base styles */
+        body { visibility: visible; }
     </style>
     
-    <!-- Mobile Responsive CSS -->
-    <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/mobile-responsive.css' %}?v={{ CP_VERSION }}">
-    
-    <!-- Readability Fixes CSS -->
-    <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/readability-fixes.css' %}?v={{ CP_VERSION }}">
-    
-    <!-- Core Scripts -->
+    <!-- Core Scripts - AngularJS MUST load FIRST before all other scripts -->
     <script src="{% static 'baseTemplate/angularjs.1.6.5.js' %}?v={{ CP_VERSION }}"></script>
+    
+    <!-- Dynamic CSS from Django template (injected via JavaScript to avoid linter errors) -->
+    <script>
+        // Inject dynamic CSS from data attribute to avoid CSS/JS linter errors
+        (function() {
+            var htmlElement = document.documentElement;
+            var cssContent = htmlElement.getAttribute('data-dynamic-css');
+            if (cssContent) {
+                var style = document.createElement('style');
+                style.textContent = cssContent;
+                document.head.appendChild(style);
+            }
+        })();
+    </script>
     <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
     <!-- Bootstrap JavaScript -->
 
     <script src="{% static 'baseTemplate/assets/bootstrap/js/bootstrap.min.js' %}?v={{ CP_VERSION }}"></script>
     <script src="{% static 'baseTemplate/bootstrap-toggle.min.js' %}?v={{ CP_VERSION }}"></script>
-    <script src="{% static 'baseTemplate/custom-js/qrious.min.js' %}?v={{ CP_VERSION }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrious/dist/qrious.min.js"></script>
     <script src="{% static 'baseTemplate/custom-js/system-status.js' %}?v={{ CP_VERSION }}"></script>
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Chart.js -->
-    <script src="{% static 'baseTemplate/custom-js/chart.umd.min.js' %}?v={{ CP_VERSION }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- PNotify -->
     <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/custom-js/pnotify.custom.min.css' %}?v={{ CP_VERSION }}">
@@ -1566,7 +1575,7 @@
     
     {% block header_scripts %}{% endblock %}
 </head>
-<body>
+<body data-has-backup-configured="{% if request.session.has_backup_configured %}true{% else %}false{% endif %}">
     <!-- Header -->
     <div id="header">
         <button id="mobile-menu-toggle" class="mobile-menu-toggle" onclick="toggleSidebar()" style="display: none;">
@@ -1647,7 +1656,7 @@
                 <div class="info-line">
                     <strong>Uptime:</strong> 
                     <span ng-show="!uptimeLoaded">Loading...</span>
-                    <span ng-show="uptimeLoaded" ng-bind="uptime">N/A</span>
+                    <span ng-show="uptimeLoaded">{$ uptime $}</span>
                 </div>
             </div>
         </div>
@@ -1802,9 +1811,6 @@
                 </a>
                 <a href="{% url 'listChildDomains' %}" class="menu-item">
                     <span>List Sub/Addon Domains</span>
-                </a>
-                <a href="{% url 'fixSubdomainLogs' %}" class="menu-item">
-                    <span>Fix Subdomain Logs</span>
                 </a>
                 {% if admin or modifyWebsite %}
                 <a href="{% url 'modifyWebsite' %}" class="menu-item">
@@ -2157,7 +2163,7 @@
                 <a href="{% url 'manageImages' %}" class="menu-item">
                     <span>Manage Images</span>
                 </a>
-                <a href="{% url 'listContainers' %}" class="menu-item">
+                <a href="{% url 'listContainersPage' %}" class="menu-item">
                     <span>Manage Containers</span>
                 </a>
                 <a href="{% url 'containerImage' %}" class="menu-item">
@@ -2287,9 +2293,6 @@
                 <a href="{% url 'aiScannerHome' %}" class="menu-item">
                     <span>AI Scanner</span>
                 </a>
-                <a href="#" class="menu-item" onclick="loadSecurityManagement(); return false;">
-                    <span>Security Management</span>
-                </a>
             </div>
             
             <a href="#" class="menu-item" onclick="toggleSubmenu('mail-settings-submenu', this); return false;">
@@ -2343,11 +2346,6 @@
                 <a href="{% url 'managePureFtpd' %}" class="menu-item">
                     <span>Manage FTP</span>
                 </a>
-                {% if admin %}
-                <a href="#" class="menu-item" onclick="loadBandwidthManagement(); return false;">
-                    <span>Bandwidth Management</span>
-                </a>
-                {% endif %}
             </div>
             
             <a href="#" class="menu-item" onclick="toggleSubmenu('plugins-submenu', this); return false;">
@@ -2452,6 +2450,12 @@
     <script src="{% static 'CLManager/CLManager.js' %}?v={{ CP_VERSION }}"></script>
     
     <!-- Scripts -->
+    <!-- Set backup configuration status from Django template via data attribute -->
+    <script>
+        // Read backup configuration status from data attribute (set by Django template)
+        var backupConfigElement = document.querySelector('[data-has-backup-configured]');
+        window.hasBackupConfigured = backupConfigElement ? backupConfigElement.getAttribute('data-has-backup-configured') === 'true' : false;
+    </script>
     <script>
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -2580,9 +2584,10 @@
             // Check if user has backup configured (you'll need to implement this API)
             // For now, we'll show it by default unless they have a backup plan
             // This should be replaced with an actual check
-            {% if not request.session.has_backup_configured %}
+            // Note: hasBackupConfigured is set via Django template before this script
+            if (typeof window.hasBackupConfigured !== 'undefined' && !window.hasBackupConfigured) {
                 showBackupNotification();
-            {% endif %}
+            }
             
             // For demonstration, let's show it if URL doesn't contain 'OneClickBackups'
             if (!window.location.href.includes('OneClickBackups')) {
@@ -2819,7 +2824,44 @@
                 item.classList.remove('active', 'has-active-child');
             });
             
-            // Find and activate the matching menu item
+            // Special handling for plugin pages - expand Plugins submenu and highlight
+            if (currentPath.startsWith('/plugins/')) {
+                const pluginsSubmenu = document.getElementById('plugins-submenu');
+                const pluginsMenuItem = pluginsSubmenu ? pluginsSubmenu.previousElementSibling : null;
+                
+                if (pluginsSubmenu) {
+                    pluginsSubmenu.classList.add('show');
+                }
+                
+                if (pluginsMenuItem && pluginsMenuItem.classList.contains('menu-item')) {
+                    pluginsMenuItem.classList.add('expanded', 'has-active-child');
+                }
+                
+                // Check if it's the installed page
+                if (currentPath === '/plugins/installed' || currentPath.startsWith('/plugins/installed')) {
+                    const installedLink = pluginsSubmenu ? pluginsSubmenu.querySelector('a[href*="installed"]') : null;
+                    if (installedLink) {
+                        installedLink.classList.add('active');
+                    }
+                } else if (currentPath.match(/^\/plugins\/[^\/]+\/(settings|help)/)) {
+                    // It's a plugin settings/help page - highlight "Installed" menu item
+                    const installedLink = pluginsSubmenu ? pluginsSubmenu.querySelector('a[href*="installed"]') : null;
+                    if (installedLink) {
+                        installedLink.classList.add('active');
+                    }
+                } else {
+                    // Try to match specific plugin links in the submenu
+                    const pluginLinks = pluginsSubmenu ? pluginsSubmenu.querySelectorAll('a.menu-item') : [];
+                    pluginLinks.forEach(link => {
+                        const href = link.getAttribute('href');
+                        if (href && (currentPath === href || currentPath.startsWith(href + '/'))) {
+                            link.classList.add('active');
+                        }
+                    });
+                }
+            }
+            
+            // Find and activate the matching menu item (exact matches)
             allMenuItems.forEach(item => {
                 const href = item.getAttribute('href');
                 if (href && href !== '#' && currentPath === href) {
