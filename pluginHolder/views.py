@@ -697,6 +697,57 @@ def _enrich_store_plugins(plugins):
         # Ensure it's a proper boolean (not string or other type)
         plugin['is_paid'] = bool(plugin['is_paid']) if plugin['is_paid'] not in [True, False] else plugin['is_paid']
         
+        # Calculate NEW and Stale badges based on modify_date
+        modify_date_str = plugin.get('modify_date', 'N/A')
+        plugin['is_new'] = False
+        plugin['is_stale'] = False
+        
+        if modify_date_str and modify_date_str != 'N/A':
+            try:
+                # Parse the modify_date (could be various formats)
+                modify_date = None
+                if isinstance(modify_date_str, str):
+                    # Handle ISO format with timezone (from GitHub API)
+                    if 'T' in modify_date_str:
+                        # ISO format: 2026-01-25T04:24:52Z or 2026-01-25T04:24:52+00:00
+                        try:
+                            # Remove timezone info for simpler parsing
+                            date_part = modify_date_str.split('T')[0]
+                            time_part = modify_date_str.split('T')[1].split('+')[0].split('Z')[0]
+                            modify_date = datetime.strptime(f"{date_part} {time_part}", '%Y-%m-%d %H:%M:%S')
+                        except:
+                            # Fallback: try standard format
+                            modify_date = datetime.strptime(modify_date_str[:19], '%Y-%m-%d %H:%M:%S')
+                    else:
+                        # Standard format: YYYY-MM-DD HH:MM:SS
+                        modify_date = datetime.strptime(modify_date_str, '%Y-%m-%d %H:%M:%S')
+                else:
+                    modify_date = modify_date_str
+                
+                if modify_date:
+                    now = datetime.now()
+                    # Handle timezone-aware datetime
+                    if modify_date.tzinfo:
+                        from datetime import timezone
+                        modify_date = modify_date.replace(tzinfo=None)
+                    
+                    # Calculate time difference
+                    time_diff = now - modify_date
+                    
+                    # NEW: updated within last 3 months (90 days)
+                    if time_diff.days <= 90:
+                        plugin['is_new'] = True
+                    
+                    # Stale: not updated in last 2 years (730 days)
+                    if time_diff.days > 730:
+                        plugin['is_stale'] = True
+                        
+            except Exception as e:
+                logging.writeToFile(f"Error calculating NEW/Stale status for {plugin_dir}: {str(e)}")
+                # Default to not new and not stale if parsing fails
+                plugin['is_new'] = False
+                plugin['is_stale'] = False
+        
         enriched.append(plugin)
     
     return enriched
@@ -768,6 +819,46 @@ def _fetch_plugins_from_github():
                     logging.writeToFile(f"Could not fetch commit date for {plugin_name}: {str(e)}")
                     modify_date = 'N/A'
                 
+                # Calculate NEW and Stale badges based on modify_date
+                is_new = False
+                is_stale = False
+                
+                if modify_date and modify_date != 'N/A':
+                    try:
+                        # Parse the modify_date
+                        modify_date_obj = None
+                        if isinstance(modify_date, str):
+                            if 'T' in modify_date:
+                                # ISO format: 2026-01-25T04:24:52Z or 2026-01-25T04:24:52+00:00
+                                try:
+                                    date_part = modify_date.split('T')[0]
+                                    time_part = modify_date.split('T')[1].split('+')[0].split('Z')[0]
+                                    modify_date_obj = datetime.strptime(f"{date_part} {time_part}", '%Y-%m-%d %H:%M:%S')
+                                except:
+                                    modify_date_obj = datetime.strptime(modify_date[:19], '%Y-%m-%d %H:%M:%S')
+                            else:
+                                # Standard format: YYYY-MM-DD HH:MM:SS
+                                modify_date_obj = datetime.strptime(modify_date, '%Y-%m-%d %H:%M:%S')
+                        else:
+                            modify_date_obj = modify_date
+                        
+                        if modify_date_obj:
+                            now = datetime.now()
+                            if modify_date_obj.tzinfo:
+                                modify_date_obj = modify_date_obj.replace(tzinfo=None)
+                            
+                            time_diff = now - modify_date_obj
+                            
+                            # NEW: updated within last 3 months (90 days)
+                            if time_diff.days <= 90:
+                                is_new = True
+                            
+                            # Stale: not updated in last 2 years (730 days)
+                            if time_diff.days > 730:
+                                is_stale = True
+                    except Exception as e:
+                        logging.writeToFile(f"Error calculating NEW/Stale for {plugin_name}: {str(e)}")
+                
                 # Extract paid plugin information
                 paid_elem = root.find('paid')
                 patreon_tier_elem = root.find('patreon_tier')
@@ -796,7 +887,9 @@ def _fetch_plugins_from_github():
                     'modify_date': modify_date,
                     'is_paid': is_paid,
                     'patreon_tier': patreon_tier,
-                    'patreon_url': patreon_url
+                    'patreon_url': patreon_url,
+                    'is_new': is_new,
+                    'is_stale': is_stale
                 }
                 
                 plugins.append(plugin_data)
