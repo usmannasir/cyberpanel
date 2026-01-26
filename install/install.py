@@ -349,6 +349,17 @@ class preFlightsChecks:
             # This prevents upgrade attempts in Pre_Install_Required_Components
             self.disableMariaDB12RepositoryIfNeeded()
             
+            # CRITICAL: Remove conflicting MariaDB compat packages before installation
+            # These packages from MariaDB 12.1 can conflict with MariaDB 10.11
+            self.stdOut("Removing conflicting MariaDB compat packages...", 1)
+            try:
+                # Remove MariaDB-server-compat packages that conflict with MariaDB 10.11
+                compat_remove_cmd = "dnf remove -y MariaDB-server-compat* 2>/dev/null || rpm -e --nodeps MariaDB-server-compat* 2>/dev/null || true"
+                subprocess.run(compat_remove_cmd, shell=True, timeout=60)
+                self.stdOut("Removed conflicting MariaDB compat packages", 1)
+            except Exception as e:
+                self.stdOut(f"Warning: Could not remove compat packages: {e}", 0)
+            
             # Check if MariaDB is already installed before attempting installation
             is_installed, installed_version, major_minor = self.checkExistingMariaDB()
             
@@ -1789,6 +1800,20 @@ module cyberpanel_ols {
                 
             else:
                 # RHEL-based MariaDB installation
+                # CRITICAL: Remove conflicting MariaDB compat packages first
+                # These packages from MariaDB 12.1 can conflict with MariaDB 10.11
+                self.stdOut("Removing conflicting MariaDB compat packages...", 1)
+                try:
+                    # Remove MariaDB-server-compat packages that conflict with MariaDB 10.11
+                    compat_remove_cmd = "dnf remove -y MariaDB-server-compat* 2>/dev/null || rpm -e --nodeps MariaDB-server-compat* 2>/dev/null || true"
+                    result = subprocess.run(compat_remove_cmd, shell=True, timeout=60, capture_output=True)
+                    if result.returncode == 0 or "not installed" in result.stdout.decode('utf-8', errors='ignore').lower():
+                        self.stdOut("Removed conflicting MariaDB compat packages", 1)
+                    else:
+                        self.stdOut("No conflicting compat packages found or already removed", 1)
+                except Exception as e:
+                    self.stdOut(f"Warning: Could not remove compat packages: {e}", 0)
+                
                 # Check if MariaDB is already installed before setting up repository
                 is_installed, installed_version, major_minor = self.checkExistingMariaDB()
                 
@@ -1809,7 +1834,7 @@ module cyberpanel_ols {
                             pass
                 
                 # Set up MariaDB 12.1 repository only if not already installed
-                command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=12.1'
+                command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version=12.1'
                 self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
                 
                 command = 'dnf install mariadb-server mariadb-devel mariadb-client-utils -y'
