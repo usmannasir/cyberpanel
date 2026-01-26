@@ -113,8 +113,10 @@ if [ "$BRANCH_NAME" = "v2.5.5-dev" ] || [ "$BRANCH_NAME" = "stable" ]; then
         if [ -f "$SCRIPT_PATH" ] && [ -s "$SCRIPT_PATH" ]; then
             chmod +x "$SCRIPT_PATH" 2>/dev/null || true
             echo "✅ Downloaded cyberpanel.sh from branch $BRANCH_NAME"
-            # Use sh to execute to avoid permission issues
-            exec sh "$SCRIPT_PATH" "$@"
+            # Use bash to execute (cyberpanel.sh uses #!/bin/bash)
+            # Change to /tmp to ensure we're in a writable directory
+            cd /tmp
+            exec bash "$SCRIPT_PATH" "$@"
         fi
     fi
 fi
@@ -125,8 +127,10 @@ if curl --silent -o "$SCRIPT_PATH" "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev
     if [ -f "$SCRIPT_PATH" ] && [ -s "$SCRIPT_PATH" ]; then
         chmod +x "$SCRIPT_PATH" 2>/dev/null || true
         echo "✅ Downloaded cyberpanel.sh from standard source"
-        # Use sh to execute to avoid permission issues
-        exec sh "$SCRIPT_PATH" "$@"
+        # Use bash to execute (cyberpanel.sh uses #!/bin/bash)
+        # Change to /tmp to ensure we're in a writable directory
+        cd /tmp
+        exec bash "$SCRIPT_PATH" "$@"
     fi
 fi
 
