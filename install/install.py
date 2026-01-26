@@ -1459,6 +1459,52 @@ module cyberpanel_ols {
         except:
             return False
 
+    def disableMariaDB12RepositoryIfNeeded(self):
+        """Disable MariaDB 12.1 repository if MariaDB 10.x is already installed to prevent upgrade attempts"""
+        try:
+            is_installed, installed_version, major_minor = self.checkExistingMariaDB()
+            
+            if is_installed and major_minor and major_minor != "unknown":
+                try:
+                    major_ver = float(major_minor)
+                    if major_ver < 12.0:
+                        # MariaDB 10.x is installed, disable 12.1 repository to prevent upgrade attempts
+                        self.stdOut(f"MariaDB {installed_version} detected, disabling MariaDB 12.1 repository to prevent upgrade conflicts", 1)
+                        
+                        # Disable MariaDB 12.1 repository
+                        repo_files = [
+                            '/etc/yum.repos.d/mariadb-main.repo',
+                            '/etc/yum.repos.d/mariadb.repo',
+                            '/etc/yum.repos.d/mariadb-12.1.repo'
+                        ]
+                        
+                        for repo_file in repo_files:
+                            if os.path.exists(repo_file):
+                                try:
+                                    # Read the file
+                                    with open(repo_file, 'r') as f:
+                                        content = f.read()
+                                    
+                                    # Disable all MariaDB repositories
+                                    content = re.sub(r'^(\[.*mariadb.*\])', r'\1\nenabled=0', content, flags=re.MULTILINE | re.IGNORECASE)
+                                    
+                                    # Write back
+                                    with open(repo_file, 'w') as f:
+                                        f.write(content)
+                                    
+                                    self.stdOut(f"Disabled MariaDB repository in {repo_file}", 1)
+                                except Exception as e:
+                                    self.stdOut(f"Warning: Could not disable repository {repo_file}: {e}", 1)
+                        
+                        return True
+                except (ValueError, TypeError):
+                    pass
+            
+            return False
+        except Exception as e:
+            self.stdOut(f"Warning: Error checking MariaDB repository: {e}", 1)
+            return False
+
     def checkExistingMariaDB(self):
         """Check if MariaDB/MySQL is already installed and return version info"""
         try:
@@ -6301,6 +6347,10 @@ def main():
     # Apply AlmaLinux 9 comprehensive fixes first if needed
     if checks.is_almalinux9():
         checks.fix_almalinux9_comprehensive()
+    
+    # Disable MariaDB 12.1 repository if MariaDB 10.x is already installed
+    # This prevents upgrade attempts in Pre_Install_Required_Components
+    checks.disableMariaDB12RepositoryIfNeeded()
 
     # Install core services in the correct order
     checks.installLiteSpeed(ent, serial)
