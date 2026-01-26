@@ -285,102 +285,103 @@ class pluginInstaller:
     @staticmethod
     def removeFiles(pluginName):
         pluginPath = '/usr/local/CyberCP/' + pluginName
-        if os.path.exists(pluginPath):
+        if not os.path.exists(pluginPath):
+            # Directory doesn't exist - already removed
+            pluginInstaller.stdOut(f'Plugin directory does not exist (already removed): {pluginName}')
+            return
+        
+        try:
+            # Check if we're running as root
+            is_root = os.geteuid() == 0 if hasattr(os, 'geteuid') else False
+            use_sudo = not is_root
+            
+            # First try: Use shutil.rmtree (works if permissions are correct)
             try:
-                # Check if we're running as root
-                is_root = os.geteuid() == 0 if hasattr(os, 'geteuid') else False
-                use_sudo = not is_root
+                shutil.rmtree(pluginPath)
+                pluginInstaller.stdOut(f'Plugin directory removed: {pluginName}')
+                return
+            except (OSError, PermissionError) as e:
+                pluginInstaller.stdOut(f'Direct removal failed, trying with permission fix: {str(e)}')
+            
+            # Second try: Fix permissions, then remove
+            try:
+                import subprocess
+                import stat
                 
-                # First try: Use shutil.rmtree (works if permissions are correct)
-                try:
-                    shutil.rmtree(pluginPath)
-                    pluginInstaller.stdOut(f'Plugin directory removed: {pluginName}')
-                    return
-                except (OSError, PermissionError) as e:
-                    pluginInstaller.stdOut(f'Direct removal failed, trying with permission fix: {str(e)}')
-                
-                # Second try: Fix permissions, then remove
-                try:
-                    import subprocess
-                    import stat
+                if use_sudo:
+                    # Use ProcessUtilities which handles privileged commands
+                    # Fix ownership recursively
+                    chown_cmd = f'chown -R cyberpanel:cyberpanel {pluginPath}'
+                    ProcessUtilities.normalExecutioner(chown_cmd)
                     
-                    if use_sudo:
-                        # Use ProcessUtilities which handles privileged commands
-                        # Fix ownership recursively
-                        chown_cmd = f'chown -R cyberpanel:cyberpanel {pluginPath}'
-                        ProcessUtilities.normalExecutioner(chown_cmd)
-                        
-                        # Fix permissions recursively
-                        chmod_cmd = f'chmod -R u+rwX,go+rX {pluginPath}'
-                        ProcessUtilities.normalExecutioner(chmod_cmd)
-                    else:
-                        # Running as root - fix permissions directly
-                        import pwd
-                        import grp
+                    # Fix permissions recursively
+                    chmod_cmd = f'chmod -R u+rwX,go+rX {pluginPath}'
+                    ProcessUtilities.normalExecutioner(chmod_cmd)
+                else:
+                    # Running as root - fix permissions directly
+                    import pwd
+                    import grp
+                    try:
+                        cyberpanel_uid = pwd.getpwnam('cyberpanel').pw_uid
+                        cyberpanel_gid = grp.getgrnam('cyberpanel').gr_gid
+                    except (KeyError, OSError):
+                        cyberpanel_uid = 0
+                        cyberpanel_gid = 0
+                    
+                    # Recursively fix ownership and permissions
+                    for root, dirs, files in os.walk(pluginPath):
                         try:
-                            cyberpanel_uid = pwd.getpwnam('cyberpanel').pw_uid
-                            cyberpanel_gid = grp.getgrnam('cyberpanel').gr_gid
-                        except (KeyError, OSError):
-                            cyberpanel_uid = 0
-                            cyberpanel_gid = 0
+                            os.chown(root, cyberpanel_uid, cyberpanel_gid)
+                            os.chmod(root, stat.S_IRWXU | stat.S_IRWXG | stat.S_IROTH | stat.S_IXOTH)
+                        except (OSError, PermissionError):
+                            pass
                         
-                        # Recursively fix ownership and permissions
-                        for root, dirs, files in os.walk(pluginPath):
+                        for d in dirs:
+                            dir_path = os.path.join(root, d)
                             try:
-                                os.chown(root, cyberpanel_uid, cyberpanel_gid)
-                                os.chmod(root, stat.S_IRWXU | stat.S_IRWXG | stat.S_IROTH | stat.S_IXOTH)
+                                os.chown(dir_path, cyberpanel_uid, cyberpanel_gid)
+                                os.chmod(dir_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IROTH | stat.S_IXOTH)
                             except (OSError, PermissionError):
                                 pass
-                            
-                            for d in dirs:
-                                dir_path = os.path.join(root, d)
-                                try:
-                                    os.chown(dir_path, cyberpanel_uid, cyberpanel_gid)
-                                    os.chmod(dir_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IROTH | stat.S_IXOTH)
-                                except (OSError, PermissionError):
-                                    pass
-                            
-                            for f in files:
-                                file_path = os.path.join(root, f)
-                                try:
-                                    os.chown(file_path, cyberpanel_uid, cyberpanel_gid)
-                                    os.chmod(file_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
-                                except (OSError, PermissionError):
-                                    pass
-                    
-                    # Now try to remove
-                    shutil.rmtree(pluginPath)
-                    pluginInstaller.stdOut(f'Plugin directory removed after permission fix: {pluginName}')
-                    return
-                except Exception as e:
-                    pluginInstaller.stdOut(f'Permission fix and removal failed: {str(e)}')
+                        
+                        for f in files:
+                            file_path = os.path.join(root, f)
+                            try:
+                                os.chown(file_path, cyberpanel_uid, cyberpanel_gid)
+                                os.chmod(file_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
+                            except (OSError, PermissionError):
+                                pass
                 
-                # Third try: Use rm -rf (with or without sudo depending on privileges)
-                try:
-                    if use_sudo:
-                        # Use ProcessUtilities for privileged removal
-                        rm_cmd = f'rm -rf {pluginPath}'
-                        ProcessUtilities.normalExecutioner(rm_cmd)
-                    else:
-                        # Running as root - use subprocess directly
-                        result = subprocess.run(
-                            ['rm', '-rf', pluginPath],
-                            capture_output=True, text=True, timeout=30
-                        )
-                        if result.returncode != 0:
-                            raise Exception(f"rm -rf failed: {result.stderr}")
-                    
-                    pluginInstaller.stdOut(f'Plugin directory removed using rm -rf: {pluginName}')
-                    return
-                except Exception as e:
-                    raise Exception(f"All removal methods failed. Last error: {str(e)}")
-            else:
-                # Directory doesn't exist - already removed
-                pluginInstaller.stdOut(f'Plugin directory does not exist (already removed): {pluginName}')
-                    
+                # Now try to remove
+                shutil.rmtree(pluginPath)
+                pluginInstaller.stdOut(f'Plugin directory removed after permission fix: {pluginName}')
+                return
             except Exception as e:
-                pluginInstaller.stdOut(f"Error removing plugin files: {str(e)}")
-                raise Exception(f"Failed to remove plugin directory: {str(e)}")
+                pluginInstaller.stdOut(f'Permission fix and removal failed: {str(e)}')
+            
+            # Third try: Use rm -rf (with or without sudo depending on privileges)
+            try:
+                if use_sudo:
+                    # Use ProcessUtilities for privileged removal
+                    rm_cmd = f'rm -rf {pluginPath}'
+                    ProcessUtilities.normalExecutioner(rm_cmd)
+                else:
+                    # Running as root - use subprocess directly
+                    result = subprocess.run(
+                        ['rm', '-rf', pluginPath],
+                        capture_output=True, text=True, timeout=30
+                    )
+                    if result.returncode != 0:
+                        raise Exception(f"rm -rf failed: {result.stderr}")
+                
+                pluginInstaller.stdOut(f'Plugin directory removed using rm -rf: {pluginName}')
+                return
+            except Exception as e:
+                raise Exception(f"All removal methods failed. Last error: {str(e)}")
+                
+        except Exception as e:
+            pluginInstaller.stdOut(f"Error removing plugin files: {str(e)}")
+            raise Exception(f"Failed to remove plugin directory: {str(e)}")
 
     @staticmethod
     def removeFromSettings(pluginName):
