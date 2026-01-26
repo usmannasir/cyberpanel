@@ -3730,7 +3730,9 @@ context /cyberpanel_suspension_page.html {
 
             from plogical.processUtilities import ProcessUtilities
 
-            marketingStatus = emACL.checkIfEMEnabled(admin.userName)
+            # emailMarketing removed - always return False for marketing status
+            # marketingStatus = emACL.checkIfEMEnabled(admin.userName)
+            marketingStatus = False
 
             Data['marketingStatus'] = marketingStatus
             Data['ftpTotal'] = website.package.ftpAccounts
