@@ -140,6 +140,9 @@ def installed(request):
                 data['is_paid'] = False
                 data['patreon_tier'] = None
                 data['patreon_url'] = None
+                data['paypal_me_url'] = None
+                data['paypal_payment_link'] = None
+                data['payment_type'] = None  # 'patreon' or 'paypal'
                 
                 # Get modify date from local file (fast, no API calls)
                 # GitHub commit dates are fetched in the plugin store, not here to avoid timeouts
@@ -152,6 +155,28 @@ def installed(request):
                     modify_date = 'N/A'
                 
                 data['modify_date'] = modify_date
+                
+                # Calculate NEW and Stale badges based on modify_date
+                data['is_new'] = False
+                data['is_stale'] = False
+                
+                if modify_date and modify_date != 'N/A':
+                    try:
+                        # Parse the modify_date (format: YYYY-MM-DD HH:MM:SS)
+                        modify_date_obj = datetime.strptime(modify_date, '%Y-%m-%d %H:%M:%S')
+                        now = datetime.now()
+                        time_diff = now - modify_date_obj
+                        
+                        # NEW: updated within last 90 days (3 months)
+                        if time_diff.days <= 90:
+                            data['is_new'] = True
+                        
+                        # Stale: not updated in last 2 years (730 days)
+                        if time_diff.days > 730:
+                            data['is_stale'] = True
+                    except Exception:
+                        # If date parsing fails, leave as False
+                        pass
                 
                 # Extract settings URL or main URL for "Manage" button
                 settings_url_elem = root.find('settings_url')
@@ -188,19 +213,39 @@ def installed(request):
                 else:
                     data['author'] = 'Unknown'
                 
-                # Extract paid plugin information
+                # Extract paid plugin information - support both Patreon and PayPal
                 paid_elem = root.find('paid')
-                patreon_tier_elem = root.find('patreon_tier')
                 
                 # CRITICAL: Always explicitly set is_paid as boolean True/False
                 if paid_elem is not None and paid_elem.text and str(paid_elem.text).strip().lower() == 'true':
                     data['is_paid'] = True  # Explicit boolean True
-                    data['patreon_tier'] = patreon_tier_elem.text if patreon_tier_elem is not None and patreon_tier_elem.text else 'CyberPanel Paid Plugin'
-                    data['patreon_url'] = root.find('patreon_url').text if root.find('patreon_url') is not None else 'https://www.patreon.com/c/newstargeted/membership'
+                    
+                    # Check for PayPal payment method first
+                    paypal_me_elem = root.find('paypal_me_url')
+                    paypal_payment_link_elem = root.find('paypal_payment_link')
+                    
+                    if (paypal_me_elem is not None and paypal_me_elem.text) or (paypal_payment_link_elem is not None and paypal_payment_link_elem.text):
+                        # This is a PayPal plugin
+                        data['payment_type'] = 'paypal'
+                        data['paypal_me_url'] = paypal_me_elem.text if paypal_me_elem is not None and paypal_me_elem.text else None
+                        data['paypal_payment_link'] = paypal_payment_link_elem.text if paypal_payment_link_elem is not None and paypal_payment_link_elem.text else None
+                        data['patreon_tier'] = None
+                        data['patreon_url'] = None
+                    else:
+                        # This is a Patreon plugin (default/fallback)
+                        data['payment_type'] = 'patreon'
+                        patreon_tier_elem = root.find('patreon_tier')
+                        data['patreon_tier'] = patreon_tier_elem.text if patreon_tier_elem is not None and patreon_tier_elem.text else 'CyberPanel Paid Plugin'
+                        data['patreon_url'] = root.find('patreon_url').text if root.find('patreon_url') is not None else 'https://www.patreon.com/c/newstargeted/membership'
+                        data['paypal_me_url'] = None
+                        data['paypal_payment_link'] = None
                 else:
                     data['is_paid'] = False  # Explicit boolean False
                     data['patreon_tier'] = None
                     data['patreon_url'] = None
+                    data['paypal_me_url'] = None
+                    data['paypal_payment_link'] = None
+                    data['payment_type'] = None
                 
                 # Force boolean type (defensive programming) - CRITICAL: Always ensure boolean
                 data['is_paid'] = bool(data['is_paid']) if 'is_paid' in data else False
@@ -279,6 +324,28 @@ def installed(request):
                 
                 data['modify_date'] = modify_date
                 
+                # Calculate NEW and Stale badges based on modify_date
+                data['is_new'] = False
+                data['is_stale'] = False
+                
+                if modify_date and modify_date != 'N/A':
+                    try:
+                        # Parse the modify_date (format: YYYY-MM-DD HH:MM:SS)
+                        modify_date_obj = datetime.strptime(modify_date, '%Y-%m-%d %H:%M:%S')
+                        now = datetime.now()
+                        time_diff = now - modify_date_obj
+                        
+                        # NEW: updated within last 90 days (3 months)
+                        if time_diff.days <= 90:
+                            data['is_new'] = True
+                        
+                        # Stale: not updated in last 2 years (730 days)
+                        if time_diff.days > 730:
+                            data['is_stale'] = True
+                    except Exception:
+                        # If date parsing fails, leave as False
+                        pass
+                
                 # Extract settings URL or main URL
                 settings_url_elem = root.find('settings_url')
                 url_elem = root.find('url')
@@ -308,18 +375,40 @@ def installed(request):
                 else:
                     data['author'] = 'Unknown'
                 
-                # Extract paid plugin information (is_paid already initialized to False above)
+                # Extract paid plugin information - support both Patreon and PayPal
                 paid_elem = root.find('paid')
-                patreon_tier_elem = root.find('patreon_tier')
                 
                 # CRITICAL: Always explicitly set is_paid as boolean True/False
                 if paid_elem is not None and paid_elem.text and str(paid_elem.text).strip().lower() == 'true':
                     data['is_paid'] = True  # Explicit boolean True
-                    data['patreon_tier'] = patreon_tier_elem.text if patreon_tier_elem is not None and patreon_tier_elem.text else 'CyberPanel Paid Plugin'
-                    patreon_url_elem = root.find('patreon_url')
-                    data['patreon_url'] = patreon_url_elem.text if patreon_url_elem is not None and patreon_url_elem.text else 'https://www.patreon.com/membership/27789984'
+                    
+                    # Check for PayPal payment method first
+                    paypal_me_elem = root.find('paypal_me_url')
+                    paypal_payment_link_elem = root.find('paypal_payment_link')
+                    
+                    if (paypal_me_elem is not None and paypal_me_elem.text) or (paypal_payment_link_elem is not None and paypal_payment_link_elem.text):
+                        # This is a PayPal plugin
+                        data['payment_type'] = 'paypal'
+                        data['paypal_me_url'] = paypal_me_elem.text if paypal_me_elem is not None and paypal_me_elem.text else None
+                        data['paypal_payment_link'] = paypal_payment_link_elem.text if paypal_payment_link_elem is not None and paypal_payment_link_elem.text else None
+                        data['patreon_tier'] = None
+                        data['patreon_url'] = None
+                    else:
+                        # This is a Patreon plugin (default/fallback)
+                        data['payment_type'] = 'patreon'
+                        patreon_tier_elem = root.find('patreon_tier')
+                        data['patreon_tier'] = patreon_tier_elem.text if patreon_tier_elem is not None and patreon_tier_elem.text else 'CyberPanel Paid Plugin'
+                        patreon_url_elem = root.find('patreon_url')
+                        data['patreon_url'] = patreon_url_elem.text if patreon_url_elem is not None and patreon_url_elem.text else 'https://www.patreon.com/membership/27789984'
+                        data['paypal_me_url'] = None
+                        data['paypal_payment_link'] = None
                 else:
                     data['is_paid'] = False  # Explicit boolean False
+                    data['patreon_tier'] = None
+                    data['patreon_url'] = None
+                    data['paypal_me_url'] = None
+                    data['paypal_payment_link'] = None
+                    data['payment_type'] = None
                 
                 # Force boolean type (defensive programming) - CRITICAL: Always ensure boolean
                 data['is_paid'] = bool(data['is_paid']) if 'is_paid' in data else False
@@ -339,9 +428,26 @@ def installed(request):
                 logging.writeToFile(f"Installed plugin {plugin}: Error loading - {str(e)}")
                 continue
 
-    proc = httpProc(request, 'pluginHolder/plugins.html',
-                    {'plugins': pluginList, 'error_plugins': errorPlugins}, 'admin')
-    return proc.render()
+    # Sort plugins deterministically by name to prevent order changes
+    pluginList.sort(key=lambda x: x.get('name', '').lower())
+    
+    # Add cache-busting timestamp to context to prevent browser caching
+    import time
+    context = {
+        'plugins': pluginList,
+        'error_plugins': errorPlugins,
+        'cache_buster': int(time.time())  # Add timestamp to force template reload
+    }
+    
+    proc = httpProc(request, 'pluginHolder/plugins.html', context, 'admin')
+    response = proc.render()
+    
+    # Add cache-busting headers to prevent browser caching
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    
+    return response
 
 @csrf_exempt
 @require_http_methods(["POST"])
@@ -435,6 +541,17 @@ def install_plugin(request, plugin_name):
             
             # Set plugin to enabled by default after installation
             _set_plugin_state(plugin_name, True)
+            
+            # Restart lscpd service to ensure plugin loads immediately
+            try:
+                logging.writeToFile(f"Restarting lscpd service after plugin installation...")
+                subprocess.run(['systemctl', 'restart', 'lscpd'], check=True, timeout=30)
+                logging.writeToFile(f"lscpd service restarted successfully")
+            except subprocess.TimeoutExpired:
+                logging.writeToFile(f"Warning: lscpd restart timed out, but continuing...")
+            except Exception as restart_error:
+                logging.writeToFile(f"Warning: Failed to restart lscpd: {str(restart_error)}")
+                # Don't fail installation if restart fails, just log it
             
             return JsonResponse({
                 'success': True,
@@ -663,17 +780,36 @@ def _enrich_store_plugins(plugins):
                 pluginMetaData = ElementTree.parse(meta_path)
                 root = pluginMetaData.getroot()
                 paid_elem = root.find('paid')
-                if paid_elem is not None and paid_elem.text and paid_elem.text.lower() == 'true':
+                if paid_elem is not None and paid_elem.text and str(paid_elem.text).strip().lower() == 'true':
                     plugin['is_paid'] = True
-                    # Also update patreon fields if available
-                    patreon_tier_elem = root.find('patreon_tier')
-                    if patreon_tier_elem is not None and patreon_tier_elem.text:
-                        plugin['patreon_tier'] = patreon_tier_elem.text
-                    patreon_url_elem = root.find('patreon_url')
-                    if patreon_url_elem is not None and patreon_url_elem.text:
-                        plugin['patreon_url'] = patreon_url_elem.text
+                    
+                    # Check for PayPal payment method first
+                    paypal_me_elem = root.find('paypal_me_url')
+                    paypal_payment_link_elem = root.find('paypal_payment_link')
+                    
+                    if (paypal_me_elem is not None and paypal_me_elem.text) or (paypal_payment_link_elem is not None and paypal_payment_link_elem.text):
+                        # This is a PayPal plugin
+                        plugin['payment_type'] = 'paypal'
+                        plugin['paypal_me_url'] = paypal_me_elem.text if paypal_me_elem is not None and paypal_me_elem.text else None
+                        plugin['paypal_payment_link'] = paypal_payment_link_elem.text if paypal_payment_link_elem is not None and paypal_payment_link_elem.text else None
+                        plugin['patreon_tier'] = None
+                        plugin['patreon_url'] = None
+                    else:
+                        # This is a Patreon plugin (default/fallback)
+                        plugin['payment_type'] = 'patreon'
+                        patreon_tier_elem = root.find('patreon_tier')
+                        plugin['patreon_tier'] = patreon_tier_elem.text if patreon_tier_elem is not None and patreon_tier_elem.text else 'CyberPanel Paid Plugin'
+                        patreon_url_elem = root.find('patreon_url')
+                        plugin['patreon_url'] = patreon_url_elem.text if patreon_url_elem is not None and patreon_url_elem.text else 'https://www.patreon.com/c/newstargeted/membership'
+                        plugin['paypal_me_url'] = None
+                        plugin['paypal_payment_link'] = None
                 else:
                     plugin['is_paid'] = False
+                    plugin['payment_type'] = None
+                    plugin['patreon_tier'] = None
+                    plugin['patreon_url'] = None
+                    plugin['paypal_me_url'] = None
+                    plugin['paypal_payment_link'] = None
             except Exception as e:
                 logging.writeToFile(f"Error parsing meta.xml for {plugin_dir} in _enrich_store_plugins: {str(e)}")
                 # Fall back to normalizing existing value
@@ -694,8 +830,16 @@ def _enrich_store_plugins(plugins):
             else:
                 plugin['is_paid'] = False  # Default to free if we can't determine
         
-        # Ensure it's a proper boolean (not string or other type)
-        plugin['is_paid'] = bool(plugin['is_paid']) if plugin['is_paid'] not in [True, False] else plugin['is_paid']
+        # Ensure it's a proper boolean (not string or other type) - CRITICAL for consistency
+        if plugin['is_paid'] not in [True, False]:
+            plugin['is_paid'] = bool(plugin['is_paid'])
+        # Final safety check - force boolean type (defensive programming)
+        plugin['is_paid'] = True if plugin['is_paid'] is True else False
+        
+        # Ensure payment_type is set if is_paid is True
+        if plugin['is_paid'] and 'payment_type' not in plugin:
+            # Default to patreon if payment_type not set
+            plugin['payment_type'] = 'patreon'
         
         # Calculate NEW and Stale badges based on modify_date
         modify_date_str = plugin.get('modify_date', 'N/A')
@@ -859,19 +1003,39 @@ def _fetch_plugins_from_github():
                     except Exception as e:
                         logging.writeToFile(f"Error calculating NEW/Stale for {plugin_name}: {str(e)}")
                 
-                # Extract paid plugin information
+                # Extract paid plugin information - support both Patreon and PayPal
                 paid_elem = root.find('paid')
-                patreon_tier_elem = root.find('patreon_tier')
                 
                 is_paid = False
                 patreon_tier = None
                 patreon_url = None
+                paypal_me_url = None
+                paypal_payment_link = None
+                payment_type = None
                 
-                if paid_elem is not None and paid_elem.text and paid_elem.text.lower() == 'true':
+                if paid_elem is not None and paid_elem.text and str(paid_elem.text).strip().lower() == 'true':
                     is_paid = True
-                    patreon_tier = patreon_tier_elem.text if patreon_tier_elem is not None and patreon_tier_elem.text else 'CyberPanel Paid Plugin'
-                    patreon_url_elem = root.find('patreon_url')
-                    patreon_url = patreon_url_elem.text if patreon_url_elem is not None else 'https://www.patreon.com/c/newstargeted/membership'
+                    
+                    # Check for PayPal payment method first
+                    paypal_me_elem = root.find('paypal_me_url')
+                    paypal_payment_link_elem = root.find('paypal_payment_link')
+                    
+                    if (paypal_me_elem is not None and paypal_me_elem.text) or (paypal_payment_link_elem is not None and paypal_payment_link_elem.text):
+                        # This is a PayPal plugin
+                        payment_type = 'paypal'
+                        paypal_me_url = paypal_me_elem.text if paypal_me_elem is not None and paypal_me_elem.text else None
+                        paypal_payment_link = paypal_payment_link_elem.text if paypal_payment_link_elem is not None and paypal_payment_link_elem.text else None
+                        patreon_tier = None
+                        patreon_url = None
+                    else:
+                        # This is a Patreon plugin (default/fallback)
+                        payment_type = 'patreon'
+                        patreon_tier_elem = root.find('patreon_tier')
+                        patreon_tier = patreon_tier_elem.text if patreon_tier_elem is not None and patreon_tier_elem.text else 'CyberPanel Paid Plugin'
+                        patreon_url_elem = root.find('patreon_url')
+                        patreon_url = patreon_url_elem.text if patreon_url_elem is not None and patreon_url_elem.text else 'https://www.patreon.com/c/newstargeted/membership'
+                        paypal_me_url = None
+                        paypal_payment_link = None
                 
                 plugin_data = {
                     'plugin_dir': plugin_name,
@@ -885,9 +1049,12 @@ def _fetch_plugins_from_github():
                     'github_url': f'https://github.com/master3395/cyberpanel-plugins/tree/main/{plugin_name}',
                     'about_url': f'https://github.com/master3395/cyberpanel-plugins/tree/main/{plugin_name}',
                     'modify_date': modify_date,
-                    'is_paid': is_paid,
+                    'is_paid': bool(is_paid),  # Force boolean type
                     'patreon_tier': patreon_tier,
                     'patreon_url': patreon_url,
+                    'paypal_me_url': paypal_me_url,
+                    'paypal_payment_link': paypal_payment_link,
+                    'payment_type': payment_type,
                     'is_new': is_new,
                     'is_stale': is_stale
                 }
@@ -937,20 +1104,37 @@ def fetch_plugin_store(request):
     """Fetch plugins from the plugin store with caching"""
     mailUtilities.checkHome()
     
+    # Add cache-busting headers to prevent browser caching
+    response_headers = {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+    }
+    
     # Try to get from cache first
     cached_plugins = _get_cached_plugins()
     if cached_plugins is not None:
+        # Sort plugins deterministically by name to prevent order changes
+        cached_plugins.sort(key=lambda x: x.get('name', '').lower())
+        
         # Enrich cached plugins with installed/enabled status
         enriched_plugins = _enrich_store_plugins(cached_plugins)
-        return JsonResponse({
+        response = JsonResponse({
             'success': True,
             'plugins': enriched_plugins,
             'cached': True
-        })
+        }, json_dumps_params={'ensure_ascii': False})
+        # Add headers
+        for key, value in response_headers.items():
+            response[key] = value
+        return response
     
     # Cache miss or expired - fetch from GitHub
     try:
         plugins = _fetch_plugins_from_github()
+        
+        # Sort plugins deterministically by name to prevent order changes
+        plugins.sort(key=lambda x: x.get('name', '').lower())
         
         # Enrich plugins with installed/enabled status
         enriched_plugins = _enrich_store_plugins(plugins)
@@ -959,11 +1143,15 @@ def fetch_plugin_store(request):
         if plugins:
             _save_plugins_cache(plugins)
         
-        return JsonResponse({
+        response = JsonResponse({
             'success': True,
             'plugins': enriched_plugins,
             'cached': False
-        })
+        }, json_dumps_params={'ensure_ascii': False})
+        # Add cache-busting headers
+        for key, value in response_headers.items():
+            response[key] = value
+        return response
     
     except Exception as e:
         error_message = str(e)
@@ -973,13 +1161,19 @@ def fetch_plugin_store(request):
             stale_cache = _get_cached_plugins(allow_expired=True)  # Get cache even if expired
             if stale_cache is not None:
                 logging.writeToFile("Using stale cache due to rate limit")
+                # Sort plugins deterministically by name to prevent order changes
+                stale_cache.sort(key=lambda x: x.get('name', '').lower())
                 enriched_plugins = _enrich_store_plugins(stale_cache)
-                return JsonResponse({
+                response = JsonResponse({
                     'success': True,
                     'plugins': enriched_plugins,
                     'cached': True,
                     'warning': 'Using cached data due to GitHub rate limit. Data may be outdated.'
-                })
+                }, json_dumps_params={'ensure_ascii': False})
+                # Add cache-busting headers
+                for key, value in response_headers.items():
+                    response[key] = value
+                return response
         
         # No cache available, return error
         return JsonResponse({
@@ -1123,9 +1317,21 @@ def install_from_store(request, plugin_name):
                     else:
                         raise Exception(f'Plugin installation failed: {error_msg}')
                 
-                # Wait a moment for file system to sync and service to restart
+                # Wait a moment for file system to sync
                 import time
-                time.sleep(3)  # Increased wait time for file system sync
+                time.sleep(2)  # Wait for file system sync
+                
+                # Restart lscpd service to ensure plugin loads immediately
+                try:
+                    logging.writeToFile(f"Restarting lscpd service after plugin installation...")
+                    subprocess.run(['systemctl', 'restart', 'lscpd'], check=True, timeout=30)
+                    logging.writeToFile(f"lscpd service restarted successfully")
+                    time.sleep(2)  # Wait for service to fully restart
+                except subprocess.TimeoutExpired:
+                    logging.writeToFile(f"Warning: lscpd restart timed out, but continuing...")
+                except Exception as restart_error:
+                    logging.writeToFile(f"Warning: Failed to restart lscpd: {str(restart_error)}")
+                    # Don't fail installation if restart fails, just log it
                 
                 # Verify plugin was actually installed
                 pluginInstalled = '/usr/local/CyberCP/' + plugin_name

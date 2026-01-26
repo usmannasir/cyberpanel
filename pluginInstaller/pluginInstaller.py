@@ -71,8 +71,8 @@ class pluginInstaller:
 
     @staticmethod
     def upgradingSettingsFile(pluginName):
-        data = open("/usr/local/CyberCP/CyberCP/settings.py", 'r').readlines()
-        writeToFile = open("/usr/local/CyberCP/CyberCP/settings.py", 'w')
+        data = open("/usr/local/CyberCP/CyberCP/settings.py", 'r', encoding='utf-8').readlines()
+        writeToFile = open("/usr/local/CyberCP/CyberCP/settings.py", 'w', encoding='utf-8')
 
         for items in data:
             if items.find("'emailPremium',") > -1:
@@ -90,8 +90,8 @@ class pluginInstaller:
         Plugin URLs must be inserted BEFORE the generic 'plugins/' line
         to ensure proper route matching (more specific routes first)
         """
-        data = open("/usr/local/CyberCP/CyberCP/urls.py", 'r').readlines()
-        writeToFile = open("/usr/local/CyberCP/CyberCP/urls.py", 'w')
+        data = open("/usr/local/CyberCP/CyberCP/urls.py", 'r', encoding='utf-8').readlines()
+        writeToFile = open("/usr/local/CyberCP/CyberCP/urls.py", 'w', encoding='utf-8')
         urlPatternAdded = False
 
         for items in data:
@@ -109,7 +109,7 @@ class pluginInstaller:
         if not urlPatternAdded:
             pluginInstaller.stdOut(f"Warning: 'plugins/' line not found, using fallback insertion after 'manageservices'")
             writeToFile.close()
-            writeToFile = open("/usr/local/CyberCP/CyberCP/urls.py", 'w')
+            writeToFile = open("/usr/local/CyberCP/CyberCP/urls.py", 'w', encoding='utf-8')
             for items in data:
                 if items.find("manageservices") > -1:
                     writeToFile.writelines(items)
@@ -132,8 +132,8 @@ class pluginInstaller:
 
     @staticmethod
     def addInterfaceLink(pluginName):
-        data = open("/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html", 'r').readlines()
-        writeToFile = open("/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html", 'w')
+        data = open("/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html", 'r', encoding='utf-8').readlines()
+        writeToFile = open("/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html", 'w', encoding='utf-8')
 
         for items in data:
             if items.find("{# pluginsList #}") > -1:
@@ -290,8 +290,8 @@ class pluginInstaller:
 
     @staticmethod
     def removeFromSettings(pluginName):
-        data = open("/usr/local/CyberCP/CyberCP/settings.py", 'r').readlines()
-        writeToFile = open("/usr/local/CyberCP/CyberCP/settings.py", 'w')
+        data = open("/usr/local/CyberCP/CyberCP/settings.py", 'r', encoding='utf-8').readlines()
+        writeToFile = open("/usr/local/CyberCP/CyberCP/settings.py", 'w', encoding='utf-8')
 
         for items in data:
             if items.find(pluginName) > -1:
@@ -302,8 +302,8 @@ class pluginInstaller:
 
     @staticmethod
     def removeFromURLs(pluginName):
-        data = open("/usr/local/CyberCP/CyberCP/urls.py", 'r').readlines()
-        writeToFile = open("/usr/local/CyberCP/CyberCP/urls.py", 'w')
+        data = open("/usr/local/CyberCP/CyberCP/urls.py", 'r', encoding='utf-8').readlines()
+        writeToFile = open("/usr/local/CyberCP/CyberCP/urls.py", 'w', encoding='utf-8')
 
         for items in data:
             if items.find(pluginName) > -1:
@@ -322,8 +322,8 @@ class pluginInstaller:
 
     @staticmethod
     def removeInterfaceLink(pluginName):
-        data = open("/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html", 'r').readlines()
-        writeToFile = open("/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html", 'w')
+        data = open("/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html", 'r', encoding='utf-8').readlines()
+        writeToFile = open("/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html", 'w', encoding='utf-8')
 
         for items in data:
             if items.find(pluginName) > -1 and items.find('<li>') > -1:
