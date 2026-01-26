@@ -556,6 +556,50 @@ def call(command, distro, bracket, message, log=0, do_exit=0, code=os.EX_OK, she
                 os._exit(code)
             return False
 
+    # CRITICAL: For mysql/mariadb commands, use shell=True and find the binary path
+    # This fixes "No such file or directory: 'mysql'" errors
+    if not shell and ('mysql' in command or 'mariadb' in command):
+        # Try to find mysql/mariadb binary path
+        mysql_paths = ['/usr/bin/mysql', '/usr/bin/mariadb', '/usr/local/bin/mysql', '/usr/local/bin/mariadb']
+        mysql_found = None
+        
+        # Check which mysql binary exists
+        for path in mysql_paths:
+            if os.path.exists(path):
+                mysql_found = path
+                break
+        
+        # If mysql/mariadb is in command but not found, try to use shell=True
+        if mysql_found is None:
+            # Try using 'which' to find mysql
+            try:
+                which_result = subprocess.run(['which', 'mysql'], capture_output=True, text=True, timeout=5)
+                if which_result.returncode == 0:
+                    mysql_found = which_result.stdout.strip()
+            except:
+                pass
+        
+        # If still not found, try mariadb
+        if mysql_found is None:
+            try:
+                which_result = subprocess.run(['which', 'mariadb'], capture_output=True, text=True, timeout=5)
+                if which_result.returncode == 0:
+                    mysql_found = which_result.stdout.strip()
+            except:
+                pass
+        
+        # If mysql/mariadb command found, replace it with full path
+        if mysql_found:
+            # Replace 'mysql' or 'mariadb' at the start of command with full path
+            import re
+            command = re.sub(r'^(mysql|mariadb)\s', f'{mysql_found} ', command)
+            # Also replace if it's in the middle (e.g., "sudo mysql")
+            command = re.sub(r'\s(mysql|mariadb)\s', f' {mysql_found} ', command)
+            command = re.sub(r'\s(mysql|mariadb)$', f' {mysql_found}', command)
+        
+        # Use shell=True for mysql commands to handle complex SQL properly
+        shell = True
+
     finalMessage = 'Running: %s' % (message)
     stdOut(finalMessage, log)
     count = 0
