@@ -783,6 +783,28 @@ except:
         return 1
     fi
     
+    # CRITICAL: Patch the installer script to skip MariaDB installation if 10.x is already installed
+    if [ -n "$MARIADB_VERSION" ] && [ "$major_ver" -lt 12 ] 2>/dev/null; then
+        print_status "Patching installer script to skip MariaDB installation..."
+        
+        # Create a backup
+        cp cyberpanel_installer.sh cyberpanel_installer.sh.backup
+        
+        # Patch dnf install commands to exclude MariaDB-server
+        # This prevents the installer from trying to upgrade MariaDB
+        sed -i 's/dnf install\([^;]*\)mariadb-server/dnf install\1--exclude=MariaDB-server* mariadb-server/g' cyberpanel_installer.sh 2>/dev/null
+        sed -i 's/dnf install\([^;]*\)MariaDB-server/dnf install\1--exclude=MariaDB-server* MariaDB-server/g' cyberpanel_installer.sh 2>/dev/null
+        
+        # Also patch yum commands
+        sed -i 's/yum install\([^;]*\)mariadb-server/yum install\1--exclude=MariaDB-server* mariadb-server/g' cyberpanel_installer.sh 2>/dev/null
+        sed -i 's/yum install\([^;]*\)MariaDB-server/yum install\1--exclude=MariaDB-server* MariaDB-server/g' cyberpanel_installer.sh 2>/dev/null
+        
+        # Add exclude to any dnf/yum install command that might install MariaDB
+        sed -i 's/\(dnf\|yum\) install -y\([^;]*\)$/\1 install -y --exclude=MariaDB-server*\2/g' cyberpanel_installer.sh 2>/dev/null
+        
+        print_status "Installer script patched to exclude MariaDB-server from installation"
+    fi
+    
     # Make script executable and verify
     chmod 755 cyberpanel_installer.sh 2>/dev/null || true
     if [ ! -x "cyberpanel_installer.sh" ]; then
