@@ -989,6 +989,20 @@
                 {% trans "Installed Plugins" %}
             </h1>
             <p>{% trans "List of installed plugins on your CyberPanel" %}</p>
+            {% if plugins %}
+            <div style="margin-top: 15px; display: flex; gap: 20px; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary, #64748b); font-size: 14px;">
+                    <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                    <strong>{% trans "Installed:" %}</strong>
+                    <span style="color: var(--text-primary, #2f3640); font-weight: 600;">{{ total_installed }}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary, #64748b); font-size: 14px;">
+                    <i class="fas fa-power-off" style="color: #3b82f6;"></i>
+                    <strong>{% trans "Active:" %}</strong>
+                    <span style="color: var(--text-primary, #2f3640); font-weight: 600;">{{ total_active }}</span>
+                </div>
+            </div>
+            {% endif %}
         </div>
 
         <!-- Plugins Section -->
