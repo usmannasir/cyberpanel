@@ -4,6 +4,7 @@
 # This installer uses modules for better organization and maintainability
 # Each module is kept under 500 lines for easy management
 
+# Note: We use 'set -e' carefully - some operations need to handle failures gracefully
 set -e
 
 # Get script directory
@@ -41,7 +42,8 @@ if [[ "$SCRIPT_DIR" == /dev/fd/* ]] || [[ ! -d "$SCRIPT_DIR/modules" ]]; then
     rm -rf /tmp/cyberpanel-installer-* 2>/dev/null || true
     rm -rf /var/tmp/cyberpanel-installer-* 2>/dev/null || true
     
-    # Try multiple temp locations
+    # Try multiple temp locations (disable set -e for this section)
+    set +e
     for temp_location in "/tmp/cyberpanel-installer-$$" "/var/tmp/cyberpanel-installer-$$" "$HOME/cyberpanel-installer-$$" "/root/cyberpanel-installer-$$"; do
         if mkdir -p "$temp_location" 2>/dev/null; then
             TEMP_DIR="$temp_location"
@@ -49,6 +51,7 @@ if [[ "$SCRIPT_DIR" == /dev/fd/* ]] || [[ ! -d "$SCRIPT_DIR/modules" ]]; then
             break
         fi
     done
+    set -e
     
     # If we still don't have a temp dir, skip git clone and use fallback
     if [ -z "$TEMP_DIR" ]; then
