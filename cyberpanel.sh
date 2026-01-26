@@ -934,6 +934,68 @@ except Exception as e:
     if [ -f "$installer_py" ]; then
         print_status "Using install/install.py directly for installation (non-interactive mode)"
         
+        # CRITICAL: Patch install.py to exclude MariaDB-server from dnf/yum commands
+        if [ -n "$MARIADB_VERSION" ] && [ "$major_ver" -lt 12 ] 2>/dev/null; then
+            print_status "Patching install.py to exclude MariaDB-server from installation commands..."
+            
+            # Create backup
+            cp "$installer_py" "${installer_py}.backup" 2>/dev/null || true
+            
+            # Patch install.py to add --exclude=MariaDB-server* to dnf/yum install commands
+            python3 -c "
+import re
+import sys
+
+try:
+    with open('$installer_py', 'r') as f:
+        content = f.read()
+    
+    original_content = content
+    
+    # Pattern: Add --exclude=MariaDB-server* to dnf/yum install commands that install mariadb-server
+    def add_exclude(match):
+        cmd = match.group(0)
+        # Check if --exclude is already present
+        if '--exclude=MariaDB-server' in cmd:
+            return cmd
+        # Add --exclude=MariaDB-server* after install and flags, before packages
+        return re.sub(r'((?:dnf|yum)\s+install\s+(?:-[^\s]+\s+)*)', r'\1--exclude=MariaDB-server* ', cmd, flags=re.IGNORECASE)
+    
+    # Find all dnf/yum install commands that mention mariadb-server
+    content = re.sub(
+        r'(?:dnf|yum)\s+install[^;]*?mariadb-server[^;]*',
+        add_exclude,
+        content,
+        flags=re.IGNORECASE | re.MULTILINE
+    )
+    
+    # Also handle MariaDB-server (capitalized) and in Python strings
+    content = re.sub(
+        r'(\"|\')(?:dnf|yum)\s+install[^\"]*?mariadb-server[^\"]*(\"|\')',
+        lambda m: m.group(1) + re.sub(r'((?:dnf|yum)\s+install\s+(?:-[^\s]+\s+)*)', r'\1--exclude=MariaDB-server* ', m.group(0)[1:-1], flags=re.IGNORECASE) + m.group(2),
+        content,
+        flags=re.IGNORECASE | re.MULTILINE
+    )
+    
+    # Only write if content changed
+    if content != original_content:
+        with open('$installer_py', 'w') as f:
+            f.write(content)
+        print('install.py patched successfully')
+    else:
+        print('No changes needed in install.py')
+        
+except Exception as e:
+    print(f'Error patching install.py: {e}')
+    sys.exit(1)
+" 2>/dev/null && print_status "install.py patched successfully" || {
+            # Fallback: Simple sed-based patching if Python fails
+            sed -i 's/\(dnf\|yum\) install\([^;]*\)mariadb-server/\1 install\2--exclude=MariaDB-server* mariadb-server/gi' "$installer_py" 2>/dev/null
+            sed -i 's/\(dnf\|yum\) install\([^;]*\)MariaDB-server/\1 install\2--exclude=MariaDB-server* MariaDB-server/gi' "$installer_py" 2>/dev/null
+            print_status "install.py patched (fallback method)"
+        }
+        fi
+        
         # If MariaDB 10.x is installed, disable repositories right before running installer
         if [ -n "$MARIADB_VERSION" ] && [ -f /tmp/cyberpanel_repo_monitor.pid ]; then
             # Call the disable function one more time before installer runs
