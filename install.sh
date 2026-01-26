@@ -8,6 +8,62 @@ set -e
 
 # Get script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Early logging function (before main functions are defined)
+early_log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
+}
+
+# Check if script is being executed via curl/wget (SCRIPT_DIR will be /dev/fd/...)
+# In that case, we need to clone the repository first
+if [[ "$SCRIPT_DIR" == /dev/fd/* ]] || [[ ! -d "$SCRIPT_DIR/modules" ]]; then
+    # Script is being executed via curl/wget, need to clone repo first
+    early_log "📥 Detected curl/wget execution - cloning repository..."
+    
+    # Determine branch from arguments or use default
+    BRANCH_NAME="v2.5.5-dev"
+    ARGS=("$@")
+    for i in "${!ARGS[@]}"; do
+        if [[ "${ARGS[i]}" == "-b" ]] || [[ "${ARGS[i]}" == "--branch" ]]; then
+            if [[ -n "${ARGS[i+1]}" ]]; then
+                BRANCH_NAME="${ARGS[i+1]}"
+            fi
+            break
+        fi
+    done
+    
+    # Clone repository to temporary directory
+    TEMP_DIR="/tmp/cyberpanel-installer-$$"
+    mkdir -p "$TEMP_DIR"
+    
+    early_log "📦 Cloning CyberPanel repository (branch: $BRANCH_NAME)..."
+    if git clone --depth 1 --branch "$BRANCH_NAME" https://github.com/master3395/cyberpanel.git "$TEMP_DIR/cyberpanel" 2>/dev/null; then
+        SCRIPT_DIR="$TEMP_DIR/cyberpanel"
+        cd "$SCRIPT_DIR"
+        early_log "✅ Repository cloned successfully"
+    else
+        # Fallback: try to download install.sh from the old method
+        early_log "⚠️  Git clone failed, falling back to legacy installer..."
+        OUTPUT=$(cat /etc/*release 2>/dev/null || echo "")
+        if echo "$OUTPUT" | grep -qE "(CentOS|AlmaLinux|CloudLinux|Rocky)" ; then
+            SERVER_OS="CentOS8"
+            yum install -y -q curl wget 2>/dev/null || true
+        elif echo "$OUTPUT" | grep -qE "Ubuntu" ; then
+            SERVER_OS="Ubuntu"
+            apt install -y -qq wget curl 2>/dev/null || true
+        else
+            early_log "❌ Unable to detect OS for fallback installer"
+            exit 1
+        fi
+        
+        rm -f /tmp/cyberpanel.sh
+        curl --silent -o /tmp/cyberpanel.sh "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null || \
+        wget -q -O /tmp/cyberpanel.sh "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null
+        chmod +x /tmp/cyberpanel.sh
+        exec /tmp/cyberpanel.sh "$@"
+    fi
+fi
+
 MODULES_DIR="$SCRIPT_DIR/modules"
 
 # Colors for output
