@@ -111,9 +111,10 @@ if [ "$BRANCH_NAME" = "v2.5.5-dev" ] || [ "$BRANCH_NAME" = "stable" ]; then
     # Try to download from the branch-specific URL
     if curl --silent -o "$SCRIPT_PATH" "https://raw.githubusercontent.com/master3395/cyberpanel/$BRANCH_NAME/cyberpanel.sh" 2>/dev/null; then
         if [ -f "$SCRIPT_PATH" ] && [ -s "$SCRIPT_PATH" ]; then
-            chmod +x "$SCRIPT_PATH"
+            chmod +x "$SCRIPT_PATH" 2>/dev/null || true
             echo "✅ Downloaded cyberpanel.sh from branch $BRANCH_NAME"
-            exec "$SCRIPT_PATH" "$@"
+            # Use sh to execute to avoid permission issues
+            exec sh "$SCRIPT_PATH" "$@"
         fi
     fi
 fi
@@ -122,9 +123,10 @@ fi
 if curl --silent -o "$SCRIPT_PATH" "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null || \
    wget -q -O "$SCRIPT_PATH" "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null; then
     if [ -f "$SCRIPT_PATH" ] && [ -s "$SCRIPT_PATH" ]; then
-        chmod +x "$SCRIPT_PATH"
+        chmod +x "$SCRIPT_PATH" 2>/dev/null || true
         echo "✅ Downloaded cyberpanel.sh from standard source"
-        exec "$SCRIPT_PATH" "$@"
+        # Use sh to execute to avoid permission issues
+        exec sh "$SCRIPT_PATH" "$@"
     fi
 fi
 
