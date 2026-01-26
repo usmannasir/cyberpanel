@@ -1667,6 +1667,26 @@ module cyberpanel_ols {
                 
             else:
                 # RHEL-based MariaDB installation
+                # Check if MariaDB is already installed before setting up repository
+                is_installed, installed_version, major_minor = self.checkExistingMariaDB()
+                
+                if is_installed:
+                    self.stdOut(f"MariaDB/MySQL is already installed (version: {installed_version}), skipping installation", 1)
+                    # Don't set up 12.1 repository if 10.x is installed to avoid upgrade issues
+                    if major_minor and major_minor != "unknown":
+                        try:
+                            major_ver = float(major_minor)
+                            if major_ver < 12.0:
+                                self.stdOut("Skipping MariaDB 12.1 repository setup to avoid upgrade conflicts", 1)
+                                self.stdOut("Using existing MariaDB installation", 1)
+                                self.startMariaDB()
+                                self.changeMYSQLRootPassword()
+                                self.fixMariaDB()
+                                return True
+                        except (ValueError, TypeError):
+                            pass
+                
+                # Set up MariaDB 12.1 repository only if not already installed
                 command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=12.1'
                 self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
                 
