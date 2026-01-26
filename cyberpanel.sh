@@ -1080,9 +1080,24 @@ except Exception as e:
             print_status "Installing MariaDB development headers for RHEL-based system..."
             
             # Try to install mariadb-devel (works with MariaDB 10.x and 12.x)
+            # NOTE: We need mariadb-devel even if we excluded MariaDB-server
+            # The exclude only applies to MariaDB-server, not development packages
             if command -v dnf >/dev/null 2>&1; then
                 # For AlmaLinux 9/10 and newer - show output for debugging
-                print_status "Attempting to install mariadb-devel..."
+                print_status "Attempting to install mariadb-devel (development headers only, not server)..."
+                # Temporarily remove exclude for devel packages if needed
+                local dnf_exclude_backup=""
+                if [ -f /etc/dnf/dnf.conf ] && grep -q "exclude=.*MariaDB" /etc/dnf/dnf.conf; then
+                    # Check if exclude is too broad
+                    if grep -q "exclude=.*MariaDB-server.*MariaDB-devel" /etc/dnf/dnf.conf || \
+                       grep -q "exclude=.*MariaDB\*" /etc/dnf/dnf.conf; then
+                        print_status "Temporarily adjusting dnf exclude to allow mariadb-devel installation..."
+                        # We only want to exclude MariaDB-server, not devel packages
+                        sed -i 's/exclude=\(.*\)MariaDB-server\(.*\)MariaDB-devel\(.*\)/exclude=\1MariaDB-server\2\3/' /etc/dnf/dnf.conf 2>/dev/null || true
+                        sed -i 's/exclude=\(.*\)MariaDB\*\(.*\)/exclude=\1MariaDB-server*\2/' /etc/dnf/dnf.conf 2>/dev/null || true
+                    fi
+                fi
+                
                 if dnf install -y --allowerasing --skip-broken --nobest \
                     mariadb-devel pkgconfig gcc python3-devel python3-pip; then
                     print_status "✓ Successfully installed mariadb-devel"
@@ -1094,6 +1109,7 @@ except Exception as e:
                     print_status "✓ Successfully installed mariadb-connector-c-devel"
                 else
                     print_status "⚠️  WARNING: Failed to install MariaDB development headers"
+                    print_status "This may cause MySQLdb installation to fail"
                 fi
             else
                 # For older systems with yum
