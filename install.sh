@@ -101,31 +101,34 @@ check_disk_space
 
 # Download and execute cyberpanel.sh for the specified branch
 echo "Downloading CyberPanel installer for branch: $BRANCH_NAME"
-rm -f cyberpanel.sh
-rm -f install.tar.gz
+
+# Use absolute path for downloaded script
+SCRIPT_PATH="/tmp/cyberpanel-$$.sh"
+rm -f "$SCRIPT_PATH" cyberpanel.sh install.tar.gz
 
 # For v2.5.5-dev, try to get the cyberpanel.sh from the branch
 if [ "$BRANCH_NAME" = "v2.5.5-dev" ] || [ "$BRANCH_NAME" = "stable" ]; then
     # Try to download from the branch-specific URL
-    if curl --silent -o cyberpanel.sh "https://raw.githubusercontent.com/master3395/cyberpanel/$BRANCH_NAME/cyberpanel.sh" 2>/dev/null; then
-        if [ -f cyberpanel.sh ] && [ -s cyberpanel.sh ]; then
-            chmod +x cyberpanel.sh
+    if curl --silent -o "$SCRIPT_PATH" "https://raw.githubusercontent.com/master3395/cyberpanel/$BRANCH_NAME/cyberpanel.sh" 2>/dev/null; then
+        if [ -f "$SCRIPT_PATH" ] && [ -s "$SCRIPT_PATH" ]; then
+            chmod +x "$SCRIPT_PATH"
             echo "✅ Downloaded cyberpanel.sh from branch $BRANCH_NAME"
-            ./cyberpanel.sh "$@"
-            exit $?
+            exec "$SCRIPT_PATH" "$@"
         fi
     fi
 fi
 
 # Fallback to standard cyberpanel.sh download
-curl --silent -o cyberpanel.sh "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null || \
-wget -q -O cyberpanel.sh "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null
-
-if [ -f cyberpanel.sh ] && [ -s cyberpanel.sh ]; then
-    chmod +x cyberpanel.sh
-    ./cyberpanel.sh "$@"
-else
-    echo "❌ Failed to download cyberpanel.sh"
-    echo "Please check your internet connection and try again"
-    exit 1
+if curl --silent -o "$SCRIPT_PATH" "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null || \
+   wget -q -O "$SCRIPT_PATH" "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null; then
+    if [ -f "$SCRIPT_PATH" ] && [ -s "$SCRIPT_PATH" ]; then
+        chmod +x "$SCRIPT_PATH"
+        echo "✅ Downloaded cyberpanel.sh from standard source"
+        exec "$SCRIPT_PATH" "$@"
+    fi
 fi
+
+# If we get here, download failed
+echo "❌ Failed to download cyberpanel.sh"
+echo "Please check your internet connection and try again"
+exit 1
