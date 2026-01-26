@@ -846,10 +846,15 @@ def _enrich_store_plugins(plugins):
             continue
         
         # Check if plugin is installed locally
+        # IMPORTANT: Only check installed location, not source location
+        # Plugins in /home/cyberpanel/plugins/ are just source files, not installed plugins
         installed_path = os.path.join(plugin_install_dir, plugin_dir)
-        source_path = os.path.join(plugin_source_dir, plugin_dir)
+        installed_meta = os.path.join(installed_path, 'meta.xml')
         
-        plugin['installed'] = os.path.exists(installed_path) or os.path.exists(source_path)
+        # Plugin is only considered installed if:
+        # 1. The plugin directory exists in /usr/local/CyberCP/
+        # 2. AND meta.xml exists (indicates actual installation, not just leftover files)
+        plugin['installed'] = os.path.exists(installed_path) and os.path.exists(installed_meta)
         
         # Check if plugin is enabled (only if installed)
         if plugin['installed']:
@@ -860,11 +865,15 @@ def _enrich_store_plugins(plugins):
         # Ensure is_paid field exists and is properly set (default to False if not set or invalid)
         # CRITICAL FIX: Always check local meta.xml FIRST as source of truth
         # This ensures cache entries without is_paid are properly enriched
+        # Check installed location first, then fallback to source location for metadata
         meta_path = None
-        if os.path.exists(installed_path):
-            meta_path = os.path.join(installed_path, 'meta.xml')
+        source_path = os.path.join(plugin_source_dir, plugin_dir)
+        if os.path.exists(installed_meta):
+            meta_path = installed_meta
         elif os.path.exists(source_path):
-            meta_path = os.path.join(source_path, 'meta.xml')
+            source_meta = os.path.join(source_path, 'meta.xml')
+            if os.path.exists(source_meta):
+                meta_path = source_meta
         
         # If we have a local meta.xml, use it as the source of truth (most reliable)
         if meta_path and os.path.exists(meta_path):
