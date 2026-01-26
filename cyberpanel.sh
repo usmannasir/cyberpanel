@@ -673,6 +673,42 @@ install_cyberpanel_direct() {
                             print_status "Added MariaDB-server* to yum excludes"
                         fi
                     fi
+                    
+                    # Create a function to disable MariaDB repositories (will be called after repository setup)
+                    disable_mariadb_repos() {
+                        local repo_files=(
+                            "/etc/yum.repos.d/mariadb-main.repo"
+                            "/etc/yum.repos.d/mariadb.repo"
+                            "/etc/yum.repos.d/mariadb-12.1.repo"
+                        )
+                        
+                        for repo_file in "${repo_files[@]}"; do
+                            if [ -f "$repo_file" ]; then
+                                # Disable all MariaDB repository sections
+                                sed -i '/^\[.*mariadb.*\]/I,/^\[/ { /^enabled\s*=/ s/=.*/=0/; /^\[.*mariadb.*\]/I { /enabled/!a enabled=0
+} }' "$repo_file" 2>/dev/null || \
+                                sed -i 's/^enabled\s*=\s*1/enabled=0/g' "$repo_file" 2>/dev/null
+                                print_status "Disabled MariaDB repository in $repo_file"
+                            fi
+                        done
+                    }
+                    
+                    # Export function so it can be called from installer
+                    export -f disable_mariadb_repos
+                    export MARIADB_VERSION="$mariadb_version"
+                    
+                    # Also set up a background process to monitor and disable repos
+                    (
+                        while [ ! -f /tmp/cyberpanel_install_complete ]; do
+                            sleep 2
+                            if [ -f /etc/yum.repos.d/mariadb-main.repo ] || [ -f /etc/yum.repos.d/mariadb.repo ]; then
+                                disable_mariadb_repos
+                            fi
+                        done
+                    ) &
+                    local monitor_pid=$!
+                    echo "$monitor_pid" > /tmp/cyberpanel_repo_monitor.pid
+                    print_status "Started background process to monitor and disable MariaDB repositories"
                 fi
             fi
         fi
@@ -785,11 +821,31 @@ install_cyberpanel_direct() {
         installer_path="$(pwd)/$installer_script"
     fi
     
+    # If MariaDB 10.x is installed, disable repositories right before running installer
+    if [ -n "$MARIADB_VERSION" ] && [ -f /tmp/cyberpanel_repo_monitor.pid ]; then
+        # Call the disable function one more time before installer runs
+        if type disable_mariadb_repos >/dev/null 2>&1; then
+            disable_mariadb_repos
+        fi
+    fi
+    
     if [ "$DEBUG_MODE" = true ]; then
         bash "$installer_path" --debug 2>&1 | tee /var/log/CyberPanel/install_output.log
     else
         bash "$installer_path" 2>&1 | tee /var/log/CyberPanel/install_output.log
     fi
+    
+    local install_exit_code=${PIPESTATUS[0]}
+    
+    # Stop the repository monitor
+    if [ -f /tmp/cyberpanel_repo_monitor.pid ]; then
+        local monitor_pid=$(cat /tmp/cyberpanel_repo_monitor.pid 2>/dev/null)
+        if [ -n "$monitor_pid" ] && kill -0 "$monitor_pid" 2>/dev/null; then
+            kill "$monitor_pid" 2>/dev/null
+        fi
+        rm -f /tmp/cyberpanel_repo_monitor.pid
+    fi
+    touch /tmp/cyberpanel_install_complete 2>/dev/null || true
 
     local install_exit_code=${PIPESTATUS[0]}
 
