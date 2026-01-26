@@ -1317,6 +1317,15 @@ def fetch_plugin_store(request):
                 'error': error_message,
                 'plugins': []
             }, status=500)
+    except Exception as outer_error:
+        # Catch any other unexpected errors
+        error_message = str(outer_error)
+        logging.writeToFile(f"Unexpected error in fetch_plugin_store: {error_message}")
+        return JsonResponse({
+            'success': False,
+            'error': error_message,
+            'plugins': []
+        }, status=500)
 
 @csrf_exempt
 @require_http_methods(["POST"])
