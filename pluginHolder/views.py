@@ -18,6 +18,7 @@ import urllib.error
 import time
 sys.path.append('/usr/local/CyberCP')
 from pluginInstaller.pluginInstaller import pluginInstaller
+from .patreon_verifier import PatreonVerifier
 
 # Plugin state file location
 PLUGIN_STATE_DIR = '/home/cyberpanel/plugin_states'
@@ -127,13 +128,20 @@ def installed(request):
                 data['desc'] = desc_elem.text
                 data['version'] = version_elem.text
                 data['plugin_dir'] = plugin  # Plugin directory name
-                data['installed'] = os.path.exists(completePath)  # True if installed, False if only in source
+                # Check if plugin is installed (only if it exists in /usr/local/CyberCP/)
+                # Source directory presence doesn't mean installed - it just means the source files are available
+                data['installed'] = os.path.exists(completePath)
                 
                 # Get plugin enabled state (only for installed plugins)
                 if data['installed']:
                     data['enabled'] = _is_plugin_enabled(plugin)
                 else:
                     data['enabled'] = False
+                
+                # Initialize is_paid to False by default (will be set later if paid)
+                data['is_paid'] = False
+                data['patreon_tier'] = None
+                data['patreon_url'] = None
                 
                 # Get modify date from local file (fast, no API calls)
                 # GitHub commit dates are fetched in the plugin store, not here to avoid timeouts
@@ -181,16 +189,40 @@ def installed(request):
                     data['author'] = author_elem.text
                 else:
                     data['author'] = 'Unknown'
+                
+                # Extract paid plugin information
+                paid_elem = root.find('paid')
+                patreon_tier_elem = root.find('patreon_tier')
+                
+                if paid_elem is not None and paid_elem.text and paid_elem.text.lower() == 'true':
+                    data['is_paid'] = True
+                    data['patreon_tier'] = patreon_tier_elem.text if patreon_tier_elem is not None and patreon_tier_elem.text else 'CyberPanel Paid Plugin'
+                    data['patreon_url'] = root.find('patreon_url').text if root.find('patreon_url') is not None else 'https://www.patreon.com/c/newstargeted/membership'
+                else:
+                    data['is_paid'] = False
+                    data['patreon_tier'] = None
+                    data['patreon_url'] = None
 
                 pluginList.append(data)
                 processed_plugins.add(plugin)  # Mark as processed
             except ElementTree.ParseError as e:
                 errorPlugins.append({'name': plugin, 'error': f'XML parse error: {str(e)}'})
                 logging.writeToFile(f"Plugin {plugin}: XML parse error - {str(e)}")
+                # Don't mark as processed if it failed - let installed check handle it
+                # This ensures plugins that exist in /usr/local/CyberCP/ but have bad source meta.xml still get counted
+                if not os.path.exists(completePath):
+                    # Only skip if it's not actually installed
+                    continue
+                # If it exists in installed location, don't mark as processed so it gets checked there
                 continue
             except Exception as e:
                 errorPlugins.append({'name': plugin, 'error': f'Error loading plugin: {str(e)}'})
                 logging.writeToFile(f"Plugin {plugin}: Error loading - {str(e)}")
+                # Don't mark as processed if it failed - let installed check handle it
+                if not os.path.exists(completePath):
+                    # Only skip if it's not actually installed
+                    continue
+                # If it exists in installed location, don't mark as processed so it gets checked there
                 continue
     
     # Also check for installed plugins that don't have source directories
@@ -236,6 +268,11 @@ def installed(request):
                 data['installed'] = True  # This is an installed plugin
                 data['enabled'] = _is_plugin_enabled(plugin)
                 
+                # Initialize is_paid to False by default (will be set later if paid)
+                data['is_paid'] = False
+                data['patreon_tier'] = None
+                data['patreon_url'] = None
+                
                 # Get modify date from installed location
                 modify_date = 'N/A'
                 try:
@@ -276,6 +313,17 @@ def installed(request):
                 else:
                     data['author'] = 'Unknown'
                 
+                # Extract paid plugin information (is_paid already initialized to False above)
+                paid_elem = root.find('paid')
+                patreon_tier_elem = root.find('patreon_tier')
+                
+                if paid_elem is not None and paid_elem.text and paid_elem.text.lower() == 'true':
+                    data['is_paid'] = True
+                    data['patreon_tier'] = patreon_tier_elem.text if patreon_tier_elem is not None and patreon_tier_elem.text else 'CyberPanel Paid Plugin'
+                    patreon_url_elem = root.find('patreon_url')
+                    data['patreon_url'] = patreon_url_elem.text if patreon_url_elem is not None and patreon_url_elem.text else 'https://www.patreon.com/membership/27789984'
+                # else: is_paid already False from initialization above
+
                 pluginList.append(data)
                 
             except ElementTree.ParseError as e:
@@ -287,8 +335,38 @@ def installed(request):
                 logging.writeToFile(f"Installed plugin {plugin}: Error loading - {str(e)}")
                 continue
 
+    # Calculate installed and active counts
+    # Double-check by also counting plugins that actually exist in /usr/local/CyberCP/
+    installed_plugins_in_filesystem = set()
+    if os.path.exists(installedPath):
+        for plugin in os.listdir(installedPath):
+            pluginInstalledDir = os.path.join(installedPath, plugin)
+            if os.path.isdir(pluginInstalledDir):
+                metaXmlPath = os.path.join(pluginInstalledDir, 'meta.xml')
+                if os.path.exists(metaXmlPath):
+                    installed_plugins_in_filesystem.add(plugin)
+    
+    # Count installed plugins from the list
+    installed_count = len([p for p in pluginList if p.get('installed', False)])
+    active_count = len([p for p in pluginList if p.get('installed', False) and p.get('enabled', False)])
+    
+    # If there's a discrepancy, use the filesystem count as the source of truth
+    filesystem_installed_count = len(installed_plugins_in_filesystem)
+    if filesystem_installed_count != installed_count:
+        logging.writeToFile(f"WARNING: Plugin count mismatch! List says {installed_count}, filesystem has {filesystem_installed_count}")
+        logging.writeToFile(f"Plugins in filesystem: {sorted(installed_plugins_in_filesystem)}")
+        logging.writeToFile(f"Plugins in list with installed=True: {[p.get('plugin_dir') for p in pluginList if p.get('installed', False)]}")
+        # Use filesystem count as source of truth
+        installed_count = filesystem_installed_count
+    
+    # Debug logging to help identify discrepancies
+    logging.writeToFile(f"Plugin count: Total={len(pluginList)}, Installed={installed_count}, Active={active_count}")
+    for p in pluginList:
+        logging.writeToFile(f"  - {p.get('plugin_dir')}: installed={p.get('installed')}, enabled={p.get('enabled')}")
+
     proc = httpProc(request, 'pluginHolder/plugins.html',
-                    {'plugins': pluginList, 'error_plugins': errorPlugins}, 'admin')
+                    {'plugins': pluginList, 'error_plugins': errorPlugins, 
+                     'installed_count': installed_count, 'active_count': active_count}, 'admin')
     return proc.render()
 
 @csrf_exempt
@@ -315,11 +393,25 @@ def install_plugin(request, plugin_name):
         # Create zip file for installation (pluginInstaller expects a zip)
         import tempfile
         import shutil
+        import zipfile
         temp_dir = tempfile.mkdtemp()
         zip_path = os.path.join(temp_dir, plugin_name + '.zip')
         
-        # Create zip from source directory
-        shutil.make_archive(os.path.join(temp_dir, plugin_name), 'zip', pluginSource)
+        # Create zip from source directory with correct structure
+        # The ZIP must contain plugin_name/ directory structure for proper extraction
+        plugin_zip = zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED)
+        
+        # Walk through source directory and add files with plugin_name prefix
+        for root, dirs, files in os.walk(pluginSource):
+            for file in files:
+                file_path = os.path.join(root, file)
+                # Calculate relative path from plugin source
+                arcname = os.path.relpath(file_path, pluginSource)
+                # Add plugin_name prefix to maintain directory structure
+                arcname = os.path.join(plugin_name, arcname)
+                plugin_zip.write(file_path, arcname)
+        
+        plugin_zip.close()
         
         # Verify zip file was created
         if not os.path.exists(zip_path):
@@ -340,11 +432,31 @@ def install_plugin(request, plugin_name):
                 raise Exception(f'Zip file {zip_file} not found in temp directory')
             
             # Install using pluginInstaller
-            pluginInstaller.installPlugin(plugin_name)
+            try:
+                pluginInstaller.installPlugin(plugin_name)
+            except Exception as install_error:
+                # Log the full error for debugging
+                error_msg = str(install_error)
+                logging.writeToFile(f"pluginInstaller.installPlugin raised exception: {error_msg}")
+                # Check if plugin directory exists despite the error
+                pluginInstalled = '/usr/local/CyberCP/' + plugin_name
+                if os.path.exists(pluginInstalled):
+                    logging.writeToFile(f"Plugin directory exists despite error, continuing...")
+                else:
+                    raise Exception(f'Plugin installation failed: {error_msg}')
+            
+            # Wait a moment for file system to sync
+            import time
+            time.sleep(2)
             
             # Verify plugin was actually installed
             pluginInstalled = '/usr/local/CyberCP/' + plugin_name
             if not os.path.exists(pluginInstalled):
+                # Check if files were extracted to root instead
+                root_files = ['README.md', 'apps.py', 'meta.xml', 'urls.py', 'views.py']
+                found_root_files = [f for f in root_files if os.path.exists(os.path.join('/usr/local/CyberCP', f))]
+                if found_root_files:
+                    raise Exception(f'Plugin installation failed: Files extracted to wrong location. Found {found_root_files} in /usr/local/CyberCP/ root instead of {pluginInstalled}/')
                 raise Exception(f'Plugin installation failed: {pluginInstalled} does not exist after installation')
             
             # Set plugin to enabled by default after installation
@@ -551,16 +663,51 @@ def _enrich_store_plugins(plugins):
             continue
         
         # Check if plugin is installed locally
+        # Plugin is only considered "installed" if it exists in /usr/local/CyberCP/
+        # Source directory presence doesn't mean installed - it just means the source files are available
         installed_path = os.path.join(plugin_install_dir, plugin_dir)
-        source_path = os.path.join(plugin_source_dir, plugin_dir)
         
-        plugin['installed'] = os.path.exists(installed_path) or os.path.exists(source_path)
+        plugin['installed'] = os.path.exists(installed_path)
         
         # Check if plugin is enabled (only if installed)
         if plugin['installed']:
             plugin['enabled'] = _is_plugin_enabled(plugin_dir)
         else:
             plugin['enabled'] = False
+        
+        # Ensure is_paid field exists and is properly set (default to False if not set or invalid)
+        # Handle all possible cases: missing, None, empty string, string values, boolean
+        is_paid_value = plugin.get('is_paid', False)
+        
+        # Normalize is_paid to boolean
+        if is_paid_value is None or is_paid_value == '' or is_paid_value == 'false' or is_paid_value == 'False' or is_paid_value == '0':
+            plugin['is_paid'] = False
+        elif is_paid_value is True or is_paid_value == 'true' or is_paid_value == 'True' or is_paid_value == '1' or str(is_paid_value).lower() == 'true':
+            plugin['is_paid'] = True
+        elif 'is_paid' not in plugin or plugin.get('is_paid') is None:
+            # Try to check from local meta.xml if available
+            meta_path = None
+            if os.path.exists(installed_path):
+                meta_path = os.path.join(installed_path, 'meta.xml')
+            elif os.path.exists(source_path):
+                meta_path = os.path.join(source_path, 'meta.xml')
+            
+            if meta_path and os.path.exists(meta_path):
+                try:
+                    pluginMetaData = ElementTree.parse(meta_path)
+                    root = pluginMetaData.getroot()
+                    paid_elem = root.find('paid')
+                    if paid_elem is not None and paid_elem.text and paid_elem.text.lower() == 'true':
+                        plugin['is_paid'] = True
+                    else:
+                        plugin['is_paid'] = False
+                except:
+                    plugin['is_paid'] = False
+            else:
+                plugin['is_paid'] = False  # Default to free if we can't determine
+        else:
+            # Already set, but ensure it's boolean
+            plugin['is_paid'] = bool(plugin['is_paid']) if plugin['is_paid'] not in [True, False] else plugin['is_paid']
         
         enriched.append(plugin)
     
@@ -633,6 +780,20 @@ def _fetch_plugins_from_github():
                     logging.writeToFile(f"Could not fetch commit date for {plugin_name}: {str(e)}")
                     modify_date = 'N/A'
                 
+                # Extract paid plugin information
+                paid_elem = root.find('paid')
+                patreon_tier_elem = root.find('patreon_tier')
+                
+                is_paid = False
+                patreon_tier = None
+                patreon_url = None
+                
+                if paid_elem is not None and paid_elem.text and paid_elem.text.lower() == 'true':
+                    is_paid = True
+                    patreon_tier = patreon_tier_elem.text if patreon_tier_elem is not None and patreon_tier_elem.text else 'CyberPanel Paid Plugin'
+                    patreon_url_elem = root.find('patreon_url')
+                    patreon_url = patreon_url_elem.text if patreon_url_elem is not None else 'https://www.patreon.com/c/newstargeted/membership'
+                
                 plugin_data = {
                     'plugin_dir': plugin_name,
                     'name': root.find('name').text if root.find('name') is not None else plugin_name,
@@ -644,7 +805,10 @@ def _fetch_plugins_from_github():
                     'author': root.find('author').text if root.find('author') is not None else 'Unknown',
                     'github_url': f'https://github.com/master3395/cyberpanel-plugins/tree/main/{plugin_name}',
                     'about_url': f'https://github.com/master3395/cyberpanel-plugins/tree/main/{plugin_name}',
-                    'modify_date': modify_date
+                    'modify_date': modify_date,
+                    'is_paid': is_paid,
+                    'patreon_tier': patreon_tier,
+                    'patreon_url': patreon_url
                 }
                 
                 plugins.append(plugin_data)
@@ -746,7 +910,7 @@ def fetch_plugin_store(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def install_from_store(request, plugin_name):
-    """Install plugin from GitHub store"""
+    """Install plugin from GitHub store, with fallback to local source"""
     mailUtilities.checkHome()
     
     try:
@@ -771,44 +935,80 @@ def install_from_store(request, plugin_name):
         zip_path = os.path.join(temp_dir, plugin_name + '.zip')
         
         try:
-            # Download repository as ZIP
-            repo_zip_url = 'https://github.com/master3395/cyberpanel-plugins/archive/refs/heads/main.zip'
-            logging.writeToFile(f"Downloading plugin from: {repo_zip_url}")
+            # Try to download from GitHub first
+            use_local_fallback = False
+            try:
+                # Download repository as ZIP
+                repo_zip_url = 'https://github.com/master3395/cyberpanel-plugins/archive/refs/heads/main.zip'
+                logging.writeToFile(f"Downloading plugin from: {repo_zip_url}")
+                
+                repo_req = urllib.request.Request(
+                    repo_zip_url,
+                    headers={
+                        'User-Agent': 'CyberPanel-Plugin-Store/1.0',
+                        'Accept': 'application/zip'
+                    }
+                )
+                
+                with urllib.request.urlopen(repo_req, timeout=30) as repo_response:
+                    repo_zip_data = repo_response.read()
+                
+                # Extract plugin directory from repository ZIP
+                repo_zip = zipfile.ZipFile(io.BytesIO(repo_zip_data))
+                
+                # Find plugin directory in ZIP
+                plugin_prefix = f'cyberpanel-plugins-main/{plugin_name}/'
+                plugin_files = [f for f in repo_zip.namelist() if f.startswith(plugin_prefix)]
+                
+                if not plugin_files:
+                    logging.writeToFile(f"Plugin {plugin_name} not found in GitHub repository, trying local source")
+                    use_local_fallback = True
+                else:
+                    logging.writeToFile(f"Found {len(plugin_files)} files for plugin {plugin_name} in GitHub")
+                    
+                    # Create plugin ZIP file from GitHub with correct structure
+                    # The ZIP must contain plugin_name/ directory structure for proper extraction
+                    plugin_zip = zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED)
+                    
+                    for file_path in plugin_files:
+                        # Remove the repository root prefix
+                        relative_path = file_path[len(plugin_prefix):]
+                        if relative_path:  # Skip directories
+                            file_data = repo_zip.read(file_path)
+                            # Add plugin_name prefix to maintain directory structure
+                            arcname = os.path.join(plugin_name, relative_path)
+                            plugin_zip.writestr(arcname, file_data)
+                    
+                    plugin_zip.close()
+                    repo_zip.close()
+            except Exception as github_error:
+                logging.writeToFile(f"GitHub download failed for {plugin_name}: {str(github_error)}, trying local source")
+                use_local_fallback = True
             
-            repo_req = urllib.request.Request(
-                repo_zip_url,
-                headers={
-                    'User-Agent': 'CyberPanel-Plugin-Store/1.0',
-                    'Accept': 'application/zip'
-                }
-            )
-            
-            with urllib.request.urlopen(repo_req, timeout=30) as repo_response:
-                repo_zip_data = repo_response.read()
-            
-            # Extract plugin directory from repository ZIP
-            repo_zip = zipfile.ZipFile(io.BytesIO(repo_zip_data))
-            
-            # Find plugin directory in ZIP
-            plugin_prefix = f'cyberpanel-plugins-main/{plugin_name}/'
-            plugin_files = [f for f in repo_zip.namelist() if f.startswith(plugin_prefix)]
-            
-            if not plugin_files:
-                raise Exception(f'Plugin {plugin_name} not found in GitHub repository')
-            
-            logging.writeToFile(f"Found {len(plugin_files)} files for plugin {plugin_name}")
-            
-            # Create plugin ZIP file
-            plugin_zip = zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED)
-            
-            for file_path in plugin_files:
-                # Remove the repository root prefix
-                relative_path = file_path[len(plugin_prefix):]
-                if relative_path:  # Skip directories
-                    file_data = repo_zip.read(file_path)
-                    plugin_zip.writestr(relative_path, file_data)
-            
-            plugin_zip.close()
+            # Fallback to local source if GitHub download failed
+            if use_local_fallback:
+                pluginSource = '/home/cyberpanel/plugins/' + plugin_name
+                if not os.path.exists(pluginSource):
+                    raise Exception(f'Plugin {plugin_name} not found in GitHub repository and local source not found at {pluginSource}')
+                
+                logging.writeToFile(f"Using local source for {plugin_name} from {pluginSource}")
+                
+                # Create zip from local source directory with correct structure
+                # The ZIP must contain plugin_name/ directory structure for proper extraction
+                import zipfile
+                plugin_zip = zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED)
+                
+                # Walk through source directory and add files with plugin_name prefix
+                for root, dirs, files in os.walk(pluginSource):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        # Calculate relative path from plugin source
+                        arcname = os.path.relpath(file_path, pluginSource)
+                        # Add plugin_name prefix to maintain directory structure
+                        arcname = os.path.join(plugin_name, arcname)
+                        plugin_zip.write(file_path, arcname)
+                
+                plugin_zip.close()
             
             # Verify ZIP was created
             if not os.path.exists(zip_path):
@@ -829,15 +1029,31 @@ def install_from_store(request, plugin_name):
                 logging.writeToFile(f"Installing plugin using pluginInstaller")
                 
                 # Install using pluginInstaller (direct call, not via command line)
-                pluginInstaller.installPlugin(plugin_name)
+                try:
+                    pluginInstaller.installPlugin(plugin_name)
+                except Exception as install_error:
+                    # Log the full error for debugging
+                    error_msg = str(install_error)
+                    logging.writeToFile(f"pluginInstaller.installPlugin raised exception: {error_msg}")
+                    # Check if plugin directory exists despite the error
+                    pluginInstalled = '/usr/local/CyberCP/' + plugin_name
+                    if os.path.exists(pluginInstalled):
+                        logging.writeToFile(f"Plugin directory exists despite error, continuing...")
+                    else:
+                        raise Exception(f'Plugin installation failed: {error_msg}')
                 
                 # Wait a moment for file system to sync and service to restart
                 import time
-                time.sleep(2)
+                time.sleep(3)  # Increased wait time for file system sync
                 
                 # Verify plugin was actually installed
                 pluginInstalled = '/usr/local/CyberCP/' + plugin_name
                 if not os.path.exists(pluginInstalled):
+                    # Check if files were extracted to root instead
+                    root_files = ['README.md', 'apps.py', 'meta.xml', 'urls.py', 'views.py']
+                    found_root_files = [f for f in root_files if os.path.exists(os.path.join('/usr/local/CyberCP', f))]
+                    if found_root_files:
+                        raise Exception(f'Plugin installation failed: Files extracted to wrong location. Found {found_root_files} in /usr/local/CyberCP/ root instead of {pluginInstalled}/')
                     raise Exception(f'Plugin installation failed: {pluginInstalled} does not exist after installation')
                 
                 logging.writeToFile(f"Plugin {plugin_name} installed successfully")
@@ -1062,3 +1278,58 @@ def plugin_help(request, plugin_name):
     
     proc = httpProc(request, 'pluginHolder/plugin_help.html', context, 'admin')
     return proc.render()
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def check_plugin_subscription(request, plugin_name):
+    """
+    API endpoint to check if user has Patreon subscription for a paid plugin
+    
+    Args:
+        request: Django request object
+        plugin_name: Name of the plugin to check
+        
+    Returns:
+        JsonResponse: {
+            'has_access': bool,
+            'is_paid': bool,
+            'message': str,
+            'patreon_url': str or None
+        }
+    """
+    try:
+        # Check if user is authenticated
+        if not request.user or not request.user.is_authenticated:
+            return JsonResponse({
+                'success': False,
+                'has_access': False,
+                'is_paid': False,
+                'message': 'Please log in to check subscription status',
+                'patreon_url': None
+            }, status=401)
+        
+        # Load plugin metadata
+        from .plugin_access import check_plugin_access, _load_plugin_meta
+        
+        plugin_meta = _load_plugin_meta(plugin_name)
+        
+        # Check access
+        access_result = check_plugin_access(request, plugin_name, plugin_meta)
+        
+        return JsonResponse({
+            'success': True,
+            'has_access': access_result['has_access'],
+            'is_paid': access_result['is_paid'],
+            'message': access_result['message'],
+            'patreon_url': access_result.get('patreon_url')
+        })
+        
+    except Exception as e:
+        logging.writeToFile(f"Error checking subscription for {plugin_name}: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'has_access': False,
+            'is_paid': False,
+            'message': f'Error checking subscription: {str(e)}',
+            'patreon_url': None
+        }, status=500)

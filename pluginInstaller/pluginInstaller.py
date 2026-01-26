@@ -71,8 +71,8 @@ class pluginInstaller:
 
     @staticmethod
     def upgradingSettingsFile(pluginName):
-        data = open("/usr/local/CyberCP/CyberCP/settings.py", 'r').readlines()
-        writeToFile = open("/usr/local/CyberCP/CyberCP/settings.py", 'w')
+        data = open("/usr/local/CyberCP/CyberCP/settings.py", 'r', encoding='utf-8').readlines()
+        writeToFile = open("/usr/local/CyberCP/CyberCP/settings.py", 'w', encoding='utf-8')
 
         for items in data:
             if items.find("'emailPremium',") > -1:
@@ -90,8 +90,8 @@ class pluginInstaller:
         Plugin URLs must be inserted BEFORE the generic 'plugins/' line
         to ensure proper route matching (more specific routes first)
         """
-        data = open("/usr/local/CyberCP/CyberCP/urls.py", 'r').readlines()
-        writeToFile = open("/usr/local/CyberCP/CyberCP/urls.py", 'w')
+        data = open("/usr/local/CyberCP/CyberCP/urls.py", 'r', encoding='utf-8').readlines()
+        writeToFile = open("/usr/local/CyberCP/CyberCP/urls.py", 'w', encoding='utf-8')
         urlPatternAdded = False
 
         for items in data:
@@ -109,7 +109,7 @@ class pluginInstaller:
         if not urlPatternAdded:
             pluginInstaller.stdOut(f"Warning: 'plugins/' line not found, using fallback insertion after 'manageservices'")
             writeToFile.close()
-            writeToFile = open("/usr/local/CyberCP/CyberCP/urls.py", 'w')
+            writeToFile = open("/usr/local/CyberCP/CyberCP/urls.py", 'w', encoding='utf-8')
             for items in data:
                 if items.find("manageservices") > -1:
                     writeToFile.writelines(items)
@@ -132,8 +132,8 @@ class pluginInstaller:
 
     @staticmethod
     def addInterfaceLink(pluginName):
-        data = open("/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html", 'r').readlines()
-        writeToFile = open("/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html", 'w')
+        data = open("/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html", 'r', encoding='utf-8').readlines()
+        writeToFile = open("/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html", 'w', encoding='utf-8')
 
         for items in data:
             if items.find("{# pluginsList #}") > -1:
@@ -155,7 +155,7 @@ class pluginInstaller:
 
         os.chdir('/usr/local/CyberCP')
 
-        command = "/usr/local/CyberCP/bin/python manage.py collectstatic --noinput"
+        command = "python3 /usr/local/CyberCP/manage.py collectstatic --noinput"
         subprocess.call(shlex.split(command))
 
         command = "mv /usr/local/CyberCP/static /usr/local/lscp/cyberpanel"
@@ -168,9 +168,9 @@ class pluginInstaller:
     def installMigrations(pluginName):
         currentDir = os.getcwd()
         os.chdir('/usr/local/CyberCP')
-        command = "/usr/local/CyberCP/bin/python manage.py makemigrations %s" % pluginName
+        command = "python3 /usr/local/CyberCP/manage.py makemigrations %s" % pluginName
         subprocess.call(shlex.split(command))
-        command = "/usr/local/CyberCP/bin/python manage.py migrate %s" % pluginName
+        command = "python3 /usr/local/CyberCP/manage.py migrate %s" % pluginName
         subprocess.call(shlex.split(command))
         os.chdir(currentDir)
 
@@ -285,16 +285,120 @@ class pluginInstaller:
     @staticmethod
     def removeFiles(pluginName):
         pluginPath = '/usr/local/CyberCP/' + pluginName
-        if os.path.exists(pluginPath):
-            shutil.rmtree(pluginPath)
+        if not os.path.exists(pluginPath):
+            # Directory doesn't exist - already removed
+            pluginInstaller.stdOut(f'Plugin directory does not exist (already removed): {pluginName}')
+            return
+        
+        try:
+            # Check if we're running as root
+            is_root = os.geteuid() == 0 if hasattr(os, 'geteuid') else False
+            use_sudo = not is_root
+            
+            # First try: Use shutil.rmtree (works if permissions are correct)
+            try:
+                shutil.rmtree(pluginPath)
+                pluginInstaller.stdOut(f'Plugin directory removed: {pluginName}')
+                return
+            except (OSError, PermissionError) as e:
+                pluginInstaller.stdOut(f'Direct removal failed, trying with permission fix: {str(e)}')
+            
+            # Second try: Fix permissions, then remove
+            try:
+                import subprocess
+                import stat
+                
+                if use_sudo:
+                    # Use ProcessUtilities which handles privileged commands
+                    # Fix ownership recursively
+                    chown_cmd = f'chown -R cyberpanel:cyberpanel {pluginPath}'
+                    ProcessUtilities.normalExecutioner(chown_cmd)
+                    
+                    # Fix permissions recursively
+                    chmod_cmd = f'chmod -R u+rwX,go+rX {pluginPath}'
+                    ProcessUtilities.normalExecutioner(chmod_cmd)
+                else:
+                    # Running as root - fix permissions directly
+                    import pwd
+                    import grp
+                    try:
+                        cyberpanel_uid = pwd.getpwnam('cyberpanel').pw_uid
+                        cyberpanel_gid = grp.getgrnam('cyberpanel').gr_gid
+                    except (KeyError, OSError):
+                        cyberpanel_uid = 0
+                        cyberpanel_gid = 0
+                    
+                    # Recursively fix ownership and permissions
+                    for root, dirs, files in os.walk(pluginPath):
+                        try:
+                            os.chown(root, cyberpanel_uid, cyberpanel_gid)
+                            os.chmod(root, stat.S_IRWXU | stat.S_IRWXG | stat.S_IROTH | stat.S_IXOTH)
+                        except (OSError, PermissionError):
+                            pass
+                        
+                        for d in dirs:
+                            dir_path = os.path.join(root, d)
+                            try:
+                                os.chown(dir_path, cyberpanel_uid, cyberpanel_gid)
+                                os.chmod(dir_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IROTH | stat.S_IXOTH)
+                            except (OSError, PermissionError):
+                                pass
+                        
+                        for f in files:
+                            file_path = os.path.join(root, f)
+                            try:
+                                os.chown(file_path, cyberpanel_uid, cyberpanel_gid)
+                                os.chmod(file_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
+                            except (OSError, PermissionError):
+                                pass
+                
+                # Now try to remove
+                shutil.rmtree(pluginPath)
+                pluginInstaller.stdOut(f'Plugin directory removed after permission fix: {pluginName}')
+                return
+            except Exception as e:
+                pluginInstaller.stdOut(f'Permission fix and removal failed: {str(e)}')
+            
+            # Third try: Use rm -rf (with or without sudo depending on privileges)
+            try:
+                if use_sudo:
+                    # Use ProcessUtilities for privileged removal
+                    rm_cmd = f'rm -rf {pluginPath}'
+                    ProcessUtilities.normalExecutioner(rm_cmd)
+                else:
+                    # Running as root - use subprocess directly
+                    result = subprocess.run(
+                        ['rm', '-rf', pluginPath],
+                        capture_output=True, text=True, timeout=30
+                    )
+                    if result.returncode != 0:
+                        raise Exception(f"rm -rf failed: {result.stderr}")
+                
+                pluginInstaller.stdOut(f'Plugin directory removed using rm -rf: {pluginName}')
+                return
+            except Exception as e:
+                raise Exception(f"All removal methods failed. Last error: {str(e)}")
+                
+        except Exception as e:
+            pluginInstaller.stdOut(f"Error removing plugin files: {str(e)}")
+            raise Exception(f"Failed to remove plugin directory: {str(e)}")
 
     @staticmethod
     def removeFromSettings(pluginName):
-        data = open("/usr/local/CyberCP/CyberCP/settings.py", 'r').readlines()
-        writeToFile = open("/usr/local/CyberCP/CyberCP/settings.py", 'w')
-
-        for items in data:
-            if items.find(pluginName) > -1:
+        data = open("/usr/local/CyberCP/CyberCP/settings.py", 'r', encoding='utf-8').readlines()
+        writeToFile = open("/usr/local/CyberCP/CyberCP/settings.py", 'w', encoding='utf-8')
+        
+        in_installed_apps = False
+        for i, items in enumerate(data):
+            # Track if we're in INSTALLED_APPS section
+            if 'INSTALLED_APPS' in items and '=' in items:
+                in_installed_apps = True
+            elif in_installed_apps and items.strip().startswith(']'):
+                in_installed_apps = False
+            
+            # More precise matching: look for plugin name in quotes (e.g., 'pluginName' or "pluginName")
+            # Only match if we're in INSTALLED_APPS section to prevent false positives
+            if in_installed_apps and (f"'{pluginName}'" in items or f'"{pluginName}"' in items):
                 continue
             else:
                 writeToFile.writelines(items)
@@ -302,11 +406,15 @@ class pluginInstaller:
 
     @staticmethod
     def removeFromURLs(pluginName):
-        data = open("/usr/local/CyberCP/CyberCP/urls.py", 'r').readlines()
-        writeToFile = open("/usr/local/CyberCP/CyberCP/urls.py", 'w')
+        data = open("/usr/local/CyberCP/CyberCP/urls.py", 'r', encoding='utf-8').readlines()
+        writeToFile = open("/usr/local/CyberCP/CyberCP/urls.py", 'w', encoding='utf-8')
 
         for items in data:
-            if items.find(pluginName) > -1:
+            # More precise matching: look for plugin name in path() or include() calls
+            # Match patterns like: path('plugins/pluginName/', include('pluginName.urls'))
+            # This prevents partial matches
+            if (f"plugins/{pluginName}/" in items or f"'{pluginName}.urls'" in items or f'"{pluginName}.urls"' in items or 
+                f"include('{pluginName}.urls')" in items or f'include("{pluginName}.urls")' in items):
                 continue
             else:
                 writeToFile.writelines(items)
@@ -322,8 +430,8 @@ class pluginInstaller:
 
     @staticmethod
     def removeInterfaceLink(pluginName):
-        data = open("/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html", 'r').readlines()
-        writeToFile = open("/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html", 'w')
+        data = open("/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html", 'r', encoding='utf-8').readlines()
+        writeToFile = open("/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html", 'w', encoding='utf-8')
 
         for items in data:
             if items.find(pluginName) > -1 and items.find('<li>') > -1:
@@ -336,7 +444,7 @@ class pluginInstaller:
     def removeMigrations(pluginName):
         currentDir = os.getcwd()
         os.chdir('/usr/local/CyberCP')
-        command = "/usr/local/CyberCP/bin/python manage.py migrate %s zero" % pluginName
+        command = "python3 /usr/local/CyberCP/manage.py migrate %s zero" % pluginName
         subprocess.call(shlex.split(command))
         os.chdir(currentDir)
 

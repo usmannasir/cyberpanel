@@ -698,9 +698,31 @@ class ContainerManager(multi.Thread):
                 return ACLManager.loadErrorJson('listContainerStatus', 0)
 
             currentACL = ACLManager.loadedACL(userID)
-            pageNumber = int(data['page'])
-            json_data = self.findContainersJson(currentACL, userID, pageNumber)
-            final_dic = {'listContainerStatus': 1, 'error_message': "None", "data": json_data}
+            pageNumber = max(1, int(data.get('page', 1)))
+            items_per_page = 10
+
+            all_containers = ACLManager.findContainersObjects(currentACL, userID)
+            totalCount = len(all_containers)
+            totalPages = max(1, int(ceil(float(totalCount) / float(items_per_page))))
+
+            start = (pageNumber - 1) * items_per_page
+            end = start + items_per_page
+            page_containers = all_containers[start:end]
+
+            rows = []
+            for items in page_containers:
+                rows.append({'name': items.name, 'admin': items.admin.userName, 'tag': items.tag, 'image': items.image})
+            json_data = json.dumps(rows)
+
+            final_dic = {
+                'listContainerStatus': 1,
+                'error_message': 'None',
+                'data': json_data,
+                'totalCount': totalCount,
+                'totalPages': totalPages,
+                'currentPage': pageNumber,
+                'itemsPerPage': items_per_page
+            }
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
         except BaseException as msg:
@@ -2407,9 +2429,9 @@ class ContainerManager(multi.Thread):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    def listContainers(self, userID=None):
+    def listContainersJson(self, userID=None):
         """
-        Get list of all Docker containers
+        Get list of all Docker containers as JSON (for Angular API).
         """
         try:
             admin = Administrator.objects.get(pk=userID)
@@ -2441,13 +2463,13 @@ class ContainerManager(multi.Thread):
                 'containers': container_list
             }
             json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
+            return HttpResponse(json_data, content_type='application/json')
 
         except Exception as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [ContainerManager.listContainers]')
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [ContainerManager.listContainersJson]')
             data_ret = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
+            return HttpResponse(json_data, content_type='application/json')
 
     def getDockerNetworks(self, userID=None):
         """
