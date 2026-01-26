@@ -33,8 +33,33 @@ if [[ "$SCRIPT_DIR" == /dev/fd/* ]] || [[ ! -d "$SCRIPT_DIR/modules" ]]; then
     done
     
     # Clone repository to temporary directory
-    TEMP_DIR="/tmp/cyberpanel-installer-$$"
-    mkdir -p "$TEMP_DIR"
+    # Try multiple locations if /tmp is full
+    TEMP_DIR=""
+    early_log "Checking available disk space..."
+    
+    # Try to clean up old temp directories first
+    rm -rf /tmp/cyberpanel-installer-* 2>/dev/null || true
+    rm -rf /var/tmp/cyberpanel-installer-* 2>/dev/null || true
+    
+    # Try multiple temp locations
+    for temp_location in "/tmp/cyberpanel-installer-$$" "/var/tmp/cyberpanel-installer-$$" "$HOME/cyberpanel-installer-$$" "/root/cyberpanel-installer-$$"; do
+        if mkdir -p "$temp_location" 2>/dev/null; then
+            TEMP_DIR="$temp_location"
+            early_log "Using temporary directory: $TEMP_DIR"
+            break
+        fi
+    done
+    
+    # If we still don't have a temp dir, skip git clone and use fallback
+    if [ -z "$TEMP_DIR" ]; then
+        early_log "⚠️  Cannot create temporary directory (disk may be full)"
+        early_log "Skipping git clone, using fallback installer directly..."
+        # Skip to fallback installer
+        TEMP_DIR=""
+    fi
+    
+    # Only attempt git clone if we have a temp directory
+    if [ -n "$TEMP_DIR" ]; then
     
     early_log "📦 Cloning CyberPanel repository (branch: $BRANCH_NAME)..."
     early_log "This may take a minute depending on your connection speed..."
@@ -67,8 +92,12 @@ if [[ "$SCRIPT_DIR" == /dev/fd/* ]] || [[ ! -d "$SCRIPT_DIR/modules" ]]; then
         fi
         early_log "Falling back to legacy installer..."
         rm -rf "$TEMP_DIR/cyberpanel" 2>/dev/null || true
-        
+    fi
+    
+    # If git clone failed or we couldn't create temp dir, use fallback
+    if [ -z "$TEMP_DIR" ] || [ ! -d "$TEMP_DIR/cyberpanel" ] || [ ! -f "$TEMP_DIR/cyberpanel/install.sh" ]; then
         # Fallback: try to download install.sh from the old method
+        early_log "Using fallback installer method..."
         OUTPUT=$(cat /etc/*release 2>/dev/null || echo "")
         if echo "$OUTPUT" | grep -qE "(CentOS|AlmaLinux|CloudLinux|Rocky)" ; then
             SERVER_OS="CentOS8"
@@ -81,14 +110,26 @@ if [[ "$SCRIPT_DIR" == /dev/fd/* ]] || [[ ! -d "$SCRIPT_DIR/modules" ]]; then
             exit 1
         fi
         
-        rm -f /tmp/cyberpanel.sh
-        curl --silent -o /tmp/cyberpanel.sh "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null || \
-        wget -q -O /tmp/cyberpanel.sh "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null
-        if [ -f /tmp/cyberpanel.sh ]; then
-            chmod +x /tmp/cyberpanel.sh
-            exec /tmp/cyberpanel.sh "$@"
+        # Try multiple locations for fallback script
+        FALLBACK_SCRIPT=""
+        for fallback_location in "/tmp/cyberpanel.sh" "/var/tmp/cyberpanel.sh" "$HOME/cyberpanel.sh"; do
+            rm -f "$fallback_location" 2>/dev/null || true
+            if curl --silent -o "$fallback_location" "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null || \
+               wget -q -O "$fallback_location" "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null; then
+                if [ -f "$fallback_location" ]; then
+                    FALLBACK_SCRIPT="$fallback_location"
+                    chmod +x "$FALLBACK_SCRIPT"
+                    break
+                fi
+            fi
+        done
+        
+        if [ -n "$FALLBACK_SCRIPT" ] && [ -f "$FALLBACK_SCRIPT" ]; then
+            early_log "✅ Fallback installer downloaded, executing..."
+            exec "$FALLBACK_SCRIPT" "$@"
         else
             early_log "❌ Failed to download fallback installer"
+            early_log "Please free up disk space or check your internet connection"
             exit 1
         fi
     fi
