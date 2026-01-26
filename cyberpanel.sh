@@ -765,16 +765,24 @@ except:
     
     # Download the working CyberPanel installation files
     # Use master3395 fork which has our fixes
+    # Try to download the actual installer script (install/install.py) from the repository
     echo "Downloading from: https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/cyberpanel.sh"
-    # Try development branch first, fallback to stable
+    
+    # First, try to download the repository archive to get the correct installer
+    local archive_url="https://github.com/master3395/cyberpanel/archive/v2.5.5-dev.tar.gz"
     local installer_url="https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/cyberpanel.sh"
     
-    # Test if the development branch exists
-    if ! curl -s --head "$installer_url" | grep -q "200 OK"; then
-        echo "    Development branch not available, falling back to stable"
-        installer_url="https://raw.githubusercontent.com/master3395/cyberpanel/stable/cyberpanel.sh"
-    else
+    # Test if the development branch archive exists
+    if curl -s --head "$archive_url" | grep -q "200 OK"; then
         echo "    Using development branch (v2.5.5-dev) from master3395/cyberpanel"
+    else
+        echo "    Development branch archive not available, trying installer script directly..."
+        # Test if the installer script exists
+        if ! curl -s --head "$installer_url" | grep -q "200 OK"; then
+            echo "    Development branch not available, falling back to stable"
+            installer_url="https://raw.githubusercontent.com/master3395/cyberpanel/stable/cyberpanel.sh"
+            archive_url="https://github.com/master3395/cyberpanel/archive/stable.tar.gz"
+        fi
     fi
     
     curl --silent -o cyberpanel_installer.sh "$installer_url" 2>/dev/null
@@ -919,34 +927,64 @@ except Exception as e:
     fi
     echo ""
 
-    # Run installer and show live output, capturing the password
-    # Use bash to execute to avoid permission issues
-    local installer_script="cyberpanel_installer.sh"
-    if [ ! -f "$installer_script" ]; then
-        print_status "ERROR: cyberpanel_installer.sh not found in current directory: $(pwd)"
-        return 1
-    fi
-    
-    # Get absolute path to installer script
-    local installer_path
-    if [[ "$installer_script" = /* ]]; then
-        installer_path="$installer_script"
-    else
-        installer_path="$(pwd)/$installer_script"
-    fi
-    
-    # If MariaDB 10.x is installed, disable repositories right before running installer
-    if [ -n "$MARIADB_VERSION" ] && [ -f /tmp/cyberpanel_repo_monitor.pid ]; then
-        # Call the disable function one more time before installer runs
-        if type disable_mariadb_repos >/dev/null 2>&1; then
-            disable_mariadb_repos
+    # CRITICAL: Use install/install.py directly instead of cyberpanel_installer.sh
+    # The cyberpanel_installer.sh is the old wrapper that doesn't support auto-install
+    # install/install.py is the actual installer that we can control
+    local installer_py="install/install.py"
+    if [ -f "$installer_py" ]; then
+        print_status "Using install/install.py directly for installation"
+        
+        # If MariaDB 10.x is installed, disable repositories right before running installer
+        if [ -n "$MARIADB_VERSION" ] && [ -f /tmp/cyberpanel_repo_monitor.pid ]; then
+            # Call the disable function one more time before installer runs
+            if type disable_mariadb_repos >/dev/null 2>&1; then
+                disable_mariadb_repos
+            fi
         fi
-    fi
-    
-    if [ "$DEBUG_MODE" = true ]; then
-        bash "$installer_path" --debug 2>&1 | tee /var/log/CyberPanel/install_output.log
+        
+        # Build installer arguments based on user preferences
+        local install_args=()
+        if [ "$DEBUG_MODE" = true ]; then
+            install_args+=("--debug")
+        fi
+        
+        # Run the Python installer directly
+        if [ "$DEBUG_MODE" = true ]; then
+            python3 "$installer_py" "${install_args[@]}" 2>&1 | tee /var/log/CyberPanel/install_output.log
+        else
+            python3 "$installer_py" "${install_args[@]}" 2>&1 | tee /var/log/CyberPanel/install_output.log
+        fi
     else
-        bash "$installer_path" 2>&1 | tee /var/log/CyberPanel/install_output.log
+        # Fallback to cyberpanel_installer.sh if install.py not found
+        print_status "WARNING: install/install.py not found, using cyberpanel_installer.sh (may be interactive)"
+        
+        local installer_script="cyberpanel_installer.sh"
+        if [ ! -f "$installer_script" ]; then
+            print_status "ERROR: cyberpanel_installer.sh not found in current directory: $(pwd)"
+            return 1
+        fi
+        
+        # Get absolute path to installer script
+        local installer_path
+        if [[ "$installer_script" = /* ]]; then
+            installer_path="$installer_script"
+        else
+            installer_path="$(pwd)/$installer_script"
+        fi
+        
+        # If MariaDB 10.x is installed, disable repositories right before running installer
+        if [ -n "$MARIADB_VERSION" ] && [ -f /tmp/cyberpanel_repo_monitor.pid ]; then
+            # Call the disable function one more time before installer runs
+            if type disable_mariadb_repos >/dev/null 2>&1; then
+                disable_mariadb_repos
+            fi
+        fi
+        
+        if [ "$DEBUG_MODE" = true ]; then
+            bash "$installer_path" --debug 2>&1 | tee /var/log/CyberPanel/install_output.log
+        else
+            bash "$installer_path" 2>&1 | tee /var/log/CyberPanel/install_output.log
+        fi
     fi
     
     local install_exit_code=${PIPESTATUS[0]}
