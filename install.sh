@@ -218,9 +218,13 @@ detect_operating_system() {
     print_status "$BLUE" "🔍 Detecting operating system..."
     
     if detect_os; then
-        # Variables are set by detect_os() in the sourced module
+        # Get OS information using get_os_info() to ensure we capture the values
+        # This outputs variable assignments that we can eval
+        eval $(get_os_info)
+        
         # Export them to ensure they're available to all functions
         export SERVER_OS OS_FAMILY PACKAGE_MANAGER ARCHITECTURE
+        
         print_status "$GREEN" "✅ OS detected: $SERVER_OS ($OS_FAMILY)"
         print_status "$GREEN" "✅ Package manager: $PACKAGE_MANAGER"
         print_status "$GREEN" "✅ Architecture: $ARCHITECTURE"
