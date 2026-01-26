@@ -345,40 +345,48 @@ class preFlightsChecks:
                                     self.stdOut(f"Successfully installed alternative: {alt_package}", 1)
                                     break
             
-            # Install MariaDB with enhanced AlmaLinux 9.6 support
-            self.stdOut("Installing MariaDB for AlmaLinux 9.6...", 1)
+            # Check if MariaDB is already installed before attempting installation
+            is_installed, installed_version, major_minor = self.checkExistingMariaDB()
             
-            # Try multiple installation methods for maximum compatibility
-            mariadb_commands = [
-                "dnf install -y mariadb-server mariadb-devel mariadb-client --skip-broken --nobest",
-                "dnf install -y mariadb-server mariadb-devel mariadb-client --allowerasing",
-                "dnf install -y mariadb-server mariadb-devel --skip-broken --nobest --allowerasing",
-                "dnf install -y mariadb-server --skip-broken --nobest --allowerasing"
-            ]
-            
-            mariadb_installed = False
-            for cmd in mariadb_commands:
-                try:
-                    result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=300)
-                    if result.returncode == 0:
+            if is_installed:
+                self.stdOut(f"MariaDB/MySQL is already installed (version: {installed_version}), skipping installation", 1)
+                mariadb_installed = True
+            else:
+                # Install MariaDB with enhanced AlmaLinux 9.6 support
+                self.stdOut("Installing MariaDB for AlmaLinux 9.6...", 1)
+                
+                # Try multiple installation methods for maximum compatibility
+                mariadb_commands = [
+                    "dnf install -y mariadb-server mariadb-devel mariadb-client --skip-broken --nobest",
+                    "dnf install -y mariadb-server mariadb-devel mariadb-client --allowerasing",
+                    "dnf install -y mariadb-server mariadb-devel --skip-broken --nobest --allowerasing",
+                    "dnf install -y mariadb-server --skip-broken --nobest --allowerasing"
+                ]
+                
+                mariadb_installed = False
+                for cmd in mariadb_commands:
+                    try:
+                        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=300)
+                        if result.returncode == 0:
+                            mariadb_installed = True
+                            self.stdOut(f"MariaDB installed successfully with command: {cmd}", 1)
+                            break
+                    except subprocess.TimeoutExpired:
+                        self.stdOut(f"Timeout installing MariaDB with command: {cmd}", 0)
+                        continue
+                    except Exception as e:
+                        self.stdOut(f"Error installing MariaDB with command: {cmd} - {str(e)}", 0)
+                        continue
+                
+                if not mariadb_installed:
+                    self.stdOut("MariaDB installation failed, trying MySQL as fallback...", 0)
+                    try:
+                        command = "dnf install -y mysql-server mysql-devel --skip-broken --nobest --allowerasing"
+                        self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                        self.stdOut("MySQL installed as fallback for MariaDB", 1)
                         mariadb_installed = True
-                        self.stdOut(f"MariaDB installed successfully with command: {cmd}", 1)
-                        break
-                except subprocess.TimeoutExpired:
-                    self.stdOut(f"Timeout installing MariaDB with command: {cmd}", 0)
-                    continue
-                except Exception as e:
-                    self.stdOut(f"Error installing MariaDB with command: {cmd} - {str(e)}", 0)
-                    continue
-            
-            if not mariadb_installed:
-                self.stdOut("MariaDB installation failed, trying MySQL as fallback...", 0)
-                try:
-                    command = "dnf install -y mysql-server mysql-devel --skip-broken --nobest --allowerasing"
-                    self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-                    self.stdOut("MySQL installed as fallback for MariaDB", 1)
-                except:
-                    self.stdOut("Both MariaDB and MySQL installation failed", 0)
+                    except:
+                        self.stdOut("Both MariaDB and MySQL installation failed", 0)
             
             # Install additional required packages
             self.stdOut("Installing additional required packages...", 1)
