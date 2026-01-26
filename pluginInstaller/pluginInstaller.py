@@ -389,7 +389,9 @@ class pluginInstaller:
         writeToFile = open("/usr/local/CyberCP/CyberCP/settings.py", 'w', encoding='utf-8')
 
         for items in data:
-            if items.find(pluginName) > -1:
+            # More precise matching: look for plugin name in quotes (e.g., 'pluginName' or "pluginName")
+            # This prevents partial matches (e.g., 'pluginName2' matching 'pluginName')
+            if (f"'{pluginName}'" in items or f'"{pluginName}"' in items) and 'INSTALLED_APPS' in ''.join(data[max(0, data.index(items)-5):data.index(items)+5]):
                 continue
             else:
                 writeToFile.writelines(items)
@@ -401,7 +403,11 @@ class pluginInstaller:
         writeToFile = open("/usr/local/CyberCP/CyberCP/urls.py", 'w', encoding='utf-8')
 
         for items in data:
-            if items.find(pluginName) > -1:
+            # More precise matching: look for plugin name in path() or include() calls
+            # Match patterns like: path('plugins/pluginName/', include('pluginName.urls'))
+            # This prevents partial matches
+            if (f"plugins/{pluginName}/" in items or f"'{pluginName}.urls'" in items or f'"{pluginName}.urls"' in items or 
+                f"include('{pluginName}.urls')" in items or f'include("{pluginName}.urls")' in items):
                 continue
             else:
                 writeToFile.writelines(items)
