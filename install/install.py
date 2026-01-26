@@ -354,11 +354,15 @@ class preFlightsChecks:
             self.stdOut("Removing conflicting MariaDB compat packages...", 1)
             try:
                 # Remove MariaDB-server-compat packages that conflict with MariaDB 10.11
-                compat_remove_cmd = "dnf remove -y MariaDB-server-compat* 2>/dev/null || rpm -e --nodeps MariaDB-server-compat* 2>/dev/null || true"
-                subprocess.run(compat_remove_cmd, shell=True, timeout=60)
+                subprocess.run("dnf remove -y 'MariaDB-server-compat*' 2>/dev/null || true", shell=True, timeout=60)
+                r = subprocess.run("rpm -qa 2>/dev/null | grep -i MariaDB-server-compat", shell=True, capture_output=True, text=True, timeout=30)
+                for line in (r.stdout or "").strip().splitlines():
+                    pkg = (line.strip().split() or [""])[0]
+                    if pkg and "MariaDB-server-compat" in pkg:
+                        subprocess.run(["rpm", "-e", "--nodeps", pkg], timeout=30)
                 self.stdOut("Removed conflicting MariaDB compat packages", 1)
             except Exception as e:
-                self.stdOut(f"Warning: Could not remove compat packages: {e}", 0)
+                self.stdOut("Warning: Could not remove compat packages: " + str(e), 0)
             
             # Check if MariaDB is already installed before attempting installation
             is_installed, installed_version, major_minor = self.checkExistingMariaDB()
@@ -1261,6 +1265,13 @@ class preFlightsChecks:
             self.stdOut("Installing custom binaries...", 1)
 
             try:
+                # Ensure /usr/local/lsws/bin exists (dnf openlitespeed may use different layout)
+                ols_bin_dir = os.path.dirname(OLS_BINARY_PATH)
+                os.makedirs(ols_bin_dir, mode=0o755, exist_ok=True)
+                ols_base = os.path.dirname(ols_bin_dir)
+                if not os.path.isdir(ols_base):
+                    os.makedirs(ols_base, mode=0o755, exist_ok=True)
+
                 # Make binary executable before moving
                 os.chmod(tmp_binary, 0o755)
                 
@@ -1804,15 +1815,15 @@ module cyberpanel_ols {
                 # These packages from MariaDB 12.1 can conflict with MariaDB 10.11
                 self.stdOut("Removing conflicting MariaDB compat packages...", 1)
                 try:
-                    # Remove MariaDB-server-compat packages that conflict with MariaDB 10.11
-                    compat_remove_cmd = "dnf remove -y MariaDB-server-compat* 2>/dev/null || rpm -e --nodeps MariaDB-server-compat* 2>/dev/null || true"
-                    result = subprocess.run(compat_remove_cmd, shell=True, timeout=60, capture_output=True)
-                    if result.returncode == 0 or "not installed" in result.stdout.decode('utf-8', errors='ignore').lower():
-                        self.stdOut("Removed conflicting MariaDB compat packages", 1)
-                    else:
-                        self.stdOut("No conflicting compat packages found or already removed", 1)
+                    subprocess.run("dnf remove -y 'MariaDB-server-compat*' 2>/dev/null || true", shell=True, timeout=60)
+                    r = subprocess.run("rpm -qa 2>/dev/null | grep -i MariaDB-server-compat", shell=True, capture_output=True, text=True, timeout=30)
+                    for line in (r.stdout or "").strip().splitlines():
+                        pkg = (line.strip().split() or [""])[0]
+                        if pkg and "MariaDB-server-compat" in pkg:
+                            subprocess.run(["rpm", "-e", "--nodeps", pkg], timeout=30)
+                    self.stdOut("Removed conflicting MariaDB compat packages", 1)
                 except Exception as e:
-                    self.stdOut(f"Warning: Could not remove compat packages: {e}", 0)
+                    self.stdOut("Warning: Could not remove compat packages: " + str(e), 0)
                 
                 # Check if MariaDB is already installed before setting up repository
                 is_installed, installed_version, major_minor = self.checkExistingMariaDB()
@@ -6425,6 +6436,20 @@ def main():
     # CRITICAL: Disable MariaDB 12.1 repository and add dnf exclude BEFORE any MariaDB installation attempts
     # This must run before Pre_Install_Required_Components tries to install MariaDB
     checks.disableMariaDB12RepositoryIfNeeded()
+
+    # CRITICAL: Remove MariaDB-server-compat* before ANY MariaDB installation
+    # This package conflicts with MariaDB 10.11 and must be removed early
+    preFlightsChecks.stdOut("Removing conflicting MariaDB-server-compat packages...", 1)
+    try:
+        subprocess.run("dnf remove -y 'MariaDB-server-compat*' 2>/dev/null || true", shell=True, timeout=60)
+        r = subprocess.run("rpm -qa 2>/dev/null | grep -i MariaDB-server-compat", shell=True, capture_output=True, text=True, timeout=30)
+        for line in (r.stdout or "").strip().splitlines():
+            pkg = (line.strip().split() or [""])[0]
+            if pkg and "MariaDB-server-compat" in pkg:
+                subprocess.run(["rpm", "-e", "--nodeps", pkg], timeout=30)
+        preFlightsChecks.stdOut("MariaDB compat cleanup completed", 1)
+    except Exception as e:
+        preFlightsChecks.stdOut("Warning: compat cleanup: " + str(e), 0)
 
     # Ensure MySQL password file is created early to prevent FileNotFoundError
     checks.ensure_mysql_password_file()
