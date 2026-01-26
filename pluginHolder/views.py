@@ -619,7 +619,31 @@ def uninstall_plugin(request, plugin_name):
             pluginInstaller.removeMigrations(plugin_name)
         
         # Remove installed directory (but keep source in /home/cyberpanel/plugins/)
-        pluginInstaller.removeFiles(plugin_name)
+        try:
+            pluginInstaller.removeFiles(plugin_name)
+            
+            # Verify removal succeeded
+            pluginInstalled = '/usr/local/CyberCP/' + plugin_name
+            if os.path.exists(pluginInstalled):
+                # Removal failed - try again with more aggressive method
+                logging.writeToFile(f'Plugin directory still exists after removeFiles, trying ProcessUtilities')
+                try:
+                    from plogical.processUtilities import ProcessUtilities
+                    rm_cmd = f'rm -rf {pluginInstalled}'
+                    ProcessUtilities.normalExecutioner(rm_cmd)
+                    
+                    # Verify again
+                    if os.path.exists(pluginInstalled):
+                        raise Exception(f'Plugin directory still exists after ProcessUtilities removal: {pluginInstalled}')
+                except Exception as e2:
+                    logging.writeToFile(f'ProcessUtilities removal also failed: {str(e2)}')
+                    raise Exception(f'Failed to remove plugin directory. Tried removeFiles() and ProcessUtilities. Directory still exists: {pluginInstalled}')
+        except Exception as e:
+            logging.writeToFile(f'Error removing plugin files: {str(e)}')
+            return JsonResponse({
+                'success': False,
+                'error': f'Failed to remove plugin directory: {str(e)}'
+            }, status=500)
         
         # DON'T call informCyberPanelRemoval - we want to keep the source directory
         # so users can reinstall the plugin later
