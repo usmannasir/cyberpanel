@@ -37,13 +37,31 @@ if [[ "$SCRIPT_DIR" == /dev/fd/* ]] || [[ ! -d "$SCRIPT_DIR/modules" ]]; then
     mkdir -p "$TEMP_DIR"
     
     early_log "📦 Cloning CyberPanel repository (branch: $BRANCH_NAME)..."
-    if git clone --depth 1 --branch "$BRANCH_NAME" https://github.com/master3395/cyberpanel.git "$TEMP_DIR/cyberpanel" 2>/dev/null; then
-        SCRIPT_DIR="$TEMP_DIR/cyberpanel"
-        cd "$SCRIPT_DIR"
-        early_log "✅ Repository cloned successfully"
+    early_log "This may take a minute depending on your connection speed..."
+    
+    # Try git clone with timeout and better error handling
+    if timeout 120 git clone --depth 1 --branch "$BRANCH_NAME" https://github.com/master3395/cyberpanel.git "$TEMP_DIR/cyberpanel" 2>&1 | tee /tmp/git-clone.log; then
+        if [ -d "$TEMP_DIR/cyberpanel" ] && [ -f "$TEMP_DIR/cyberpanel/install.sh" ]; then
+            SCRIPT_DIR="$TEMP_DIR/cyberpanel"
+            cd "$SCRIPT_DIR"
+            early_log "✅ Repository cloned successfully"
+        else
+            early_log "⚠️  Git clone completed but repository structure is invalid"
+            early_log "Falling back to legacy installer..."
+            rm -rf "$TEMP_DIR/cyberpanel"
+        fi
     else
-        # Fallback: try to download install.sh from the old method
-        early_log "⚠️  Git clone failed, falling back to legacy installer..."
+        GIT_ERROR=$(cat /tmp/git-clone.log 2>/dev/null | tail -5)
+        early_log "⚠️  Git clone failed"
+        if [ -n "$GIT_ERROR" ]; then
+            early_log "Error details: $GIT_ERROR"
+        fi
+        early_log "Falling back to legacy installer..."
+        rm -rf "$TEMP_DIR/cyberpanel" 2>/dev/null || true
+    fi
+    
+    # If we reach here, git clone failed or was invalid, use fallback
+    if [ ! -d "$SCRIPT_DIR/modules" ]; then
         OUTPUT=$(cat /etc/*release 2>/dev/null || echo "")
         if echo "$OUTPUT" | grep -qE "(CentOS|AlmaLinux|CloudLinux|Rocky)" ; then
             SERVER_OS="CentOS8"
