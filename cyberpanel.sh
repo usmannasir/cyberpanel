@@ -1038,6 +1038,77 @@ except Exception as e:
         
         print_status "Detected server IP: $server_ip"
         
+        # CRITICAL: Install Python MySQL dependencies before running install.py
+        # installCyberPanel.py requires MySQLdb (mysqlclient) which needs development headers
+        print_status "Installing Python MySQL dependencies..."
+        
+        # Detect OS for package installation
+        local os_family=""
+        if [ -f /etc/os-release ]; then
+            . /etc/os-release
+            case "$ID" in
+                almalinux|rocky|centos|rhel|fedora)
+                    os_family="rhel"
+                    ;;
+                ubuntu|debian)
+                    os_family="debian"
+                    ;;
+            esac
+        fi
+        
+        # Install MariaDB/MySQL development headers and Python mysqlclient
+        if [ "$os_family" = "rhel" ]; then
+            # RHEL-based (AlmaLinux, Rocky, CentOS, RHEL)
+            print_status "Installing MariaDB development headers for RHEL-based system..."
+            
+            # Try to install mariadb-devel (works with MariaDB 10.x and 12.x)
+            if command -v dnf >/dev/null 2>&1; then
+                # For AlmaLinux 9/10 and newer
+                dnf install -y --allowerasing --skip-broken --nobest \
+                    mariadb-devel pkgconfig gcc python3-devel python3-pip 2>/dev/null || \
+                dnf install -y --allowerasing --skip-broken --nobest \
+                    mysql-devel pkgconfig gcc python3-devel python3-pip 2>/dev/null || \
+                dnf install -y --allowerasing --skip-broken --nobest \
+                    mariadb-connector-c-devel pkgconfig gcc python3-devel python3-pip 2>/dev/null || true
+            else
+                # For older systems with yum
+                yum install -y mariadb-devel pkgconfig gcc python3-devel python3-pip 2>/dev/null || \
+                yum install -y mysql-devel pkgconfig gcc python3-devel python3-pip 2>/dev/null || true
+            fi
+            
+            # Install mysqlclient Python package
+            print_status "Installing mysqlclient Python package..."
+            python3 -m pip install --quiet --upgrade pip setuptools wheel 2>/dev/null || true
+            python3 -m pip install --quiet mysqlclient 2>/dev/null || {
+                # If pip install fails, try with build dependencies
+                print_status "Retrying mysqlclient installation with build dependencies..."
+                python3 -m pip install --quiet --no-cache-dir mysqlclient 2>/dev/null || true
+            }
+            
+        elif [ "$os_family" = "debian" ]; then
+            # Debian-based (Ubuntu, Debian)
+            print_status "Installing MariaDB development headers for Debian-based system..."
+            apt-get update -y 2>/dev/null || true
+            apt-get install -y libmariadb-dev libmariadb-dev-compat pkg-config build-essential python3-dev python3-pip 2>/dev/null || \
+            apt-get install -y default-libmysqlclient-dev pkg-config build-essential python3-dev python3-pip 2>/dev/null || true
+            
+            # Install mysqlclient Python package
+            print_status "Installing mysqlclient Python package..."
+            python3 -m pip install --quiet --upgrade pip setuptools wheel 2>/dev/null || true
+            python3 -m pip install --quiet mysqlclient 2>/dev/null || {
+                print_status "Retrying mysqlclient installation with build dependencies..."
+                python3 -m pip install --quiet --no-cache-dir mysqlclient 2>/dev/null || true
+            }
+        fi
+        
+        # Verify MySQLdb is available
+        if python3 -c "import MySQLdb" 2>/dev/null; then
+            print_status "✓ MySQLdb module is available"
+        else
+            print_status "⚠️  WARNING: MySQLdb module not available, installation may fail"
+            print_status "Attempting to continue anyway..."
+        fi
+        
         # Build installer arguments based on user preferences
         # install.py requires publicip as first positional argument
         local install_args=("$server_ip")
