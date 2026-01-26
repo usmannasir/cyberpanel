@@ -1416,29 +1416,44 @@ function toggleView(view) {
     const storeView = document.getElementById('storeView');
     const viewBtns = document.querySelectorAll('.view-btn');
     
-    // Null check: If elements don't exist, return early
-    if (!gridView || !tableView || !storeView) {
-        console.warn('View elements not found, cannot toggle view');
-        return;
-    }
-    
     viewBtns.forEach(btn => btn.classList.remove('active'));
     
     if (view === 'grid') {
+        // Grid view requires gridView to exist
+        if (!gridView) {
+            console.warn('Grid view not available (no plugins installed)');
+            return;
+        }
         gridView.style.display = 'grid';
-        tableView.style.display = 'none';
-        storeView.style.display = 'none';
+        if (tableView) tableView.style.display = 'none';
+        if (storeView) storeView.style.display = 'none';
         if (viewBtns[0]) viewBtns[0].classList.add('active');
     } else if (view === 'table') {
-        gridView.style.display = 'none';
+        // Table view requires tableView to exist
+        if (!tableView) {
+            console.warn('Table view not available (no plugins installed)');
+            return;
+        }
+        if (gridView) gridView.style.display = 'none';
         tableView.style.display = 'block';
-        storeView.style.display = 'none';
+        if (storeView) storeView.style.display = 'none';
         if (viewBtns[1]) viewBtns[1].classList.add('active');
     } else if (view === 'store') {
-        gridView.style.display = 'none';
-        tableView.style.display = 'none';
+        // Store view requires storeView to exist
+        if (!storeView) {
+            console.error('Store view element not found');
+            return;
+        }
+        if (gridView) gridView.style.display = 'none';
+        if (tableView) tableView.style.display = 'none';
         storeView.style.display = 'block';
-        if (viewBtns[2]) viewBtns[2].classList.add('active');
+        
+        // Find and activate the store button (it might be at different index)
+        viewBtns.forEach((btn, index) => {
+            if (btn.textContent.includes('Store') || btn.textContent.includes('Plugin Store')) {
+                btn.classList.add('active');
+            }
+        });
         
         // Show search bar and alphabet filter immediately
         const searchContainer = document.getElementById('storeSearchContainer');
@@ -2130,26 +2145,47 @@ if (localStorage.getItem('pluginStoreNoticeDismissed') === 'true') {
 
 // Initialize view on page load
 document.addEventListener('DOMContentLoaded', function() {
-    // Default to grid view if plugins exist, otherwise show store
     const gridView = document.getElementById('gridView');
     const tableView = document.getElementById('tableView');
     const storeView = document.getElementById('storeView');
     
-    // Null check: Ensure all view elements exist before toggling
-    if (!gridView || !tableView || !storeView) {
-        console.warn('View elements not found on page load');
-        // If storeView exists, try to show it anyway
-        if (storeView) {
-            storeView.style.display = 'block';
-        }
-        return;
-    }
-    
+    // Determine which view to show based on what's available
     if (gridView && gridView.children.length > 0) {
+        // Plugins are installed, show grid view
         toggleView('grid');
     } else if (storeView) {
         // No plugins installed, show store by default
-        toggleView('store');
+        // Don't call toggleView here to avoid recursion, just show it directly
+        storeView.style.display = 'block';
+        if (gridView) gridView.style.display = 'none';
+        if (tableView) tableView.style.display = 'none';
+        
+        // Activate the store button
+        const viewBtns = document.querySelectorAll('.view-btn');
+        viewBtns.forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.textContent.includes('Store') || btn.textContent.includes('Plugin Store')) {
+                btn.classList.add('active');
+            }
+        });
+        
+        // Show search bar and alphabet filter
+        const searchContainer = document.getElementById('storeSearchContainer');
+        const alphabetFilter = document.getElementById('storeAlphabetFilter');
+        if (searchContainer) searchContainer.style.display = 'block';
+        if (alphabetFilter) alphabetFilter.style.display = 'flex';
+        
+        // Setup search functionality
+        if (typeof setupStoreSearch === 'function') {
+            setupStoreSearch();
+        }
+        
+        // Load plugins from store
+        if (typeof loadPluginStore === 'function') {
+            loadPluginStore();
+        }
+    } else {
+        console.error('No view elements found on page load');
     }
 });
 </script>
