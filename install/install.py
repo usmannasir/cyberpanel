@@ -345,6 +345,10 @@ class preFlightsChecks:
                                     self.stdOut(f"Successfully installed alternative: {alt_package}", 1)
                                     break
             
+            # Disable MariaDB 12.1 repository if MariaDB 10.x is already installed
+            # This prevents upgrade attempts in Pre_Install_Required_Components
+            self.disableMariaDB12RepositoryIfNeeded()
+            
             # Check if MariaDB is already installed before attempting installation
             is_installed, installed_version, major_minor = self.checkExistingMariaDB()
             
