@@ -427,11 +427,17 @@ def installed(request):
     # Sort plugins deterministically by name to prevent order changes
     pluginList.sort(key=lambda x: x.get('name', '').lower())
     
+    # Calculate statistics
+    total_installed = len(pluginList)
+    total_active = sum(1 for plugin in pluginList if plugin.get('enabled', False))
+    
     # Add cache-busting timestamp to context to prevent browser caching
     import time
     context = {
         'plugins': pluginList,
         'error_plugins': errorPlugins,
+        'total_installed': total_installed,
+        'total_active': total_active,
         'cache_buster': int(time.time())  # Add timestamp to force template reload
     }
     
