@@ -858,7 +858,11 @@ def _enrich_store_plugins(plugins):
         
         # Check if plugin is enabled (only if installed)
         if plugin['installed']:
-            plugin['enabled'] = _is_plugin_enabled(plugin_dir)
+            try:
+                plugin['enabled'] = _is_plugin_enabled(plugin_dir)
+            except Exception as e:
+                logging.writeToFile(f"Error checking enabled status for {plugin_dir}: {str(e)}")
+                plugin['enabled'] = False  # Default to disabled on error
         else:
             plugin['enabled'] = False
         
@@ -1203,7 +1207,10 @@ def _fetch_plugins_from_github():
 @require_http_methods(["GET"])
 def fetch_plugin_store(request):
     """Fetch plugins from the plugin store with caching"""
-    mailUtilities.checkHome()
+    try:
+        mailUtilities.checkHome()
+    except Exception as e:
+        logging.writeToFile(f"Warning in mailUtilities.checkHome: {str(e)}")
     
     # Add cache-busting headers to prevent browser caching
     response_headers = {
@@ -1212,47 +1219,67 @@ def fetch_plugin_store(request):
         'Expires': '0'
     }
     
-    # Try to get from cache first
-    cached_plugins = _get_cached_plugins()
-    if cached_plugins is not None:
-        # Sort plugins deterministically by name to prevent order changes
-        cached_plugins.sort(key=lambda x: x.get('name', '').lower())
-        
-        # Enrich cached plugins with installed/enabled status
-        enriched_plugins = _enrich_store_plugins(cached_plugins)
-        response = JsonResponse({
-            'success': True,
-            'plugins': enriched_plugins,
-            'cached': True
-        }, json_dumps_params={'ensure_ascii': False})
-        # Add headers
-        for key, value in response_headers.items():
-            response[key] = value
-        return response
-    
-    # Cache miss or expired - fetch from GitHub
     try:
-        plugins = _fetch_plugins_from_github()
+        # Try to get from cache first
+        cached_plugins = _get_cached_plugins()
+        if cached_plugins is not None:
+            # Sort plugins deterministically by name to prevent order changes
+            cached_plugins.sort(key=lambda x: x.get('name', '').lower())
+            
+            # Enrich cached plugins with installed/enabled status
+            try:
+                enriched_plugins = _enrich_store_plugins(cached_plugins)
+            except Exception as enrich_error:
+                logging.writeToFile(f"Error enriching cached plugins: {str(enrich_error)}")
+                # Return cached plugins without enrichment if enrichment fails
+                enriched_plugins = cached_plugins
+                for plugin in enriched_plugins:
+                    plugin.setdefault('installed', False)
+                    plugin.setdefault('enabled', False)
+                    plugin.setdefault('is_paid', False)
+            
+            response = JsonResponse({
+                'success': True,
+                'plugins': enriched_plugins,
+                'cached': True
+            }, json_dumps_params={'ensure_ascii': False})
+            # Add headers
+            for key, value in response_headers.items():
+                response[key] = value
+            return response
         
-        # Sort plugins deterministically by name to prevent order changes
-        plugins.sort(key=lambda x: x.get('name', '').lower())
-        
-        # Enrich plugins with installed/enabled status
-        enriched_plugins = _enrich_store_plugins(plugins)
-        
-        # Save to cache (save original, not enriched, to keep cache clean)
-        if plugins:
-            _save_plugins_cache(plugins)
-        
-        response = JsonResponse({
-            'success': True,
-            'plugins': enriched_plugins,
-            'cached': False
-        }, json_dumps_params={'ensure_ascii': False})
-        # Add cache-busting headers
-        for key, value in response_headers.items():
-            response[key] = value
-        return response
+        # Cache miss or expired - fetch from GitHub
+        try:
+            plugins = _fetch_plugins_from_github()
+            
+            # Sort plugins deterministically by name to prevent order changes
+            plugins.sort(key=lambda x: x.get('name', '').lower())
+            
+            # Enrich plugins with installed/enabled status
+            try:
+                enriched_plugins = _enrich_store_plugins(plugins)
+            except Exception as enrich_error:
+                logging.writeToFile(f"Error enriching plugins from GitHub: {str(enrich_error)}")
+                # Return plugins without enrichment if enrichment fails
+                enriched_plugins = plugins
+                for plugin in enriched_plugins:
+                    plugin.setdefault('installed', False)
+                    plugin.setdefault('enabled', False)
+                    plugin.setdefault('is_paid', False)
+            
+            # Save to cache (save original, not enriched, to keep cache clean)
+            if plugins:
+                _save_plugins_cache(plugins)
+            
+            response = JsonResponse({
+                'success': True,
+                'plugins': enriched_plugins,
+                'cached': False
+            }, json_dumps_params={'ensure_ascii': False})
+            # Add cache-busting headers
+            for key, value in response_headers.items():
+                response[key] = value
+            return response
     
     except Exception as e:
         error_message = str(e)
