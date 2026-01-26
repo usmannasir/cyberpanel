@@ -194,10 +194,7 @@ def installed(request):
                 else:
                     # Default: try /plugins/{plugin_dir}/settings/ or /plugins/{plugin_dir}/
                     # Only set if plugin is installed (we can't know if the URL exists otherwise)
-                    # Special handling for emailMarketing
-                    if plugin == 'emailMarketing':
-                        data['manage_url'] = '/emailMarketing/'
-                    elif os.path.exists(completePath):
+                    if os.path.exists(completePath):
                         # Check if settings route exists, otherwise use main plugin URL
                         settings_route = f'/plugins/{plugin}/settings/'
                         main_route = f'/plugins/{plugin}/'
@@ -361,10 +358,6 @@ def installed(request):
                     data['manage_url'] = url_elem.text
                 else:
                     # Default to /plugins/{plugin}/ for regular plugins
-                    # Special handling for emailMarketing
-                    if plugin == 'emailMarketing':
-                        data['manage_url'] = '/emailMarketing/'
-                    else:
                         # Default to main plugin route (most plugins work from main route)
                         data['manage_url'] = f'/plugins/{plugin}/'
                 
