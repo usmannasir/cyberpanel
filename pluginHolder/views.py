@@ -1280,7 +1280,7 @@ def fetch_plugin_store(request):
             for key, value in response_headers.items():
                 response[key] = value
             return response
-        
+            
         except Exception as e:
             error_message = str(e)
             
