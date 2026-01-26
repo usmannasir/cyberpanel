@@ -374,6 +374,9 @@ class pluginInstaller:
                     return
                 except Exception as e:
                     raise Exception(f"All removal methods failed. Last error: {str(e)}")
+            else:
+                # Directory doesn't exist - already removed
+                pluginInstaller.stdOut(f'Plugin directory does not exist (already removed): {pluginName}')
                     
             except Exception as e:
                 pluginInstaller.stdOut(f"Error removing plugin files: {str(e)}")
