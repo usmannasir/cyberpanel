@@ -629,28 +629,32 @@ def uninstall_plugin(request, plugin_name):
                 logging.writeToFile(f'Plugin directory still exists after removeFiles, trying ProcessUtilities')
                 try:
                     from plogical.processUtilities import ProcessUtilities
+                    import time
+                    import subprocess
                     
                     # First, try to fix permissions with ProcessUtilities
                     chown_cmd = f'chown -R cyberpanel:cyberpanel {pluginInstalled}'
-                    ProcessUtilities.normalExecutioner(chown_cmd)
+                    chown_result = ProcessUtilities.normalExecutioner(chown_cmd)
+                    if chown_result == 0:
+                        logging.writeToFile(f'Warning: chown failed for {pluginInstalled}')
                     
                     chmod_cmd = f'chmod -R u+rwX,go+rX {pluginInstalled}'
-                    ProcessUtilities.normalExecutioner(chmod_cmd)
+                    chmod_result = ProcessUtilities.normalExecutioner(chmod_cmd)
+                    if chmod_result == 0:
+                        logging.writeToFile(f'Warning: chmod failed for {pluginInstalled}')
                     
-                    # Then try to remove
+                    # Then try to remove with ProcessUtilities
                     rm_cmd = f'rm -rf {pluginInstalled}'
-                    ProcessUtilities.normalExecutioner(rm_cmd)
+                    rm_result = ProcessUtilities.normalExecutioner(rm_cmd)
                     
                     # Wait a moment for filesystem to sync
-                    import time
                     time.sleep(0.5)
                     
                     # Verify again
                     if os.path.exists(pluginInstalled):
-                        # Last resort: try subprocess with shell=True as root
-                        logging.writeToFile(f'ProcessUtilities removal failed, trying subprocess as root')
+                        # ProcessUtilities failed - try subprocess directly
+                        logging.writeToFile(f'ProcessUtilities removal failed (exit code: {rm_result}), trying subprocess')
                         try:
-                            import subprocess
                             # Check if we're root
                             is_root = os.geteuid() == 0 if hasattr(os, 'geteuid') else False
                             if is_root:
@@ -661,9 +665,19 @@ def uninstall_plugin(request, plugin_name):
                                 )
                                 time.sleep(0.5)
                                 if os.path.exists(pluginInstalled):
-                                    raise Exception(f'Plugin directory still exists after all removal attempts: {pluginInstalled}')
+                                    # Last resort: try with shell=True
+                                    logging.writeToFile(f'Subprocess rm -rf failed, trying with shell=True')
+                                    subprocess.run(f'rm -rf {pluginInstalled}', shell=True, timeout=30)
+                                    time.sleep(0.5)
+                                    if os.path.exists(pluginInstalled):
+                                        raise Exception(f'Plugin directory still exists after all removal attempts: {pluginInstalled}')
                             else:
-                                raise Exception(f'Plugin directory still exists after ProcessUtilities removal: {pluginInstalled}')
+                                # Not root - try with shell=True which might work better
+                                logging.writeToFile(f'Not root, trying rm -rf with shell=True')
+                                subprocess.run(f'rm -rf {pluginInstalled}', shell=True, timeout=30)
+                                time.sleep(0.5)
+                                if os.path.exists(pluginInstalled):
+                                    raise Exception(f'Plugin directory still exists after ProcessUtilities and subprocess removal: {pluginInstalled}')
                         except Exception as e3:
                             logging.writeToFile(f'Subprocess removal also failed: {str(e3)}')
                             raise Exception(f'Failed to remove plugin directory. Tried removeFiles(), ProcessUtilities, and subprocess. Directory still exists: {pluginInstalled}')
