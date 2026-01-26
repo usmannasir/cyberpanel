@@ -654,6 +654,62 @@
         border-color: #5856d6;
     }
     
+    /* Store Search Styles */
+    .store-search-container {
+        padding: 15px;
+        background: var(--bg-secondary, #f8f9ff);
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    
+    .store-search-wrapper {
+        position: relative;
+    }
+    
+    .store-search-input {
+        width: 100%;
+        padding: 12px 15px 12px 45px;
+        border: 2px solid #e8e9ff;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        background: white;
+        color: var(--text-primary, #2f3640);
+    }
+    
+    .store-search-input:focus {
+        outline: none;
+        border-color: #5856d6;
+        box-shadow: 0 0 0 3px rgba(88, 86, 214, 0.1);
+    }
+    
+    .store-search-input::placeholder {
+        color: #94a3b8;
+    }
+    
+    .clear-search-btn {
+        display: none;
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #64748b;
+        cursor: pointer;
+        padding: 5px;
+        font-size: 14px;
+        transition: color 0.2s;
+    }
+    
+    .clear-search-btn:hover {
+        color: #dc3545;
+    }
+    
+    .clear-search-btn.visible {
+        display: block;
+    }
+    
     .store-table-wrapper {
         overflow-x: auto;
         background: var(--bg-primary, white);
@@ -995,7 +1051,12 @@
                             {% endif %}
                         </div>
                         <div class="plugin-info">
-                            <h3 class="plugin-name">{{ plugin.name }}{% if plugin.is_paid|default:False|default_if_none:False %} <span class="paid-badge" title="{% trans 'Paid Plugin - Patreon Subscription Required' %}"><i class="fas fa-crown"></i> {% trans "Premium" %}</span>{% endif %}</h3>
+                            <h3 class="plugin-name">
+                                {{ plugin.name }}
+                                {% if plugin.is_paid|default:False|default_if_none:False %} <span class="paid-badge" title="{% trans 'Paid Plugin - Patreon Subscription Required' %}"><i class="fas fa-crown"></i> {% trans "Premium" %}</span>{% endif %}
+                                {% if plugin.is_new|default:False %} <span class="plugin-status-badge new" title="{% trans 'This plugin was released/updated within the last 3 months' %}">NEW</span>{% endif %}
+                                {% if plugin.is_stale|default:False %} <span class="plugin-status-badge stale" title="{% trans 'This plugin is marked \'Stale\' (Last release over two years ago). This means it may work fine, but it has not had any recent development. Use your own discretion when using this plugin!' %}">STALE</span>{% endif %}
+                            </h3>
                             <div class="plugin-meta">
                                 <span class="plugin-type">{{ plugin.type }}</span>
                                 <span class="plugin-version-number">v{{ plugin.version }}</span>
@@ -1014,13 +1075,32 @@
                         <div class="subscription-warning">
                             <div class="subscription-warning-content">
                                 <i class="fas fa-exclamation-triangle"></i>
-                                <strong>{% trans "Paid Plugin:" %}</strong> {% trans "Requires Patreon subscription to" %} "{{ plugin.patreon_tier|default:'CyberPanel Paid Plugin' }}"
+                                {% if plugin.payment_type == 'paypal' %}
+                                    <strong>{% trans "Paid Plugin:" %}</strong> {% trans "Requires PayPal payment to access." %}
+                                {% else %}
+                                    <strong>{% trans "Paid Plugin:" %}</strong> {% trans "Requires Patreon subscription to" %} "{{ plugin.patreon_tier|default:'CyberPanel Paid Plugin' }}"
+                                {% endif %}
                             </div>
-                            {% if plugin.patreon_url %}
-                            <a href="{{ plugin.patreon_url }}" target="_blank" rel="noopener noreferrer" class="subscription-warning-button">
-                                <i class="fab fa-patreon"></i>
-                                {% trans "Subscribe on Patreon" %}
-                            </a>
+                            {% if plugin.payment_type == 'paypal' %}
+                                {% if plugin.paypal_me_url %}
+                                <a href="{{ plugin.paypal_me_url }}" target="_blank" rel="noopener noreferrer" class="subscription-warning-button" style="background: linear-gradient(135deg, #0070ba 0%, #003087 100%);">
+                                    <i class="fab fa-paypal"></i>
+                                    {% trans "Pay with PayPal.me" %}
+                                </a>
+                                {% endif %}
+                                {% if plugin.paypal_payment_link %}
+                                <a href="{{ plugin.paypal_payment_link }}" target="_blank" rel="noopener noreferrer" class="subscription-warning-button" style="background: linear-gradient(135deg, #009cde 0%, #0070ba 100%); margin-left: 10px;">
+                                    <i class="fab fa-paypal"></i>
+                                    {% trans "Pay with Payment Link" %}
+                                </a>
+                                {% endif %}
+                            {% else %}
+                                {% if plugin.patreon_url %}
+                                <a href="{{ plugin.patreon_url }}" target="_blank" rel="noopener noreferrer" class="subscription-warning-button">
+                                    <i class="fab fa-patreon"></i>
+                                    {% trans "Subscribe on Patreon" %}
+                                </a>
+                                {% endif %}
                             {% endif %}
                         </div>
                         {% endif %}
@@ -1094,8 +1174,10 @@
                     <table class="plugins-table">
                         <thead>
                             <tr>
+                                <th>{% trans "Icon" %}</th>
                                 <th>{% trans "Plugin Name" %}</th>
                                 <th>{% trans "Version" %}</th>
+                                <th>{% trans "Pricing" %}</th>
                                 <th>{% trans "Modify Date" %}</th>
                                 <th>{% trans "Status" %}</th>
                                 <th>{% trans "Action" %}</th>
@@ -1107,11 +1189,30 @@
                         <tbody>
                             {% for plugin in plugins %}
                             <tr>
+                                <td style="text-align: center; vertical-align: middle;">
+                                    <div style="width: 40px; height: 40px; background: #f8f9ff; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; color: #5856d6; margin: 0 auto;">
+                                        {% if plugin.type == "Security" %}
+                                            <i class="fas fa-shield-alt"></i>
+                                        {% elif plugin.type == "Performance" %}
+                                            <i class="fas fa-rocket"></i>
+                                        {% elif plugin.type == "Utility" %}
+                                            <i class="fas fa-tools"></i>
+                                        {% elif plugin.type == "Backup" %}
+                                            <i class="fas fa-save"></i>
+                                        {% else %}
+                                            <i class="fas fa-puzzle-piece"></i>
+                                        {% endif %}
+                                    </div>
+                                </td>
                                 <td>
                                     <strong>{{ plugin.name }}</strong>
+                                    {% if plugin.is_new|default:False %} <span class="plugin-status-badge new" title="{% trans 'This plugin was released/updated within the last 3 months' %}">NEW</span>{% endif %}
+                                    {% if plugin.is_stale|default:False %} <span class="plugin-status-badge stale" title="{% trans 'This plugin is marked \'Stale\' (Last release over two years ago). This means it may work fine, but it has not had any recent development. Use your own discretion when using this plugin!' %}">STALE</span>{% endif %}
                                 </td>
                                 <td>
                                     <span class="plugin-version-number">{{ plugin.version }}</span>
+                                </td>
+                                <td>
                                     {% if plugin.is_paid|default:False|default_if_none:False %}
                                         <span class="plugin-pricing-badge paid">{% trans "Paid" %}</span>
                                     {% else %}
@@ -1233,16 +1334,27 @@
                     <span id="storeErrorText"></span>
                 </div>
                 
+                <!-- Search Bar - Always visible when store view is active -->
+                <div id="storeSearchContainer" class="store-search-container" style="margin-bottom: 20px; display: none;">
+                    <div class="store-search-wrapper" style="position: relative; max-width: 500px; margin: 0 auto;">
+                        <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #64748b; z-index: 1;"></i>
+                        <input type="text" id="storeSearchInput" class="store-search-input" placeholder="{% trans 'Search plugins by name or description...' %}" style="width: 100%; padding: 12px 15px 12px 45px; border: 2px solid #e8e9ff; border-radius: 8px; font-size: 14px; transition: all 0.3s ease; background: white;">
+                        <button id="clearSearchBtn" class="clear-search-btn" style="display: none; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #64748b; cursor: pointer; padding: 5px; font-size: 14px;" onclick="clearStoreSearch()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Alphabetical Filter - Always visible when store view is active -->
+                <div id="storeAlphabetFilter" class="alphabet-filter" style="display: none;">
+                    {% for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" %}
+                        <button class="alpha-btn" onclick="filterByLetter('{{ letter }}')">{{ letter }}</button>
+                    {% endfor %}
+                    <button class="alpha-btn active" onclick="filterByLetter('all')">{% trans "All" %}</button>
+                </div>
+                
                 <!-- Store Content -->
                 <div id="storeContent" style="display: none;">
-                    <!-- Alphabetical Filter -->
-                    <div class="alphabet-filter">
-                        {% for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" %}
-                            <button class="alpha-btn" onclick="filterByLetter('{{ letter }}')">{{ letter }}</button>
-                        {% endfor %}
-                        <button class="alpha-btn active" onclick="filterByLetter('all')">{% trans "All" %}</button>
-                    </div>
-                    
                     <!-- Store Table -->
                     <div class="store-table-wrapper">
                         <table class="store-table">
@@ -1275,10 +1387,11 @@
 </div>
 
 <script>
-// Cache-busting version: 2026-01-25-v7 - Added NEW/Stale badges, removed Author/Status/Active columns, fixed intermittent display
+// Cache-busting version: 2026-01-25-v8 - Added search functionality to Plugin Store
 // Force browser to reload this script by changing version number
 let storePlugins = [];
 let currentFilter = 'all';
+let currentSearchQuery = '';
 
 // Get CSRF cookie helper function
 function getCookie(name) {
@@ -1302,28 +1415,47 @@ function toggleView(view) {
     const storeView = document.getElementById('storeView');
     const viewBtns = document.querySelectorAll('.view-btn');
     
+    // Null check: If elements don't exist, return early
+    if (!gridView || !tableView || !storeView) {
+        console.warn('View elements not found, cannot toggle view');
+        return;
+    }
+    
     viewBtns.forEach(btn => btn.classList.remove('active'));
     
     if (view === 'grid') {
         gridView.style.display = 'grid';
         tableView.style.display = 'none';
         storeView.style.display = 'none';
-        viewBtns[0].classList.add('active');
+        if (viewBtns[0]) viewBtns[0].classList.add('active');
     } else if (view === 'table') {
         gridView.style.display = 'none';
         tableView.style.display = 'block';
         storeView.style.display = 'none';
-        viewBtns[1].classList.add('active');
+        if (viewBtns[1]) viewBtns[1].classList.add('active');
     } else if (view === 'store') {
         gridView.style.display = 'none';
         tableView.style.display = 'none';
         storeView.style.display = 'block';
-        viewBtns[2].classList.add('active');
+        if (viewBtns[2]) viewBtns[2].classList.add('active');
+        
+        // Show search bar and alphabet filter immediately
+        const searchContainer = document.getElementById('storeSearchContainer');
+        const alphabetFilter = document.getElementById('storeAlphabetFilter');
+        if (searchContainer) searchContainer.style.display = 'block';
+        if (alphabetFilter) alphabetFilter.style.display = 'flex';
+        
+        // Setup search functionality
+        if (typeof setupStoreSearch === 'function') {
+            setupStoreSearch();
+        }
         
         // Load plugins from store if not already loaded
-        if (storePlugins.length === 0) {
-            loadPluginStore();
-        } else {
+        if (typeof storePlugins !== 'undefined' && storePlugins.length === 0) {
+            if (typeof loadPluginStore === 'function') {
+                loadPluginStore();
+            }
+        } else if (typeof displayStorePlugins === 'function') {
             displayStorePlugins();
         }
     }
@@ -1339,29 +1471,74 @@ function loadPluginStore() {
     storeError.style.display = 'none';
     storeContent.style.display = 'none';
     
-    fetch('/plugins/api/store/plugins/', {
+    // Add cache-busting timestamp to prevent browser caching
+    const cacheBuster = '?t=' + Date.now();
+    
+    fetch('/plugins/api/store/plugins/' + cacheBuster, {
         method: 'GET',
         headers: {
-            'X-CSRFToken': getCookie('csrftoken')
-        }
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+        },
+        cache: 'no-store'
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
     .then(data => {
         storeLoading.style.display = 'none';
         
-        if (data.success) {
-            storePlugins = data.plugins;
+        if (data.success && data.plugins) {
+            // Sort plugins deterministically by name to prevent order changes
+            storePlugins = data.plugins.sort((a, b) => {
+                const nameA = (a.name || '').toLowerCase();
+                const nameB = (b.name || '').toLowerCase();
+                return nameA.localeCompare(nameB);
+            });
+            
+            // Normalize is_paid to boolean for all plugins
+            storePlugins = storePlugins.map(plugin => {
+                if (plugin.is_paid !== undefined && plugin.is_paid !== null) {
+                    const isPaidValue = plugin.is_paid;
+                    if (isPaidValue === true || isPaidValue === 'true' || isPaidValue === 'True' || isPaidValue === 1 || isPaidValue === '1' || String(isPaidValue).toLowerCase() === 'true') {
+                        plugin.is_paid = true;
+                    } else {
+                        plugin.is_paid = false;
+                    }
+                } else {
+                    plugin.is_paid = false;
+                }
+                // Force boolean type
+                plugin.is_paid = Boolean(plugin.is_paid);
+                return plugin;
+            });
+            
             displayStorePlugins();
             storeContent.style.display = 'block';
+            // Ensure search and filter are visible
+            const searchContainer = document.getElementById('storeSearchContainer');
+            const alphabetFilter = document.getElementById('storeAlphabetFilter');
+            if (searchContainer) searchContainer.style.display = 'block';
+            if (alphabetFilter) alphabetFilter.style.display = 'flex';
         } else {
             storeErrorText.textContent = data.error || 'Failed to load plugins from store';
             storeError.style.display = 'block';
+            // Keep search and filter visible even on error
+            const searchContainer = document.getElementById('storeSearchContainer');
+            const alphabetFilter = document.getElementById('storeAlphabetFilter');
+            if (searchContainer) searchContainer.style.display = 'block';
+            if (alphabetFilter) alphabetFilter.style.display = 'flex';
         }
     })
     .catch(error => {
         storeLoading.style.display = 'none';
         storeErrorText.textContent = 'Error loading plugin store: ' + error.message;
         storeError.style.display = 'block';
+        console.error('Plugin store load error:', error);
     });
 }
 
@@ -1373,7 +1550,7 @@ function escapeHtml(text) {
 }
 
 function displayStorePlugins() {
-    // Version: 2026-01-25-v7 - Store view: 8 columns (Icon, Plugin Name, Version, Pricing, Modify Date, Action, Help, About)
+    // Version: 2026-01-25-v8 - Store view: 8 columns with search functionality
     // CRITICAL: NO Author, NO Status, NO Active columns - these are for Grid/Table views only
     // Store view shows: Icon | Plugin Name (with NEW/Stale badges) | Version | Pricing | Modify Date | Action (Installed/Install) | Help | About
     const tbody = document.getElementById('storeTableBody');
@@ -1388,18 +1565,45 @@ function displayStorePlugins() {
         return;
     }
     
-    // CRITICAL: Clear any old cached table structure that might have Author/Status/Active columns
-    // Force the correct 8-column structure
+    // CRITICAL: Sort plugins deterministically by name to prevent order changes
+    // Create a copy to avoid mutating the original array
+    let sortedPlugins = [...storePlugins].sort((a, b) => {
+        const nameA = (a.name || '').toLowerCase();
+        const nameB = (b.name || '').toLowerCase();
+        return nameA.localeCompare(nameB);
+    });
     
-    let filteredPlugins = storePlugins;
+    // Initialize filteredPlugins FIRST
+    let filteredPlugins = sortedPlugins;
     
+    // Apply alphabetical filter
     if (currentFilter !== 'all') {
-        filteredPlugins = storePlugins.filter(plugin => 
-            plugin.name.charAt(0).toUpperCase() === currentFilter
+        filteredPlugins = filteredPlugins.filter(plugin => 
+            plugin.name && plugin.name.charAt(0).toUpperCase() === currentFilter
         );
     }
     
-        filteredPlugins.forEach(plugin => {
+    // Apply search filter
+    if (currentSearchQuery && currentSearchQuery.trim() !== '') {
+        const searchLower = currentSearchQuery.toLowerCase().trim();
+        filteredPlugins = filteredPlugins.filter(plugin => {
+            const nameMatch = plugin.name && plugin.name.toLowerCase().includes(searchLower);
+            const descMatch = plugin.description && plugin.description.toLowerCase().includes(searchLower);
+            const authorMatch = plugin.author && plugin.author.toLowerCase().includes(searchLower);
+            return nameMatch || descMatch || authorMatch;
+        });
+    }
+    
+    // Show message if search/filter returns no results (AFTER filtering)
+    if (filteredPlugins.length === 0) {
+        const searchMsg = currentSearchQuery 
+            ? `No plugins found matching "${currentSearchQuery}"`
+            : 'No plugins available';
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 20px; color: var(--text-secondary, #64748b);">${escapeHtml(searchMsg)}</td></tr>`;
+        return;
+    }
+    
+    filteredPlugins.forEach(plugin => {
         const row = document.createElement('tr');
         
         // Plugin icon - based on plugin type (same logic as Grid/Table views)
@@ -1516,6 +1720,50 @@ function filterByLetter(letter) {
         });
     }
     displayStorePlugins();
+}
+
+// Search functionality
+function setupStoreSearch() {
+    const searchInput = document.getElementById('storeSearchInput');
+    const clearBtn = document.getElementById('clearSearchBtn');
+    
+    if (!searchInput) return;
+    
+    // Search on input
+    searchInput.addEventListener('input', function(e) {
+        currentSearchQuery = e.target.value;
+        
+        // Show/hide clear button
+        if (currentSearchQuery && currentSearchQuery.trim() !== '') {
+            clearBtn.style.display = 'block';
+        } else {
+            clearBtn.style.display = 'none';
+        }
+        
+        // Filter plugins
+        displayStorePlugins();
+    });
+    
+    // Search on Enter key
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            displayStorePlugins();
+        }
+    });
+}
+
+function clearStoreSearch() {
+    const searchInput = document.getElementById('storeSearchInput');
+    const clearBtn = document.getElementById('clearSearchBtn');
+    
+    if (searchInput) {
+        searchInput.value = '';
+        currentSearchQuery = '';
+        clearBtn.style.display = 'none';
+        displayStorePlugins();
+        searchInput.focus();
+    }
 }
 
 function installFromStore(pluginName) {
@@ -1883,7 +2131,19 @@ if (localStorage.getItem('pluginStoreNoticeDismissed') === 'true') {
 document.addEventListener('DOMContentLoaded', function() {
     // Default to grid view if plugins exist, otherwise show store
     const gridView = document.getElementById('gridView');
+    const tableView = document.getElementById('tableView');
     const storeView = document.getElementById('storeView');
+    
+    // Null check: Ensure all view elements exist before toggling
+    if (!gridView || !tableView || !storeView) {
+        console.warn('View elements not found on page load');
+        // If storeView exists, try to show it anyway
+        if (storeView) {
+            storeView.style.display = 'block';
+        }
+        return;
+    }
+    
     if (gridView && gridView.children.length > 0) {
         toggleView('grid');
     } else if (storeView) {
