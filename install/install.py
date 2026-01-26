@@ -1474,31 +1474,102 @@ module cyberpanel_ols {
                     if major_ver < 12.0:
                         # MariaDB 10.x is installed, disable 12.1 repository to prevent upgrade attempts
                         self.stdOut(f"MariaDB {installed_version} detected, disabling MariaDB 12.1 repository to prevent upgrade conflicts", 1)
+                        logging.InstallLog.writeToFile(f"MariaDB {installed_version} detected, disabling MariaDB 12.1 repository")
                         
-                        # Disable MariaDB 12.1 repository
+                        # Disable MariaDB 12.1 repository - check all possible repo file locations
                         repo_files = [
                             '/etc/yum.repos.d/mariadb-main.repo',
                             '/etc/yum.repos.d/mariadb.repo',
-                            '/etc/yum.repos.d/mariadb-12.1.repo'
+                            '/etc/yum.repos.d/mariadb-12.1.repo',
+                            '/etc/yum.repos.d/mariadb-main.repo.bak'
                         ]
                         
+                        # Also check for any mariadb repo files
+                        import glob
+                        repo_files.extend(glob.glob('/etc/yum.repos.d/*mariadb*.repo'))
+                        
+                        disabled_any = False
                         for repo_file in repo_files:
                             if os.path.exists(repo_file):
                                 try:
                                     # Read the file
                                     with open(repo_file, 'r') as f:
-                                        content = f.read()
+                                        lines = f.readlines()
                                     
-                                    # Disable all MariaDB repositories
-                                    content = re.sub(r'^(\[.*mariadb.*\])', r'\1\nenabled=0', content, flags=re.MULTILINE | re.IGNORECASE)
+                                    # Modify the file to disable all MariaDB repositories
+                                    modified = False
+                                    new_lines = []
+                                    in_mariadb_section = False
                                     
-                                    # Write back
-                                    with open(repo_file, 'w') as f:
-                                        f.write(content)
+                                    for line in lines:
+                                        # Check if we're entering a MariaDB repository section
+                                        if line.strip().startswith('[') and 'mariadb' in line.lower():
+                                            in_mariadb_section = True
+                                            new_lines.append(line)
+                                            # Add enabled=0 if not already present
+                                            if 'enabled' not in line.lower():
+                                                new_lines.append('enabled=0\n')
+                                                modified = True
+                                        elif in_mariadb_section:
+                                            # If we see enabled=1, change it to enabled=0
+                                            if line.strip().startswith('enabled=') and 'enabled=0' not in line.lower():
+                                                new_lines.append('enabled=0\n')
+                                                modified = True
+                                            elif line.strip().startswith('['):
+                                                # New section, exit MariaDB section
+                                                in_mariadb_section = False
+                                                new_lines.append(line)
+                                            else:
+                                                new_lines.append(line)
+                                        else:
+                                            new_lines.append(line)
                                     
-                                    self.stdOut(f"Disabled MariaDB repository in {repo_file}", 1)
+                                    # Write back if modified
+                                    if modified:
+                                        with open(repo_file, 'w') as f:
+                                            f.writelines(new_lines)
+                                        self.stdOut(f"Disabled MariaDB repository in {repo_file}", 1)
+                                        logging.InstallLog.writeToFile(f"Disabled MariaDB repository in {repo_file}")
+                                        disabled_any = True
+                                    
                                 except Exception as e:
                                     self.stdOut(f"Warning: Could not disable repository {repo_file}: {e}", 1)
+                                    logging.InstallLog.writeToFile(f"Warning: Could not disable repository {repo_file}: {e}")
+                        
+                        # Always exclude MariaDB-server from dnf/yum operations to prevent upgrades
+                        try:
+                            # Add exclude to dnf.conf
+                            dnf_conf = '/etc/dnf/dnf.conf'
+                            exclude_line = 'exclude=MariaDB-server'
+                            
+                            if os.path.exists(dnf_conf):
+                                with open(dnf_conf, 'r') as f:
+                                    dnf_content = f.read()
+                                
+                                # Check if exclude line already exists
+                                if exclude_line not in dnf_content:
+                                    # Check if there's already an exclude line
+                                    if 'exclude=' in dnf_content:
+                                        # Append to existing exclude line
+                                        dnf_content = re.sub(r'(exclude=.*)', r'\1 MariaDB-server', dnf_content)
+                                    else:
+                                        # Add new exclude line
+                                        dnf_content = dnf_content.rstrip() + '\n' + exclude_line + '\n'
+                                    
+                                    with open(dnf_conf, 'w') as f:
+                                        f.write(dnf_content)
+                                    self.stdOut("Added MariaDB-server to dnf excludes to prevent upgrade", 1)
+                                    logging.InstallLog.writeToFile("Added MariaDB-server to dnf excludes")
+                            else:
+                                # Create dnf.conf with exclude
+                                with open(dnf_conf, 'w') as f:
+                                    f.write('[main]\n')
+                                    f.write(exclude_line + '\n')
+                                self.stdOut("Created dnf.conf with MariaDB-server exclude", 1)
+                                logging.InstallLog.writeToFile("Created dnf.conf with MariaDB-server exclude")
+                        except Exception as e:
+                            self.stdOut(f"Warning: Could not add exclude to dnf.conf: {e}", 1)
+                            logging.InstallLog.writeToFile(f"Warning: Could not add exclude to dnf.conf: {e}")
                         
                         return True
                 except (ValueError, TypeError):
@@ -1507,6 +1578,7 @@ module cyberpanel_ols {
             return False
         except Exception as e:
             self.stdOut(f"Warning: Error checking MariaDB repository: {e}", 1)
+            logging.InstallLog.writeToFile(f"Warning: Error checking MariaDB repository: {e}")
             return False
 
     def checkExistingMariaDB(self):
