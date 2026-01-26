@@ -137,7 +137,6 @@ if [[ "$SCRIPT_DIR" == /dev/fd/* ]] || [[ ! -d "$SCRIPT_DIR/modules" ]]; then
             exit 1
         fi
     fi
-    fi  # Close the if [ -n "$TEMP_DIR" ] block
 fi  # Close the if [[ "$SCRIPT_DIR" == /dev/fd/* ]] block
 
 MODULES_DIR="$SCRIPT_DIR/modules"
