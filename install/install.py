@@ -1451,9 +1451,189 @@ module cyberpanel_ols {
         except:
             return False
 
+    def checkExistingMariaDB(self):
+        """Check if MariaDB/MySQL is already installed and return version info"""
+        try:
+            # Check if MariaDB/MySQL server package is installed
+            if self.distro == ubuntu:
+                command = 'dpkg -l | grep -iE "^(ii|rc).*mariadb-server|mysql-server" 2>/dev/null || echo ""'
+            else:
+                command = 'rpm -qa | grep -iE "^(mariadb-server|mysql-server|MariaDB-server)" 2>/dev/null || echo ""'
+            
+            result = subprocess.run(command, shell=True, capture_output=True, universal_newlines=True)
+            
+            if result.stdout.strip():
+                # MariaDB/MySQL server package is installed, get version
+                version_command = 'mysql --version 2>/dev/null || mariadb --version 2>/dev/null || echo ""'
+                version_result = subprocess.run(version_command, shell=True, capture_output=True, universal_newlines=True)
+                version_output = version_result.stdout.strip()
+                
+                if version_output:
+                    # Extract version number (e.g., "10.11.15" from "mysql  Ver 10.11.15-MariaDB")
+                    import re
+                    version_match = re.search(r'(\d+\.\d+\.\d+)', version_output)
+                    if version_match:
+                        installed_version = version_match.group(1)
+                        major_minor = '.'.join(installed_version.split('.')[:2])  # e.g., "10.11"
+                        logging.InstallLog.writeToFile(f"Found existing MariaDB installation: {installed_version} (major.minor: {major_minor})")
+                        return True, installed_version, major_minor
+                
+                logging.InstallLog.writeToFile("Found MariaDB/MySQL package but could not determine version")
+                return True, "unknown", "unknown"
+            
+            # Also check if MariaDB service exists and data directory exists (might be installed but package query failed)
+            if os.path.exists('/var/lib/mysql') and os.listdir('/var/lib/mysql'):
+                logging.InstallLog.writeToFile("Found MariaDB data directory, assuming MariaDB is installed")
+                # Try to get version one more time
+                version_command = 'mysql --version 2>/dev/null || mariadb --version 2>/dev/null || echo ""'
+                version_result = subprocess.run(version_command, shell=True, capture_output=True, universal_newlines=True)
+                version_output = version_result.stdout.strip()
+                if version_output:
+                    import re
+                    version_match = re.search(r'(\d+\.\d+\.\d+)', version_output)
+                    if version_match:
+                        installed_version = version_match.group(1)
+                        major_minor = '.'.join(installed_version.split('.')[:2])
+                        return True, installed_version, major_minor
+                return True, "unknown", "unknown"
+            
+            return False, None, None
+        except Exception as e:
+            logging.InstallLog.writeToFile(f"Error checking existing MariaDB: {str(e)}")
+            return False, None, None
+
+    def _attemptMariaDBUpgrade(self):
+        """Attempt to upgrade MariaDB to 12.1. Returns True if successful, False otherwise."""
+        try:
+            if self.distro == ubuntu:
+                # Ubuntu MariaDB upgrade
+                command = 'DEBIAN_FRONTEND=noninteractive apt-get install software-properties-common apt-transport-https curl -y'
+                result = subprocess.run(command, shell=True, capture_output=True, universal_newlines=True)
+                if result.returncode != 0:
+                    logging.InstallLog.writeToFile(f"Failed to install prerequisites: {result.stderr}")
+                    return False
+                
+                command = "mkdir -p /etc/apt/keyrings"
+                subprocess.run(command, shell=True, check=False)
+                
+                command = "curl -o /etc/apt/keyrings/mariadb-keyring.pgp 'https://mariadb.org/mariadb_release_signing_key.pgp'"
+                result = subprocess.run(command, shell=True, capture_output=True, universal_newlines=True)
+                if result.returncode != 0:
+                    logging.InstallLog.writeToFile(f"Failed to download MariaDB keyring: {result.stderr}")
+                    return False
+                
+                # Setup MariaDB 12.1 repository
+                command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=12.1'
+                result = subprocess.run(command, shell=True, capture_output=True, universal_newlines=True)
+                if result.returncode != 0:
+                    logging.InstallLog.writeToFile(f"Failed to setup MariaDB repository: {result.stderr}")
+                    return False
+                
+                command = 'DEBIAN_FRONTEND=noninteractive apt-get update -y'
+                result = subprocess.run(command, shell=True, capture_output=True, universal_newlines=True)
+                if result.returncode != 0:
+                    logging.InstallLog.writeToFile(f"Failed to update package list: {result.stderr}")
+                    return False
+                
+                # Attempt to install MariaDB 12.1
+                command = "DEBIAN_FRONTEND=noninteractive apt-get install mariadb-server -y"
+                result = subprocess.run(command, shell=True, capture_output=True, universal_newlines=True)
+                if result.returncode != 0:
+                    # Check if error is due to upgrade restrictions
+                    error_output = result.stderr + result.stdout
+                    if "upgrade" in error_output.lower() or "manual" in error_output.lower():
+                        logging.InstallLog.writeToFile("MariaDB upgrade blocked - requires manual intervention")
+                    else:
+                        logging.InstallLog.writeToFile(f"MariaDB installation failed: {error_output}")
+                    return False
+                
+                return True
+            else:
+                # RHEL-based MariaDB upgrade
+                # Setup MariaDB 12.1 repository
+                command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=12.1'
+                result = subprocess.run(command, shell=True, capture_output=True, universal_newlines=True)
+                if result.returncode != 0:
+                    logging.InstallLog.writeToFile(f"Failed to setup MariaDB repository: {result.stderr}")
+                    return False
+                
+                # Attempt to install MariaDB 12.1
+                # Use --allowerasing to allow package replacements if needed
+                command = 'dnf install mariadb-server mariadb-devel mariadb-client-utils -y --allowerasing'
+                result = subprocess.run(command, shell=True, capture_output=True, universal_newlines=True)
+                if result.returncode != 0:
+                    # Check if error is due to upgrade restrictions
+                    error_output = result.stderr + result.stdout
+                    if "PREIN scriptlet failed" in error_output or "upgrade" in error_output.lower() or "manual" in error_output.lower():
+                        logging.InstallLog.writeToFile("MariaDB upgrade blocked by package manager - requires manual intervention")
+                    else:
+                        logging.InstallLog.writeToFile(f"MariaDB installation failed: {error_output}")
+                    return False
+                
+                return True
+                
+        except Exception as e:
+            logging.InstallLog.writeToFile(f"Exception during MariaDB upgrade attempt: {str(e)}")
+            return False
+
     def installMySQL(self, mysql):
         """Install MySQL/MariaDB"""
         try:
+            # Check if MariaDB is already installed
+            is_installed, installed_version, major_minor = self.checkExistingMariaDB()
+            
+            if is_installed:
+                self.stdOut(f"MariaDB/MySQL is already installed (version: {installed_version})", 1)
+                
+                # Check if we need to upgrade
+                should_try_upgrade = False
+                if major_minor and major_minor != "unknown":
+                    try:
+                        major_ver = float(major_minor)
+                        if major_ver < 12.0:
+                            should_try_upgrade = True
+                            self.stdOut(f"Existing MariaDB {major_minor} detected. Attempting to upgrade to MariaDB 12.1...", 1)
+                            self.stdOut("If upgrade fails, we will use the existing MariaDB installation.", 1)
+                    except (ValueError, TypeError):
+                        pass
+                
+                # If MariaDB 10.x is installed, try to upgrade to 12.1 first
+                if should_try_upgrade:
+                    try:
+                        self.stdOut("Attempting to install MariaDB 12.1...", 1)
+                        upgrade_success = self._attemptMariaDBUpgrade()
+                        if upgrade_success:
+                            self.stdOut("✅ Successfully upgraded to MariaDB 12.1", 1)
+                            self.startMariaDB()
+                            self.changeMYSQLRootPassword()
+                            self.fixMariaDB()
+                            return True
+                        else:
+                            self.stdOut("⚠️  MariaDB 12.1 upgrade failed, using existing MariaDB installation", 1)
+                            self.startMariaDB()
+                            return True
+                    except Exception as upgrade_error:
+                        error_msg = str(upgrade_error)
+                        logging.InstallLog.writeToFile(f"MariaDB upgrade attempt failed: {error_msg}")
+                        
+                        # Check if error is due to upgrade restrictions
+                        if "PREIN scriptlet failed" in error_msg or "upgrade" in error_msg.lower() or "manual" in error_msg.lower():
+                            self.stdOut("⚠️  MariaDB upgrade blocked by package manager (10.x to 12.x requires manual upgrade)", 1)
+                            self.stdOut(f"Using existing MariaDB {installed_version} installation", 1)
+                        else:
+                            self.stdOut(f"⚠️  MariaDB upgrade failed: {error_msg}", 1)
+                            self.stdOut(f"Using existing MariaDB {installed_version} installation", 1)
+                        
+                        # Fall back to existing installation
+                        self.startMariaDB()
+                        return True
+                
+                # MariaDB 12.x or higher already installed, or version unknown but working
+                # Just ensure it's running
+                self.stdOut("Using existing MariaDB installation", 1)
+                self.startMariaDB()
+                return True
+            
             self.stdOut("Installing MySQL/MariaDB...", 1)
             
             if self.distro == ubuntu:
