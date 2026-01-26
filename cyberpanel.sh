@@ -81,7 +81,12 @@ detect_os() {
     fi
     
     # Detect OS
-    if echo $OUTPUT | grep -q "AlmaLinux 9" ; then
+    if echo $OUTPUT | grep -q "AlmaLinux 10" ; then
+        SERVER_OS="AlmaLinux10"
+        OS_FAMILY="rhel"
+        PACKAGE_MANAGER="dnf"
+        print_status "Detected: AlmaLinux 10"
+    elif echo $OUTPUT | grep -q "AlmaLinux 9" ; then
         SERVER_OS="AlmaLinux9"
         OS_FAMILY="rhel"
         PACKAGE_MANAGER="dnf"
@@ -133,7 +138,7 @@ detect_os() {
         print_status "Detected: Debian GNU/Linux 11"
     else
         print_status "ERROR: Unsupported OS detected"
-        print_status "Supported OS: AlmaLinux 8/9, CentOS 8/9, Rocky Linux 8/9, Ubuntu 20.04/22.04, Debian 11/12"
+        print_status "Supported OS: AlmaLinux 8/9/10, CentOS 8/9, Rocky Linux 8/9, Ubuntu 20.04/22.04, Debian 11/12"
         return 1
     fi
     
@@ -477,8 +482,8 @@ install_dependencies() {
             echo ""
             
             echo "Step 3/4: Installing core packages..."
-            if [ "$SERVER_OS" = "AlmaLinux9" ] || [ "$SERVER_OS" = "CentOS9" ] || [ "$SERVER_OS" = "RockyLinux9" ]; then
-                # AlmaLinux 9 / CentOS 9 / Rocky Linux 9
+            if [ "$SERVER_OS" = "AlmaLinux9" ] || [ "$SERVER_OS" = "AlmaLinux10" ] || [ "$SERVER_OS" = "CentOS9" ] || [ "$SERVER_OS" = "RockyLinux9" ]; then
+                # AlmaLinux 9/10 / CentOS 9 / Rocky Linux 9
                 $PACKAGE_MANAGER install -y ImageMagick gd libicu oniguruma python3 python3-pip python3-devel 2>/dev/null || true
                 $PACKAGE_MANAGER install -y aspell 2>/dev/null || print_status "WARNING: aspell not available, skipping..."
                 $PACKAGE_MANAGER install -y libc-client-devel 2>/dev/null || print_status "WARNING: libc-client-devel not available, skipping..."
@@ -609,24 +614,251 @@ install_cyberpanel_direct() {
     mkdir -p "$temp_dir"
     cd "$temp_dir" || return 1
     
+    # CRITICAL: Disable MariaDB 12.1 repository and add dnf exclude if MariaDB 10.x is installed
+    # This must be done BEFORE Pre_Install_Setup_Repository runs
+    if command -v rpm >/dev/null 2>&1; then
+        # Check if MariaDB 10.x is installed
+        if rpm -qa | grep -qiE "^(mariadb-server|mysql-server|MariaDB-server)" 2>/dev/null; then
+            local mariadb_version=$(mysql --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+            if [ -n "$mariadb_version" ]; then
+                local major_ver=$(echo "$mariadb_version" | cut -d. -f1)
+                local minor_ver=$(echo "$mariadb_version" | cut -d. -f2)
+                
+                # Check if it's MariaDB 10.x (major version < 12)
+                if [ "$major_ver" -lt 12 ]; then
+                    print_status "MariaDB $mariadb_version detected, adding dnf exclude to prevent upgrade attempts"
+                    
+                    # Add MariaDB-server to dnf excludes (multiple formats for compatibility)
+                    local dnf_conf="/etc/dnf/dnf.conf"
+                    local exclude_added=false
+                    
+                    if [ -f "$dnf_conf" ]; then
+                        # Check if [main] section exists
+                        if grep -q "^\[main\]" "$dnf_conf" 2>/dev/null; then
+                            # [main] section exists, add exclude there
+                            if ! grep -q "exclude=.*MariaDB-server" "$dnf_conf" 2>/dev/null; then
+                                if grep -q "^exclude=" "$dnf_conf" 2>/dev/null; then
+                                    # Append to existing exclude line in [main] section
+                                    sed -i '/^\[main\]/,/^\[/ { /^exclude=/ s/$/ MariaDB-server*/ }' "$dnf_conf"
+                                else
+                                    # Add new exclude line after [main]
+                                    sed -i '/^\[main\]/a exclude=MariaDB-server*' "$dnf_conf"
+                                fi
+                                exclude_added=true
+                            fi
+                        else
+                            # No [main] section, add it with exclude
+                            if ! grep -q "exclude=.*MariaDB-server" "$dnf_conf" 2>/dev/null; then
+                                echo "" >> "$dnf_conf"
+                                echo "[main]" >> "$dnf_conf"
+                                echo "exclude=MariaDB-server*" >> "$dnf_conf"
+                                exclude_added=true
+                            fi
+                        fi
+                    else
+                        # Create dnf.conf with exclude
+                        echo "[main]" > "$dnf_conf"
+                        echo "exclude=MariaDB-server*" >> "$dnf_conf"
+                        exclude_added=true
+                    fi
+                    
+                    if [ "$exclude_added" = true ]; then
+                        print_status "Added MariaDB-server* to dnf excludes in $dnf_conf"
+                    fi
+                    
+                    # Also add to yum.conf for compatibility
+                    local yum_conf="/etc/yum.conf"
+                    if [ -f "$yum_conf" ]; then
+                        if ! grep -q "exclude=.*MariaDB-server" "$yum_conf" 2>/dev/null; then
+                            if grep -q "^exclude=" "$yum_conf" 2>/dev/null; then
+                                sed -i 's/^exclude=\(.*\)/exclude=\1 MariaDB-server*/' "$yum_conf"
+                            else
+                                echo "exclude=MariaDB-server*" >> "$yum_conf"
+                            fi
+                            print_status "Added MariaDB-server* to yum excludes"
+                        fi
+                    fi
+                    
+                    # Create a function to disable MariaDB repositories (will be called after repository setup)
+                    disable_mariadb_repos() {
+                        local repo_files=(
+                            "/etc/yum.repos.d/mariadb-main.repo"
+                            "/etc/yum.repos.d/mariadb.repo"
+                            "/etc/yum.repos.d/mariadb-12.1.repo"
+                        )
+                        
+                        # Also check for any mariadb repo files
+                        while IFS= read -r repo_file; do
+                            repo_files+=("$repo_file")
+                        done < <(find /etc/yum.repos.d -name "*mariadb*.repo" 2>/dev/null)
+                        
+                        for repo_file in "${repo_files[@]}"; do
+                            if [ -f "$repo_file" ] && [ -n "$repo_file" ]; then
+                                # First, try to disable by setting enabled=0
+                                sed -i 's/^enabled\s*=\s*1/enabled=0/g' "$repo_file" 2>/dev/null
+                                
+                                # If file contains MariaDB 12.1 references, disable or remove it
+                                if grep -qi "mariadb.*12\|12.*mariadb\|mariadb-main" "$repo_file" 2>/dev/null; then
+                                    # Try to add enabled=0 to each [mariadb...] section
+                                    python3 -c "
+import re
+import sys
+try:
+    with open('$repo_file', 'r') as f:
+        content = f.read()
+    
+    # Replace enabled=1 with enabled=0
+    content = re.sub(r'(enabled\s*=\s*)1', r'\g<1>0', content, flags=re.IGNORECASE)
+    
+    # Add enabled=0 after [mariadb...] sections if not present
+    lines = content.split('\n')
+    new_lines = []
+    in_mariadb_section = False
+    has_enabled = False
+    
+    for i, line in enumerate(lines):
+        new_lines.append(line)
+        if re.match(r'^\s*\[.*mariadb.*\]', line, re.IGNORECASE):
+            in_mariadb_section = True
+            has_enabled = False
+        elif in_mariadb_section:
+            if re.match(r'^\s*enabled\s*=', line, re.IGNORECASE):
+                has_enabled = True
+            elif re.match(r'^\s*\[', line) and not re.match(r'^\s*\[.*mariadb.*\]', line, re.IGNORECASE):
+                if not has_enabled:
+                    new_lines.insert(-1, 'enabled=0')
+                in_mariadb_section = False
+                has_enabled = False
+    
+    if in_mariadb_section and not has_enabled:
+        new_lines.append('enabled=0')
+    
+    with open('$repo_file', 'w') as f:
+        f.write('\n'.join(new_lines))
+except:
+    # Fallback: just rename the file
+    import os
+    os.rename('$repo_file', '${repo_file}.disabled')
+" 2>/dev/null || \
+                                    # Fallback: rename the file to disable it
+                                    mv "$repo_file" "${repo_file}.disabled" 2>/dev/null || true
+                                fi
+                            fi
+                        done
+                    }
+                    
+                    # Export function so it can be called from installer
+                    export -f disable_mariadb_repos
+                    export MARIADB_VERSION="$mariadb_version"
+                    
+                    # Also set up a background process to monitor and disable repos
+                    (
+                        while [ ! -f /tmp/cyberpanel_install_complete ]; do
+                            sleep 2
+                            if [ -f /etc/yum.repos.d/mariadb-main.repo ] || [ -f /etc/yum.repos.d/mariadb.repo ]; then
+                                disable_mariadb_repos
+                            fi
+                        done
+                    ) &
+                    local monitor_pid=$!
+                    echo "$monitor_pid" > /tmp/cyberpanel_repo_monitor.pid
+                    print_status "Started background process to monitor and disable MariaDB repositories"
+                fi
+            fi
+        fi
+    fi
+    
     # Download the working CyberPanel installation files
     # Use master3395 fork which has our fixes
+    # Try to download the actual installer script (install/install.py) from the repository
     echo "Downloading from: https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/cyberpanel.sh"
-    # Try development branch first, fallback to stable
+    
+    # First, try to download the repository archive to get the correct installer
+    local archive_url="https://github.com/master3395/cyberpanel/archive/v2.5.5-dev.tar.gz"
     local installer_url="https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/cyberpanel.sh"
     
-    # Test if the development branch exists
-    if ! curl -s --head "$installer_url" | grep -q "200 OK"; then
-        echo "    Development branch not available, falling back to stable"
-        installer_url="https://raw.githubusercontent.com/master3395/cyberpanel/stable/cyberpanel.sh"
-    else
+    # Test if the development branch archive exists
+    if curl -s --head "$archive_url" | grep -q "200 OK"; then
         echo "    Using development branch (v2.5.5-dev) from master3395/cyberpanel"
+    else
+        echo "    Development branch archive not available, trying installer script directly..."
+        # Test if the installer script exists
+        if ! curl -s --head "$installer_url" | grep -q "200 OK"; then
+            echo "    Development branch not available, falling back to stable"
+            installer_url="https://raw.githubusercontent.com/master3395/cyberpanel/stable/cyberpanel.sh"
+            archive_url="https://github.com/master3395/cyberpanel/archive/stable.tar.gz"
+        fi
     fi
     
     curl --silent -o cyberpanel_installer.sh "$installer_url" 2>/dev/null
     if [ $? -ne 0 ] || [ ! -s "cyberpanel_installer.sh" ]; then
         print_status "ERROR: Failed to download CyberPanel installer"
         return 1
+    fi
+    
+    # CRITICAL: Patch the installer script to skip MariaDB installation if 10.x is already installed
+    if [ -n "$MARIADB_VERSION" ] && [ "$major_ver" -lt 12 ] 2>/dev/null; then
+        print_status "Patching installer script to skip MariaDB installation..."
+        
+        # Create a backup
+        cp cyberpanel_installer.sh cyberpanel_installer.sh.backup
+        
+        # Use Python to properly patch the installer script
+        python3 -c "
+import re
+import sys
+
+try:
+    with open('cyberpanel_installer.sh', 'r') as f:
+        content = f.read()
+    
+    original_content = content
+    
+    # Pattern: Add --exclude=MariaDB-server* to dnf/yum install commands that install mariadb-server
+    # Match: (dnf|yum) install [flags] [packages including mariadb-server]
+    def add_exclude(match):
+        cmd = match.group(0)
+        # Check if --exclude is already present
+        if '--exclude=MariaDB-server' in cmd:
+            return cmd
+        # Add --exclude=MariaDB-server* after install and flags, before packages
+        return re.sub(r'((?:dnf|yum)\s+install\s+(?:-[^\s]+\s+)*)', r'\1--exclude=MariaDB-server* ', cmd, flags=re.IGNORECASE)
+    
+    # Find all dnf/yum install commands that mention mariadb-server
+    content = re.sub(
+        r'(?:dnf|yum)\s+install[^;]*?mariadb-server[^;]*',
+        add_exclude,
+        content,
+        flags=re.IGNORECASE | re.MULTILINE
+    )
+    
+    # Also handle MariaDB-server (capitalized)
+    content = re.sub(
+        r'(?:dnf|yum)\s+install[^;]*?MariaDB-server[^;]*',
+        add_exclude,
+        content,
+        flags=re.IGNORECASE | re.MULTILINE
+    )
+    
+    # Only write if content changed
+    if content != original_content:
+        with open('cyberpanel_installer.sh', 'w') as f:
+            f.write(content)
+        print('Installer script patched successfully')
+    else:
+        print('No changes needed in installer script')
+        
+except Exception as e:
+    print(f'Error patching installer script: {e}')
+    sys.exit(1)
+" 2>/dev/null && print_status "Installer script patched successfully" || {
+        # Fallback: Simple sed-based patching if Python fails
+        sed -i 's/\(dnf\|yum\) install\([^;]*\)mariadb-server/\1 install\2--exclude=MariaDB-server* mariadb-server/gi' cyberpanel_installer.sh 2>/dev/null
+        sed -i 's/\(dnf\|yum\) install\([^;]*\)MariaDB-server/\1 install\2--exclude=MariaDB-server* MariaDB-server/gi' cyberpanel_installer.sh 2>/dev/null
+        print_status "Installer script patched (fallback method)"
+    }
+        
+        print_status "Installer script patched to exclude MariaDB-server from installation"
     fi
     
     # Make script executable and verify
@@ -657,12 +889,26 @@ install_cyberpanel_direct() {
     
     # Copy install directory to current location
     if [ "$installer_url" = "https://raw.githubusercontent.com/master3395/cyberpanel/stable/cyberpanel.sh" ]; then
-        cp -r cyberpanel-stable/install . 2>/dev/null || true
-        cp -r cyberpanel-stable/install.sh . 2>/dev/null || true
+        if [ -d "cyberpanel-stable" ]; then
+            cp -r cyberpanel-stable/install . 2>/dev/null || true
+            cp -r cyberpanel-stable/install.sh . 2>/dev/null || true
+        fi
     else
-        cp -r cyberpanel-v2.5.5-dev/install . 2>/dev/null || true
-        cp -r cyberpanel-v2.5.5-dev/install.sh . 2>/dev/null || true
+        if [ -d "cyberpanel-v2.5.5-dev" ]; then
+            cp -r cyberpanel-v2.5.5-dev/install . 2>/dev/null || true
+            cp -r cyberpanel-v2.5.5-dev/install.sh . 2>/dev/null || true
+        fi
     fi
+    
+    # Verify install directory was copied
+    if [ ! -d "install" ]; then
+        print_status "ERROR: install directory not found after extraction"
+        print_status "Archive contents:"
+        ls -la 2>/dev/null | head -20
+        return 1
+    fi
+    
+    print_status "Verified install directory exists"
     
     echo "  ✓ CyberPanel installation files downloaded"
     echo "  🔄 Starting CyberPanel installation..."
@@ -700,27 +946,301 @@ install_cyberpanel_direct() {
     fi
     echo ""
 
-    # Run installer and show live output, capturing the password
-    # Use bash to execute to avoid permission issues
-    local installer_script="cyberpanel_installer.sh"
-    if [ ! -f "$installer_script" ]; then
-        print_status "ERROR: cyberpanel_installer.sh not found in current directory: $(pwd)"
-        return 1
+    # CRITICAL: Use install/install.py directly instead of cyberpanel_installer.sh
+    # The cyberpanel_installer.sh is the old wrapper that doesn't support auto-install
+    # install/install.py is the actual installer that we can control
+    local installer_py="install/install.py"
+    if [ -f "$installer_py" ]; then
+        print_status "Using install/install.py directly for installation (non-interactive mode)"
+        
+        # CRITICAL: Patch install.py to exclude MariaDB-server from dnf/yum commands
+        if [ -n "$MARIADB_VERSION" ] && [ "$major_ver" -lt 12 ] 2>/dev/null; then
+            print_status "Patching install.py to exclude MariaDB-server from installation commands..."
+            
+            # Create backup
+            cp "$installer_py" "${installer_py}.backup" 2>/dev/null || true
+            
+            # Patch install.py to add --exclude=MariaDB-server* to dnf/yum install commands
+            python3 -c "
+import re
+import sys
+
+try:
+    with open('$installer_py', 'r') as f:
+        content = f.read()
+    
+    original_content = content
+    
+    # Pattern: Add --exclude=MariaDB-server* to dnf/yum install commands that install mariadb-server
+    def add_exclude(match):
+        cmd = match.group(0)
+        # Check if --exclude is already present
+        if '--exclude=MariaDB-server' in cmd:
+            return cmd
+        # Add --exclude=MariaDB-server* after install and flags, before packages
+        return re.sub(r'((?:dnf|yum)\s+install\s+(?:-[^\s]+\s+)*)', r'\1--exclude=MariaDB-server* ', cmd, flags=re.IGNORECASE)
+    
+    # Find all dnf/yum install commands that mention mariadb-server
+    content = re.sub(
+        r'(?:dnf|yum)\s+install[^;]*?mariadb-server[^;]*',
+        add_exclude,
+        content,
+        flags=re.IGNORECASE | re.MULTILINE
+    )
+    
+    # Also handle MariaDB-server (capitalized) and in Python strings
+    content = re.sub(
+        r'(\"|\')(?:dnf|yum)\s+install[^\"]*?mariadb-server[^\"]*(\"|\')',
+        lambda m: m.group(1) + re.sub(r'((?:dnf|yum)\s+install\s+(?:-[^\s]+\s+)*)', r'\1--exclude=MariaDB-server* ', m.group(0)[1:-1], flags=re.IGNORECASE) + m.group(2),
+        content,
+        flags=re.IGNORECASE | re.MULTILINE
+    )
+    
+    # Only write if content changed
+    if content != original_content:
+        with open('$installer_py', 'w') as f:
+            f.write(content)
+        print('install.py patched successfully')
+    else:
+        print('No changes needed in install.py')
+        
+except Exception as e:
+    print(f'Error patching install.py: {e}')
+    sys.exit(1)
+" 2>/dev/null && print_status "install.py patched successfully" || {
+            # Fallback: Simple sed-based patching if Python fails
+            sed -i 's/\(dnf\|yum\) install\([^;]*\)mariadb-server/\1 install\2--exclude=MariaDB-server* mariadb-server/gi' "$installer_py" 2>/dev/null
+            sed -i 's/\(dnf\|yum\) install\([^;]*\)MariaDB-server/\1 install\2--exclude=MariaDB-server* MariaDB-server/gi' "$installer_py" 2>/dev/null
+            print_status "install.py patched (fallback method)"
+        }
+        fi
+        
+        # If MariaDB 10.x is installed, disable repositories right before running installer
+        if [ -n "$MARIADB_VERSION" ] && [ -f /tmp/cyberpanel_repo_monitor.pid ]; then
+            # Call the disable function one more time before installer runs
+            if type disable_mariadb_repos >/dev/null 2>&1; then
+                disable_mariadb_repos
+            fi
+        fi
+        
+        # Get server IP address (required by install.py)
+        local server_ip
+        if command -v curl >/dev/null 2>&1; then
+            server_ip=$(curl -s --max-time 5 https://api.ipify.org 2>/dev/null || curl -s --max-time 5 https://icanhazip.com 2>/dev/null || echo "")
+        fi
+        
+        if [ -z "$server_ip" ]; then
+            # Fallback: try to get IP from network interfaces
+            server_ip=$(ip route get 8.8.8.8 2>/dev/null | awk '{print $7; exit}' || \
+                       hostname -I 2>/dev/null | awk '{print $1}' || \
+                       echo "127.0.0.1")
+        fi
+        
+        if [ -z "$server_ip" ] || [ "$server_ip" = "127.0.0.1" ]; then
+            print_status "WARNING: Could not detect public IP, using 127.0.0.1"
+            server_ip="127.0.0.1"
+        fi
+        
+        print_status "Detected server IP: $server_ip"
+        
+        # CRITICAL: Install Python MySQL dependencies before running install.py
+        # installCyberPanel.py requires MySQLdb (mysqlclient) which needs development headers
+        echo ""
+        echo "==============================================================================================================="
+        echo "Installing Python MySQL dependencies (required for installCyberPanel.py)..."
+        echo "==============================================================================================================="
+        print_status "Installing Python MySQL dependencies..."
+        
+        # Detect OS for package installation
+        local os_family=""
+        if [ -f /etc/os-release ]; then
+            . /etc/os-release
+            case "$ID" in
+                almalinux|rocky|centos|rhel|fedora)
+                    os_family="rhel"
+                    print_status "Detected RHEL-based OS: $ID"
+                    ;;
+                ubuntu|debian)
+                    os_family="debian"
+                    print_status "Detected Debian-based OS: $ID"
+                    ;;
+                *)
+                    print_status "Unknown OS ID: $ID, defaulting to RHEL-based"
+                    os_family="rhel"
+                    ;;
+            esac
+        else
+            print_status "WARNING: /etc/os-release not found, defaulting to RHEL-based"
+            os_family="rhel"
+        fi
+        
+        # Install MariaDB/MySQL development headers and Python mysqlclient
+        if [ "$os_family" = "rhel" ]; then
+            # RHEL-based (AlmaLinux, Rocky, CentOS, RHEL)
+            print_status "Installing MariaDB development headers for RHEL-based system..."
+            
+            # Try to install mariadb-devel (works with MariaDB 10.x and 12.x)
+            # NOTE: We need mariadb-devel even if we excluded MariaDB-server
+            # The exclude only applies to MariaDB-server, not development packages
+            if command -v dnf >/dev/null 2>&1; then
+                # For AlmaLinux 9/10 and newer - show output for debugging
+                print_status "Attempting to install mariadb-devel (development headers only, not server)..."
+                # Temporarily remove exclude for devel packages if needed
+                local dnf_exclude_backup=""
+                if [ -f /etc/dnf/dnf.conf ] && grep -q "exclude=.*MariaDB" /etc/dnf/dnf.conf; then
+                    # Check if exclude is too broad
+                    if grep -q "exclude=.*MariaDB-server.*MariaDB-devel" /etc/dnf/dnf.conf || \
+                       grep -q "exclude=.*MariaDB\*" /etc/dnf/dnf.conf; then
+                        print_status "Temporarily adjusting dnf exclude to allow mariadb-devel installation..."
+                        # We only want to exclude MariaDB-server, not devel packages
+                        sed -i 's/exclude=\(.*\)MariaDB-server\(.*\)MariaDB-devel\(.*\)/exclude=\1MariaDB-server\2\3/' /etc/dnf/dnf.conf 2>/dev/null || true
+                        sed -i 's/exclude=\(.*\)MariaDB\*\(.*\)/exclude=\1MariaDB-server*\2/' /etc/dnf/dnf.conf 2>/dev/null || true
+                    fi
+                fi
+                
+                if dnf install -y --allowerasing --skip-broken --nobest \
+                    mariadb-devel pkgconfig gcc python3-devel python3-pip; then
+                    print_status "✓ Successfully installed mariadb-devel"
+                elif dnf install -y --allowerasing --skip-broken --nobest \
+                    mysql-devel pkgconfig gcc python3-devel python3-pip; then
+                    print_status "✓ Successfully installed mysql-devel"
+                elif dnf install -y --allowerasing --skip-broken --nobest \
+                    mariadb-connector-c-devel pkgconfig gcc python3-devel python3-pip; then
+                    print_status "✓ Successfully installed mariadb-connector-c-devel"
+                else
+                    print_status "⚠️  WARNING: Failed to install MariaDB development headers"
+                    print_status "This may cause MySQLdb installation to fail"
+                fi
+            else
+                # For older systems with yum
+                print_status "Using yum to install mariadb-devel..."
+                if yum install -y mariadb-devel pkgconfig gcc python3-devel python3-pip; then
+                    print_status "✓ Successfully installed mariadb-devel"
+                elif yum install -y mysql-devel pkgconfig gcc python3-devel python3-pip; then
+                    print_status "✓ Successfully installed mysql-devel"
+                else
+                    print_status "⚠️  WARNING: Failed to install MariaDB development headers"
+                fi
+            fi
+            
+            # Install mysqlclient Python package
+            print_status "Installing mysqlclient Python package..."
+            python3 -m pip install --upgrade pip setuptools wheel 2>&1 | grep -v "already satisfied" || true
+            if python3 -m pip install mysqlclient 2>&1; then
+                print_status "✓ Successfully installed mysqlclient"
+            else
+                # If pip install fails, try with build dependencies
+                print_status "Retrying mysqlclient installation with build dependencies..."
+                python3 -m pip install --no-cache-dir mysqlclient 2>&1 || {
+                    print_status "⚠️  WARNING: Failed to install mysqlclient, trying alternative method..."
+                    # Try installing from source
+                    python3 -m pip install --no-binary mysqlclient mysqlclient 2>&1 || true
+                }
+            fi
+            
+        elif [ "$os_family" = "debian" ]; then
+            # Debian-based (Ubuntu, Debian)
+            print_status "Installing MariaDB development headers for Debian-based system..."
+            apt-get update -y
+            if apt-get install -y libmariadb-dev libmariadb-dev-compat pkg-config build-essential python3-dev python3-pip; then
+                print_status "✓ Successfully installed MariaDB development headers"
+            elif apt-get install -y default-libmysqlclient-dev pkg-config build-essential python3-dev python3-pip; then
+                print_status "✓ Successfully installed MySQL development headers"
+            else
+                print_status "⚠️  WARNING: Failed to install MariaDB/MySQL development headers"
+            fi
+            
+            # Install mysqlclient Python package
+            print_status "Installing mysqlclient Python package..."
+            python3 -m pip install --upgrade pip setuptools wheel 2>&1 | grep -v "already satisfied" || true
+            if python3 -m pip install mysqlclient 2>&1; then
+                print_status "✓ Successfully installed mysqlclient"
+            else
+                print_status "Retrying mysqlclient installation with build dependencies..."
+                python3 -m pip install --no-cache-dir mysqlclient 2>&1 || true
+            fi
+        fi
+        
+        # Verify MySQLdb is available
+        print_status "Verifying MySQLdb module availability..."
+        if python3 -c "import MySQLdb; print('MySQLdb version:', MySQLdb.__version__)" 2>&1; then
+            print_status "✓ MySQLdb module is available and working"
+        else
+            print_status "⚠️  WARNING: MySQLdb module not available"
+            print_status "Attempting to diagnose the issue..."
+            python3 -c "import sys; print('Python path:', sys.path)" 2>&1 || true
+            python3 -m pip list | grep -i mysql || print_status "No MySQL-related packages found in pip list"
+            print_status "Attempting to continue anyway, but installation may fail..."
+        fi
+        echo ""
+        
+        # Build installer arguments based on user preferences
+        # install.py requires publicip as first positional argument
+        local install_args=("$server_ip")
+        
+        # Add optional arguments based on user preferences
+        # Default: OpenLiteSpeed, Full installation (postfix, powerdns, ftp), Local MySQL
+        # These match what the user selected in the interactive prompts
+        install_args+=("--postfix" "ON")
+        install_args+=("--powerdns" "ON")
+        install_args+=("--ftp" "ON")
+        install_args+=("--remotemysql" "OFF")
+        
+        if [ "$DEBUG_MODE" = true ]; then
+            # Note: install.py doesn't have --debug, but we can set it via environment
+            export DEBUG_MODE=true
+        fi
+        
+        # Run the Python installer directly
+        if [ "$DEBUG_MODE" = true ]; then
+            python3 "$installer_py" "${install_args[@]}" 2>&1 | tee /var/log/CyberPanel/install_output.log
+        else
+            python3 "$installer_py" "${install_args[@]}" 2>&1 | tee /var/log/CyberPanel/install_output.log
+        fi
+    else
+        # Fallback to cyberpanel_installer.sh if install.py not found
+        print_status "WARNING: install/install.py not found, using cyberpanel_installer.sh (may be interactive)"
+        
+        local installer_script="cyberpanel_installer.sh"
+        if [ ! -f "$installer_script" ]; then
+            print_status "ERROR: cyberpanel_installer.sh not found in current directory: $(pwd)"
+            return 1
+        fi
+        
+        # Get absolute path to installer script
+        local installer_path
+        if [[ "$installer_script" = /* ]]; then
+            installer_path="$installer_script"
+        else
+            installer_path="$(pwd)/$installer_script"
+        fi
+        
+        # If MariaDB 10.x is installed, disable repositories right before running installer
+        if [ -n "$MARIADB_VERSION" ] && [ -f /tmp/cyberpanel_repo_monitor.pid ]; then
+            # Call the disable function one more time before installer runs
+            if type disable_mariadb_repos >/dev/null 2>&1; then
+                disable_mariadb_repos
+            fi
+        fi
+        
+        if [ "$DEBUG_MODE" = true ]; then
+            bash "$installer_path" --debug 2>&1 | tee /var/log/CyberPanel/install_output.log
+        else
+            bash "$installer_path" 2>&1 | tee /var/log/CyberPanel/install_output.log
+        fi
     fi
     
-    # Get absolute path to installer script
-    local installer_path
-    if [[ "$installer_script" = /* ]]; then
-        installer_path="$installer_script"
-    else
-        installer_path="$(pwd)/$installer_script"
-    fi
+    local install_exit_code=${PIPESTATUS[0]}
     
-    if [ "$DEBUG_MODE" = true ]; then
-        bash "$installer_path" --debug 2>&1 | tee /var/log/CyberPanel/install_output.log
-    else
-        bash "$installer_path" 2>&1 | tee /var/log/CyberPanel/install_output.log
+    # Stop the repository monitor
+    if [ -f /tmp/cyberpanel_repo_monitor.pid ]; then
+        local monitor_pid=$(cat /tmp/cyberpanel_repo_monitor.pid 2>/dev/null)
+        if [ -n "$monitor_pid" ] && kill -0 "$monitor_pid" 2>/dev/null; then
+            kill "$monitor_pid" 2>/dev/null
+        fi
+        rm -f /tmp/cyberpanel_repo_monitor.pid
     fi
+    touch /tmp/cyberpanel_install_complete 2>/dev/null || true
 
     local install_exit_code=${PIPESTATUS[0]}
 

@@ -345,40 +345,67 @@ class preFlightsChecks:
                                     self.stdOut(f"Successfully installed alternative: {alt_package}", 1)
                                     break
             
-            # Install MariaDB with enhanced AlmaLinux 9.6 support
-            self.stdOut("Installing MariaDB for AlmaLinux 9.6...", 1)
+            # Disable MariaDB 12.1 repository if MariaDB 10.x is already installed
+            # This prevents upgrade attempts in Pre_Install_Required_Components
+            self.disableMariaDB12RepositoryIfNeeded()
             
-            # Try multiple installation methods for maximum compatibility
-            mariadb_commands = [
-                "dnf install -y mariadb-server mariadb-devel mariadb-client --skip-broken --nobest",
-                "dnf install -y mariadb-server mariadb-devel mariadb-client --allowerasing",
-                "dnf install -y mariadb-server mariadb-devel --skip-broken --nobest --allowerasing",
-                "dnf install -y mariadb-server --skip-broken --nobest --allowerasing"
-            ]
+            # CRITICAL: Remove conflicting MariaDB compat packages before installation
+            # These packages from MariaDB 12.1 can conflict with MariaDB 10.11
+            self.stdOut("Removing conflicting MariaDB compat packages...", 1)
+            try:
+                subprocess.run("rpm -e --nodeps MariaDB-server-compat-12.1.2-1.el9.noarch 2>/dev/null; true", shell=True, timeout=30)
+                subprocess.run("dnf remove -y 'MariaDB-server-compat*' 2>/dev/null || true", shell=True, timeout=60)
+                r = subprocess.run("rpm -qa 2>/dev/null | grep -i MariaDB-server-compat", shell=True, capture_output=True, text=True, timeout=30)
+                for line in (r.stdout or "").strip().splitlines():
+                    pkg = (line.strip().split() or [""])[0]
+                    if pkg and "MariaDB-server-compat" in pkg:
+                        subprocess.run(["rpm", "-e", "--nodeps", pkg], timeout=30)
+                self.stdOut("Removed conflicting MariaDB compat packages", 1)
+            except Exception as e:
+                self.stdOut("Warning: Could not remove compat packages: " + str(e), 0)
             
-            mariadb_installed = False
-            for cmd in mariadb_commands:
-                try:
-                    result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=300)
-                    if result.returncode == 0:
+            # Check if MariaDB is already installed before attempting installation
+            is_installed, installed_version, major_minor = self.checkExistingMariaDB()
+            
+            if is_installed:
+                self.stdOut(f"MariaDB/MySQL is already installed (version: {installed_version}), skipping installation", 1)
+                mariadb_installed = True
+            else:
+                # Install MariaDB with enhanced AlmaLinux 9.6 support
+                self.stdOut("Installing MariaDB for AlmaLinux 9.6...", 1)
+                
+                # Try multiple installation methods for maximum compatibility
+                mariadb_commands = [
+                    "dnf install -y mariadb-server mariadb-devel mariadb-client --skip-broken --nobest",
+                    "dnf install -y mariadb-server mariadb-devel mariadb-client --allowerasing",
+                    "dnf install -y mariadb-server mariadb-devel --skip-broken --nobest --allowerasing",
+                    "dnf install -y mariadb-server --skip-broken --nobest --allowerasing"
+                ]
+                
+                mariadb_installed = False
+                for cmd in mariadb_commands:
+                    try:
+                        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=300)
+                        if result.returncode == 0:
+                            mariadb_installed = True
+                            self.stdOut(f"MariaDB installed successfully with command: {cmd}", 1)
+                            break
+                    except subprocess.TimeoutExpired:
+                        self.stdOut(f"Timeout installing MariaDB with command: {cmd}", 0)
+                        continue
+                    except Exception as e:
+                        self.stdOut(f"Error installing MariaDB with command: {cmd} - {str(e)}", 0)
+                        continue
+                
+                if not mariadb_installed:
+                    self.stdOut("MariaDB installation failed, trying MySQL as fallback...", 0)
+                    try:
+                        command = "dnf install -y mysql-server mysql-devel --skip-broken --nobest --allowerasing"
+                        self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                        self.stdOut("MySQL installed as fallback for MariaDB", 1)
                         mariadb_installed = True
-                        self.stdOut(f"MariaDB installed successfully with command: {cmd}", 1)
-                        break
-                except subprocess.TimeoutExpired:
-                    self.stdOut(f"Timeout installing MariaDB with command: {cmd}", 0)
-                    continue
-                except Exception as e:
-                    self.stdOut(f"Error installing MariaDB with command: {cmd} - {str(e)}", 0)
-                    continue
-            
-            if not mariadb_installed:
-                self.stdOut("MariaDB installation failed, trying MySQL as fallback...", 0)
-                try:
-                    command = "dnf install -y mysql-server mysql-devel --skip-broken --nobest --allowerasing"
-                    self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-                    self.stdOut("MySQL installed as fallback for MariaDB", 1)
-                except:
-                    self.stdOut("Both MariaDB and MySQL installation failed", 0)
+                    except:
+                        self.stdOut("Both MariaDB and MySQL installation failed", 0)
             
             # Install additional required packages
             self.stdOut("Installing additional required packages...", 1)
@@ -1238,6 +1265,13 @@ class preFlightsChecks:
             self.stdOut("Installing custom binaries...", 1)
 
             try:
+                # Ensure /usr/local/lsws/bin exists (dnf openlitespeed may use different layout)
+                ols_bin_dir = os.path.dirname(OLS_BINARY_PATH)
+                os.makedirs(ols_bin_dir, mode=0o755, exist_ok=True)
+                ols_base = os.path.dirname(ols_bin_dir)
+                if not os.path.isdir(ols_base):
+                    os.makedirs(ols_base, mode=0o755, exist_ok=True)
+
                 # Make binary executable before moving
                 os.chmod(tmp_binary, 0o755)
                 
@@ -1451,6 +1485,124 @@ module cyberpanel_ols {
         except:
             return False
 
+    def disableMariaDB12RepositoryIfNeeded(self):
+        """Disable MariaDB 12.1 repository if MariaDB 10.x is already installed to prevent upgrade attempts"""
+        try:
+            is_installed, installed_version, major_minor = self.checkExistingMariaDB()
+            
+            if is_installed and major_minor and major_minor != "unknown":
+                try:
+                    major_ver = float(major_minor)
+                    if major_ver < 12.0:
+                        # MariaDB 10.x is installed, disable 12.1 repository to prevent upgrade attempts
+                        self.stdOut(f"MariaDB {installed_version} detected, disabling MariaDB 12.1 repository to prevent upgrade conflicts", 1)
+                        logging.InstallLog.writeToFile(f"MariaDB {installed_version} detected, disabling MariaDB 12.1 repository")
+                        
+                        # Disable MariaDB 12.1 repository - check all possible repo file locations
+                        repo_files = [
+                            '/etc/yum.repos.d/mariadb-main.repo',
+                            '/etc/yum.repos.d/mariadb.repo',
+                            '/etc/yum.repos.d/mariadb-12.1.repo',
+                            '/etc/yum.repos.d/mariadb-main.repo.bak'
+                        ]
+                        
+                        # Also check for any mariadb repo files
+                        import glob
+                        repo_files.extend(glob.glob('/etc/yum.repos.d/*mariadb*.repo'))
+                        
+                        disabled_any = False
+                        for repo_file in repo_files:
+                            if os.path.exists(repo_file):
+                                try:
+                                    # Read the file
+                                    with open(repo_file, 'r') as f:
+                                        lines = f.readlines()
+                                    
+                                    # Modify the file to disable all MariaDB repositories
+                                    modified = False
+                                    new_lines = []
+                                    in_mariadb_section = False
+                                    
+                                    for line in lines:
+                                        # Check if we're entering a MariaDB repository section
+                                        if line.strip().startswith('[') and 'mariadb' in line.lower():
+                                            in_mariadb_section = True
+                                            new_lines.append(line)
+                                            # Add enabled=0 if not already present
+                                            if 'enabled' not in line.lower():
+                                                new_lines.append('enabled=0\n')
+                                                modified = True
+                                        elif in_mariadb_section:
+                                            # If we see enabled=1, change it to enabled=0
+                                            if line.strip().startswith('enabled=') and 'enabled=0' not in line.lower():
+                                                new_lines.append('enabled=0\n')
+                                                modified = True
+                                            elif line.strip().startswith('['):
+                                                # New section, exit MariaDB section
+                                                in_mariadb_section = False
+                                                new_lines.append(line)
+                                            else:
+                                                new_lines.append(line)
+                                        else:
+                                            new_lines.append(line)
+                                    
+                                    # Write back if modified
+                                    if modified:
+                                        with open(repo_file, 'w') as f:
+                                            f.writelines(new_lines)
+                                        self.stdOut(f"Disabled MariaDB repository in {repo_file}", 1)
+                                        logging.InstallLog.writeToFile(f"Disabled MariaDB repository in {repo_file}")
+                                        disabled_any = True
+                                    
+                                except Exception as e:
+                                    self.stdOut(f"Warning: Could not disable repository {repo_file}: {e}", 1)
+                                    logging.InstallLog.writeToFile(f"Warning: Could not disable repository {repo_file}: {e}")
+                        
+                        # Always exclude MariaDB-server from dnf/yum operations to prevent upgrades
+                        try:
+                            # Add exclude to dnf.conf
+                            dnf_conf = '/etc/dnf/dnf.conf'
+                            exclude_line = 'exclude=MariaDB-server'
+                            
+                            if os.path.exists(dnf_conf):
+                                with open(dnf_conf, 'r') as f:
+                                    dnf_content = f.read()
+                                
+                                # Check if exclude line already exists
+                                if exclude_line not in dnf_content:
+                                    # Check if there's already an exclude line
+                                    if 'exclude=' in dnf_content:
+                                        # Append to existing exclude line
+                                        dnf_content = re.sub(r'(exclude=.*)', r'\1 MariaDB-server', dnf_content)
+                                    else:
+                                        # Add new exclude line
+                                        dnf_content = dnf_content.rstrip() + '\n' + exclude_line + '\n'
+                                    
+                                    with open(dnf_conf, 'w') as f:
+                                        f.write(dnf_content)
+                                    self.stdOut("Added MariaDB-server to dnf excludes to prevent upgrade", 1)
+                                    logging.InstallLog.writeToFile("Added MariaDB-server to dnf excludes")
+                            else:
+                                # Create dnf.conf with exclude
+                                with open(dnf_conf, 'w') as f:
+                                    f.write('[main]\n')
+                                    f.write(exclude_line + '\n')
+                                self.stdOut("Created dnf.conf with MariaDB-server exclude", 1)
+                                logging.InstallLog.writeToFile("Created dnf.conf with MariaDB-server exclude")
+                        except Exception as e:
+                            self.stdOut(f"Warning: Could not add exclude to dnf.conf: {e}", 1)
+                            logging.InstallLog.writeToFile(f"Warning: Could not add exclude to dnf.conf: {e}")
+                        
+                        return True
+                except (ValueError, TypeError):
+                    pass
+            
+            return False
+        except Exception as e:
+            self.stdOut(f"Warning: Error checking MariaDB repository: {e}", 1)
+            logging.InstallLog.writeToFile(f"Warning: Error checking MariaDB repository: {e}")
+            return False
+
     def checkExistingMariaDB(self):
         """Check if MariaDB/MySQL is already installed and return version info"""
         try:
@@ -1659,7 +1811,42 @@ module cyberpanel_ols {
                 
             else:
                 # RHEL-based MariaDB installation
-                command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=12.1'
+                # CRITICAL: Remove conflicting MariaDB compat packages first
+                # These packages from MariaDB 12.1 can conflict with MariaDB 10.11
+                self.stdOut("Removing conflicting MariaDB compat packages...", 1)
+                try:
+                    subprocess.run("rpm -e --nodeps MariaDB-server-compat-12.1.2-1.el9.noarch 2>/dev/null; true", shell=True, timeout=30)
+                    subprocess.run("dnf remove -y 'MariaDB-server-compat*' 2>/dev/null || true", shell=True, timeout=60)
+                    r = subprocess.run("rpm -qa 2>/dev/null | grep -i MariaDB-server-compat", shell=True, capture_output=True, text=True, timeout=30)
+                    for line in (r.stdout or "").strip().splitlines():
+                        pkg = (line.strip().split() or [""])[0]
+                        if pkg and "MariaDB-server-compat" in pkg:
+                            subprocess.run(["rpm", "-e", "--nodeps", pkg], timeout=30)
+                    self.stdOut("Removed conflicting MariaDB compat packages", 1)
+                except Exception as e:
+                    self.stdOut("Warning: Could not remove compat packages: " + str(e), 0)
+                
+                # Check if MariaDB is already installed before setting up repository
+                is_installed, installed_version, major_minor = self.checkExistingMariaDB()
+                
+                if is_installed:
+                    self.stdOut(f"MariaDB/MySQL is already installed (version: {installed_version}), skipping installation", 1)
+                    # Don't set up 12.1 repository if 10.x is installed to avoid upgrade issues
+                    if major_minor and major_minor != "unknown":
+                        try:
+                            major_ver = float(major_minor)
+                            if major_ver < 12.0:
+                                self.stdOut("Skipping MariaDB 12.1 repository setup to avoid upgrade conflicts", 1)
+                                self.stdOut("Using existing MariaDB installation", 1)
+                                self.startMariaDB()
+                                self.changeMYSQLRootPassword()
+                                self.fixMariaDB()
+                                return True
+                        except (ValueError, TypeError):
+                            pass
+                
+                # Set up MariaDB 12.1 repository only if not already installed
+                command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version=12.1'
                 self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
                 
                 command = 'dnf install mariadb-server mariadb-devel mariadb-client-utils -y'
@@ -6246,6 +6433,25 @@ def main():
 
     # Apply OS-specific fixes early in the installation process
     checks.apply_os_specific_fixes()
+    
+    # CRITICAL: Disable MariaDB 12.1 repository and add dnf exclude BEFORE any MariaDB installation attempts
+    # This must run before Pre_Install_Required_Components tries to install MariaDB
+    checks.disableMariaDB12RepositoryIfNeeded()
+
+    # CRITICAL: Remove MariaDB-server-compat* before ANY MariaDB installation
+    # This package conflicts with MariaDB 10.11 and must be removed early
+    preFlightsChecks.stdOut("Removing conflicting MariaDB-server-compat packages...", 1)
+    try:
+        subprocess.run("rpm -e --nodeps MariaDB-server-compat-12.1.2-1.el9.noarch 2>/dev/null; true", shell=True, timeout=30)
+        subprocess.run("dnf remove -y 'MariaDB-server-compat*' 2>/dev/null || true", shell=True, timeout=60)
+        r = subprocess.run("rpm -qa 2>/dev/null | grep -i MariaDB-server-compat", shell=True, capture_output=True, text=True, timeout=30)
+        for line in (r.stdout or "").strip().splitlines():
+            pkg = (line.strip().split() or [""])[0]
+            if pkg and "MariaDB-server-compat" in pkg:
+                subprocess.run(["rpm", "-e", "--nodeps", pkg], timeout=30)
+        preFlightsChecks.stdOut("MariaDB compat cleanup completed", 1)
+    except Exception as e:
+        preFlightsChecks.stdOut("Warning: compat cleanup: " + str(e), 0)
 
     # Ensure MySQL password file is created early to prevent FileNotFoundError
     checks.ensure_mysql_password_file()
@@ -6273,6 +6479,10 @@ def main():
     # Apply AlmaLinux 9 comprehensive fixes first if needed
     if checks.is_almalinux9():
         checks.fix_almalinux9_comprehensive()
+    
+    # Disable MariaDB 12.1 repository if MariaDB 10.x is already installed
+    # This prevents upgrade attempts in Pre_Install_Required_Components
+    checks.disableMariaDB12RepositoryIfNeeded()
 
     # Install core services in the correct order
     checks.installLiteSpeed(ent, serial)
