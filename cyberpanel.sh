@@ -683,25 +683,60 @@ install_cyberpanel_direct() {
                         )
                         
                         # Also check for any mariadb repo files
-                        repo_files+=($(find /etc/yum.repos.d -name "*mariadb*.repo" 2>/dev/null))
+                        while IFS= read -r repo_file; do
+                            repo_files+=("$repo_file")
+                        done < <(find /etc/yum.repos.d -name "*mariadb*.repo" 2>/dev/null)
                         
                         for repo_file in "${repo_files[@]}"; do
-                            if [ -f "$repo_file" ]; then
-                                # Disable all enabled=1 lines in MariaDB repository sections
-                                # First, change enabled=1 to enabled=0
+                            if [ -f "$repo_file" ] && [ -n "$repo_file" ]; then
+                                # First, try to disable by setting enabled=0
                                 sed -i 's/^enabled\s*=\s*1/enabled=0/g' "$repo_file" 2>/dev/null
                                 
-                                # If there's a MariaDB section without enabled line, add enabled=0
-                                # This is a simpler approach - just ensure all MariaDB repos are disabled
-                                if grep -qi "mariadb" "$repo_file" 2>/dev/null; then
-                                    # Add enabled=0 after each [mariadb...] section header if not present
-                                    sed -i '/^\[.*mariadb.*\]/I { N; /enabled/! { s/$/\nenabled=0/; } }' "$repo_file" 2>/dev/null || \
-                                    sed -i '/^\[.*mariadb.*\]/I a enabled=0' "$repo_file" 2>/dev/null
-                                    
-                                    # Final check - ensure enabled=0 exists in MariaDB sections
-                                    if ! grep -qi "enabled.*0" "$repo_file" 2>/dev/null; then
-                                        sed -i 's/^\(\[.*mariadb.*\]\)/\1\nenabled=0/I' "$repo_file" 2>/dev/null
-                                    fi
+                                # If file contains MariaDB 12.1 references, disable or remove it
+                                if grep -qi "mariadb.*12\|12.*mariadb\|mariadb-main" "$repo_file" 2>/dev/null; then
+                                    # Try to add enabled=0 to each [mariadb...] section
+                                    python3 -c "
+import re
+import sys
+try:
+    with open('$repo_file', 'r') as f:
+        content = f.read()
+    
+    # Replace enabled=1 with enabled=0
+    content = re.sub(r'(enabled\s*=\s*)1', r'\g<1>0', content, flags=re.IGNORECASE)
+    
+    # Add enabled=0 after [mariadb...] sections if not present
+    lines = content.split('\n')
+    new_lines = []
+    in_mariadb_section = False
+    has_enabled = False
+    
+    for i, line in enumerate(lines):
+        new_lines.append(line)
+        if re.match(r'^\s*\[.*mariadb.*\]', line, re.IGNORECASE):
+            in_mariadb_section = True
+            has_enabled = False
+        elif in_mariadb_section:
+            if re.match(r'^\s*enabled\s*=', line, re.IGNORECASE):
+                has_enabled = True
+            elif re.match(r'^\s*\[', line) and not re.match(r'^\s*\[.*mariadb.*\]', line, re.IGNORECASE):
+                if not has_enabled:
+                    new_lines.insert(-1, 'enabled=0')
+                in_mariadb_section = False
+                has_enabled = False
+    
+    if in_mariadb_section and not has_enabled:
+        new_lines.append('enabled=0')
+    
+    with open('$repo_file', 'w') as f:
+        f.write('\n'.join(new_lines))
+except:
+    # Fallback: just rename the file
+    import os
+    os.rename('$repo_file', '${repo_file}.disabled')
+" 2>/dev/null || \
+                                    # Fallback: rename the file to disable it
+                                    mv "$repo_file" "${repo_file}.disabled" 2>/dev/null || true
                                 fi
                             fi
                         done
