@@ -1011,11 +1011,12 @@
                     {% trans "CyberPanel Plugin Store" %}
                 </button>
                 {% else %}
-                <button class="view-btn" onclick="toggleView('grid')">
+                <!-- Hide Grid/Table views when no plugins installed - only show Store -->
+                <button class="view-btn" onclick="toggleView('grid')" style="display: none;">
                     <i class="fas fa-th-large"></i>
                     {% trans "Grid View" %}
                 </button>
-                <button class="view-btn" onclick="toggleView('table')">
+                <button class="view-btn" onclick="toggleView('table')" style="display: none;">
                     <i class="fas fa-list"></i>
                     {% trans "Table View" %}
                 </button>
