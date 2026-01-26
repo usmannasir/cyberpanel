@@ -184,9 +184,9 @@ def installed(request):
                 
                 # Priority: settings_url > url > default pattern
                 # Special handling for core plugins that don't use /plugins/ prefix
+                # emailMarketing removed from INSTALLED_APPS - skip it
                 if plugin == 'emailMarketing':
-                    # emailMarketing is a core CyberPanel plugin, uses /emailMarketing/ not /plugins/emailMarketing/
-                    data['manage_url'] = '/emailMarketing/'
+                    continue
                 elif settings_url_elem is not None and settings_url_elem.text:
                     data['manage_url'] = settings_url_elem.text
                 elif url_elem is not None and url_elem.text:
@@ -352,9 +352,9 @@ def installed(request):
                 
                 # Priority: settings_url > url > default pattern
                 # Special handling for core plugins that don't use /plugins/ prefix
+                # emailMarketing removed from INSTALLED_APPS - skip it
                 if plugin == 'emailMarketing':
-                    # emailMarketing is a core CyberPanel plugin, uses /emailMarketing/ not /plugins/emailMarketing/
-                    data['manage_url'] = '/emailMarketing/'
+                    continue
                 elif settings_url_elem is not None and settings_url_elem.text:
                     data['manage_url'] = settings_url_elem.text
                 elif url_elem is not None and url_elem.text:
