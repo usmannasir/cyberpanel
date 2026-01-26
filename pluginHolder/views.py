@@ -251,7 +251,10 @@ def installed(request):
                 if 'is_paid' not in data or not isinstance(data['is_paid'], bool):
                     data['is_paid'] = False
 
-                pluginList.append(data)
+                # Only add to list if plugin is actually installed
+                # Uninstalled plugins should only appear in Plugin Store, not Installed Plugins page
+                if data['installed']:
+                    pluginList.append(data)
                 processed_plugins.add(plugin)  # Mark as processed
             except ElementTree.ParseError as e:
                 errorPlugins.append({'name': plugin, 'error': f'XML parse error: {str(e)}'})
