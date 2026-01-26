@@ -6396,6 +6396,10 @@ def main():
 
     # Apply OS-specific fixes early in the installation process
     checks.apply_os_specific_fixes()
+    
+    # CRITICAL: Disable MariaDB 12.1 repository and add dnf exclude BEFORE any MariaDB installation attempts
+    # This must run before Pre_Install_Required_Components tries to install MariaDB
+    checks.disableMariaDB12RepositoryIfNeeded()
 
     # Ensure MySQL password file is created early to prevent FileNotFoundError
     checks.ensure_mysql_password_file()
