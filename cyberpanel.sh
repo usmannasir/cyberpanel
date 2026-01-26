@@ -682,13 +682,27 @@ install_cyberpanel_direct() {
                             "/etc/yum.repos.d/mariadb-12.1.repo"
                         )
                         
+                        # Also check for any mariadb repo files
+                        repo_files+=($(find /etc/yum.repos.d -name "*mariadb*.repo" 2>/dev/null))
+                        
                         for repo_file in "${repo_files[@]}"; do
                             if [ -f "$repo_file" ]; then
-                                # Disable all MariaDB repository sections
-                                sed -i '/^\[.*mariadb.*\]/I,/^\[/ { /^enabled\s*=/ s/=.*/=0/; /^\[.*mariadb.*\]/I { /enabled/!a enabled=0
-} }' "$repo_file" 2>/dev/null || \
+                                # Disable all enabled=1 lines in MariaDB repository sections
+                                # First, change enabled=1 to enabled=0
                                 sed -i 's/^enabled\s*=\s*1/enabled=0/g' "$repo_file" 2>/dev/null
-                                print_status "Disabled MariaDB repository in $repo_file"
+                                
+                                # If there's a MariaDB section without enabled line, add enabled=0
+                                # This is a simpler approach - just ensure all MariaDB repos are disabled
+                                if grep -qi "mariadb" "$repo_file" 2>/dev/null; then
+                                    # Add enabled=0 after each [mariadb...] section header if not present
+                                    sed -i '/^\[.*mariadb.*\]/I { N; /enabled/! { s/$/\nenabled=0/; } }' "$repo_file" 2>/dev/null || \
+                                    sed -i '/^\[.*mariadb.*\]/I a enabled=0' "$repo_file" 2>/dev/null
+                                    
+                                    # Final check - ensure enabled=0 exists in MariaDB sections
+                                    if ! grep -qi "enabled.*0" "$repo_file" 2>/dev/null; then
+                                        sed -i 's/^\(\[.*mariadb.*\]\)/\1\nenabled=0/I' "$repo_file" 2>/dev/null
+                                    fi
+                                fi
                             fi
                         done
                     }
