@@ -26,10 +26,14 @@ PLUGIN_STATE_DIR = '/home/cyberpanel/plugin_states'
 # Plugin store cache configuration
 PLUGIN_STORE_CACHE_DIR = '/home/cyberpanel/plugin_store_cache'
 PLUGIN_STORE_CACHE_FILE = os.path.join(PLUGIN_STORE_CACHE_DIR, 'plugins_cache.json')
-PLUGIN_STORE_CACHE_DURATION = 3600  # Cache for 1 hour (3600 seconds)
+PLUGIN_STORE_CACHE_DURATION = 3600  # Base cache duration: 1 hour (3600 seconds)
+PLUGIN_STORE_CACHE_RANDOM_OFFSET = 600  # Random offset: ±10 minutes (600 seconds) to prevent simultaneous requests
 GITHUB_REPO_API = 'https://api.github.com/repos/master3395/cyberpanel-plugins/contents'
 GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/master3395/cyberpanel-plugins/main'
 GITHUB_COMMITS_API = 'https://api.github.com/repos/master3395/cyberpanel-plugins/commits'
+
+# Plugin backup configuration
+PLUGIN_BACKUP_DIR = '/home/cyberpanel/plugin_backups'
 
 def _get_plugin_state_file(plugin_name):
     """Get the path to the plugin state file"""
@@ -364,9 +368,13 @@ def installed(request):
     for p in pluginList:
         logging.writeToFile(f"  - {p.get('plugin_dir')}: installed={p.get('installed')}, enabled={p.get('enabled')}")
 
+    # Get cache expiry timestamp for display (will be converted to local time in browser)
+    cache_expiry_timestamp, _ = _get_cache_expiry_time()
+    
     proc = httpProc(request, 'pluginHolder/plugins.html',
                     {'plugins': pluginList, 'error_plugins': errorPlugins, 
-                     'installed_count': installed_count, 'active_count': active_count}, 'admin')
+                     'installed_count': installed_count, 'active_count': active_count,
+                     'cache_expiry_timestamp': cache_expiry_timestamp}, 'admin')
     return proc.render()
 
 @csrf_exempt
@@ -604,6 +612,37 @@ def _ensure_cache_dir():
     except Exception as e:
         logging.writeToFile(f"Error creating cache directory: {str(e)}")
 
+def _get_cache_expiry_time():
+    """Get the cache expiry time (when cache will be updated next)
+    
+    Returns:
+        tuple: (expiry_timestamp, expiry_datetime_string) or (None, None) if no cache
+        expiry_timestamp is Unix timestamp for JavaScript conversion to local time
+    """
+    try:
+        if not os.path.exists(PLUGIN_STORE_CACHE_FILE):
+            return None, None
+        
+        # Try to read stored expiry time from cache metadata
+        try:
+            with open(PLUGIN_STORE_CACHE_FILE, 'r', encoding='utf-8') as f:
+                cache_data = json.load(f)
+                stored_expiry = cache_data.get('expiry_timestamp')
+                if stored_expiry:
+                    # Return timestamp for JavaScript to convert to local time
+                    return stored_expiry, None
+        except:
+            pass  # Fall back to calculation if metadata not found
+        
+        # Fallback: calculate from file modification time (for old cache files)
+        cache_mtime = os.path.getmtime(PLUGIN_STORE_CACHE_FILE)
+        expiry_timestamp = cache_mtime + PLUGIN_STORE_CACHE_DURATION
+        
+        return expiry_timestamp, None
+    except Exception as e:
+        logging.writeToFile(f"Error getting cache expiry time: {str(e)}")
+        return None, None
+
 def _get_cached_plugins(allow_expired=False):
     """Get plugins from cache if available and not expired
     
@@ -614,22 +653,32 @@ def _get_cached_plugins(allow_expired=False):
         if not os.path.exists(PLUGIN_STORE_CACHE_FILE):
             return None
         
-        # Check if cache is expired
-        cache_mtime = os.path.getmtime(PLUGIN_STORE_CACHE_FILE)
-        cache_age = time.time() - cache_mtime
+        # Read cache file to get stored expiry time
+        with open(PLUGIN_STORE_CACHE_FILE, 'r', encoding='utf-8') as f:
+            cache_data = json.load(f)
         
-        if cache_age > PLUGIN_STORE_CACHE_DURATION:
+        # Check expiry using stored timestamp if available, otherwise fall back to file mtime
+        current_time = time.time()
+        stored_expiry = cache_data.get('expiry_timestamp')
+        
+        if stored_expiry:
+            # Use stored expiry time (with randomization)
+            cache_age = current_time - (stored_expiry - cache_data.get('cache_duration', PLUGIN_STORE_CACHE_DURATION))
+            is_expired = current_time >= stored_expiry
+        else:
+            # Fallback for old cache files without expiry metadata
+            cache_mtime = os.path.getmtime(PLUGIN_STORE_CACHE_FILE)
+            cache_age = current_time - cache_mtime
+            is_expired = cache_age > PLUGIN_STORE_CACHE_DURATION
+        
+        if is_expired:
             if not allow_expired:
                 logging.writeToFile(f"Plugin store cache expired (age: {cache_age:.0f}s)")
                 return None
             else:
                 logging.writeToFile(f"Using expired cache as fallback (age: {cache_age:.0f}s)")
         
-        # Read cache file
-        with open(PLUGIN_STORE_CACHE_FILE, 'r', encoding='utf-8') as f:
-            cache_data = json.load(f)
-        
-        if not allow_expired or cache_age <= PLUGIN_STORE_CACHE_DURATION:
+        if not allow_expired or not is_expired:
             logging.writeToFile(f"Using cached plugin store data (age: {cache_age:.0f}s)")
         return cache_data.get('plugins', [])
     except Exception as e:
@@ -637,19 +686,212 @@ def _get_cached_plugins(allow_expired=False):
         return None
 
 def _save_plugins_cache(plugins):
-    """Save plugins to cache"""
+    """Save plugins to cache with randomized expiry time"""
     try:
         _ensure_cache_dir()
+        
+        # Generate random cache duration to prevent simultaneous requests from all CyberPanel instances
+        # Base duration ± random offset (e.g., 1 hour ± 10 minutes)
+        import random
+        random_offset = random.randint(-PLUGIN_STORE_CACHE_RANDOM_OFFSET, PLUGIN_STORE_CACHE_RANDOM_OFFSET)
+        actual_cache_duration = PLUGIN_STORE_CACHE_DURATION + random_offset
+        
+        # Calculate expiry timestamp
+        current_time = time.time()
+        expiry_timestamp = current_time + actual_cache_duration
+        
         cache_data = {
             'plugins': plugins,
             'cached_at': datetime.now().isoformat(),
-            'cache_duration': PLUGIN_STORE_CACHE_DURATION
+            'expiry_timestamp': expiry_timestamp,
+            'cache_duration': actual_cache_duration,
+            'base_duration': PLUGIN_STORE_CACHE_DURATION,
+            'random_offset': random_offset
         }
+        
         with open(PLUGIN_STORE_CACHE_FILE, 'w', encoding='utf-8') as f:
             json.dump(cache_data, f, indent=2, ensure_ascii=False)
-        logging.writeToFile("Plugin store cache saved successfully")
+        
+        expiry_datetime = datetime.fromtimestamp(expiry_timestamp)
+        logging.writeToFile(f"Plugin store cache saved successfully. Expires at: {expiry_datetime.strftime('%Y-%m-%d %H:%M:%S')} (duration: {actual_cache_duration}s, offset: {random_offset:+d}s)")
     except Exception as e:
         logging.writeToFile(f"Error saving plugin store cache: {str(e)}")
+
+def _compare_versions(version1, version2):
+    """
+    Compare two version strings (semantic versioning)
+    Returns: 1 if version1 > version2, -1 if version1 < version2, 0 if equal
+    """
+    try:
+        # Split versions into parts
+        v1_parts = [int(x) for x in version1.split('.')]
+        v2_parts = [int(x) for x in version2.split('.')]
+        
+        # Pad shorter version with zeros
+        max_len = max(len(v1_parts), len(v2_parts))
+        v1_parts.extend([0] * (max_len - len(v1_parts)))
+        v2_parts.extend([0] * (max_len - len(v2_parts)))
+        
+        # Compare each part
+        for v1, v2 in zip(v1_parts, v2_parts):
+            if v1 > v2:
+                return 1
+            elif v1 < v2:
+                return -1
+        return 0
+    except:
+        # Fallback to string comparison if parsing fails
+        if version1 > version2:
+            return 1
+        elif version1 < version2:
+            return -1
+        return 0
+
+def _get_installed_version(plugin_dir, plugin_install_dir):
+    """Get installed version of a plugin from meta.xml"""
+    installed_path = os.path.join(plugin_install_dir, plugin_dir)
+    meta_path = os.path.join(installed_path, 'meta.xml')
+    
+    if os.path.exists(meta_path):
+        try:
+            pluginMetaData = ElementTree.parse(meta_path)
+            root = pluginMetaData.getroot()
+            version_elem = root.find('version')
+            if version_elem is not None and version_elem.text:
+                return version_elem.text.strip()
+        except Exception as e:
+            logging.writeToFile(f"Error reading version from {meta_path}: {str(e)}")
+    
+    return None
+
+def _create_plugin_backup(plugin_name, plugin_install_dir='/usr/local/CyberCP'):
+    """
+    Create a backup of a plugin before upgrade
+    Returns: (backup_path, backup_info) or (None, None) on failure
+    """
+    try:
+        # Ensure backup directory exists
+        if not os.path.exists(PLUGIN_BACKUP_DIR):
+            os.makedirs(PLUGIN_BACKUP_DIR, mode=0o755)
+        
+        plugin_path = os.path.join(plugin_install_dir, plugin_name)
+        if not os.path.exists(plugin_path):
+            return None, None
+        
+        # Get current version
+        installed_version = _get_installed_version(plugin_name, plugin_install_dir) or 'unknown'
+        
+        # Create backup directory with timestamp
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        backup_name = f"{plugin_name}_v{installed_version}_{timestamp}"
+        backup_path = os.path.join(PLUGIN_BACKUP_DIR, backup_name)
+        
+        # Copy plugin directory
+        import shutil
+        shutil.copytree(plugin_path, backup_path)
+        
+        # Create backup metadata
+        backup_info = {
+            'plugin_name': plugin_name,
+            'version': installed_version,
+            'timestamp': timestamp,
+            'backup_path': backup_path,
+            'created_at': datetime.now().isoformat()
+        }
+        
+        # Save metadata as JSON
+        metadata_file = os.path.join(backup_path, '.backup_metadata.json')
+        with open(metadata_file, 'w') as f:
+            json.dump(backup_info, f, indent=2)
+        
+        logging.writeToFile(f"Created backup for {plugin_name} version {installed_version} at {backup_path}")
+        
+        return backup_path, backup_info
+        
+    except Exception as e:
+        logging.writeToFile(f"Error creating backup for {plugin_name}: {str(e)}")
+        return None, None
+
+def _get_plugin_backups(plugin_name):
+    """Get list of available backups for a plugin"""
+    backups = []
+    
+    if not os.path.exists(PLUGIN_BACKUP_DIR):
+        return backups
+    
+    try:
+        for item in os.listdir(PLUGIN_BACKUP_DIR):
+            if item.startswith(plugin_name + '_'):
+                backup_path = os.path.join(PLUGIN_BACKUP_DIR, item)
+                if os.path.isdir(backup_path):
+                    metadata_file = os.path.join(backup_path, '.backup_metadata.json')
+                    if os.path.exists(metadata_file):
+                        try:
+                            with open(metadata_file, 'r') as f:
+                                backup_info = json.load(f)
+                                backups.append(backup_info)
+                        except:
+                            # Fallback: parse from directory name
+                            parts = item.split('_')
+                            if len(parts) >= 3:
+                                version = parts[1].replace('v', '')
+                                timestamp = '_'.join(parts[2:])
+                                backups.append({
+                                    'plugin_name': plugin_name,
+                                    'version': version,
+                                    'timestamp': timestamp,
+                                    'backup_path': backup_path,
+                                    'created_at': timestamp
+                                })
+                    else:
+                        # No metadata, try to parse from directory name
+                        parts = item.split('_')
+                        if len(parts) >= 3:
+                            version = parts[1].replace('v', '')
+                            timestamp = '_'.join(parts[2:])
+                            backups.append({
+                                'plugin_name': plugin_name,
+                                'version': version,
+                                'timestamp': timestamp,
+                                'backup_path': backup_path,
+                                'created_at': timestamp
+                            })
+        
+        # Sort by timestamp (newest first)
+        backups.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+        
+    except Exception as e:
+        logging.writeToFile(f"Error listing backups for {plugin_name}: {str(e)}")
+    
+    return backups
+
+def _restore_plugin_from_backup(plugin_name, backup_path):
+    """Restore a plugin from a backup"""
+    try:
+        plugin_install_dir = '/usr/local/CyberCP'
+        plugin_path = os.path.join(plugin_install_dir, plugin_name)
+        
+        # Remove current plugin installation
+        if os.path.exists(plugin_path):
+            import shutil
+            shutil.rmtree(plugin_path)
+        
+        # Restore from backup
+        import shutil
+        shutil.copytree(backup_path, plugin_path)
+        
+        # Remove backup metadata file from restored plugin
+        metadata_file = os.path.join(plugin_path, '.backup_metadata.json')
+        if os.path.exists(metadata_file):
+            os.remove(metadata_file)
+        
+        logging.writeToFile(f"Restored {plugin_name} from backup {backup_path}")
+        
+        return True
+        
+    except Exception as e:
+        logging.writeToFile(f"Error restoring {plugin_name} from backup: {str(e)}")
+        return False
 
 def _enrich_store_plugins(plugins):
     """Enrich store plugins with installed/enabled status from local system"""
@@ -672,8 +914,22 @@ def _enrich_store_plugins(plugins):
         # Check if plugin is enabled (only if installed)
         if plugin['installed']:
             plugin['enabled'] = _is_plugin_enabled(plugin_dir)
+            
+            # Check for updates by comparing versions
+            installed_version = _get_installed_version(plugin_dir, plugin_install_dir)
+            store_version = plugin.get('version', '0.0.0')
+            
+            if installed_version and store_version:
+                # Update available if store version is newer
+                plugin['update_available'] = _compare_versions(store_version, installed_version) > 0
+                plugin['installed_version'] = installed_version
+            else:
+                plugin['update_available'] = False
+                plugin['installed_version'] = installed_version or 'Unknown'
         else:
             plugin['enabled'] = False
+            plugin['update_available'] = False
+            plugin['installed_version'] = None
         
         # Ensure is_paid field exists and is properly set (default to False if not set or invalid)
         # Handle all possible cases: missing, None, empty string, string values, boolean
@@ -905,6 +1161,244 @@ def fetch_plugin_store(request):
             'success': False,
             'error': error_message,
             'plugins': []
+        }, status=500)
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def upgrade_plugin(request, plugin_name):
+    """Upgrade an installed plugin from GitHub store"""
+    mailUtilities.checkHome()
+    
+    try:
+        # Check if plugin is installed
+        pluginInstalled = '/usr/local/CyberCP/' + plugin_name
+        if not os.path.exists(pluginInstalled):
+            return JsonResponse({
+                'success': False,
+                'error': f'Plugin not installed: {plugin_name}'
+            }, status=400)
+        
+        # Get current version before upgrade
+        installed_version = _get_installed_version(plugin_name, '/usr/local/CyberCP')
+        
+        # Create automatic backup before upgrade
+        backup_path, backup_info = _create_plugin_backup(plugin_name)
+        if backup_path:
+            logging.writeToFile(f"Created automatic backup for {plugin_name} before upgrade: {backup_path}")
+        else:
+            logging.writeToFile(f"Warning: Failed to create backup for {plugin_name}, continuing with upgrade anyway")
+        
+        logging.writeToFile(f"Starting upgrade of {plugin_name} from version {installed_version}")
+        
+        # Download and install plugin from GitHub (same as install_from_store)
+        import tempfile
+        import shutil
+        import zipfile
+        import io
+        
+        # Create temporary directory
+        temp_dir = tempfile.mkdtemp()
+        zip_path = os.path.join(temp_dir, plugin_name + '.zip')
+        
+        try:
+            # Download from GitHub
+            repo_zip_url = 'https://github.com/master3395/cyberpanel-plugins/archive/refs/heads/main.zip'
+            logging.writeToFile(f"Downloading plugin upgrade from: {repo_zip_url}")
+            
+            repo_req = urllib.request.Request(
+                repo_zip_url,
+                headers={
+                    'User-Agent': 'CyberPanel-Plugin-Store/1.0',
+                    'Accept': 'application/zip'
+                }
+            )
+            
+            with urllib.request.urlopen(repo_req, timeout=30) as repo_response:
+                repo_zip_data = repo_response.read()
+            
+            # Extract plugin directory from repository ZIP
+            repo_zip = zipfile.ZipFile(io.BytesIO(repo_zip_data))
+            
+            # Find plugin directory in ZIP
+            plugin_prefix = f'cyberpanel-plugins-main/{plugin_name}/'
+            plugin_files = [f for f in repo_zip.namelist() if f.startswith(plugin_prefix)]
+            
+            if not plugin_files:
+                raise Exception(f'Plugin {plugin_name} not found in GitHub repository')
+            
+            logging.writeToFile(f"Found {len(plugin_files)} files for plugin {plugin_name} in GitHub")
+            
+            # Create plugin ZIP file from GitHub with correct structure
+            plugin_zip = zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED)
+            
+            for file_path in plugin_files:
+                relative_path = file_path[len(plugin_prefix):]
+                if relative_path:  # Skip directories
+                    file_data = repo_zip.read(file_path)
+                    arcname = os.path.join(plugin_name, relative_path)
+                    plugin_zip.writestr(arcname, file_data)
+            
+            plugin_zip.close()
+            repo_zip.close()
+            
+            # Verify ZIP was created
+            if not os.path.exists(zip_path):
+                raise Exception(f'Failed to create plugin ZIP file')
+            
+            logging.writeToFile(f"Created plugin ZIP: {zip_path}")
+            
+            # Copy ZIP to current directory (pluginInstaller expects it in cwd)
+            original_cwd = os.getcwd()
+            os.chdir(temp_dir)
+            
+            try:
+                zip_file = plugin_name + '.zip'
+                if not os.path.exists(zip_file):
+                    raise Exception(f'Zip file {zip_file} not found in temp directory')
+                
+                logging.writeToFile(f"Upgrading plugin using pluginInstaller")
+                
+                # Install using pluginInstaller (this will overwrite existing files)
+                try:
+                    pluginInstaller.installPlugin(plugin_name)
+                except Exception as install_error:
+                    error_msg = str(install_error)
+                    logging.writeToFile(f"pluginInstaller.installPlugin raised exception: {error_msg}")
+                    # Check if plugin directory exists despite the error
+                    if not os.path.exists(pluginInstalled):
+                        raise Exception(f'Plugin upgrade failed: {error_msg}')
+                
+                # Wait for file system to sync
+                import time
+                time.sleep(3)
+                
+                # Verify plugin was upgraded
+                if not os.path.exists(pluginInstalled):
+                    raise Exception(f'Plugin upgrade failed: {pluginInstalled} does not exist after upgrade')
+                
+                # Get new version
+                new_version = _get_installed_version(plugin_name, '/usr/local/CyberCP')
+                
+                logging.writeToFile(f"Plugin {plugin_name} upgraded successfully from {installed_version} to {new_version}")
+                
+                backup_message = ''
+                if backup_path:
+                    backup_message = f' Backup created at: {backup_info.get("timestamp", "unknown")}'
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': f'Plugin {plugin_name} upgraded successfully from {installed_version} to {new_version}.{backup_message}',
+                    'backup_created': backup_path is not None,
+                    'backup_path': backup_path if backup_path else None
+                })
+            finally:
+                os.chdir(original_cwd)
+                
+        finally:
+            # Cleanup
+            shutil.rmtree(temp_dir, ignore_errors=True)
+            
+    except urllib.error.HTTPError as e:
+        error_msg = f'Failed to download plugin from GitHub: HTTP {e.code}'
+        if e.code == 404:
+            error_msg = f'Plugin {plugin_name} not found in GitHub repository'
+        logging.writeToFile(f"Error upgrading {plugin_name}: {error_msg}")
+        return JsonResponse({
+            'success': False,
+            'error': error_msg
+        }, status=500)
+    except Exception as e:
+        logging.writeToFile(f"Error upgrading plugin {plugin_name}: {str(e)}")
+        import traceback
+        error_details = traceback.format_exc()
+        logging.writeToFile(f"Traceback: {error_details}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def get_plugin_backups(request, plugin_name):
+    """Get list of available backups for a plugin"""
+    mailUtilities.checkHome()
+    
+    try:
+        backups = _get_plugin_backups(plugin_name)
+        return JsonResponse({
+            'success': True,
+            'backups': backups,
+            'count': len(backups)
+        })
+    except Exception as e:
+        logging.writeToFile(f"Error getting backups for {plugin_name}: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def revert_plugin(request, plugin_name):
+    """Revert a plugin to a previous version from backup"""
+    mailUtilities.checkHome()
+    
+    try:
+        # Get backup path from request
+        data = json.loads(request.body)
+        backup_path = data.get('backup_path')
+        
+        if not backup_path:
+            return JsonResponse({
+                'success': False,
+                'error': 'Backup path is required'
+            }, status=400)
+        
+        # Verify backup exists
+        if not os.path.exists(backup_path):
+            return JsonResponse({
+                'success': False,
+                'error': f'Backup not found: {backup_path}'
+            }, status=404)
+        
+        # Get backup version info
+        metadata_file = os.path.join(backup_path, '.backup_metadata.json')
+        backup_version = 'unknown'
+        if os.path.exists(metadata_file):
+            try:
+                with open(metadata_file, 'r') as f:
+                    backup_info = json.load(f)
+                    backup_version = backup_info.get('version', 'unknown')
+            except:
+                pass
+        
+        logging.writeToFile(f"Reverting {plugin_name} to version {backup_version} from backup {backup_path}")
+        
+        # Restore from backup
+        if _restore_plugin_from_backup(plugin_name, backup_path):
+            return JsonResponse({
+                'success': True,
+                'message': f'Plugin {plugin_name} reverted successfully to version {backup_version}'
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Failed to restore plugin from backup'
+            }, status=500)
+            
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid JSON data'
+        }, status=400)
+    except Exception as e:
+        logging.writeToFile(f"Error reverting plugin {plugin_name}: {str(e)}")
+        import traceback
+        error_details = traceback.format_exc()
+        logging.writeToFile(f"Traceback: {error_details}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
         }, status=500)
 
 @csrf_exempt
