@@ -387,11 +387,18 @@ class pluginInstaller:
     def removeFromSettings(pluginName):
         data = open("/usr/local/CyberCP/CyberCP/settings.py", 'r', encoding='utf-8').readlines()
         writeToFile = open("/usr/local/CyberCP/CyberCP/settings.py", 'w', encoding='utf-8')
-
-        for items in data:
+        
+        in_installed_apps = False
+        for i, items in enumerate(data):
+            # Track if we're in INSTALLED_APPS section
+            if 'INSTALLED_APPS' in items and '=' in items:
+                in_installed_apps = True
+            elif in_installed_apps and items.strip().startswith(']'):
+                in_installed_apps = False
+            
             # More precise matching: look for plugin name in quotes (e.g., 'pluginName' or "pluginName")
-            # This prevents partial matches (e.g., 'pluginName2' matching 'pluginName')
-            if (f"'{pluginName}'" in items or f'"{pluginName}"' in items) and 'INSTALLED_APPS' in ''.join(data[max(0, data.index(items)-5):data.index(items)+5]):
+            # Only match if we're in INSTALLED_APPS section to prevent false positives
+            if in_installed_apps and (f"'{pluginName}'" in items or f'"{pluginName}"' in items):
                 continue
             else:
                 writeToFile.writelines(items)
