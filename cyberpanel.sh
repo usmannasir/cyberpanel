@@ -81,7 +81,12 @@ detect_os() {
     fi
     
     # Detect OS
-    if echo $OUTPUT | grep -q "AlmaLinux 9" ; then
+    if echo $OUTPUT | grep -q "AlmaLinux 10" ; then
+        SERVER_OS="AlmaLinux10"
+        OS_FAMILY="rhel"
+        PACKAGE_MANAGER="dnf"
+        print_status "Detected: AlmaLinux 10"
+    elif echo $OUTPUT | grep -q "AlmaLinux 9" ; then
         SERVER_OS="AlmaLinux9"
         OS_FAMILY="rhel"
         PACKAGE_MANAGER="dnf"
@@ -133,7 +138,7 @@ detect_os() {
         print_status "Detected: Debian GNU/Linux 11"
     else
         print_status "ERROR: Unsupported OS detected"
-        print_status "Supported OS: AlmaLinux 8/9, CentOS 8/9, Rocky Linux 8/9, Ubuntu 20.04/22.04, Debian 11/12"
+        print_status "Supported OS: AlmaLinux 8/9/10, CentOS 8/9, Rocky Linux 8/9, Ubuntu 20.04/22.04, Debian 11/12"
         return 1
     fi
     
@@ -477,8 +482,8 @@ install_dependencies() {
             echo ""
             
             echo "Step 3/4: Installing core packages..."
-            if [ "$SERVER_OS" = "AlmaLinux9" ] || [ "$SERVER_OS" = "CentOS9" ] || [ "$SERVER_OS" = "RockyLinux9" ]; then
-                # AlmaLinux 9 / CentOS 9 / Rocky Linux 9
+            if [ "$SERVER_OS" = "AlmaLinux9" ] || [ "$SERVER_OS" = "AlmaLinux10" ] || [ "$SERVER_OS" = "CentOS9" ] || [ "$SERVER_OS" = "RockyLinux9" ]; then
+                # AlmaLinux 9/10 / CentOS 9 / Rocky Linux 9
                 $PACKAGE_MANAGER install -y ImageMagick gd libicu oniguruma python3 python3-pip python3-devel 2>/dev/null || true
                 $PACKAGE_MANAGER install -y aspell 2>/dev/null || print_status "WARNING: aspell not available, skipping..."
                 $PACKAGE_MANAGER install -y libc-client-devel 2>/dev/null || print_status "WARNING: libc-client-devel not available, skipping..."
