@@ -932,7 +932,7 @@ except Exception as e:
     # install/install.py is the actual installer that we can control
     local installer_py="install/install.py"
     if [ -f "$installer_py" ]; then
-        print_status "Using install/install.py directly for installation"
+        print_status "Using install/install.py directly for installation (non-interactive mode)"
         
         # If MariaDB 10.x is installed, disable repositories right before running installer
         if [ -n "$MARIADB_VERSION" ] && [ -f /tmp/cyberpanel_repo_monitor.pid ]; then
@@ -942,10 +942,41 @@ except Exception as e:
             fi
         fi
         
+        # Get server IP address (required by install.py)
+        local server_ip
+        if command -v curl >/dev/null 2>&1; then
+            server_ip=$(curl -s --max-time 5 https://api.ipify.org 2>/dev/null || curl -s --max-time 5 https://icanhazip.com 2>/dev/null || echo "")
+        fi
+        
+        if [ -z "$server_ip" ]; then
+            # Fallback: try to get IP from network interfaces
+            server_ip=$(ip route get 8.8.8.8 2>/dev/null | awk '{print $7; exit}' || \
+                       hostname -I 2>/dev/null | awk '{print $1}' || \
+                       echo "127.0.0.1")
+        fi
+        
+        if [ -z "$server_ip" ] || [ "$server_ip" = "127.0.0.1" ]; then
+            print_status "WARNING: Could not detect public IP, using 127.0.0.1"
+            server_ip="127.0.0.1"
+        fi
+        
+        print_status "Detected server IP: $server_ip"
+        
         # Build installer arguments based on user preferences
-        local install_args=()
+        # install.py requires publicip as first positional argument
+        local install_args=("$server_ip")
+        
+        # Add optional arguments based on user preferences
+        # Default: OpenLiteSpeed, Full installation (postfix, powerdns, ftp), Local MySQL
+        # These match what the user selected in the interactive prompts
+        install_args+=("--postfix" "ON")
+        install_args+=("--powerdns" "ON")
+        install_args+=("--ftp" "ON")
+        install_args+=("--remotemysql" "OFF")
+        
         if [ "$DEBUG_MODE" = true ]; then
-            install_args+=("--debug")
+            # Note: install.py doesn't have --debug, but we can set it via environment
+            export DEBUG_MODE=true
         fi
         
         # Run the Python installer directly
