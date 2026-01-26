@@ -4302,13 +4302,29 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             # CRITICAL: Remove MariaDB-server-compat* before any MariaDB install (conflicts with 10.11)
             Upgrade.stdOut("Removing conflicting MariaDB-server-compat packages...", 1)
             try:
+                # Multiple aggressive removal attempts to ensure compat package is gone
+                # Step 1: Try dnf remove with allowerasing
+                subprocess.run("dnf remove -y --allowerasing 'MariaDB-server-compat*' 2>/dev/null || true", shell=True, timeout=60)
+                
+                # Step 2: Force remove with rpm
                 subprocess.run("rpm -e --nodeps MariaDB-server-compat-12.1.2-1.el9.noarch 2>/dev/null; true", shell=True, timeout=30)
-                subprocess.run("dnf remove -y 'MariaDB-server-compat*' 2>/dev/null || true", shell=True, timeout=60)
+                
+                # Step 3: Find and remove any remaining compat packages
                 r = subprocess.run("rpm -qa 2>/dev/null | grep -i MariaDB-server-compat", shell=True, capture_output=True, text=True, timeout=30)
                 for line in (r.stdout or "").strip().splitlines():
                     pkg = (line.strip().split() or [""])[0]
                     if pkg and "MariaDB-server-compat" in pkg:
+                        Upgrade.stdOut(f"Force removing remaining compat package: {pkg}", 1)
                         subprocess.run(["rpm", "-e", "--nodeps", pkg], timeout=30)
+                
+                # Step 4: Verify removal and exclude from future installs
+                r = subprocess.run("rpm -qa 2>/dev/null | grep -i MariaDB-server-compat", shell=True, capture_output=True, text=True, timeout=30)
+                if r.stdout.strip():
+                    Upgrade.stdOut(f"Warning: Some compat packages still present: {r.stdout.strip()}", 0)
+                    # Add to dnf exclude to prevent reinstallation
+                    subprocess.run("dnf config-manager --setopt exclude='MariaDB-server-compat*' --save 2>/dev/null || true", shell=True, timeout=30)
+                else:
+                    Upgrade.stdOut("Successfully removed all MariaDB-server-compat packages", 1)
             except Exception as e:
                 Upgrade.stdOut("Warning: compat cleanup: " + str(e), 0)
 
@@ -4340,13 +4356,30 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             if result.returncode != 0:
                 Upgrade.stdOut(f"Warning: MariaDB repo setup failed: {result.stderr}", 0)
             
-            # Install MariaDB packages
+            # Install MariaDB packages with exclude to prevent compat package conflicts
             Upgrade.stdOut("Installing MariaDB packages...", 1)
             mariadb_packages = "MariaDB-server MariaDB-client MariaDB-backup MariaDB-devel"
-            command = f"dnf install -y {mariadb_packages}"
+            # Use --exclude to prevent compat package from being installed
+            command = f"dnf install -y --exclude='MariaDB-server-compat*' {mariadb_packages}"
             result = subprocess.run(command, shell=True, capture_output=True, text=True)
             if result.returncode != 0:
-                Upgrade.stdOut(f"Warning: MariaDB installation issues: {result.stderr}", 0)
+                # Check if it's a compat package conflict
+                error_output = result.stderr + result.stdout
+                if "MariaDB-server-compat" in error_output or "conflicts" in error_output.lower():
+                    Upgrade.stdOut("Compat package conflict detected, trying with --allowerasing...", 1)
+                    command = f"dnf install -y --allowerasing --exclude='MariaDB-server-compat*' {mariadb_packages}"
+                    result = subprocess.run(command, shell=True, capture_output=True, text=True)
+                    if result.returncode != 0:
+                        Upgrade.stdOut(f"Error: MariaDB installation failed: {result.stderr}", 0)
+                        return False
+                else:
+                    Upgrade.stdOut(f"Warning: MariaDB installation issues: {result.stderr}", 0)
+                    return False
+            
+            # Verify MariaDB was installed successfully
+            if not os.path.exists('/usr/bin/mysql') and not os.path.exists('/usr/bin/mariadb'):
+                Upgrade.stdOut("Error: MariaDB binaries not found after installation", 0)
+                return False
             
             # Start and enable MariaDB service
             Upgrade.stdOut("Starting MariaDB service...", 1)
