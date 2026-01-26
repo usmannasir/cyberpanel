@@ -65,11 +65,8 @@ INSTALLED_APPS = [
 
     # Apps with multiple or complex dependencies
     'emailPremium',
-    'discordAuth',
-    'googleTagManager',
     'testPlugin',
     'premiumPlugin',
-    'fail2ban',
     'emailMarketing',   # Depends on websiteFunctions and loginSystem
     'cloudAPI',         # Depends on websiteFunctions
     'containerization', # Depends on websiteFunctions
