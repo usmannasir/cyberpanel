@@ -102,21 +102,35 @@ check_disk_space
 # Download and execute cyberpanel.sh for the specified branch
 echo "Downloading CyberPanel installer for branch: $BRANCH_NAME"
 
-# Use absolute path for downloaded script
-SCRIPT_PATH="/tmp/cyberpanel-$$.sh"
-rm -f "$SCRIPT_PATH" cyberpanel.sh install.tar.gz
+# Use absolute path for downloaded script in a writable directory
+TEMP_DIR="/tmp"
+SCRIPT_PATH="$TEMP_DIR/cyberpanel-$$.sh"
+rm -f "$SCRIPT_PATH" "$TEMP_DIR/cyberpanel.sh" "$TEMP_DIR/install.tar.gz"
+
+# Ensure temp directory exists and is writable
+mkdir -p "$TEMP_DIR" 2>/dev/null || true
 
 # For v2.5.5-dev, try to get the cyberpanel.sh from the branch
 if [ "$BRANCH_NAME" = "v2.5.5-dev" ] || [ "$BRANCH_NAME" = "stable" ]; then
     # Try to download from the branch-specific URL
     if curl --silent -o "$SCRIPT_PATH" "https://raw.githubusercontent.com/master3395/cyberpanel/$BRANCH_NAME/cyberpanel.sh" 2>/dev/null; then
         if [ -f "$SCRIPT_PATH" ] && [ -s "$SCRIPT_PATH" ]; then
-            chmod +x "$SCRIPT_PATH" 2>/dev/null || true
-            echo "✅ Downloaded cyberpanel.sh from branch $BRANCH_NAME"
-            # Use bash to execute (cyberpanel.sh uses #!/bin/bash)
-            # Change to /tmp to ensure we're in a writable directory
-            cd /tmp
-            exec bash "$SCRIPT_PATH" "$@"
+            # Make script executable
+            chmod 755 "$SCRIPT_PATH" 2>/dev/null || true
+            # Verify it's executable
+            if [ -x "$SCRIPT_PATH" ]; then
+                echo "✅ Downloaded cyberpanel.sh from branch $BRANCH_NAME"
+                # Change to temp directory and execute with bash
+                # Use absolute path to avoid any relative path issues
+                cd "$TEMP_DIR" || cd /tmp || cd /
+                bash "$SCRIPT_PATH" "$@"
+                exit $?
+            else
+                echo "⚠️  Warning: Could not make script executable, trying alternative method..."
+                cd "$TEMP_DIR" || cd /tmp || cd /
+                bash -c "bash '$SCRIPT_PATH' $*"
+                exit $?
+            fi
         fi
     fi
 fi
@@ -125,12 +139,22 @@ fi
 if curl --silent -o "$SCRIPT_PATH" "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null || \
    wget -q -O "$SCRIPT_PATH" "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null; then
     if [ -f "$SCRIPT_PATH" ] && [ -s "$SCRIPT_PATH" ]; then
-        chmod +x "$SCRIPT_PATH" 2>/dev/null || true
-        echo "✅ Downloaded cyberpanel.sh from standard source"
-        # Use bash to execute (cyberpanel.sh uses #!/bin/bash)
-        # Change to /tmp to ensure we're in a writable directory
-        cd /tmp
-        exec bash "$SCRIPT_PATH" "$@"
+        # Make script executable
+        chmod 755 "$SCRIPT_PATH" 2>/dev/null || true
+        # Verify it's executable
+        if [ -x "$SCRIPT_PATH" ]; then
+            echo "✅ Downloaded cyberpanel.sh from standard source"
+            # Change to temp directory and execute with bash
+            # Use absolute path to avoid any relative path issues
+            cd "$TEMP_DIR" || cd /tmp || cd /
+            bash "$SCRIPT_PATH" "$@"
+            exit $?
+        else
+            echo "⚠️  Warning: Could not make script executable, trying alternative method..."
+            cd "$TEMP_DIR" || cd /tmp || cd /
+            bash -c "bash '$SCRIPT_PATH' $*"
+            exit $?
+        fi
     fi
 fi
 
