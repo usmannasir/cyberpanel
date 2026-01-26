@@ -288,7 +288,6 @@ class pluginInstaller:
         if os.path.exists(pluginPath):
             try:
                 # Check if we're running as root
-                import os
                 is_root = os.geteuid() == 0 if hasattr(os, 'geteuid') else False
                 use_sudo = not is_root
                 
