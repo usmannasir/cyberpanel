@@ -144,11 +144,18 @@ detect_operating_system() {
     print_status "$BLUE" "🔍 Detecting operating system..."
     
     if detect_os; then
-        # Get OS information
-        eval $(get_os_info)
+        # Variables are set by detect_os() in the sourced module
+        # Export them to ensure they're available to all functions
+        export SERVER_OS OS_FAMILY PACKAGE_MANAGER ARCHITECTURE
         print_status "$GREEN" "✅ OS detected: $SERVER_OS ($OS_FAMILY)"
         print_status "$GREEN" "✅ Package manager: $PACKAGE_MANAGER"
         print_status "$GREEN" "✅ Architecture: $ARCHITECTURE"
+        
+        # Verify variables are set
+        if [ -z "$SERVER_OS" ] || [ -z "$OS_FAMILY" ] || [ -z "$PACKAGE_MANAGER" ]; then
+            print_status "$RED" "❌ OS variables not properly set after detection"
+            return 1
+        fi
         return 0
     else
         print_status "$RED" "❌ Failed to detect operating system"
@@ -159,6 +166,19 @@ detect_operating_system() {
 # Function to install dependencies
 install_dependencies() {
     print_status "$BLUE" "📦 Installing dependencies..."
+    
+    # Ensure variables are set (they should be from detect_operating_system)
+    if [ -z "$SERVER_OS" ] || [ -z "$OS_FAMILY" ] || [ -z "$PACKAGE_MANAGER" ]; then
+        print_status "$RED" "❌ OS variables not set. SERVER_OS=$SERVER_OS, OS_FAMILY=$OS_FAMILY, PACKAGE_MANAGER=$PACKAGE_MANAGER"
+        # Try to get them again
+        if detect_os; then
+            eval $(get_os_info)
+            export SERVER_OS OS_FAMILY PACKAGE_MANAGER ARCHITECTURE
+        else
+            print_status "$RED" "❌ Failed to detect OS for dependency installation"
+            return 1
+        fi
+    fi
     
     if manage_dependencies "$SERVER_OS" "$OS_FAMILY" "$PACKAGE_MANAGER"; then
         print_status "$GREEN" "✅ Dependencies installed successfully"
