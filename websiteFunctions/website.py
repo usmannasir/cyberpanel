@@ -36,7 +36,8 @@ from math import ceil
 from plogical.alias import AliasManager
 from plogical.applicationInstaller import ApplicationInstaller
 from plogical import hashPassword, randomPassword
-from emailMarketing.emACL import emACL
+# emailMarketing removed from INSTALLED_APPS
+# from emailMarketing.emACL import emACL
 from plogical.processUtilities import ProcessUtilities
 from managePHP.phpManager import PHPManager
 from ApachController.ApacheVhosts import ApacheVhost
