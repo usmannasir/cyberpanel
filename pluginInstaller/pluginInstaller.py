@@ -155,7 +155,7 @@ class pluginInstaller:
 
         os.chdir('/usr/local/CyberCP')
 
-        command = "/usr/local/CyberCP/bin/python manage.py collectstatic --noinput"
+        command = "python3 /usr/local/CyberCP/manage.py collectstatic --noinput"
         subprocess.call(shlex.split(command))
 
         command = "mv /usr/local/CyberCP/static /usr/local/lscp/cyberpanel"
@@ -168,9 +168,9 @@ class pluginInstaller:
     def installMigrations(pluginName):
         currentDir = os.getcwd()
         os.chdir('/usr/local/CyberCP')
-        command = "/usr/local/CyberCP/bin/python manage.py makemigrations %s" % pluginName
+        command = "python3 /usr/local/CyberCP/manage.py makemigrations %s" % pluginName
         subprocess.call(shlex.split(command))
-        command = "/usr/local/CyberCP/bin/python manage.py migrate %s" % pluginName
+        command = "python3 /usr/local/CyberCP/manage.py migrate %s" % pluginName
         subprocess.call(shlex.split(command))
         os.chdir(currentDir)
 
@@ -286,7 +286,61 @@ class pluginInstaller:
     def removeFiles(pluginName):
         pluginPath = '/usr/local/CyberCP/' + pluginName
         if os.path.exists(pluginPath):
-            shutil.rmtree(pluginPath)
+            try:
+                # Fix ownership and permissions before deletion to avoid permission errors
+                import stat
+                import pwd
+                import grp
+                
+                # Get cyberpanel user/group IDs
+                try:
+                    cyberpanel_uid = pwd.getpwnam('cyberpanel').pw_uid
+                    cyberpanel_gid = grp.getgrnam('cyberpanel').gr_gid
+                except (KeyError, OSError):
+                    # Fallback to root if cyberpanel user doesn't exist
+                    cyberpanel_uid = 0
+                    cyberpanel_gid = 0
+                
+                # Recursively fix ownership and permissions
+                def fix_permissions(path):
+                    for root, dirs, files in os.walk(path):
+                        try:
+                            os.chown(root, cyberpanel_uid, cyberpanel_gid)
+                            os.chmod(root, stat.S_IRWXU | stat.S_IRWXG | stat.S_IROTH | stat.S_IXOTH)
+                        except (OSError, PermissionError) as e:
+                            pluginInstaller.stdOut(f"Warning: Could not fix permissions for {root}: {str(e)}")
+                        
+                        for d in dirs:
+                            dir_path = os.path.join(root, d)
+                            try:
+                                os.chown(dir_path, cyberpanel_uid, cyberpanel_gid)
+                                os.chmod(dir_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IROTH | stat.S_IXOTH)
+                            except (OSError, PermissionError) as e:
+                                pluginInstaller.stdOut(f"Warning: Could not fix permissions for {dir_path}: {str(e)}")
+                        
+                        for f in files:
+                            file_path = os.path.join(root, f)
+                            try:
+                                os.chown(file_path, cyberpanel_uid, cyberpanel_gid)
+                                os.chmod(file_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
+                            except (OSError, PermissionError) as e:
+                                pluginInstaller.stdOut(f"Warning: Could not fix permissions for {file_path}: {str(e)}")
+                
+                # Fix permissions before deletion
+                fix_permissions(pluginPath)
+                
+                # Now remove the directory
+                shutil.rmtree(pluginPath)
+            except Exception as e:
+                pluginInstaller.stdOut(f"Error removing plugin files: {str(e)}")
+                # Try alternative: use system rm -rf as fallback
+                try:
+                    import subprocess
+                    result = subprocess.run(['rm', '-rf', pluginPath], capture_output=True, text=True, timeout=30)
+                    if result.returncode != 0:
+                        raise Exception(f"rm -rf failed: {result.stderr}")
+                except Exception as e2:
+                    raise Exception(f"Failed to remove plugin directory: {str(e)} (fallback also failed: {str(e2)})")
 
     @staticmethod
     def removeFromSettings(pluginName):
@@ -336,7 +390,7 @@ class pluginInstaller:
     def removeMigrations(pluginName):
         currentDir = os.getcwd()
         os.chdir('/usr/local/CyberCP')
-        command = "/usr/local/CyberCP/bin/python manage.py migrate %s zero" % pluginName
+        command = "python3 /usr/local/CyberCP/manage.py migrate %s zero" % pluginName
         subprocess.call(shlex.split(command))
         os.chdir(currentDir)
 
