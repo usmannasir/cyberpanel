@@ -287,6 +287,11 @@ class pluginInstaller:
         pluginPath = '/usr/local/CyberCP/' + pluginName
         if os.path.exists(pluginPath):
             try:
+                # Check if we're running as root
+                import os
+                is_root = os.geteuid() == 0 if hasattr(os, 'geteuid') else False
+                use_sudo = not is_root
+                
                 # First try: Use shutil.rmtree (works if permissions are correct)
                 try:
                     shutil.rmtree(pluginPath)
@@ -295,24 +300,54 @@ class pluginInstaller:
                 except (OSError, PermissionError) as e:
                     pluginInstaller.stdOut(f'Direct removal failed, trying with permission fix: {str(e)}')
                 
-                # Second try: Fix permissions using sudo chown/chmod, then remove
+                # Second try: Fix permissions, then remove
                 try:
                     import subprocess
-                    # Fix ownership recursively using sudo
-                    chown_result = subprocess.run(
-                        ['sudo', 'chown', '-R', 'cyberpanel:cyberpanel', pluginPath],
-                        capture_output=True, text=True, timeout=30
-                    )
-                    if chown_result.returncode != 0:
-                        pluginInstaller.stdOut(f'Warning: chown failed: {chown_result.stderr}')
+                    import stat
                     
-                    # Fix permissions recursively
-                    chmod_result = subprocess.run(
-                        ['sudo', 'chmod', '-R', 'u+rwX,go+rX', pluginPath],
-                        capture_output=True, text=True, timeout=30
-                    )
-                    if chmod_result.returncode != 0:
-                        pluginInstaller.stdOut(f'Warning: chmod failed: {chmod_result.stderr}')
+                    if use_sudo:
+                        # Use ProcessUtilities which handles privileged commands
+                        # Fix ownership recursively
+                        chown_cmd = f'chown -R cyberpanel:cyberpanel {pluginPath}'
+                        ProcessUtilities.normalExecutioner(chown_cmd)
+                        
+                        # Fix permissions recursively
+                        chmod_cmd = f'chmod -R u+rwX,go+rX {pluginPath}'
+                        ProcessUtilities.normalExecutioner(chmod_cmd)
+                    else:
+                        # Running as root - fix permissions directly
+                        import pwd
+                        import grp
+                        try:
+                            cyberpanel_uid = pwd.getpwnam('cyberpanel').pw_uid
+                            cyberpanel_gid = grp.getgrnam('cyberpanel').gr_gid
+                        except (KeyError, OSError):
+                            cyberpanel_uid = 0
+                            cyberpanel_gid = 0
+                        
+                        # Recursively fix ownership and permissions
+                        for root, dirs, files in os.walk(pluginPath):
+                            try:
+                                os.chown(root, cyberpanel_uid, cyberpanel_gid)
+                                os.chmod(root, stat.S_IRWXU | stat.S_IRWXG | stat.S_IROTH | stat.S_IXOTH)
+                            except (OSError, PermissionError):
+                                pass
+                            
+                            for d in dirs:
+                                dir_path = os.path.join(root, d)
+                                try:
+                                    os.chown(dir_path, cyberpanel_uid, cyberpanel_gid)
+                                    os.chmod(dir_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IROTH | stat.S_IXOTH)
+                                except (OSError, PermissionError):
+                                    pass
+                            
+                            for f in files:
+                                file_path = os.path.join(root, f)
+                                try:
+                                    os.chown(file_path, cyberpanel_uid, cyberpanel_gid)
+                                    os.chmod(file_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
+                                except (OSError, PermissionError):
+                                    pass
                     
                     # Now try to remove
                     shutil.rmtree(pluginPath)
@@ -321,17 +356,23 @@ class pluginInstaller:
                 except Exception as e:
                     pluginInstaller.stdOut(f'Permission fix and removal failed: {str(e)}')
                 
-                # Third try: Use sudo rm -rf as final fallback
+                # Third try: Use rm -rf (with or without sudo depending on privileges)
                 try:
-                    result = subprocess.run(
-                        ['sudo', 'rm', '-rf', pluginPath],
-                        capture_output=True, text=True, timeout=30
-                    )
-                    if result.returncode == 0:
-                        pluginInstaller.stdOut(f'Plugin directory removed using sudo rm -rf: {pluginName}')
-                        return
+                    if use_sudo:
+                        # Use ProcessUtilities for privileged removal
+                        rm_cmd = f'rm -rf {pluginPath}'
+                        ProcessUtilities.normalExecutioner(rm_cmd)
                     else:
-                        raise Exception(f"sudo rm -rf failed: {result.stderr}")
+                        # Running as root - use subprocess directly
+                        result = subprocess.run(
+                            ['rm', '-rf', pluginPath],
+                            capture_output=True, text=True, timeout=30
+                        )
+                        if result.returncode != 0:
+                            raise Exception(f"rm -rf failed: {result.stderr}")
+                    
+                    pluginInstaller.stdOut(f'Plugin directory removed using rm -rf: {pluginName}')
+                    return
                 except Exception as e:
                     raise Exception(f"All removal methods failed. Last error: {str(e)}")
                     
