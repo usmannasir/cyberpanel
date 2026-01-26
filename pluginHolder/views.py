@@ -1280,35 +1280,43 @@ def fetch_plugin_store(request):
             for key, value in response_headers.items():
                 response[key] = value
             return response
-    
-    except Exception as e:
-        error_message = str(e)
         
-        # If rate limited, try to use stale cache as fallback
-        if '403' in error_message or 'rate limit' in error_message.lower():
-            stale_cache = _get_cached_plugins(allow_expired=True)  # Get cache even if expired
-            if stale_cache is not None:
-                logging.writeToFile("Using stale cache due to rate limit")
-                # Sort plugins deterministically by name to prevent order changes
-                stale_cache.sort(key=lambda x: x.get('name', '').lower())
-                enriched_plugins = _enrich_store_plugins(stale_cache)
-                response = JsonResponse({
-                    'success': True,
-                    'plugins': enriched_plugins,
-                    'cached': True,
-                    'warning': 'Using cached data due to GitHub rate limit. Data may be outdated.'
-                }, json_dumps_params={'ensure_ascii': False})
-                # Add cache-busting headers
-                for key, value in response_headers.items():
-                    response[key] = value
-                return response
-        
-        # No cache available, return error
-        return JsonResponse({
-            'success': False,
-            'error': error_message,
-            'plugins': []
-        }, status=500)
+        except Exception as e:
+            error_message = str(e)
+            
+            # If rate limited, try to use stale cache as fallback
+            if '403' in error_message or 'rate limit' in error_message.lower():
+                stale_cache = _get_cached_plugins(allow_expired=True)  # Get cache even if expired
+                if stale_cache is not None:
+                    logging.writeToFile("Using stale cache due to rate limit")
+                    # Sort plugins deterministically by name to prevent order changes
+                    stale_cache.sort(key=lambda x: x.get('name', '').lower())
+                    try:
+                        enriched_plugins = _enrich_store_plugins(stale_cache)
+                    except Exception as enrich_error:
+                        logging.writeToFile(f"Error enriching stale cache: {str(enrich_error)}")
+                        enriched_plugins = stale_cache
+                        for plugin in enriched_plugins:
+                            plugin.setdefault('installed', False)
+                            plugin.setdefault('enabled', False)
+                            plugin.setdefault('is_paid', False)
+                    response = JsonResponse({
+                        'success': True,
+                        'plugins': enriched_plugins,
+                        'cached': True,
+                        'warning': 'Using cached data due to GitHub rate limit. Data may be outdated.'
+                    }, json_dumps_params={'ensure_ascii': False})
+                    # Add cache-busting headers
+                    for key, value in response_headers.items():
+                        response[key] = value
+                    return response
+            
+            # No cache available, return error
+            return JsonResponse({
+                'success': False,
+                'error': error_message,
+                'plugins': []
+            }, status=500)
 
 @csrf_exempt
 @require_http_methods(["POST"])
