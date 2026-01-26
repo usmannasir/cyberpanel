@@ -709,6 +709,32 @@
         cursor: not-allowed;
     }
     
+    .btn-upgrade {
+        padding: 8px 16px;
+        background: #f59e0b;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .btn-upgrade:hover:not(:disabled) {
+        background: #d97706;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(245,158,11,0.3);
+    }
+    
+    .btn-upgrade:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
     .btn-link {
         padding: 6px 12px;
         background: var(--bg-secondary, #f8f9ff);
@@ -770,6 +796,17 @@
         background: #4a48c4;
         transform: translateY(-1px);
         box-shadow: 0 4px 8px rgba(88,86,214,0.3);
+    }
+    
+    .btn-revert {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .btn-revert:hover:not(:disabled) {
+        background: #5a6268;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(108,117,125,0.3);
     }
     
     .btn-uninstall {
@@ -1042,6 +1079,9 @@
                                         <i class="fas fa-toggle-off"></i> {% trans "Activate" %}
                                     </button>
                                 {% endif %}
+                                <button class="btn-action btn-revert btn-small" onclick="showRevertDialog('{{ plugin.plugin_dir }}')" title="{% trans 'Revert to Previous Version' %}">
+                                    <i class="fas fa-undo"></i> {% trans "Revert Version" %}
+                                </button>
                                 <button class="btn-action btn-uninstall btn-small" onclick="uninstallPlugin('{{ plugin.plugin_dir }}')">
                                     <i class="fas fa-trash"></i> {% trans "Uninstall" %}
                                 </button>
@@ -1123,6 +1163,9 @@
                                                     <i class="fas fa-toggle-off"></i> {% trans "Activate" %}
                                                 </button>
                                             {% endif %}
+                                            <button class="btn-action btn-revert" onclick="showRevertDialog('{{ plugin.plugin_dir }}')" title="{% trans 'Revert to Previous Version' %}">
+                                                <i class="fas fa-undo"></i> {% trans "Revert Version" %}
+                                            </button>
                                             <button class="btn-action btn-uninstall" onclick="uninstallPlugin('{{ plugin.plugin_dir }}')">
                                                 <i class="fas fa-trash"></i> {% trans "Uninstall" %}
                                             </button>
@@ -1194,6 +1237,17 @@
             
             <!-- CyberPanel Plugin Store (always available) -->
             <div id="storeView" style="display: {% if not plugins %}block{% else %}none{% endif %};">
+                <!-- Loading Indicator -->
+                <div id="storeLoading" class="store-loading" style="display: {% if not plugins %}block{% else %}none{% endif %};">
+                    <i class="fas fa-spinner fa-spin"></i> {% trans "Loading plugins from store..." %}
+                </div>
+                
+                <!-- Store Error -->
+                <div id="storeError" class="alert alert-danger" style="display: none;">
+                    <i class="fas fa-exclamation-circle alert-icon"></i>
+                    <span id="storeErrorText"></span>
+                </div>
+                
                 <!-- Notice Section (similar to CMSMS Module Manager) -->
                 <div class="store-notice" id="pluginStoreNotice">
                     <div class="notice-header">
@@ -1208,6 +1262,9 @@
                             <i class="fas fa-info-circle" style="color: #5856d6;"></i>
                             <strong>{% trans "Cache Information:" %}</strong>
                             {% trans "Plugin store data is cached for 1 hour to improve performance and reduce GitHub API rate limits. New plugins may take up to 1 hour to appear after being published." %}
+                            {% if cache_expiry_timestamp %}
+                                <br><strong>{% trans "Next cache update:" %}</strong> <span id="cacheExpiryTime" style="font-family: monospace;" data-timestamp="{{ cache_expiry_timestamp }}">{% trans "Calculating..." %}</span>
+                            {% endif %}
                         </p>
                         <p class="warning-text">
                             <i class="fas fa-exclamation-triangle"></i>
@@ -1410,12 +1467,20 @@ function displayStorePlugins() {
             <i class="${iconClass}"></i>
         </div>`;
         
-        // Action column - Store view only shows Install/Installed (no Deactivate/Uninstall)
+        // Action column - Store view only shows Install/Installed/Upgrade (no Deactivate/Uninstall)
         // NOTE: Store view should NOT show Deactivate/Uninstall buttons - users manage from Grid/Table views
         let actionHtml = '';
         if (plugin.installed) {
-            // Show "Installed" text
-            actionHtml = '<span class="status-installed">Installed</span>';
+            // Check if update is available
+            if (plugin.update_available) {
+                // Show Upgrade button
+                actionHtml = `<button class="btn-action btn-upgrade" onclick="upgradePlugin('${plugin.plugin_dir}', '${plugin.installed_version || 'Unknown'}', '${plugin.version || 'Unknown'}')">
+                    <i class="fas fa-arrow-up"></i> Upgrade
+                </button>`;
+            } else {
+                // Show "Installed" text
+                actionHtml = '<span class="status-installed">Installed</span>';
+            }
         } else {
             // Show Install button
             actionHtml = `<button class="btn-action btn-install" onclick="installFromStore('${plugin.plugin_dir}')">
@@ -1484,6 +1549,83 @@ function filterByLetter(letter) {
         });
     }
     displayStorePlugins();
+}
+
+function upgradePlugin(pluginName, currentVersion, newVersion) {
+    // Show confirmation dialog with backup warning
+    const message = `⚠️ WARNING: Plugin Upgrade\n\n` +
+        `You are about to upgrade ${pluginName} from version ${currentVersion} to ${newVersion}.\n\n` +
+        `⚠️ IMPORTANT: You could lose data during the upgrade process.\n\n` +
+        `Please ensure you have backed up:\n` +
+        `• Plugin configuration files\n` +
+        `• Plugin data and databases\n` +
+        `• Any custom modifications\n\n` +
+        `Do you want to continue with the upgrade?`;
+    
+    if (!confirm(message)) {
+        return;
+    }
+    
+    // Double confirmation
+    if (!confirm(`Final confirmation: Upgrade ${pluginName} now?\n\nThis action cannot be undone.`)) {
+        return;
+    }
+    
+    const btn = event.target.closest('.btn-upgrade') || event.target;
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Upgrading...';
+    
+    fetch(`/plugins/api/store/upgrade/${pluginName}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Upgrade Successful!',
+                    text: data.message || `Plugin ${pluginName} upgraded successfully`,
+                    type: 'success'
+                });
+            } else {
+                alert('Success: ' + (data.message || `Plugin ${pluginName} upgraded successfully`));
+            }
+            // Reload page after short delay to show success message
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Upgrade Failed!',
+                    text: data.error || 'Failed to upgrade plugin',
+                    type: 'error'
+                });
+            } else {
+                alert('Error: ' + (data.error || 'Failed to upgrade plugin'));
+            }
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        if (typeof PNotify !== 'undefined') {
+            new PNotify({
+                title: 'Error!',
+                text: 'Failed to upgrade plugin: ' + error.message,
+                type: 'error'
+            });
+        } else {
+            alert('Error: Failed to upgrade plugin - ' + error.message);
+        }
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
 }
 
 function installFromStore(pluginName) {
@@ -1656,6 +1798,165 @@ function installPlugin(pluginName) {
         }
         btn.disabled = false;
         btn.innerHTML = originalText;
+    });
+}
+
+function showRevertDialog(pluginName) {
+    // Fetch available backups
+    fetch(`/plugins/api/backups/${pluginName}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                if (typeof PNotify !== 'undefined') {
+                    new PNotify({
+                        title: 'Error!',
+                        text: data.error || 'Failed to load backups',
+                        type: 'error'
+                    });
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to load backups'));
+                }
+                return;
+            }
+            
+            if (!data.backups || data.backups.length === 0) {
+                if (typeof PNotify !== 'undefined') {
+                    new PNotify({
+                        title: 'No Backups Available',
+                        text: `No backups found for ${pluginName}. Backups are automatically created before upgrades.`,
+                        type: 'info'
+                    });
+                } else {
+                    alert(`No backups found for ${pluginName}. Backups are automatically created before upgrades.`);
+                }
+                return;
+            }
+            
+            // Show backup selection dialog
+            let backupList = 'Available backups:\n\n';
+            data.backups.forEach((backup, index) => {
+                const version = backup.version || 'unknown';
+                const timestamp = backup.timestamp || backup.created_at || 'unknown';
+                backupList += `${index + 1}. Version ${version} (${timestamp})\n`;
+            });
+            
+            backupList += '\n⚠️ WARNING: Reverting will replace the current plugin version with the selected backup.\n';
+            backupList += 'This action cannot be undone. Continue?';
+            
+            if (!confirm(backupList)) {
+                return;
+            }
+            
+            // Ask which backup to restore (for now, restore the most recent)
+            // In a more advanced UI, you could show a dropdown
+            const selectedBackup = data.backups[0]; // Most recent backup
+            
+            if (!confirm(`Revert ${pluginName} to version ${selectedBackup.version}?\n\nThis will replace the current installation.`)) {
+                return;
+            }
+            
+            // Perform revert
+            revertPlugin(pluginName, selectedBackup.backup_path);
+        })
+        .catch(error => {
+            const errorMessage = error && error.message ? error.message : (error ? String(error) : 'Unknown error');
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Error!',
+                    text: 'Failed to load backups: ' + errorMessage,
+                    type: 'error'
+                });
+            } else {
+                alert('Error: Failed to load backups - ' + errorMessage);
+            }
+        });
+}
+
+function revertPlugin(pluginName, backupPath) {
+    // Find the revert button for this plugin (if it exists)
+    let btn = null;
+    let originalText = '';
+    
+    // Try to find button by looking for onclick attribute containing the plugin name
+    const revertButtons = document.querySelectorAll('.btn-revert');
+    for (let button of revertButtons) {
+        const onclickAttr = button.getAttribute('onclick') || '';
+        if (onclickAttr.includes(pluginName)) {
+            btn = button;
+            originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Reverting...';
+            break;
+        }
+    }
+    
+    // Show loading notification if button not found
+    if (!btn) {
+        if (typeof PNotify !== 'undefined') {
+            new PNotify({
+                title: 'Reverting...',
+                text: `Reverting ${pluginName} to previous version...`,
+                type: 'info'
+            });
+        }
+    }
+    
+    fetch(`/plugins/api/revert/${pluginName}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            backup_path: backupPath
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Revert Successful!',
+                    text: data.message || `Plugin ${pluginName} reverted successfully`,
+                    type: 'success'
+                });
+            } else {
+                alert('Success: ' + (data.message || `Plugin ${pluginName} reverted successfully`));
+            }
+            // Reload page after short delay
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Revert Failed!',
+                    text: data.error || 'Failed to revert plugin',
+                    type: 'error'
+                });
+            } else {
+                alert('Error: ' + (data.error || 'Failed to revert plugin'));
+            }
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+    })
+    .catch(error => {
+        if (typeof PNotify !== 'undefined') {
+            new PNotify({
+                title: 'Error!',
+                text: 'Failed to revert plugin: ' + error.message,
+                type: 'error'
+            });
+        } else {
+            alert('Error: Failed to revert plugin - ' + error.message);
+        }
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
     });
 }
 
@@ -1848,7 +2149,63 @@ if (localStorage.getItem('pluginStoreNoticeDismissed') === 'true') {
 }
 
 // Initialize view on page load
+// Convert cache expiry timestamp to local time
+function updateCacheExpiryTime() {
+    const expiryElement = document.getElementById('cacheExpiryTime');
+    if (!expiryElement) return;
+    
+    const timestamp = expiryElement.getAttribute('data-timestamp');
+    if (!timestamp) return;
+    
+    try {
+        // Convert Unix timestamp (seconds) to milliseconds for JavaScript Date
+        const timestampMs = parseFloat(timestamp) * 1000;
+        const expiryDate = new Date(timestampMs);
+        
+        // Check if date is valid
+        if (isNaN(expiryDate.getTime())) {
+            expiryElement.textContent = 'Invalid timestamp';
+            return;
+        }
+        
+        // Get user's locale preferences
+        const locale = navigator.language || navigator.userLanguage || 'en-US';
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        
+        // Format date and time according to user's locale
+        const dateOptions = {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        };
+        
+        const timeOptions = {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        };
+        
+        // Format date and time separately for better readability
+        const dateStr = expiryDate.toLocaleDateString(locale, dateOptions);
+        const timeStr = expiryDate.toLocaleTimeString(locale, timeOptions);
+        
+        // Combine with timezone abbreviation
+        const formatted = dateStr + ' ' + timeStr;
+        
+        // Display with timezone info
+        expiryElement.textContent = formatted;
+        expiryElement.title = 'Local time: ' + formatted + ' | Timezone: ' + timezone;
+    } catch (e) {
+        console.error('Error formatting cache expiry time:', e);
+        expiryElement.textContent = 'Error calculating time';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Update cache expiry time to local timezone
+    updateCacheExpiryTime();
+    
     // Default to grid view if plugins exist, otherwise show store
     const gridView = document.getElementById('gridView');
     const storeView = document.getElementById('storeView');
@@ -1858,6 +2215,14 @@ document.addEventListener('DOMContentLoaded', function() {
         // No plugins installed, show store by default
         toggleView('store');
     }
+    
+    // Load store plugins if store view is visible (either from toggleView or already displayed)
+    setTimeout(function() {
+        const storeViewCheck = document.getElementById('storeView');
+        if (storeViewCheck && storeViewCheck.style.display !== 'none' && storePlugins.length === 0) {
+            loadPluginStore();
+        }
+    }, 100); // Small delay to ensure DOM is ready
 });
 </script>
 {% endblock %}

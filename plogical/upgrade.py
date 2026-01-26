@@ -4299,6 +4299,19 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         Upgrade.stdOut("Applying AlmaLinux 9 MariaDB fixes...", 1)
         
         try:
+            # CRITICAL: Remove MariaDB-server-compat* before any MariaDB install (conflicts with 10.11)
+            Upgrade.stdOut("Removing conflicting MariaDB-server-compat packages...", 1)
+            try:
+                subprocess.run("rpm -e --nodeps MariaDB-server-compat-12.1.2-1.el9.noarch 2>/dev/null; true", shell=True, timeout=30)
+                subprocess.run("dnf remove -y 'MariaDB-server-compat*' 2>/dev/null || true", shell=True, timeout=60)
+                r = subprocess.run("rpm -qa 2>/dev/null | grep -i MariaDB-server-compat", shell=True, capture_output=True, text=True, timeout=30)
+                for line in (r.stdout or "").strip().splitlines():
+                    pkg = (line.strip().split() or [""])[0]
+                    if pkg and "MariaDB-server-compat" in pkg:
+                        subprocess.run(["rpm", "-e", "--nodeps", pkg], timeout=30)
+            except Exception as e:
+                Upgrade.stdOut("Warning: compat cleanup: " + str(e), 0)
+
             # Disable problematic MariaDB MaxScale repository
             Upgrade.stdOut("Disabling problematic MariaDB MaxScale repository...", 1)
             command = "dnf config-manager --disable mariadb-maxscale 2>/dev/null || true"
@@ -4320,9 +4333,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = "dnf clean all"
             subprocess.run(command, shell=True, capture_output=True)
             
-            # Install MariaDB from official repository
+            # Install MariaDB 10.11 from official repository (avoid 12.1 compat conflicts)
             Upgrade.stdOut("Setting up official MariaDB repository...", 1)
-            command = "curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version='12.1'"
+            command = "curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version='10.11'"
             result = subprocess.run(command, shell=True, capture_output=True, text=True)
             if result.returncode != 0:
                 Upgrade.stdOut(f"Warning: MariaDB repo setup failed: {result.stderr}", 0)
