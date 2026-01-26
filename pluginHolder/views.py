@@ -462,13 +462,29 @@ def install_plugin(request, plugin_name):
                 'error': f'Plugin source not found: {plugin_name}'
             }, status=404)
         
-        # Check if already installed
+        # Check if already installed (must have meta.xml to be considered installed)
         pluginInstalled = '/usr/local/CyberCP/' + plugin_name
         if os.path.exists(pluginInstalled):
-            return JsonResponse({
-                'success': False,
-                'error': f'Plugin already installed: {plugin_name}'
-            }, status=400)
+            # Check if it's a valid installation (has meta.xml) or just leftover files
+            metaXmlPath = os.path.join(pluginInstalled, 'meta.xml')
+            if os.path.exists(metaXmlPath):
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Plugin already installed: {plugin_name}'
+                }, status=400)
+            else:
+                # Directory exists but no meta.xml - likely incomplete/uninstalled
+                # Try to clean it up first
+                try:
+                    import shutil
+                    shutil.rmtree(pluginInstalled)
+                    logging.writeToFile(f'Cleaned up incomplete plugin directory: {plugin_name}')
+                except Exception as e:
+                    logging.writeToFile(f'Warning: Could not clean up incomplete directory: {str(e)}')
+                    return JsonResponse({
+                        'success': False,
+                        'error': f'Incomplete plugin directory found. Please uninstall first or manually remove: {pluginInstalled}'
+                    }, status=400)
         
         # Create zip file for installation (pluginInstaller expects a zip)
         import tempfile
@@ -1189,13 +1205,29 @@ def install_from_store(request, plugin_name):
     mailUtilities.checkHome()
     
     try:
-        # Check if already installed
+        # Check if already installed (must have meta.xml to be considered installed)
         pluginInstalled = '/usr/local/CyberCP/' + plugin_name
         if os.path.exists(pluginInstalled):
-            return JsonResponse({
-                'success': False,
-                'error': f'Plugin already installed: {plugin_name}'
-            }, status=400)
+            # Check if it's a valid installation (has meta.xml) or just leftover files
+            metaXmlPath = os.path.join(pluginInstalled, 'meta.xml')
+            if os.path.exists(metaXmlPath):
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Plugin already installed: {plugin_name}'
+                }, status=400)
+            else:
+                # Directory exists but no meta.xml - likely incomplete/uninstalled
+                # Try to clean it up first
+                try:
+                    import shutil
+                    shutil.rmtree(pluginInstalled)
+                    logging.writeToFile(f'Cleaned up incomplete plugin directory: {plugin_name}')
+                except Exception as e:
+                    logging.writeToFile(f'Warning: Could not clean up incomplete directory: {str(e)}')
+                    return JsonResponse({
+                        'success': False,
+                        'error': f'Incomplete plugin directory found. Please uninstall first or manually remove: {pluginInstalled}'
+                    }, status=400)
         
         # Download plugin from GitHub
         import tempfile
