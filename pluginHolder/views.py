@@ -474,17 +474,27 @@ def install_plugin(request, plugin_name):
                 }, status=400)
             else:
                 # Directory exists but no meta.xml - likely incomplete/uninstalled
-                # Try to clean it up first
+                # Try to clean it up first using pluginInstaller.removeFiles which handles permissions
                 try:
-                    import shutil
-                    shutil.rmtree(pluginInstalled)
+                    from pluginInstaller.pluginInstaller import pluginInstaller
+                    pluginInstaller.removeFiles(plugin_name)
                     logging.writeToFile(f'Cleaned up incomplete plugin directory: {plugin_name}')
                 except Exception as e:
                     logging.writeToFile(f'Warning: Could not clean up incomplete directory: {str(e)}')
-                    return JsonResponse({
-                        'success': False,
-                        'error': f'Incomplete plugin directory found. Please uninstall first or manually remove: {pluginInstalled}'
-                    }, status=400)
+                    # Try fallback: use system rm -rf
+                    try:
+                        import subprocess
+                        result = subprocess.run(['rm', '-rf', pluginInstalled], capture_output=True, text=True, timeout=30)
+                        if result.returncode == 0:
+                            logging.writeToFile(f'Cleaned up incomplete plugin directory using rm -rf: {plugin_name}')
+                        else:
+                            raise Exception(f"rm -rf failed: {result.stderr}")
+                    except Exception as e2:
+                        logging.writeToFile(f'Error: Both cleanup methods failed: {str(e)}, {str(e2)}')
+                        return JsonResponse({
+                            'success': False,
+                            'error': f'Incomplete plugin directory found. Please uninstall first or manually remove: {pluginInstalled}'
+                        }, status=400)
         
         # Create zip file for installation (pluginInstaller expects a zip)
         import tempfile
@@ -1217,17 +1227,27 @@ def install_from_store(request, plugin_name):
                 }, status=400)
             else:
                 # Directory exists but no meta.xml - likely incomplete/uninstalled
-                # Try to clean it up first
+                # Try to clean it up first using pluginInstaller.removeFiles which handles permissions
                 try:
-                    import shutil
-                    shutil.rmtree(pluginInstalled)
+                    from pluginInstaller.pluginInstaller import pluginInstaller
+                    pluginInstaller.removeFiles(plugin_name)
                     logging.writeToFile(f'Cleaned up incomplete plugin directory: {plugin_name}')
                 except Exception as e:
                     logging.writeToFile(f'Warning: Could not clean up incomplete directory: {str(e)}')
-                    return JsonResponse({
-                        'success': False,
-                        'error': f'Incomplete plugin directory found. Please uninstall first or manually remove: {pluginInstalled}'
-                    }, status=400)
+                    # Try fallback: use system rm -rf
+                    try:
+                        import subprocess
+                        result = subprocess.run(['rm', '-rf', pluginInstalled], capture_output=True, text=True, timeout=30)
+                        if result.returncode == 0:
+                            logging.writeToFile(f'Cleaned up incomplete plugin directory using rm -rf: {plugin_name}')
+                        else:
+                            raise Exception(f"rm -rf failed: {result.stderr}")
+                    except Exception as e2:
+                        logging.writeToFile(f'Error: Both cleanup methods failed: {str(e)}, {str(e2)}')
+                        return JsonResponse({
+                            'success': False,
+                            'error': f'Incomplete plugin directory found. Please uninstall first or manually remove: {pluginInstalled}'
+                        }, status=400)
         
         # Download plugin from GitHub
         import tempfile
