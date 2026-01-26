@@ -65,9 +65,8 @@ INSTALLED_APPS = [
 
     # Apps with multiple or complex dependencies
     'emailPremium',
-    'googleTagManager',
     'discordAuth',
-    'discordWebhooks',
+    'googleTagManager',
     'testPlugin',
     'premiumPlugin',
     'fail2ban',
