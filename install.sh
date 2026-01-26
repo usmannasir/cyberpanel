@@ -248,25 +248,21 @@ detect_operating_system() {
 install_dependencies() {
     print_status "$BLUE" "📦 Installing dependencies..."
     
-    # Ensure variables are set (they should be from detect_operating_system)
-    # Re-detect if they're not set, using get_os_info() to capture values
-    if [ -z "$SERVER_OS" ] || [ -z "$OS_FAMILY" ] || [ -z "$PACKAGE_MANAGER" ]; then
-        print_status "$YELLOW" "⚠️  OS variables not set, re-detecting..."
-        # Try to get them again
-        if detect_os; then
-            # Use get_os_info() to properly capture the values
-            eval $(get_os_info)
-            export SERVER_OS OS_FAMILY PACKAGE_MANAGER ARCHITECTURE
-            print_status "$GREEN" "✅ Re-detected: SERVER_OS=$SERVER_OS, OS_FAMILY=$OS_FAMILY, PACKAGE_MANAGER=$PACKAGE_MANAGER"
-        else
-            print_status "$RED" "❌ Failed to detect OS for dependency installation"
-            return 1
-        fi
+    # Always re-capture OS variables using get_os_info() to ensure we have the latest values
+    # This is necessary because variables might not persist between function calls
+    if detect_os; then
+        # Use get_os_info() to properly capture the values from the module
+        eval $(get_os_info)
+        export SERVER_OS OS_FAMILY PACKAGE_MANAGER ARCHITECTURE
+        print_status "$GREEN" "✅ Captured OS info: SERVER_OS=$SERVER_OS, OS_FAMILY=$OS_FAMILY, PACKAGE_MANAGER=$PACKAGE_MANAGER"
+    else
+        print_status "$RED" "❌ Failed to detect OS for dependency installation"
+        return 1
     fi
     
-    # Verify variables one more time before calling
+    # Verify variables are set before calling manage_dependencies
     if [ -z "$SERVER_OS" ] || [ -z "$OS_FAMILY" ] || [ -z "$PACKAGE_MANAGER" ]; then
-        print_status "$RED" "❌ OS variables still not set after re-detection"
+        print_status "$RED" "❌ OS variables not set after detection"
         print_status "$RED" "   SERVER_OS='$SERVER_OS', OS_FAMILY='$OS_FAMILY', PACKAGE_MANAGER='$PACKAGE_MANAGER'"
         return 1
     fi
