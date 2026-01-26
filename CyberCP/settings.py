@@ -65,8 +65,6 @@ INSTALLED_APPS = [
 
     # Apps with multiple or complex dependencies
     'emailPremium',
-    'testPlugin',
-    'premiumPlugin',
     'emailMarketing',   # Depends on websiteFunctions and loginSystem
     'cloudAPI',         # Depends on websiteFunctions
     'containerization', # Depends on websiteFunctions
@@ -95,12 +93,6 @@ INSTALLED_APPS = [
 
 # Add plugins that are installed (plugin installer handles adding/removing)
 # Plugins are added by plugin installer when plugins are installed
-if os.path.exists('/usr/local/CyberCP/pm2Manager/__init__.py'):
-    INSTALLED_APPS.append('pm2Manager')
-if os.path.exists('/usr/local/CyberCP/paypalPremiumPlugin'):
-    INSTALLED_APPS.append('paypalPremiumPlugin')
-if os.path.exists('/usr/local/CyberCP/examplePlugin/__init__.py'):
-    INSTALLED_APPS.append('examplePlugin')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
