@@ -537,12 +537,17 @@ def RestartCyberPanel(request):
 
 def getDashboardStats(request):
     try:
-        val = request.session['userID']
+        val = request.session.get('userID')
+        if val is None:
+            return HttpResponse(
+                json.dumps({'status': 0, 'error_message': 'Session required'}),
+                content_type='application/json'
+            )
         currentACL = ACLManager.loadedACL(val)
         admin = Administrator.objects.get(pk=val)
         
         # Check if user is admin
-        if currentACL['admin'] == 1:
+        if currentACL.get('admin', 0) == 1:
             # Admin can see all resources
             total_users = Administrator.objects.count()
             total_sites = Websites.objects.count()
@@ -580,7 +585,7 @@ def getDashboardStats(request):
                 total_emails = EUsers.objects.filter(emailOwner__domainOwner__domain__in=website_names).count()
                 
                 # Count FTP users associated with user's domains
-                total_ftp_users = FTPUsers.objects.filter(domain__in=website_names).count()
+                total_ftp_users = FTPUsers.objects.filter(domain__domain__in=website_names).count()
             else:
                 total_wp_sites = 0
                 total_dbs = 0
@@ -598,18 +603,24 @@ def getDashboardStats(request):
         }
         return HttpResponse(json.dumps(data), content_type='application/json')
     except Exception as e:
-        return HttpResponse(json.dumps({'status': 0, 'error_message': str(e)}), content_type='application/json')
+        logging.writeToFile('getDashboardStats error: %s' % str(e))
+        return HttpResponse(
+            json.dumps({'status': 0, 'error_message': 'Failed to load dashboard stats'}),
+            content_type='application/json'
+        )
 
 def getTrafficStats(request):
     try:
-        val = request.session['userID']
+        val = request.session.get('userID')
+        if val is None:
+            return HttpResponse(
+                json.dumps({'status': 0, 'error_message': 'Session required'}),
+                content_type='application/json'
+            )
         currentACL = ACLManager.loadedACL(val)
-        
-        # Only admins should see system-wide network stats
         if not currentACL.get('admin', 0):
             return HttpResponse(json.dumps({'status': 0, 'error_message': 'Admin access required', 'admin_only': True}), content_type='application/json')
         
-        # Get network stats from /proc/net/dev (Linux)
         rx = tx = 0
         with open('/proc/net/dev', 'r') as f:
             for line in f.readlines():
@@ -617,42 +628,49 @@ def getTrafficStats(request):
                     continue
                 if ':' in line:
                     parts = line.split()
-                    rx += int(parts[1])
-                    tx += int(parts[9])
-        data = {
-            'rx_bytes': rx,
-            'tx_bytes': tx,
-            'status': 1
-        }
+                    try:
+                        if len(parts) >= 10:
+                            rx += int(parts[1])
+                            tx += int(parts[9])
+                    except (ValueError, IndexError):
+                        continue
+        data = {'rx_bytes': rx, 'tx_bytes': tx, 'status': 1}
         return HttpResponse(json.dumps(data), content_type='application/json')
     except Exception as e:
-        return HttpResponse(json.dumps({'status': 0, 'error_message': str(e)}), content_type='application/json')
+        logging.writeToFile('getTrafficStats error: %s' % str(e))
+        return HttpResponse(
+            json.dumps({'status': 0, 'error_message': 'Failed to load traffic stats'}),
+            content_type='application/json'
+        )
 
 def getDiskIOStats(request):
     try:
-        val = request.session['userID']
+        val = request.session.get('userID')
+        if val is None:
+            return HttpResponse(
+                json.dumps({'status': 0, 'error_message': 'Session required'}),
+                content_type='application/json'
+            )
         currentACL = ACLManager.loadedACL(val)
-        
-        # Only admins should see system-wide disk I/O stats
         if not currentACL.get('admin', 0):
             return HttpResponse(json.dumps({'status': 0, 'error_message': 'Admin access required', 'admin_only': True}), content_type='application/json')
         
-        # Parse /proc/diskstats for all disks
         read_sectors = 0
         write_sectors = 0
-        sector_size = 512  # Most Linux systems use 512 bytes per sector
+        sector_size = 512
         with open('/proc/diskstats', 'r') as f:
             for line in f:
                 parts = line.split()
                 if len(parts) < 14:
                     continue
-                # parts[2] is device name, skip loopback/ram devices
                 dev = parts[2]
                 if dev.startswith('loop') or dev.startswith('ram'):
                     continue
-                # 6th and 10th columns: sectors read/written
-                read_sectors += int(parts[5])
-                write_sectors += int(parts[9])
+                try:
+                    read_sectors += int(parts[5])
+                    write_sectors += int(parts[9])
+                except (ValueError, IndexError):
+                    continue
         data = {
             'read_bytes': read_sectors * sector_size,
             'write_bytes': write_sectors * sector_size,
@@ -660,34 +678,42 @@ def getDiskIOStats(request):
         }
         return HttpResponse(json.dumps(data), content_type='application/json')
     except Exception as e:
-        return HttpResponse(json.dumps({'status': 0, 'error_message': str(e)}), content_type='application/json')
+        logging.writeToFile('getDiskIOStats error: %s' % str(e))
+        return HttpResponse(
+            json.dumps({'status': 0, 'error_message': 'Failed to load disk I/O stats'}),
+            content_type='application/json'
+        )
 
 def getCPULoadGraph(request):
     try:
-        val = request.session['userID']
+        val = request.session.get('userID')
+        if val is None:
+            return HttpResponse(
+                json.dumps({'status': 0, 'error_message': 'Session required'}),
+                content_type='application/json'
+            )
         currentACL = ACLManager.loadedACL(val)
-        
-        # Only admins should see system-wide CPU stats
         if not currentACL.get('admin', 0):
             return HttpResponse(json.dumps({'status': 0, 'error_message': 'Admin access required', 'admin_only': True}), content_type='application/json')
         
-        # Parse /proc/stat for the 'cpu' line
+        cpu_times = []
         with open('/proc/stat', 'r') as f:
             for line in f:
                 if line.startswith('cpu '):
                     parts = line.strip().split()
-                    # parts[1:] are user, nice, system, idle, iowait, irq, softirq, steal, guest, guest_nice
-                    cpu_times = [float(x) for x in parts[1:]]
+                    try:
+                        cpu_times = [float(x) for x in parts[1:]]
+                    except (ValueError, IndexError):
+                        pass
                     break
-            else:
-                cpu_times = []
-        data = {
-            'cpu_times': cpu_times,
-            'status': 1
-        }
+        data = {'cpu_times': cpu_times, 'status': 1}
         return HttpResponse(json.dumps(data), content_type='application/json')
     except Exception as e:
-        return HttpResponse(json.dumps({'status': 0, 'error_message': str(e)}), content_type='application/json')
+        logging.writeToFile('getCPULoadGraph error: %s' % str(e))
+        return HttpResponse(
+            json.dumps({'status': 0, 'error_message': 'Failed to load CPU stats'}),
+            content_type='application/json'
+        )
 
 @csrf_exempt
 @require_GET
