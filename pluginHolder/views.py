@@ -1303,15 +1303,14 @@ def install_from_store(request, plugin_name):
             else:
                 # Directory exists but no meta.xml - likely incomplete/uninstalled
                 # Try to clean it up first using pluginInstaller.removeFiles which handles permissions
+                # pluginInstaller is already imported at module level, no need to import again
                 try:
-                    from pluginInstaller.pluginInstaller import pluginInstaller
                     pluginInstaller.removeFiles(plugin_name)
                     logging.writeToFile(f'Cleaned up incomplete plugin directory: {plugin_name}')
                 except Exception as e:
                     logging.writeToFile(f'Warning: Could not clean up incomplete directory: {str(e)}')
                     # Try fallback: use system rm -rf
                     try:
-                        import subprocess
                         result = subprocess.run(['rm', '-rf', pluginInstalled], capture_output=True, text=True, timeout=30)
                         if result.returncode == 0:
                             logging.writeToFile(f'Cleaned up incomplete plugin directory using rm -rf: {plugin_name}')
