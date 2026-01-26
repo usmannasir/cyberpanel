@@ -1045,6 +1045,10 @@ except Exception as e:
         
         # CRITICAL: Install Python MySQL dependencies before running install.py
         # installCyberPanel.py requires MySQLdb (mysqlclient) which needs development headers
+        echo ""
+        echo "==============================================================================================================="
+        echo "Installing Python MySQL dependencies (required for installCyberPanel.py)..."
+        echo "==============================================================================================================="
         print_status "Installing Python MySQL dependencies..."
         
         # Detect OS for package installation
@@ -1054,11 +1058,20 @@ except Exception as e:
             case "$ID" in
                 almalinux|rocky|centos|rhel|fedora)
                     os_family="rhel"
+                    print_status "Detected RHEL-based OS: $ID"
                     ;;
                 ubuntu|debian)
                     os_family="debian"
+                    print_status "Detected Debian-based OS: $ID"
+                    ;;
+                *)
+                    print_status "Unknown OS ID: $ID, defaulting to RHEL-based"
+                    os_family="rhel"
                     ;;
             esac
+        else
+            print_status "WARNING: /etc/os-release not found, defaulting to RHEL-based"
+            os_family="rhel"
         fi
         
         # Install MariaDB/MySQL development headers and Python mysqlclient
@@ -1068,51 +1081,82 @@ except Exception as e:
             
             # Try to install mariadb-devel (works with MariaDB 10.x and 12.x)
             if command -v dnf >/dev/null 2>&1; then
-                # For AlmaLinux 9/10 and newer
-                dnf install -y --allowerasing --skip-broken --nobest \
-                    mariadb-devel pkgconfig gcc python3-devel python3-pip 2>/dev/null || \
-                dnf install -y --allowerasing --skip-broken --nobest \
-                    mysql-devel pkgconfig gcc python3-devel python3-pip 2>/dev/null || \
-                dnf install -y --allowerasing --skip-broken --nobest \
-                    mariadb-connector-c-devel pkgconfig gcc python3-devel python3-pip 2>/dev/null || true
+                # For AlmaLinux 9/10 and newer - show output for debugging
+                print_status "Attempting to install mariadb-devel..."
+                if dnf install -y --allowerasing --skip-broken --nobest \
+                    mariadb-devel pkgconfig gcc python3-devel python3-pip; then
+                    print_status "✓ Successfully installed mariadb-devel"
+                elif dnf install -y --allowerasing --skip-broken --nobest \
+                    mysql-devel pkgconfig gcc python3-devel python3-pip; then
+                    print_status "✓ Successfully installed mysql-devel"
+                elif dnf install -y --allowerasing --skip-broken --nobest \
+                    mariadb-connector-c-devel pkgconfig gcc python3-devel python3-pip; then
+                    print_status "✓ Successfully installed mariadb-connector-c-devel"
+                else
+                    print_status "⚠️  WARNING: Failed to install MariaDB development headers"
+                fi
             else
                 # For older systems with yum
-                yum install -y mariadb-devel pkgconfig gcc python3-devel python3-pip 2>/dev/null || \
-                yum install -y mysql-devel pkgconfig gcc python3-devel python3-pip 2>/dev/null || true
+                print_status "Using yum to install mariadb-devel..."
+                if yum install -y mariadb-devel pkgconfig gcc python3-devel python3-pip; then
+                    print_status "✓ Successfully installed mariadb-devel"
+                elif yum install -y mysql-devel pkgconfig gcc python3-devel python3-pip; then
+                    print_status "✓ Successfully installed mysql-devel"
+                else
+                    print_status "⚠️  WARNING: Failed to install MariaDB development headers"
+                fi
             fi
             
             # Install mysqlclient Python package
             print_status "Installing mysqlclient Python package..."
-            python3 -m pip install --quiet --upgrade pip setuptools wheel 2>/dev/null || true
-            python3 -m pip install --quiet mysqlclient 2>/dev/null || {
+            python3 -m pip install --upgrade pip setuptools wheel 2>&1 | grep -v "already satisfied" || true
+            if python3 -m pip install mysqlclient 2>&1; then
+                print_status "✓ Successfully installed mysqlclient"
+            else
                 # If pip install fails, try with build dependencies
                 print_status "Retrying mysqlclient installation with build dependencies..."
-                python3 -m pip install --quiet --no-cache-dir mysqlclient 2>/dev/null || true
-            }
+                python3 -m pip install --no-cache-dir mysqlclient 2>&1 || {
+                    print_status "⚠️  WARNING: Failed to install mysqlclient, trying alternative method..."
+                    # Try installing from source
+                    python3 -m pip install --no-binary mysqlclient mysqlclient 2>&1 || true
+                }
+            fi
             
         elif [ "$os_family" = "debian" ]; then
             # Debian-based (Ubuntu, Debian)
             print_status "Installing MariaDB development headers for Debian-based system..."
-            apt-get update -y 2>/dev/null || true
-            apt-get install -y libmariadb-dev libmariadb-dev-compat pkg-config build-essential python3-dev python3-pip 2>/dev/null || \
-            apt-get install -y default-libmysqlclient-dev pkg-config build-essential python3-dev python3-pip 2>/dev/null || true
+            apt-get update -y
+            if apt-get install -y libmariadb-dev libmariadb-dev-compat pkg-config build-essential python3-dev python3-pip; then
+                print_status "✓ Successfully installed MariaDB development headers"
+            elif apt-get install -y default-libmysqlclient-dev pkg-config build-essential python3-dev python3-pip; then
+                print_status "✓ Successfully installed MySQL development headers"
+            else
+                print_status "⚠️  WARNING: Failed to install MariaDB/MySQL development headers"
+            fi
             
             # Install mysqlclient Python package
             print_status "Installing mysqlclient Python package..."
-            python3 -m pip install --quiet --upgrade pip setuptools wheel 2>/dev/null || true
-            python3 -m pip install --quiet mysqlclient 2>/dev/null || {
+            python3 -m pip install --upgrade pip setuptools wheel 2>&1 | grep -v "already satisfied" || true
+            if python3 -m pip install mysqlclient 2>&1; then
+                print_status "✓ Successfully installed mysqlclient"
+            else
                 print_status "Retrying mysqlclient installation with build dependencies..."
-                python3 -m pip install --quiet --no-cache-dir mysqlclient 2>/dev/null || true
-            }
+                python3 -m pip install --no-cache-dir mysqlclient 2>&1 || true
+            fi
         fi
         
         # Verify MySQLdb is available
-        if python3 -c "import MySQLdb" 2>/dev/null; then
-            print_status "✓ MySQLdb module is available"
+        print_status "Verifying MySQLdb module availability..."
+        if python3 -c "import MySQLdb; print('MySQLdb version:', MySQLdb.__version__)" 2>&1; then
+            print_status "✓ MySQLdb module is available and working"
         else
-            print_status "⚠️  WARNING: MySQLdb module not available, installation may fail"
-            print_status "Attempting to continue anyway..."
+            print_status "⚠️  WARNING: MySQLdb module not available"
+            print_status "Attempting to diagnose the issue..."
+            python3 -c "import sys; print('Python path:', sys.path)" 2>&1 || true
+            python3 -m pip list | grep -i mysql || print_status "No MySQL-related packages found in pip list"
+            print_status "Attempting to continue anyway, but installation may fail..."
         fi
+        echo ""
         
         # Build installer arguments based on user preferences
         # install.py requires publicip as first positional argument
