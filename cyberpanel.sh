@@ -790,17 +790,66 @@ except:
         # Create a backup
         cp cyberpanel_installer.sh cyberpanel_installer.sh.backup
         
-        # Patch dnf install commands to exclude MariaDB-server
-        # This prevents the installer from trying to upgrade MariaDB
-        sed -i 's/dnf install\([^;]*\)mariadb-server/dnf install\1--exclude=MariaDB-server* mariadb-server/g' cyberpanel_installer.sh 2>/dev/null
-        sed -i 's/dnf install\([^;]*\)MariaDB-server/dnf install\1--exclude=MariaDB-server* MariaDB-server/g' cyberpanel_installer.sh 2>/dev/null
+        # Use Python to properly patch the installer script
+        python3 << 'PYTHON_PATCH' 2>/dev/null || {
+import re
+import sys
+
+try:
+    with open('cyberpanel_installer.sh', 'r') as f:
+        content = f.read()
+    
+    original_content = content
+    
+    # Pattern 1: dnf/yum install commands with mariadb-server/MariaDB-server
+    # Add --exclude=MariaDB-server* before mariadb-server packages
+    patterns = [
+        (r'(dnf install[^;]*?)(mariadb-server|MariaDB-server)', r'\1--exclude=MariaDB-server* \2'),
+        (r'(yum install[^;]*?)(mariadb-server|MariaDB-server)', r'\1--exclude=MariaDB-server* \2'),
+        (r'(dnf install[^;]*?)(\s+)(mariadb-server|MariaDB-server)', r'\1\2--exclude=MariaDB-server* \3'),
+        (r'(yum install[^;]*?)(\s+)(mariadb-server|MariaDB-server)', r'\1\2--exclude=MariaDB-server* \3'),
+    ]
+    
+    for pattern, replacement in patterns:
+        content = re.sub(pattern, replacement, content, flags=re.IGNORECASE)
+    
+    # Pattern 2: If dnf/yum install doesn't have --exclude yet, add it
+    # This catches commands like "dnf install -y mariadb-server mariadb-devel"
+    lines = content.split('\n')
+    new_lines = []
+    for line in lines:
+        # Check if line contains dnf/yum install and mariadb-server but not --exclude
+        if re.search(r'(dnf|yum)\s+install', line, re.IGNORECASE) and \
+           re.search(r'mariadb-server|MariaDB-server', line, re.IGNORECASE) and \
+           '--exclude=MariaDB-server' not in line:
+            # Add --exclude=MariaDB-server* after install flags but before packages
+            line = re.sub(
+                r'((?:dnf|yum)\s+install\s+(?:-[^\s]*\s*)*)',
+                r'\1--exclude=MariaDB-server* ',
+                line,
+                flags=re.IGNORECASE
+            )
+        new_lines.append(line)
+    
+    content = '\n'.join(new_lines)
+    
+    # Only write if content changed
+    if content != original_content:
+        with open('cyberpanel_installer.sh', 'w') as f:
+            f.write(content)
+        print("Installer script patched successfully")
+    else:
+        print("No changes needed in installer script")
         
-        # Also patch yum commands
-        sed -i 's/yum install\([^;]*\)mariadb-server/yum install\1--exclude=MariaDB-server* mariadb-server/g' cyberpanel_installer.sh 2>/dev/null
-        sed -i 's/yum install\([^;]*\)MariaDB-server/yum install\1--exclude=MariaDB-server* MariaDB-server/g' cyberpanel_installer.sh 2>/dev/null
-        
-        # Add exclude to any dnf/yum install command that might install MariaDB
-        sed -i 's/\(dnf\|yum\) install -y\([^;]*\)$/\1 install -y --exclude=MariaDB-server*\2/g' cyberpanel_installer.sh 2>/dev/null
+except Exception as e:
+    print(f"Error patching installer script: {e}")
+    sys.exit(1)
+PYTHON_PATCH
+        # Fallback: Simple sed-based patching if Python fails
+        sed -i 's/\(dnf\|yum\) install\([^;]*\)mariadb-server/\1 install\2--exclude=MariaDB-server* mariadb-server/gi' cyberpanel_installer.sh 2>/dev/null
+        sed -i 's/\(dnf\|yum\) install\([^;]*\)MariaDB-server/\1 install\2--exclude=MariaDB-server* MariaDB-server/gi' cyberpanel_installer.sh 2>/dev/null
+        print_status "Installer script patched (fallback method)"
+        }
         
         print_status "Installer script patched to exclude MariaDB-server from installation"
     fi
