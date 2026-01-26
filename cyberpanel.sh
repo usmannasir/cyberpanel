@@ -623,24 +623,55 @@ install_cyberpanel_direct() {
                 if [ "$major_ver" -lt 12 ]; then
                     print_status "MariaDB $mariadb_version detected, adding dnf exclude to prevent upgrade attempts"
                     
-                    # Add MariaDB-server to dnf excludes
+                    # Add MariaDB-server to dnf excludes (multiple formats for compatibility)
                     local dnf_conf="/etc/dnf/dnf.conf"
+                    local exclude_added=false
+                    
                     if [ -f "$dnf_conf" ]; then
-                        if ! grep -q "exclude=MariaDB-server" "$dnf_conf" 2>/dev/null; then
-                            if grep -q "^exclude=" "$dnf_conf" 2>/dev/null; then
-                                # Append to existing exclude line
-                                sed -i 's/^exclude=\(.*\)/exclude=\1 MariaDB-server/' "$dnf_conf"
-                            else
-                                # Add new exclude line
-                                echo "exclude=MariaDB-server" >> "$dnf_conf"
+                        # Check if [main] section exists
+                        if grep -q "^\[main\]" "$dnf_conf" 2>/dev/null; then
+                            # [main] section exists, add exclude there
+                            if ! grep -q "exclude=.*MariaDB-server" "$dnf_conf" 2>/dev/null; then
+                                if grep -q "^exclude=" "$dnf_conf" 2>/dev/null; then
+                                    # Append to existing exclude line in [main] section
+                                    sed -i '/^\[main\]/,/^\[/ { /^exclude=/ s/$/ MariaDB-server*/ }' "$dnf_conf"
+                                else
+                                    # Add new exclude line after [main]
+                                    sed -i '/^\[main\]/a exclude=MariaDB-server*' "$dnf_conf"
+                                fi
+                                exclude_added=true
                             fi
-                            print_status "Added MariaDB-server to dnf excludes"
+                        else
+                            # No [main] section, add it with exclude
+                            if ! grep -q "exclude=.*MariaDB-server" "$dnf_conf" 2>/dev/null; then
+                                echo "" >> "$dnf_conf"
+                                echo "[main]" >> "$dnf_conf"
+                                echo "exclude=MariaDB-server*" >> "$dnf_conf"
+                                exclude_added=true
+                            fi
                         fi
                     else
                         # Create dnf.conf with exclude
                         echo "[main]" > "$dnf_conf"
-                        echo "exclude=MariaDB-server" >> "$dnf_conf"
-                        print_status "Created dnf.conf with MariaDB-server exclude"
+                        echo "exclude=MariaDB-server*" >> "$dnf_conf"
+                        exclude_added=true
+                    fi
+                    
+                    if [ "$exclude_added" = true ]; then
+                        print_status "Added MariaDB-server* to dnf excludes in $dnf_conf"
+                    fi
+                    
+                    # Also add to yum.conf for compatibility
+                    local yum_conf="/etc/yum.conf"
+                    if [ -f "$yum_conf" ]; then
+                        if ! grep -q "exclude=.*MariaDB-server" "$yum_conf" 2>/dev/null; then
+                            if grep -q "^exclude=" "$yum_conf" 2>/dev/null; then
+                                sed -i 's/^exclude=\(.*\)/exclude=\1 MariaDB-server*/' "$yum_conf"
+                            else
+                                echo "exclude=MariaDB-server*" >> "$yum_conf"
+                            fi
+                            print_status "Added MariaDB-server* to yum excludes"
+                        fi
                     fi
                 fi
             fi
