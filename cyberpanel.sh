@@ -884,12 +884,26 @@ except Exception as e:
     
     # Copy install directory to current location
     if [ "$installer_url" = "https://raw.githubusercontent.com/master3395/cyberpanel/stable/cyberpanel.sh" ]; then
-        cp -r cyberpanel-stable/install . 2>/dev/null || true
-        cp -r cyberpanel-stable/install.sh . 2>/dev/null || true
+        if [ -d "cyberpanel-stable" ]; then
+            cp -r cyberpanel-stable/install . 2>/dev/null || true
+            cp -r cyberpanel-stable/install.sh . 2>/dev/null || true
+        fi
     else
-        cp -r cyberpanel-v2.5.5-dev/install . 2>/dev/null || true
-        cp -r cyberpanel-v2.5.5-dev/install.sh . 2>/dev/null || true
+        if [ -d "cyberpanel-v2.5.5-dev" ]; then
+            cp -r cyberpanel-v2.5.5-dev/install . 2>/dev/null || true
+            cp -r cyberpanel-v2.5.5-dev/install.sh . 2>/dev/null || true
+        fi
     fi
+    
+    # Verify install directory was copied
+    if [ ! -d "install" ]; then
+        print_status "ERROR: install directory not found after extraction"
+        print_status "Archive contents:"
+        ls -la 2>/dev/null | head -20
+        return 1
+    fi
+    
+    print_status "Verified install directory exists"
     
     echo "  ✓ CyberPanel installation files downloaded"
     echo "  🔄 Starting CyberPanel installation..."
