@@ -609,6 +609,44 @@ install_cyberpanel_direct() {
     mkdir -p "$temp_dir"
     cd "$temp_dir" || return 1
     
+    # CRITICAL: Disable MariaDB 12.1 repository and add dnf exclude if MariaDB 10.x is installed
+    # This must be done BEFORE Pre_Install_Setup_Repository runs
+    if command -v rpm >/dev/null 2>&1; then
+        # Check if MariaDB 10.x is installed
+        if rpm -qa | grep -qiE "^(mariadb-server|mysql-server|MariaDB-server)" 2>/dev/null; then
+            local mariadb_version=$(mysql --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+            if [ -n "$mariadb_version" ]; then
+                local major_ver=$(echo "$mariadb_version" | cut -d. -f1)
+                local minor_ver=$(echo "$mariadb_version" | cut -d. -f2)
+                
+                # Check if it's MariaDB 10.x (major version < 12)
+                if [ "$major_ver" -lt 12 ]; then
+                    print_status "MariaDB $mariadb_version detected, adding dnf exclude to prevent upgrade attempts"
+                    
+                    # Add MariaDB-server to dnf excludes
+                    local dnf_conf="/etc/dnf/dnf.conf"
+                    if [ -f "$dnf_conf" ]; then
+                        if ! grep -q "exclude=MariaDB-server" "$dnf_conf" 2>/dev/null; then
+                            if grep -q "^exclude=" "$dnf_conf" 2>/dev/null; then
+                                # Append to existing exclude line
+                                sed -i 's/^exclude=\(.*\)/exclude=\1 MariaDB-server/' "$dnf_conf"
+                            else
+                                # Add new exclude line
+                                echo "exclude=MariaDB-server" >> "$dnf_conf"
+                            fi
+                            print_status "Added MariaDB-server to dnf excludes"
+                        fi
+                    else
+                        # Create dnf.conf with exclude
+                        echo "[main]" > "$dnf_conf"
+                        echo "exclude=MariaDB-server" >> "$dnf_conf"
+                        print_status "Created dnf.conf with MariaDB-server exclude"
+                    fi
+                fi
+            fi
+        fi
+    fi
+    
     # Download the working CyberPanel installation files
     # Use master3395 fork which has our fixes
     echo "Downloading from: https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/cyberpanel.sh"
