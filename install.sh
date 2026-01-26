@@ -148,11 +148,13 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Global variables
-SERVER_OS=""
-OS_FAMILY=""
-PACKAGE_MANAGER=""
-ARCHITECTURE=""
+# Global variables (exported so they persist across function calls)
+# Note: These are initialized as empty but will be set by detect_operating_system()
+# We export them here so they're available to all functions
+export SERVER_OS
+export OS_FAMILY
+export PACKAGE_MANAGER
+export ARCHITECTURE
 BRANCH_NAME=""
 
 # Logging function
@@ -246,15 +248,14 @@ detect_operating_system() {
 install_dependencies() {
     print_status "$BLUE" "📦 Installing dependencies..."
     
-    # Debug: Show current variable values
-    print_status "$YELLOW" "DEBUG: SERVER_OS='$SERVER_OS', OS_FAMILY='$OS_FAMILY', PACKAGE_MANAGER='$PACKAGE_MANAGER'"
-    
     # Ensure variables are set (they should be from detect_operating_system)
+    # Re-detect if they're not set, using get_os_info() to capture values
     if [ -z "$SERVER_OS" ] || [ -z "$OS_FAMILY" ] || [ -z "$PACKAGE_MANAGER" ]; then
         print_status "$YELLOW" "⚠️  OS variables not set, re-detecting..."
         # Try to get them again
         if detect_os; then
-            # Variables should be set by detect_os() in the sourced module
+            # Use get_os_info() to properly capture the values
+            eval $(get_os_info)
             export SERVER_OS OS_FAMILY PACKAGE_MANAGER ARCHITECTURE
             print_status "$GREEN" "✅ Re-detected: SERVER_OS=$SERVER_OS, OS_FAMILY=$OS_FAMILY, PACKAGE_MANAGER=$PACKAGE_MANAGER"
         else
@@ -266,10 +267,11 @@ install_dependencies() {
     # Verify variables one more time before calling
     if [ -z "$SERVER_OS" ] || [ -z "$OS_FAMILY" ] || [ -z "$PACKAGE_MANAGER" ]; then
         print_status "$RED" "❌ OS variables still not set after re-detection"
+        print_status "$RED" "   SERVER_OS='$SERVER_OS', OS_FAMILY='$OS_FAMILY', PACKAGE_MANAGER='$PACKAGE_MANAGER'"
         return 1
     fi
     
-    print_status "$BLUE" "Calling manage_dependencies with: SERVER_OS='$SERVER_OS', OS_FAMILY='$OS_FAMILY', PACKAGE_MANAGER='$PACKAGE_MANAGER'"
+    print_status "$BLUE" "Installing dependencies for $SERVER_OS ($OS_FAMILY) using $PACKAGE_MANAGER..."
     
     if manage_dependencies "$SERVER_OS" "$OS_FAMILY" "$PACKAGE_MANAGER"; then
         print_status "$GREEN" "✅ Dependencies installed successfully"
