@@ -40,32 +40,39 @@ if [[ "$SCRIPT_DIR" == /dev/fd/* ]] || [[ ! -d "$SCRIPT_DIR/modules" ]]; then
     early_log "This may take a minute depending on your connection speed..."
     
     # Try git clone with timeout and better error handling
-    if timeout 120 git clone --depth 1 --branch "$BRANCH_NAME" https://github.com/master3395/cyberpanel.git "$TEMP_DIR/cyberpanel" 2>&1 | tee /tmp/git-clone.log; then
-        if [ -d "$TEMP_DIR/cyberpanel" ] && [ -f "$TEMP_DIR/cyberpanel/install.sh" ]; then
-            SCRIPT_DIR="$TEMP_DIR/cyberpanel"
-            cd "$SCRIPT_DIR"
-            early_log "✅ Repository cloned successfully"
-        else
-            early_log "⚠️  Git clone completed but repository structure is invalid"
-            early_log "Falling back to legacy installer..."
-            rm -rf "$TEMP_DIR/cyberpanel"
+    GIT_CLONE_SUCCESS=false
+    
+    if command -v timeout >/dev/null 2>&1; then
+        if timeout 180 git clone --depth 1 --branch "$BRANCH_NAME" https://github.com/master3395/cyberpanel.git "$TEMP_DIR/cyberpanel" >/tmp/git-clone.log 2>&1; then
+            GIT_CLONE_SUCCESS=true
         fi
     else
-        GIT_ERROR=$(cat /tmp/git-clone.log 2>/dev/null | tail -5)
-        early_log "⚠️  Git clone failed"
+        # No timeout command, try without timeout
+        if git clone --depth 1 --branch "$BRANCH_NAME" https://github.com/master3395/cyberpanel.git "$TEMP_DIR/cyberpanel" >/tmp/git-clone.log 2>&1; then
+            GIT_CLONE_SUCCESS=true
+        fi
+    fi
+    
+    # Verify clone was successful and structure is valid
+    if [ "$GIT_CLONE_SUCCESS" = true ] && [ -d "$TEMP_DIR/cyberpanel" ] && [ -f "$TEMP_DIR/cyberpanel/install.sh" ] && [ -d "$TEMP_DIR/cyberpanel/modules" ]; then
+        SCRIPT_DIR="$TEMP_DIR/cyberpanel"
+        cd "$SCRIPT_DIR"
+        early_log "✅ Repository cloned successfully"
+    else
+        # Git clone failed or structure invalid, use fallback
+        GIT_ERROR=$(tail -3 /tmp/git-clone.log 2>/dev/null | tr '\n' ' ')
+        early_log "⚠️  Git clone failed or incomplete"
         if [ -n "$GIT_ERROR" ]; then
-            early_log "Error details: $GIT_ERROR"
+            early_log "Last error: $GIT_ERROR"
         fi
         early_log "Falling back to legacy installer..."
         rm -rf "$TEMP_DIR/cyberpanel" 2>/dev/null || true
-    fi
-    
-    # If we reach here, git clone failed or was invalid, use fallback
-    if [ ! -d "$SCRIPT_DIR/modules" ]; then
+        
+        # Fallback: try to download install.sh from the old method
         OUTPUT=$(cat /etc/*release 2>/dev/null || echo "")
         if echo "$OUTPUT" | grep -qE "(CentOS|AlmaLinux|CloudLinux|Rocky)" ; then
             SERVER_OS="CentOS8"
-            yum install -y -q curl wget 2>/dev/null || true
+            yum install -y -q curl wget 2>/dev/null || dnf install -y -q curl wget 2>/dev/null || true
         elif echo "$OUTPUT" | grep -qE "Ubuntu" ; then
             SERVER_OS="Ubuntu"
             apt install -y -qq wget curl 2>/dev/null || true
@@ -77,8 +84,13 @@ if [[ "$SCRIPT_DIR" == /dev/fd/* ]] || [[ ! -d "$SCRIPT_DIR/modules" ]]; then
         rm -f /tmp/cyberpanel.sh
         curl --silent -o /tmp/cyberpanel.sh "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null || \
         wget -q -O /tmp/cyberpanel.sh "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null
-        chmod +x /tmp/cyberpanel.sh
-        exec /tmp/cyberpanel.sh "$@"
+        if [ -f /tmp/cyberpanel.sh ]; then
+            chmod +x /tmp/cyberpanel.sh
+            exec /tmp/cyberpanel.sh "$@"
+        else
+            early_log "❌ Failed to download fallback installer"
+            exit 1
+        fi
     fi
 fi
 
