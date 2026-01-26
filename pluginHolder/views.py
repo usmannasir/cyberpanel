@@ -128,7 +128,9 @@ def installed(request):
                 data['desc'] = desc_elem.text
                 data['version'] = version_elem.text
                 data['plugin_dir'] = plugin  # Plugin directory name
-                data['installed'] = os.path.exists(completePath)  # True if installed, False if only in source
+                # Check if plugin is installed (only if it exists in /usr/local/CyberCP/)
+                # Source directory presence doesn't mean installed - it just means the source files are available
+                data['installed'] = os.path.exists(completePath)
                 
                 # Get plugin enabled state (only for installed plugins)
                 if data['installed']:
@@ -140,9 +142,6 @@ def installed(request):
                 data['is_paid'] = False
                 data['patreon_tier'] = None
                 data['patreon_url'] = None
-                data['paypal_me_url'] = None
-                data['paypal_payment_link'] = None
-                data['payment_type'] = None  # 'patreon' or 'paypal'
                 
                 # Get modify date from local file (fast, no API calls)
                 # GitHub commit dates are fetched in the plugin store, not here to avoid timeouts
@@ -156,37 +155,15 @@ def installed(request):
                 
                 data['modify_date'] = modify_date
                 
-                # Calculate NEW and Stale badges based on modify_date
-                data['is_new'] = False
-                data['is_stale'] = False
-                
-                if modify_date and modify_date != 'N/A':
-                    try:
-                        # Parse the modify_date (format: YYYY-MM-DD HH:MM:SS)
-                        modify_date_obj = datetime.strptime(modify_date, '%Y-%m-%d %H:%M:%S')
-                        now = datetime.now()
-                        time_diff = now - modify_date_obj
-                        
-                        # NEW: updated within last 90 days (3 months)
-                        if time_diff.days <= 90:
-                            data['is_new'] = True
-                        
-                        # Stale: not updated in last 2 years (730 days)
-                        if time_diff.days > 730:
-                            data['is_stale'] = True
-                    except Exception:
-                        # If date parsing fails, leave as False
-                        pass
-                
                 # Extract settings URL or main URL for "Manage" button
                 settings_url_elem = root.find('settings_url')
                 url_elem = root.find('url')
                 
                 # Priority: settings_url > url > default pattern
                 # Special handling for core plugins that don't use /plugins/ prefix
-                # emailMarketing removed from INSTALLED_APPS - skip it
                 if plugin == 'emailMarketing':
-                    continue
+                    # emailMarketing is a core CyberPanel plugin, uses /emailMarketing/ not /plugins/emailMarketing/
+                    data['manage_url'] = '/emailMarketing/'
                 elif settings_url_elem is not None and settings_url_elem.text:
                     data['manage_url'] = settings_url_elem.text
                 elif url_elem is not None and url_elem.text:
@@ -194,7 +171,10 @@ def installed(request):
                 else:
                     # Default: try /plugins/{plugin_dir}/settings/ or /plugins/{plugin_dir}/
                     # Only set if plugin is installed (we can't know if the URL exists otherwise)
-                    if os.path.exists(completePath):
+                    # Special handling for emailMarketing
+                    if plugin == 'emailMarketing':
+                        data['manage_url'] = '/emailMarketing/'
+                    elif os.path.exists(completePath):
                         # Check if settings route exists, otherwise use main plugin URL
                         settings_route = f'/plugins/{plugin}/settings/'
                         main_route = f'/plugins/{plugin}/'
@@ -210,59 +190,39 @@ def installed(request):
                 else:
                     data['author'] = 'Unknown'
                 
-                # Extract paid plugin information - support both Patreon and PayPal
+                # Extract paid plugin information
                 paid_elem = root.find('paid')
+                patreon_tier_elem = root.find('patreon_tier')
                 
-                # CRITICAL: Always explicitly set is_paid as boolean True/False
-                if paid_elem is not None and paid_elem.text and str(paid_elem.text).strip().lower() == 'true':
-                    data['is_paid'] = True  # Explicit boolean True
-                    
-                    # Check for PayPal payment method first
-                    paypal_me_elem = root.find('paypal_me_url')
-                    paypal_payment_link_elem = root.find('paypal_payment_link')
-                    
-                    if (paypal_me_elem is not None and paypal_me_elem.text) or (paypal_payment_link_elem is not None and paypal_payment_link_elem.text):
-                        # This is a PayPal plugin
-                        data['payment_type'] = 'paypal'
-                        data['paypal_me_url'] = paypal_me_elem.text if paypal_me_elem is not None and paypal_me_elem.text else None
-                        data['paypal_payment_link'] = paypal_payment_link_elem.text if paypal_payment_link_elem is not None and paypal_payment_link_elem.text else None
-                        data['patreon_tier'] = None
-                        data['patreon_url'] = None
-                    else:
-                        # This is a Patreon plugin (default/fallback)
-                        data['payment_type'] = 'patreon'
-                        patreon_tier_elem = root.find('patreon_tier')
-                        data['patreon_tier'] = patreon_tier_elem.text if patreon_tier_elem is not None and patreon_tier_elem.text else 'CyberPanel Paid Plugin'
-                        data['patreon_url'] = root.find('patreon_url').text if root.find('patreon_url') is not None else 'https://www.patreon.com/c/newstargeted/membership'
-                        data['paypal_me_url'] = None
-                        data['paypal_payment_link'] = None
+                if paid_elem is not None and paid_elem.text and paid_elem.text.lower() == 'true':
+                    data['is_paid'] = True
+                    data['patreon_tier'] = patreon_tier_elem.text if patreon_tier_elem is not None and patreon_tier_elem.text else 'CyberPanel Paid Plugin'
+                    data['patreon_url'] = root.find('patreon_url').text if root.find('patreon_url') is not None else 'https://www.patreon.com/c/newstargeted/membership'
                 else:
-                    data['is_paid'] = False  # Explicit boolean False
+                    data['is_paid'] = False
                     data['patreon_tier'] = None
                     data['patreon_url'] = None
-                    data['paypal_me_url'] = None
-                    data['paypal_payment_link'] = None
-                    data['payment_type'] = None
-                
-                # Force boolean type (defensive programming) - CRITICAL: Always ensure boolean
-                data['is_paid'] = bool(data['is_paid']) if 'is_paid' in data else False
-                
-                # Final safety check - ensure is_paid exists and is boolean before adding to list
-                if 'is_paid' not in data or not isinstance(data['is_paid'], bool):
-                    data['is_paid'] = False
 
-                # Only add to list if plugin is actually installed
-                # Uninstalled plugins should only appear in Plugin Store, not Installed Plugins page
-                if data['installed']:
-                    pluginList.append(data)
+                pluginList.append(data)
                 processed_plugins.add(plugin)  # Mark as processed
             except ElementTree.ParseError as e:
                 errorPlugins.append({'name': plugin, 'error': f'XML parse error: {str(e)}'})
                 logging.writeToFile(f"Plugin {plugin}: XML parse error - {str(e)}")
+                # Don't mark as processed if it failed - let installed check handle it
+                # This ensures plugins that exist in /usr/local/CyberCP/ but have bad source meta.xml still get counted
+                if not os.path.exists(completePath):
+                    # Only skip if it's not actually installed
+                    continue
+                # If it exists in installed location, don't mark as processed so it gets checked there
                 continue
             except Exception as e:
                 errorPlugins.append({'name': plugin, 'error': f'Error loading plugin: {str(e)}'})
                 logging.writeToFile(f"Plugin {plugin}: Error loading - {str(e)}")
+                # Don't mark as processed if it failed - let installed check handle it
+                if not os.path.exists(completePath):
+                    # Only skip if it's not actually installed
+                    continue
+                # If it exists in installed location, don't mark as processed so it gets checked there
                 continue
     
     # Also check for installed plugins that don't have source directories
@@ -324,43 +284,25 @@ def installed(request):
                 
                 data['modify_date'] = modify_date
                 
-                # Calculate NEW and Stale badges based on modify_date
-                data['is_new'] = False
-                data['is_stale'] = False
-                
-                if modify_date and modify_date != 'N/A':
-                    try:
-                        # Parse the modify_date (format: YYYY-MM-DD HH:MM:SS)
-                        modify_date_obj = datetime.strptime(modify_date, '%Y-%m-%d %H:%M:%S')
-                        now = datetime.now()
-                        time_diff = now - modify_date_obj
-                        
-                        # NEW: updated within last 90 days (3 months)
-                        if time_diff.days <= 90:
-                            data['is_new'] = True
-                        
-                        # Stale: not updated in last 2 years (730 days)
-                        if time_diff.days > 730:
-                            data['is_stale'] = True
-                    except Exception:
-                        # If date parsing fails, leave as False
-                        pass
-                
                 # Extract settings URL or main URL
                 settings_url_elem = root.find('settings_url')
                 url_elem = root.find('url')
                 
                 # Priority: settings_url > url > default pattern
                 # Special handling for core plugins that don't use /plugins/ prefix
-                # emailMarketing removed from INSTALLED_APPS - skip it
                 if plugin == 'emailMarketing':
-                    continue
+                    # emailMarketing is a core CyberPanel plugin, uses /emailMarketing/ not /plugins/emailMarketing/
+                    data['manage_url'] = '/emailMarketing/'
                 elif settings_url_elem is not None and settings_url_elem.text:
                     data['manage_url'] = settings_url_elem.text
                 elif url_elem is not None and url_elem.text:
                     data['manage_url'] = url_elem.text
                 else:
                     # Default to /plugins/{plugin}/ for regular plugins
+                    # Special handling for emailMarketing
+                    if plugin == 'emailMarketing':
+                        data['manage_url'] = '/emailMarketing/'
+                    else:
                         # Default to main plugin route (most plugins work from main route)
                         data['manage_url'] = f'/plugins/{plugin}/'
                 
@@ -371,47 +313,16 @@ def installed(request):
                 else:
                     data['author'] = 'Unknown'
                 
-                # Extract paid plugin information - support both Patreon and PayPal
+                # Extract paid plugin information (is_paid already initialized to False above)
                 paid_elem = root.find('paid')
+                patreon_tier_elem = root.find('patreon_tier')
                 
-                # CRITICAL: Always explicitly set is_paid as boolean True/False
-                if paid_elem is not None and paid_elem.text and str(paid_elem.text).strip().lower() == 'true':
-                    data['is_paid'] = True  # Explicit boolean True
-                    
-                    # Check for PayPal payment method first
-                    paypal_me_elem = root.find('paypal_me_url')
-                    paypal_payment_link_elem = root.find('paypal_payment_link')
-                    
-                    if (paypal_me_elem is not None and paypal_me_elem.text) or (paypal_payment_link_elem is not None and paypal_payment_link_elem.text):
-                        # This is a PayPal plugin
-                        data['payment_type'] = 'paypal'
-                        data['paypal_me_url'] = paypal_me_elem.text if paypal_me_elem is not None and paypal_me_elem.text else None
-                        data['paypal_payment_link'] = paypal_payment_link_elem.text if paypal_payment_link_elem is not None and paypal_payment_link_elem.text else None
-                        data['patreon_tier'] = None
-                        data['patreon_url'] = None
-                    else:
-                        # This is a Patreon plugin (default/fallback)
-                        data['payment_type'] = 'patreon'
-                        patreon_tier_elem = root.find('patreon_tier')
-                        data['patreon_tier'] = patreon_tier_elem.text if patreon_tier_elem is not None and patreon_tier_elem.text else 'CyberPanel Paid Plugin'
-                        patreon_url_elem = root.find('patreon_url')
-                        data['patreon_url'] = patreon_url_elem.text if patreon_url_elem is not None and patreon_url_elem.text else 'https://www.patreon.com/membership/27789984'
-                        data['paypal_me_url'] = None
-                        data['paypal_payment_link'] = None
-                else:
-                    data['is_paid'] = False  # Explicit boolean False
-                    data['patreon_tier'] = None
-                    data['patreon_url'] = None
-                    data['paypal_me_url'] = None
-                    data['paypal_payment_link'] = None
-                    data['payment_type'] = None
-                
-                # Force boolean type (defensive programming) - CRITICAL: Always ensure boolean
-                data['is_paid'] = bool(data['is_paid']) if 'is_paid' in data else False
-                
-                # Final safety check - ensure is_paid exists and is boolean before adding to list
-                if 'is_paid' not in data or not isinstance(data['is_paid'], bool):
-                    data['is_paid'] = False
+                if paid_elem is not None and paid_elem.text and paid_elem.text.lower() == 'true':
+                    data['is_paid'] = True
+                    data['patreon_tier'] = patreon_tier_elem.text if patreon_tier_elem is not None and patreon_tier_elem.text else 'CyberPanel Paid Plugin'
+                    patreon_url_elem = root.find('patreon_url')
+                    data['patreon_url'] = patreon_url_elem.text if patreon_url_elem is not None and patreon_url_elem.text else 'https://www.patreon.com/membership/27789984'
+                # else: is_paid already False from initialization above
 
                 pluginList.append(data)
                 
@@ -424,32 +335,39 @@ def installed(request):
                 logging.writeToFile(f"Installed plugin {plugin}: Error loading - {str(e)}")
                 continue
 
-    # Sort plugins deterministically by name to prevent order changes
-    pluginList.sort(key=lambda x: x.get('name', '').lower())
+    # Calculate installed and active counts
+    # Double-check by also counting plugins that actually exist in /usr/local/CyberCP/
+    installed_plugins_in_filesystem = set()
+    if os.path.exists(installedPath):
+        for plugin in os.listdir(installedPath):
+            pluginInstalledDir = os.path.join(installedPath, plugin)
+            if os.path.isdir(pluginInstalledDir):
+                metaXmlPath = os.path.join(pluginInstalledDir, 'meta.xml')
+                if os.path.exists(metaXmlPath):
+                    installed_plugins_in_filesystem.add(plugin)
     
-    # Calculate statistics
-    total_installed = len(pluginList)
-    total_active = sum(1 for plugin in pluginList if plugin.get('enabled', False))
+    # Count installed plugins from the list
+    installed_count = len([p for p in pluginList if p.get('installed', False)])
+    active_count = len([p for p in pluginList if p.get('installed', False) and p.get('enabled', False)])
     
-    # Add cache-busting timestamp to context to prevent browser caching
-    import time
-    context = {
-        'plugins': pluginList,
-        'error_plugins': errorPlugins,
-        'total_installed': total_installed,
-        'total_active': total_active,
-        'cache_buster': int(time.time())  # Add timestamp to force template reload
-    }
+    # If there's a discrepancy, use the filesystem count as the source of truth
+    filesystem_installed_count = len(installed_plugins_in_filesystem)
+    if filesystem_installed_count != installed_count:
+        logging.writeToFile(f"WARNING: Plugin count mismatch! List says {installed_count}, filesystem has {filesystem_installed_count}")
+        logging.writeToFile(f"Plugins in filesystem: {sorted(installed_plugins_in_filesystem)}")
+        logging.writeToFile(f"Plugins in list with installed=True: {[p.get('plugin_dir') for p in pluginList if p.get('installed', False)]}")
+        # Use filesystem count as source of truth
+        installed_count = filesystem_installed_count
     
-    proc = httpProc(request, 'pluginHolder/plugins.html', context, 'admin')
-    response = proc.render()
-    
-    # Add cache-busting headers to prevent browser caching
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-    response['Pragma'] = 'no-cache'
-    response['Expires'] = '0'
-    
-    return response
+    # Debug logging to help identify discrepancies
+    logging.writeToFile(f"Plugin count: Total={len(pluginList)}, Installed={installed_count}, Active={active_count}")
+    for p in pluginList:
+        logging.writeToFile(f"  - {p.get('plugin_dir')}: installed={p.get('installed')}, enabled={p.get('enabled')}")
+
+    proc = httpProc(request, 'pluginHolder/plugins.html',
+                    {'plugins': pluginList, 'error_plugins': errorPlugins, 
+                     'installed_count': installed_count, 'active_count': active_count}, 'admin')
+    return proc.render()
 
 @csrf_exempt
 @require_http_methods(["POST"])
@@ -464,39 +382,13 @@ def install_plugin(request, plugin_name):
                 'error': f'Plugin source not found: {plugin_name}'
             }, status=404)
         
-        # Check if already installed (must have meta.xml to be considered installed)
+        # Check if already installed
         pluginInstalled = '/usr/local/CyberCP/' + plugin_name
         if os.path.exists(pluginInstalled):
-            # Check if it's a valid installation (has meta.xml) or just leftover files
-            metaXmlPath = os.path.join(pluginInstalled, 'meta.xml')
-            if os.path.exists(metaXmlPath):
-                return JsonResponse({
-                    'success': False,
-                    'error': f'Plugin already installed: {plugin_name}'
-                }, status=400)
-            else:
-                # Directory exists but no meta.xml - likely incomplete/uninstalled
-                # Try to clean it up first using pluginInstaller.removeFiles which handles permissions
-                try:
-                    from pluginInstaller.pluginInstaller import pluginInstaller
-                    pluginInstaller.removeFiles(plugin_name)
-                    logging.writeToFile(f'Cleaned up incomplete plugin directory: {plugin_name}')
-                except Exception as e:
-                    logging.writeToFile(f'Warning: Could not clean up incomplete directory: {str(e)}')
-                    # Try fallback: use system rm -rf
-                    try:
-                        import subprocess
-                        result = subprocess.run(['rm', '-rf', pluginInstalled], capture_output=True, text=True, timeout=30)
-                        if result.returncode == 0:
-                            logging.writeToFile(f'Cleaned up incomplete plugin directory using rm -rf: {plugin_name}')
-                        else:
-                            raise Exception(f"rm -rf failed: {result.stderr}")
-                    except Exception as e2:
-                        logging.writeToFile(f'Error: Both cleanup methods failed: {str(e)}, {str(e2)}')
-                        return JsonResponse({
-                            'success': False,
-                            'error': f'Incomplete plugin directory found. Please uninstall first or manually remove: {pluginInstalled}'
-                        }, status=400)
+            return JsonResponse({
+                'success': False,
+                'error': f'Plugin already installed: {plugin_name}'
+            }, status=400)
         
         # Create zip file for installation (pluginInstaller expects a zip)
         import tempfile
@@ -570,17 +462,6 @@ def install_plugin(request, plugin_name):
             # Set plugin to enabled by default after installation
             _set_plugin_state(plugin_name, True)
             
-            # Restart lscpd service to ensure plugin loads immediately
-            try:
-                logging.writeToFile(f"Restarting lscpd service after plugin installation...")
-                subprocess.run(['systemctl', 'restart', 'lscpd'], check=True, timeout=30)
-                logging.writeToFile(f"lscpd service restarted successfully")
-            except subprocess.TimeoutExpired:
-                logging.writeToFile(f"Warning: lscpd restart timed out, but continuing...")
-            except Exception as restart_error:
-                logging.writeToFile(f"Warning: Failed to restart lscpd: {str(restart_error)}")
-                # Don't fail installation if restart fails, just log it
-            
             return JsonResponse({
                 'success': True,
                 'message': f'Plugin {plugin_name} installed successfully'
@@ -628,77 +509,7 @@ def uninstall_plugin(request, plugin_name):
             pluginInstaller.removeMigrations(plugin_name)
         
         # Remove installed directory (but keep source in /home/cyberpanel/plugins/)
-        try:
-            pluginInstaller.removeFiles(plugin_name)
-            
-            # Verify removal succeeded
-            pluginInstalled = '/usr/local/CyberCP/' + plugin_name
-            if os.path.exists(pluginInstalled):
-                # Removal failed - try again with more aggressive methods
-                logging.writeToFile(f'Plugin directory still exists after removeFiles, trying ProcessUtilities')
-                try:
-                    from plogical.processUtilities import ProcessUtilities
-                    import time
-                    import subprocess
-                    
-                    # First, try to fix permissions with ProcessUtilities
-                    chown_cmd = f'chown -R cyberpanel:cyberpanel {pluginInstalled}'
-                    chown_result = ProcessUtilities.normalExecutioner(chown_cmd)
-                    if chown_result == 0:
-                        logging.writeToFile(f'Warning: chown failed for {pluginInstalled}')
-                    
-                    chmod_cmd = f'chmod -R u+rwX,go+rX {pluginInstalled}'
-                    chmod_result = ProcessUtilities.normalExecutioner(chmod_cmd)
-                    if chmod_result == 0:
-                        logging.writeToFile(f'Warning: chmod failed for {pluginInstalled}')
-                    
-                    # Then try to remove with ProcessUtilities
-                    rm_cmd = f'rm -rf {pluginInstalled}'
-                    rm_result = ProcessUtilities.normalExecutioner(rm_cmd)
-                    
-                    # Wait a moment for filesystem to sync
-                    time.sleep(0.5)
-                    
-                    # Verify again
-                    if os.path.exists(pluginInstalled):
-                        # ProcessUtilities failed - try subprocess directly
-                        logging.writeToFile(f'ProcessUtilities removal failed (exit code: {rm_result}), trying subprocess')
-                        try:
-                            # Check if we're root
-                            is_root = os.geteuid() == 0 if hasattr(os, 'geteuid') else False
-                            if is_root:
-                                # Running as root - use subprocess directly
-                                result = subprocess.run(
-                                    ['rm', '-rf', pluginInstalled],
-                                    capture_output=True, text=True, timeout=30
-                                )
-                                time.sleep(0.5)
-                                if os.path.exists(pluginInstalled):
-                                    # Last resort: try with shell=True
-                                    logging.writeToFile(f'Subprocess rm -rf failed, trying with shell=True')
-                                    subprocess.run(f'rm -rf {pluginInstalled}', shell=True, timeout=30)
-                                    time.sleep(0.5)
-                                    if os.path.exists(pluginInstalled):
-                                        raise Exception(f'Plugin directory still exists after all removal attempts: {pluginInstalled}')
-                            else:
-                                # Not root - try with shell=True which might work better
-                                logging.writeToFile(f'Not root, trying rm -rf with shell=True')
-                                subprocess.run(f'rm -rf {pluginInstalled}', shell=True, timeout=30)
-                                time.sleep(0.5)
-                                if os.path.exists(pluginInstalled):
-                                    raise Exception(f'Plugin directory still exists after ProcessUtilities and subprocess removal: {pluginInstalled}')
-                        except Exception as e3:
-                            logging.writeToFile(f'Subprocess removal also failed: {str(e3)}')
-                            raise Exception(f'Failed to remove plugin directory. Tried removeFiles(), ProcessUtilities, and subprocess. Directory still exists: {pluginInstalled}')
-                except Exception as e2:
-                    logging.writeToFile(f'ProcessUtilities removal failed: {str(e2)}')
-                    raise Exception(f'Failed to remove plugin directory. Tried removeFiles() and ProcessUtilities. Directory still exists: {pluginInstalled}')
-        except Exception as e:
-            logging.writeToFile(f'Error removing plugin files: {str(e)}')
-            return JsonResponse({
-                'success': False,
-                'error': f'Failed to remove plugin directory: {str(e)}'
-            }, status=500)
+        pluginInstaller.removeFiles(plugin_name)
         
         # DON'T call informCyberPanelRemoval - we want to keep the source directory
         # so users can reinstall the plugin later
@@ -852,156 +663,51 @@ def _enrich_store_plugins(plugins):
             continue
         
         # Check if plugin is installed locally
-        # IMPORTANT: Only check installed location, not source location
-        # Plugins in /home/cyberpanel/plugins/ are just source files, not installed plugins
+        # Plugin is only considered "installed" if it exists in /usr/local/CyberCP/
+        # Source directory presence doesn't mean installed - it just means the source files are available
         installed_path = os.path.join(plugin_install_dir, plugin_dir)
-        installed_meta = os.path.join(installed_path, 'meta.xml')
         
-        # Plugin is only considered installed if:
-        # 1. The plugin directory exists in /usr/local/CyberCP/
-        # 2. AND meta.xml exists (indicates actual installation, not just leftover files)
-        plugin['installed'] = os.path.exists(installed_path) and os.path.exists(installed_meta)
+        plugin['installed'] = os.path.exists(installed_path)
         
         # Check if plugin is enabled (only if installed)
         if plugin['installed']:
-            try:
-                plugin['enabled'] = _is_plugin_enabled(plugin_dir)
-            except Exception as e:
-                logging.writeToFile(f"Error checking enabled status for {plugin_dir}: {str(e)}")
-                plugin['enabled'] = False  # Default to disabled on error
+            plugin['enabled'] = _is_plugin_enabled(plugin_dir)
         else:
             plugin['enabled'] = False
         
         # Ensure is_paid field exists and is properly set (default to False if not set or invalid)
-        # CRITICAL FIX: Always check local meta.xml FIRST as source of truth
-        # This ensures cache entries without is_paid are properly enriched
-        # Check installed location first, then fallback to source location for metadata
-        meta_path = None
-        source_path = os.path.join(plugin_source_dir, plugin_dir)
-        if os.path.exists(installed_meta):
-            meta_path = installed_meta
-        elif os.path.exists(source_path):
-            source_meta = os.path.join(source_path, 'meta.xml')
-            if os.path.exists(source_meta):
-                meta_path = source_meta
+        # Handle all possible cases: missing, None, empty string, string values, boolean
+        is_paid_value = plugin.get('is_paid', False)
         
-        # If we have a local meta.xml, use it as the source of truth (most reliable)
-        if meta_path and os.path.exists(meta_path):
-            try:
-                pluginMetaData = ElementTree.parse(meta_path)
-                root = pluginMetaData.getroot()
-                paid_elem = root.find('paid')
-                if paid_elem is not None and paid_elem.text and str(paid_elem.text).strip().lower() == 'true':
-                    plugin['is_paid'] = True
-                    
-                    # Check for PayPal payment method first
-                    paypal_me_elem = root.find('paypal_me_url')
-                    paypal_payment_link_elem = root.find('paypal_payment_link')
-                    
-                    if (paypal_me_elem is not None and paypal_me_elem.text) or (paypal_payment_link_elem is not None and paypal_payment_link_elem.text):
-                        # This is a PayPal plugin
-                        plugin['payment_type'] = 'paypal'
-                        plugin['paypal_me_url'] = paypal_me_elem.text if paypal_me_elem is not None and paypal_me_elem.text else None
-                        plugin['paypal_payment_link'] = paypal_payment_link_elem.text if paypal_payment_link_elem is not None and paypal_payment_link_elem.text else None
-                        plugin['patreon_tier'] = None
-                        plugin['patreon_url'] = None
+        # Normalize is_paid to boolean
+        if is_paid_value is None or is_paid_value == '' or is_paid_value == 'false' or is_paid_value == 'False' or is_paid_value == '0':
+            plugin['is_paid'] = False
+        elif is_paid_value is True or is_paid_value == 'true' or is_paid_value == 'True' or is_paid_value == '1' or str(is_paid_value).lower() == 'true':
+            plugin['is_paid'] = True
+        elif 'is_paid' not in plugin or plugin.get('is_paid') is None:
+            # Try to check from local meta.xml if available
+            meta_path = None
+            if os.path.exists(installed_path):
+                meta_path = os.path.join(installed_path, 'meta.xml')
+            elif os.path.exists(source_path):
+                meta_path = os.path.join(source_path, 'meta.xml')
+            
+            if meta_path and os.path.exists(meta_path):
+                try:
+                    pluginMetaData = ElementTree.parse(meta_path)
+                    root = pluginMetaData.getroot()
+                    paid_elem = root.find('paid')
+                    if paid_elem is not None and paid_elem.text and paid_elem.text.lower() == 'true':
+                        plugin['is_paid'] = True
                     else:
-                        # This is a Patreon plugin (default/fallback)
-                        plugin['payment_type'] = 'patreon'
-                        patreon_tier_elem = root.find('patreon_tier')
-                        plugin['patreon_tier'] = patreon_tier_elem.text if patreon_tier_elem is not None and patreon_tier_elem.text else 'CyberPanel Paid Plugin'
-                        patreon_url_elem = root.find('patreon_url')
-                        plugin['patreon_url'] = patreon_url_elem.text if patreon_url_elem is not None and patreon_url_elem.text else 'https://www.patreon.com/c/newstargeted/membership'
-                        plugin['paypal_me_url'] = None
-                        plugin['paypal_payment_link'] = None
-                else:
+                        plugin['is_paid'] = False
+                except:
                     plugin['is_paid'] = False
-                    plugin['payment_type'] = None
-                    plugin['patreon_tier'] = None
-                    plugin['patreon_url'] = None
-                    plugin['paypal_me_url'] = None
-                    plugin['paypal_payment_link'] = None
-            except Exception as e:
-                logging.writeToFile(f"Error parsing meta.xml for {plugin_dir} in _enrich_store_plugins: {str(e)}")
-                # Fall back to normalizing existing value
-                is_paid_value = plugin.get('is_paid', False)
-                if is_paid_value is None or is_paid_value == '' or is_paid_value == 'false' or is_paid_value == 'False' or is_paid_value == '0':
-                    plugin['is_paid'] = False
-                elif is_paid_value is True or is_paid_value == 'true' or is_paid_value == 'True' or is_paid_value == '1' or str(is_paid_value).lower() == 'true':
-                    plugin['is_paid'] = True
-                else:
-                    plugin['is_paid'] = False
-        else:
-            # No local meta.xml, normalize existing value from cache/API
-            is_paid_value = plugin.get('is_paid', False)
-            if is_paid_value is None or is_paid_value == '' or is_paid_value == 'false' or is_paid_value == 'False' or is_paid_value == '0':
-                plugin['is_paid'] = False
-            elif is_paid_value is True or is_paid_value == 'true' or is_paid_value == 'True' or is_paid_value == '1' or str(is_paid_value).lower() == 'true':
-                plugin['is_paid'] = True
             else:
                 plugin['is_paid'] = False  # Default to free if we can't determine
-        
-        # Ensure it's a proper boolean (not string or other type) - CRITICAL for consistency
-        if plugin['is_paid'] not in [True, False]:
-            plugin['is_paid'] = bool(plugin['is_paid'])
-        # Final safety check - force boolean type (defensive programming)
-        plugin['is_paid'] = True if plugin['is_paid'] is True else False
-        
-        # Ensure payment_type is set if is_paid is True
-        if plugin['is_paid'] and 'payment_type' not in plugin:
-            # Default to patreon if payment_type not set
-            plugin['payment_type'] = 'patreon'
-        
-        # Calculate NEW and Stale badges based on modify_date
-        modify_date_str = plugin.get('modify_date', 'N/A')
-        plugin['is_new'] = False
-        plugin['is_stale'] = False
-        
-        if modify_date_str and modify_date_str != 'N/A':
-            try:
-                # Parse the modify_date (could be various formats)
-                modify_date = None
-                if isinstance(modify_date_str, str):
-                    # Handle ISO format with timezone (from GitHub API)
-                    if 'T' in modify_date_str:
-                        # ISO format: 2026-01-25T04:24:52Z or 2026-01-25T04:24:52+00:00
-                        try:
-                            # Remove timezone info for simpler parsing
-                            date_part = modify_date_str.split('T')[0]
-                            time_part = modify_date_str.split('T')[1].split('+')[0].split('Z')[0]
-                            modify_date = datetime.strptime(f"{date_part} {time_part}", '%Y-%m-%d %H:%M:%S')
-                        except:
-                            # Fallback: try standard format
-                            modify_date = datetime.strptime(modify_date_str[:19], '%Y-%m-%d %H:%M:%S')
-                    else:
-                        # Standard format: YYYY-MM-DD HH:MM:SS
-                        modify_date = datetime.strptime(modify_date_str, '%Y-%m-%d %H:%M:%S')
-                else:
-                    modify_date = modify_date_str
-                
-                if modify_date:
-                    now = datetime.now()
-                    # Handle timezone-aware datetime
-                    if modify_date.tzinfo:
-                        from datetime import timezone
-                        modify_date = modify_date.replace(tzinfo=None)
-                    
-                    # Calculate time difference
-                    time_diff = now - modify_date
-                    
-                    # NEW: updated within last 3 months (90 days)
-                    if time_diff.days <= 90:
-                        plugin['is_new'] = True
-                    
-                    # Stale: not updated in last 2 years (730 days)
-                    if time_diff.days > 730:
-                        plugin['is_stale'] = True
-                        
-            except Exception as e:
-                logging.writeToFile(f"Error calculating NEW/Stale status for {plugin_dir}: {str(e)}")
-                # Default to not new and not stale if parsing fails
-                plugin['is_new'] = False
-                plugin['is_stale'] = False
+        else:
+            # Already set, but ensure it's boolean
+            plugin['is_paid'] = bool(plugin['is_paid']) if plugin['is_paid'] not in [True, False] else plugin['is_paid']
         
         enriched.append(plugin)
     
@@ -1074,79 +780,19 @@ def _fetch_plugins_from_github():
                     logging.writeToFile(f"Could not fetch commit date for {plugin_name}: {str(e)}")
                     modify_date = 'N/A'
                 
-                # Calculate NEW and Stale badges based on modify_date
-                is_new = False
-                is_stale = False
-                
-                if modify_date and modify_date != 'N/A':
-                    try:
-                        # Parse the modify_date
-                        modify_date_obj = None
-                        if isinstance(modify_date, str):
-                            if 'T' in modify_date:
-                                # ISO format: 2026-01-25T04:24:52Z or 2026-01-25T04:24:52+00:00
-                                try:
-                                    date_part = modify_date.split('T')[0]
-                                    time_part = modify_date.split('T')[1].split('+')[0].split('Z')[0]
-                                    modify_date_obj = datetime.strptime(f"{date_part} {time_part}", '%Y-%m-%d %H:%M:%S')
-                                except:
-                                    modify_date_obj = datetime.strptime(modify_date[:19], '%Y-%m-%d %H:%M:%S')
-                            else:
-                                # Standard format: YYYY-MM-DD HH:MM:SS
-                                modify_date_obj = datetime.strptime(modify_date, '%Y-%m-%d %H:%M:%S')
-                        else:
-                            modify_date_obj = modify_date
-                        
-                        if modify_date_obj:
-                            now = datetime.now()
-                            if modify_date_obj.tzinfo:
-                                modify_date_obj = modify_date_obj.replace(tzinfo=None)
-                            
-                            time_diff = now - modify_date_obj
-                            
-                            # NEW: updated within last 3 months (90 days)
-                            if time_diff.days <= 90:
-                                is_new = True
-                            
-                            # Stale: not updated in last 2 years (730 days)
-                            if time_diff.days > 730:
-                                is_stale = True
-                    except Exception as e:
-                        logging.writeToFile(f"Error calculating NEW/Stale for {plugin_name}: {str(e)}")
-                
-                # Extract paid plugin information - support both Patreon and PayPal
+                # Extract paid plugin information
                 paid_elem = root.find('paid')
+                patreon_tier_elem = root.find('patreon_tier')
                 
                 is_paid = False
                 patreon_tier = None
                 patreon_url = None
-                paypal_me_url = None
-                paypal_payment_link = None
-                payment_type = None
                 
-                if paid_elem is not None and paid_elem.text and str(paid_elem.text).strip().lower() == 'true':
+                if paid_elem is not None and paid_elem.text and paid_elem.text.lower() == 'true':
                     is_paid = True
-                    
-                    # Check for PayPal payment method first
-                    paypal_me_elem = root.find('paypal_me_url')
-                    paypal_payment_link_elem = root.find('paypal_payment_link')
-                    
-                    if (paypal_me_elem is not None and paypal_me_elem.text) or (paypal_payment_link_elem is not None and paypal_payment_link_elem.text):
-                        # This is a PayPal plugin
-                        payment_type = 'paypal'
-                        paypal_me_url = paypal_me_elem.text if paypal_me_elem is not None and paypal_me_elem.text else None
-                        paypal_payment_link = paypal_payment_link_elem.text if paypal_payment_link_elem is not None and paypal_payment_link_elem.text else None
-                        patreon_tier = None
-                        patreon_url = None
-                    else:
-                        # This is a Patreon plugin (default/fallback)
-                        payment_type = 'patreon'
-                        patreon_tier_elem = root.find('patreon_tier')
-                        patreon_tier = patreon_tier_elem.text if patreon_tier_elem is not None and patreon_tier_elem.text else 'CyberPanel Paid Plugin'
-                        patreon_url_elem = root.find('patreon_url')
-                        patreon_url = patreon_url_elem.text if patreon_url_elem is not None and patreon_url_elem.text else 'https://www.patreon.com/c/newstargeted/membership'
-                        paypal_me_url = None
-                        paypal_payment_link = None
+                    patreon_tier = patreon_tier_elem.text if patreon_tier_elem is not None and patreon_tier_elem.text else 'CyberPanel Paid Plugin'
+                    patreon_url_elem = root.find('patreon_url')
+                    patreon_url = patreon_url_elem.text if patreon_url_elem is not None else 'https://www.patreon.com/c/newstargeted/membership'
                 
                 plugin_data = {
                     'plugin_dir': plugin_name,
@@ -1160,14 +806,9 @@ def _fetch_plugins_from_github():
                     'github_url': f'https://github.com/master3395/cyberpanel-plugins/tree/main/{plugin_name}',
                     'about_url': f'https://github.com/master3395/cyberpanel-plugins/tree/main/{plugin_name}',
                     'modify_date': modify_date,
-                    'is_paid': bool(is_paid),  # Force boolean type
+                    'is_paid': is_paid,
                     'patreon_tier': patreon_tier,
-                    'patreon_url': patreon_url,
-                    'paypal_me_url': paypal_me_url,
-                    'paypal_payment_link': paypal_payment_link,
-                    'payment_type': payment_type,
-                    'is_new': is_new,
-                    'is_stale': is_stale
+                    'patreon_url': patreon_url
                 }
                 
                 plugins.append(plugin_data)
@@ -1213,120 +854,53 @@ def _fetch_plugins_from_github():
 @require_http_methods(["GET"])
 def fetch_plugin_store(request):
     """Fetch plugins from the plugin store with caching"""
-    try:
-        mailUtilities.checkHome()
-    except Exception as e:
-        logging.writeToFile(f"Warning in mailUtilities.checkHome: {str(e)}")
+    mailUtilities.checkHome()
     
-    # Add cache-busting headers to prevent browser caching
-    response_headers = {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-    }
+    # Try to get from cache first
+    cached_plugins = _get_cached_plugins()
+    if cached_plugins is not None:
+        # Enrich cached plugins with installed/enabled status
+        enriched_plugins = _enrich_store_plugins(cached_plugins)
+        return JsonResponse({
+            'success': True,
+            'plugins': enriched_plugins,
+            'cached': True
+        })
     
+    # Cache miss or expired - fetch from GitHub
     try:
-        # Try to get from cache first
-        cached_plugins = _get_cached_plugins()
-        if cached_plugins is not None:
-            # Sort plugins deterministically by name to prevent order changes
-            cached_plugins.sort(key=lambda x: x.get('name', '').lower())
-            
-            # Enrich cached plugins with installed/enabled status
-            try:
-                enriched_plugins = _enrich_store_plugins(cached_plugins)
-            except Exception as enrich_error:
-                logging.writeToFile(f"Error enriching cached plugins: {str(enrich_error)}")
-                # Return cached plugins without enrichment if enrichment fails
-                enriched_plugins = cached_plugins
-                for plugin in enriched_plugins:
-                    plugin.setdefault('installed', False)
-                    plugin.setdefault('enabled', False)
-                    plugin.setdefault('is_paid', False)
-            
-            response = JsonResponse({
-                'success': True,
-                'plugins': enriched_plugins,
-                'cached': True
-            }, json_dumps_params={'ensure_ascii': False})
-            # Add headers
-            for key, value in response_headers.items():
-                response[key] = value
-            return response
+        plugins = _fetch_plugins_from_github()
         
-        # Cache miss or expired - fetch from GitHub
-        try:
-            plugins = _fetch_plugins_from_github()
-            
-            # Sort plugins deterministically by name to prevent order changes
-            plugins.sort(key=lambda x: x.get('name', '').lower())
-            
-            # Enrich plugins with installed/enabled status
-            try:
-                enriched_plugins = _enrich_store_plugins(plugins)
-            except Exception as enrich_error:
-                logging.writeToFile(f"Error enriching plugins from GitHub: {str(enrich_error)}")
-                # Return plugins without enrichment if enrichment fails
-                enriched_plugins = plugins
-                for plugin in enriched_plugins:
-                    plugin.setdefault('installed', False)
-                    plugin.setdefault('enabled', False)
-                    plugin.setdefault('is_paid', False)
-            
-            # Save to cache (save original, not enriched, to keep cache clean)
-            if plugins:
-                _save_plugins_cache(plugins)
-            
-            response = JsonResponse({
-                'success': True,
-                'plugins': enriched_plugins,
-                'cached': False
-            }, json_dumps_params={'ensure_ascii': False})
-            # Add cache-busting headers
-            for key, value in response_headers.items():
-                response[key] = value
-            return response
-            
-        except Exception as e:
-            error_message = str(e)
-            
-            # If rate limited, try to use stale cache as fallback
-            if '403' in error_message or 'rate limit' in error_message.lower():
-                stale_cache = _get_cached_plugins(allow_expired=True)  # Get cache even if expired
-                if stale_cache is not None:
-                    logging.writeToFile("Using stale cache due to rate limit")
-                    # Sort plugins deterministically by name to prevent order changes
-                    stale_cache.sort(key=lambda x: x.get('name', '').lower())
-                    try:
-                        enriched_plugins = _enrich_store_plugins(stale_cache)
-                    except Exception as enrich_error:
-                        logging.writeToFile(f"Error enriching stale cache: {str(enrich_error)}")
-                        enriched_plugins = stale_cache
-                        for plugin in enriched_plugins:
-                            plugin.setdefault('installed', False)
-                            plugin.setdefault('enabled', False)
-                            plugin.setdefault('is_paid', False)
-                    response = JsonResponse({
-                        'success': True,
-                        'plugins': enriched_plugins,
-                        'cached': True,
-                        'warning': 'Using cached data due to GitHub rate limit. Data may be outdated.'
-                    }, json_dumps_params={'ensure_ascii': False})
-                    # Add cache-busting headers
-                    for key, value in response_headers.items():
-                        response[key] = value
-                    return response
-            
-            # No cache available, return error
-            return JsonResponse({
-                'success': False,
-                'error': error_message,
-                'plugins': []
-            }, status=500)
-    except Exception as outer_error:
-        # Catch any other unexpected errors
-        error_message = str(outer_error)
-        logging.writeToFile(f"Unexpected error in fetch_plugin_store: {error_message}")
+        # Enrich plugins with installed/enabled status
+        enriched_plugins = _enrich_store_plugins(plugins)
+        
+        # Save to cache (save original, not enriched, to keep cache clean)
+        if plugins:
+            _save_plugins_cache(plugins)
+        
+        return JsonResponse({
+            'success': True,
+            'plugins': enriched_plugins,
+            'cached': False
+        })
+    
+    except Exception as e:
+        error_message = str(e)
+        
+        # If rate limited, try to use stale cache as fallback
+        if '403' in error_message or 'rate limit' in error_message.lower():
+            stale_cache = _get_cached_plugins(allow_expired=True)  # Get cache even if expired
+            if stale_cache is not None:
+                logging.writeToFile("Using stale cache due to rate limit")
+                enriched_plugins = _enrich_store_plugins(stale_cache)
+                return JsonResponse({
+                    'success': True,
+                    'plugins': enriched_plugins,
+                    'cached': True,
+                    'warning': 'Using cached data due to GitHub rate limit. Data may be outdated.'
+                })
+        
+        # No cache available, return error
         return JsonResponse({
             'success': False,
             'error': error_message,
@@ -1340,38 +914,13 @@ def install_from_store(request, plugin_name):
     mailUtilities.checkHome()
     
     try:
-        # Check if already installed (must have meta.xml to be considered installed)
+        # Check if already installed
         pluginInstalled = '/usr/local/CyberCP/' + plugin_name
         if os.path.exists(pluginInstalled):
-            # Check if it's a valid installation (has meta.xml) or just leftover files
-            metaXmlPath = os.path.join(pluginInstalled, 'meta.xml')
-            if os.path.exists(metaXmlPath):
-                return JsonResponse({
-                    'success': False,
-                    'error': f'Plugin already installed: {plugin_name}'
-                }, status=400)
-            else:
-                # Directory exists but no meta.xml - likely incomplete/uninstalled
-                # Try to clean it up first using pluginInstaller.removeFiles which handles permissions
-                # pluginInstaller is already imported at module level, no need to import again
-                try:
-                    pluginInstaller.removeFiles(plugin_name)
-                    logging.writeToFile(f'Cleaned up incomplete plugin directory: {plugin_name}')
-                except Exception as e:
-                    logging.writeToFile(f'Warning: Could not clean up incomplete directory: {str(e)}')
-                    # Try fallback: use system rm -rf
-                    try:
-                        result = subprocess.run(['rm', '-rf', pluginInstalled], capture_output=True, text=True, timeout=30)
-                        if result.returncode == 0:
-                            logging.writeToFile(f'Cleaned up incomplete plugin directory using rm -rf: {plugin_name}')
-                        else:
-                            raise Exception(f"rm -rf failed: {result.stderr}")
-                    except Exception as e2:
-                        logging.writeToFile(f'Error: Both cleanup methods failed: {str(e)}, {str(e2)}')
-                        return JsonResponse({
-                            'success': False,
-                            'error': f'Incomplete plugin directory found. Please uninstall first or manually remove: {pluginInstalled}'
-                        }, status=400)
+            return JsonResponse({
+                'success': False,
+                'error': f'Plugin already installed: {plugin_name}'
+            }, status=400)
         
         # Download plugin from GitHub
         import tempfile
@@ -1493,21 +1042,9 @@ def install_from_store(request, plugin_name):
                     else:
                         raise Exception(f'Plugin installation failed: {error_msg}')
                 
-                # Wait a moment for file system to sync
+                # Wait a moment for file system to sync and service to restart
                 import time
-                time.sleep(2)  # Wait for file system sync
-                
-                # Restart lscpd service to ensure plugin loads immediately
-                try:
-                    logging.writeToFile(f"Restarting lscpd service after plugin installation...")
-                    subprocess.run(['systemctl', 'restart', 'lscpd'], check=True, timeout=30)
-                    logging.writeToFile(f"lscpd service restarted successfully")
-                    time.sleep(2)  # Wait for service to fully restart
-                except subprocess.TimeoutExpired:
-                    logging.writeToFile(f"Warning: lscpd restart timed out, but continuing...")
-                except Exception as restart_error:
-                    logging.writeToFile(f"Warning: Failed to restart lscpd: {str(restart_error)}")
-                    # Don't fail installation if restart fails, just log it
+                time.sleep(3)  # Increased wait time for file system sync
                 
                 # Verify plugin was actually installed
                 pluginInstalled = '/usr/local/CyberCP/' + plugin_name
