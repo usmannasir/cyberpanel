@@ -353,7 +353,7 @@ class preFlightsChecks:
             # These packages from MariaDB 12.1 can conflict with MariaDB 10.11
             self.stdOut("Removing conflicting MariaDB compat packages...", 1)
             try:
-                # Remove MariaDB-server-compat packages that conflict with MariaDB 10.11
+                subprocess.run("rpm -e --nodeps MariaDB-server-compat-12.1.2-1.el9.noarch 2>/dev/null; true", shell=True, timeout=30)
                 subprocess.run("dnf remove -y 'MariaDB-server-compat*' 2>/dev/null || true", shell=True, timeout=60)
                 r = subprocess.run("rpm -qa 2>/dev/null | grep -i MariaDB-server-compat", shell=True, capture_output=True, text=True, timeout=30)
                 for line in (r.stdout or "").strip().splitlines():
@@ -1815,6 +1815,7 @@ module cyberpanel_ols {
                 # These packages from MariaDB 12.1 can conflict with MariaDB 10.11
                 self.stdOut("Removing conflicting MariaDB compat packages...", 1)
                 try:
+                    subprocess.run("rpm -e --nodeps MariaDB-server-compat-12.1.2-1.el9.noarch 2>/dev/null; true", shell=True, timeout=30)
                     subprocess.run("dnf remove -y 'MariaDB-server-compat*' 2>/dev/null || true", shell=True, timeout=60)
                     r = subprocess.run("rpm -qa 2>/dev/null | grep -i MariaDB-server-compat", shell=True, capture_output=True, text=True, timeout=30)
                     for line in (r.stdout or "").strip().splitlines():
@@ -6441,6 +6442,7 @@ def main():
     # This package conflicts with MariaDB 10.11 and must be removed early
     preFlightsChecks.stdOut("Removing conflicting MariaDB-server-compat packages...", 1)
     try:
+        subprocess.run("rpm -e --nodeps MariaDB-server-compat-12.1.2-1.el9.noarch 2>/dev/null; true", shell=True, timeout=30)
         subprocess.run("dnf remove -y 'MariaDB-server-compat*' 2>/dev/null || true", shell=True, timeout=60)
         r = subprocess.run("rpm -qa 2>/dev/null | grep -i MariaDB-server-compat", shell=True, capture_output=True, text=True, timeout=30)
         for line in (r.stdout or "").strip().splitlines():

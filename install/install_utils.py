@@ -556,6 +556,11 @@ def call(command, distro, bracket, message, log=0, do_exit=0, code=os.EX_OK, she
                 os._exit(code)
             return False
 
+    # CRITICAL: Use shell=True for commands with shell metacharacters
+    # Avoids "No matching repo to modify: 2>/dev/null, true, ||" when shlex.split splits them
+    if not shell and any(x in command for x in (' || ', ' 2>/dev', ' 2>', ' | ', '; true', '|| true')):
+        shell = True
+
     # CRITICAL: For mysql/mariadb commands, always use shell=True and full binary path
     # This fixes "No such file or directory: 'mysql'" when run via shlex.split
     if not shell and ('mysql' in command or 'mariadb' in command):
