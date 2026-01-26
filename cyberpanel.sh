@@ -791,7 +791,7 @@ except:
         cp cyberpanel_installer.sh cyberpanel_installer.sh.backup
         
         # Use Python to properly patch the installer script
-        python3 << 'PYTHON_PATCH' 2>/dev/null || {
+        python3 -c "
 import re
 import sys
 
@@ -801,55 +801,49 @@ try:
     
     original_content = content
     
-    # Pattern 1: dnf/yum install commands with mariadb-server/MariaDB-server
-    # Add --exclude=MariaDB-server* before mariadb-server packages
-    patterns = [
-        (r'(dnf install[^;]*?)(mariadb-server|MariaDB-server)', r'\1--exclude=MariaDB-server* \2'),
-        (r'(yum install[^;]*?)(mariadb-server|MariaDB-server)', r'\1--exclude=MariaDB-server* \2'),
-        (r'(dnf install[^;]*?)(\s+)(mariadb-server|MariaDB-server)', r'\1\2--exclude=MariaDB-server* \3'),
-        (r'(yum install[^;]*?)(\s+)(mariadb-server|MariaDB-server)', r'\1\2--exclude=MariaDB-server* \3'),
-    ]
+    # Pattern: Add --exclude=MariaDB-server* to dnf/yum install commands that install mariadb-server
+    # Match: (dnf|yum) install [flags] [packages including mariadb-server]
+    def add_exclude(match):
+        cmd = match.group(0)
+        # Check if --exclude is already present
+        if '--exclude=MariaDB-server' in cmd:
+            return cmd
+        # Add --exclude=MariaDB-server* after install and flags, before packages
+        return re.sub(r'((?:dnf|yum)\s+install\s+(?:-[^\s]+\s+)*)', r'\1--exclude=MariaDB-server* ', cmd, flags=re.IGNORECASE)
     
-    for pattern, replacement in patterns:
-        content = re.sub(pattern, replacement, content, flags=re.IGNORECASE)
+    # Find all dnf/yum install commands that mention mariadb-server
+    content = re.sub(
+        r'(?:dnf|yum)\s+install[^;]*?mariadb-server[^;]*',
+        add_exclude,
+        content,
+        flags=re.IGNORECASE | re.MULTILINE
+    )
     
-    # Pattern 2: If dnf/yum install doesn't have --exclude yet, add it
-    # This catches commands like "dnf install -y mariadb-server mariadb-devel"
-    lines = content.split('\n')
-    new_lines = []
-    for line in lines:
-        # Check if line contains dnf/yum install and mariadb-server but not --exclude
-        if re.search(r'(dnf|yum)\s+install', line, re.IGNORECASE) and \
-           re.search(r'mariadb-server|MariaDB-server', line, re.IGNORECASE) and \
-           '--exclude=MariaDB-server' not in line:
-            # Add --exclude=MariaDB-server* after install flags but before packages
-            line = re.sub(
-                r'((?:dnf|yum)\s+install\s+(?:-[^\s]*\s*)*)',
-                r'\1--exclude=MariaDB-server* ',
-                line,
-                flags=re.IGNORECASE
-            )
-        new_lines.append(line)
-    
-    content = '\n'.join(new_lines)
+    # Also handle MariaDB-server (capitalized)
+    content = re.sub(
+        r'(?:dnf|yum)\s+install[^;]*?MariaDB-server[^;]*',
+        add_exclude,
+        content,
+        flags=re.IGNORECASE | re.MULTILINE
+    )
     
     # Only write if content changed
     if content != original_content:
         with open('cyberpanel_installer.sh', 'w') as f:
             f.write(content)
-        print("Installer script patched successfully")
+        print('Installer script patched successfully')
     else:
-        print("No changes needed in installer script")
+        print('No changes needed in installer script')
         
 except Exception as e:
-    print(f"Error patching installer script: {e}")
+    print(f'Error patching installer script: {e}')
     sys.exit(1)
-PYTHON_PATCH
+" 2>/dev/null && print_status "Installer script patched successfully" || {
         # Fallback: Simple sed-based patching if Python fails
         sed -i 's/\(dnf\|yum\) install\([^;]*\)mariadb-server/\1 install\2--exclude=MariaDB-server* mariadb-server/gi' cyberpanel_installer.sh 2>/dev/null
         sed -i 's/\(dnf\|yum\) install\([^;]*\)MariaDB-server/\1 install\2--exclude=MariaDB-server* MariaDB-server/gi' cyberpanel_installer.sh 2>/dev/null
         print_status "Installer script patched (fallback method)"
-        }
+    }
         
         print_status "Installer script patched to exclude MariaDB-server from installation"
     fi
