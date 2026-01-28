@@ -66,6 +66,15 @@ def addRule(request):
         return redirect(loadLoginPage)
 
 
+def modifyRule(request):
+    try:
+        userID = request.session['userID']
+        fm = FirewallManager()
+        return fm.modifyRule(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 def deleteRule(request):
     try:
         userID = request.session['userID']
@@ -666,6 +675,14 @@ def addBannedIP(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def modifyBannedIP(request):
+    try:
+        userID = request.session['userID']
+        fm = FirewallManager()
+        return fm.modifyBannedIP(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
 def removeBannedIP(request):
     try:
         userID = request.session['userID']
@@ -703,5 +720,30 @@ def importFirewallRules(request):
         else:
             # Handle JSON data
             return fm.importFirewallRules(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def exportBannedIPs(request):
+    try:
+        userID = request.session['userID']
+        fm = FirewallManager()
+        return fm.exportBannedIPs(userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def importBannedIPs(request):
+    try:
+        userID = request.session['userID']
+        fm = FirewallManager()
+        fm.request = request  # Set request for file upload handling
+        
+        # Handle file upload
+        if request.method == 'POST' and 'import_file' in request.FILES:
+            return fm.importBannedIPs(userID, None)
+        else:
+            # Handle JSON data
+            return fm.importBannedIPs(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)

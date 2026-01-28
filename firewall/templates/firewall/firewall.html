@@ -8,6 +8,7 @@
         max-width: 1400px;
         margin: 0 auto;
         padding: 2rem;
+        overflow: visible; /* Allow modal to show above container */
     }
     
     .page-header {
@@ -611,7 +612,63 @@
         border-radius: 16px;
         box-shadow: 0 4px 12px var(--shadow-medium, rgba(0,0,0,0.15));
         border: 1px solid var(--border-color, #e8e9ff);
-        overflow: hidden;
+        overflow: visible; /* Changed from hidden to allow modal to show */
+        position: relative;
+        z-index: 1;
+    }
+    
+    /* Modal Styles - Ensure it's above everything */
+    #modifyBannedIPModal, #modifyRuleModal {
+        z-index: 99999 !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+    }
+    
+    #modifyBannedIPModal.show, #modifyRuleModal.show {
+        display: flex !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    
+    #modifyBannedIPModal.fade.show, #modifyRuleModal.fade.show {
+        opacity: 1 !important;
+    }
+    
+    #modifyBannedIPModal .modal-dialog, #modifyRuleModal .modal-dialog {
+        z-index: 100000 !important;
+        position: relative !important;
+        margin: 1.75rem auto !important;
+        max-width: 500px !important;
+        width: 90% !important;
+    }
+    
+    .modal-backdrop {
+        z-index: 99998 !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        background-color: rgba(0, 0, 0, 0.5) !important;
+    }
+    
+    /* Ensure modal is always on top */
+    body.modal-open #modifyBannedIPModal {
+        display: flex !important;
+    }
+    
+    /* Make sure modal is not hidden by parent containers */
+    .modern-container #modifyBannedIPModal,
+    .banned-ips-panel #modifyBannedIPModal,
+    .modern-container #modifyRuleModal,
+    .rules-panel #modifyRuleModal {
+        position: fixed !important;
+        z-index: 99999 !important;
     }
 
     .add-banned-section {
@@ -770,18 +827,114 @@
         box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
     }
 
+    .btn-modify {
+        background: #2196f3 !important;
+        color: var(--bg-secondary, white) !important;
+        border: none !important;
+        padding: 0.75rem 1.5rem !important;
+        border-radius: 6px !important;
+        font-weight: 600 !important;
+        cursor: pointer !important;
+        transition: all 0.3s ease;
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.5rem !important;
+        font-size: 0.95rem !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        min-width: 100px !important;
+        min-height: 40px !important;
+        position: relative !important;
+        z-index: 10 !important;
+    }
+
+    .btn-modify:hover {
+        background: #1976d2;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+    }
+
+    .export-import-buttons {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+    }
+
+    .btn-export, .btn-import {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+    }
+
+    .btn-export {
+        background: #10b981;
+        color: white;
+    }
+
+    .btn-export:hover:not(:disabled) {
+        background: #059669;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-import {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .btn-import:hover:not(:disabled) {
+        background: #2563eb;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-export:disabled, .btn-import:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    /* Ensure actions column and buttons are always visible */
+    .banned-table td.actions {
+        display: flex !important;
+        visibility: visible !important;
+    }
+    
+    .banned-table td.actions {
+        display: flex !important;
+        gap: 0.5rem !important;
+        align-items: center !important;
+    }
+    
+    .banned-table td.actions .btn-modify {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: auto !important;
+        height: auto !important;
+    }
+
     .btn-delete {
         background: var(--danger-color, #ef4444);
         color: var(--bg-secondary, white);
         border: none;
-        padding: 0.5rem;
+        padding: 0.75rem 1.5rem !important;
         border-radius: 6px;
+        font-weight: 600 !important;
         cursor: pointer;
         transition: all 0.3s ease;
-        width: 32px;
-        height: 32px;
-        display: flex;
+        display: flex !important;
         align-items: center;
+        gap: 0.5rem !important;
+        font-size: 0.95rem !important;
+        min-width: 100px !important;
+        min-height: 40px !important;
         justify-content: center;
     }
 
@@ -1009,7 +1162,14 @@
                         <td>
                             <span class="port-number">{$ rule.port $}</span>
                         </td>
-                        <td>
+                        <td class="actions" style="display: flex !important; gap: 0.5rem !important; align-items: center !important;">
+                            <button type="button"
+                                    ng-click="handleModifyRuleClick(rule, $event)"
+                                    class="btn-modify"
+                                    title="{% trans 'Modify Rule' %}">
+                                <i class="fas fa-edit"></i>
+                                {% trans "Modify" %}
+                            </button>
                             <button type="button"
                                     ng-click="deleteRule(rule.id, rule.proto, rule.port, rule.ipAddress)"
                                     class="btn-delete"
@@ -1057,7 +1217,25 @@
                 </div>
                 {% trans "Banned IP Addresses" %}
             </div>
-            <div ng-show="bannedIPsLoading" class="loading-spinner"></div>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <div ng-show="bannedIPsLoading" class="loading-spinner"></div>
+                <div class="export-import-buttons">
+                    <button type="button" 
+                            ng-click="exportBannedIPs()" 
+                            class="btn-export"
+                            ng-disabled="bannedIPsLoading">
+                        <i class="fas fa-download"></i>
+                        {% trans "Export Banned IPs" %}
+                    </button>
+                    <button type="button" 
+                            ng-click="importBannedIPs()" 
+                            class="btn-import"
+                            ng-disabled="bannedIPsLoading">
+                        <i class="fas fa-upload"></i>
+                        {% trans "Import Banned IPs" %}
+                    </button>
+                </div>
+            </div>
         </div>
         
         <!-- Add Banned IP Section -->
@@ -1115,22 +1293,23 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr ng-repeat="bannedIP in bannedIPs">
+                    <tr ng-repeat="bannedIP in bannedIPs" style="position: relative; z-index: 1;">
                         <td class="ip-address">
                             <i class="fas fa-globe"></i>
                             {$ bannedIP.ip $}
                         </td>
                         <td class="reason">
-                            <span class="reason-text">{$ bannedIP.reason $}</span>
+                            <span class="reason-text ng-binding">{$ bannedIP.reason $}</span>
                         </td>
-                        <td class="banned-date">
+                        <td class="banned-date ng-binding">
                             <i class="fas fa-calendar"></i>
-                            {$ bannedIP.banned_on | date:'MMM dd, yyyy HH:mm' $}
+                            <span ng-if="bannedIP.banned_on_timestamp">{$ bannedIP.banned_on_timestamp | date:'MMM dd, yyyy HH:mm' $}</span>
+                            <span ng-if="!bannedIP.banned_on_timestamp">{$ bannedIP.banned_on $}</span>
                         </td>
                         <td class="expires-date">
                             <i class="fas fa-clock"></i>
-                            <span ng-if="bannedIP.expires === 'Never'">{% trans "Never" %}</span>
-                            <span ng-if="bannedIP.expires !== 'Never'">{$ bannedIP.expires | date:'MMM dd, yyyy HH:mm' $}</span>
+                            <span ng-if="bannedIP.expires === 'Never' || !bannedIP.expires_timestamp">{% trans "Never" %}</span>
+                            <span ng-if="bannedIP.expires !== 'Never' && bannedIP.expires_timestamp">{$ bannedIP.expires_timestamp | date:'MMM dd, yyyy HH:mm' $}</span>
                         </td>
                         <td class="status">
                             <span ng-class="{'status-active': bannedIP.active, 'status-expired': !bannedIP.active}" 
@@ -1139,20 +1318,24 @@
                                 {$ bannedIP.active ? 'Active' : 'Expired' $}
                             </span>
                         </td>
-                        <td class="actions">
+                        <td class="actions" style="display: flex !important; gap: 0.5rem !important; align-items: center !important; position: relative !important; z-index: 100 !important;">
                             <button type="button"
-                                    ng-click="removeBannedIP(bannedIP.id, bannedIP.ip)"
-                                    class="btn-unban"
-                                    title="{% trans 'Unban IP' %}"
-                                    ng-if="bannedIP.active">
-                                <i class="fas fa-unlock"></i>
-                                {% trans "Unban" %}
+                                    ng-click="handleModifyButtonClick(bannedIP, $event)"
+                                    class="btn-modify"
+                                    style="display: flex !important; visibility: visible !important; opacity: 1 !important; cursor: pointer !important; pointer-events: auto !important; z-index: 1000 !important; position: relative !important; background: #2196f3 !important; color: white !important; padding: 0.75rem 1.5rem !important; border-radius: 6px !important; border: none !important; font-weight: 600 !important; min-width: 100px !important; min-height: 40px !important;"
+                                    data-ip="{$ bannedIP.ip $}"
+                                    data-id="{$ bannedIP.id $}"
+                                    title="{% trans 'Modify Ban' %}">
+                                <i class="fas fa-edit"></i>
+                                {% trans "Modify" %}
                             </button>
                             <button type="button"
                                     ng-click="deleteBannedIP(bannedIP.id, bannedIP.ip)"
                                     class="btn-delete"
-                                    title="{% trans 'Delete Record' %}">
+                                    style="padding: 0.75rem 1.5rem !important; font-size: 0.95rem !important; min-width: 100px !important; min-height: 40px !important; font-weight: 600 !important;"
+                                    title="{% trans 'Delete Record and Unban IP' %}">
                                 <i class="fas fa-trash"></i>
+                                {% trans "Delete" %}
                             </button>
                         </td>
                     </tr>
@@ -1185,6 +1368,141 @@
             </div>
         </div>
     </div>
-</div>
+    
+    <!-- Modify Firewall Rule Modal -->
+    <div class="modal fade" id="modifyRuleModal" tabindex="-1" role="dialog" aria-labelledby="modifyRuleModalLabel" style="display: none;">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modifyRuleModalLabel">
+                        <i class="fas fa-edit"></i> {% trans "Modify Firewall Rule" %}
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" ng-click="closeModifyRuleModal()">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="modifyRuleForm">
+                        <input type="hidden" id="modifyRuleId" name="rule_id">
+                        
+                        <div class="form-group">
+                            <label for="modifyRuleName">
+                                <i class="fas fa-tag"></i> {% trans "Rule Name" %}
+                            </label>
+                            <input type="text" class="form-control" id="modifyRuleName" name="rule_name" placeholder="{% trans 'e.g., Allow SSH' %}">
+                            <small class="form-text text-muted">{% trans "Enter a descriptive name for this rule" %}</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="modifyRuleProtocol">
+                                <i class="fas fa-network-wired"></i> {% trans "Protocol" %}
+                            </label>
+                            <select class="form-control" id="modifyRuleProtocol" name="protocol">
+                                <option value="tcp">TCP</option>
+                                <option value="udp">UDP</option>
+                            </select>
+                            <small class="form-text text-muted">{% trans "Select the network protocol" %}</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="modifyRuleIP">
+                                <i class="fas fa-globe"></i> {% trans "IP Address" %}
+                            </label>
+                            <input type="text" class="form-control" id="modifyRuleIP" name="ip_address" placeholder="{% trans '0.0.0.0/0 for all IPs' %}">
+                            <small class="form-text text-muted">{% trans "Enter IP address or CIDR notation (e.g., 192.168.1.0/24)" %}</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="modifyRulePort">
+                                <i class="fas fa-plug"></i> {% trans "Port" %}
+                            </label>
+                            <input type="text" class="form-control" id="modifyRulePort" name="port" placeholder="{% trans 'e.g., 80 or 8000-8010' %}">
+                            <small class="form-text text-muted">{% trans "Enter port number or range" %}</small>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>{% trans "Note:" %}</strong> {% trans "Modifying a rule will update the firewall configuration. The old rule will be removed and replaced with the new settings." %}
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" ng-click="closeModifyRuleModal()">
+                        <i class="fas fa-times"></i> {% trans "Cancel" %}
+                    </button>
+                    <button type="button" class="btn btn-primary" ng-click="modifyRule()">
+                        <i class="fas fa-save"></i> {% trans "Save Changes" %}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modify Banned IP Modal - Inside controller for AngularJS scope access -->
+    <div class="modal fade" id="modifyBannedIPModal" tabindex="-1" role="dialog" aria-labelledby="modifyBannedIPModalLabel" style="display: none;">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modifyBannedIPModalLabel">
+                        <i class="fas fa-edit"></i> {% trans "Modify Banned IP" %}
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" ng-click="closeModifyModal()" onclick="if(window.closeModifyModalGlobal) { window.closeModifyModalGlobal(); } else { var modal = document.getElementById('modifyBannedIPModal'); if(modal) { modal.classList.remove('show'); modal.removeAttribute('aria-hidden'); modal.setAttribute('aria-hidden', 'true'); modal.style.display = 'none'; document.body.classList.remove('modal-open'); document.body.style.overflow = ''; var backdrops = document.querySelectorAll('.modal-backdrop'); for(var i=0; i<backdrops.length; i++) backdrops[i].remove(); } } return false;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="modifyBannedIPForm">
+                        <input type="hidden" id="modifyBannedIPId" name="ban_id">
+                        
+                        <div class="form-group">
+                            <label for="modifyBannedIPAddress">
+                                <i class="fas fa-globe"></i> {% trans "IP Address" %}
+                            </label>
+                            <input type="text" class="form-control" id="modifyBannedIPAddress" name="ip_address" placeholder="{% trans 'Enter IP address' %}">
+                            <small class="form-text text-muted">{% trans "Enter the IP address to ban" %}</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="modifyBannedIPReason">
+                                <i class="fas fa-comment-alt"></i> {% trans "Reason" %}
+                            </label>
+                            <input type="text" class="form-control" id="modifyBannedIPReason" name="reason" placeholder="{% trans 'Enter ban reason' %}">
+                            <small class="form-text text-muted">{% trans "Reason for banning this IP address" %}</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="modifyBannedIPDuration">
+                                <i class="fas fa-clock"></i> {% trans "Duration" %}
+                            </label>
+                            <select class="form-control" id="modifyBannedIPDuration" name="duration">
+                                <option value="1h">{% trans "1 Hour" %}</option>
+                                <option value="6h">{% trans "6 Hours" %}</option>
+                                <option value="12h">{% trans "12 Hours" %}</option>
+                                <option value="24h">{% trans "24 Hours" %}</option>
+                                <option value="48h">{% trans "48 Hours" %}</option>
+                                <option value="7d">{% trans "7 Days" %}</option>
+                                <option value="30d">{% trans "30 Days" %}</option>
+                                <option value="never" selected>{% trans "Never (Permanent)" %}</option>
+                            </select>
+                            <small class="form-text text-muted">{% trans "How long should this IP remain banned?" %}</small>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>{% trans "Note:" %}</strong> {% trans "Modifying a ban will update the IP address, reason, and expiration time. Changing the IP address will update the firewall rule." %}
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" ng-click="closeModifyModal()" onclick="if(window.closeModifyModalGlobal) { window.closeModifyModalGlobal(); } else { var modal = document.getElementById('modifyBannedIPModal'); if(modal) { modal.classList.remove('show'); modal.removeAttribute('aria-hidden'); modal.setAttribute('aria-hidden', 'true'); modal.style.display = 'none'; document.body.classList.remove('modal-open'); document.body.style.overflow = ''; var backdrops = document.querySelectorAll('.modal-backdrop'); for(var i=0; i<backdrops.length; i++) backdrops[i].remove(); } } return false;">
+                        <i class="fas fa-times"></i> {% trans "Cancel" %}
+                    </button>
+                    <button type="button" class="btn btn-primary" ng-click="modifyBannedIP()" onclick="if(window.modifyBannedIPGlobal) { window.modifyBannedIPGlobal(); } else { alert('Error: Cannot save changes. Please refresh the page.'); } return false;">
+                        <i class="fas fa-save"></i> {% trans "Save Changes" %}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 {% endblock %}
