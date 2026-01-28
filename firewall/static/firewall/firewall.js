@@ -499,6 +499,281 @@ app.controller('firewallController', function ($scope, $http, $timeout, $window,
 
     };
 
+    // Modify Firewall Rule Functions
+    $scope.handleModifyRuleClick = function(rule, event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        
+        if (!rule) {
+            console.error('No rule provided');
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Error',
+                    text: 'No rule data provided',
+                    type: 'error'
+                });
+            }
+            return false;
+        }
+        
+        $scope.showModifyRuleModal(rule, event);
+        return false;
+    };
+
+    $scope.showModifyRuleModal = function(rule, event) {
+        console.log('=== showModifyRuleModal CALLED ===');
+        console.log('Rule:', rule);
+        
+        if (!rule) {
+            console.error('No rule provided');
+            return false;
+        }
+        
+        // Get modal element
+        var modalElement = document.getElementById('modifyRuleModal');
+        if (!modalElement) {
+            console.error('Modal element not found');
+            alert('Error: Modal element not found. Please refresh the page.');
+            return false;
+        }
+        
+        // Set form values
+        var idField = document.getElementById('modifyRuleId');
+        var nameField = document.getElementById('modifyRuleName');
+        var protocolField = document.getElementById('modifyRuleProtocol');
+        var ipField = document.getElementById('modifyRuleIP');
+        var portField = document.getElementById('modifyRulePort');
+        
+        if (idField) idField.value = rule.id || '';
+        if (nameField) nameField.value = rule.name || '';
+        if (protocolField) protocolField.value = rule.proto || 'tcp';
+        if (ipField) ipField.value = rule.ipAddress || '';
+        if (portField) portField.value = rule.port || '';
+        
+        // Show modal using AngularJS $timeout
+        $timeout(function() {
+            // Clean up existing modals/backdrops
+            var existingBackdrops = document.querySelectorAll('.modal-backdrop');
+            existingBackdrops.forEach(function(b) { b.remove(); });
+            
+            var existingModals = document.querySelectorAll('.modal.show');
+            existingModals.forEach(function(m) {
+                m.classList.remove('show');
+            });
+            
+            document.body.classList.remove('modal-open');
+            
+            // Move modal to body if needed
+            if (modalElement.parentElement !== document.body) {
+                document.body.appendChild(modalElement);
+            }
+            
+            // Show modal
+            modalElement.classList.add('show', 'fade');
+            modalElement.style.cssText = 'display: flex !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; z-index: 99999 !important; opacity: 1 !important; visibility: visible !important; align-items: center !important; justify-content: center !important;';
+            modalElement.removeAttribute('aria-hidden');
+            modalElement.setAttribute('aria-hidden', 'false');
+            modalElement.setAttribute('aria-modal', 'true');
+            
+            document.body.classList.add('modal-open');
+            document.body.style.overflow = 'hidden';
+            
+            // Create backdrop
+            var backdrop = document.createElement('div');
+            backdrop.className = 'modal-backdrop fade show';
+            backdrop.style.cssText = 'position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; z-index: 99998 !important; background-color: rgba(0, 0, 0, 0.5) !important;';
+            backdrop.id = 'modifyRuleModalBackdrop';
+            document.body.appendChild(backdrop);
+            
+            // Handle backdrop click
+            backdrop.addEventListener('click', function(e) {
+                if (e.target === backdrop) {
+                    $scope.closeModifyRuleModal();
+                }
+            });
+            
+            // Try jQuery/Bootstrap modal if available
+            if (typeof $ !== 'undefined' && $.fn.modal) {
+                try {
+                    var $modal = $('#modifyRuleModal');
+                    if ($modal.length > 0) {
+                        if ($modal.parent()[0] !== document.body) {
+                            $modal.appendTo('body');
+                        }
+                        if (!$modal.data('bs.modal')) {
+                            $modal.modal({show: false, backdrop: true, keyboard: true});
+                        }
+                        $modal.modal('show');
+                    }
+                } catch (e) {
+                    console.warn('jQuery modal failed, using direct display:', e);
+                }
+            }
+        }, 10);
+    };
+
+    $scope.closeModifyRuleModal = function() {
+        var modalElement = document.getElementById('modifyRuleModal');
+        if (modalElement) {
+            // Try jQuery/Bootstrap modal first
+            if (typeof $ !== 'undefined' && $.fn.modal) {
+                try {
+                    $('#modifyRuleModal').modal('hide');
+                } catch (e) {
+                    // Fall through to manual cleanup
+                }
+            }
+            
+            // Manual cleanup
+            modalElement.classList.remove('show', 'fade');
+            modalElement.style.display = 'none';
+            modalElement.setAttribute('aria-hidden', 'true');
+            
+            // Remove backdrop
+            var backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(function(b) { b.remove(); });
+            
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+        }
+    };
+
+    $scope.modifyRule = function() {
+        var ruleId = document.getElementById('modifyRuleId').value;
+        var ruleName = document.getElementById('modifyRuleName').value.trim();
+        var ruleProtocol = document.getElementById('modifyRuleProtocol').value;
+        var ruleIP = document.getElementById('modifyRuleIP').value.trim();
+        var rulePort = document.getElementById('modifyRulePort').value.trim();
+
+        // Validation
+        if (!ruleName) {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Validation Error',
+                    text: 'Please enter a rule name',
+                    type: 'error'
+                });
+            } else {
+                alert('Please enter a rule name');
+            }
+            return;
+        }
+
+        if (!ruleProtocol || (ruleProtocol !== 'tcp' && ruleProtocol !== 'udp')) {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Validation Error',
+                    text: 'Please select a valid protocol (TCP or UDP)',
+                    type: 'error'
+                });
+            } else {
+                alert('Please select a valid protocol');
+            }
+            return;
+        }
+
+        if (!ruleIP) {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Validation Error',
+                    text: 'Please enter an IP address',
+                    type: 'error'
+                });
+            } else {
+                alert('Please enter an IP address');
+            }
+            return;
+        }
+
+        if (!rulePort) {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Validation Error',
+                    text: 'Please enter a port number',
+                    type: 'error'
+                });
+            } else {
+                alert('Please enter a port number');
+            }
+            return;
+        }
+
+        $scope.rulesLoading = false;
+        $scope.actionFailed = true;
+        $scope.actionSuccess = true;
+        $scope.couldNotConnect = true;
+
+        var url = "/firewall/modifyRule";
+        var data = {
+            id: ruleId,
+            ruleName: ruleName,
+            ruleProtocol: ruleProtocol,
+            rulePort: rulePort,
+            ruleIP: ruleIP
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(function(response) {
+            $scope.rulesLoading = true;
+            
+            if (response.data && response.data.modify_status === 1) {
+                // Close modal
+                $scope.closeModifyRuleModal();
+                
+                // Refresh rules list
+                populateCurrentRecords();
+                
+                $scope.actionFailed = true;
+                $scope.actionSuccess = false;
+                $scope.canNotAddRule = true;
+                $scope.ruleAdded = false;
+                $scope.couldNotConnect = true;
+                
+                if (typeof PNotify !== 'undefined') {
+                    new PNotify({
+                        title: 'Success!',
+                        text: 'Firewall rule modified successfully',
+                        type: 'success'
+                    });
+                }
+            } else {
+                $scope.actionFailed = false;
+                $scope.actionSuccess = true;
+                $scope.errorMessage = (response.data && response.data.error_message) || 'Failed to modify firewall rule';
+                
+                if (typeof PNotify !== 'undefined') {
+                    new PNotify({
+                        title: 'Error!',
+                        text: (response.data && response.data.error_message) || 'Failed to modify firewall rule',
+                        type: 'error'
+                    });
+                }
+            }
+        }, function(error) {
+            $scope.rulesLoading = true;
+            $scope.couldNotConnect = false;
+            
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Connection Error',
+                    text: 'Could not connect to server. Please refresh this page.',
+                    type: 'error'
+                });
+            }
+        });
+    };
+
+    // Make modify rule functions available globally
+    window.showModifyRuleModalScope = $scope.showModifyRuleModal;
+    window.closeModifyRuleModalScope = $scope.closeModifyRuleModal;
+    window.modifyRuleScope = $scope.modifyRule;
 
     $scope.reloadFireWall = function () {
 
@@ -3828,53 +4103,325 @@ app.controller('litespeed_ent_conf', function ($scope, $http, $timeout, $window)
         });
     };
 
+    // Export/Import Banned IPs Functions
+    $scope.exportBannedIPs = function () {
+        $scope.bannedIPsLoading = false;
+        $scope.bannedIPActionFailed = true;
+        $scope.bannedIPActionSuccess = true;
+
+        var url = "/firewall/exportBannedIPs";
+        var data = {};
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            responseType: 'blob'
+        };
+
+        $http.post(url, data, config).then(function(response) {
+            $scope.bannedIPsLoading = true;
+            
+            // Check if response is JSON (error) or file download
+            if (response.data instanceof Blob) {
+                // Create blob URL and trigger download
+                var blob = new Blob([response.data], { type: 'application/json' });
+                var url = window.URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = 'banned_ips_export_' + Math.floor(Date.now() / 1000) + '.json';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                $scope.bannedIPActionFailed = true;
+                $scope.bannedIPActionSuccess = false;
+                
+                if (typeof PNotify !== 'undefined') {
+                    new PNotify({
+                        title: 'Success!',
+                        text: 'Banned IPs exported successfully',
+                        type: 'success'
+                    });
+                }
+            } else {
+                // Handle error response
+                try {
+                    var errorData = typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
+                    if (errorData.exportStatus === 0) {
+                        $scope.bannedIPActionFailed = false;
+                        $scope.bannedIPActionSuccess = true;
+                        $scope.bannedIPErrorMessage = errorData.error_message;
+                        
+                        if (typeof PNotify !== 'undefined') {
+                            new PNotify({
+                                title: 'Export Failed',
+                                text: errorData.error_message,
+                                type: 'error'
+                            });
+                        }
+                    }
+                } catch (e) {
+                    // If not JSON, try reading as text
+                    var reader = new FileReader();
+                    reader.onload = function() {
+                        try {
+                            var errorData = JSON.parse(reader.result);
+                            if (errorData.exportStatus === 0) {
+                                $scope.bannedIPActionFailed = false;
+                                $scope.bannedIPActionSuccess = true;
+                                $scope.bannedIPErrorMessage = errorData.error_message;
+                            }
+                        } catch (e2) {
+                            $scope.bannedIPActionFailed = false;
+                            $scope.bannedIPActionSuccess = true;
+                            $scope.bannedIPErrorMessage = 'Failed to export banned IPs';
+                        }
+                    };
+                    reader.readAsText(response.data);
+                }
+            }
+        }, function(error) {
+            $scope.bannedIPsLoading = true;
+            $scope.bannedIPActionFailed = false;
+            $scope.bannedIPActionSuccess = true;
+            $scope.bannedIPErrorMessage = 'Could not connect to server. Please refresh this page.';
+            
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Connection Error',
+                    text: 'Could not connect to server. Please refresh this page.',
+                    type: 'error'
+                });
+            }
+        });
+    };
+
+    $scope.importBannedIPs = function () {
+        // Create file input element
+        var input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.style.display = 'none';
+        
+        input.onchange = function(event) {
+            var file = event.target.files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        var importData = JSON.parse(e.target.result);
+                        
+                        // Validate file format
+                        if (!importData.banned_ips || !Array.isArray(importData.banned_ips)) {
+                            $scope.$apply(function() {
+                                $scope.bannedIPActionFailed = false;
+                                $scope.bannedIPActionSuccess = true;
+                                $scope.bannedIPErrorMessage = "Invalid import file format. Please select a valid banned IPs export file.";
+                            });
+                            
+                            if (typeof PNotify !== 'undefined') {
+                                new PNotify({
+                                    title: 'Invalid File',
+                                    text: 'Invalid import file format. Please select a valid banned IPs export file.',
+                                    type: 'error'
+                                });
+                            }
+                            return;
+                        }
+                        
+                        // Upload file to server
+                        uploadBannedIPsImportFile(file);
+                    } catch (error) {
+                        $scope.$apply(function() {
+                            $scope.bannedIPActionFailed = false;
+                            $scope.bannedIPActionSuccess = true;
+                            $scope.bannedIPErrorMessage = "Invalid JSON file. Please select a valid banned IPs export file.";
+                        });
+                        
+                        if (typeof PNotify !== 'undefined') {
+                            new PNotify({
+                                title: 'Invalid File',
+                                text: 'Invalid JSON file. Please select a valid banned IPs export file.',
+                                type: 'error'
+                            });
+                        }
+                    }
+                };
+                reader.readAsText(file);
+            }
+        };
+        
+        document.body.appendChild(input);
+        input.click();
+        document.body.removeChild(input);
+    };
+
+    function uploadBannedIPsImportFile(file) {
+        $scope.bannedIPsLoading = false;
+        $scope.bannedIPActionFailed = true;
+        $scope.bannedIPActionSuccess = true;
+        $scope.bannedIPCouldNotConnect = true;
+
+        var formData = new FormData();
+        formData.append('import_file', file);
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': undefined
+            },
+            transformRequest: angular.identity
+        };
+
+        $http.post("/firewall/importBannedIPs", formData, config).then(function(response) {
+            $scope.bannedIPsLoading = true;
+            
+            if (response.data.importStatus === 1) {
+                $scope.bannedIPActionSuccess = false;
+                populateBannedIPs(); // Refresh the list
+                
+                var message = `Import completed: ${response.data.imported_count} imported, ${response.data.skipped_count} skipped`;
+                if (response.data.error_count > 0) {
+                    message += `, ${response.data.error_count} errors`;
+                    if (response.data.errors && response.data.errors.length > 0) {
+                        message += '\nErrors: ' + response.data.errors.slice(0, 5).join('; ');
+                        if (response.data.errors.length > 5) {
+                            message += ` ... and ${response.data.errors.length - 5} more`;
+                        }
+                    }
+                }
+                
+                if (typeof PNotify !== 'undefined') {
+                    new PNotify({
+                        title: 'Import Completed!',
+                        text: message,
+                        type: response.data.error_count > 0 ? 'notice' : 'success'
+                    });
+                } else {
+                    alert(message);
+                }
+            } else {
+                $scope.bannedIPActionFailed = false;
+                $scope.bannedIPErrorMessage = response.data.error_message || 'Failed to import banned IPs';
+                
+                if (typeof PNotify !== 'undefined') {
+                    new PNotify({
+                        title: 'Import Failed',
+                        text: response.data.error_message || 'Failed to import banned IPs',
+                        type: 'error'
+                    });
+                }
+            }
+        }, function(error) {
+            $scope.bannedIPsLoading = true;
+            $scope.bannedIPCouldNotConnect = false;
+            
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Connection Error',
+                    text: 'Could not connect to server. Please refresh this page.',
+                    type: 'error'
+                });
+            }
+        });
+    }
+
     // Export/Import Firewall Rules Functions
     $scope.exportRules = function () {
         $scope.rulesLoading = false;
         $scope.actionFailed = true;
         $scope.actionSuccess = true;
 
-        url = "/firewall/exportFirewallRules";
-
+        var url = "/firewall/exportFirewallRules";
         var data = {};
 
         var config = {
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
-            }
+            },
+            responseType: 'blob'
         };
 
-        $http.post(url, data, config).then(exportSuccess, exportError);
-
-        function exportSuccess(response) {
+        $http.post(url, data, config).then(function(response) {
             $scope.rulesLoading = true;
             
             // Check if response is JSON (error) or file download
-            if (typeof response.data === 'string' && response.data.includes('{')) {
-                try {
-                    var errorData = JSON.parse(response.data);
-                    if (errorData.exportStatus === 0) {
-                        $scope.actionFailed = false;
-                        $scope.actionSuccess = true;
-                        $scope.errorMessage = errorData.error_message;
-                        return;
+            if (response.data instanceof Blob) {
+                // Check if it's actually a JSON error by reading the blob
+                var reader = new FileReader();
+                reader.onload = function() {
+                    try {
+                        var text = reader.result;
+                        // Check if it's JSON error
+                        if (text.trim().startsWith('{')) {
+                            var errorData = JSON.parse(text);
+                            if (errorData.exportStatus === 0) {
+                                $scope.$apply(function() {
+                                    $scope.actionFailed = false;
+                                    $scope.actionSuccess = true;
+                                    $scope.errorMessage = errorData.error_message;
+                                });
+                                
+                                if (typeof PNotify !== 'undefined') {
+                                    new PNotify({
+                                        title: 'Export Failed',
+                                        text: errorData.error_message,
+                                        type: 'error'
+                                    });
+                                }
+                                return;
+                            }
+                        }
+                    } catch (e) {
+                        // Not JSON, proceed with download
                     }
-                } catch (e) {
-                    // If not JSON, assume it's the file content
-                }
+                    
+                    // It's a valid file, trigger download
+                    var blob = new Blob([response.data], { type: 'application/json' });
+                    var url = window.URL.createObjectURL(blob);
+                    var a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'firewall_rules_export_' + Math.floor(Date.now() / 1000) + '.json';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    
+                    $scope.$apply(function() {
+                        $scope.actionFailed = true;
+                        $scope.actionSuccess = false;
+                    });
+                    
+                    if (typeof PNotify !== 'undefined') {
+                        new PNotify({
+                            title: 'Success!',
+                            text: 'Firewall rules exported successfully',
+                            type: 'success'
+                        });
+                    }
+                };
+                reader.readAsText(response.data);
+            } else {
+                // Handle as text response (shouldn't happen with blob)
+                $scope.actionFailed = true;
+                $scope.actionSuccess = false;
             }
-            
-            // If we get here, it's a successful file download
-            $scope.actionFailed = true;
-            $scope.actionSuccess = false;
-        }
-
-        function exportError(response) {
+        }, function(error) {
             $scope.rulesLoading = true;
             $scope.actionFailed = false;
             $scope.actionSuccess = true;
             $scope.errorMessage = "Could not connect to server. Please refresh this page.";
-        }
+            
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Connection Error',
+                    text: 'Could not connect to server. Please refresh this page.',
+                    type: 'error'
+                });
+            }
+        });
     };
 
     $scope.importRules = function () {
@@ -3942,7 +4489,7 @@ app.controller('litespeed_ent_conf', function ($scope, $http, $timeout, $window)
         function importSuccess(response) {
             $scope.rulesLoading = true;
             
-            if (response.data.importStatus === 1) {
+            if (response.data && response.data.importStatus === 1) {
                 $scope.actionFailed = true;
                 $scope.actionSuccess = false;
                 
@@ -3950,20 +4497,38 @@ app.controller('litespeed_ent_conf', function ($scope, $http, $timeout, $window)
                 populateCurrentRecords();
                 
                 // Show import summary
-                var summary = `Import completed successfully!\n` +
-                             `Imported: ${response.data.imported_count} rules\n` +
-                             `Skipped: ${response.data.skipped_count} rules\n` +
-                             `Errors: ${response.data.error_count} rules`;
-                
-                if (response.data.errors && response.data.errors.length > 0) {
-                    summary += `\n\nErrors:\n${response.data.errors.join('\n')}`;
+                var message = `Import completed: ${response.data.imported_count} imported, ${response.data.skipped_count} skipped`;
+                if (response.data.error_count > 0) {
+                    message += `, ${response.data.error_count} errors`;
+                    if (response.data.errors && response.data.errors.length > 0) {
+                        message += '\nErrors: ' + response.data.errors.slice(0, 5).join('; ');
+                        if (response.data.errors.length > 5) {
+                            message += ` ... and ${response.data.errors.length - 5} more`;
+                        }
+                    }
                 }
                 
-                alert(summary);
+                if (typeof PNotify !== 'undefined') {
+                    new PNotify({
+                        title: 'Import Completed!',
+                        text: message,
+                        type: response.data.error_count > 0 ? 'notice' : 'success'
+                    });
+                } else {
+                    alert(message);
+                }
             } else {
                 $scope.actionFailed = false;
                 $scope.actionSuccess = true;
-                $scope.errorMessage = response.data.error_message;
+                $scope.errorMessage = (response.data && response.data.error_message) || 'Failed to import firewall rules';
+                
+                if (typeof PNotify !== 'undefined') {
+                    new PNotify({
+                        title: 'Import Failed',
+                        text: (response.data && response.data.error_message) || 'Failed to import firewall rules',
+                        type: 'error'
+                    });
+                }
             }
         }
 
@@ -3972,6 +4537,14 @@ app.controller('litespeed_ent_conf', function ($scope, $http, $timeout, $window)
             $scope.actionFailed = false;
             $scope.actionSuccess = true;
             $scope.errorMessage = "Could not connect to server. Please refresh this page.";
+            
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Connection Error',
+                    text: 'Could not connect to server. Please refresh this page.',
+                    type: 'error'
+                });
+            }
         }
     }
 
