@@ -1543,6 +1543,9 @@ fi
 
 # Test if CyberPanel is accessible
 echo -e "\n🔍 Testing CyberPanel accessibility..."
+
+# Check if lscpd service is running
+if systemctl is-active --quiet lscpd 2>/dev/null; then
   echo "╔═════════════════════════════════════════════════════════════════════════════════════════════════════════════╗"
   echo "║                                                                                         ║"
   echo "║  🌐 ACCESS YOUR CYBERPANEL:                                                         ║"
