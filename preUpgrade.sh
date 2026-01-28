@@ -15,6 +15,6 @@ fi
 echo "Upgrading CyberPanel from branch: $BRANCH_NAME"
 
 rm -f /usr/local/cyberpanel_upgrade.sh
-wget -O /usr/local/cyberpanel_upgrade.sh https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel_upgrade.sh 2>/dev/null
+wget -O /usr/local/cyberpanel_upgrade.sh https://raw.githubusercontent.com/master3395/cyberpanel/$BRANCH_NAME/cyberpanel_upgrade.sh 2>/dev/null
 chmod 700 /usr/local/cyberpanel_upgrade.sh
 /usr/local/cyberpanel_upgrade.sh $@
