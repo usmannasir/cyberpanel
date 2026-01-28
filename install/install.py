@@ -1815,14 +1815,29 @@ module cyberpanel_ols {
                 # These packages from MariaDB 12.1 can conflict with MariaDB 10.11
                 self.stdOut("Removing conflicting MariaDB compat packages...", 1)
                 try:
+                    # Multiple aggressive removal attempts to ensure compat package is gone
+                    # Step 1: Try dnf remove with allowerasing
+                    subprocess.run("dnf remove -y --allowerasing 'MariaDB-server-compat*' 2>/dev/null || true", shell=True, timeout=60)
+                    
+                    # Step 2: Force remove with rpm
                     subprocess.run("rpm -e --nodeps MariaDB-server-compat-12.1.2-1.el9.noarch 2>/dev/null; true", shell=True, timeout=30)
-                    subprocess.run("dnf remove -y 'MariaDB-server-compat*' 2>/dev/null || true", shell=True, timeout=60)
+                    
+                    # Step 3: Find and remove any remaining compat packages
                     r = subprocess.run("rpm -qa 2>/dev/null | grep -i MariaDB-server-compat", shell=True, capture_output=True, text=True, timeout=30)
                     for line in (r.stdout or "").strip().splitlines():
                         pkg = (line.strip().split() or [""])[0]
                         if pkg and "MariaDB-server-compat" in pkg:
+                            self.stdOut(f"Force removing remaining compat package: {pkg}", 1)
                             subprocess.run(["rpm", "-e", "--nodeps", pkg], timeout=30)
-                    self.stdOut("Removed conflicting MariaDB compat packages", 1)
+                    
+                    # Step 4: Verify removal and exclude from future installs
+                    r = subprocess.run("rpm -qa 2>/dev/null | grep -i MariaDB-server-compat", shell=True, capture_output=True, text=True, timeout=30)
+                    if r.stdout.strip():
+                        self.stdOut(f"Warning: Some compat packages still present: {r.stdout.strip()}", 0)
+                        # Add to dnf exclude to prevent reinstallation
+                        subprocess.run("dnf config-manager --setopt exclude='MariaDB-server-compat*' --save 2>/dev/null || true", shell=True, timeout=30)
+                    else:
+                        self.stdOut("Successfully removed all MariaDB-server-compat packages", 1)
                 except Exception as e:
                     self.stdOut("Warning: Could not remove compat packages: " + str(e), 0)
                 
@@ -1852,8 +1867,34 @@ module cyberpanel_ols {
                 command = 'dnf install mariadb-server mariadb-devel mariadb-client-utils -y'
                 self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
             
+            # Verify MariaDB was installed successfully before proceeding
+            if not os.path.exists('/usr/bin/mysql') and not os.path.exists('/usr/bin/mariadb'):
+                self.stdOut("Error: MariaDB binaries not found after installation. Installation may have failed.", 0)
+                return False
+            
             # Start and enable MariaDB
-            self.startMariaDB()
+            if not self.startMariaDB():
+                self.stdOut("Error: Failed to start MariaDB service", 0)
+                return False
+            
+            # Wait a moment for MariaDB to be ready
+            import time
+            time.sleep(3)
+            
+            # Verify MariaDB is running before changing password
+            mariadb_running = False
+            for service_name in ['mariadb', 'mysql', 'mysqld']:
+                try:
+                    result = subprocess.run(f"systemctl is-active {service_name}", shell=True, capture_output=True, text=True, timeout=5)
+                    if result.returncode == 0 and 'active' in result.stdout.lower():
+                        mariadb_running = True
+                        break
+                except:
+                    continue
+            
+            if not mariadb_running:
+                self.stdOut("Warning: MariaDB service may not be running. Attempting password change anyway...", 0)
+            
             self.changeMYSQLRootPassword()
             self.fixMariaDB()
             
@@ -1897,6 +1938,18 @@ module cyberpanel_ols {
         """Change MySQL root password"""
         try:
             if self.remotemysql == 'OFF':
+                # Verify mysql/mariadb command exists before attempting password change
+                mysql_exists = False
+                for cmd in ['mysql', 'mariadb', '/usr/bin/mysql', '/usr/bin/mariadb']:
+                    if self.command_exists(cmd.split()[-1]) or os.path.exists(cmd):
+                        mysql_exists = True
+                        break
+                
+                if not mysql_exists:
+                    self.stdOut("Error: mysql/mariadb command not found. MariaDB may not have been installed successfully.", 0)
+                    self.ensure_mysql_password_file()  # Still save password for manual fix
+                    return False
+                
                 # Use ALTER USER syntax (compatible with MariaDB 10.4+ and MySQL 5.7+)
                 # GRANT ... IDENTIFIED BY is deprecated in MariaDB 10.4+ and removed in 10.11+
                 passwordCMD = "use mysql;DROP DATABASE IF EXISTS test;DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%%';ALTER USER 'root'@'localhost' IDENTIFIED BY '%s';GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION;flush privileges;" % (self.mysql_Root_password)
