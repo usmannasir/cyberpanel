@@ -2014,7 +2014,7 @@ class FirewallManager:
         try:
             admin = Administrator.objects.get(pk=userID)
             if admin.acl.adminStatus != 1:
-                return ACLManager.loadError()
+                return ACLManager.loadErrorJson('status', 0)
 
             ip = data.get('ip', '').strip()
             reason = data.get('reason', '').strip()
@@ -2095,23 +2095,32 @@ class FirewallManager:
             command = f'chmod 644 {banned_ips_file} && chown root:root {banned_ips_file}'
             ProcessUtilities.executioner(command, None, True)
 
-            # Apply firewall rule to block the IP
+            # Apply firewall rule to block the IP using ProcessUtilities (handles sudo)
             try:
-                # Add iptables rule to block the IP
-                if '/' in ip:
-                    # CIDR notation
-                    subprocess.run(['iptables', '-A', 'INPUT', '-s', ip, '-j', 'DROP'], check=True)
-                else:
-                    # Single IP
-                    subprocess.run(['iptables', '-A', 'INPUT', '-s', ip, '-j', 'DROP'], check=True)
+                # Check if rule already exists to avoid duplicate rules
+                check_command = f"iptables -C INPUT -s {ip} -j DROP 2>&1"
+                check_result = ProcessUtilities.executioner(check_command, None, True)
                 
-                logging.CyberCPLogFileWriter.writeToFile(f'Banned IP {ip} with reason: {reason}')
-            except subprocess.CalledProcessError as e:
-                logging.CyberCPLogFileWriter.writeToFile(f'Failed to add iptables rule for {ip}: {str(e)}')
+                # If rule doesn't exist (check returns non-zero), add it
+                if check_result != 0:
+                    # Add iptables rule to block the IP using ProcessUtilities (handles sudo)
+                    command = f"iptables -A INPUT -s {ip} -j DROP"
+                    result = ProcessUtilities.executioner(command, None, True)
+                    
+                    if result == 0:
+                        logging.CyberCPLogFileWriter.writeToFile(f'Successfully added iptables rule to ban IP {ip} with reason: {reason}')
+                    else:
+                        logging.CyberCPLogFileWriter.writeToFile(f'Warning: Failed to add iptables rule for {ip} (exit code: {result}), but IP was added to banned list')
+                        # Don't fail the entire operation - IP is still in banned list
+                else:
+                    logging.CyberCPLogFileWriter.writeToFile(f'IPTables rule already exists for {ip}, skipping')
+            except Exception as e:
+                logging.CyberCPLogFileWriter.writeToFile(f'Error adding iptables rule for {ip}: {str(e)}, but IP was added to banned list')
+                # Don't fail the entire operation - IP is still in banned list
 
             final_dic = {'status': 1, 'message': f'IP address {ip} has been banned successfully'}
             final_json = json.dumps(final_dic)
-            return HttpResponse(final_json)
+            return HttpResponse(final_json, content_type='application/json')
 
         except BaseException as msg:
             final_dic = {'status': 0, 'error_message': str(msg)}
