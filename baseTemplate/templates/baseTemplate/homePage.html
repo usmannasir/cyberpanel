@@ -972,22 +972,23 @@
                                     <strong style="font-size: 12px; color: #1e293b;">Recommendation:</strong>
                                     <p style="margin: 4px 0 0 0; font-size: 12px; color: #475569; white-space: pre-line;">{$ alert.recommendation $}</p>
                                 </div>
-                                <!-- Add to Firewall Button for Brute Force Attacks -->
-                                <div ng-if="alert.title === 'Brute Force Attack Detected' && alert.details && alert.details['IP Address']" style="margin-top: 12px;">
-                                    <button ng-click="blockIPAddress(alert.details['IP Address'])" 
-                                            ng-disabled="blockingIP === alert.details['IP Address']"
+                                <!-- Add to Firewall Button for Brute Force Attacks and Root Login Attempts -->
+                                <div ng-if="(alert.title === 'Brute Force Attack Detected' && alert.details && alert.details['IP Address']) || (alert.title === 'Root Login Attempts Detected' && alert.details && alert.details['Top IP'])" style="margin-top: 12px;">
+                                    <button ng-click="blockIPAddress(alert.details['IP Address'] || alert.details['Top IP']); $event.stopPropagation(); return false;" 
+                                            ng-disabled="blockingIP === (alert.details['IP Address'] || alert.details['Top IP'])"
                                             style="background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;"
                                             onmouseover="this.style.background='#b91c1c'" 
-                                            onmouseout="this.style.background='#dc2626'">
-                                        <i class="fas fa-ban" ng-if="blockingIP !== alert.details['IP Address']"></i>
-                                        <i class="fas fa-spinner fa-spin" ng-if="blockingIP === alert.details['IP Address']"></i>
-                                        <span ng-if="blockingIP !== alert.details['IP Address']">Ban IP Permanently</span>
-                                        <span ng-if="blockingIP === alert.details['IP Address']">Banning...</span>
+                                            onmouseout="this.style.background='#dc2626'"
+                                            type="button">
+                                        <i class="fas fa-ban" ng-if="blockingIP !== (alert.details['IP Address'] || alert.details['Top IP'])"></i>
+                                        <i class="fas fa-spinner fa-spin" ng-if="blockingIP === (alert.details['IP Address'] || alert.details['Top IP'])"></i>
+                                        <span ng-if="blockingIP !== (alert.details['IP Address'] || alert.details['Top IP'])">Ban IP</span>
+                                        <span ng-if="blockingIP === (alert.details['IP Address'] || alert.details['Top IP'])">Banning...</span>
                                     </button>
                                     <a href="/firewall/" target="_blank" style="margin-left: 10px; color: #5b5fcf; font-size: 12px; text-decoration: none;">
                                         <i class="fas fa-external-link-alt"></i> Manage in Firewall
                                     </a>
-                                    <span ng-if="blockedIPs && blockedIPs[alert.details['IP Address']]" 
+                                    <span ng-if="blockedIPs && blockedIPs[alert.details['IP Address'] || alert.details['Top IP']]" 
                                           style="margin-left: 10px; color: #10b981; font-size: 12px; font-weight: 600;">
                                         <i class="fas fa-check-circle"></i> Blocked
                                     </span>
@@ -1015,12 +1016,43 @@
                     <tr>
                         <th>TIMESTAMP</th>
                         <th>MESSAGE</th>
+                        <th>IP ADDRESS</th>
+                        <th>ACTIONS</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr ng-repeat="log in sshLogs">
                         <td>{$ log.timestamp $}</td>
                         <td>{$ log.message $}</td>
+                        <td>
+                            <span ng-if="log.ip_address" style="font-family: monospace; color: #5b5fcf; font-weight: 600;">
+                                {$ log.ip_address $}
+                            </span>
+                            <span ng-if="!log.ip_address" style="color: #8893a7;">-</span>
+                        </td>
+                        <td>
+                            <button ng-if="log.ip_address && blockingIP !== log.ip_address && !blockedIPs[log.ip_address]" 
+                                    ng-click="banIPFromSSHLog(log.ip_address)"
+                                    style="background: #dc2626; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"
+                                    onmouseover="this.style.background='#b91c1c'" 
+                                    onmouseout="this.style.background='#dc2626'"
+                                    title="Ban this IP address permanently">
+                                <i class="fas fa-ban"></i>
+                                Ban IP
+                            </button>
+                            <button ng-if="log.ip_address && blockingIP === log.ip_address" 
+                                    disabled
+                                    style="background: #9ca3af; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: not-allowed; display: inline-flex; align-items: center; gap: 4px;">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                Banning...
+                            </button>
+                            <span ng-if="log.ip_address && blockedIPs[log.ip_address]" 
+                                  style="color: #10b981; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                                <i class="fas fa-check-circle"></i>
+                                Banned
+                            </span>
+                            <span ng-if="!log.ip_address" style="color: #8893a7; font-size: 11px;">-</span>
+                        </td>
                     </tr>
                 </tbody>
             </table>
