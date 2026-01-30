@@ -14,16 +14,24 @@
 Sudo_Test=$(set)
 #for SUDO check
 
+# Logging setup
+LOG_FILE="/var/log/installer.log"
+mkdir -p /var/log 2>/dev/null || true
+touch "$LOG_FILE" 2>/dev/null || true
+exec >>"$LOG_FILE" 2>&1
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Upgrade started: $0 $*"
+
 # Re-exec with elevation if not running as root
 if [[ $(id -u) != 0 ]]; then
   SCRIPT_PATH="$(readlink -f "$0" 2>/dev/null || echo "$0")"
   for elevate in sudo doas run0 pkexec; do
     if command -v "$elevate" >/dev/null 2>&1; then
-      echo "Elevating with $elevate"
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Elevating with $elevate"
       "$elevate" env "XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-}" "SUDO_USER=$(whoami)" "$SCRIPT_PATH" "$@"
       exit $?
     fi
   done
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] ERROR: No elevation tool found."
   echo "Please install sudo, doas, run0 (systemd), or pkexec (polkit) to continue."
   exit 1
 fi
@@ -41,6 +49,7 @@ echo -e "\n\n========================================" > /var/log/cyberpanel_upg
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Starting CyberPanel Upgrade Script" >> /var/log/cyberpanel_upgrade_debug.log
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Old log files have been cleared" >> /var/log/cyberpanel_upgrade_debug.log
 echo -e "========================================\n" >> /var/log/cyberpanel_upgrade_debug.log
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Logging to ${LOG_FILE}" >> /var/log/cyberpanel_upgrade_debug.log
 
 #### this is temp code for csf
 
@@ -372,6 +381,7 @@ mysql -uroot -p"$MySQL_Password" -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'loca
 
 Pre_Upgrade_Setup_Repository() {
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Pre_Upgrade_Setup_Repository started for OS: $Server_OS" | tee -a /var/log/cyberpanel_upgrade_debug.log
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Pre_Upgrade_Setup_Repository started for OS: $Server_OS"
 
 if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "AlmaLinux9" ]] ; then
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Setting up repositories for $Server_OS..." | tee -a /var/log/cyberpanel_upgrade_debug.log
@@ -606,6 +616,7 @@ fi
 
 Download_Requirement() {
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Starting Download_Requirement function..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Download_Requirement started"
 for i in {1..50};
   do
   if [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] || [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]; then
@@ -639,6 +650,7 @@ Pre_Upgrade_Required_Components() {
 
 # Check if CyberCP directory exists but is incomplete/damaged
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Checking CyberCP directory integrity..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Pre_Upgrade_Required_Components started"
 
 # Define essential CyberCP components
 CYBERCP_ESSENTIAL_DIRS=(
@@ -884,6 +896,7 @@ Pre_Upgrade_Branch_Input() {
 Main_Upgrade() {
 echo -e "\n[$(date +"%Y-%m-%d %H:%M:%S")] Starting Main_Upgrade function..." | tee -a /var/log/cyberpanel_upgrade_debug.log
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running: /usr/local/CyberPanel/bin/python upgrade.py $Branch_Name" | tee -a /var/log/cyberpanel_upgrade_debug.log
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Main_Upgrade started for branch ${Branch_Name}"
 
 # Run upgrade.py and capture output
 upgrade_output=$(/usr/local/CyberPanel/bin/python upgrade.py "$Branch_Name" 2>&1)
@@ -1191,6 +1204,7 @@ echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Main_Upgrade function completed" | tee -
 }
 
 Post_Upgrade_System_Tweak() {
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Post_Upgrade_System_Tweak started"
   if [[ "$Server_OS" = "CentOS" ]] ; then
 
   #for cenots 7/8
@@ -1510,6 +1524,7 @@ systemctl restart lscpd
 }
 
 Post_Install_Display_Final_Info() {
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Post_Install_Display_Final_Info started"
 echo -e "\n"
 echo "╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╗"
 echo "║                                                                                                               ║"
