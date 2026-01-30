@@ -220,7 +220,7 @@ def submitUserCreation(request):
             if ACLManager.CheckRegEx("^[\w'\-,.][^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]]{2,}$", firstName) == 0:
                 data_ret = {'status': 0, 'createStatus': 0, 'error_message': 'First Name can only contain alphabetic characters, and should be more than 2 characters long...'}
                 json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
+                return HttpResponse(json_data, content_type='application/json')
 
             if ACLManager.CheckRegEx("^[\w'\-,.][^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]]{2,}$", lastName) == 0:
                 data_ret = {'status': 0, 'createStatus': 0, 'error_message': 'Last Name can only contain alphabetic characters, and should be more than 2 characters long...'}
@@ -362,7 +362,7 @@ def submitUserCreation(request):
             data_ret = {'status': 1, 'createStatus': 1,
                         'error_message': "None"}
             final_json = json.dumps(data_ret)
-            return HttpResponse(final_json)
+            return HttpResponse(final_json, content_type='application/json')
 
         except Exception as e:
             secure_log_error(e, 'submitUserCreation', request.session.get('userID', 'Unknown'))

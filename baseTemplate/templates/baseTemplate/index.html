@@ -42,9 +42,9 @@
     <!-- Chart.js -->
     <script src="{% static 'baseTemplate/custom-js/chart.umd.min.js' %}?v={{ CP_VERSION }}"></script>
     
-    <!-- PNotify -->
+    <!-- PNotify (data-cfasync=false ensures it loads before controllers that use it) -->
     <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/custom-js/pnotify.custom.min.css' %}?v={{ CP_VERSION }}">
-    <script src="{% static 'baseTemplate/custom-js/pnotify.custom.min.js' %}?v={{ CP_VERSION }}"></script>
+    <script src="{% static 'baseTemplate/custom-js/pnotify.custom.min.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     
     <!-- Select2 (required by FTP create account; load after jQuery; exclude from Rocket Loader to preserve order) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css">
@@ -2178,22 +2178,22 @@
         {% block content %}{% endblock %}
     </div>
     
-    <!-- Additional Scripts -->
-    <script src="{% static 'packages/packages.js' %}?v={{ CP_VERSION }}"></script>
-    <script src="{% static 'websiteFunctions/websiteFunctions.js' %}?v={{ CP_VERSION }}"></script>
-    <script src="{% static 'userManagment/userManagment.js' %}?v={{ CP_VERSION }}"></script>
-    <script src="{% static 'databases/databases.js' %}?v={{ CP_VERSION }}"></script>
-    <script src="{% static 'dns/dns.js' %}?v={{ CP_VERSION }}"></script>
-    <script src="{% static 'mailServer/mailServer.js' %}?v={{ CP_VERSION }}"></script>
+    <!-- Additional Scripts (data-cfasync=false ensures controllers load before Angular compiles) -->
+    <script src="{% static 'packages/packages.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'websiteFunctions/websiteFunctions.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'userManagment/userManagment.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'databases/databases.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'dns/dns.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'mailServer/mailServer.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'ftp/ftp.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
-    <script src="{% static 'backup/backup.js' %}?v={{ CP_VERSION }}"></script>
-    <script src="{% static 'managePHP/managePHP.js' %}?v={{ CP_VERSION }}"></script>
-    <script src="{% static 'serverLogs/serverLogs.js' %}?v={{ CP_VERSION }}"></script>
-    <script src="{% static 'serverStatus/serverStatus.js' %}?v={{ CP_VERSION }}"></script>
-    <script src="{% static 'firewall/firewall.js' %}?v={{ CP_VERSION }}"></script>
-    <script src="{% static 'emailPremium/emailPremium.js' %}?v={{ CP_VERSION }}"></script>
-    <script src="{% static 'manageServices/manageServices.js' %}?v={{ CP_VERSION }}"></script>
-    <script src="{% static 'CLManager/CLManager.js' %}?v={{ CP_VERSION }}"></script>
+    <script src="{% static 'backup/backup.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'managePHP/managePHP.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'serverLogs/serverLogs.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'serverStatus/serverStatus.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'firewall/firewall.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'emailPremium/emailPremium.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'manageServices/manageServices.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'CLManager/CLManager.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     
     <!-- Scripts -->
     <script>

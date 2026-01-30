@@ -8744,7 +8744,7 @@ StrictHostKeyChecking no
             admin = Administrator.objects.get(pk=userID)
             
             # Check if user has permission
-            if not ACLManager.checkIfUserIsAdmin(currentACL):
+            if not (currentACL.get('admin', 0) == 1):
                 return ACLManager.loadErrorJson('status', 0)
             
             # Backup existing configurations
@@ -8811,7 +8811,7 @@ StrictHostKeyChecking no
             admin = Administrator.objects.get(pk=userID)
             
             # Check if user has permission
-            if not ACLManager.checkIfUserIsAdmin(currentACL):
+            if not (currentACL.get('admin', 0) == 1):
                 return ACLManager.loadErrorJson('status', 0)
             
             quotas = FTPQuota.objects.all().order_by('-created_at')
@@ -8856,7 +8856,7 @@ StrictHostKeyChecking no
             admin = Administrator.objects.get(pk=userID)
             
             # Check if user has permission
-            if not ACLManager.checkIfUserIsAdmin(currentACL):
+            if not (currentACL.get('admin', 0) == 1):
                 return ACLManager.loadErrorJson('status', 0)
             
             quota_id = data.get('quota_id')
@@ -8899,7 +8899,7 @@ StrictHostKeyChecking no
             admin = Administrator.objects.get(pk=userID)
             
             # Check if user has permission
-            if not ACLManager.checkIfUserIsAdmin(currentACL):
+            if not (currentACL.get('admin', 0) == 1):
                 return ACLManager.loadErrorJson('status', 0)
             
             reset_type = data.get('reset_type', 'manual')
@@ -8970,7 +8970,7 @@ StrictHostKeyChecking no
             admin = Administrator.objects.get(pk=userID)
             
             # Check if user has permission
-            if not ACLManager.checkIfUserIsAdmin(currentACL):
+            if not (currentACL.get('admin', 0) == 1):
                 return ACLManager.loadErrorJson('status', 0)
             
             logs = BandwidthResetLog.objects.all().order_by('-reset_at')[:50]  # Last 50 entries
@@ -9013,7 +9013,7 @@ StrictHostKeyChecking no
             admin = Administrator.objects.get(pk=userID)
             
             # Check if user has permission
-            if not ACLManager.checkIfUserIsAdmin(currentACL):
+            if not (currentACL.get('admin', 0) == 1):
                 return ACLManager.loadErrorJson('status', 0)
             
             schedule_type = data.get('schedule_type', 'monthly')  # monthly, weekly, daily
@@ -9068,7 +9068,7 @@ StrictHostKeyChecking no
             admin = Administrator.objects.get(pk=userID)
             
             # Check if user has permission
-            if not ACLManager.checkIfUserIsAdmin(currentACL):
+            if not (currentACL.get('admin', 0) == 1):
                 return ACLManager.loadErrorJson('status', 0)
             
             ip_address = data.get('ip_address')
@@ -9119,7 +9119,7 @@ StrictHostKeyChecking no
             admin = Administrator.objects.get(pk=userID)
             
             # Check if user has permission
-            if not ACLManager.checkIfUserIsAdmin(currentACL):
+            if not (currentACL.get('admin', 0) == 1):
                 return ACLManager.loadErrorJson('status', 0)
             
             ip_address = data.get('ip_address')
@@ -9169,7 +9169,7 @@ StrictHostKeyChecking no
             admin = Administrator.objects.get(pk=userID)
             
             # Check if user has permission
-            if not ACLManager.checkIfUserIsAdmin(currentACL):
+            if not (currentACL.get('admin', 0) == 1):
                 return ACLManager.loadErrorJson('status', 0)
             
             # Import firewall utilities
@@ -9203,7 +9203,7 @@ StrictHostKeyChecking no
             admin = Administrator.objects.get(pk=userID)
             
             # Check if user has permission
-            if not ACLManager.checkIfUserIsAdmin(currentACL):
+            if not (currentACL.get('admin', 0) == 1):
                 return ACLManager.loadErrorJson('status', 0)
             
             ip_address = data.get('ip_address')
