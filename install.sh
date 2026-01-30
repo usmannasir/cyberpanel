@@ -1,15 +1,38 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # CyberPanel v2.5.5-dev Installer
 # Simplified approach similar to stable branch
 
+# Re-exec with elevation if not running as root
+if [ "$(id -u)" -ne 0 ]; then
+    SCRIPT_PATH="$(readlink -f "$0" 2>/dev/null || echo "$0")"
+    for elevate in sudo doas run0 pkexec; do
+        if command -v "$elevate" >/dev/null 2>&1; then
+            echo "Elevating with $elevate"
+            "$elevate" env "XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-}" "SUDO_USER=$(whoami)" "$SCRIPT_PATH" "$@"
+            exit $?
+        fi
+    done
+
+    echo "Please install sudo, doas, run0 (systemd), or pkexec (polkit) to continue."
+    exit 1
+fi
+
 # Determine branch from arguments or use default
 BRANCH_NAME="v2.5.5-dev"
-for arg in "$@"; do
-    case "$arg" in
+while [ "$#" -gt 0 ]; do
+    case "$1" in
         -b|--branch)
-            BRANCH_NAME="$2"
-            shift 2
+            if [ -n "${2:-}" ]; then
+                BRANCH_NAME="$2"
+                shift 2
+            else
+                echo "❌ Missing value for $1"
+                exit 1
+            fi
+            ;;
+        *)
+            shift
             ;;
     esac
 done
