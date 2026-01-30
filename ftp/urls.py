@@ -18,4 +18,7 @@ urlpatterns = [
     path('updateFTPQuota', views.updateFTPQuota, name='updateFTPQuota'),
     path('getFTPQuotaUsage', views.getFTPQuotaUsage, name='getFTPQuotaUsage'),
     path('migrateFTPQuotas', views.migrateFTPQuotas, name='migrateFTPQuotas'),
+
+    # FTP Quota Management page (at /ftp/quotaManagement to avoid websites/<domain> catch-all)
+    path('quotaManagement', views.ftpQuotaManagementPage, name='ftpQuotaManagementPage'),
 ]

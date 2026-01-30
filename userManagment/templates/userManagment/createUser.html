@@ -4,6 +4,8 @@
 {% block content %}
 
     {% load static %}
+    {# Ensure createUserCtr is registered before Angular compiles #}
+    <script src="{% static 'userManagment/userManagment.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     {% get_current_language as LANGUAGE_CODE %}
     <!-- Current language: {{ LANGUAGE_CODE }} -->
 
@@ -250,9 +252,9 @@
                 <div class="form-col-6">
                     <div class="form-group">
                         <label class="form-label">{% trans "First Name" %}</label>
-                        <input name="firstName" ng-pattern="/^[a-zA-Z ]+$/" type="text" class="form-control"
+                        <input name="firstName" ng-pattern="/^[a-zA-Z ]*$/" type="text" class="form-control"
                                ng-model="firstName" required>
-                        <div ng-show="createUser.firstName.$error.pattern" class="error-text">
+                        <div ng-show="createUser.firstName.$dirty && createUser.firstName.$error.pattern" class="error-text">
                             {% trans "First Name should contain only alphabetic characters." %}
                         </div>
                     </div>
@@ -260,9 +262,9 @@
                 <div class="form-col-6">
                     <div class="form-group">
                         <label class="form-label">{% trans "Last Name" %}</label>
-                        <input name="lastName" ng-pattern="/^[a-zA-Z ]+$/" type="text" class="form-control"
+                        <input name="lastName" ng-pattern="/^[a-zA-Z ]*$/" type="text" class="form-control"
                                ng-model="lastName" required>
-                        <div ng-show="createUser.lastName.$error.pattern" class="error-text">
+                        <div ng-show="createUser.lastName.$dirty && createUser.lastName.$error.pattern" class="error-text">
                             {% trans "Last Name should contain only alphabetic characters." %}
                         </div>
                     </div>
@@ -272,7 +274,7 @@
             <div class="form-group">
                 <label class="form-label">{% trans "Email Address" %}</label>
                 <input name="email" type="email" class="form-control" ng-model="email" required>
-                <div ng-show="createUser.email.$error.email" class="error-text">
+                <div ng-show="createUser.email.$dirty && createUser.email.$error.email" class="error-text">
                     {% trans "Please enter a valid email address" %}
                 </div>
             </div>
@@ -348,19 +350,19 @@
                 </button>
             </div>
 
-            <div ng-hide="userCreated" class="alert alert-success">
-                <i class="fa fa-check-circle"></i> {% trans "Account with username:" %} <strong>{$ userName $}</strong> {% trans "is successfully created." %}
+            <div ng-cloak ng-show="userCreated === false" class="alert alert-success">
+                <i class="fa fa-check-circle"></i> {% trans "Account with username:" %} <strong><span ng-bind="userName"></span></strong> {% trans "is successfully created." %}
             </div>
 
-            <div ng-hide="userCreationFailed" class="alert alert-danger">
-                <i class="fa fa-exclamation-circle"></i> {% trans "Cannot create user. Error message:" %} {$ errorMessage $}
+            <div ng-cloak ng-show="userCreationFailed === true" class="alert alert-danger">
+                <i class="fa fa-exclamation-circle"></i> {% trans "Cannot create user. Error message:" %} <span ng-bind="errorMessage || 'Unknown error'"></span>
             </div>
 
-            <div ng-hide="couldNotConnect" class="alert alert-danger">
+            <div ng-cloak ng-show="couldNotConnect === false" class="alert alert-danger">
                 <i class="fa fa-times-circle"></i> {% trans "Could not connect to server. Please refresh this page." %}
             </div>
 
-            <div ng-hide="combinedLength" class="alert alert-danger">
+            <div ng-cloak ng-show="combinedLength === false" class="alert alert-danger">
                 <i class="fa fa-exclamation-triangle"></i> {% trans "Length of first and last name combined should be less than or equal to 20 characters" %}
             </div>
           </form>

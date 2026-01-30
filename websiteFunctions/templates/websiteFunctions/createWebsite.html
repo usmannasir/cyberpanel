@@ -391,7 +391,7 @@
                     <label class="form-label">{% trans "Domain Name" %}</label>
                     <input name="dom" type="text" class="form-control" ng-model="domainNameCreate"
                            placeholder="{% trans "example.com (Do not enter WWW, it will be auto created)" %}" required>
-                    <div ng-show="websiteCreationForm.dom.$error.pattern" class="field-error">
+                    <div ng-show="websiteCreationForm.dom.$dirty && websiteCreationForm.dom.$error.pattern" class="field-error">
                         {% trans "Invalid Domain (Note: You don't need to add 'http' or 'https')" %}
                     </div>
                 </div>
@@ -401,7 +401,7 @@
                         <label class="form-label">{% trans "Email" %}</label>
                         <input type="email" name="email" class="form-control" ng-model="adminEmail" 
                                placeholder="{% trans "admin@example.com" %}" required>
-                        <div ng-show="websiteCreationForm.email.$error.email" class="field-error">
+                        <div ng-show="websiteCreationForm.email.$dirty && websiteCreationForm.email.$error.email" class="field-error">
                             {% trans "Invalid Email" %}
                         </div>
                     </div>

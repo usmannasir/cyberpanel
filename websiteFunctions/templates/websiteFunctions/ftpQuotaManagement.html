@@ -6,6 +6,24 @@ FTP Quota Management - CyberPanel
 {% endblock %}
 
 {% block content %}
+<style>
+/* Ensure FTP Quota info section is readable - dark text on light background */
+.ftp-quota-info .alert-info {
+    background: #e0f2fe !important;
+    color: #0c4a6e !important;
+    border: 1px solid #7dd3fc;
+}
+.ftp-quota-info .alert-info h5,
+.ftp-quota-info .alert-info p,
+.ftp-quota-info .alert-info .btn-primary {
+    color: inherit !important;
+}
+.ftp-quota-info .alert-info .btn-primary {
+    background: #0284c7 !important;
+    border-color: #0284c7 !important;
+    color: white !important;
+}
+</style>
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
@@ -18,7 +36,7 @@ FTP Quota Management - CyberPanel
                 </div>
                 <div class="card-body">
                     <!-- Enable FTP Quota Section -->
-                    <div class="row mb-4">
+                    <div class="row mb-4 ftp-quota-info">
                         <div class="col-12">
                             <div class="alert alert-info">
                                 <h5><i class="fas fa-info-circle"></i> FTP Quota System</h5>
@@ -112,22 +130,35 @@ function enableFTPQuota() {
         'csrfmiddlewaretoken': '{{ csrf_token }}'
     }, function(data) {
         if (data.status === 1) {
-            showNotification('success', data.message);
+            showNotification('success', (data && (data.message || data.error_message)) || 'Success');
             refreshQuotas();
         } else {
-            showNotification('error', data.message);
+            showNotification('error', (data && (data.error_message || data.message)) || 'Unknown error');
         }
     });
 }
 
 function refreshQuotas() {
-    $.post('{% url "getFTPQuotas" %}', {
-        'csrfmiddlewaretoken': '{{ csrf_token }}'
-    }, function(data) {
-        if (data.status === 1) {
-            displayQuotas(data.quotas);
-        } else {
-            showNotification('error', data.message);
+    var tbody = document.getElementById('quotasTableBody');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+    $.ajax({
+        url: '{% url "getFTPQuotas" %}',
+        type: 'POST',
+        data: { 'csrfmiddlewaretoken': '{{ csrf_token }}' },
+        dataType: 'json',
+        success: function(data) {
+            if (data && data.status === 1) {
+                displayQuotas(data.quotas || []);
+            } else {
+                var msg = (data && (data.error_message || data.message)) || 'Unknown error';
+                showNotification('error', msg);
+                if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="text-center text-danger">' + msg + '</td></tr>';
+            }
+        },
+        error: function(xhr) {
+            var msg = (xhr.responseJSON && (xhr.responseJSON.error_message || xhr.responseJSON.message)) || (xhr.statusText || 'Request failed');
+            showNotification('error', msg);
+            if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="text-center text-danger">' + msg + '</td></tr>';
         }
     });
 }
@@ -190,11 +221,11 @@ function saveQuota() {
     
     $.post('{% url "updateFTPQuota" %}', formData, function(data) {
         if (data.status === 1) {
-            showNotification('success', data.message);
+            showNotification('success', (data && (data.message || data.error_message)) || 'Success');
             $('#editQuotaModal').modal('hide');
             refreshQuotas();
         } else {
-            showNotification('error', data.message);
+            showNotification('error', (data && (data.error_message || data.message)) || 'Unknown error');
         }
     });
 }
