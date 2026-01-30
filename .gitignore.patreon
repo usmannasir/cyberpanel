@@ -1,0 +1,5 @@
+# Patreon Secrets - Never commit these files
+patreon_config.py
+patreon_secrets.env
+.env.patreon
+*patreon*.secret

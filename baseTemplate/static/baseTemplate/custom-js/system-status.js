@@ -35,7 +35,9 @@ function randomPassword(length) {
 
 /* Java script code to monitor system status */
 
-var app = angular.module('CyberCP', []);
+// Create global app reference for CyberCP module so other scripts can access it
+window.app = angular.module('CyberCP', []);
+var app = window.app; // Local reference for this file
 
 var globalScope;
 
@@ -151,13 +153,8 @@ app.controller('systemStatusInfo', function ($scope, $http, $timeout) {
                 $scope.uptime = response.data.uptime;
                 $scope.uptimeLoaded = true;
             } else {
-                // Fallback: try to get uptime separately
-                $http.get("/base/getUptime").then(function(uptimeResponse) {
-                    if (uptimeResponse.data.uptime) {
-                        $scope.uptime = uptimeResponse.data.uptime;
-                        $scope.uptimeLoaded = true;
-                    }
-                });
+                $scope.uptime = 'N/A';
+                $scope.uptimeLoaded = true;
             }
 
         }
@@ -904,6 +901,8 @@ app.controller('OnboardingCP', function ($scope, $http, $timeout, $window) {
 });
 
 app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
+    console.log('dashboardStatsController initialized');
+    
     // Card values
     $scope.totalUsers = 0;
     $scope.totalSites = 0;
@@ -1012,8 +1011,84 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     };
     
     $scope.blockIPAddress = function(ipAddress) {
-        if (!$scope.blockingIP) {
-            $scope.blockingIP = ipAddress;
+        try {
+            console.log('========================================');
+            console.log('=== blockIPAddress CALLED ===');
+            console.log('========================================');
+            console.log('blockIPAddress called with:', ipAddress);
+            console.log('ipAddress type:', typeof ipAddress);
+            console.log('ipAddress value:', ipAddress);
+            console.log('$scope:', $scope);
+            console.log('$scope.blockIPAddress:', typeof $scope.blockIPAddress);
+            
+            // Validate IP address parameter
+        if (!ipAddress) {
+            console.error('No IP address provided:', ipAddress);
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Error',
+                    text: 'No IP address provided',
+                    type: 'error',
+                    delay: 5000
+                });
+            }
+            return;
+        }
+        
+        // Ensure it's a string and trim it
+        ipAddress = String(ipAddress).trim();
+        
+        // Validate after trimming
+        if (!ipAddress || ipAddress === '' || ipAddress === 'undefined' || ipAddress === 'null') {
+            console.error('IP address is empty or invalid after trim:', ipAddress);
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Error',
+                    text: 'Invalid IP address provided: ' + ipAddress,
+                    type: 'error',
+                    delay: 5000
+                });
+            }
+            return;
+        }
+        
+        // Basic IP format validation
+        var ipPattern = /^(\d{1,3}\.){3}\d{1,3}(\/\d{1,2})?$/;
+        if (!ipPattern.test(ipAddress)) {
+            console.error('IP address format is invalid:', ipAddress);
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Error',
+                    text: 'Invalid IP address format: ' + ipAddress,
+                    type: 'error',
+                    delay: 5000
+                });
+            }
+            return;
+        }
+        
+        // Prevent duplicate requests
+        if ($scope.blockingIP === ipAddress) {
+            console.log('Already processing IP:', ipAddress);
+            return; // Already processing this IP
+        }
+        
+        // Check if already blocked
+        if ($scope.blockedIPs && $scope.blockedIPs[ipAddress]) {
+            console.log('IP already blocked:', ipAddress);
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Info',
+                    text: `IP address ${ipAddress} is already banned`,
+                    type: 'info',
+                    delay: 3000
+                });
+            }
+            return;
+        }
+        
+        // Set blocking flag to prevent duplicate requests
+        $scope.blockingIP = ipAddress;
             
             // Use the new Banned IPs system instead of the old blockIPAddress
             var data = {
@@ -1028,48 +1103,265 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                 }
             };
             
+            console.log('Sending ban IP request:', data);
+            console.log('CSRF Token:', getCookie('csrftoken'));
+            console.log('Config:', config);
+            
             $http.post('/firewall/addBannedIP', data, config).then(function (response) {
+                console.log('=== addBannedIP SUCCESS ===');
+                console.log('Full response:', response);
+                console.log('response.data:', response.data);
+                console.log('response.data type:', typeof response.data);
+                console.log('response.status:', response.status);
+                
+                // Reset blocking flag
                 $scope.blockingIP = null;
-                if (response.data && response.data.status === 1) {
+                
+                // Apply scope changes
+                if (!$scope.$$phase && !$scope.$root.$$phase) {
+                    $scope.$apply();
+                }
+                
+                // Handle both JSON string and object responses
+                var responseData = response.data;
+                if (typeof responseData === 'string') {
+                    try {
+                        responseData = JSON.parse(responseData);
+                        console.log('Parsed responseData from string:', responseData);
+                    } catch (e) {
+                        console.error('Failed to parse response as JSON:', e);
+                        console.error('Raw response string:', responseData);
+                        // Try to extract error from string
+                        if (responseData.includes('error')) {
+                            if (typeof PNotify !== 'undefined') {
+                                new PNotify({
+                                    title: 'Error',
+                                    text: 'Failed to block IP address: ' + responseData,
+                                    type: 'error',
+                                    delay: 5000
+                                });
+                            }
+                            return;
+                        }
+                    }
+                }
+                
+                console.log('Final responseData:', responseData);
+                console.log('responseData.status:', responseData ? responseData.status : 'undefined');
+                console.log('responseData.message:', responseData ? responseData.message : 'undefined');
+                console.log('responseData.error_message:', responseData ? responseData.error_message : 'undefined');
+                
+                // Check for success (status === 1 or status === '1')
+                if (responseData && (responseData.status === 1 || responseData.status === '1')) {
                     // Mark IP as blocked
+                    if (!$scope.blockedIPs) {
+                        $scope.blockedIPs = {};
+                    }
                     $scope.blockedIPs[ipAddress] = true;
                     
                     // Show success notification
-                    new PNotify({
-                        title: 'IP Address Banned',
-                        text: `IP address ${ipAddress} has been permanently banned and added to the firewall. You can manage it in the Firewall > Banned IPs section.`,
-                        type: 'success',
-                        delay: 5000
-                    });
+                    if (typeof PNotify !== 'undefined') {
+                        new PNotify({
+                            title: 'IP Address Banned',
+                            text: `IP address ${ipAddress} has been permanently banned and added to the firewall. You can manage it in the Firewall > Banned IPs section.`,
+                            type: 'success',
+                            delay: 5000
+                        });
+                    }
                     
                     // Refresh security analysis to update alerts
-                    $scope.analyzeSSHSecurity();
+                    if ($scope.analyzeSSHSecurity) {
+                        $scope.analyzeSSHSecurity();
+                    }
+                    
+                    // Apply scope changes
+                    if (!$scope.$$phase && !$scope.$root.$$phase) {
+                        $scope.$apply();
+                    }
                 } else {
                     // Show error notification
+                    var errorMsg = 'Failed to block IP address';
+                    if (responseData && responseData.error_message) {
+                        errorMsg = responseData.error_message;
+                    } else if (responseData && responseData.error) {
+                        errorMsg = responseData.error;
+                    } else if (responseData && responseData.message) {
+                        errorMsg = responseData.message;
+                    } else if (responseData) {
+                        errorMsg = JSON.stringify(responseData);
+                    }
+                    console.error('Ban IP failed:', errorMsg);
+                    if (typeof PNotify !== 'undefined') {
+                        new PNotify({
+                            title: 'Error',
+                            text: errorMsg,
+                            type: 'error',
+                            delay: 5000
+                        });
+                    }
+                }
+            }, function (err) {
+                $scope.blockingIP = null;
+                console.error('addBannedIP error:', err);
+                console.error('Error status:', err.status);
+                console.error('Error statusText:', err.statusText);
+                console.error('Error data:', err.data);
+                
+                // Prevent showing duplicate error notifications
+                if ($scope.lastErrorIP === ipAddress && $scope.lastErrorTime && (Date.now() - $scope.lastErrorTime) < 2000) {
+                    console.log('Skipping duplicate error notification for IP:', ipAddress);
+                    return;
+                }
+                
+                $scope.lastErrorIP = ipAddress;
+                $scope.lastErrorTime = Date.now();
+                
+                var errorMessage = 'Failed to block IP address';
+                if (err.data) {
+                    var errData = err.data;
+                    if (typeof errData === 'string') {
+                        try {
+                            errData = JSON.parse(errData);
+                        } catch (e) {
+                            errorMessage = errData || errorMessage;
+                        }
+                    }
+                    if (errData && typeof errData === 'object') {
+                        if (errData.error_message) {
+                            errorMessage = errData.error_message;
+                        } else if (errData.error) {
+                            errorMessage = errData.error;
+                        } else if (errData.message) {
+                            errorMessage = errData.message;
+                        }
+                    }
+                } else if (err.statusText) {
+                    errorMessage = err.statusText;
+                } else if (err.status) {
+                    errorMessage = `HTTP ${err.status}: ${err.statusText || 'Unknown error'}`;
+                }
+                
+                console.error('Final error message:', errorMessage);
+                
+                if (typeof PNotify !== 'undefined') {
                     new PNotify({
                         title: 'Error',
-                        text: response.data && response.data.error ? response.data.error : 'Failed to block IP address',
+                        text: errorMessage,
                         type: 'error',
                         delay: 5000
                     });
                 }
-            }, function (err) {
-                $scope.blockingIP = null;
-                var errorMessage = 'Failed to block IP address';
-                if (err.data && err.data.error) {
-                    errorMessage = err.data.error;
-                } else if (err.data && err.data.message) {
-                    errorMessage = err.data.message;
+            });
+        } catch (e) {
+            console.error('========================================');
+            console.error('=== ERROR in blockIPAddress ===');
+            console.error('========================================');
+            console.error('Error:', e);
+            console.error('Error message:', e.message);
+            console.error('Error stack:', e.stack);
+            $scope.blockingIP = null;
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Error',
+                    text: 'An error occurred while trying to ban the IP address: ' + (e.message || String(e)),
+                    type: 'error',
+                    delay: 5000
+                });
+            }
+        }
+    };
+    
+    // Ban IP from SSH Logs
+    $scope.banIPFromSSHLog = function(ipAddress) {
+        if (!ipAddress) {
+            new PNotify({
+                title: 'Error',
+                text: 'No IP address provided',
+                type: 'error',
+                delay: 5000
+            });
+            return;
+        }
+        
+        if ($scope.blockingIP === ipAddress) {
+            return; // Already processing
+        }
+        
+        if ($scope.blockedIPs[ipAddress]) {
+            new PNotify({
+                title: 'Info',
+                text: `IP address ${ipAddress} is already banned`,
+                type: 'info',
+                delay: 3000
+            });
+            return;
+        }
+        
+        $scope.blockingIP = ipAddress;
+        
+        // Use the Banned IPs system
+        var data = {
+            ip: ipAddress,
+            reason: 'Suspicious activity detected from SSH logs',
+            duration: 'permanent'
+        };
+        
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        
+        $http.post('/firewall/addBannedIP', data, config).then(function (response) {
+            $scope.blockingIP = null;
+            if (response.data && response.data.status === 1) {
+                // Mark IP as blocked
+                $scope.blockedIPs[ipAddress] = true;
+                
+                // Show success notification
+                new PNotify({
+                    title: 'IP Address Banned',
+                    text: `IP address ${ipAddress} has been permanently banned and added to the firewall. You can manage it in the Firewall > Banned IPs section.`,
+                    type: 'success',
+                    delay: 5000
+                });
+                
+                // Refresh SSH logs to update the UI
+                $scope.refreshSSHLogs();
+            } else {
+                // Show error notification
+                var errorMsg = 'Failed to ban IP address';
+                if (response.data && response.data.error_message) {
+                    errorMsg = response.data.error_message;
+                } else if (response.data && response.data.error) {
+                    errorMsg = response.data.error;
                 }
                 
                 new PNotify({
                     title: 'Error',
-                    text: errorMessage,
+                    text: errorMsg,
                     type: 'error',
                     delay: 5000
                 });
+            }
+        }, function (err) {
+            $scope.blockingIP = null;
+            var errorMessage = 'Failed to ban IP address';
+            if (err.data && err.data.error_message) {
+                errorMessage = err.data.error_message;
+            } else if (err.data && err.data.error) {
+                errorMessage = err.data.error;
+            } else if (err.data && err.data.message) {
+                errorMessage = err.data.message;
+            }
+            
+            new PNotify({
+                title: 'Error',
+                text: errorMessage,
+                type: 'error',
+                delay: 5000
             });
-        }
+        });
     };
     
     // Ban IP from SSH Logs
@@ -1183,15 +1475,59 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     var maxPoints = 30;
 
     function pollDashboardStats() {
-        $http.get('/base/getDashboardStats').then(function(response) {
-            if (response.data.status === 1) {
-                $scope.totalUsers = response.data.total_users;
-                $scope.totalSites = response.data.total_sites;
-                $scope.totalWPSites = response.data.total_wp_sites;
-                $scope.totalDBs = response.data.total_dbs;
-                $scope.totalEmails = response.data.total_emails;
-                $scope.totalFTPUsers = response.data.total_ftp_users;
+        console.log('[dashboardStatsController] pollDashboardStats() called');
+        console.log('[dashboardStatsController] Fetching dashboard stats from /base/getDashboardStats');
+        $http({
+            method: 'GET',
+            url: '/base/getDashboardStats',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCookie('csrftoken')
             }
+        }).then(function(response) {
+            console.log('[dashboardStatsController] pollDashboardStats SUCCESS callback called');
+            console.log('[dashboardStatsController] Dashboard stats response received:', response);
+            console.log('[dashboardStatsController] Response status:', response.status);
+            console.log('[dashboardStatsController] Response data:', response.data);
+            if (response.data && response.data.status === 1) {
+                $scope.totalUsers = response.data.total_users || 0;
+                $scope.totalSites = response.data.total_sites || 0;
+                $scope.totalWPSites = response.data.total_wp_sites || 0;
+                $scope.totalDBs = response.data.total_dbs || 0;
+                $scope.totalEmails = response.data.total_emails || 0;
+                $scope.totalFTPUsers = response.data.total_ftp_users || 0;
+                console.log('[dashboardStatsController] Dashboard stats updated:', {
+                    users: $scope.totalUsers,
+                    sites: $scope.totalSites,
+                    wp: $scope.totalWPSites,
+                    dbs: $scope.totalDBs,
+                    emails: $scope.totalEmails,
+                    ftp: $scope.totalFTPUsers
+                });
+                // No $apply needed - $http already triggers digest cycle
+            } else {
+                // Set default values if request fails
+                console.error('[dashboardStatsController] Failed to load dashboard stats - invalid response:', response.data);
+                $scope.$apply(function() {
+                    $scope.totalUsers = 0;
+                    $scope.totalSites = 0;
+                    $scope.totalWPSites = 0;
+                    $scope.totalDBs = 0;
+                    $scope.totalEmails = 0;
+                    $scope.totalFTPUsers = 0;
+                });
+            }
+        }, function(error) {
+            console.error('[dashboardStatsController] Error loading dashboard stats:', error);
+            console.error('[dashboardStatsController] Error status:', error.status);
+            console.error('[dashboardStatsController] Error data:', error.data);
+            // Set default values on error (no $apply needed - error callback also triggers digest)
+            $scope.totalUsers = 0;
+            $scope.totalSites = 0;
+            $scope.totalWPSites = 0;
+            $scope.totalDBs = 0;
+            $scope.totalEmails = 0;
+            $scope.totalFTPUsers = 0;
         });
     }
 
@@ -1614,7 +1950,12 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
         });
     }
 
-    // Initial setup
+    // Initial setup - fetch stats immediately
+    pollDashboardStats();
+    $scope.refreshTopProcesses();
+    $scope.refreshSSHLogins();
+    $scope.refreshSSHLogs();
+    
     $timeout(function() {
         // Check if user is admin before setting up charts
         $http.get('/base/getAdminStatus').then(function(response) {
@@ -1628,12 +1969,7 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
             $scope.hideSystemCharts = true;
         });
         
-        // Immediately poll once so stats are updated on first load
-        pollDashboardStats();
-        pollTraffic();
-        pollDiskIO();
-        pollCPU();
-        // Start polling
+        // Start polling for all stats
         function pollAll() {
             pollDashboardStats();
             pollTraffic();

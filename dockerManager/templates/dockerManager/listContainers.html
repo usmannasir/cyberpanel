@@ -674,14 +674,37 @@
                 <strong>{% trans "Error:" %}</strong> {$ errorMessage $}
             </div>
 
-            <div class="pagination" ng-if="pagination">
-                <ul>
-                    {% for items in pagination %}
-                        <li ng-click="getFurtherContainersFromDB({{ forloop.counter }})">
-                            <a href="">{{ forloop.counter }}</a>
-                        </li>
-                    {% endfor %}
-                </ul>
+            <!-- Pagination Controls (ACTIVITY BOARD-style: Go to page) -->
+            <div ng-if="pagination && pagination.containers && (ContainerList.length > 0 || totalCount > 0)" class="pagination-wrapper" style="margin-top: 20px; padding: 15px; background: #f8f9ff; border-radius: 8px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <button ng-click="prevPage('containers')" ng-disabled="!pagination.containers || (pagination.containers.currentPage || 1) === 1"
+                            class="pagination-btn" style="padding: 6px 12px; border: 1px solid #e8e9ff; background: white; border-radius: 6px; cursor: pointer; font-size: 12px; color: #2f3640;">
+                        <i class="fas fa-chevron-left"></i> {% trans "Prev" %}
+                    </button>
+                    <span style="font-size: 12px; color: #64748b; margin: 0 8px;">
+                        {% trans "Page" %} {$ (pagination.containers.currentPage || 1) $} {% trans "of" %} {$ (getTotalPages('containers') || 1) $}
+                    </span>
+                    <button ng-click="nextPage('containers')" ng-disabled="!pagination.containers || !getTotalPages || (pagination.containers.currentPage || 1) >= (getTotalPages('containers') || 1)"
+                            class="pagination-btn" style="padding: 6px 12px; border: 1px solid #e8e9ff; background: white; border-radius: 6px; cursor: pointer; font-size: 12px; color: #2f3640;">
+                        {% trans "Next" %} <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <label style="font-size: 12px; color: #64748b; margin: 0;">{% trans "Go to page:" %}</label>
+                    <input type="number" min="1" max="{$ (getTotalPages('containers') || 1) $}"
+                           ng-model="gotoPageInput.containers"
+                           ng-keyup="$event.keyCode === 13 && goToPage('containers', gotoPageInput.containers)"
+                           style="width: 60px; padding: 6px; border: 1px solid #e8e9ff; border-radius: 6px; font-size: 12px; text-align: center;">
+                    <button ng-click="goToPage('containers', gotoPageInput.containers)"
+                            class="pagination-btn" style="padding: 6px 12px; border: 1px solid #5b5fcf; background: #5b5fcf; color: white; border-radius: 6px; cursor: pointer; font-size: 12px;">
+                        {% trans "Go" %}
+                    </button>
+                </div>
+                <div style="font-size: 12px; color: #64748b; margin: 0;" ng-if="totalCount > 0">
+                    <span ng-if="pagination && pagination.containers">
+                        {% trans "Showing" %} {$ ((pagination.containers.currentPage || 1) - 1) * (pagination.containers.itemsPerPage || 10) + 1 $}-{$ Math.min((pagination.containers.currentPage || 1) * (pagination.containers.itemsPerPage || 10), totalCount) $} {% trans "of" %} {$ totalCount $} {% trans "entries" %}
+                    </span>
+                </div>
             </div>
         </div>
     </div>
@@ -949,5 +972,5 @@
 {% endblock %}
 
 {% block footer_scripts %}
-<script src="{% static 'dockerManager/dockerManager.js' %}"></script>
+<script src="{% static 'dockerManager/dockerManager.js' %}?v=4"></script>
 {% endblock %}

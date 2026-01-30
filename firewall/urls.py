@@ -6,6 +6,7 @@ urlpatterns = [
     path('', views.firewallHome, name='firewallHome'),
     path('getCurrentRules', views.getCurrentRules, name='getCurrentRules'),
     path('addRule', views.addRule, name='addRule'),
+    path('modifyRule', views.modifyRule, name='modifyRule'),
     path('deleteRule', views.deleteRule, name='deleteRule'),
 
     path('reloadFirewall', views.reloadFirewall, name='reloadFirewall'),
@@ -36,8 +37,11 @@ urlpatterns = [
     # Banned IPs
     path('getBannedIPs', views.getBannedIPs, name='getBannedIPs'),
     path('addBannedIP', views.addBannedIP, name='addBannedIP'),
+    path('modifyBannedIP', views.modifyBannedIP, name='modifyBannedIP'),
     path('removeBannedIP', views.removeBannedIP, name='removeBannedIP'),
     path('deleteBannedIP', views.deleteBannedIP, name='deleteBannedIP'),
+    path('exportBannedIPs', views.exportBannedIPs, name='exportBannedIPs'),
+    path('importBannedIPs', views.importBannedIPs, name='importBannedIPs'),
     path('getRulesFiles', views.getRulesFiles, name='getRulesFiles'),
     path('enableDisableRuleFile', views.enableDisableRuleFile, name='enableDisableRuleFile'),
 

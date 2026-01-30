@@ -1,5 +1,6 @@
 {% extends "baseTemplate/index.html" %}
 {% load i18n %}
+{% load website_filters %}
 {% block title %}{% trans "Modify Website - CyberPanel" %}{% endblock %}
 
 {% block header_scripts %}
@@ -479,10 +480,10 @@
                     <div ng-show="selectedHomeDirectoryInfo" class="info-box" style="margin-top: 10px;">
                         <i class="fas fa-info-circle"></i>
                         <div class="info-box-content">
-                            <div class="info-box-title">{{selectedHomeDirectoryInfo.name}}</div>
+                            <div class="info-box-title">{$ selectedHomeDirectoryInfo.name $}</div>
                             <div class="info-box-text">
-                                {{selectedHomeDirectoryInfo.description || 'No description available'}}<br>
-                                <small>Available Space: {{selectedHomeDirectoryInfo.available_space | filesize}} | Users: {{selectedHomeDirectoryInfo.user_count}}</small>
+                                {$ selectedHomeDirectoryInfo.description || 'No description available' $}<br>
+                                <small>Available Space: {$ selectedHomeDirectoryInfo.available_space | filesize $} | Users: {$ selectedHomeDirectoryInfo.user_count $}</small>
                             </div>
                         </div>
                     </div>

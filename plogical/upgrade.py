@@ -1185,7 +1185,7 @@ module cyberpanel_ols {
                 pass
 
             # Try to fetch latest phpMyAdmin version from GitHub
-            phpmyadmin_version = '5.2.2'  # Fallback version
+            phpmyadmin_version = '5.2.3'  # Fallback version
             try:
                 from plogical.versionFetcher import get_latest_phpmyadmin_version
                 latest_version = get_latest_phpmyadmin_version()
@@ -1427,13 +1427,14 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             for items in data:
                 if items.find("$sCustomDataPath = '';") > -1:
                     writeToFile.writelines(
-                        "			$sCustomDataPath = '/usr/local/lscp/cyberpanel/rainloop/data';\n")
+                        "			$sCustomDataPath = '/usr/local/lscp/cyberpanel/snappymail/data';\n")
                 else:
                     writeToFile.writelines(items)
 
             writeToFile.close()
 
-            command = "mkdir -p /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/"
+            # Create snappymail data directories (rainloop is deprecated in 2.5.5)
+            command = "mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/"
             Upgrade.executioner_silent(command, 'mkdir snappymail configs', 0)
 
             command = f'wget -q -O /usr/local/CyberCP/snappymail_cyberpanel.php  https://raw.githubusercontent.com/the-djmaze/snappymail/master/integrations/cyberpanel/install.php'
@@ -1562,6 +1563,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             #             Upgrade.executioner(command, 'verify certificate', 0)
 
             os.chdir(cwd)
+            
+            # Migrate data from old rainloop folder to new snappymail folder (2.4.4 -> 2.5.5 upgrade)
+            Upgrade.migrateRainloopToSnappymail()
             
             Upgrade.stdOut("SnappyMail installation completed.", 0)
 
@@ -3197,6 +3201,126 @@ class Migration(migrations.Migration):
             Upgrade.stdOut("Error fixing baseTemplate migrations: " + str(e))
 
     @staticmethod
+    def migrateRainloopToSnappymail():
+        """
+        Migrate data from old rainloop folder to new snappymail folder
+        This migration is for upgrading from CyberPanel 2.4.4 to 2.5.5-dev
+        """
+        try:
+            old_data_path = '/usr/local/lscp/cyberpanel/rainloop/data'
+            new_data_path = '/usr/local/lscp/cyberpanel/snappymail/data'
+            
+            # Check if old rainloop data exists
+            if not os.path.exists(old_data_path):
+                Upgrade.stdOut("No old rainloop data found, skipping migration.", 0)
+                return 0
+            
+            # Check if old data directory has actual content
+            try:
+                old_data_contents = os.listdir(old_data_path)
+                if not old_data_contents or old_data_contents == []:
+                    Upgrade.stdOut("Old rainloop data directory is empty, skipping migration.", 0)
+                    return 0
+            except:
+                Upgrade.stdOut("Could not read old rainloop data directory, skipping migration.", 0)
+                return 0
+            
+            # Check if new snappymail data already exists and has content
+            if os.path.exists(new_data_path):
+                try:
+                    new_data_contents = os.listdir(new_data_path)
+                    # If new directory has content (more than just empty subdirs), don't migrate
+                    if new_data_contents and len(new_data_contents) > 0:
+                        # Check if _data_ directory exists and has content
+                        data_dir = os.path.join(new_data_path, '_data_')
+                        if os.path.exists(data_dir):
+                            default_dir = os.path.join(data_dir, '_default_')
+                            if os.path.exists(default_dir):
+                                default_contents = os.listdir(default_dir)
+                                # If configs, domains, or storage exist, assume migration already done
+                                if any(item in default_contents for item in ['configs', 'domains', 'storage']):
+                                    Upgrade.stdOut("SnappyMail data already exists, skipping migration.", 0)
+                                    return 0
+                except:
+                    pass
+            
+            Upgrade.stdOut("Migrating rainloop data to snappymail...", 0)
+            
+            # Ensure new data directory structure exists
+            os.makedirs(new_data_path, exist_ok=True)
+            os.makedirs(os.path.join(new_data_path, '_data_', '_default_'), exist_ok=True)
+            
+            # Use rsync to copy data (preserves permissions, ownership, and handles large files)
+            import subprocess
+            import shlex
+            
+            # Copy all data from old to new location
+            command = f'rsync -av --ignore-existing {old_data_path}/ {new_data_path}/'
+            cmd = shlex.split(command)
+            result = subprocess.call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            
+            if result == 0:
+                # Set proper ownership for migrated data
+                command = "chown -R lscpd:lscpd " + new_data_path
+                Upgrade.executioner_silent(command, 'Set ownership for migrated data', 0)
+                
+                # Set proper permissions
+                command = "chmod -R 775 " + new_data_path
+                Upgrade.executioner_silent(command, 'Set permissions for migrated data', 0)
+                
+                Upgrade.stdOut("Successfully migrated rainloop data to snappymail.", 0)
+                
+                # Update include.php to use new snappymail path
+                include_file = '/usr/local/CyberCP/public/snappymail/include.php'
+                if os.path.exists(include_file):
+                    try:
+                        with open(include_file, 'r') as f:
+                            content = f.read()
+                        
+                        # Replace rainloop path with snappymail path
+                        content = content.replace(
+                            '/usr/local/lscp/cyberpanel/rainloop/data',
+                            '/usr/local/lscp/cyberpanel/snappymail/data'
+                        )
+                        
+                        with open(include_file, 'w') as f:
+                            f.write(content)
+                        
+                        Upgrade.stdOut("Updated include.php to use snappymail data path.", 0)
+                    except Exception as e:
+                        Upgrade.stdOut(f"Warning: Could not update include.php: {str(e)}", 0)
+                
+                # Also update the version-specific include.php if it exists
+                try:
+                    iPath = os.listdir('/usr/local/CyberCP/public/snappymail/snappymail/v/')
+                    if iPath:
+                        version_include = f"/usr/local/CyberCP/public/snappymail/snappymail/v/{iPath[0]}/include.php"
+                        if os.path.exists(version_include):
+                            with open(version_include, 'r') as f:
+                                content = f.read()
+                            
+                            # Replace rainloop path with snappymail path
+                            content = content.replace(
+                                '/usr/local/lscp/cyberpanel/rainloop/data',
+                                '/usr/local/lscp/cyberpanel/snappymail/data'
+                            )
+                            
+                            with open(version_include, 'w') as f:
+                                f.write(content)
+                            
+                            Upgrade.stdOut("Updated version-specific include.php to use snappymail data path.", 0)
+                except:
+                    pass
+                
+                return 1
+            else:
+                Upgrade.stdOut("Warning: Data migration completed with errors. Please verify manually.", 0)
+                return 0
+                
+        except Exception as e:
+            Upgrade.stdOut(f"Error during rainloop to snappymail migration: {str(e)}", 0)
+            return 0
+
     def IncBackupMigrations():
         try:
             connection, cursor = Upgrade.setupConnection('cyberpanel')
@@ -4175,6 +4299,35 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         Upgrade.stdOut("Applying AlmaLinux 9 MariaDB fixes...", 1)
         
         try:
+            # CRITICAL: Remove MariaDB-server-compat* before any MariaDB install (conflicts with 10.11)
+            Upgrade.stdOut("Removing conflicting MariaDB-server-compat packages...", 1)
+            try:
+                # Multiple aggressive removal attempts to ensure compat package is gone
+                # Step 1: Try dnf remove with allowerasing
+                subprocess.run("dnf remove -y --allowerasing 'MariaDB-server-compat*' 2>/dev/null || true", shell=True, timeout=60)
+                
+                # Step 2: Force remove with rpm
+                subprocess.run("rpm -e --nodeps MariaDB-server-compat-12.1.2-1.el9.noarch 2>/dev/null; true", shell=True, timeout=30)
+                
+                # Step 3: Find and remove any remaining compat packages
+                r = subprocess.run("rpm -qa 2>/dev/null | grep -i MariaDB-server-compat", shell=True, capture_output=True, text=True, timeout=30)
+                for line in (r.stdout or "").strip().splitlines():
+                    pkg = (line.strip().split() or [""])[0]
+                    if pkg and "MariaDB-server-compat" in pkg:
+                        Upgrade.stdOut(f"Force removing remaining compat package: {pkg}", 1)
+                        subprocess.run(["rpm", "-e", "--nodeps", pkg], timeout=30)
+                
+                # Step 4: Verify removal and exclude from future installs
+                r = subprocess.run("rpm -qa 2>/dev/null | grep -i MariaDB-server-compat", shell=True, capture_output=True, text=True, timeout=30)
+                if r.stdout.strip():
+                    Upgrade.stdOut(f"Warning: Some compat packages still present: {r.stdout.strip()}", 0)
+                    # Add to dnf exclude to prevent reinstallation
+                    subprocess.run("dnf config-manager --setopt exclude='MariaDB-server-compat*' --save 2>/dev/null || true", shell=True, timeout=30)
+                else:
+                    Upgrade.stdOut("Successfully removed all MariaDB-server-compat packages", 1)
+            except Exception as e:
+                Upgrade.stdOut("Warning: compat cleanup: " + str(e), 0)
+
             # Disable problematic MariaDB MaxScale repository
             Upgrade.stdOut("Disabling problematic MariaDB MaxScale repository...", 1)
             command = "dnf config-manager --disable mariadb-maxscale 2>/dev/null || true"
@@ -4196,20 +4349,37 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = "dnf clean all"
             subprocess.run(command, shell=True, capture_output=True)
             
-            # Install MariaDB from official repository
+            # Install MariaDB 10.11 from official repository (avoid 12.1 compat conflicts)
             Upgrade.stdOut("Setting up official MariaDB repository...", 1)
-            command = "curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version='12.1'"
+            command = "curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version='10.11'"
             result = subprocess.run(command, shell=True, capture_output=True, text=True)
             if result.returncode != 0:
                 Upgrade.stdOut(f"Warning: MariaDB repo setup failed: {result.stderr}", 0)
             
-            # Install MariaDB packages
+            # Install MariaDB packages with exclude to prevent compat package conflicts
             Upgrade.stdOut("Installing MariaDB packages...", 1)
             mariadb_packages = "MariaDB-server MariaDB-client MariaDB-backup MariaDB-devel"
-            command = f"dnf install -y {mariadb_packages}"
+            # Use --exclude to prevent compat package from being installed
+            command = f"dnf install -y --exclude='MariaDB-server-compat*' {mariadb_packages}"
             result = subprocess.run(command, shell=True, capture_output=True, text=True)
             if result.returncode != 0:
-                Upgrade.stdOut(f"Warning: MariaDB installation issues: {result.stderr}", 0)
+                # Check if it's a compat package conflict
+                error_output = result.stderr + result.stdout
+                if "MariaDB-server-compat" in error_output or "conflicts" in error_output.lower():
+                    Upgrade.stdOut("Compat package conflict detected, trying with --allowerasing...", 1)
+                    command = f"dnf install -y --allowerasing --exclude='MariaDB-server-compat*' {mariadb_packages}"
+                    result = subprocess.run(command, shell=True, capture_output=True, text=True)
+                    if result.returncode != 0:
+                        Upgrade.stdOut(f"Error: MariaDB installation failed: {result.stderr}", 0)
+                        return False
+                else:
+                    Upgrade.stdOut(f"Warning: MariaDB installation issues: {result.stderr}", 0)
+                    return False
+            
+            # Verify MariaDB was installed successfully
+            if not os.path.exists('/usr/bin/mysql') and not os.path.exists('/usr/bin/mariadb'):
+                Upgrade.stdOut("Error: MariaDB binaries not found after installation", 0)
+                return False
             
             # Start and enable MariaDB service
             Upgrade.stdOut("Starting MariaDB service...", 1)
