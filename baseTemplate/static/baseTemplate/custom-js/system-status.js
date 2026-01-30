@@ -1071,6 +1071,99 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
             });
         }
     };
+    
+    // Ban IP from SSH Logs
+    $scope.banIPFromSSHLog = function(ipAddress) {
+        if (!ipAddress) {
+            new PNotify({
+                title: 'Error',
+                text: 'No IP address provided',
+                type: 'error',
+                delay: 5000
+            });
+            return;
+        }
+        
+        if ($scope.blockingIP === ipAddress) {
+            return; // Already processing
+        }
+        
+        if ($scope.blockedIPs[ipAddress]) {
+            new PNotify({
+                title: 'Info',
+                text: `IP address ${ipAddress} is already banned`,
+                type: 'info',
+                delay: 3000
+            });
+            return;
+        }
+        
+        $scope.blockingIP = ipAddress;
+        
+        // Use the Banned IPs system
+        var data = {
+            ip: ipAddress,
+            reason: 'Suspicious activity detected from SSH logs',
+            duration: 'permanent'
+        };
+        
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        
+        $http.post('/firewall/addBannedIP', data, config).then(function (response) {
+            $scope.blockingIP = null;
+            if (response.data && response.data.status === 1) {
+                // Mark IP as blocked
+                $scope.blockedIPs[ipAddress] = true;
+                
+                // Show success notification
+                new PNotify({
+                    title: 'IP Address Banned',
+                    text: `IP address ${ipAddress} has been permanently banned and added to the firewall. You can manage it in the Firewall > Banned IPs section.`,
+                    type: 'success',
+                    delay: 5000
+                });
+                
+                // Refresh SSH logs to update the UI
+                $scope.refreshSSHLogs();
+            } else {
+                // Show error notification
+                var errorMsg = 'Failed to ban IP address';
+                if (response.data && response.data.error_message) {
+                    errorMsg = response.data.error_message;
+                } else if (response.data && response.data.error) {
+                    errorMsg = response.data.error;
+                }
+                
+                new PNotify({
+                    title: 'Error',
+                    text: errorMsg,
+                    type: 'error',
+                    delay: 5000
+                });
+            }
+        }, function (err) {
+            $scope.blockingIP = null;
+            var errorMessage = 'Failed to ban IP address';
+            if (err.data && err.data.error_message) {
+                errorMessage = err.data.error_message;
+            } else if (err.data && err.data.error) {
+                errorMessage = err.data.error;
+            } else if (err.data && err.data.message) {
+                errorMessage = err.data.message;
+            }
+            
+            new PNotify({
+                title: 'Error',
+                text: errorMessage,
+                type: 'error',
+                delay: 5000
+            });
+        });
+    };
 
     // Initial fetch
     $scope.refreshTopProcesses();

@@ -972,22 +972,22 @@
                                     <strong style="font-size: 12px; color: #1e293b;">Recommendation:</strong>
                                     <p style="margin: 4px 0 0 0; font-size: 12px; color: #475569; white-space: pre-line;">{$ alert.recommendation $}</p>
                                 </div>
-                                <!-- Add to Firewall Button for Brute Force Attacks -->
-                                <div ng-if="alert.title === 'Brute Force Attack Detected' && alert.details && alert.details['IP Address']" style="margin-top: 12px;">
-                                    <button ng-click="blockIPAddress(alert.details['IP Address'])" 
-                                            ng-disabled="blockingIP === alert.details['IP Address']"
+                                <!-- Add to Firewall Button for all alerts with IP addresses -->
+                                <div ng-if="alert.details && (alert.details['IP Address'] || alert.details['Top IP'])" style="margin-top: 12px;">
+                                    <button ng-click="blockIPAddress(alert.details['IP Address'] || alert.details['Top IP']); $event.stopPropagation()" 
+                                            ng-disabled="blockingIP === (alert.details['IP Address'] || alert.details['Top IP'])"
                                             style="background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;"
                                             onmouseover="this.style.background='#b91c1c'" 
                                             onmouseout="this.style.background='#dc2626'">
-                                        <i class="fas fa-ban" ng-if="blockingIP !== alert.details['IP Address']"></i>
-                                        <i class="fas fa-spinner fa-spin" ng-if="blockingIP === alert.details['IP Address']"></i>
-                                        <span ng-if="blockingIP !== alert.details['IP Address']">Ban IP Permanently</span>
-                                        <span ng-if="blockingIP === alert.details['IP Address']">Banning...</span>
+                                        <i class="fas fa-ban" ng-if="blockingIP !== (alert.details['IP Address'] || alert.details['Top IP'])"></i>
+                                        <i class="fas fa-spinner fa-spin" ng-if="blockingIP === (alert.details['IP Address'] || alert.details['Top IP'])"></i>
+                                        <span ng-if="blockingIP !== (alert.details['IP Address'] || alert.details['Top IP'])">Ban IP Permanently</span>
+                                        <span ng-if="blockingIP === (alert.details['IP Address'] || alert.details['Top IP'])">Banning...</span>
                                     </button>
                                     <a href="/firewall/" target="_blank" style="margin-left: 10px; color: #5b5fcf; font-size: 12px; text-decoration: none;">
                                         <i class="fas fa-external-link-alt"></i> Manage in Firewall
                                     </a>
-                                    <span ng-if="blockedIPs && blockedIPs[alert.details['IP Address']]" 
+                                    <span ng-if="blockedIPs && blockedIPs[alert.details['IP Address'] || alert.details['Top IP']]" 
                                           style="margin-left: 10px; color: #10b981; font-size: 12px; font-weight: 600;">
                                         <i class="fas fa-check-circle"></i> Blocked
                                     </span>
@@ -1015,12 +1015,43 @@
                     <tr>
                         <th>TIMESTAMP</th>
                         <th>MESSAGE</th>
+                        <th>IP ADDRESS</th>
+                        <th>ACTIONS</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr ng-repeat="log in sshLogs">
                         <td>{$ log.timestamp $}</td>
                         <td>{$ log.message $}</td>
+                        <td>
+                            <span ng-if="log.ip_address" style="font-family: monospace; color: #5b5fcf; font-weight: 600;">
+                                {$ log.ip_address $}
+                            </span>
+                            <span ng-if="!log.ip_address" style="color: #8893a7;">-</span>
+                        </td>
+                        <td>
+                            <button ng-if="log.ip_address && blockingIP !== log.ip_address && !blockedIPs[log.ip_address]" 
+                                    ng-click="banIPFromSSHLog(log.ip_address)"
+                                    style="background: #dc2626; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"
+                                    onmouseover="this.style.background='#b91c1c'" 
+                                    onmouseout="this.style.background='#dc2626'"
+                                    title="Ban this IP address permanently">
+                                <i class="fas fa-ban"></i>
+                                Ban IP
+                            </button>
+                            <button ng-if="log.ip_address && blockingIP === log.ip_address" 
+                                    disabled
+                                    style="background: #9ca3af; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: not-allowed; display: inline-flex; align-items: center; gap: 4px;">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                Banning...
+                            </button>
+                            <span ng-if="log.ip_address && blockedIPs[log.ip_address]" 
+                                  style="color: #10b981; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                                <i class="fas fa-check-circle"></i>
+                                Banned
+                            </span>
+                            <span ng-if="!log.ip_address" style="color: #8893a7; font-size: 11px;">-</span>
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -1292,31 +1323,67 @@
             });
         }
         
-        const formData = {
-            'csrfmiddlewaretoken': getCookie('csrftoken'),
-            'ip_address': ipAddress,
-            'reason': 'Brute force attack detected from dashboard'
-        };
-        
-        $.post('/base/blockIPAddress', formData, function(data) {
-            if (data.status === 1) {
-                showNotification('success', data.message);
-                // Refresh the page to update the blocked IPs list
-                setTimeout(() => {
-                    location.reload();
-                }, 1000);
-            } else {
-                showNotification('error', data.message);
-            }
-        }).fail(function() {
-            showNotification('error', 'Failed to block IP address. Please try again.');
-        }).always(function() {
-            // Clear loading state
-            if (typeof angular !== 'undefined' && angular.element(document.body).scope()) {
-                var scope = angular.element(document.body).scope();
-                scope.$apply(function() {
-                    scope.blockingIP = null;
-                });
+        $.ajax({
+            url: '/base/blockIPAddress',
+            type: 'POST',
+            contentType: 'application/json',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            data: JSON.stringify({
+                'ip_address': ipAddress,
+                'reason': 'Security alert detected from dashboard'
+            }),
+            success: function(data) {
+                // Handle both success and error responses
+                if (data.status === 1) {
+                    showNotification('success', data.message || 'IP address blocked successfully');
+                    // Refresh the page to update the blocked IPs list
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    // Handle error response - check for both 'error' and 'error_message' fields
+                    var errorMsg = data.error || data.error_message || data.message || 'Failed to block IP address';
+                    showNotification('error', errorMsg);
+                }
+            },
+            error: function(xhr, status, error) {
+                // Handle network errors and parse JSON errors
+                console.error('Ban IP error:', xhr, status, error);
+                var errorMsg = 'Failed to block IP address. Please try again.';
+                
+                // Log full response for debugging
+                console.log('Response status:', xhr.status);
+                console.log('Response text:', xhr.responseText);
+                
+                if (xhr.responseJSON) {
+                    errorMsg = xhr.responseJSON.error || xhr.responseJSON.error_message || xhr.responseJSON.message || errorMsg;
+                    console.log('Parsed error from JSON:', errorMsg);
+                } else if (xhr.responseText) {
+                    try {
+                        var errorData = JSON.parse(xhr.responseText);
+                        errorMsg = errorData.error || errorData.error_message || errorData.message || errorMsg;
+                        console.log('Parsed error from text:', errorMsg);
+                    } catch(e) {
+                        console.error('Failed to parse error response:', e);
+                        // If parsing fails, try to extract error from response text
+                        if (xhr.responseText.includes('error')) {
+                            errorMsg = xhr.responseText.substring(0, 200);
+                        }
+                    }
+                }
+                
+                showNotification('error', errorMsg);
+            },
+            complete: function() {
+                // Clear loading state
+                if (typeof angular !== 'undefined' && angular.element(document.body).scope()) {
+                    var scope = angular.element(document.body).scope();
+                    scope.$apply(function() {
+                        scope.blockingIP = null;
+                    });
+                }
             }
         });
     }

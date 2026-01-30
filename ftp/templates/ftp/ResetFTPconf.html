@@ -308,24 +308,22 @@
                     </button>
                 </div>
 
-                <!-- Alert Messages -->
-                <div ng-hide="NotifyBox">
-                    <div ng-hide="failedToStartInallation" class="alert alert-danger">
+                <!-- Alert Messages (only one shown at a time) -->
+                <div ng-show="!NotifyBox && alertType">
+                    <div ng-if="alertType === 'failedToStart'" class="alert alert-danger">
                         <i class="fas fa-exclamation-circle"></i>
-                        {% trans "Failed to start reset process. Error message:" %} {$ errorMessage $}
+                        {% trans "Failed to start reset process. Error message:" %} <span ng-bind="errorMessage || 'Unknown error'"></span>
                     </div>
-
-                    <div ng-hide="couldNotConnect" class="alert alert-danger">
+                    <div ng-if="alertType === 'couldNotConnect'" class="alert alert-danger">
                         <i class="fas fa-times-circle"></i>
                         {% trans "Could not connect. Please refresh this page." %}
+                        <span ng-if="errorMessage" ng-bind="errorMessage"></span>
                     </div>
-
-                    <div ng-hide="installationFailed" class="alert alert-danger">
+                    <div ng-if="alertType === 'resetFailed'" class="alert alert-danger">
                         <i class="fas fa-exclamation-circle"></i>
-                        {% trans "Reset process failed." %} {$ errorMessage $}
+                        {% trans "Reset process failed." %} <span ng-bind="errorMessage || 'Unknown error'"></span>
                     </div>
-
-                    <div ng-hide="modSecSuccessfullyInstalled" class="alert alert-success">
+                    <div ng-if="alertType === 'success'" class="alert alert-success">
                         <i class="fas fa-check-circle"></i>
                         {% trans "Successfully completed reset process." %}
                     </div>

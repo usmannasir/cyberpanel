@@ -201,25 +201,25 @@ urlpatterns = [
     path('resetVHostConfigToDefault', views.resetVHostConfigToDefault, name='resetVHostConfigToDefault'),
     path('getTerminalJWT', views.get_terminal_jwt, name='get_terminal_jwt'),
 
-    # Catch all for domains
-    path('<domain>/<childDomain>', views.launchChild, name='launchChild'),
-    path('<domain>', views.domain, name='domain'),
-
     path('get_website_resources/', views.get_website_resources, name='get_website_resources'),
 
     # Subdomain Log Fix
     path('fixSubdomainLogs', views.fixSubdomainLogs, name='fixSubdomainLogs'),
     path('fixSubdomainLogsAction', views.fixSubdomainLogsAction, name='fixSubdomainLogsAction'),
 
-    # FTP Quota Management
+    # FTP Quota Management (API endpoints only; page is at /ftp/quotaManagement)
     path('enableFTPQuota', views.enableFTPQuota, name='enableFTPQuota'),
     path('getFTPQuotas', views.getFTPQuotas, name='getFTPQuotas'),
     path('updateFTPQuota', views.updateFTPQuota, name='updateFTPQuota'),
 
     # Bandwidth Management
+    path('bandwidthManagement', views.bandwidthManagementPage, name='bandwidthManagementPage'),
     path('resetBandwidth', views.resetBandwidth, name='resetBandwidth'),
     path('getBandwidthResetLogs', views.getBandwidthResetLogs, name='getBandwidthResetLogs'),
     path('scheduleBandwidthReset', views.scheduleBandwidthReset, name='scheduleBandwidthReset'),
+
+    # Security Management
+    path('securityManagement', views.securityManagementPage, name='securityManagementPage'),
 
     # IP Blocking
     path('blockIPAddress', views.blockIPAddress, name='blockIPAddress'),
@@ -227,5 +227,7 @@ urlpatterns = [
     path('getBlockedIPs', views.getBlockedIPs, name='getBlockedIPs'),
     path('checkIPStatus', views.checkIPStatus, name='checkIPStatus'),
 
-    
+    # Catch all for domains (must be last)
+    path('<domain>/<childDomain>', views.launchChild, name='launchChild'),
+    path('<domain>', views.domain, name='domain'),
 ]

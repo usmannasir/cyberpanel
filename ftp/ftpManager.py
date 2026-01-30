@@ -17,7 +17,7 @@ except:
 import plogical.CyberCPLogFileWriter as logging
 try:
     from loginSystem.views import loadLoginPage
-    from websiteFunctions.models import Websites
+    from websiteFunctions.models import Websites, ChildDomains
     from plogical.ftpUtilities import FTPUtilities
     from plogical.acl import ACLManager
 except:
@@ -102,13 +102,14 @@ class FTPManager:
             result = FTPUtilities.submitFTPCreation(domainName, userName, password, path, admin.userName, api, customQuotaSize, enableCustomQuota)
 
             if result[0] == 1:
-                data_ret = {'status': 1, 'creatFTPStatus': 1, 'error_message': 'None'}
+                created_username = (admin.userName + "_" + userName) if api == '0' else userName
+                data_ret = {'status': 1, 'creatFTPStatus': 1, 'error_message': 'None', 'createdFTPUsername': created_username}
                 json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
+                return HttpResponse(json_data, content_type='application/json')
             else:
                 data_ret = {'status': 0, 'creatFTPStatus': 0, 'error_message': result[1]}
                 json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
+                return HttpResponse(json_data, content_type='application/json')
 
         except BaseException as msg:
             # Enhanced error handling with better user feedback
@@ -135,7 +136,7 @@ class FTPManager:
             
             data_ret = {'status': 0, 'creatFTPStatus': 0, 'error_message': error_message}
             json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
+            return HttpResponse(json_data, content_type='application/json')
 
     def deleteFTPAccount(self):
         userID = self.request.session['userID']
@@ -161,23 +162,30 @@ class FTPManager:
                 return ACLManager.loadErrorJson('fetchStatus', 0)
 
             data = json.loads(self.request.body)
-            domain = data['ftpDomain']
+            domain = data.get('ftpDomain') or data.get('selectedDomain', '')
+
+            if not domain or not str(domain).strip():
+                return HttpResponse(json.dumps({'fetchStatus': 0, 'error_message': 'No domain selected'}), content_type='application/json')
 
             admin = Administrator.objects.get(pk=userID)
             if ACLManager.checkOwnership(domain, admin, currentACL) == 1:
                 pass
             else:
-                return ACLManager.loadErrorJson()
+                return ACLManager.loadErrorJson('fetchStatus', 0)
 
-            website = Websites.objects.get(domain=domain)
+            try:
+                child = ChildDomains.objects.get(domain=domain)
+                website = child.master
+            except ChildDomains.DoesNotExist:
+                website = Websites.objects.get(domain=domain)
 
-            ftpAccounts = website.users_set.all()
+            ftpAccounts = website.users_set.values_list('user', flat=True)
 
             json_data = "["
             checker = 0
 
-            for items in ftpAccounts:
-                dic = {"userName": items.user}
+            for userName in ftpAccounts:
+                dic = {"userName": userName}
 
                 if checker == 0:
                     json_data = json_data + json.dumps(dic)
@@ -187,12 +195,12 @@ class FTPManager:
 
             json_data = json_data + ']'
             final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "data": json_data})
-            return HttpResponse(final_json)
+            return HttpResponse(final_json, content_type='application/json')
 
         except BaseException as msg:
             data_ret = {'fetchStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
+            return HttpResponse(json_data, content_type='application/json')
 
     def submitFTPDelete(self):
         try:
@@ -808,9 +816,15 @@ class FTPManager:
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Completed [200].')
 
         except BaseException as msg:
-            final_dic = {'status': 0, 'error_message': str(msg)}
-            final_json = json.dumps(final_dic)
-            return HttpResponse(final_json)
+            err_msg = str(msg)
+            try:
+                logging.CyberCPLogFileWriter.statusWriter(
+                    self.extraArgs['tempStatusPath'],
+                    '[ERROR] %s [404].' % err_msg
+                )
+            except Exception:
+                pass
+            return 0
 
 def main():
 
