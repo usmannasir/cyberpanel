@@ -36,7 +36,8 @@ from math import ceil
 from plogical.alias import AliasManager
 from plogical.applicationInstaller import ApplicationInstaller
 from plogical import hashPassword, randomPassword
-from emailMarketing.emACL import emACL
+# emailMarketing removed from INSTALLED_APPS
+# from emailMarketing.emACL import emACL
 from plogical.processUtilities import ProcessUtilities
 from managePHP.phpManager import PHPManager
 from ApachController.ApacheVhosts import ApacheVhost
@@ -3729,7 +3730,9 @@ context /cyberpanel_suspension_page.html {
 
             from plogical.processUtilities import ProcessUtilities
 
-            marketingStatus = emACL.checkIfEMEnabled(admin.userName)
+            # emailMarketing removed - always return False for marketing status
+            # marketingStatus = emACL.checkIfEMEnabled(admin.userName)
+            marketingStatus = False
 
             Data['marketingStatus'] = marketingStatus
             Data['ftpTotal'] = website.package.ftpAccounts
@@ -4023,6 +4026,43 @@ context /cyberpanel_suspension_page.html {
                             {"error": 1, "domain": "This child domain does not exists"})
             return proc.render()
 
+    def _get_log_file_path(self, domain_name, log_type):
+        """
+        Get the correct log file path for a domain.
+        For child domains (sub-domains), logs are stored in the master domain's log directory.
+        
+        Args:
+            domain_name: The domain name (could be a child domain)
+            log_type: 1 for access log, 0 for error log
+            
+        Returns:
+            str: The full path to the log file
+        """
+        try:
+            # Check if this is a child domain
+            try:
+                child_domain = ChildDomains.objects.get(domain=domain_name)
+                master_domain = child_domain.master.domain
+                log_dir = f"/home/{master_domain}/logs"
+            except ChildDomains.DoesNotExist:
+                # Not a child domain, use standard path
+                log_dir = f"/home/{domain_name}/logs"
+            
+            # Construct log file path
+            if log_type == 1:
+                log_file = f"{domain_name}.access_log"
+            else:
+                log_file = f"{domain_name}.error_log"
+            
+            return f"{log_dir}/{log_file}"
+        except Exception as e:
+            # Fallback to standard path if anything fails
+            logging.CyberCPLogFileWriter.writeToFile(f'Error determining log path for {domain_name}: {str(e)}')
+            if log_type == 1:
+                return f"/home/{domain_name}/logs/{domain_name}.access_log"
+            else:
+                return f"/home/{domain_name}/logs/{domain_name}.error_log"
+
     def getDataFromLogFile(self, userID=None, data=None):
 
         currentACL = ACLManager.loadedACL(userID)
@@ -4037,10 +4077,8 @@ context /cyberpanel_suspension_page.html {
         else:
             return ACLManager.loadErrorJson('logstatus', 0)
 
-        if logType == 1:
-            fileName = "/home/" + self.domain + "/logs/" + self.domain + ".access_log"
-        else:
-            fileName = "/home/" + self.domain + "/logs/" + self.domain + ".error_log"
+        # Use helper method to get correct log file path (handles child domains)
+        fileName = self._get_log_file_path(self.domain, logType)
 
         command = 'ls -la %s' % fileName
         result = ProcessUtilities.outputExecutioner(command)
@@ -4050,6 +4088,10 @@ context /cyberpanel_suspension_page.html {
                 {'status': 0, 'logstatus': 0,
                  'error_message': "Symlink attack."})
             return HttpResponse(final_json)
+        
+        # Only read from the specific domain's log file - don't fallback to master domain
+        # This ensures we only show logs for the requested domain, not mixed logs from other domains
+        # If the log file doesn't exist or is empty, we'll return empty results
 
         ## get Logs
         website = Websites.objects.get(domain=self.domain)
@@ -4071,25 +4113,47 @@ context /cyberpanel_suspension_page.html {
 
         for items in reversed(data):
             if len(items) > 10:
-                logData = items.split(" ")
-                domain = logData[5].strip('"')
-                ipAddress = logData[0].strip('"')
-                time = (logData[3]).strip("[").strip("]")
-                resource = logData[6].strip('"')
-                size = logData[9].replace('"', '')
+                try:
+                    logData = items.split(" ")
+                    if len(logData) < 10:
+                        continue
+                    
+                    # Parse log entry: format is "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\""
+                    # When split by space: [0]="IP, [1]=-, [2]=-, [3]=[timestamp_part1, [4]=timestamp_part2], [5]="GET, [6]=/path?params, [7]=HTTP/2", [8]=status, [9]=size, [10]="referer", [11+]="user-agent"
+                    ipAddress = logData[0].strip('"')
+                    # Reconstruct timestamp from fields 3 and 4
+                    time = (logData[3] + " " + logData[4]).strip("[").strip("]") if len(logData) > 4 else logData[3].strip("[").strip("]")
+                    # Resource path starts at field 6, reconstruct until we hit HTTP/version field
+                    if len(logData) > 6:
+                        resource_parts = []
+                        i = 6
+                        while i < len(logData) and not logData[i].startswith('HTTP/'):
+                            resource_parts.append(logData[i])
+                            i += 1
+                        resource = " ".join(resource_parts).strip('"')
+                    else:
+                        resource = ""
+                    # Size is typically in field 9 (after status code in field 8)
+                    size = logData[9].replace('"', '') if len(logData) > 9 else "0"
+                    
+                    # Note: Log format doesn't include domain name, so domain is determined by which log file is read
+                    # We already ensured we're reading from the correct domain's log file above
 
-                dic = {'domain': domain,
-                       'ipAddress': ipAddress,
-                       'time': time,
-                       'resource': resource,
-                       'size': size,
-                       }
+                    dic = {'domain': self.domain,  # Use requested domain since it's determined by log file
+                           'ipAddress': ipAddress,
+                           'time': time,
+                           'resource': resource,
+                           'size': size,
+                           }
 
-                if checker == 0:
-                    json_data = json_data + json.dumps(dic)
-                    checker = 1
-                else:
-                    json_data = json_data + ',' + json.dumps(dic)
+                    if checker == 0:
+                        json_data = json_data + json.dumps(dic)
+                        checker = 1
+                    else:
+                        json_data = json_data + ',' + json.dumps(dic)
+                except (IndexError, ValueError) as e:
+                    # Skip malformed log entries
+                    continue
 
         json_data = json_data + ']'
         final_json = json.dumps({'status': 1, 'logstatus': 1, 'error_message': "None", "data": json_data})
@@ -4108,7 +4172,9 @@ context /cyberpanel_suspension_page.html {
         else:
             return ACLManager.loadErrorJson('logstatus', 0)
 
-        fileName = "/home/" + self.domain + "/logs/" + self.domain + ".error_log"
+        # Use helper method to get correct log file path (handles child domains)
+        # log_type 0 = error log
+        fileName = self._get_log_file_path(self.domain, 0)
 
         command = 'ls -la %s' % fileName
         result = ProcessUtilities.outputExecutioner(command)

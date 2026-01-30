@@ -13,6 +13,16 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 import os
 from django.utils.translation import gettext_lazy as _
 
+# Patreon OAuth Configuration for Paid Plugins
+# SECURITY: Environment variables take precedence. Hardcoded values are fallback for this server only.
+# For repository version, use empty defaults and set via environment variables.
+PATREON_CLIENT_ID = os.environ.get('PATREON_CLIENT_ID', 'LFXeXUcfrM8MeVbUcmGbB7BgeJ9RzZi2v_H9wL4d9vG6t1dV4SUnQ4ibn9IYzvt7')
+PATREON_CLIENT_SECRET = os.environ.get('PATREON_CLIENT_SECRET', 'APuJ5qoL3TLFmNnGDVkgl-qr3sCzp2CQsKfslBbp32hhnhlD0y6-ZcSCkb_FaUJv')
+PATREON_CREATOR_ID = os.environ.get('PATREON_CREATOR_ID', '')
+PATREON_MEMBERSHIP_TIER_ID = os.environ.get('PATREON_MEMBERSHIP_TIER_ID', '27789984')  # CyberPanel Paid Plugin tier
+PATREON_CREATOR_ACCESS_TOKEN = os.environ.get('PATREON_CREATOR_ACCESS_TOKEN', 'niAHRiI9SgrRCMmaf5exoXXphy3RWXWsX4kO5Yv9SQI')
+PATREON_CREATOR_REFRESH_TOKEN = os.environ.get('PATREON_CREATOR_REFRESH_TOKEN', 'VZlCQoPwJUr4NLni1N82-K_CpJHTAOYUOCx2PujdjQg')
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -55,8 +65,6 @@ INSTALLED_APPS = [
 
     # Apps with multiple or complex dependencies
     'emailPremium',
-    'discordWebhooks',     # Depends on mailServer
-    'testPlugin',       # Test plugin
     'emailMarketing',   # Depends on websiteFunctions and loginSystem
     'cloudAPI',         # Depends on websiteFunctions
     'containerization', # Depends on websiteFunctions
@@ -82,6 +90,9 @@ INSTALLED_APPS = [
     'highAvailability',
     #    'WebTerminal'
 ]
+
+# Add plugins that are installed (plugin installer handles adding/removing)
+# Plugins are added by plugin installer when plugins are installed
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -130,7 +141,7 @@ DATABASES = {
         'USER': 'cyberpanel',
         'PASSWORD': '1XTy1XOV0BZPnM',
         'HOST': 'localhost',
-        'PORT': ''
+        'PORT':''
     },
     'rootdb': {
         'ENGINE': 'django.db.backends.mysql',

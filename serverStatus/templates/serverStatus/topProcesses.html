@@ -184,23 +184,47 @@
         margin: 0 auto;
     }
     
-    .auto-refresh-indicator {
+    .header-actions {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    
+    .btn-refresh {
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
         background: rgba(255, 255, 255, 0.2);
-        padding: 0.5rem 1rem;
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        padding: 0.75rem 1.5rem;
         border-radius: 20px;
         font-size: 1rem;
-        margin-top: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
     }
     
-    .refresh-dot {
-        width: 8px;
-        height: 8px;
-        background: var(--success-accent);
-        border-radius: 50%;
-        animation: pulse 1.5s infinite;
+    .btn-refresh:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.5);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    
+    .btn-refresh:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    .btn-refresh i {
+        transition: transform 0.3s ease;
+    }
+    
+    .btn-refresh i.fa-spin {
+        animation: spin 1s linear infinite;
     }
     
     .stats-grid {
@@ -616,9 +640,11 @@
             <p class="page-subtitle">
                 {% trans "Real-time monitoring of system processes, CPU usage, memory consumption, and resource allocation" %}
             </p>
-            <div class="auto-refresh-indicator">
-                <span class="refresh-dot"></span>
-                {% trans "Auto-refresh every 3 seconds" %}
+            <div class="header-actions">
+                <button type="button" ng-click="topProcessesStatus()" class="btn-refresh" ng-disabled="!cyberPanelLoading">
+                    <i class="fas fa-sync-alt" ng-class="{'fa-spin': !cyberPanelLoading}"></i>
+                    {% trans "Refresh" %}
+                </button>
             </div>
         </div>
     </div>
@@ -793,19 +819,19 @@
             </div>
             <div class="stat-content">
                 <div class="stat-item">
-                    <span class="stat-value">{$ ioWait || '-' $}%</span>
+                    <span class="stat-value">{$ ioWait || '-' $}</span>
                     <span class="stat-label">{% trans "I/O Wait" %}</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-value">{$ idleTime || '-' $}%</span>
+                    <span class="stat-value">{$ idleTime || '-' $}</span>
                     <span class="stat-label">{% trans "Idle Time" %}</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-value">{$ hwInterrupts || '-' $}%</span>
+                    <span class="stat-value">{$ hwInterrupts || '-' $}</span>
                     <span class="stat-label">{% trans "HW Interrupts" %}</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-value">{$ Softirqs || '-' $}%</span>
+                    <span class="stat-value">{$ Softirqs || '-' $}</span>
                     <span class="stat-label">{% trans "Soft IRQs" %}</span>
                 </div>
             </div>
@@ -916,5 +942,5 @@
 {% endblock %}
 
 {% block footer_scripts %}
-<script src="{% static 'serverStatus/serverStatus.js' %}"></script>
+<!-- serverStatus.js is already loaded by base template, no need to load again -->
 {% endblock %}

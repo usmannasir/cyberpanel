@@ -1,254 +1,164 @@
-#!/bin/bash
+#!/bin/sh
 
-# Enhanced CyberPanel Installer with Modular Architecture
-# This installer uses modules for better organization and maintainability
-# Each module is kept under 500 lines for easy management
+# CyberPanel v2.5.5-dev Installer
+# Simplified approach similar to stable branch
 
-set -e
-
-# Get script directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-MODULES_DIR="$SCRIPT_DIR/modules"
-
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-
-# Global variables
-SERVER_OS=""
-OS_FAMILY=""
-PACKAGE_MANAGER=""
-ARCHITECTURE=""
-BRANCH_NAME=""
-
-# Logging function
-log_message() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [MAIN-INSTALLER] $1" | tee -a "/var/log/cyberpanel_install.log" 2>/dev/null || echo "[$(date '+%Y-%m-%d %H:%M:%S')] [MAIN-INSTALLER] $1"
-}
-
-# Print colored output
-print_status() {
-    local color=$1
-    local message=$2
-    echo -e "${color}${message}${NC}"
-    log_message "$message"
-}
-
-# Function to load modules
-load_module() {
-    local module_path="$1"
-    local module_name="$2"
-    
-    if [ -f "$module_path" ]; then
-        source "$module_path"
-        print_status "$GREEN" "✅ Loaded module: $module_name"
-        return 0
-    else
-        print_status "$RED" "❌ Module not found: $module_path"
-        return 1
-    fi
-}
-
-# Function to initialize modules
-initialize_modules() {
-    print_status "$BLUE" "🔧 Initializing modules..."
-    
-    # Load OS detection module
-    if ! load_module "$MODULES_DIR/os/detect.sh" "OS Detection"; then
-        print_status "$RED" "❌ Failed to load OS detection module"
-                exit 1
-fi
-
-    # Load dependency manager module
-    if ! load_module "$MODULES_DIR/deps/manager.sh" "Dependency Manager"; then
-        print_status "$RED" "❌ Failed to load dependency manager module"
-        exit 1
-    fi
-    
-    # Load CyberPanel installer module
-    if ! load_module "$MODULES_DIR/install/cyberpanel_installer.sh" "CyberPanel Installer"; then
-        print_status "$RED" "❌ Failed to load CyberPanel installer module"
-        exit 1
-    fi
-    
-    # Load fixes module
-    if ! load_module "$MODULES_DIR/fixes/cyberpanel_fixes.sh" "CyberPanel Fixes"; then
-        print_status "$RED" "❌ Failed to load fixes module"
-        exit 1
-    fi
-    
-    print_status "$GREEN" "✅ All modules loaded successfully"
-}
-
-# Function to detect operating system
-detect_operating_system() {
-    print_status "$BLUE" "🔍 Detecting operating system..."
-    
-    if detect_os; then
-        # Get OS information
-        eval $(get_os_info)
-        print_status "$GREEN" "✅ OS detected: $SERVER_OS ($OS_FAMILY)"
-        print_status "$GREEN" "✅ Package manager: $PACKAGE_MANAGER"
-        print_status "$GREEN" "✅ Architecture: $ARCHITECTURE"
-        return 0
-    else
-        print_status "$RED" "❌ Failed to detect operating system"
-        exit 1
-    fi
-}
-
-# Function to install dependencies
-install_dependencies() {
-    print_status "$BLUE" "📦 Installing dependencies..."
-    
-    if manage_dependencies "$SERVER_OS" "$OS_FAMILY" "$PACKAGE_MANAGER"; then
-        print_status "$GREEN" "✅ Dependencies installed successfully"
-        return 0
-    else
-        print_status "$YELLOW" "⚠️  Dependency installation had issues, continuing..."
-        return 1
-    fi
-}
-
-# Function to install CyberPanel
-install_cyberpanel_main() {
-    print_status "$BLUE" "🚀 Installing CyberPanel..."
-    
-    # Prepare installation arguments
-    local install_args=()
-    for arg in "$@"; do
-        install_args+=("$arg")
-    done
-    
-    if install_cyberpanel_main "$SERVER_OS" "$BRANCH_NAME" "${install_args[@]}"; then
-        print_status "$GREEN" "✅ CyberPanel installed successfully"
-        return 0
-    else
-        print_status "$RED" "❌ CyberPanel installation failed"
-        return 1
-    fi
-}
-
-# Function to apply fixes
-apply_fixes() {
-    print_status "$BLUE" "🔧 Applying installation fixes..."
-    
-    if apply_cyberpanel_fixes "$PACKAGE_MANAGER"; then
-        print_status "$GREEN" "✅ All fixes applied successfully"
-        return 0
-    else
-        print_status "$YELLOW" "⚠️  Some fixes had issues, but continuing..."
-        return 1
-    fi
-}
-
-# Function to show firewall information
-show_firewall_info() {
-    echo ""
-    echo "🔥 FIREWALL CONFIGURATION REQUIRED:"
-    echo "═══════════════════════════════════════════════════════════════════════════════════════════════════════════════"
-    echo "If your provider has a network-level firewall, please ensure these ports are open:"
-    echo ""
-    echo "• TCP 8090 - CyberPanel Web Interface"
-    echo "• TCP 80, 443 - Web Server (HTTP/HTTPS)"
-    echo "• TCP 7080 - LiteSpeed Admin Console"
-    echo "• TCP 21, 40110-40210 - FTP Service"
-    echo "• TCP 25, 587, 465, 110, 143, 993 - Mail Services"
-    echo "• TCP/UDP 53 - DNS Service"
-    echo ""
-}
-
-# Function to show final restart prompt
-show_restart_prompt() {
-    echo ""
-    echo "╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╗"
-    echo "║                                                                                                               ║"
-    echo "║                    🔄 SERVER RESTART PROMPT 🔄                                                              ║"
-    echo "║                                                                                                               ║"
-    echo "╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╝"
-    echo ""
-    
-    print_status "$GREEN" "✅ Installation completed! Safe to restart server."
-    echo "Would you like to restart your server now? [Y/n]: "
-    
-    read -r response
-    case "$response" in
-        [yY]|[yY][eE][sS]|"")
-            print_status "$GREEN" "🔄 Restarting server..."
-            shutdown -r now
-            ;;
-        *)
-            print_status "$BLUE" "Server restart cancelled. You can restart manually when ready."
+# Determine branch from arguments or use default
+BRANCH_NAME="v2.5.5-dev"
+for arg in "$@"; do
+    case "$arg" in
+        -b|--branch)
+            BRANCH_NAME="$2"
+            shift 2
             ;;
     esac
+done
+
+# Check disk space (10GB minimum)
+check_disk_space() {
+    if command -v df >/dev/null 2>&1; then
+        available_gb=$(df -BG / 2>/dev/null | awk 'NR==2 {print $4}' | sed 's/G//' | cut -d. -f1)
+        if [ -z "$available_gb" ] || ! [[ "$available_gb" =~ ^[0-9]+$ ]]; then
+            available_gb=$(df / 2>/dev/null | awk 'NR==2 {print $4}' | awk '{printf "%.0f", $1/1024/1024}')
+        fi
+        if [[ "$available_gb" =~ ^[0-9]+$ ]]; then
+            echo "💾 Disk space: ${available_gb}GB available (10GB minimum required)"
+            if [ "$available_gb" -lt 10 ]; then
+                echo "⚠️  Warning: Less than 10GB available. Installation may fail."
+            fi
+        fi
+    fi
 }
 
-# Function to parse command line arguments
-parse_arguments() {
-    while [[ $# -gt 0 ]]; do
-        case $1 in
-            -b|--branch)
-                BRANCH_NAME="$2"
-                shift 2
-                ;;
-            --debug)
-                set -x
-                shift
-                ;;
-            -h|--help)
-                echo "Usage: $0 [OPTIONS]"
-                echo "Options:"
-                echo "  -b, --branch BRANCH    Install from specific branch/commit"
-                echo "  --debug               Enable debug mode"
-                echo "  -h, --help            Show this help message"
-                exit 0
-                ;;
-            *)
-                print_status "$YELLOW" "Unknown option: $1"
-                shift
-                ;;
-        esac
-    done
-}
+# Detect OS and set SERVER_OS (similar to stable branch)
+OUTPUT=$(cat /etc/*release 2>/dev/null || echo "")
 
-# Main installation function
-main() {
-    # Initialize log file
-    mkdir -p /var/log
-    touch "/var/log/cyberpanel_install.log"
-    
-    print_status "$BLUE" "🚀 Enhanced CyberPanel Installer Starting..."
-    print_status "$BLUE" "Log file: /var/log/cyberpanel_install.log"
-    
-    # Parse command line arguments
-    parse_arguments "$@"
-    
-    # Initialize modules
-    initialize_modules
-    
-    # Detect operating system
-    detect_operating_system
-    
-    # Install dependencies
-    install_dependencies
-    
-    # Install CyberPanel
-    install_cyberpanel_main "$@"
-    
-    # Apply fixes
-    apply_fixes
-    
-    # Show firewall information
-    show_firewall_info
-    
-    # Show restart prompt
-    show_restart_prompt
-    
-    print_status "$GREEN" "🎉 CyberPanel installation process completed!"
-}
+if echo "$OUTPUT" | grep -q "CentOS Linux 7" ; then
+    echo "Checking and installing curl and wget"
+    yum install curl wget -y 1> /dev/null 2>&1 || dnf install curl wget -y 1> /dev/null 2>&1 || true
+    yum update curl wget ca-certificates -y 1> /dev/null 2>&1 || dnf update curl wget ca-certificates -y 1> /dev/null 2>&1 || true
+    SERVER_OS="CentOS"
+elif echo "$OUTPUT" | grep -q "CentOS Linux 8" ; then
+    echo -e "\nDetecting CentOS 8...\n"
+    SERVER_OS="CentOS8"
+    yum install curl wget -y 1> /dev/null 2>&1 || dnf install curl wget -y 1> /dev/null 2>&1 || true
+    yum update curl wget ca-certificates -y 1> /dev/null 2>&1 || dnf update curl wget ca-certificates -y 1> /dev/null 2>&1 || true
+elif echo "$OUTPUT" | grep -q "AlmaLinux 8" ; then
+    echo -e "\nDetecting AlmaLinux 8...\n"
+    SERVER_OS="CentOS8"
+    yum install curl wget -y 1> /dev/null 2>&1 || dnf install curl wget -y 1> /dev/null 2>&1 || true
+    yum update curl wget ca-certificates -y 1> /dev/null 2>&1 || dnf update curl wget ca-certificates -y 1> /dev/null 2>&1 || true
+elif echo "$OUTPUT" | grep -q "AlmaLinux 9" ; then
+    echo -e "\nDetecting AlmaLinux 9...\n"
+    SERVER_OS="CentOS8"
+    yum install curl wget -y 1> /dev/null 2>&1 || dnf install curl wget -y 1> /dev/null 2>&1 || true
+    yum update curl wget ca-certificates -y 1> /dev/null 2>&1 || dnf update curl wget ca-certificates -y 1> /dev/null 2>&1 || true
+elif echo "$OUTPUT" | grep -q "AlmaLinux 10" ; then
+    echo -e "\nDetecting AlmaLinux 10...\n"
+    SERVER_OS="CentOS8"
+    yum install curl wget -y 1> /dev/null 2>&1 || dnf install curl wget -y 1> /dev/null 2>&1 || true
+    yum update curl wget ca-certificates -y 1> /dev/null 2>&1 || dnf update curl wget ca-certificates -y 1> /dev/null 2>&1 || true
+elif echo "$OUTPUT" | grep -q "CloudLinux 7" ; then
+    echo "Checking and installing curl and wget"
+    yum install curl wget -y 1> /dev/null 2>&1 || dnf install curl wget -y 1> /dev/null 2>&1 || true
+    yum update curl wget ca-certificates -y 1> /dev/null 2>&1 || dnf update curl wget ca-certificates -y 1> /dev/null 2>&1 || true
+    SERVER_OS="CloudLinux"
+elif echo "$OUTPUT" | grep -q "CloudLinux 8" ; then
+    echo "Checking and installing curl and wget"
+    yum install curl wget -y 1> /dev/null 2>&1 || dnf install curl wget -y 1> /dev/null 2>&1 || true
+    yum update curl wget ca-certificates -y 1> /dev/null 2>&1 || dnf update curl wget ca-certificates -y 1> /dev/null 2>&1 || true
+    SERVER_OS="CloudLinux"
+elif echo "$OUTPUT" | grep -q "Ubuntu 18.04" ; then
+    apt install -y -qq wget curl 2>/dev/null || true
+    SERVER_OS="Ubuntu"
+elif echo "$OUTPUT" | grep -q "Ubuntu 20.04" ; then
+    apt install -y -qq wget curl 2>/dev/null || true
+    SERVER_OS="Ubuntu"
+elif echo "$OUTPUT" | grep -q "Ubuntu 22.04" ; then
+    apt install -y -qq wget curl 2>/dev/null || true
+    SERVER_OS="Ubuntu"
+elif echo "$OUTPUT" | grep -q "Ubuntu 24.04" ; then
+    apt install -y -qq wget curl 2>/dev/null || true
+    SERVER_OS="Ubuntu"
+elif echo "$OUTPUT" | grep -q "openEuler 20.03" ; then
+    echo -e "\nDetecting openEuler 20.03...\n"
+    SERVER_OS="openEuler"
+    yum install curl wget -y 1> /dev/null 2>&1 || dnf install curl wget -y 1> /dev/null 2>&1 || true
+    yum update curl wget ca-certificates -y 1> /dev/null 2>&1 || dnf update curl wget ca-certificates -y 1> /dev/null 2>&1 || true
+elif echo "$OUTPUT" | grep -q "openEuler 22.03" ; then
+    echo -e "\nDetecting openEuler 22.03...\n"
+    SERVER_OS="openEuler"
+    yum install curl wget -y 1> /dev/null 2>&1 || dnf install curl wget -y 1> /dev/null 2>&1 || true
+    yum update curl wget ca-certificates -y 1> /dev/null 2>&1 || dnf update curl wget ca-certificates -y 1> /dev/null 2>&1 || true
+else
+    echo -e "\nUnable to detect your OS...\n"
+    echo -e "\nCyberPanel is supported on Ubuntu 18.04, Ubuntu 20.04, Ubuntu 22.04, Ubuntu 24.04, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10 and CloudLinux 7.x...\n"
+    exit 1
+fi
 
-# Run main function
-main "$@"
+# Check disk space
+check_disk_space
+
+# Download and execute cyberpanel.sh for the specified branch
+echo "Downloading CyberPanel installer for branch: $BRANCH_NAME"
+
+# Use absolute path for downloaded script in a writable directory
+TEMP_DIR="/tmp"
+SCRIPT_PATH="$TEMP_DIR/cyberpanel-$$.sh"
+rm -f "$SCRIPT_PATH" "$TEMP_DIR/cyberpanel.sh" "$TEMP_DIR/install.tar.gz"
+
+# Ensure temp directory exists and is writable
+mkdir -p "$TEMP_DIR" 2>/dev/null || true
+
+# For v2.5.5-dev, try to get the cyberpanel.sh from the branch
+if [ "$BRANCH_NAME" = "v2.5.5-dev" ] || [ "$BRANCH_NAME" = "stable" ]; then
+    # Try to download from the branch-specific URL
+    if curl --silent -o "$SCRIPT_PATH" "https://raw.githubusercontent.com/master3395/cyberpanel/$BRANCH_NAME/cyberpanel.sh" 2>/dev/null; then
+        if [ -f "$SCRIPT_PATH" ] && [ -s "$SCRIPT_PATH" ]; then
+            # Make script executable
+            chmod 755 "$SCRIPT_PATH" 2>/dev/null || true
+            # Verify it's executable
+            if [ -x "$SCRIPT_PATH" ]; then
+                echo "✅ Downloaded cyberpanel.sh from branch $BRANCH_NAME"
+                # Change to temp directory and execute with bash
+                # Use absolute path to avoid any relative path issues
+                cd "$TEMP_DIR" || cd /tmp || cd /
+                bash "$SCRIPT_PATH" "$@"
+                exit $?
+            else
+                echo "⚠️  Warning: Could not make script executable, trying alternative method..."
+                cd "$TEMP_DIR" || cd /tmp || cd /
+                bash -c "bash '$SCRIPT_PATH' $*"
+                exit $?
+            fi
+        fi
+    fi
+fi
+
+# Fallback to standard cyberpanel.sh download
+if curl --silent -o "$SCRIPT_PATH" "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null || \
+   wget -q -O "$SCRIPT_PATH" "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null; then
+    if [ -f "$SCRIPT_PATH" ] && [ -s "$SCRIPT_PATH" ]; then
+        # Make script executable
+        chmod 755 "$SCRIPT_PATH" 2>/dev/null || true
+        # Verify it's executable
+        if [ -x "$SCRIPT_PATH" ]; then
+            echo "✅ Downloaded cyberpanel.sh from standard source"
+            # Change to temp directory and execute with bash
+            # Use absolute path to avoid any relative path issues
+            cd "$TEMP_DIR" || cd /tmp || cd /
+            bash "$SCRIPT_PATH" "$@"
+            exit $?
+        else
+            echo "⚠️  Warning: Could not make script executable, trying alternative method..."
+            cd "$TEMP_DIR" || cd /tmp || cd /
+            bash -c "bash '$SCRIPT_PATH' $*"
+            exit $?
+        fi
+    fi
+fi
+
+# If we get here, download failed
+echo "❌ Failed to download cyberpanel.sh"
+echo "Please check your internet connection and try again"
+exit 1

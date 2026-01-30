@@ -125,7 +125,7 @@
         display: flex;
         align-items: center;
         gap: 15px;
-        margin-bottom: 20px;
+        margin-bottom: 15px;
     }
     
     .plugin-icon {
@@ -143,6 +143,7 @@
     
     .plugin-info {
         flex: 1;
+        min-width: 0;
     }
     
     .plugin-name {
@@ -150,6 +151,14 @@
         font-weight: 700;
         color: var(--text-primary, #2f3640);
         margin-bottom: 5px;
+        word-wrap: break-word;
+    }
+    
+    .plugin-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
     }
     
     .plugin-type {
@@ -158,33 +167,10 @@
         background: var(--purple-light, #e8e6ff);
         color: #5856d6;
         border-radius: 6px;
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-    }
-    
-    .plugin-description {
-        font-size: 14px;
-        color: var(--text-secondary, #64748b);
-        line-height: 1.6;
-        margin-bottom: 15px;
-    }
-    
-    .plugin-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding-top: 15px;
-        border-top: 1px solid var(--border-primary, #e8e9ff);
-    }
-    
-    .plugin-version {
-        font-size: 13px;
-        color: var(--text-muted, #94a3b8);
-        display: flex;
-        align-items: center;
-        gap: 5px;
     }
     
     .plugin-version-number {
@@ -192,7 +178,203 @@
         padding: 3px 8px;
         border-radius: 4px;
         font-weight: 600;
+        font-size: 11px;
         color: var(--text-secondary, #64748b);
+    }
+    
+    .plugin-pricing-badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-left: 6px;
+        vertical-align: middle;
+    }
+    
+    .plugin-pricing-badge.free {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .plugin-pricing-badge.paid {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+    }
+    
+    .paid-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-left: 8px;
+        vertical-align: middle;
+    }
+    
+    .paid-badge i {
+        margin-right: 4px;
+    }
+    
+    .subscription-warning {
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        border-radius: 8px;
+        padding: 12px;
+        margin-top: 10px;
+        font-size: 12px;
+        color: #856404;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .subscription-warning-content {
+        display: flex;
+        align-items: center;
+        flex: 1;
+    }
+    
+    .subscription-warning i {
+        margin-right: 6px;
+        color: #ffc107;
+    }
+    
+    .subscription-warning-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        background: linear-gradient(135deg, #f96854 0%, #f96854 100%);
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+        box-shadow: 0 2px 4px rgba(249, 104, 84, 0.3);
+    }
+    
+    .subscription-warning-button:hover {
+        background: linear-gradient(135deg, #e55a47 0%, #e55a47 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(249, 104, 84, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .subscription-warning-button i {
+        margin-right: 0;
+        color: white;
+    }
+    
+    .plugin-description {
+        font-size: 13px;
+        color: var(--text-secondary, #64748b);
+        line-height: 1.6;
+        margin-bottom: 15px;
+        min-height: 40px;
+    }
+    
+    .plugin-status-section {
+        padding: 12px;
+        background: var(--bg-secondary, #f8f9ff);
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+    
+    .plugin-status-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        font-size: 12px;
+    }
+    
+    .plugin-status-row:last-child {
+        margin-bottom: 0;
+    }
+    
+    .plugin-status-row .label {
+        color: var(--text-secondary, #64748b);
+        font-weight: 600;
+    }
+    
+    .status-installed-small {
+        display: inline-block;
+        padding: 3px 8px;
+        background: #d4edda;
+        color: #155724;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+    
+    .status-not-installed-small {
+        display: inline-block;
+        padding: 3px 8px;
+        background: #f8f9fa;
+        color: #6c757d;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+    
+    .active-status {
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    .active-status.active-yes {
+        color: #28a745;
+    }
+    
+    .active-status.active-no {
+        color: #dc3545;
+    }
+    
+    .active-status.active-na {
+        color: #6c757d;
+        font-size: 12px;
+    }
+    
+    .plugin-footer {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding-top: 15px;
+        border-top: 1px solid var(--border-primary, #e8e9ff);
+    }
+    
+    .plugin-links {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    
+    .btn-small {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+    
+    .btn-link-small {
+        padding: 4px 10px;
+        font-size: 11px;
+        white-space: nowrap;
     }
     
     /* Table View (Alternative) */
@@ -295,6 +477,21 @@
         border-color: #5856d6;
     }
     
+    /* Style links that use view-btn class */
+    a.view-btn {
+        color: var(--text-secondary, #64748b);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    a.view-btn:hover {
+        background: var(--bg-hover, #f8f9ff);
+        color: #5856d6;
+        border-color: #5856d6;
+    }
+    
     /* Alert Messages */
     .alert {
         padding: 15px 20px;
@@ -319,6 +516,376 @@
     
     .alert-danger .alert-icon {
         color: var(--alert-danger-icon, #ef4444);
+    }
+    
+    /* Plugin Store Styles */
+    .store-notice {
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 25px;
+        position: relative;
+    }
+    
+    .notice-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        font-weight: 700;
+        color: #856404;
+    }
+    
+    .notice-close {
+        background: none;
+        border: none;
+        font-size: 18px;
+        color: #856404;
+        cursor: pointer;
+        padding: 5px;
+        border-radius: 4px;
+        transition: background 0.2s;
+    }
+    
+    .notice-close:hover {
+        background: rgba(0,0,0,0.1);
+    }
+    
+    .notice-content p {
+        margin: 10px 0;
+        color: #856404;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+    
+    .warning-text {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #ff6b00 !important;
+        font-weight: 600;
+        margin-top: 15px !important;
+    }
+    
+    .warning-text i {
+        font-size: 18px;
+    }
+    
+    .store-loading {
+        text-align: center;
+        padding: 60px 20px;
+    }
+    
+    .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #5856d6;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .alphabet-filter {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 20px;
+        padding: 15px;
+        background: var(--bg-secondary, #f8f9ff);
+        border-radius: 8px;
+    }
+    
+    .alpha-btn {
+        padding: 6px 12px;
+        border: 1px solid var(--border-primary, #e8e9ff);
+        background: var(--bg-primary, white);
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: var(--text-secondary, #64748b);
+        min-width: 36px;
+        text-align: center;
+    }
+    
+    .alpha-btn:hover {
+        background: var(--bg-hover, #f0f1ff);
+        border-color: #5856d6;
+        color: #5856d6;
+    }
+    
+    .alpha-btn.active {
+        background: #5856d6;
+        color: white;
+        border-color: #5856d6;
+    }
+    
+    .store-table-wrapper {
+        overflow-x: auto;
+        background: var(--bg-primary, white);
+        border-radius: 8px;
+        border: 1px solid var(--border-primary, #e8e9ff);
+    }
+    
+    .store-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .store-table th {
+        background: #2f3640;
+        color: white;
+        padding: 15px;
+        text-align: left;
+        font-size: 13px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #1a1d2e;
+    }
+    
+    .store-table td {
+        padding: 18px 15px;
+        border-bottom: 1px solid var(--border-primary, #e8e9ff);
+        font-size: 14px;
+        color: var(--text-primary, #2f3640);
+    }
+    
+    .store-table tr:hover {
+        background: var(--bg-hover, #f8f9ff);
+    }
+    
+    .store-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .status-action {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .status-installed {
+        display: inline-block;
+        padding: 6px 12px;
+        background: #d4edda;
+        color: #155724;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+    
+    .btn-install {
+        padding: 8px 16px;
+        background: #5856d6;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .btn-install:hover:not(:disabled) {
+        background: #4a48c4;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(88,86,214,0.3);
+    }
+    
+    .btn-install:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    .btn-upgrade {
+        padding: 8px 16px;
+        background: #f59e0b;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .btn-upgrade:hover:not(:disabled) {
+        background: #d97706;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(245,158,11,0.3);
+    }
+    
+    .btn-upgrade:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    .btn-link {
+        padding: 6px 12px;
+        background: var(--bg-secondary, #f8f9ff);
+        color: var(--text-secondary, #64748b);
+        text-decoration: none;
+        border-radius: 6px;
+        font-size: 13px;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .btn-link:hover {
+        background: var(--bg-hover, #f0f1ff);
+        color: #5856d6;
+    }
+    
+    /* Status and Action Columns */
+    .status-installed {
+        display: inline-block;
+        padding: 4px 10px;
+        background: #d4edda;
+        color: #155724;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    .status-not-installed {
+        display: inline-block;
+        padding: 4px 10px;
+        background: #f8f9fa;
+        color: #6c757d;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    .btn-action {
+        padding: 6px 12px;
+        border: none;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .btn-install {
+        background: #5856d6;
+        color: white;
+    }
+    
+    .btn-install:hover:not(:disabled) {
+        background: #4a48c4;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(88,86,214,0.3);
+    }
+    
+    .btn-revert {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .btn-revert:hover:not(:disabled) {
+        background: #5a6268;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(108,117,125,0.3);
+    }
+    
+    .btn-uninstall {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .btn-uninstall:hover:not(:disabled) {
+        background: #c82333;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(220,53,69,0.3);
+    }
+    
+    .btn-activate {
+        background: #28a745;
+        color: white;
+    }
+    
+    .btn-activate:hover:not(:disabled) {
+        background: #218838;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(40,167,69,0.3);
+    }
+    
+    .btn-deactivate {
+        background: #ffc107;
+        color: #212529;
+    }
+    
+    .btn-deactivate:hover:not(:disabled) {
+        background: #e0a800;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(255,193,7,0.3);
+    }
+    
+    .btn-settings {
+        background: #5856d6;
+        color: white;
+    }
+    
+    .btn-settings:hover {
+        background: #4a48c4;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(88,86,214,0.3);
+    }
+    
+    .btn-action:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    .plugin-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    /* Active Column */
+    .active-column {
+        text-align: center;
+    }
+    
+    .active-status {
+        font-size: 18px;
+        display: inline-block;
+    }
+    
+    .active-status.active-yes {
+        color: #28a745;
+    }
+    
+    .active-status.active-no {
+        color: #dc3545;
+    }
+    
+    .active-status.active-na {
+        color: #6c757d;
+        font-size: 14px;
     }
     
     /* Responsive */
@@ -346,7 +913,17 @@
         }
         
         .view-toggle {
-            display: none;
+            flex-wrap: wrap;
+        }
+        
+        .alphabet-filter {
+            padding: 10px;
+        }
+        
+        .alpha-btn {
+            padding: 5px 10px;
+            font-size: 12px;
+            min-width: 32px;
         }
     }
 </style>
@@ -360,13 +937,31 @@
     <div class="plugins-container">
         <!-- Page Header -->
         <div class="page-header">
-            <h1>
-                <div class="icon">
-                    <i class="fas fa-plug"></i>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+                <div>
+                    <h1>
+                        <div class="icon">
+                            <i class="fas fa-plug"></i>
+                        </div>
+                        {% trans "Installed Plugins" %}
+                    </h1>
+                    <p>{% trans "List of installed plugins on your CyberPanel" %}</p>
                 </div>
-                {% trans "Installed Plugins" %}
-            </h1>
-            <p>{% trans "List of installed plugins on your CyberPanel" %}</p>
+                <div style="display: flex; gap: 20px; align-items: center; margin-top: 10px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-check-circle" style="color: #28a745; font-size: 18px;"></i>
+                        <span style="font-weight: 600; color: var(--text-primary, #2f3640);">
+                            {% trans "Installed:" %} {{ installed_count|default:0 }}
+                        </span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-power-off" style="color: #007bff; font-size: 18px;"></i>
+                        <span style="font-weight: 600; color: var(--text-primary, #2f3640);">
+                            {% trans "Active:" %} {{ active_count|default:0 }}
+                        </span>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Plugins Section -->
@@ -384,6 +979,14 @@
                     <i class="fas fa-list"></i>
                     {% trans "Table View" %}
                 </button>
+                <button class="view-btn" onclick="toggleView('store')">
+                    <i class="fas fa-store"></i>
+                    {% trans "CyberPanel Plugin Store" %}
+                </button>
+                <a href="/plugins/help/" class="view-btn" style="text-decoration: none;">
+                    <i class="fas fa-book"></i>
+                    {% trans "Plugin Development Guide" %}
+                </a>
             </div>
             
             <!-- Grid View -->
@@ -405,19 +1008,96 @@
                             {% endif %}
                         </div>
                         <div class="plugin-info">
-                            <h3 class="plugin-name">{{ plugin.name }}</h3>
+                            <h3 class="plugin-name">{{ plugin.name }}{% if plugin.is_paid|default:False|default_if_none:False %} <span class="paid-badge" title="{% trans 'Paid Plugin - Patreon Subscription Required' %}"><i class="fas fa-crown"></i> {% trans "Premium" %}</span>{% endif %}</h3>
+                            <div class="plugin-meta">
                             <span class="plugin-type">{{ plugin.type }}</span>
+                                <span class="plugin-version-number">v{{ plugin.version }}</span>
+                                {% if plugin.is_paid|default:False|default_if_none:False %}
+                                    <span class="plugin-pricing-badge paid">{% trans "Paid" %}</span>
+                                {% else %}
+                                    <span class="plugin-pricing-badge free">{% trans "Free" %}</span>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                     
                     <div class="plugin-description">
                         {{ plugin.desc }}
+                        {% if plugin.is_paid|default:False|default_if_none:False %}
+                        <div class="subscription-warning">
+                            <div class="subscription-warning-content">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <strong>{% trans "Paid Plugin:" %}</strong> {% trans "Requires Patreon subscription to" %} "{{ plugin.patreon_tier|default:'CyberPanel Paid Plugin' }}"
+                            </div>
+                            {% if plugin.patreon_url %}
+                            <a href="{{ plugin.patreon_url }}" target="_blank" rel="noopener noreferrer" class="subscription-warning-button">
+                                <i class="fab fa-patreon"></i>
+                                {% trans "Subscribe on Patreon" %}
+                            </a>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="plugin-status-section">
+                        <div class="plugin-status-row">
+                            <span class="label">{% trans "Status:" %}</span>
+                            {% if plugin.installed %}
+                                <span class="status-installed-small">{% trans "Installed" %}</span>
+                            {% else %}
+                                <span class="status-not-installed-small">{% trans "Not Installed" %}</span>
+                            {% endif %}
+                        </div>
+                        <div class="plugin-status-row">
+                            <span class="label">{% trans "Active:" %}</span>
+                            {% if plugin.installed %}
+                                {% if plugin.enabled %}
+                                    <span class="active-status active-yes"><i class="fas fa-check-circle"></i> {% trans "Yes" %}</span>
+                                {% else %}
+                                    <span class="active-status active-no"><i class="fas fa-times-circle"></i> {% trans "No" %}</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="active-status active-na">-</span>
+                            {% endif %}
+                        </div>
                     </div>
                     
                     <div class="plugin-footer">
-                        <div class="plugin-version">
-                            <span>{% trans "Version" %}</span>
-                            <span class="plugin-version-number">{{ plugin.version }}</span>
+                        <div class="plugin-actions">
+                            {% if plugin.installed %}
+                                {% if plugin.manage_url %}
+                                    <a href="{{ plugin.manage_url }}" class="btn-action btn-settings btn-small" title="{% trans 'Plugin Settings' %}">
+                                        <i class="fas fa-cog"></i> {% trans "Settings" %}
+                                    </a>
+                                {% endif %}
+                                {% if plugin.enabled %}
+                                    <button class="btn-action btn-deactivate btn-small" onclick="deactivatePlugin('{{ plugin.plugin_dir }}')">
+                                        <i class="fas fa-toggle-on"></i> {% trans "Deactivate" %}
+                                    </button>
+                                {% else %}
+                                    <button class="btn-action btn-activate btn-small" onclick="activatePlugin('{{ plugin.plugin_dir }}')">
+                                        <i class="fas fa-toggle-off"></i> {% trans "Activate" %}
+                                    </button>
+                                {% endif %}
+                                <button class="btn-action btn-revert btn-small" onclick="showRevertDialog('{{ plugin.plugin_dir }}')" title="{% trans 'Revert to Previous Version' %}">
+                                    <i class="fas fa-undo"></i> {% trans "Revert Version" %}
+                                </button>
+                                <button class="btn-action btn-uninstall btn-small" onclick="uninstallPlugin('{{ plugin.plugin_dir }}')">
+                                    <i class="fas fa-trash"></i> {% trans "Uninstall" %}
+                                </button>
+                            {% else %}
+                                <button class="btn-action btn-install btn-small" onclick="installPlugin('{{ plugin.plugin_dir }}')">
+                                    <i class="fas fa-download"></i> {% trans "Install" %}
+                                </button>
+                            {% endif %}
+                        </div>
+                        <div class="plugin-links">
+                            <a href="/plugins/{{ plugin.plugin_dir }}/help/" class="btn-link btn-link-small" title="{% trans 'Plugin Help' %}">
+                                <i class="fas fa-question-circle"></i> {% trans "Help" %}
+                            </a>
+                            <a href="https://github.com/master3395/cyberpanel-plugins/tree/main/{{ plugin.plugin_dir }}" target="_blank" class="btn-link btn-link-small" title="{% trans 'About Plugin' %}">
+                                <i class="fas fa-info-circle"></i> {% trans "About" %}
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -430,10 +1110,14 @@
                     <table class="plugins-table">
                         <thead>
                             <tr>
-                                <th>{% trans "Name" %}</th>
-                                <th>{% trans "Type" %}</th>
-                                <th>{% trans "Description" %}</th>
+                                <th>{% trans "Plugin Name" %}</th>
                                 <th>{% trans "Version" %}</th>
+                                <th>{% trans "Modify Date" %}</th>
+                                <th>{% trans "Status" %}</th>
+                                <th>{% trans "Action" %}</th>
+                                <th>{% trans "Active" %}</th>
+                                <th>{% trans "Help" %}</th>
+                                <th>{% trans "About" %}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -443,11 +1127,75 @@
                                     <strong>{{ plugin.name }}</strong>
                                 </td>
                                 <td>
-                                    <span class="plugin-type">{{ plugin.type }}</span>
-                                </td>
-                                <td>{{ plugin.desc }}</td>
-                                <td>
                                     <span class="plugin-version-number">{{ plugin.version }}</span>
+                                    {% if plugin.is_paid|default:False|default_if_none:False %}
+                                        <span class="plugin-pricing-badge paid">{% trans "Paid" %}</span>
+                                    {% else %}
+                                        <span class="plugin-pricing-badge free">{% trans "Free" %}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small style="color: var(--text-secondary, #64748b);">
+                                        {{ plugin.modify_date|default:"N/A" }}
+                                    </small>
+                                </td>
+                                <td>
+                                    {% if plugin.installed %}
+                                        <span class="status-installed">{% trans "Installed" %}</span>
+                                    {% else %}
+                                        <span class="status-not-installed">{% trans "Not Installed" %}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="plugin-actions">
+                                        {% if plugin.installed %}
+                                            {% if plugin.manage_url %}
+                                                <a href="{{ plugin.manage_url }}" class="btn-action btn-settings" title="{% trans 'Plugin Settings' %}">
+                                                    <i class="fas fa-cog"></i> {% trans "Settings" %}
+                                                </a>
+                                            {% endif %}
+                                            {% if plugin.enabled %}
+                                                <button class="btn-action btn-deactivate" onclick="deactivatePlugin('{{ plugin.plugin_dir }}')">
+                                                    <i class="fas fa-toggle-on"></i> {% trans "Deactivate" %}
+                                                </button>
+                                            {% else %}
+                                                <button class="btn-action btn-activate" onclick="activatePlugin('{{ plugin.plugin_dir }}')">
+                                                    <i class="fas fa-toggle-off"></i> {% trans "Activate" %}
+                                                </button>
+                                            {% endif %}
+                                            <button class="btn-action btn-revert" onclick="showRevertDialog('{{ plugin.plugin_dir }}')" title="{% trans 'Revert to Previous Version' %}">
+                                                <i class="fas fa-undo"></i> {% trans "Revert Version" %}
+                                            </button>
+                                            <button class="btn-action btn-uninstall" onclick="uninstallPlugin('{{ plugin.plugin_dir }}')">
+                                                <i class="fas fa-trash"></i> {% trans "Uninstall" %}
+                                            </button>
+                                        {% else %}
+                                            <button class="btn-action btn-install" onclick="installPlugin('{{ plugin.plugin_dir }}')">
+                                                <i class="fas fa-download"></i> {% trans "Install" %}
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="active-column">
+                                    {% if plugin.installed %}
+                                        {% if plugin.enabled %}
+                                            <span class="active-status active-yes"><i class="fas fa-check-circle"></i></span>
+                                        {% else %}
+                                            <span class="active-status active-no"><i class="fas fa-times-circle"></i></span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="active-status active-na">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="/plugins/{{ plugin.plugin_dir }}/help/" class="btn-link" title="{% trans 'Plugin Help' %}">
+                                        <i class="fas fa-question-circle"></i> {% trans "Help" %}
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="https://github.com/master3395/cyberpanel-plugins/tree/main/{{ plugin.plugin_dir }}" target="_blank" class="btn-link" title="{% trans 'About Plugin' %}">
+                                        <i class="fas fa-info-circle"></i> {% trans "About" %}
+                                    </a>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -455,6 +1203,7 @@
                     </table>
                 </div>
             </div>
+            
             {% else %}
             <!-- Empty State -->
             <div class="empty-state">
@@ -464,7 +1213,111 @@
                 <h3 class="empty-title">{% trans "No Plugins Installed" %}</h3>
                 <p class="empty-description">{% trans "You haven't installed any plugins yet. Plugins extend CyberPanel's functionality with additional features." %}</p>
             </div>
+            
+            <!-- View Toggle (only shown when no plugins installed) -->
+            <div class="view-toggle" style="margin-top: 25px;">
+                <button class="view-btn" onclick="toggleView('grid')">
+                    <i class="fas fa-th-large"></i>
+                    {% trans "Grid View" %}
+                </button>
+                <button class="view-btn" onclick="toggleView('table')">
+                    <i class="fas fa-list"></i>
+                    {% trans "Table View" %}
+                </button>
+                <button class="view-btn active" onclick="toggleView('store')">
+                    <i class="fas fa-store"></i>
+                    {% trans "CyberPanel Plugin Store" %}
+                </button>
+                <a href="/plugins/help/" class="view-btn" style="text-decoration: none;">
+                    <i class="fas fa-book"></i>
+                    {% trans "Plugin Development Guide" %}
+                </a>
+            </div>
             {% endif %}
+            
+            <!-- CyberPanel Plugin Store (always available) -->
+            <div id="storeView" style="display: {% if not plugins %}block{% else %}none{% endif %};">
+                <!-- Loading Indicator -->
+                <div id="storeLoading" class="store-loading" style="display: {% if not plugins %}block{% else %}none{% endif %};">
+                    <i class="fas fa-spinner fa-spin"></i> {% trans "Loading plugins from store..." %}
+                </div>
+                
+                <!-- Store Error -->
+                <div id="storeError" class="alert alert-danger" style="display: none;">
+                    <i class="fas fa-exclamation-circle alert-icon"></i>
+                    <span id="storeErrorText"></span>
+                </div>
+                
+                <!-- Notice Section (similar to CMSMS Module Manager) -->
+                <div class="store-notice" id="pluginStoreNotice">
+                    <div class="notice-header">
+                        <strong>{% trans "Notice" %}</strong>
+                        <button class="notice-close" onclick="dismissNotice()" aria-label="{% trans 'Close notice' %}">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="notice-content">
+                        <p>{% trans "The versions displayed here represent the latest plugins from the CyberPanel Plugin Store repository. They may or may not represent the latest available versions. Additionally, the plugin repository may only contain plugins released within the last few months." %}</p>
+                        <p style="color: var(--text-secondary, #64748b); font-size: 13px; margin-top: 10px; padding: 10px; background: var(--bg-secondary, #f8f9ff); border-radius: 6px; border-left: 3px solid #5856d6;">
+                            <i class="fas fa-info-circle" style="color: #5856d6;"></i>
+                            <strong>{% trans "Cache Information:" %}</strong>
+                            {% trans "Plugin store data is cached for 1 hour to improve performance and reduce GitHub API rate limits. New plugins may take up to 1 hour to appear after being published." %}
+                            {% if cache_expiry_timestamp %}
+                                <br><strong>{% trans "Next cache update:" %}</strong> <span id="cacheExpiryTime" style="font-family: monospace;" data-timestamp="{{ cache_expiry_timestamp }}">{% trans "Calculating..." %}</span>
+                            {% endif %}
+                        </p>
+                        <p class="warning-text">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>{% trans "Use at Your Own Risk" %}</strong>
+                        </p>
+                        <p>{% trans "The plugins displayed here are contributed by both the CyberPanel Developers and independent third parties. We make no guarantees that the plugins available here are functional, tested, or compatible with your system. You are encouraged to read the information found in the help and about links for each plugin before attempting the installation." %}</p>
+                    </div>
+                </div>
+                
+                <!-- Store Loading Indicator -->
+                <div id="storeLoading" class="store-loading" style="display: none;">
+                    <div class="loading-spinner"></div>
+                    <p>{% trans "Loading plugins from store..." %}</p>
+                </div>
+                
+                <!-- Store Error -->
+                <div id="storeError" class="alert alert-danger" style="display: none;">
+                    <i class="fas fa-exclamation-circle alert-icon"></i>
+                    <span id="storeErrorText"></span>
+                </div>
+                
+                <!-- Store Content -->
+                <div id="storeContent" style="display: none;">
+                    <!-- Alphabetical Filter -->
+                    <div class="alphabet-filter">
+                        {% for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" %}
+                            <button class="alpha-btn" onclick="filterByLetter('{{ letter }}')">{{ letter }}</button>
+                        {% endfor %}
+                        <button class="alpha-btn active" onclick="filterByLetter('all')">{% trans "All" %}</button>
+                    </div>
+                    
+                    <!-- Store Table -->
+                    <div class="store-table-wrapper">
+                        <table class="store-table">
+                            <thead>
+                                <tr>
+                                    <th>{% trans "Icon" %}</th>
+                                    <th>{% trans "Plugin Name" %}</th>
+                                    <th>{% trans "Version" %}</th>
+                                    <th>{% trans "Pricing" %}</th>
+                                    <th>{% trans "Modify Date" %}</th>
+                                    <th>{% trans "Action" %}</th>
+                                    <th>{% trans "Help" %}</th>
+                                    <th>{% trans "About" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody id="storeTableBody">
+                                <!-- Plugin rows will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
             
             <div ng-controller="listWebsites" id="listFail" class="alert alert-danger" style="display: none;">
                 <i class="fas fa-exclamation-circle alert-icon"></i>
@@ -475,9 +1328,31 @@
 </div>
 
 <script>
+// Cache-busting version: 2026-01-25-v4 - Fixed is_paid normalization and ensured consistent rendering
+// Force browser to reload this script by changing version number
+let storePlugins = [];
+let currentFilter = 'all';
+
+// Get CSRF cookie helper function
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
 function toggleView(view) {
     const gridView = document.getElementById('gridView');
     const tableView = document.getElementById('tableView');
+    const storeView = document.getElementById('storeView');
     const viewBtns = document.querySelectorAll('.view-btn');
     
     viewBtns.forEach(btn => btn.classList.remove('active'));
@@ -485,12 +1360,869 @@ function toggleView(view) {
     if (view === 'grid') {
         gridView.style.display = 'grid';
         tableView.style.display = 'none';
+        storeView.style.display = 'none';
         viewBtns[0].classList.add('active');
-    } else {
+    } else if (view === 'table') {
         gridView.style.display = 'none';
         tableView.style.display = 'block';
+        storeView.style.display = 'none';
         viewBtns[1].classList.add('active');
+    } else if (view === 'store') {
+        gridView.style.display = 'none';
+        tableView.style.display = 'none';
+        storeView.style.display = 'block';
+        viewBtns[2].classList.add('active');
+        
+        // Load plugins from store if not already loaded
+        if (storePlugins.length === 0) {
+            loadPluginStore();
+        } else {
+            displayStorePlugins();
+        }
     }
 }
+
+function loadPluginStore() {
+    const storeLoading = document.getElementById('storeLoading');
+    const storeError = document.getElementById('storeError');
+    const storeErrorText = document.getElementById('storeErrorText');
+    const storeContent = document.getElementById('storeContent');
+    
+    storeLoading.style.display = 'block';
+    storeError.style.display = 'none';
+    storeContent.style.display = 'none';
+    
+    fetch('/plugins/api/store/plugins/', {
+        method: 'GET',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        storeLoading.style.display = 'none';
+        
+        if (data.success) {
+            storePlugins = data.plugins;
+            displayStorePlugins();
+            storeContent.style.display = 'block';
+        } else {
+            storeErrorText.textContent = data.error || 'Failed to load plugins from store';
+            storeError.style.display = 'block';
+        }
+    })
+    .catch(error => {
+        storeLoading.style.display = 'none';
+        storeErrorText.textContent = 'Error loading plugin store: ' + error.message;
+        storeError.style.display = 'block';
+    });
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function displayStorePlugins() {
+    // Version: 2026-01-25-v4 - Store view: Removed Status column, always show Free/Paid badges
+    // CRITICAL: This function MUST create exactly 7 columns (no Status, no Deactivate/Uninstall)
+    const tbody = document.getElementById('storeTableBody');
+    if (!tbody) {
+        console.error('storeTableBody not found!');
+        return;
+    }
+    tbody.innerHTML = '';
+    
+    if (!storePlugins || storePlugins.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px; color: var(--text-secondary, #64748b);">No plugins available in store</td></tr>';
+        return;
+    }
+    
+    let filteredPlugins = storePlugins;
+    
+    if (currentFilter !== 'all') {
+        filteredPlugins = storePlugins.filter(plugin => 
+            plugin.name.charAt(0).toUpperCase() === currentFilter
+        );
+    }
+    
+        filteredPlugins.forEach(plugin => {
+        const row = document.createElement('tr');
+        
+        // Plugin icon - based on plugin type (same logic as Grid/Table views)
+        const pluginType = (plugin.type || 'Plugin').toLowerCase();
+        let iconClass = 'fas fa-puzzle-piece'; // Default icon
+        if (pluginType.includes('security')) {
+            iconClass = 'fas fa-shield-alt';
+        } else if (pluginType.includes('performance')) {
+            iconClass = 'fas fa-rocket';
+        } else if (pluginType.includes('utility')) {
+            iconClass = 'fas fa-tools';
+        } else if (pluginType.includes('backup')) {
+            iconClass = 'fas fa-save';
+        }
+        const iconHtml = `<div class="plugin-icon" style="width: 40px; height: 40px; background: var(--bg-secondary, #f8f9ff); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #5856d6; margin: 0 auto;">
+            <i class="${iconClass}"></i>
+        </div>`;
+        
+        // Action column - Store view only shows Install/Installed/Upgrade (no Deactivate/Uninstall)
+        // NOTE: Store view should NOT show Deactivate/Uninstall buttons - users manage from Grid/Table views
+        let actionHtml = '';
+        if (plugin.installed) {
+            // Check if update is available
+            if (plugin.update_available) {
+                // Show Upgrade button
+                actionHtml = `<button class="btn-action btn-upgrade" onclick="upgradePlugin('${plugin.plugin_dir}', '${plugin.installed_version || 'Unknown'}', '${plugin.version || 'Unknown'}')">
+                    <i class="fas fa-arrow-up"></i> Upgrade
+                </button>`;
+            } else {
+                // Show "Installed" text
+                actionHtml = '<span class="status-installed">Installed</span>';
+            }
+        } else {
+            // Show Install button
+            actionHtml = `<button class="btn-action btn-install" onclick="installFromStore('${plugin.plugin_dir}')">
+                <i class="fas fa-download"></i> Install
+            </button>`;
+        }
+        
+        // Help column - always use consistent help URL
+        const helpUrl = `/plugins/${plugin.plugin_dir}/help/`;
+        const helpHtml = `<a href="${helpUrl}" class="btn-link" title="Plugin Help">
+            <i class="fas fa-question-circle"></i> Help
+        </a>`;
+        
+        // About column
+        const aboutUrl = plugin.about_url || plugin.github_url || '#';
+        const aboutHtml = `<a href="${aboutUrl}" target="_blank" class="btn-link" title="About Plugin">
+            <i class="fas fa-info-circle"></i> About
+        </a>`;
+        
+        // Modify Date column - show N/A for store plugins (they're from GitHub, not local)
+        const modifyDateHtml = plugin.modify_date ? `<small style="color: var(--text-secondary, #64748b);">${escapeHtml(plugin.modify_date)}</small>` : '<small style="color: var(--text-secondary, #64748b);">N/A</small>';
+        
+        // Pricing badge - ALWAYS show a badge (default to Free if is_paid is missing/undefined/null)
+        // Version: 2026-01-25-v4 - Normalize is_paid to handle all possible values
+        let isPaid = false;
+        if (plugin.is_paid !== undefined && plugin.is_paid !== null) {
+            const isPaidValue = plugin.is_paid;
+            if (isPaidValue === true || isPaidValue === 'true' || isPaidValue === 'True' || isPaidValue === 1 || isPaidValue === '1' || String(isPaidValue).toLowerCase() === 'true') {
+                isPaid = true;
+            }
+        }
+        const pricingBadge = isPaid 
+            ? '<span class="plugin-pricing-badge paid">Paid</span>'
+            : '<span class="plugin-pricing-badge free">Free</span>';
+        
+        // Version: 2026-01-25-v5 - Added plugin icons to Store view (8 columns: Icon, Plugin Name, Version, Pricing, Modify Date, Action, Help, About)
+        row.innerHTML = `
+            <td style="text-align: center;">${iconHtml}</td>
+            <td>
+                <strong>${escapeHtml(plugin.name)}</strong>
+            </td>
+            <td><span class="plugin-version-number">${escapeHtml(plugin.version)}</span></td>
+            <td>${pricingBadge}</td>
+            <td>${modifyDateHtml}</td>
+            <td>${actionHtml}</td>
+            <td>${helpHtml}</td>
+            <td>${aboutHtml}</td>
+        `;
+        
+        tbody.appendChild(row);
+    });
+}
+
+function filterByLetter(letter) {
+    currentFilter = letter;
+    const alphaBtns = document.querySelectorAll('.alpha-btn');
+    alphaBtns.forEach(btn => btn.classList.remove('active'));
+    if (event && event.target) {
+        event.target.classList.add('active');
+    } else {
+        // Find and activate the clicked button
+        alphaBtns.forEach(btn => {
+            if (btn.textContent.trim() === letter || (letter === 'all' && btn.textContent.trim() === 'All')) {
+                btn.classList.add('active');
+            }
+        });
+    }
+    displayStorePlugins();
+}
+
+function upgradePlugin(pluginName, currentVersion, newVersion) {
+    // Show confirmation dialog with backup warning
+    const message = `⚠️ WARNING: Plugin Upgrade\n\n` +
+        `You are about to upgrade ${pluginName} from version ${currentVersion} to ${newVersion}.\n\n` +
+        `⚠️ IMPORTANT: You could lose data during the upgrade process.\n\n` +
+        `Please ensure you have backed up:\n` +
+        `• Plugin configuration files\n` +
+        `• Plugin data and databases\n` +
+        `• Any custom modifications\n\n` +
+        `Do you want to continue with the upgrade?`;
+    
+    if (!confirm(message)) {
+        return;
+    }
+    
+    // Double confirmation
+    if (!confirm(`Final confirmation: Upgrade ${pluginName} now?\n\nThis action cannot be undone.`)) {
+        return;
+    }
+    
+    const btn = event.target.closest('.btn-upgrade') || event.target;
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Upgrading...';
+    
+    fetch(`/plugins/api/store/upgrade/${pluginName}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Upgrade Successful!',
+                    text: data.message || `Plugin ${pluginName} upgraded successfully`,
+                    type: 'success'
+                });
+            } else {
+                alert('Success: ' + (data.message || `Plugin ${pluginName} upgraded successfully`));
+            }
+            // Reload page after short delay to show success message
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Upgrade Failed!',
+                    text: data.error || 'Failed to upgrade plugin',
+                    type: 'error'
+                });
+            } else {
+                alert('Error: ' + (data.error || 'Failed to upgrade plugin'));
+            }
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        if (typeof PNotify !== 'undefined') {
+            new PNotify({
+                title: 'Error!',
+                text: 'Failed to upgrade plugin: ' + error.message,
+                type: 'error'
+            });
+        } else {
+            alert('Error: Failed to upgrade plugin - ' + error.message);
+        }
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+}
+
+function installFromStore(pluginName) {
+    if (!confirm(`Install ${pluginName} from the CyberPanel Plugin Store?`)) {
+        return;
+    }
+    
+    const btn = event.target.closest('.btn-install') || event.target;
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Installing...';
+    
+    fetch(`/plugins/api/store/install/${pluginName}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success notification
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Success!',
+                    text: data.message || `Plugin ${pluginName} installed successfully`,
+                    type: 'success'
+                });
+            } else {
+                alert('Success: ' + (data.message || `Plugin ${pluginName} installed successfully`));
+            }
+            
+            // Reload plugins
+            loadPluginStore();
+        } else {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Installation Failed!',
+                    text: data.error || 'Failed to install plugin',
+                    type: 'error'
+                });
+            } else {
+                alert('Error: ' + (data.error || 'Failed to install plugin'));
+            }
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        if (typeof PNotify !== 'undefined') {
+            new PNotify({
+                title: 'Error!',
+                text: 'Failed to install plugin: ' + error.message,
+                type: 'error'
+            });
+        } else {
+            alert('Error: Failed to install plugin - ' + error.message);
+        }
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+}
+
+function uninstallPluginFromStore(pluginName) {
+    if (!confirm(`Are you sure you want to uninstall ${pluginName}? All data from this plugin will be deleted.`)) {
+        return;
+    }
+    
+    const btn = event.target.closest('.btn-uninstall') || event.target;
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uninstalling...';
+    
+    fetch(`/plugins/api/uninstall/${pluginName}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Success!',
+                    text: data.message || `Plugin ${pluginName} uninstalled successfully`,
+                    type: 'success'
+                });
+            } else {
+                alert('Success: ' + (data.message || `Plugin ${pluginName} uninstalled successfully`));
+            }
+            
+            // Reload plugins
+            loadPluginStore();
+        } else {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Uninstall Failed!',
+                    text: data.error || 'Failed to uninstall plugin',
+                    type: 'error'
+                });
+            } else {
+                alert('Error: ' + (data.error || 'Failed to uninstall plugin'));
+            }
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        if (typeof PNotify !== 'undefined') {
+            new PNotify({
+                title: 'Error!',
+                text: 'Failed to uninstall plugin: ' + error.message,
+                type: 'error'
+            });
+        } else {
+            alert('Error: Failed to uninstall plugin - ' + error.message);
+        }
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+}
+
+function installPlugin(pluginName) {
+    if (!confirm(`Install ${pluginName}?`)) {
+        return;
+    }
+    
+    const btn = event.target.closest('.btn-install') || event.target;
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Installing...';
+    
+    fetch(`/plugins/api/install/${pluginName}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Installation Failed!',
+                    text: data.error || 'Failed to install plugin',
+                    type: 'error'
+                });
+            } else {
+                alert('Error: ' + (data.error || 'Failed to install plugin'));
+            }
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        if (typeof PNotify !== 'undefined') {
+            new PNotify({
+                title: 'Error!',
+                text: 'Failed to install plugin: ' + error.message,
+                type: 'error'
+            });
+        } else {
+            alert('Error: Failed to install plugin - ' + error.message);
+        }
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+}
+
+function showRevertDialog(pluginName) {
+    // Fetch available backups
+    fetch(`/plugins/api/backups/${pluginName}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                if (typeof PNotify !== 'undefined') {
+                    new PNotify({
+                        title: 'Error!',
+                        text: data.error || 'Failed to load backups',
+                        type: 'error'
+                    });
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to load backups'));
+                }
+                return;
+            }
+            
+            if (!data.backups || data.backups.length === 0) {
+                if (typeof PNotify !== 'undefined') {
+                    new PNotify({
+                        title: 'No Backups Available',
+                        text: `No backups found for ${pluginName}. Backups are automatically created before upgrades.`,
+                        type: 'info'
+                    });
+                } else {
+                    alert(`No backups found for ${pluginName}. Backups are automatically created before upgrades.`);
+                }
+                return;
+            }
+            
+            // Show backup selection dialog
+            let backupList = 'Available backups:\n\n';
+            data.backups.forEach((backup, index) => {
+                const version = backup.version || 'unknown';
+                const timestamp = backup.timestamp || backup.created_at || 'unknown';
+                backupList += `${index + 1}. Version ${version} (${timestamp})\n`;
+            });
+            
+            backupList += '\n⚠️ WARNING: Reverting will replace the current plugin version with the selected backup.\n';
+            backupList += 'This action cannot be undone. Continue?';
+            
+            if (!confirm(backupList)) {
+                return;
+            }
+            
+            // Ask which backup to restore (for now, restore the most recent)
+            // In a more advanced UI, you could show a dropdown
+            const selectedBackup = data.backups[0]; // Most recent backup
+            
+            if (!confirm(`Revert ${pluginName} to version ${selectedBackup.version}?\n\nThis will replace the current installation.`)) {
+                return;
+            }
+            
+            // Perform revert
+            revertPlugin(pluginName, selectedBackup.backup_path);
+        })
+        .catch(error => {
+            const errorMessage = error && error.message ? error.message : (error ? String(error) : 'Unknown error');
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Error!',
+                    text: 'Failed to load backups: ' + errorMessage,
+                    type: 'error'
+                });
+            } else {
+                alert('Error: Failed to load backups - ' + errorMessage);
+            }
+        });
+}
+
+function revertPlugin(pluginName, backupPath) {
+    // Find the revert button for this plugin (if it exists)
+    let btn = null;
+    let originalText = '';
+    
+    // Try to find button by looking for onclick attribute containing the plugin name
+    const revertButtons = document.querySelectorAll('.btn-revert');
+    for (let button of revertButtons) {
+        const onclickAttr = button.getAttribute('onclick') || '';
+        if (onclickAttr.includes(pluginName)) {
+            btn = button;
+            originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Reverting...';
+            break;
+        }
+    }
+    
+    // Show loading notification if button not found
+    if (!btn) {
+        if (typeof PNotify !== 'undefined') {
+            new PNotify({
+                title: 'Reverting...',
+                text: `Reverting ${pluginName} to previous version...`,
+                type: 'info'
+            });
+        }
+    }
+    
+    fetch(`/plugins/api/revert/${pluginName}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            backup_path: backupPath
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Revert Successful!',
+                    text: data.message || `Plugin ${pluginName} reverted successfully`,
+                    type: 'success'
+                });
+            } else {
+                alert('Success: ' + (data.message || `Plugin ${pluginName} reverted successfully`));
+            }
+            // Reload page after short delay
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Revert Failed!',
+                    text: data.error || 'Failed to revert plugin',
+                    type: 'error'
+                });
+            } else {
+                alert('Error: ' + (data.error || 'Failed to revert plugin'));
+            }
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+    })
+    .catch(error => {
+        if (typeof PNotify !== 'undefined') {
+            new PNotify({
+                title: 'Error!',
+                text: 'Failed to revert plugin: ' + error.message,
+                type: 'error'
+            });
+        } else {
+            alert('Error: Failed to revert plugin - ' + error.message);
+        }
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    });
+}
+
+function uninstallPlugin(pluginName) {
+    if (!confirm(`Are you sure you want to uninstall ${pluginName}? All data from this plugin will be deleted.`)) {
+        return;
+    }
+    
+    const btn = event.target.closest('.btn-uninstall') || event.target;
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uninstalling...';
+    
+    fetch(`/plugins/api/uninstall/${pluginName}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Uninstall Failed!',
+                    text: data.error || 'Failed to uninstall plugin',
+                    type: 'error'
+                });
+            } else {
+                alert('Error: ' + (data.error || 'Failed to uninstall plugin'));
+            }
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        if (typeof PNotify !== 'undefined') {
+            new PNotify({
+                title: 'Error!',
+                text: 'Failed to uninstall plugin: ' + error.message,
+                type: 'error'
+            });
+        } else {
+            alert('Error: Failed to uninstall plugin - ' + error.message);
+        }
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+}
+
+function activatePlugin(pluginName) {
+    const btn = event.target.closest('.btn-activate') || event.target;
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Activating...';
+    
+    fetch(`/plugins/api/enable/${pluginName}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Success!',
+                    text: data.message || `Plugin ${pluginName} activated successfully`,
+                    type: 'success'
+                });
+            } else {
+                alert('Success: ' + (data.message || `Plugin ${pluginName} activated successfully`));
+            }
+            // Reload page to update UI
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Activation Failed!',
+                    text: data.error || 'Failed to activate plugin',
+                    type: 'error'
+                });
+            } else {
+                alert('Error: ' + (data.error || 'Failed to activate plugin'));
+            }
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        if (typeof PNotify !== 'undefined') {
+            new PNotify({
+                title: 'Error!',
+                text: 'Failed to activate plugin: ' + error.message,
+                type: 'error'
+            });
+        } else {
+            alert('Error: Failed to activate plugin - ' + error.message);
+        }
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+}
+
+function deactivatePlugin(pluginName) {
+    if (!confirm(`Deactivate ${pluginName}? The plugin will be disabled but remain installed.`)) {
+        return;
+    }
+    
+    const btn = event.target.closest('.btn-deactivate') || event.target;
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deactivating...';
+    
+    fetch(`/plugins/api/disable/${pluginName}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Success!',
+                    text: data.message || `Plugin ${pluginName} deactivated successfully`,
+                    type: 'success'
+                });
+            } else {
+                alert('Success: ' + (data.message || `Plugin ${pluginName} deactivated successfully`));
+            }
+            // Reload page to update UI
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Deactivation Failed!',
+                    text: data.error || 'Failed to deactivate plugin',
+                    type: 'error'
+                });
+            } else {
+                alert('Error: ' + (data.error || 'Failed to deactivate plugin'));
+            }
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        if (typeof PNotify !== 'undefined') {
+            new PNotify({
+                title: 'Error!',
+                text: 'Failed to deactivate plugin: ' + error.message,
+                type: 'error'
+            });
+        } else {
+            alert('Error: Failed to deactivate plugin - ' + error.message);
+        }
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+}
+
+function dismissNotice() {
+    const notice = document.getElementById('pluginStoreNotice');
+    if (notice) {
+        notice.style.display = 'none';
+        localStorage.setItem('pluginStoreNoticeDismissed', 'true');
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Check if notice was previously dismissed
+if (localStorage.getItem('pluginStoreNoticeDismissed') === 'true') {
+    const notice = document.getElementById('pluginStoreNotice');
+    if (notice) {
+        notice.style.display = 'none';
+    }
+}
+
+// Initialize view on page load
+// Convert cache expiry timestamp to local time
+function updateCacheExpiryTime() {
+    const expiryElement = document.getElementById('cacheExpiryTime');
+    if (!expiryElement) return;
+    
+    const timestamp = expiryElement.getAttribute('data-timestamp');
+    if (!timestamp) return;
+    
+    try {
+        // Convert Unix timestamp (seconds) to milliseconds for JavaScript Date
+        const timestampMs = parseFloat(timestamp) * 1000;
+        const expiryDate = new Date(timestampMs);
+        
+        // Check if date is valid
+        if (isNaN(expiryDate.getTime())) {
+            expiryElement.textContent = 'Invalid timestamp';
+            return;
+        }
+        
+        // Get user's locale preferences
+        const locale = navigator.language || navigator.userLanguage || 'en-US';
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        
+        // Format date and time according to user's locale
+        const dateOptions = {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        };
+        
+        const timeOptions = {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        };
+        
+        // Format date and time separately for better readability
+        const dateStr = expiryDate.toLocaleDateString(locale, dateOptions);
+        const timeStr = expiryDate.toLocaleTimeString(locale, timeOptions);
+        
+        // Combine with timezone abbreviation
+        const formatted = dateStr + ' ' + timeStr;
+        
+        // Display with timezone info
+        expiryElement.textContent = formatted;
+        expiryElement.title = 'Local time: ' + formatted + ' | Timezone: ' + timezone;
+    } catch (e) {
+        console.error('Error formatting cache expiry time:', e);
+        expiryElement.textContent = 'Error calculating time';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Update cache expiry time to local timezone
+    updateCacheExpiryTime();
+    
+    // Default to grid view if plugins exist, otherwise show store
+    const gridView = document.getElementById('gridView');
+    const storeView = document.getElementById('storeView');
+    if (gridView && gridView.children.length > 0) {
+        toggleView('grid');
+    } else if (storeView) {
+        // No plugins installed, show store by default
+        toggleView('store');
+    }
+    
+    // Load store plugins if store view is visible (either from toggleView or already displayed)
+    setTimeout(function() {
+        const storeViewCheck = document.getElementById('storeView');
+        if (storeViewCheck && storeViewCheck.style.display !== 'none' && storePlugins.length === 0) {
+            loadPluginStore();
+        }
+    }, 100); // Small delay to ensure DOM is ready
+});
 </script>
 {% endblock %}

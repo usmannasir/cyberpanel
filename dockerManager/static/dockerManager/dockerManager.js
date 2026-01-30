@@ -729,6 +729,59 @@ app.controller('listContainers', function ($scope, $http) {
     $scope.assignActive = "";
     $scope.dockerOwner = "";
 
+    /* Pagination (ACTIVITY BOARD-style) */
+    var CONTAINERS_PER_PAGE = 10;
+    $scope.pagination = { containers: { currentPage: 1, itemsPerPage: CONTAINERS_PER_PAGE } };
+    $scope.gotoPageInput = { containers: 1 };
+    $scope.totalCount = 0;
+    $scope.totalPages = 1;
+    $scope.Math = Math;
+
+    $scope.getTotalPages = function(section) {
+        if (section === 'containers') return Math.max(1, $scope.totalPages || 1);
+        return 1;
+    };
+
+    $scope.goToPage = function(section, page) {
+        if (section !== 'containers') return;
+        var totalPages = $scope.getTotalPages(section);
+        var p = parseInt(page, 10);
+        if (isNaN(p) || p < 1) p = 1;
+        if (p > totalPages) p = totalPages;
+        $scope.getFurtherContainersFromDB(p);
+    };
+
+    $scope.nextPage = function(section) {
+        if (section !== 'containers') return;
+        if ($scope.pagination.containers.currentPage < $scope.getTotalPages(section)) {
+            $scope.getFurtherContainersFromDB($scope.pagination.containers.currentPage + 1);
+        }
+    };
+
+    $scope.prevPage = function(section) {
+        if (section !== 'containers') return;
+        if ($scope.pagination.containers.currentPage > 1) {
+            $scope.getFurtherContainersFromDB($scope.pagination.containers.currentPage - 1);
+        }
+    };
+
+    $scope.getPageNumbers = function(section) {
+        if (section !== 'containers') return [];
+        var totalPages = $scope.getTotalPages(section);
+        var current = $scope.pagination.containers.currentPage;
+        var maxVisible = 5;
+        var pages = [];
+        if (totalPages <= maxVisible) {
+            for (var i = 1; i <= totalPages; i++) pages.push(i);
+        } else {
+            var start = Math.max(1, current - 2);
+            var end = Math.min(totalPages, start + maxVisible - 1);
+            if (end - start + 1 < maxVisible) start = Math.max(1, end - maxVisible + 1);
+            for (var j = start; j <= end; j++) pages.push(j);
+        }
+        return pages;
+    };
+
     $scope.assignContainer = function (name) {
         console.log('assignContainer called with:', name);
         $scope.assignActive = name;
@@ -783,7 +836,7 @@ app.controller('listContainers', function ($scope, $http) {
                     title: 'Container assigned successfully',
                     type: 'success'
                 });
-                window.location.href = '/docker/listContainers';
+                window.location.href = '/docker/containers';
             }
             else {
                 new PNotify({
@@ -1264,77 +1317,35 @@ app.controller('listContainers', function ($scope, $http) {
         $scope.logInfo = null;
     };
 
-    url = "/docker/getContainerList";
-
-    var data = {page: 1};
-
-    var config = {
-        headers: {
-            'X-CSRFToken': getCookie('csrftoken')
-        }
-    };
-
-    $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
-
-
-    function ListInitialData(response) {
-        console.log(response);
-
+    function handleContainerListResponse(response) {
         if (response.data.listContainerStatus === 1) {
-
             var finalData = JSON.parse(response.data.data);
             $scope.ContainerList = finalData;
-            console.log($scope.ContainerList);
+            $scope.totalCount = response.data.totalCount || 0;
+            $scope.totalPages = Math.max(1, response.data.totalPages || 1);
+            var cp = Math.max(1, parseInt(response.data.currentPage, 10) || 1);
+            $scope.pagination.containers.currentPage = cp;
+            $scope.gotoPageInput.containers = cp;
             $("#listFail").hide();
-        }
-        else {
+        } else {
             $("#listFail").fadeIn();
-            $scope.errorMessage = response.data.error_message;
-
+            $scope.errorMessage = response.data.error_message || 'Failed to load containers';
         }
     }
 
     function cantLoadInitialData(response) {
-        console.log("not good");
+        $("#listFail").fadeIn();
+        $scope.errorMessage = (response && response.data && response.data.error_message) ? response.data.error_message : 'Could not connect to server';
     }
 
+    var config = {
+        headers: { 'X-CSRFToken': getCookie('csrftoken') }
+    };
+    $http.post("/docker/getContainerList", { page: 1 }, config).then(handleContainerListResponse, cantLoadInitialData);
 
     $scope.getFurtherContainersFromDB = function (pageNumber) {
-
-        var config = {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        };
-
-        var data = {page: pageNumber};
-
-
-        dataurl = "/docker/getContainerList";
-
-        $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
-
-
-        function ListInitialData(response) {
-            if (response.data.listContainerStatus === 1) {
-
-                var finalData = JSON.parse(response.data.data);
-                $scope.ContainerList = finalData;
-                $("#listFail").hide();
-            }
-            else {
-                $("#listFail").fadeIn();
-                $scope.errorMessage = response.data.error_message;
-                console.log(response.data);
-
-            }
-        }
-
-        function cantLoadInitialData(response) {
-            console.log("not good");
-        }
-
-
+        var p = Math.max(1, parseInt(pageNumber, 10) || 1);
+        $http.post("/docker/getContainerList", { page: p }, config).then(handleContainerListResponse, cantLoadInitialData);
     };
 });
 
@@ -1906,7 +1917,7 @@ app.controller('viewContainer', function ($scope, $http, $interval, $timeout) {
                         text: 'Redirecting...',
                         type: 'success'
                     });
-                    window.location.href = '/docker/listContainers';
+                    window.location.href = '/docker/containers';
                 }
                 else {
                     new PNotify({
@@ -2703,257 +2714,3 @@ app.controller('manageImages', function ($scope, $http) {
     }
 });
 
-// Container List Controller
-app.controller('listContainers', function ($scope, $http, $timeout, $window) {
-    $scope.containers = [];
-    $scope.loading = false;
-    $scope.updateContainerName = '';
-    $scope.currentImage = '';
-    $scope.newImage = '';
-    $scope.newTag = 'latest';
-
-    // Load containers list
-    $scope.loadContainers = function() {
-        $scope.loading = true;
-        var url = '/docker/listContainers';
-        var config = {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        };
-
-        $http.post(url, {}, config).then(function(response) {
-            $scope.loading = false;
-            if (response.data.status === 1) {
-                $scope.containers = response.data.containers || [];
-            } else {
-                new PNotify({
-                    title: 'Error Loading Containers',
-                    text: response.data.error_message || 'Failed to load containers',
-                    type: 'error'
-                });
-            }
-        }, function(error) {
-            $scope.loading = false;
-            new PNotify({
-                title: 'Connection Error',
-                text: 'Could not connect to server',
-                type: 'error'
-            });
-        });
-    };
-
-    // Initialize containers on page load
-    $scope.loadContainers();
-
-    // Open update container modal
-    $scope.openUpdateModal = function(container) {
-        $scope.updateContainerName = container.name;
-        $scope.currentImage = container.image;
-        $scope.newImage = '';
-        $scope.newTag = 'latest';
-        $('#updateContainer').modal('show');
-    };
-
-    // Perform container update
-    $scope.performUpdate = function() {
-        if (!$scope.newImage && !$scope.newTag) {
-            new PNotify({
-                title: 'Missing Information',
-                text: 'Please enter a new image name or tag',
-                type: 'error'
-            });
-            return;
-        }
-
-        // If no new image specified, use current image with new tag
-        var imageToUse = $scope.newImage || $scope.currentImage.split(':')[0];
-        var tagToUse = $scope.newTag || 'latest';
-
-        var data = {
-            containerName: $scope.updateContainerName,
-            newImage: imageToUse,
-            newTag: tagToUse
-        };
-
-        var url = '/docker/updateContainer';
-        var config = {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        };
-
-        // Show loading
-        $('#updateContainer').modal('hide');
-        new PNotify({
-            title: 'Updating Container',
-            text: 'Please wait while the container is being updated...',
-            type: 'info',
-            hide: false
-        });
-
-        $http.post(url, data, config).then(function(response) {
-            if (response.data.updateContainerStatus === 1) {
-                new PNotify({
-                    title: 'Container Updated Successfully',
-                    text: response.data.message || 'Container has been updated successfully',
-                    type: 'success'
-                });
-                // Reload containers list
-                $scope.loadContainers();
-            } else {
-                new PNotify({
-                    title: 'Update Failed',
-                    text: response.data.error_message || 'Failed to update container',
-                    type: 'error'
-                });
-            }
-        }, function(error) {
-            new PNotify({
-                title: 'Update Failed',
-                text: 'Could not connect to server',
-                type: 'error'
-            });
-        });
-    };
-
-    // Container actions
-    $scope.startContainer = function(containerName) {
-        var data = { containerName: containerName };
-        var url = '/docker/startContainer';
-        var config = {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        };
-
-        $http.post(url, data, config).then(function(response) {
-            if (response.data.startContainerStatus === 1) {
-                new PNotify({
-                    title: 'Container Started',
-                    text: 'Container has been started successfully',
-                    type: 'success'
-                });
-                $scope.loadContainers();
-            } else {
-                new PNotify({
-                    title: 'Start Failed',
-                    text: response.data.error_message || 'Failed to start container',
-                    type: 'error'
-                });
-            }
-        });
-    };
-
-    $scope.stopContainer = function(containerName) {
-        var data = { containerName: containerName };
-        var url = '/docker/stopContainer';
-        var config = {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        };
-
-        $http.post(url, data, config).then(function(response) {
-            if (response.data.stopContainerStatus === 1) {
-                new PNotify({
-                    title: 'Container Stopped',
-                    text: 'Container has been stopped successfully',
-                    type: 'success'
-                });
-                $scope.loadContainers();
-            } else {
-                new PNotify({
-                    title: 'Stop Failed',
-                    text: response.data.error_message || 'Failed to stop container',
-                    type: 'error'
-                });
-            }
-        });
-    };
-
-    $scope.restartContainer = function(containerName) {
-        var data = { containerName: containerName };
-        var url = '/docker/restartContainer';
-        var config = {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        };
-
-        $http.post(url, data, config).then(function(response) {
-            if (response.data.restartContainerStatus === 1) {
-                new PNotify({
-                    title: 'Container Restarted',
-                    text: 'Container has been restarted successfully',
-                    type: 'success'
-                });
-                $scope.loadContainers();
-            } else {
-                new PNotify({
-                    title: 'Restart Failed',
-                    text: response.data.error_message || 'Failed to restart container',
-                    type: 'error'
-                });
-            }
-        });
-    };
-
-    $scope.deleteContainerWithData = function(containerName) {
-        if (confirm('Are you sure you want to delete this container and all its data? This action cannot be undone.')) {
-            var data = { containerName: containerName };
-            var url = '/docker/deleteContainerWithData';
-            var config = {
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken')
-                }
-            };
-
-            $http.post(url, data, config).then(function(response) {
-                if (response.data.deleteContainerWithDataStatus === 1) {
-                    new PNotify({
-                        title: 'Container Deleted',
-                        text: 'Container and all data have been deleted successfully',
-                        type: 'success'
-                    });
-                    $scope.loadContainers();
-                } else {
-                    new PNotify({
-                        title: 'Delete Failed',
-                        text: response.data.error_message || 'Failed to delete container',
-                        type: 'error'
-                    });
-                }
-            });
-        }
-    };
-
-    $scope.deleteContainerKeepData = function(containerName) {
-        if (confirm('Are you sure you want to delete this container but keep the data? The container will be removed but volumes will be preserved.')) {
-            var data = { containerName: containerName };
-            var url = '/docker/deleteContainerKeepData';
-            var config = {
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken')
-                }
-            };
-
-            $http.post(url, data, config).then(function(response) {
-                if (response.data.deleteContainerKeepDataStatus === 1) {
-                    new PNotify({
-                        title: 'Container Deleted',
-                        text: 'Container has been deleted but data has been preserved',
-                        type: 'success'
-                    });
-                    $scope.loadContainers();
-                } else {
-                    new PNotify({
-                        title: 'Delete Failed',
-                        text: response.data.error_message || 'Failed to delete container',
-                        type: 'error'
-                    });
-                }
-            });
-        }
-    };
-});

@@ -1453,12 +1453,46 @@ fi
 # Fix SnappyMail directory permissions for Ubuntu 24.04 and other systems
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Checking SnappyMail directories..." | tee -a /var/log/cyberpanel_upgrade_debug.log
 
-# Create SnappyMail data directories if they don't exist
-mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/
-mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/domains/
-mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/storage/
-mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/temp/
-mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/cache/
+# Migrate data from old rainloop folder to new snappymail folder (2.4.4 -> 2.5.5 upgrade)
+if [ -d "/usr/local/lscp/cyberpanel/rainloop/data" ] && [ "$(ls -A /usr/local/lscp/cyberpanel/rainloop/data 2>/dev/null)" ]; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Migrating rainloop data to snappymail..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    
+    # Check if snappymail data already exists with content
+    if [ -d "/usr/local/lscp/cyberpanel/snappymail/data" ] && [ -d "/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs" ]; then
+        echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] SnappyMail data already exists, skipping migration" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    else
+        # Create SnappyMail data directories if they don't exist
+        mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/
+        mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/domains/
+        mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/storage/
+        mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/temp/
+        mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/cache/
+        
+        # Migrate data using rsync (preserves permissions and ownership)
+        rsync -av --ignore-existing /usr/local/lscp/cyberpanel/rainloop/data/ /usr/local/lscp/cyberpanel/snappymail/data/ 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+        
+        if [ $? -eq 0 ]; then
+            echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Successfully migrated rainloop data to snappymail" | tee -a /var/log/cyberpanel_upgrade_debug.log
+            
+            # Update include.php to use snappymail path
+            if [ -f "/usr/local/CyberCP/public/snappymail/include.php" ]; then
+                sed -i 's|/usr/local/lscp/cyberpanel/rainloop/data|/usr/local/lscp/cyberpanel/snappymail/data|g' /usr/local/CyberCP/public/snappymail/include.php
+                echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Updated include.php to use snappymail data path" | tee -a /var/log/cyberpanel_upgrade_debug.log
+            fi
+        else
+            echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: Data migration completed with errors" | tee -a /var/log/cyberpanel_upgrade_debug.log
+        fi
+    fi
+else
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] No old rainloop data found, creating new SnappyMail directories..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    
+    # Create SnappyMail data directories if they don't exist
+    mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/
+    mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/domains/
+    mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/storage/
+    mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/temp/
+    mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/cache/
+fi
 
 # Ensure proper ownership for SnappyMail data directories
 if id -u lscpd >/dev/null 2>&1; then
@@ -1509,6 +1543,9 @@ fi
 
 # Test if CyberPanel is accessible
 echo -e "\n🔍 Testing CyberPanel accessibility..."
+
+# Check if lscpd service is running
+if systemctl is-active --quiet lscpd 2>/dev/null; then
   echo "╔═════════════════════════════════════════════════════════════════════════════════════════════════════════════╗"
   echo "║                                                                                         ║"
   echo "║  🌐 ACCESS YOUR CYBERPANEL:                                                         ║"

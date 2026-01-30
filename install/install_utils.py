@@ -556,14 +556,31 @@ def call(command, distro, bracket, message, log=0, do_exit=0, code=os.EX_OK, she
                 os._exit(code)
             return False
 
+    # CRITICAL: Use shell=True for commands with shell metacharacters
+    # Avoids "No matching repo to modify: 2>/dev/null, true, ||" when shlex.split splits them
+    if not shell and any(x in command for x in (' || ', ' 2>/dev', ' 2>', ' | ', '; true', '|| true')):
+        shell = True
+
+    # CRITICAL: For mysql/mariadb commands, always use shell=True and full binary path
+    # This fixes "No such file or directory: 'mysql'" when run via shlex.split
+    if not shell and ('mysql' in command or 'mariadb' in command):
+        import re
+        mysql_bin = '/usr/bin/mariadb' if os.path.exists('/usr/bin/mariadb') else '/usr/bin/mysql'
+        if not os.path.exists(mysql_bin):
+            mysql_bin = '/usr/bin/mysql'
+        # Replace only leading "mysql" or "mariadb" (executable), not "mysql" in SQL like "use mysql;"
+        if re.match(r'^\s*(sudo\s+)?(mysql|mariadb)\s', command):
+            command = re.sub(r'^(\s*)(?:sudo\s+)?(mysql|mariadb)(\s)', r'\g<1>' + mysql_bin + r'\g<3>', command, count=1)
+        shell = True
+
     finalMessage = 'Running: %s' % (message)
     stdOut(finalMessage, log)
     count = 0
     while True:
-        if shell == False:
-            res = subprocess.call(shlex.split(command))
-        else:
+        if shell:
             res = subprocess.call(command, shell=True)
+        else:
+            res = subprocess.call(shlex.split(command))
 
         if resFailed(distro, res):
             count = count + 1
