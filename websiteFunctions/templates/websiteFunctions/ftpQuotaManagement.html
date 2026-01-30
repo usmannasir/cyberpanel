@@ -112,22 +112,35 @@ function enableFTPQuota() {
         'csrfmiddlewaretoken': '{{ csrf_token }}'
     }, function(data) {
         if (data.status === 1) {
-            showNotification('success', data.message);
+            showNotification('success', (data && (data.message || data.error_message)) || 'Success');
             refreshQuotas();
         } else {
-            showNotification('error', data.message);
+            showNotification('error', (data && (data.error_message || data.message)) || 'Unknown error');
         }
     });
 }
 
 function refreshQuotas() {
-    $.post('{% url "getFTPQuotas" %}', {
-        'csrfmiddlewaretoken': '{{ csrf_token }}'
-    }, function(data) {
-        if (data.status === 1) {
-            displayQuotas(data.quotas);
-        } else {
-            showNotification('error', data.message);
+    var tbody = document.getElementById('quotasTableBody');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+    $.ajax({
+        url: '{% url "getFTPQuotas" %}',
+        type: 'POST',
+        data: { 'csrfmiddlewaretoken': '{{ csrf_token }}' },
+        dataType: 'json',
+        success: function(data) {
+            if (data && data.status === 1) {
+                displayQuotas(data.quotas || []);
+            } else {
+                var msg = (data && (data.error_message || data.message)) || 'Unknown error';
+                showNotification('error', msg);
+                if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="text-center text-danger">' + msg + '</td></tr>';
+            }
+        },
+        error: function(xhr) {
+            var msg = (xhr.responseJSON && (xhr.responseJSON.error_message || xhr.responseJSON.message)) || (xhr.statusText || 'Request failed');
+            showNotification('error', msg);
+            if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="text-center text-danger">' + msg + '</td></tr>';
         }
     });
 }
@@ -190,11 +203,11 @@ function saveQuota() {
     
     $.post('{% url "updateFTPQuota" %}', formData, function(data) {
         if (data.status === 1) {
-            showNotification('success', data.message);
+            showNotification('success', (data && (data.message || data.error_message)) || 'Success');
             $('#editQuotaModal').modal('hide');
             refreshQuotas();
         } else {
-            showNotification('error', data.message);
+            showNotification('error', (data && (data.error_message || data.message)) || 'Unknown error');
         }
     });
 }

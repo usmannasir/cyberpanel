@@ -1810,49 +1810,49 @@ class FirewallManager:
 
     def getBannedIPs(self, userID=None):
         """
-        Get list of banned IP addresses
+        Get list of banned IP addresses from database
         """
         try:
             admin = Administrator.objects.get(pk=userID)
             if admin.acl.adminStatus != 1:
                 return ACLManager.loadError()
 
-            # For now, we'll use a simple file-based storage
-            # In production, you might want to use a database
-            banned_ips_file = '/etc/cyberpanel/banned_ips.json'
+            # Import BannedIP model and Django Q
+            from firewall.models import BannedIP
+            from django.db.models import Q
             
-            banned_ips = []
-            if os.path.exists(banned_ips_file):
-                try:
-                    with open(banned_ips_file, 'r') as f:
-                        banned_ips = json.load(f)
-                except:
-                    banned_ips = []
+            # Get all active banned IPs that haven't expired
+            current_time = int(time.time())
+            banned_ips_queryset = BannedIP.objects.filter(
+                active=True
+            ).filter(
+                Q(expires__isnull=True) | Q(expires__gt=current_time)
+            ).order_by('-banned_on')
             
-            # Filter out expired bans
-            current_time = time.time()
             active_banned_ips = []
-            
-            for banned_ip in banned_ips:
-                if banned_ip.get('expires') == 'Never' or banned_ip.get('expires', 0) > current_time:
-                    banned_ip['active'] = True
-                    if banned_ip.get('expires') != 'Never':
-                        banned_ip['expires'] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(banned_ip['expires']))
-                    else:
-                        banned_ip['expires'] = 'Never'
-                    banned_ip['banned_on'] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(banned_ip.get('banned_on', current_time)))
-                else:
-                    banned_ip['active'] = False
-                    banned_ip['expires'] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(banned_ip.get('expires', current_time)))
-                    banned_ip['banned_on'] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(banned_ip.get('banned_on', current_time)))
+            for banned_ip in banned_ips_queryset:
+                # Format the data for frontend
+                ip_data = {
+                    'id': banned_ip.id,
+                    'ip': banned_ip.ip_address,
+                    'reason': banned_ip.reason,
+                    'duration': banned_ip.duration,
+                    'banned_on': banned_ip.get_banned_on_display(),
+                    'expires': banned_ip.get_expires_display(),
+                    'active': not banned_ip.is_expired() and banned_ip.active
+                }
                 
-                active_banned_ips.append(banned_ip)
+                # Only include truly active bans
+                if ip_data['active']:
+                    active_banned_ips.append(ip_data)
             
             final_dic = {'status': 1, 'bannedIPs': active_banned_ips}
             final_json = json.dumps(final_dic)
-            return HttpResponse(final_json)
+            return HttpResponse(final_json, content_type='application/json')
 
         except BaseException as msg:
+            import plogical.CyberCPLogFileWriter as logging
+            logging.CyberCPLogFileWriter.writeToFile(f'Error in getBannedIPs: {str(msg)}')
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -1934,19 +1934,53 @@ class FirewallManager:
             with open(banned_ips_file, 'w') as f:
                 json.dump(banned_ips, f, indent=2)
 
-            # Apply firewall rule to block the IP
+            # Apply firewall rule to block the IP using firewalld
             try:
-                # Add iptables rule to block the IP
-                if '/' in ip:
-                    # CIDR notation
-                    subprocess.run(['iptables', '-A', 'INPUT', '-s', ip, '-j', 'DROP'], check=True)
-                else:
-                    # Single IP
-                    subprocess.run(['iptables', '-A', 'INPUT', '-s', ip, '-j', 'DROP'], check=True)
+                import subprocess
+                # Verify firewalld is active
+                firewalld_check = subprocess.run(['systemctl', 'is-active', 'firewalld'], 
+                                               capture_output=True, text=True, timeout=10)
+                if not (firewalld_check.returncode == 0 and 'active' in firewalld_check.stdout):
+                    final_dic = {'status': 0, 'error_message': 'Firewalld is not active. Please enable firewalld service.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
                 
-                logging.CyberCPLogFileWriter.writeToFile(f'Banned IP {ip} with reason: {reason}')
-            except subprocess.CalledProcessError as e:
-                logging.CyberCPLogFileWriter.writeToFile(f'Failed to add iptables rule for {ip}: {str(e)}')
+                # Add firewalld rich rule to block the IP
+                rich_rule = f'rule family=ipv4 source address={ip} drop'
+                add_rule_cmd = ['firewall-cmd', '--permanent', '--add-rich-rule', rich_rule]
+                
+                # Execute the add rule command
+                result = subprocess.run(add_rule_cmd, capture_output=True, text=True, timeout=30)
+                if result.returncode == 0:
+                    # Reload firewall rules
+                    reload_cmd = ['firewall-cmd', '--reload']
+                    reload_result = subprocess.run(reload_cmd, capture_output=True, text=True, timeout=30)
+                    if reload_result.returncode == 0:
+                        logging.CyberCPLogFileWriter.writeToFile(f'Banned IP {ip} with reason: {reason}')
+                    else:
+                        logging.CyberCPLogFileWriter.writeToFile(f'Failed to reload firewalld for {ip}: {reload_result.stderr}')
+                        final_dic = {'status': 0, 'error_message': f'Failed to reload firewall rules: {reload_result.stderr}'}
+                        final_json = json.dumps(final_dic)
+                        return HttpResponse(final_json)
+                else:
+                    # Check if rule already exists (this is not an error)
+                    if 'ALREADY_ENABLED' in result.stderr or 'already exists' in result.stderr.lower():
+                        logging.CyberCPLogFileWriter.writeToFile(f'IP {ip} already blocked in firewalld')
+                    else:
+                        logging.CyberCPLogFileWriter.writeToFile(f'Failed to add firewalld rule for {ip}: {result.stderr}')
+                        final_dic = {'status': 0, 'error_message': f'Failed to add firewall rule: {result.stderr}'}
+                        final_json = json.dumps(final_dic)
+                        return HttpResponse(final_json)
+            except subprocess.TimeoutExpired:
+                logging.CyberCPLogFileWriter.writeToFile(f'Timeout adding firewalld rule for {ip}')
+                final_dic = {'status': 0, 'error_message': 'Firewall command timed out'}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+            except Exception as e:
+                logging.CyberCPLogFileWriter.writeToFile(f'Failed to add firewalld rule for {ip}: {str(e)}')
+                final_dic = {'status': 0, 'error_message': f'Firewall command failed: {str(e)}'}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
 
             final_dic = {'status': 1, 'message': f'IP address {ip} has been banned successfully'}
             final_json = json.dumps(final_dic)
@@ -1996,19 +2030,40 @@ class FirewallManager:
             with open(banned_ips_file, 'w') as f:
                 json.dump(banned_ips, f, indent=2)
 
-            # Remove iptables rule
+            # Remove firewalld rule to unblock the IP
             try:
-                # Remove iptables rule to unblock the IP
-                if '/' in ip_to_unban:
-                    # CIDR notation
-                    subprocess.run(['iptables', '-D', 'INPUT', '-s', ip_to_unban, '-j', 'DROP'], check=False)
+                import subprocess
+                # Verify firewalld is active
+                firewalld_check = subprocess.run(['systemctl', 'is-active', 'firewalld'], 
+                                               capture_output=True, text=True, timeout=10)
+                if not (firewalld_check.returncode == 0 and 'active' in firewalld_check.stdout):
+                    # Firewalld not active, but still mark as unbanned in JSON
+                    logging.CyberCPLogFileWriter.writeToFile(f'Warning: Firewalld not active when unbanned IP {ip_to_unban}')
                 else:
-                    # Single IP
-                    subprocess.run(['iptables', '-D', 'INPUT', '-s', ip_to_unban, '-j', 'DROP'], check=False)
-                
-                logging.CyberCPLogFileWriter.writeToFile(f'Unbanned IP {ip_to_unban}')
-            except subprocess.CalledProcessError as e:
-                logging.CyberCPLogFileWriter.writeToFile(f'Failed to remove iptables rule for {ip_to_unban}: {str(e)}')
+                    # Remove firewalld rich rule
+                    rich_rule = f'rule family=ipv4 source address={ip_to_unban} drop'
+                    remove_rule_cmd = ['firewall-cmd', '--permanent', '--remove-rich-rule', rich_rule]
+                    
+                    # Execute the remove rule command
+                    result = subprocess.run(remove_rule_cmd, capture_output=True, text=True, timeout=30)
+                    if result.returncode == 0:
+                        # Reload firewall rules
+                        reload_cmd = ['firewall-cmd', '--reload']
+                        reload_result = subprocess.run(reload_cmd, capture_output=True, text=True, timeout=30)
+                        if reload_result.returncode == 0:
+                            logging.CyberCPLogFileWriter.writeToFile(f'Unbanned IP {ip_to_unban}')
+                        else:
+                            logging.CyberCPLogFileWriter.writeToFile(f'Warning: Failed to reload firewalld after unbanning {ip_to_unban}: {reload_result.stderr}')
+                    else:
+                        # Rule might not exist, which is okay
+                        if 'NOT_ENABLED' in result.stderr or 'not found' in result.stderr.lower():
+                            logging.CyberCPLogFileWriter.writeToFile(f'IP {ip_to_unban} rule not found in firewalld (may have been removed already)')
+                        else:
+                            logging.CyberCPLogFileWriter.writeToFile(f'Warning: Failed to remove firewalld rule for {ip_to_unban}: {result.stderr}')
+            except subprocess.TimeoutExpired:
+                logging.CyberCPLogFileWriter.writeToFile(f'Timeout removing firewalld rule for {ip_to_unban}')
+            except Exception as e:
+                logging.CyberCPLogFileWriter.writeToFile(f'Failed to remove firewalld rule for {ip_to_unban}: {str(e)}')
 
             final_dic = {'status': 1, 'message': f'IP address {ip_to_unban} has been unbanned successfully'}
             final_json = json.dumps(final_dic)

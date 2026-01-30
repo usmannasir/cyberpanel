@@ -895,7 +895,7 @@
             {% trans "Firewall Rules" %}
         </button>
         <button type="button" 
-                ng-click="activeTab = 'banned'" 
+                ng-click="activeTab = 'banned'; populateBannedIPs();" 
                 ng-class="{'tab-active': activeTab === 'banned'}"
                 class="tab-button">
             <i class="fas fa-ban"></i>
@@ -1102,8 +1102,8 @@
         </div>
         
         <!-- Banned IPs List -->
-        <div class="banned-list-section">
-            <table class="banned-table" ng-if="bannedIPs.length > 0">
+        <div class="banned-list-section" ng-init="activeTab === 'banned' && populateBannedIPs()">
+            <table class="banned-table" ng-if="bannedIPs && bannedIPs.length > 0">
                 <thead>
                     <tr>
                         <th>{% trans "IP Address" %}</th>
@@ -1121,16 +1121,16 @@
                             {$ bannedIP.ip $}
                         </td>
                         <td class="reason">
-                            <span class="reason-text">{$ bannedIP.reason $}</span>
+                            <span class="reason-text ng-binding">{$ bannedIP.reason $}</span>
                         </td>
-                        <td class="banned-date">
+                        <td class="banned-date ng-binding">
                             <i class="fas fa-calendar"></i>
-                            {$ bannedIP.banned_on | date:'MMM dd, yyyy HH:mm' $}
+                            {$ bannedIP.banned_on $}
                         </td>
                         <td class="expires-date">
                             <i class="fas fa-clock"></i>
                             <span ng-if="bannedIP.expires === 'Never'">{% trans "Never" %}</span>
-                            <span ng-if="bannedIP.expires !== 'Never'">{$ bannedIP.expires | date:'MMM dd, yyyy HH:mm' $}</span>
+                            <span ng-if="bannedIP.expires !== 'Never'">{$ bannedIP.expires $}</span>
                         </td>
                         <td class="status">
                             <span ng-class="{'status-active': bannedIP.active, 'status-expired': !bannedIP.active}" 
@@ -1160,7 +1160,7 @@
             </table>
             
             <!-- Empty State -->
-            <div ng-if="bannedIPs.length == 0" class="empty-state">
+            <div ng-if="!bannedIPs || bannedIPs.length == 0" class="empty-state">
                 <i class="fas fa-shield-check empty-icon"></i>
                 <h3 class="empty-title">{% trans "No Banned IPs" %}</h3>
                 <p class="empty-text">{% trans "All IP addresses are currently allowed. Add banned IPs to block suspicious or malicious traffic." %}</p>
@@ -1169,17 +1169,17 @@
         
         <!-- Messages -->
         <div style="padding: 0 2rem 2rem;">
-            <div ng-hide="bannedIPActionFailed" class="alert alert-danger">
+            <div ng-show="bannedIPActionFailed === false" class="alert alert-danger">
                 <i class="fas fa-exclamation-circle alert-icon"></i>
                 <span>{% trans "Action failed. Error message:" %} {$ bannedIPErrorMessage $}</span>
             </div>
             
-            <div ng-hide="bannedIPActionSuccess" class="alert alert-success">
+            <div ng-show="bannedIPActionSuccess === false" class="alert alert-success">
                 <i class="fas fa-check-circle alert-icon"></i>
                 <span>{% trans "Action completed successfully." %}</span>
             </div>
             
-            <div ng-hide="bannedIPCouldNotConnect" class="alert alert-danger">
+            <div ng-show="bannedIPCouldNotConnect === false" class="alert alert-danger">
                 <i class="fas fa-exclamation-circle alert-icon"></i>
                 <span>{% trans "Could not connect to server. Please refresh this page." %}</span>
             </div>

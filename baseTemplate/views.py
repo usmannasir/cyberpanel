@@ -523,12 +523,17 @@ def RestartCyberPanel(request):
 
 def getDashboardStats(request):
     try:
-        val = request.session['userID']
+        val = request.session.get('userID')
+        if val is None:
+            return HttpResponse(
+                json.dumps({'status': 0, 'error_message': 'Session required'}),
+                content_type='application/json'
+            )
         currentACL = ACLManager.loadedACL(val)
         admin = Administrator.objects.get(pk=val)
         
         # Check if user is admin
-        if currentACL['admin'] == 1:
+        if currentACL.get('admin', 0) == 1:
             # Admin can see all resources
             total_users = Administrator.objects.count()
             total_sites = Websites.objects.count()
@@ -566,7 +571,7 @@ def getDashboardStats(request):
                 total_emails = EUsers.objects.filter(emailOwner__domainOwner__domain__in=website_names).count()
                 
                 # Count FTP users associated with user's domains
-                total_ftp_users = FTPUsers.objects.filter(domain__in=website_names).count()
+                total_ftp_users = FTPUsers.objects.filter(domain__domain__in=website_names).count()
             else:
                 total_wp_sites = 0
                 total_dbs = 0
@@ -584,18 +589,24 @@ def getDashboardStats(request):
         }
         return HttpResponse(json.dumps(data), content_type='application/json')
     except Exception as e:
-        return HttpResponse(json.dumps({'status': 0, 'error_message': str(e)}), content_type='application/json')
+        logging.writeToFile('getDashboardStats error: %s' % str(e))
+        return HttpResponse(
+            json.dumps({'status': 0, 'error_message': 'Failed to load dashboard stats'}),
+            content_type='application/json'
+        )
 
 def getTrafficStats(request):
     try:
-        val = request.session['userID']
+        val = request.session.get('userID')
+        if val is None:
+            return HttpResponse(
+                json.dumps({'status': 0, 'error_message': 'Session required'}),
+                content_type='application/json'
+            )
         currentACL = ACLManager.loadedACL(val)
-        
-        # Only admins should see system-wide network stats
         if not currentACL.get('admin', 0):
             return HttpResponse(json.dumps({'status': 0, 'error_message': 'Admin access required', 'admin_only': True}), content_type='application/json')
         
-        # Get network stats from /proc/net/dev (Linux)
         rx = tx = 0
         with open('/proc/net/dev', 'r') as f:
             for line in f.readlines():
@@ -603,42 +614,49 @@ def getTrafficStats(request):
                     continue
                 if ':' in line:
                     parts = line.split()
-                    rx += int(parts[1])
-                    tx += int(parts[9])
-        data = {
-            'rx_bytes': rx,
-            'tx_bytes': tx,
-            'status': 1
-        }
+                    try:
+                        if len(parts) >= 10:
+                            rx += int(parts[1])
+                            tx += int(parts[9])
+                    except (ValueError, IndexError):
+                        continue
+        data = {'rx_bytes': rx, 'tx_bytes': tx, 'status': 1}
         return HttpResponse(json.dumps(data), content_type='application/json')
     except Exception as e:
-        return HttpResponse(json.dumps({'status': 0, 'error_message': str(e)}), content_type='application/json')
+        logging.writeToFile('getTrafficStats error: %s' % str(e))
+        return HttpResponse(
+            json.dumps({'status': 0, 'error_message': 'Failed to load traffic stats'}),
+            content_type='application/json'
+        )
 
 def getDiskIOStats(request):
     try:
-        val = request.session['userID']
+        val = request.session.get('userID')
+        if val is None:
+            return HttpResponse(
+                json.dumps({'status': 0, 'error_message': 'Session required'}),
+                content_type='application/json'
+            )
         currentACL = ACLManager.loadedACL(val)
-        
-        # Only admins should see system-wide disk I/O stats
         if not currentACL.get('admin', 0):
             return HttpResponse(json.dumps({'status': 0, 'error_message': 'Admin access required', 'admin_only': True}), content_type='application/json')
         
-        # Parse /proc/diskstats for all disks
         read_sectors = 0
         write_sectors = 0
-        sector_size = 512  # Most Linux systems use 512 bytes per sector
+        sector_size = 512
         with open('/proc/diskstats', 'r') as f:
             for line in f:
                 parts = line.split()
                 if len(parts) < 14:
                     continue
-                # parts[2] is device name, skip loopback/ram devices
                 dev = parts[2]
                 if dev.startswith('loop') or dev.startswith('ram'):
                     continue
-                # 6th and 10th columns: sectors read/written
-                read_sectors += int(parts[5])
-                write_sectors += int(parts[9])
+                try:
+                    read_sectors += int(parts[5])
+                    write_sectors += int(parts[9])
+                except (ValueError, IndexError):
+                    continue
         data = {
             'read_bytes': read_sectors * sector_size,
             'write_bytes': write_sectors * sector_size,
@@ -646,34 +664,42 @@ def getDiskIOStats(request):
         }
         return HttpResponse(json.dumps(data), content_type='application/json')
     except Exception as e:
-        return HttpResponse(json.dumps({'status': 0, 'error_message': str(e)}), content_type='application/json')
+        logging.writeToFile('getDiskIOStats error: %s' % str(e))
+        return HttpResponse(
+            json.dumps({'status': 0, 'error_message': 'Failed to load disk I/O stats'}),
+            content_type='application/json'
+        )
 
 def getCPULoadGraph(request):
     try:
-        val = request.session['userID']
+        val = request.session.get('userID')
+        if val is None:
+            return HttpResponse(
+                json.dumps({'status': 0, 'error_message': 'Session required'}),
+                content_type='application/json'
+            )
         currentACL = ACLManager.loadedACL(val)
-        
-        # Only admins should see system-wide CPU stats
         if not currentACL.get('admin', 0):
             return HttpResponse(json.dumps({'status': 0, 'error_message': 'Admin access required', 'admin_only': True}), content_type='application/json')
         
-        # Parse /proc/stat for the 'cpu' line
+        cpu_times = []
         with open('/proc/stat', 'r') as f:
             for line in f:
                 if line.startswith('cpu '):
                     parts = line.strip().split()
-                    # parts[1:] are user, nice, system, idle, iowait, irq, softirq, steal, guest, guest_nice
-                    cpu_times = [float(x) for x in parts[1:]]
+                    try:
+                        cpu_times = [float(x) for x in parts[1:]]
+                    except (ValueError, IndexError):
+                        pass
                     break
-            else:
-                cpu_times = []
-        data = {
-            'cpu_times': cpu_times,
-            'status': 1
-        }
+        data = {'cpu_times': cpu_times, 'status': 1}
         return HttpResponse(json.dumps(data), content_type='application/json')
     except Exception as e:
-        return HttpResponse(json.dumps({'status': 0, 'error_message': str(e)}), content_type='application/json')
+        logging.writeToFile('getCPULoadGraph error: %s' % str(e))
+        return HttpResponse(
+            json.dumps({'status': 0, 'error_message': 'Failed to load CPU stats'}),
+            content_type='application/json'
+        )
 
 @csrf_exempt
 @require_GET
@@ -790,6 +816,7 @@ def getRecentSSHLogs(request):
         if not currentACL.get('admin', 0):
             return HttpResponse(json.dumps({'error': 'Admin only'}), content_type='application/json', status=403)
         from plogical.processUtilities import ProcessUtilities
+        import re
         distro = ProcessUtilities.decideDistro()
         if distro in [ProcessUtilities.ubuntu, ProcessUtilities.ubuntu20]:
             log_path = '/var/log/auth.log'
@@ -801,6 +828,9 @@ def getRecentSSHLogs(request):
             return HttpResponse(json.dumps({'error': f'Failed to read log: {str(e)}'}), content_type='application/json', status=500)
         lines = output.split('\n')
         logs = []
+        # IP address regex patterns (IPv4)
+        ipv4_pattern = r'\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b'
+        
         for line in lines:
             if not line.strip():
                 continue
@@ -811,7 +841,26 @@ def getRecentSSHLogs(request):
             else:
                 timestamp = ''
                 message = line
-            logs.append({'timestamp': timestamp, 'message': message, 'raw': line})
+            
+            # Extract IP address from the log line
+            ip_address = None
+            ip_matches = re.findall(ipv4_pattern, line)
+            if ip_matches:
+                # Filter out localhost and common non-external IPs
+                for ip in ip_matches:
+                    if ip not in ['127.0.0.1', '0.0.0.0', '::1'] and not ip.startswith('192.168.') and not ip.startswith('10.') and not ip.startswith('172.'):
+                        ip_address = ip
+                        break
+                # If no external IP found, use the first match anyway (might be needed for internal attacks)
+                if not ip_address and ip_matches:
+                    ip_address = ip_matches[0]
+            
+            logs.append({
+                'timestamp': timestamp, 
+                'message': message, 
+                'raw': line,
+                'ip_address': ip_address
+            })
         return HttpResponse(json.dumps({'logs': logs}), content_type='application/json')
     except Exception as e:
         return HttpResponse(json.dumps({'error': str(e)}), content_type='application/json', status=500)
@@ -1153,7 +1202,30 @@ def blockIPAddress(request):
                 'error': 'Premium feature required'
             }), content_type='application/json', status=403)
         
-        data = json.loads(request.body)
+        # Parse request body - Django request.body is always bytes
+        try:
+            if not request.body:
+                return HttpResponse(json.dumps({
+                    'status': 0,
+                    'error': 'Request body is empty'
+                }), content_type='application/json', status=400)
+            
+            body_str = request.body.decode('utf-8')
+            if not body_str or body_str.strip() == '':
+                return HttpResponse(json.dumps({
+                    'status': 0,
+                    'error': 'Request body is empty'
+                }), content_type='application/json', status=400)
+            
+            data = json.loads(body_str)
+        except (json.JSONDecodeError, UnicodeDecodeError) as e:
+            import plogical.CyberCPLogFileWriter as logging
+            logging.CyberCPLogFileWriter.writeToFile(f'JSON decode error in blockIPAddress: {str(e)}, body: {request.body[:200] if request.body else "empty"}')
+            return HttpResponse(json.dumps({
+                'status': 0,
+                'error': f'Invalid request format: {str(e)}'
+            }), content_type='application/json', status=400)
+        
         ip_address = data.get('ip_address', '').strip()
         
         if not ip_address:
@@ -1248,6 +1320,54 @@ def blockIPAddress(request):
             error_message = f'Firewall command failed: {str(e)}'
         
         if success:
+            # Add to banned IPs JSON file for consistency with firewall page
+            try:
+                import os
+                import time
+                banned_ips_file = '/etc/cyberpanel/banned_ips.json'
+                banned_ips = []
+                
+                if os.path.exists(banned_ips_file):
+                    try:
+                        with open(banned_ips_file, 'r') as f:
+                            banned_ips = json.load(f)
+                    except:
+                        banned_ips = []
+                
+                # Check if IP is already banned
+                ip_already_banned = False
+                for banned_ip in banned_ips:
+                    if banned_ip.get('ip') == ip_address and banned_ip.get('active', True):
+                        ip_already_banned = True
+                        break
+                
+                if not ip_already_banned:
+                    # Get reason from request data
+                    reason = data.get('reason', 'Security alert detected from dashboard')
+                    
+                    # Add new banned IP
+                    new_banned_ip = {
+                        'id': int(time.time()),
+                        'ip': ip_address,
+                        'reason': reason,
+                        'duration': 'permanent',
+                        'banned_on': time.time(),
+                        'expires': 'Never',
+                        'active': True
+                    }
+                    banned_ips.append(new_banned_ip)
+                    
+                    # Ensure directory exists
+                    os.makedirs(os.path.dirname(banned_ips_file), exist_ok=True)
+                    
+                    # Save to file
+                    with open(banned_ips_file, 'w') as f:
+                        json.dump(banned_ips, f, indent=2)
+            except Exception as e:
+                # Log but don't fail the request if JSON update fails
+                import plogical.CyberCPLogFileWriter as logging
+                logging.CyberCPLogFileWriter.writeToFile(f'Warning: Failed to update banned_ips.json: {str(e)}')
+            
             # Log the action
             import plogical.CyberCPLogFileWriter as logging
             logging.CyberCPLogFileWriter.writeToFile(f'IP address {ip_address} blocked via CyberPanel dashboard by user {user_id}')
@@ -1263,7 +1383,18 @@ def blockIPAddress(request):
                 'error': error_message or 'Failed to block IP address'
             }), content_type='application/json', status=500)
         
+    except json.JSONDecodeError as e:
+        import plogical.CyberCPLogFileWriter as logging
+        logging.CyberCPLogFileWriter.writeToFile(f'JSON decode error in blockIPAddress: {str(e)}, body: {request.body}')
+        return HttpResponse(json.dumps({
+            'status': 0,
+            'error': f'Invalid JSON in request: {str(e)}'
+        }), content_type='application/json', status=400)
     except Exception as e:
+        import plogical.CyberCPLogFileWriter as logging
+        import traceback
+        error_trace = traceback.format_exc()
+        logging.CyberCPLogFileWriter.writeToFile(f'Error in blockIPAddress: {str(e)}\n{error_trace}')
         return HttpResponse(json.dumps({
             'status': 0,
             'error': f'Server error: {str(e)}'

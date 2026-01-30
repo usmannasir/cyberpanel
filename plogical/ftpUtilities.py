@@ -131,9 +131,10 @@ class FTPUtilities:
             ## need to get gid and uid
 
             try:
-                website = ChildDomains.objects.get(domain=domainName)
-                externalApp = website.master.externalApp
-            except:
+                child = ChildDomains.objects.get(domain=domainName)
+                website = child.master
+                externalApp = child.master.externalApp
+            except ChildDomains.DoesNotExist:
                 website = Websites.objects.get(domain=domainName)
                 externalApp = website.externalApp
 

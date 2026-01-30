@@ -2236,6 +2236,33 @@ def fixSubdomainLogsAction(request):
         return redirect(loadLoginPage)
 
 # FTP Quota Management Views
+def ftpQuotaManagementPage(request):
+    """Render the FTP Quota Management page."""
+    try:
+        userID = request.session['userID']
+        proc = httpProc(request, 'websiteFunctions/ftpQuotaManagement.html', {}, 'admin')
+        return proc.render()
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def bandwidthManagementPage(request):
+    """Render the Bandwidth Management page."""
+    try:
+        userID = request.session['userID']
+        proc = httpProc(request, 'websiteFunctions/bandwidthManagement.html', {}, 'admin')
+        return proc.render()
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def securityManagementPage(request):
+    """Render the Security Management page."""
+    try:
+        userID = request.session['userID']
+        proc = httpProc(request, 'websiteFunctions/securityManagement.html', {}, 'admin')
+        return proc.render()
+    except KeyError:
+        return redirect(loadLoginPage)
+
 def enableFTPQuota(request):
     try:
         userID = request.session['userID']

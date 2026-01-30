@@ -141,22 +141,24 @@ class modSec:
                 writeToFile.writelines("ModSecurity Installed.[200]\n")
                 writeToFile.close()
 
-            # Check if custom OLS binary is installed - if so, replace with compatible ModSecurity
-            custom_ols_marker = "/usr/local/lsws/modules/cyberpanel_ols.so"
-            if os.path.exists(custom_ols_marker):
-                writeToFile = open(modSec.installLogPath, 'a')
-                writeToFile.writelines("Custom OLS detected, installing compatible ModSecurity...\n")
-                writeToFile.close()
+            # Always download and install compatible ModSecurity binary to prevent LMDB dependency crashes
+            # This fixes the "undefined symbol: mdb_env_create" error that causes OpenLiteSpeed to crash
+            writeToFile = open(modSec.installLogPath, 'a')
+            writeToFile.writelines("Downloading compatible ModSecurity binary to prevent LMDB dependency issues...\n")
+            writeToFile.close()
 
-                platform = modSec.detectPlatform()
-                if modSec.downloadCompatibleModSec(platform):
-                    writeToFile = open(modSec.installLogPath, 'a')
-                    writeToFile.writelines("Compatible ModSecurity installed successfully.\n")
-                    writeToFile.close()
-                else:
-                    writeToFile = open(modSec.installLogPath, 'a')
-                    writeToFile.writelines("WARNING: Could not install compatible ModSecurity. May experience crashes.\n")
-                    writeToFile.close()
+            platform = modSec.detectPlatform()
+            if modSec.downloadCompatibleModSec(platform):
+                writeToFile = open(modSec.installLogPath, 'a')
+                writeToFile.writelines("Compatible ModSecurity binary installed successfully.\n")
+                writeToFile.close()
+                logging.CyberCPLogFileWriter.writeToFile("Compatible ModSecurity binary installed to prevent LMDB dependency crashes [installModSec]")
+            else:
+                writeToFile = open(modSec.installLogPath, 'a')
+                writeToFile.writelines("WARNING: Could not install compatible ModSecurity binary. Using package-manager binary instead.\n")
+                writeToFile.writelines("WARNING: If you experience crashes (SIGSEGV signal 11), manually download compatible binary.\n")
+                writeToFile.close()
+                logging.CyberCPLogFileWriter.writeToFile("WARNING: Could not install compatible ModSecurity binary - may experience LMDB dependency crashes [installModSec]")
 
             return 1
         except BaseException as msg:
