@@ -132,6 +132,16 @@
         cursor: pointer;
     }
     
+    a.insight-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+    
+    a.insight-link:hover {
+        color: inherit;
+    }
+    
     .insight-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 5px 20px rgba(91,95,207,0.1);
@@ -730,53 +740,53 @@
     <div class="insights-section">
         <h2 class="section-title">INSIGHTS</h2>
         <div class="insights-grid">
-            <div class="insight-card">
+            <a href="{% url 'listUsers' %}" class="insight-card insight-link">
                 <div class="insight-icon">
                     <i class="fas fa-users"></i>
                 </div>
                 <div class="insight-value">{$ totalUsers || 0 $}</div>
                 <div class="insight-label">Users</div>
-            </div>
+            </a>
             
-            <div class="insight-card">
+            <a href="{% url 'listWebsites' %}" class="insight-card insight-link">
                 <div class="insight-icon">
                     <i class="fas fa-globe"></i>
                 </div>
                 <div class="insight-value">{$ totalSites || 0 $}</div>
                 <div class="insight-label">Websites</div>
-            </div>
+            </a>
             
-            <div class="insight-card">
+            <a href="{% url 'ListWPSites' %}" class="insight-card insight-link">
                 <div class="insight-icon" style="background: #5b87da;">
                     <i class="fab fa-wordpress"></i>
                 </div>
                 <div class="insight-value">{$ totalWPSites || 0 $}</div>
                 <div class="insight-label">WordPress</div>
-            </div>
+            </a>
             
-            <div class="insight-card">
+            <a href="{% url 'listDBs' %}" class="insight-card insight-link">
                 <div class="insight-icon">
                     <i class="fas fa-database"></i>
                 </div>
                 <div class="insight-value">{$ totalDBs || 0 $}</div>
                 <div class="insight-label">Databases</div>
-            </div>
+            </a>
             
-            <div class="insight-card">
+            <a href="{% url 'listEmails' %}" class="insight-card insight-link">
                 <div class="insight-icon">
                     <i class="fas fa-envelope"></i>
                 </div>
                 <div class="insight-value">{$ totalEmails || 0 $}</div>
                 <div class="insight-label">Emails</div>
-            </div>
+            </a>
             
-            <div class="insight-card">
+            <a href="{% url 'listFTPAccounts' %}" class="insight-card insight-link">
                 <div class="insight-icon">
                     <i class="fas fa-folder"></i>
                 </div>
                 <div class="insight-value">{$ totalFTPUsers || 0 $}</div>
                 <div class="insight-label">FTP Users</div>
-            </div>
+            </a>
         </div>
     </div>
     

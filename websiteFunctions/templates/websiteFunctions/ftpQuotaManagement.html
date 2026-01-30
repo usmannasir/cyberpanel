@@ -6,6 +6,24 @@ FTP Quota Management - CyberPanel
 {% endblock %}
 
 {% block content %}
+<style>
+/* Ensure FTP Quota info section is readable - dark text on light background */
+.ftp-quota-info .alert-info {
+    background: #e0f2fe !important;
+    color: #0c4a6e !important;
+    border: 1px solid #7dd3fc;
+}
+.ftp-quota-info .alert-info h5,
+.ftp-quota-info .alert-info p,
+.ftp-quota-info .alert-info .btn-primary {
+    color: inherit !important;
+}
+.ftp-quota-info .alert-info .btn-primary {
+    background: #0284c7 !important;
+    border-color: #0284c7 !important;
+    color: white !important;
+}
+</style>
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
@@ -18,7 +36,7 @@ FTP Quota Management - CyberPanel
                 </div>
                 <div class="card-body">
                     <!-- Enable FTP Quota Section -->
-                    <div class="row mb-4">
+                    <div class="row mb-4 ftp-quota-info">
                         <div class="col-12">
                             <div class="alert alert-info">
                                 <h5><i class="fas fa-info-circle"></i> FTP Quota System</h5>
