@@ -575,7 +575,7 @@
                                     </div>
 
                                     <div style="margin-top: 2rem;">
-                                        <button type="button" ng-click="createFTPAccount()" class="btn-primary">
+                                        <button type="button" ng-click="createFTPAccount()" ng-disabled="ftpLoading" class="btn-primary">
                                             <i class="fas fa-plus-circle"></i>
                                             {% trans "Create FTP Account" %}
                                         </button>

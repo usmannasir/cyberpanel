@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+import os
 import time
 from random import randint
 
@@ -17,6 +18,15 @@ def loadFTPHome(request):
     try:
         fm = FTPManager(request)
         return fm.loadFTPHome()
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def ftpQuotaManagementPage(request):
+    """Render the FTP Quota Management page (served from /ftp/ to avoid websites/<domain> conflict)."""
+    try:
+        proc = httpProc(request, 'websiteFunctions/ftpQuotaManagement.html', {}, 'admin')
+        return proc.render()
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -113,29 +123,43 @@ def ResetFTPConfigurations(request):
 
 def resetftpnow(request):
     try:
-        from plogical.virtualHostUtilities import virtualHostUtilities
         userID = request.session['userID']
-
         currentACL = ACLManager.loadedACL(userID)
 
-        if currentACL['admin'] == 1:
-            pass
-        else:
+        if currentACL['admin'] != 1:
             return ACLManager.loadErrorJson('FilemanagerAdmin', 0)
 
-        data = json.loads(request.body)
-        tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+        try:
+            body = request.body
+            if isinstance(body, bytes):
+                body = body.decode('utf-8') if body else '{}'
+            data = json.loads(body) if body and body.strip() else {}
+        except (json.JSONDecodeError, ValueError):
+            data = {}
 
-        execPath = f"/usr/local/CyberCP/bin/python /usr/local/CyberCP/ftp/ftpManager.py ResetFTPConfigurations --tempStatusPath {tempStatusPath}"
-
+        tempStatusPath = os.path.join('/tmp', 'cyberpanel_ftp_reset_' + str(randint(10000, 99999)))
+        try:
+            with open(tempStatusPath, 'w') as f:
+                f.write("Starting FTP reset...,0\n")
+        except OSError as e:
+            data_ret = {'status': 0, 'error_message': 'Cannot create status file: ' + str(e), 'tempStatusPath': ''}
+            return HttpResponse(json.dumps(data_ret), content_type='application/json')
+        python_path = '/usr/local/CyberCP/bin/python'
+        if not os.path.exists(python_path):
+            for p in ('/usr/bin/python3', '/usr/bin/python'):
+                if os.path.exists(p):
+                    python_path = p
+                    break
+            else:
+                python_path = 'python3'
+        execPath = f"{python_path} /usr/local/CyberCP/ftp/ftpManager.py ResetFTPConfigurations --tempStatusPath {tempStatusPath}"
 
         ProcessUtilities.popenExecutioner(execPath)
         time.sleep(2)
 
-        data_ret = {'status': 1, 'error_message': "None",
-                    'tempStatusPath': tempStatusPath}
+        data_ret = {'status': 1, 'error_message': "None", 'tempStatusPath': tempStatusPath}
         json_data = json.dumps(data_ret)
-        return HttpResponse(json_data)
+        return HttpResponse(json_data, content_type='application/json')
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -152,42 +176,56 @@ def getresetstatus(request):
         else:
             return ACLManager.loadErrorJson('FilemanagerAdmin', 0)
 
-        data = json.loads(request.body)
-        statusfile = data['statusfile']
-        installStatus = ProcessUtilities.outputExecutioner("sudo cat " + statusfile)
+        try:
+            body = request.body
+            if isinstance(body, bytes):
+                body = body.decode('utf-8') if body else '{}'
+            data = json.loads(body) if body and body.strip() else {}
+        except (json.JSONDecodeError, ValueError, TypeError):
+            data = {}
+        statusfile = data.get('statusfile', '')
+        if not statusfile:
+            return HttpResponse(json.dumps({'abort': 1, 'installed': 0, 'error_message': 'Missing status file', 'requestStatus': ''}), content_type='application/json')
+        result = ProcessUtilities.outputExecutioner("cat " + statusfile)
+        if result is None:
+            installStatus = ""
+        elif isinstance(result, tuple):
+            installStatus = result[1] if len(result) > 1 else ""
+        else:
+            installStatus = str(result) if result else ""
 
 
 
         if installStatus.find("[200]") > -1:
-
-            command = 'sudo rm -f ' + statusfile
+            command = 'rm -f ' + statusfile
             ProcessUtilities.executioner(command)
 
-            final_json = json.dumps({
+            return HttpResponse(json.dumps({
                 'error_message': "None",
                 'requestStatus': installStatus,
                 'abort': 1,
                 'installed': 1,
-            })
-            return HttpResponse(final_json)
+            }), content_type='application/json')
         elif installStatus.find("[404]") > -1:
-            command = 'sudo rm -f ' + statusfile
+            command = 'rm -f ' + statusfile
             ProcessUtilities.executioner(command)
+            err_msg = installStatus.replace('[404]', '').strip() if installStatus else 'Reset failed'
+            if not err_msg or err_msg == ',':
+                err_msg = 'FTP configuration reset failed'
             final_json = json.dumps({
                 'abort': 1,
                 'installed': 0,
-                'error_message': "None",
+                'error_message': err_msg,
                 'requestStatus': installStatus,
             })
-            return HttpResponse(final_json)
+            return HttpResponse(final_json, content_type='application/json')
 
         else:
-            final_json = json.dumps({
+            return HttpResponse(json.dumps({
                 'abort': 0,
                 'error_message': "None",
-                'requestStatus': installStatus,
-            })
-            return HttpResponse(final_json)
+                'requestStatus': installStatus or '',
+            }), content_type='application/json')
     except KeyError:
         return redirect(loadLoginPage)
 

@@ -2,6 +2,15 @@
  * Created by usman on 8/5/17.
  */
 
+/* Safe notification - use PNotify if available, else fallback to alert */
+function safePNotify(opts) {
+    if (typeof PNotify !== 'undefined') {
+        new PNotify(opts);
+    } else {
+        var msg = (opts.title || '') + (opts.text ? ': ' + opts.text : '');
+        alert(msg || JSON.stringify(opts));
+    }
+}
 
 /* Java script code to create account */
 app.controller('createUserCtr', function ($scope, $http) {
@@ -51,7 +60,7 @@ app.controller('createUserCtr', function ($scope, $http) {
     $scope.acctsLimit = true;
     $scope.webLimits = true;
     $scope.userCreated = true;
-    $scope.userCreationFailed = true;
+    $scope.userCreationFailed = false;  // false = don't show error alert on load
     $scope.couldNotConnect = true;
     $scope.userCreationLoading = true;
     $scope.combinedLength = true;
@@ -60,20 +69,24 @@ app.controller('createUserCtr', function ($scope, $http) {
 
         $scope.webLimits = false;
         $scope.userCreated = true;
-        $scope.userCreationFailed = true;
+        $scope.userCreationFailed = false;  // hide error until we know the result
         $scope.couldNotConnect = true;
         $scope.userCreationLoading = false;
         $scope.combinedLength = true;
 
-
-        var firstName = $scope.firstName;
-        var lastName = $scope.lastName;
+        var firstName = $scope.firstName || '';
+        var lastName = $scope.lastName || '';
         var email = $scope.email;
         var selectedACL = $scope.selectedACL;
         var websitesLimits = $scope.websitesLimits;
         var userName = $scope.userName;
         var password = $scope.password;
 
+        if (firstName.length + lastName.length > 20) {
+            $scope.combinedLength = false;
+            $scope.userCreationLoading = true;
+            return;
+        }
 
         var url = "/users/submitUserCreation";
 
@@ -91,7 +104,8 @@ app.controller('createUserCtr', function ($scope, $http) {
 
         var config = {
             headers: {
-                'X-CSRFToken': getCookie('csrftoken')
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
             }
         };
 
@@ -102,42 +116,31 @@ app.controller('createUserCtr', function ($scope, $http) {
 
 
             if (response.data.createStatus == 1) {
-
-                $scope.userCreated = false;
-                $scope.userCreationFailed = true;
+                $scope.userCreated = false;   // show success
+                $scope.userCreationFailed = false;  // hide error
                 $scope.couldNotConnect = true;
                 $scope.userCreationLoading = true;
-
                 $scope.userName = userName;
-
-
             } else {
-
                 $scope.acctsLimit = false;
                 $scope.webLimits = false;
                 $scope.userCreated = true;
-                $scope.userCreationFailed = false;
+                $scope.userCreationFailed = true;   // true = show error alert
                 $scope.couldNotConnect = true;
                 $scope.userCreationLoading = true;
-
-                $scope.errorMessage = response.data.error_message;
-
-
+                $scope.errorMessage = (response.data && (response.data.error_message || response.data.message || response.data.errorMessage)) || 'Unknown error';
             }
 
 
         }
 
         function cantLoadInitialDatas(response) {
-
             $scope.acctsLimit = false;
             $scope.webLimits = false;
             $scope.userCreated = true;
-            $scope.userCreationFailed = true;
-            $scope.couldNotConnect = false;
+            $scope.userCreationFailed = false;  // hide server error, show connection error instead
+            $scope.couldNotConnect = false;    // show "Could not connect" message
             $scope.userCreationLoading = true;
-
-
         }
 
 
@@ -181,10 +184,10 @@ app.controller('modifyUser', function ($scope, $http) {
     $scope.acctDetailsFetched = true;
     $scope.userAccountsLimit = true;
     $scope.userModified = true;
-    $scope.canotModifyUser = true;
+    $scope.canotModifyUser = false;   // false = don't show error alert on load
     $scope.couldNotConnect = true;
-    $scope.canotFetchDetails = true;
-    $scope.detailsFetched = true;
+    $scope.canotFetchDetails = false; // false = don't show fetch error on load
+    $scope.detailsFetched = false;    // false = don't show "details loaded" on load
     $scope.accountTypeView = true;
     $scope.websitesLimit = true;
     $scope.qrHidden = true;
@@ -716,7 +719,7 @@ app.controller('deleteUser', function ($scope, $http) {
 app.controller('createACLCTRL', function ($scope, $http) {
 
     $scope.aclCreated = true;
-    $scope.aclCreationFailed = true;
+    $scope.aclCreationFailed = false;  // false = don't show error alert on load
     $scope.couldNotConnect = true;
 
     $scope.aclLoading = true;
@@ -887,14 +890,14 @@ app.controller('createACLCTRL', function ($scope, $http) {
             $scope.aclLoading = true;
 
             if (response.data.status === 1) {
-                new PNotify({
+                safePNotify({
                     title: 'Success!',
                     text: 'ACL Successfully created.',
                     type: 'success'
                 });
             } else {
 
-                new PNotify({
+                safePNotify({
                     title: 'Error!',
                     text: response.data.errorMessage,
                     type: 'error'
@@ -909,7 +912,7 @@ app.controller('createACLCTRL', function ($scope, $http) {
 
             $scope.aclLoading = false;
 
-            new PNotify({
+            safePNotify({
                 title: 'Error!',
                 text: 'Could not connect to server, please refresh this page.',
                 type: 'error'
@@ -1108,14 +1111,14 @@ app.controller('deleteACTCTRL', function ($scope, $http) {
             $scope.aclLoading = true;
 
             if (response.data.status === 1) {
-                new PNotify({
+                safePNotify({
                     title: 'Success!',
                     text: 'ACL Successfully deleted.',
                     type: 'success'
                 });
 
             } else {
-                new PNotify({
+                safePNotify({
                     title: 'Error!',
                     text: response.data.errorMessage,
                     type: 'error'
@@ -1127,7 +1130,7 @@ app.controller('deleteACTCTRL', function ($scope, $http) {
 
         function cantLoadInitialDatas(response) {
             $scope.aclLoading = true;
-            new PNotify({
+            safePNotify({
                 title: 'Error!',
                 text: 'Could not connect to server, please refresh this page.',
                 type: 'error'
@@ -1171,7 +1174,7 @@ app.controller('modifyACLCtrl', function ($scope, $http) {
 
 
             if (response.data.status === 1) {
-                new PNotify({
+                safePNotify({
                     title: 'Success!',
                     text: 'Current settings successfully fetched',
                     type: 'success'
@@ -1251,7 +1254,7 @@ app.controller('modifyACLCtrl', function ($scope, $http) {
                 $scope.mailServerSSL = Boolean(response.data.mailServerSSL);
 
             } else {
-                new PNotify({
+                safePNotify({
                     title: 'Error!',
                     text: response.data.errorMessage,
                     type: 'error'
@@ -1264,7 +1267,7 @@ app.controller('modifyACLCtrl', function ($scope, $http) {
 
             $scope.aclLoading = false;
 
-            new PNotify({
+            safePNotify({
                 title: 'Error!',
                 text: 'Could not connect to server, please refresh this page.',
                 type: 'error'
@@ -1366,14 +1369,14 @@ app.controller('modifyACLCtrl', function ($scope, $http) {
             $scope.aclLoading = true;
 
             if (response.data.status === 1) {
-                new PNotify({
+                safePNotify({
                     title: 'Success!',
                     text: 'ACL Successfully modified.',
                     type: 'success'
                 });
             } else {
 
-                new PNotify({
+                safePNotify({
                     title: 'Error!',
                     text: response.data.errorMessage,
                     type: 'error'
@@ -1388,7 +1391,7 @@ app.controller('modifyACLCtrl', function ($scope, $http) {
 
             $scope.aclLoading = false;
 
-            new PNotify({
+            safePNotify({
                 title: 'Error!',
                 text: 'Could not connect to server, please refresh this page.',
                 type: 'error'
@@ -1580,14 +1583,14 @@ app.controller('changeUserACLCTRL', function ($scope, $http) {
             $scope.aclLoading = true;
 
             if (response.data.status === 1) {
-                new PNotify({
+                safePNotify({
                     title: 'Success!',
                     text: 'ACL Successfully changed.',
                     type: 'success'
                 });
 
             } else {
-                new PNotify({
+                safePNotify({
                     title: 'Error!',
                     text: response.data.errorMessage,
                     type: 'error'
@@ -1599,7 +1602,7 @@ app.controller('changeUserACLCTRL', function ($scope, $http) {
 
         function cantLoadInitialDatas(response) {
             $scope.aclLoading = true;
-            new PNotify({
+            safePNotify({
                 title: 'Error!',
                 text: 'Could not connect to server, please refresh this page.',
                 type: 'error'
@@ -1642,14 +1645,14 @@ app.controller('resellerCenterCTRL', function ($scope, $http) {
             $scope.aclLoading = true;
 
             if (response.data.status === 1) {
-                new PNotify({
+                safePNotify({
                     title: 'Success!',
                     text: 'Changes successfully applied!',
                     type: 'success'
                 });
 
             } else {
-                new PNotify({
+                safePNotify({
                     title: 'Error!',
                     text: response.data.errorMessage,
                     type: 'error'
@@ -1661,7 +1664,7 @@ app.controller('resellerCenterCTRL', function ($scope, $http) {
 
         function cantLoadInitialDatas(response) {
             $scope.aclLoading = true;
-            new PNotify({
+            safePNotify({
                 title: 'Error!',
                 text: 'Could not connect to server, please refresh this page.',
                 type: 'error'
@@ -1711,14 +1714,14 @@ app.controller('apiAccessCTRL', function ($scope, $http) {
 
             if (response.data.status === 1) {
                 $scope.apiAccessDropDown = true;
-                new PNotify({
+                safePNotify({
                     title: 'Success!',
                     text: 'Changes successfully applied!',
                     type: 'success'
                 });
 
             } else {
-                new PNotify({
+                safePNotify({
                     title: 'Error!',
                     text: response.data.error_message,
                     type: 'error'
@@ -1730,7 +1733,7 @@ app.controller('apiAccessCTRL', function ($scope, $http) {
 
         function cantLoadInitialDatas(response) {
             $scope.cyberpanelLoading = true;
-            new PNotify({
+            safePNotify({
                 title: 'Error!',
                 text: 'Could not connect to server, please refresh this page.',
                 type: 'error'
@@ -1771,13 +1774,13 @@ app.controller('apiUsersCTRL', function ($scope, $http) {
             $scope.apiUsers = response.data.users;
             $scope.filteredUsers = response.data.users;
             
-            new PNotify({
+            safePNotify({
                 title: 'Success!',
                 text: 'API users loaded successfully',
                 type: 'success'
             });
         } else {
-            new PNotify({
+            safePNotify({
                 title: 'Error!',
                 text: response.data.error_message,
                 type: 'error'
@@ -1787,7 +1790,7 @@ app.controller('apiUsersCTRL', function ($scope, $http) {
 
     function loadAPIUsersError(response) {
         $scope.apiUsersLoading = true;
-        new PNotify({
+        safePNotify({
             title: 'Error!',
             text: 'Could not load API users. Please refresh the page.',
             type: 'error'
@@ -1816,7 +1819,7 @@ app.controller('apiUsersCTRL', function ($scope, $http) {
     };
 
     $scope.viewUserDetails = function(user) {
-        new PNotify({
+        safePNotify({
             title: 'User Details',
             text: 'Username: ' + user.userName + '<br>' +
                   'Full Name: ' + user.firstName + ' ' + user.lastName + '<br>' +
@@ -1859,13 +1862,13 @@ app.controller('apiUsersCTRL', function ($scope, $http) {
             });
             $scope.filteredUsers = $scope.apiUsers;
             
-            new PNotify({
+            safePNotify({
                 title: 'Success!',
                 text: 'API access disabled for ' + response.data.accountUsername,
                 type: 'success'
             });
         } else {
-            new PNotify({
+            safePNotify({
                 title: 'Error!',
                 text: response.data.error_message,
                 type: 'error'
@@ -1875,7 +1878,7 @@ app.controller('apiUsersCTRL', function ($scope, $http) {
 
     function disableAPIError(response) {
         $scope.apiUsersLoading = true;
-        new PNotify({
+        safePNotify({
             title: 'Error!',
             text: 'Could not disable API access. Please try again.',
             type: 'error'
@@ -1919,14 +1922,14 @@ app.controller('listTableUsers', function ($scope, $http) {
 
                 $scope.records = JSON.parse(response.data.data);
 
-                new PNotify({
+                safePNotify({
                     title: 'Success!',
                     text: 'Users successfully fetched!',
                     type: 'success'
                 });
 
             } else {
-                new PNotify({
+                safePNotify({
                     title: 'Error!',
                     text: response.data.error_message,
                     type: 'error'
@@ -1937,7 +1940,7 @@ app.controller('listTableUsers', function ($scope, $http) {
 
         function cantLoadInitialDatas(response) {
             $scope.cyberpanelLoading = true;
-            new PNotify({
+            safePNotify({
                 title: 'Error!',
                 text: 'Could not connect to server, please refresh this page.',
                 type: 'error'
@@ -1977,7 +1980,7 @@ app.controller('listTableUsers', function ($scope, $http) {
             if (response.data.deleteStatus === 1) {
                 $scope.populateCurrentRecords();
                 $('#deleteModal').modal('hide');
-                new PNotify({
+                safePNotify({
                     title: 'Success!',
                     text: 'Users successfully deleted!',
                     type: 'success'
@@ -1985,7 +1988,7 @@ app.controller('listTableUsers', function ($scope, $http) {
 
             } else {
 
-                new PNotify({
+                safePNotify({
                     title: 'Error!',
                     text: response.data.error_message,
                     type: 'error'
@@ -1999,7 +2002,7 @@ app.controller('listTableUsers', function ($scope, $http) {
         function cantLoadInitialDatas(response) {
 
             $scope.cyberpanelLoading = false;
-            new PNotify({
+            safePNotify({
                 title: 'Error!',
                 text: 'Could not connect to server, please refresh this page.',
                 type: 'error'
@@ -2041,14 +2044,14 @@ app.controller('listTableUsers', function ($scope, $http) {
             if (response.data.status === 1) {
                 $scope.populateCurrentRecords();
                 $('#editModal').modal('hide');
-                new PNotify({
+                safePNotify({
                     title: 'Success!',
                     text: 'Changes successfully applied!',
                     type: 'success'
                 });
 
             } else {
-                new PNotify({
+                safePNotify({
                     title: 'Error!',
                     text: response.data.errorMessage,
                     type: 'error'
@@ -2059,7 +2062,7 @@ app.controller('listTableUsers', function ($scope, $http) {
         }
 
         function cantLoadInitialDatas(response) {
-            new PNotify({
+            safePNotify({
                 title: 'Error!',
                 text: 'Could not connect to server, please refresh this page.',
                 type: 'error'
@@ -2095,14 +2098,14 @@ app.controller('listTableUsers', function ($scope, $http) {
             if (response.data.status === 1) {
                 $scope.populateCurrentRecords();
                 $('#editModal').modal('hide');
-                new PNotify({
+                safePNotify({
                     title: 'Success!',
                     text: 'ACL Successfully changed.',
                     type: 'success'
                 });
 
             } else {
-                new PNotify({
+                safePNotify({
                     title: 'Error!',
                     text: response.data.errorMessage,
                     type: 'error'
@@ -2114,7 +2117,7 @@ app.controller('listTableUsers', function ($scope, $http) {
 
         function cantLoadInitialDatas(response) {
             $scope.aclLoading = true;
-            new PNotify({
+            safePNotify({
                 title: 'Error!',
                 text: 'Could not connect to server, please refresh this page.',
                 type: 'error'
@@ -2148,7 +2151,7 @@ app.controller('listTableUsers', function ($scope, $http) {
             $scope.cyberpanelLoading = true;
             if (response.data.status === 1) {
                 $scope.populateCurrentRecords();
-                new PNotify({
+                safePNotify({
                     title: 'Success!',
                     text: 'Action successfully started.',
                     type: 'success'
@@ -2156,7 +2159,7 @@ app.controller('listTableUsers', function ($scope, $http) {
 
             } else {
 
-                new PNotify({
+                safePNotify({
                     title: 'Error!',
                     text: response.data.error_message,
                     type: 'error'
@@ -2170,7 +2173,7 @@ app.controller('listTableUsers', function ($scope, $http) {
         function cantLoadInitialDatas(response) {
 
             $scope.cyberpanelLoading = false;
-            new PNotify({
+            safePNotify({
                 title: 'Error!',
                 text: 'Could not connect to server, please refresh this page.',
                 type: 'error'

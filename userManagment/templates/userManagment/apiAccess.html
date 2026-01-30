@@ -4,6 +4,8 @@
 {% block content %}
 
     {% load static %}
+    {# Ensure userManagment controllers load before Angular compiles this page #}
+    <script src="{% static 'userManagment/userManagment.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     {% get_current_language as LANGUAGE_CODE %}
     <!-- Current language: {{ LANGUAGE_CODE }} -->
 
@@ -576,24 +578,36 @@
 <script>
 // Tab switching functionality
 function switchTab(tabName) {
+    var configContent = document.getElementById('configure-content');
+    var usersContent = document.getElementById('users-content');
+    var configTab = document.getElementById('configure-tab');
+    var usersTab = document.getElementById('users-tab');
+    if (!configContent || !usersContent) return;
+
     // Hide all tab contents
-    document.getElementById('configure-content').classList.remove('active');
-    document.getElementById('users-content').classList.remove('active');
-    
-    // Remove active class from all tabs
-    document.getElementById('configure-tab').classList.remove('active');
-    document.getElementById('users-tab').classList.remove('active');
-    
+    configContent.classList.remove('active');
+    usersContent.classList.remove('active');
+    if (configTab) configTab.classList.remove('active');
+    if (usersTab) usersTab.classList.remove('active');
+
     // Show selected tab content and add active class
     if (tabName === 'configure') {
-        document.getElementById('configure-content').classList.add('active');
-        document.getElementById('configure-tab').classList.add('active');
+        configContent.classList.add('active');
+        if (configTab) configTab.classList.add('active');
     } else if (tabName === 'users') {
-        document.getElementById('users-content').classList.add('active');
-        document.getElementById('users-tab').classList.add('active');
-        // Load API users when switching to users tab
-        if (typeof angular !== 'undefined' && angular.element(document.getElementById('users-content')).scope()) {
-            angular.element(document.getElementById('users-content')).scope().loadAPIUsers();
+        usersContent.classList.add('active');
+        if (usersTab) usersTab.classList.add('active');
+        // Load API users when switching to users tab - safely get scope and call if available
+        if (typeof angular !== 'undefined') {
+            var elem = angular.element(usersContent);
+            var scope = elem.scope();
+            if (scope && typeof scope.loadAPIUsers === 'function') {
+                try {
+                    scope.$apply(function() { scope.loadAPIUsers(); });
+                } catch (e) {
+                    scope.loadAPIUsers();
+                }
+            }
         }
     }
 }

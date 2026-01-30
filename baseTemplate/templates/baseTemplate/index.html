@@ -1,8 +1,8 @@
 {% load i18n %}
 {% get_current_language as LANGUAGE_CODE %}
-{% with CP_VERSION="2.5.5-dev-fix" %}
+{% with CP_VERSION="2.4.4.1" %}
 <!DOCTYPE html>
-<html lang="en" ng-app="CyberCP" {% if cosmetic.MainDashboardCSS %}data-dynamic-css="{{ cosmetic.MainDashboardCSS|escape }}"{% endif %}>
+<html lang="en" ng-app="CyberCP">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,43 +17,38 @@
     
     <!-- Custom CSS -->
     <style>
-        /* Custom dashboard CSS - base styles */
-        body { visibility: visible; }
+        {{ cosmetic.MainDashboardCSS | safe }}
     </style>
     
-    <!-- Core Scripts - AngularJS MUST load FIRST before all other scripts -->
-    <script src="{% static 'baseTemplate/angularjs.1.6.5.js' %}?v={{ CP_VERSION }}"></script>
+    <!-- Mobile Responsive CSS -->
+    <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/mobile-responsive.css' %}?v={{ CP_VERSION }}">
     
-    <!-- Dynamic CSS from Django template (injected via JavaScript to avoid linter errors) -->
-    <script>
-        // Inject dynamic CSS from data attribute to avoid CSS/JS linter errors
-        (function() {
-            var htmlElement = document.documentElement;
-            var cssContent = htmlElement.getAttribute('data-dynamic-css');
-            if (cssContent) {
-                var style = document.createElement('style');
-                style.textContent = cssContent;
-                document.head.appendChild(style);
-            }
-        })();
-    </script>
-    <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+    <!-- Readability Fixes CSS -->
+    <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/readability-fixes.css' %}?v={{ CP_VERSION }}">
+    
+    <!-- Core Scripts (data-cfasync=false prevents Cloudflare Rocket Loader from breaking load order) -->
+    <script src="{% static 'baseTemplate/angularjs.1.6.5.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js" data-cfasync="false"></script>
     <!-- Bootstrap JavaScript -->
 
     <script src="{% static 'baseTemplate/assets/bootstrap/js/bootstrap.min.js' %}?v={{ CP_VERSION }}"></script>
     <script src="{% static 'baseTemplate/bootstrap-toggle.min.js' %}?v={{ CP_VERSION }}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrious/dist/qrious.min.js"></script>
-    <script src="{% static 'baseTemplate/custom-js/system-status.js' %}?v={{ CP_VERSION }}"></script>
+    <script src="{% static 'baseTemplate/custom-js/qrious.min.js' %}?v={{ CP_VERSION }}"></script>
+    <script src="{% static 'baseTemplate/custom-js/system-status.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{% static 'baseTemplate/custom-js/chart.umd.min.js' %}?v={{ CP_VERSION }}"></script>
     
-    <!-- PNotify -->
+    <!-- PNotify (data-cfasync=false ensures it loads before controllers that use it) -->
     <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/custom-js/pnotify.custom.min.css' %}?v={{ CP_VERSION }}">
-    <script src="{% static 'baseTemplate/custom-js/pnotify.custom.min.js' %}?v={{ CP_VERSION }}"></script>
+    <script src="{% static 'baseTemplate/custom-js/pnotify.custom.min.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    
+    <!-- Select2 (required by FTP create account; load after jQuery; exclude from Rocket Loader to preserve order) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.full.min.js" data-cfasync="false"></script>
     
     <!-- Modern Design System -->
     <style>
@@ -188,379 +183,6 @@
         #header-right .social-links {
             display: flex;
             gap: 15px;
-            position: relative;
-        }
-        
-        /* Notification Center Button */
-        .notification-center-btn {
-            position: relative;
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: transparent;
-            color: var(--text-secondary);
-            border: 1px solid var(--border-color);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 18px;
-        }
-        
-        .notification-center-btn:hover {
-            background: var(--accent-color);
-            color: white;
-            border-color: var(--accent-color);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(88,86,214,0.3);
-        }
-        
-        .notification-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: #dc2626;
-            color: white;
-            font-size: 0.7rem;
-            font-weight: bold;
-            padding: 0.15rem 0.4rem;
-            border-radius: 10px;
-            min-width: 1.2rem;
-            text-align: center;
-            line-height: 1.2;
-            border: 2px solid white;
-        }
-        
-        /* Notification Center Dropdown */
-        .notification-center-dropdown {
-            position: absolute;
-            top: calc(100% + 10px);
-            right: 0;
-            background: white;
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-            width: 520px;
-            max-width: calc(100vw - 40px);
-            max-height: 600px;
-            overflow-y: auto;
-            overflow-x: hidden;
-            z-index: 10000;
-            display: none;
-            box-sizing: border-box;
-        }
-        
-        .notification-center-dropdown.show {
-            display: block;
-            animation: slideDownFade 0.3s ease-out;
-        }
-        
-        @keyframes slideDownFade {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .notification-center-header {
-            padding: 1.25rem 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--bg-secondary);
-            border-radius: 16px 16px 0 0;
-        }
-        
-        .notification-center-header h3 {
-            margin: 0;
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--text-color);
-            letter-spacing: -0.02em;
-        }
-        
-        .notification-center-header button {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 1.5rem;
-            color: var(--text-secondary);
-            padding: 0.25rem;
-            line-height: 1;
-            transition: all 0.2s ease;
-            border-radius: 4px;
-            width: 28px;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .notification-center-header button:hover {
-            background: rgba(0, 0, 0, 0.05);
-            color: var(--text-color);
-        }
-        
-        .notification-center-list {
-            padding: 1rem;
-            box-sizing: border-box;
-            overflow-x: hidden;
-        }
-        
-        .notification-center-item {
-            padding: 1.5rem;
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            margin-bottom: 1rem;
-            background: white;
-            transition: all 0.2s ease;
-            cursor: default;
-            box-sizing: border-box;
-            width: 100%;
-            overflow: hidden;
-            min-width: 0;
-        }
-        
-        .notification-center-item:hover {
-            background: var(--bg-secondary);
-            border-color: var(--accent-color);
-            box-shadow: 0 4px 12px rgba(88, 86, 214, 0.1);
-            transform: translateY(-2px);
-        }
-        
-        .notification-center-item:last-child {
-            margin-bottom: 0;
-        }
-        
-        .notification-center-item.dismissed {
-            opacity: 0.7;
-            background: #f9fafb;
-        }
-        
-        .notification-center-item-title {
-            font-weight: 700;
-            color: var(--text-color);
-            margin-bottom: 0.75rem;
-            font-size: 1.1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            line-height: 1.3;
-            width: 100%;
-            box-sizing: border-box;
-            min-width: 0;
-            overflow: hidden;
-        }
-        
-        .notification-center-item-title > span {
-            flex: 1;
-            min-width: 0;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        
-        .notification-center-item-title i {
-            font-size: 1.25rem;
-            color: var(--accent-color);
-            flex-shrink: 0;
-            min-width: 1.25rem;
-            width: 1.25rem;
-            display: inline-block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-        }
-        
-        .notification-center-item-title .dismissed-badge {
-            font-size: 0.75rem;
-            color: #6b7280;
-            margin-left: auto;
-            font-weight: 500;
-            padding: 0.25rem 0.5rem;
-            background: #f3f4f6;
-            border-radius: 6px;
-            flex-shrink: 0;
-            white-space: nowrap;
-        }
-        
-        .notification-center-item-text {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-            line-height: 1.6;
-            margin-bottom: 1rem;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            word-break: break-word;
-            width: 100%;
-            box-sizing: border-box;
-            overflow: hidden;
-        }
-        
-        .notification-center-item-actions {
-            margin-top: 1.25rem;
-            display: flex;
-            gap: 0.75rem;
-            flex-wrap: wrap;
-        }
-        
-        .notification-center-item-link {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            color: white;
-            background: linear-gradient(135deg, var(--accent-color) 0%, #6d6bd4 100%);
-            text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 600;
-            padding: 0.75rem 1.5rem;
-            border-radius: 10px;
-            transition: all 0.3s ease;
-            white-space: nowrap;
-            box-sizing: border-box;
-            max-width: 100%;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(88, 86, 214, 0.2);
-            border: none;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .notification-center-item-link::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s ease;
-        }
-        
-        .notification-center-item-link:hover::before {
-            left: 100%;
-        }
-        
-        .notification-center-item-link > span {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .notification-center-item-link:hover {
-            background: linear-gradient(135deg, #6d6bd4 0%, #5a58c4 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(88, 86, 214, 0.4);
-            text-decoration: none;
-        }
-        
-        .notification-center-item-link:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 8px rgba(88, 86, 214, 0.3);
-        }
-        
-        .notification-center-item-link i {
-            font-size: 0.85rem;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .notification-center-item-link-secondary {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            color: var(--accent-color);
-            background: transparent;
-            border: 2px solid var(--accent-color);
-            text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 600;
-            padding: 0.75rem 1.5rem;
-            border-radius: 10px;
-            transition: all 0.3s ease;
-            white-space: nowrap;
-            box-sizing: border-box;
-            min-width: fit-content;
-            cursor: pointer;
-            position: relative;
-        }
-        
-        .notification-center-item-link-secondary > span {
-            display: inline-block;
-            white-space: nowrap;
-            font-weight: 600;
-            font-size: 0.9rem;
-            color: inherit;
-            flex-shrink: 0;
-        }
-        
-        .notification-center-item-link-secondary:hover {
-            background: var(--accent-color);
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(88, 86, 214, 0.3);
-            text-decoration: none;
-        }
-        
-        .notification-center-item-link-secondary:hover > span {
-            color: white;
-        }
-        
-        .notification-center-item-link-secondary:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 8px rgba(88, 86, 214, 0.2);
-        }
-        
-        .notification-center-item-link-secondary i {
-            font-size: 0.85rem;
-            opacity: 0.9;
-            display: inline-block !important;
-            visibility: visible !important;
-        }
-        
-        .notification-center-item-link-secondary i.fa-info-circle {
-            margin-right: 0.25rem;
-        }
-        
-        .notification-center-item-link-secondary i.fa-arrow-right {
-            margin-left: 0.25rem;
-            font-size: 0.75rem;
-        }
-        
-        .notification-center-empty {
-            padding: 3rem 2rem;
-            text-align: center;
-            color: var(--text-secondary);
-            font-size: 1rem;
-        }
-        
-        /* Custom scrollbar for notification center */
-        .notification-center-dropdown::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-        .notification-center-dropdown::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 0 0 16px 0;
-        }
-        
-        .notification-center-dropdown::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 4px;
-        }
-        
-        .notification-center-dropdown::-webkit-scrollbar-thumb:hover {
-            background: #a8a8a8;
         }
         
         #header-right .social-links a {
@@ -632,6 +254,119 @@
         
         [data-theme="dark"] .theme-toggle {
             color: #fbbf24;
+        }
+        
+        /* Notification Center Button */
+        .notification-center-btn {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 18px;
+        }
+        .notification-center-btn:hover {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(88,86,214,0.3);
+        }
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #dc2626;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: bold;
+            padding: 0.15rem 0.4rem;
+            border-radius: 10px;
+            min-width: 1.2rem;
+            text-align: center;
+            line-height: 1.2;
+            border: 2px solid white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .notification-center-dropdown {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            width: 520px;
+            max-width: calc(100vw - 40px);
+            max-height: 600px;
+            overflow-y: auto;
+            z-index: 10000;
+            display: none;
+        }
+        .notification-center-dropdown.show { display: block; }
+        .notification-center-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .notification-center-header h3 { margin: 0; font-size: 1.25rem; font-weight: 700; }
+        .notification-center-list { padding: 1rem; }
+        .notification-center-empty { color: var(--text-secondary); padding: 1rem; }
+        .notification-center-item {
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            background: white;
+        }
+        .notification-center-item.dismissed { opacity: 0.7; background: #f9fafb; }
+        .notification-center-item-title {
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .notification-center-item-title .dismissed-badge {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-left: auto;
+            padding: 0.25rem 0.5rem;
+            background: #f3f4f6;
+            border-radius: 6px;
+        }
+        .notification-center-item-text { color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1rem; line-height: 1.6; }
+        .notification-center-item-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+        .notification-center-item-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: white;
+            background: linear-gradient(135deg, var(--accent-color) 0%, #6d6bd4 100%);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+        }
+        .notification-center-item-link-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--accent-color);
+            text-decoration: none;
+            font-size: 0.9rem;
         }
         
         /* Sidebar */
@@ -1575,7 +1310,7 @@
     
     {% block header_scripts %}{% endblock %}
 </head>
-<body data-has-backup-configured="{% if request.session.has_backup_configured %}true{% else %}false{% endif %}">
+<body>
     <!-- Header -->
     <div id="header">
         <button id="mobile-menu-toggle" class="mobile-menu-toggle" onclick="toggleSidebar()" style="display: none;">
@@ -1596,7 +1331,7 @@
             <div class="social-links" style="position: relative;">
                 <button id="notification-center-btn" class="notification-center-btn" title="Notifications" onclick="toggleNotificationCenter()">
                     <i class="fas fa-bell"></i>
-                    <span id="notification-badge" class="notification-badge" style="display: none;">0</span>
+                    <span id="notification-badge" class="notification-badge">0</span>
                 </button>
                 <div id="notification-center-dropdown" class="notification-center-dropdown">
                     <div class="notification-center-header">
@@ -1812,6 +1547,9 @@
                 <a href="{% url 'listChildDomains' %}" class="menu-item">
                     <span>List Sub/Addon Domains</span>
                 </a>
+                <a href="{% url 'fixSubdomainLogs' %}" class="menu-item">
+                    <span>Fix Subdomain Logs</span>
+                </a>
                 {% if admin or modifyWebsite %}
                 <a href="{% url 'modifyWebsite' %}" class="menu-item">
                     <span>Modify Website</span>
@@ -2013,7 +1751,7 @@
                 </a>
                 {% endif %}
                 {% if admin %}
-                <a href="#" class="menu-item" onclick="loadFTPQuotaManagement(); return false;">
+                <a href="{% url 'ftpQuotaManagementPage' %}" class="menu-item" target="_blank">
                     <span>FTP Quota Management</span>
                 </a>
                 {% endif %}
@@ -2163,7 +1901,7 @@
                 <a href="{% url 'manageImages' %}" class="menu-item">
                     <span>Manage Images</span>
                 </a>
-                <a href="{% url 'listContainersPage' %}" class="menu-item">
+                <a href="{% url 'listContainers' %}" class="menu-item">
                     <span>Manage Containers</span>
                 </a>
                 <a href="{% url 'containerImage' %}" class="menu-item">
@@ -2293,6 +2031,9 @@
                 <a href="{% url 'aiScannerHome' %}" class="menu-item">
                     <span>AI Scanner</span>
                 </a>
+                <a href="#" class="menu-item" onclick="loadSecurityManagement(); return false;">
+                    <span>Security Management</span>
+                </a>
             </div>
             
             <a href="#" class="menu-item" onclick="toggleSubmenu('mail-settings-submenu', this); return false;">
@@ -2311,6 +2052,9 @@
                 </a>
                 <a href="{% url 'SpamAssassin' %}" class="menu-item">
                     <span>SpamAssassin</span>
+                </a>
+                <a href="{% url 'emailMarketing' %}" class="menu-item">
+                    <span>Email Marketing</span>
                 </a>
                 <a href="{% url 'MailScanner' %}" class="menu-item">
                     <span>MailScanner</span>
@@ -2343,6 +2087,11 @@
                 <a href="{% url 'managePureFtpd' %}" class="menu-item">
                     <span>Manage FTP</span>
                 </a>
+                {% if admin %}
+                <a href="#" class="menu-item" onclick="loadBandwidthManagement(); return false;">
+                    <span>Bandwidth Management</span>
+                </a>
+                {% endif %}
             </div>
             
             <a href="#" class="menu-item" onclick="toggleSubmenu('plugins-submenu', this); return false;">
@@ -2429,30 +2178,24 @@
         {% block content %}{% endblock %}
     </div>
     
-    <!-- Additional Scripts -->
-    <script src="{% static 'packages/packages.js' %}?v={{ CP_VERSION }}"></script>
-    <script src="{% static 'websiteFunctions/websiteFunctions.js' %}?v={{ CP_VERSION }}"></script>
-    <script src="{% static 'userManagment/userManagment.js' %}?v={{ CP_VERSION }}"></script>
-    <script src="{% static 'databases/databases.js' %}?v={{ CP_VERSION }}"></script>
-    <script src="{% static 'dns/dns.js' %}?v={{ CP_VERSION }}"></script>
-    <script src="{% static 'mailServer/mailServer.js' %}?v={{ CP_VERSION }}"></script>
-    <script src="{% static 'ftp/ftp.js' %}?v={{ CP_VERSION }}"></script>
-    <script src="{% static 'backup/backup.js' %}?v={{ CP_VERSION }}"></script>
-    <script src="{% static 'managePHP/managePHP.js' %}?v={{ CP_VERSION }}"></script>
-    <script src="{% static 'serverLogs/serverLogs.js' %}?v={{ CP_VERSION }}"></script>
-    <script src="{% static 'serverStatus/serverStatus.js' %}?v={{ CP_VERSION }}"></script>
-    <script src="{% static 'firewall/firewall.js' %}?v={{ CP_VERSION }}"></script>
-    <script src="{% static 'emailPremium/emailPremium.js' %}?v={{ CP_VERSION }}"></script>
-    <script src="{% static 'manageServices/manageServices.js' %}?v={{ CP_VERSION }}"></script>
-    <script src="{% static 'CLManager/CLManager.js' %}?v={{ CP_VERSION }}"></script>
+    <!-- Additional Scripts (data-cfasync=false ensures controllers load before Angular compiles) -->
+    <script src="{% static 'packages/packages.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'websiteFunctions/websiteFunctions.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'userManagment/userManagment.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'databases/databases.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'dns/dns.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'mailServer/mailServer.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'ftp/ftp.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'backup/backup.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'managePHP/managePHP.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'serverLogs/serverLogs.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'serverStatus/serverStatus.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'firewall/firewall.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'emailPremium/emailPremium.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'manageServices/manageServices.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'CLManager/CLManager.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     
     <!-- Scripts -->
-    <!-- Set backup configuration status from Django template via data attribute -->
-    <script>
-        // Read backup configuration status from data attribute (set by Django template)
-        var backupConfigElement = document.querySelector('[data-has-backup-configured]');
-        window.hasBackupConfigured = backupConfigElement ? backupConfigElement.getAttribute('data-has-backup-configured') === 'true' : false;
-    </script>
     <script>
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -2550,41 +2293,19 @@
             }
         });
         
-        // Helper function to check if notification was dismissed within last 24 hours
-        function isNotificationDismissed(notificationKey) {
-            const dismissedTime = localStorage.getItem(notificationKey + '_dismissed_time');
-            if (!dismissedTime) {
-                return false;
-            }
-            
-            const now = new Date().getTime();
-            const dismissed = parseInt(dismissedTime, 10);
-            const hours24 = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-            
-            // If dismissed within last 24 hours, return true
-            return (now - dismissed) < hours24;
-        }
-        
-        // Helper function to dismiss notification for 24 hours
-        function dismissNotificationFor24Hours(notificationKey) {
-            const now = new Date().getTime();
-            localStorage.setItem(notificationKey + '_dismissed_time', now.toString());
-        }
-        
         // Backup notification banner logic
         function checkBackupStatus() {
-            // Check if notification was dismissed within last 24 hours
-            if (isNotificationDismissed('backup-notification')) {
-                return;
-            }
+            // Check if user has dismissed the notification permanently (from server-side context)
+            {% if backup_notification_dismissed %}
+                return; // Notification already dismissed permanently
+            {% endif %}
             
             // Check if user has backup configured (you'll need to implement this API)
             // For now, we'll show it by default unless they have a backup plan
             // This should be replaced with an actual check
-            // Note: hasBackupConfigured is set via Django template before this script
-            if (typeof window.hasBackupConfigured !== 'undefined' && !window.hasBackupConfigured) {
+            {% if not request.session.has_backup_configured %}
                 showBackupNotification();
-            }
+            {% endif %}
             
             // For demonstration, let's show it if URL doesn't contain 'OneClickBackups'
             if (!window.location.href.includes('OneClickBackups')) {
@@ -2605,17 +2326,33 @@
             banner.classList.remove('show');
             body.classList.remove('notification-shown');
             
-            // Dismiss for 24 hours using localStorage
-            dismissNotificationFor24Hours('backup-notification');
-            console.log('Backup notification dismissed for 24 hours');
+            // Dismiss permanently via API
+            fetch('/base/dismiss_backup_notification', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 1) {
+                    console.log('Backup notification dismissed permanently');
+                } else {
+                    console.error('Failed to dismiss backup notification:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error dismissing backup notification:', error);
+            });
         }
         
         // AI Scanner Notification Functions
         function checkAIScannerStatus() {
-            // Check if notification was dismissed within last 24 hours
-            if (isNotificationDismissed('ai-scanner-notification')) {
-                return;
-            }
+            // Check if user has dismissed the notification permanently (from server-side context)
+            {% if ai_scanner_notification_dismissed %}
+                return; // Notification already dismissed permanently
+            {% endif %}
             
             // Check if we're not already on the AI Scanner page
             if (!window.location.href.includes('aiscanner')) {
@@ -2636,20 +2373,45 @@
             banner.classList.remove('show');
             body.classList.remove('ai-scanner-shown');
             
-            // Dismiss for 24 hours using localStorage
-            dismissNotificationFor24Hours('ai-scanner-notification');
-            console.log('AI scanner notification dismissed for 24 hours');
+            // Dismiss permanently via API
+            fetch('/base/dismiss_ai_scanner_notification', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 1) {
+                    console.log('AI scanner notification dismissed permanently');
+                } else {
+                    console.error('Failed to dismiss AI scanner notification:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error dismissing AI scanner notification:', error);
+            });
         }
         
         // .htaccess Feature Notification Functions
         function checkHtaccessStatus() {
-            // Check if notification was dismissed within last 24 hours
-            if (isNotificationDismissed('htaccess-notification')) {
+            // Check if user has dismissed the notification permanently (localStorage for longer persistence)
+            if (localStorage.getItem('htaccessNotificationDismissed') === 'true') {
+                return;
+            }
+
+            // Check if notification has been shown today
+            const lastShown = localStorage.getItem('htaccessNotificationLastShown');
+            const today = new Date().toDateString();
+
+            if (lastShown === today) {
                 return;
             }
 
             // Show the notification
             showHtaccessNotification();
+            localStorage.setItem('htaccessNotificationLastShown', today);
         }
 
         function showHtaccessNotification() {
@@ -2664,13 +2426,22 @@
             const body = document.body;
             banner.classList.remove('show');
             body.classList.remove('htaccess-shown');
-            
-            // Dismiss for 24 hours using localStorage
-            dismissNotificationFor24Hours('htaccess-notification');
-            console.log('htaccess notification dismissed for 24 hours');
+            // Remember dismissal permanently
+            localStorage.setItem('htaccessNotificationDismissed', 'true');
         }
         
-        // Notification Center Functions
+        function isNotificationDismissed(notificationKey) {
+            if (notificationKey === 'backup-notification') {
+                return {% if backup_notification_dismissed %}true{% else %}false{% endif %};
+            }
+            if (notificationKey === 'ai-scanner-notification') {
+                return {% if ai_scanner_notification_dismissed %}true{% else %}false{% endif %};
+            }
+            if (notificationKey === 'htaccess-notification') {
+                return localStorage.getItem('htaccessNotificationDismissed') === 'true';
+            }
+            return false;
+        }
         function toggleNotificationCenter() {
             const dropdown = document.getElementById('notification-center-dropdown');
             if (dropdown) {
@@ -2680,114 +2451,56 @@
                 }
             }
         }
-        
         function loadNotificationCenter() {
             const list = document.getElementById('notification-center-list');
             if (!list) return;
-            
-            // Get all available notifications (even if dismissed)
-            const notifications = [];
-            
-            // Backup notification
-            notifications.push({
-                id: 'backup',
-                title: 'Backup Security',
-                icon: 'fas fa-shield-alt',
-                text: 'Looks like your websites are not secured with automatic backups.',
-                link: '/backup/OneClickBackups',
-                linkText: 'Configure now',
-                learnMoreLink: 'https://cyberpanel.net/docs/backup',
-                dismissed: isNotificationDismissed('backup-notification')
-            });
-            
-            // AI Scanner notification
-            notifications.push({
-                id: 'ai-scanner',
-                title: 'AI Security Scanner',
-                icon: 'fas fa-brain',
-                text: 'Secure your websites with AI-powered malware detection. Advanced threat detection • Real-time scanning • Zero false positives',
-                link: '/aiscanner/',
-                linkText: 'Start AI Security Scan',
-                learnMoreLink: 'https://cyberpanel.net/docs/ai-scanner',
-                dismissed: isNotificationDismissed('ai-scanner-notification')
-            });
-            
-            // .htaccess notification
-            notifications.push({
-                id: 'htaccess',
-                title: '.htaccess Support',
-                icon: 'fas fa-magic',
-                text: 'Revolutionary .htaccess Support Now Live! Full .htaccess support • PHP configuration now works • Zero rule rewrites needed',
-                link: 'https://cyberpanel.net/cyberpanel-htaccess-module',
-                linkText: 'View Details',
-                learnMoreLink: 'https://cyberpanel.net/cyberpanel-htaccess-module',
-                dismissed: isNotificationDismissed('htaccess-notification')
-            });
-            
-            // Render notifications
+            const notifications = [
+                { id: 'backup', title: 'Backup Security', icon: 'fas fa-shield-alt',
+                  text: 'Looks like your websites are not secured with automatic backups.',
+                  link: '/backup/OneClickBackups', linkText: 'Configure now',
+                  learnMoreLink: 'https://cyberpanel.net/docs/backup',
+                  dismissed: isNotificationDismissed('backup-notification') },
+                { id: 'ai-scanner', title: 'AI Security Scanner', icon: 'fas fa-brain',
+                  text: 'Secure your websites with AI-powered malware detection. Advanced threat detection • Real-time scanning • Zero false positives',
+                  link: '/aiscanner/', linkText: 'Start AI Security Scan',
+                  learnMoreLink: 'https://cyberpanel.net/docs/ai-scanner',
+                  dismissed: isNotificationDismissed('ai-scanner-notification') },
+                { id: 'htaccess', title: '.htaccess Support', icon: 'fas fa-magic',
+                  text: 'Revolutionary .htaccess Support Now Live! Full .htaccess support • PHP configuration now works • Zero rule rewrites needed',
+                  link: 'https://cyberpanel.net/cyberpanel-htaccess-module', linkText: 'View Details',
+                  learnMoreLink: 'https://cyberpanel.net/cyberpanel-htaccess-module',
+                  dismissed: isNotificationDismissed('htaccess-notification') }
+            ];
             if (notifications.length === 0) {
                 list.innerHTML = '<div class="notification-center-empty">No notifications available</div>';
             } else {
                 list.innerHTML = notifications.map(notif => {
-                    // Extract icon class from linkText if it contains one
-                    let linkIcon = '';
-                    if (notif.linkText.includes('Configure')) {
-                        linkIcon = '<i class="fas fa-cog"></i>';
-                    } else if (notif.linkText.includes('Start')) {
-                        linkIcon = '<i class="fas fa-rocket"></i>';
-                    } else if (notif.linkText.includes('Learn')) {
-                        linkIcon = '<i class="fas fa-book-open"></i>';
-                    } else if (notif.linkText.includes('View') || notif.linkText.includes('Details')) {
-                        linkIcon = '<i class="fas fa-external-link-alt"></i>';
-                    } else {
-                        // Default icon for any other button
-                        linkIcon = '<i class="fas fa-arrow-right"></i>';
-                    }
-                    
-                    // Determine if primary link is external
+                    let linkIcon = notif.linkText.includes('Configure') ? '<i class="fas fa-cog"></i>' :
+                        notif.linkText.includes('Start') ? '<i class="fas fa-rocket"></i>' :
+                        (notif.linkText.includes('View') || notif.linkText.includes('Details')) ? '<i class="fas fa-external-link-alt"></i>' : '<i class="fas fa-arrow-right"></i>';
                     const isExternal = notif.link.startsWith('http');
-                    const learnMoreExternal = notif.learnMoreLink && notif.learnMoreLink.startsWith('http');
-                    
-                    return `
-                    <div class="notification-center-item ${notif.dismissed ? 'dismissed' : ''}">
+                    const learnExternal = notif.learnMoreLink && notif.learnMoreLink.startsWith('http');
+                    return `<div class="notification-center-item ${notif.dismissed ? 'dismissed' : ''}">
                         <div class="notification-center-item-title">
-                            <i class="${notif.icon}" style="display: inline-block !important; visibility: visible !important;"></i>
+                            <i class="${notif.icon}"></i>
                             <span>${notif.title}</span>
                             ${notif.dismissed ? '<span class="dismissed-badge">Dismissed</span>' : ''}
                         </div>
                         <div class="notification-center-item-text">${notif.text}</div>
                         <div class="notification-center-item-actions">
-                            <a href="${notif.link}" class="notification-center-item-link" ${isExternal ? 'target="_blank" rel="noopener"' : ''}>
-                                ${linkIcon}
-                                <span>${notif.linkText}</span>
-                            </a>
-                            ${notif.learnMoreLink ? `
-                            <a href="${notif.learnMoreLink}" class="notification-center-item-link-secondary" ${learnMoreExternal ? 'target="_blank" rel="noopener"' : ''}>
-                                <i class="fas fa-info-circle"></i>
-                                <span>Learn More</span>
-                                <i class="fas fa-arrow-right"></i>
-                            </a>
-                            ` : ''}
+                            <a href="${notif.link}" class="notification-center-item-link" ${isExternal ? 'target="_blank" rel="noopener"' : ''}>${linkIcon} <span>${notif.linkText}</span></a>
+                            ${notif.learnMoreLink ? `<a href="${notif.learnMoreLink}" class="notification-center-item-link-secondary" ${learnExternal ? 'target="_blank" rel="noopener"' : ''}><i class="fas fa-info-circle"></i> <span>Learn More</span> <i class="fas fa-arrow-right"></i></a>` : ''}
                         </div>
-                    </div>
-                `;
+                    </div>`;
                 }).join('');
             }
-            
-            // Update badge count (show count of non-dismissed notifications)
             const activeCount = notifications.filter(n => !n.dismissed).length;
             const badge = document.getElementById('notification-badge');
             if (badge) {
-                if (activeCount > 0) {
-                    badge.textContent = activeCount;
-                    badge.style.display = 'block';
-                } else {
-                    badge.style.display = 'none';
-                }
+                badge.textContent = activeCount;
+                badge.style.display = 'flex';
             }
         }
-        
-        // Close notification center when clicking outside
         document.addEventListener('click', function(event) {
             const dropdown = document.getElementById('notification-center-dropdown');
             const button = document.getElementById('notification-center-btn');
@@ -2798,14 +2511,12 @@
         
         // Check all notification statuses when page loads
         document.addEventListener('DOMContentLoaded', function() {
+            loadNotificationCenter();
             checkBackupStatus();
             // Show AI Scanner notification with a slight delay for better UX
             setTimeout(checkAIScannerStatus, 1000);
             // Show .htaccess notification with additional delay for staggered effect
             setTimeout(checkHtaccessStatus, 1500);
-            
-            // Update notification badge on load
-            setTimeout(loadNotificationCenter, 2000);
             
             // Set active menu state based on current URL
             setActiveMenuState();
@@ -2821,44 +2532,7 @@
                 item.classList.remove('active', 'has-active-child');
             });
             
-            // Special handling for plugin pages - expand Plugins submenu and highlight
-            if (currentPath.startsWith('/plugins/')) {
-                const pluginsSubmenu = document.getElementById('plugins-submenu');
-                const pluginsMenuItem = pluginsSubmenu ? pluginsSubmenu.previousElementSibling : null;
-                
-                if (pluginsSubmenu) {
-                    pluginsSubmenu.classList.add('show');
-                }
-                
-                if (pluginsMenuItem && pluginsMenuItem.classList.contains('menu-item')) {
-                    pluginsMenuItem.classList.add('expanded', 'has-active-child');
-                }
-                
-                // Check if it's the installed page
-                if (currentPath === '/plugins/installed' || currentPath.startsWith('/plugins/installed')) {
-                    const installedLink = pluginsSubmenu ? pluginsSubmenu.querySelector('a[href*="installed"]') : null;
-                    if (installedLink) {
-                        installedLink.classList.add('active');
-                    }
-                } else if (currentPath.match(/^\/plugins\/[^\/]+\/(settings|help)/)) {
-                    // It's a plugin settings/help page - highlight "Installed" menu item
-                    const installedLink = pluginsSubmenu ? pluginsSubmenu.querySelector('a[href*="installed"]') : null;
-                    if (installedLink) {
-                        installedLink.classList.add('active');
-                    }
-                } else {
-                    // Try to match specific plugin links in the submenu
-                    const pluginLinks = pluginsSubmenu ? pluginsSubmenu.querySelectorAll('a.menu-item') : [];
-                    pluginLinks.forEach(link => {
-                        const href = link.getAttribute('href');
-                        if (href && (currentPath === href || currentPath.startsWith(href + '/'))) {
-                            link.classList.add('active');
-                        }
-                    });
-                }
-            }
-            
-            // Find and activate the matching menu item (exact matches)
+            // Find and activate the matching menu item
             allMenuItems.forEach(item => {
                 const href = item.getAttribute('href');
                 if (href && href !== '#' && currentPath === href) {
@@ -2924,32 +2598,47 @@
     <!-- FTP Quota and Bandwidth Management Functions -->
     <script>
         function loadFTPQuotaManagement() {
-            // Load FTP quota management interface
-            $.get('{% url "getFTPQuotas" %}', function(data) {
-                if (data.status === 1) {
-                    // Create modal or redirect to dedicated page
-                    window.open('/websiteFunctions/ftpQuotaManagement.html', '_blank');
-                } else {
-                    alert('Error loading FTP quota management: ' + data.message);
+            $.ajax({
+                url: '{% url "getFTPQuotas" %}',
+                method: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    if (data.status === 1) {
+                        window.open('{% url "ftpQuotaManagementPage" %}', '_blank');
+                    } else {
+                        var msg = (data && (data.error_message || data.message || data.errorMessage)) || 'Unknown error';
+                        alert('Error loading FTP quota management: ' + msg);
+                    }
+                },
+                error: function(xhr) {
+                    var msg = (xhr.responseJSON && (xhr.responseJSON.error_message || xhr.responseJSON.message)) || (xhr.statusText || 'Request failed');
+                    alert('Error loading FTP quota management: ' + msg);
                 }
             });
         }
         
         function loadBandwidthManagement() {
-            // Load bandwidth management interface
-            $.get('{% url "getBandwidthResetLogs" %}', function(data) {
-                if (data.status === 1) {
-                    // Create modal or redirect to dedicated page
-                    window.open('/websiteFunctions/bandwidthManagement.html', '_blank');
-                } else {
-                    alert('Error loading bandwidth management: ' + data.message);
+            $.ajax({
+                url: '{% url "getBandwidthResetLogs" %}',
+                method: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    if (data.status === 1) {
+                        window.open('{% url "bandwidthManagementPage" %}', '_blank');
+                    } else {
+                        var msg = (data && (data.error_message || data.message || data.errorMessage)) || 'Unknown error';
+                        alert('Error loading bandwidth management: ' + msg);
+                    }
+                },
+                error: function(xhr) {
+                    var msg = (xhr.responseJSON && (xhr.responseJSON.error_message || xhr.responseJSON.message)) || (xhr.statusText || 'Request failed');
+                    alert('Error loading bandwidth management: ' + msg);
                 }
             });
         }
         
         function loadSecurityManagement() {
-            // Load security management interface
-            window.open('/websiteFunctions/securityManagement.html', '_blank');
+            window.open('{% url "securityManagementPage" %}', '_blank');
         }
     </script>
     

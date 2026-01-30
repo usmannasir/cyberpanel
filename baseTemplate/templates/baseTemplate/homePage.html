@@ -132,6 +132,16 @@
         cursor: pointer;
     }
     
+    a.insight-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+    
+    a.insight-link:hover {
+        color: inherit;
+    }
+    
     .insight-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 5px 20px rgba(91,95,207,0.1);
@@ -690,38 +700,38 @@
     <!-- Overview Section -->
     <div class="overview-section">
         <h2 class="section-title">OVERVIEW</h2>
-        <div class="stats-grid" ng-controller="systemStatusInfo" ng-cloak>
+        <div class="stats-grid" ng-controller="systemStatusInfo">
             <div class="stat-card">
                 <div class="stat-card-header">
                     <span class="stat-card-title">CPU USAGE</span>
-                    <span class="stat-card-value" ng-bind="cpuUsage || 0">0</span><span>%</span>
+                    <span class="stat-card-value">({$ cpuUsage $}%)</span>
                 </div>
                 <div class="progress-bar-container">
-                    <div class="progress-bar" ng-style="{'width': (cpuUsage || 0) + '%'}"></div>
+                    <div class="progress-bar" style="width: {$ cpuUsage $}%;"></div>
                 </div>
-                <div class="stat-card-info">You've <span ng-bind="cpuCores || 0">0</span> Core(s) CPU.</div>
+                <div class="stat-card-info">You've {$ cpuCores $} Core(s) CPU.</div>
             </div>
             
             <div class="stat-card">
                 <div class="stat-card-header">
                     <span class="stat-card-title">MEMORY USAGE</span>
-                    <span class="stat-card-value" ng-bind="ramUsage || 0">0</span><span>%</span>
+                    <span class="stat-card-value">({$ ramUsage $}%)</span>
                 </div>
                 <div class="progress-bar-container">
-                    <div class="progress-bar" ng-style="{'width': (ramUsage || 0) + '%'}"></div>
+                    <div class="progress-bar" style="width: {$ ramUsage $}%;"></div>
                 </div>
-                <div class="stat-card-info">You've <span ng-bind="ramTotalMB || 0">0</span> MB Memory.</div>
+                <div class="stat-card-info">You've {$ ramTotalMB $} MB Memory.</div>
             </div>
             
             <div class="stat-card">
                 <div class="stat-card-header">
                     <span class="stat-card-title">DISK USAGE</span>
-                    <span class="stat-card-value" ng-bind="diskUsage || 0">0</span><span>%</span>
+                    <span class="stat-card-value">({$ diskUsage $}%)</span>
                 </div>
                 <div class="progress-bar-container">
-                    <div class="progress-bar" ng-style="{'width': (diskUsage || 0) + '%'}"></div>
+                    <div class="progress-bar" style="width: {$ diskUsage $}%;"></div>
                 </div>
-                <div class="stat-card-info">You've <span ng-bind="diskFreeGB || 0">0</span> GB remaining out of <span ng-bind="diskTotalGB || 0">0</span> GB.</div>
+                <div class="stat-card-info">You've {$ diskFreeGB $} GB remaining out of {$ diskTotalGB $} GB.</div>
             </div>
         </div>
     </div>
@@ -729,54 +739,54 @@
     <!-- Insights Section -->
     <div class="insights-section">
         <h2 class="section-title">INSIGHTS</h2>
-        <div class="insights-grid" ng-cloak>
-            <div class="insight-card">
+        <div class="insights-grid">
+            <a href="{% url 'listUsers' %}" class="insight-card insight-link">
                 <div class="insight-icon">
                     <i class="fas fa-users"></i>
                 </div>
-                <div class="insight-value" ng-bind="totalUsers || 0">0</div>
+                <div class="insight-value">{$ totalUsers || 0 $}</div>
                 <div class="insight-label">Users</div>
-            </div>
+            </a>
             
-            <div class="insight-card">
+            <a href="{% url 'listWebsites' %}" class="insight-card insight-link">
                 <div class="insight-icon">
                     <i class="fas fa-globe"></i>
                 </div>
-                <div class="insight-value" ng-bind="totalSites || 0">0</div>
+                <div class="insight-value">{$ totalSites || 0 $}</div>
                 <div class="insight-label">Websites</div>
-            </div>
+            </a>
             
-            <div class="insight-card">
+            <a href="{% url 'ListWPSites' %}" class="insight-card insight-link">
                 <div class="insight-icon" style="background: #5b87da;">
                     <i class="fab fa-wordpress"></i>
                 </div>
-                <div class="insight-value" ng-bind="totalWPSites || 0">0</div>
+                <div class="insight-value">{$ totalWPSites || 0 $}</div>
                 <div class="insight-label">WordPress</div>
-            </div>
+            </a>
             
-            <div class="insight-card">
+            <a href="{% url 'listDBs' %}" class="insight-card insight-link">
                 <div class="insight-icon">
                     <i class="fas fa-database"></i>
                 </div>
-                <div class="insight-value" ng-bind="totalDBs || 0">0</div>
+                <div class="insight-value">{$ totalDBs || 0 $}</div>
                 <div class="insight-label">Databases</div>
-            </div>
+            </a>
             
-            <div class="insight-card">
+            <a href="{% url 'listEmails' %}" class="insight-card insight-link">
                 <div class="insight-icon">
                     <i class="fas fa-envelope"></i>
                 </div>
-                <div class="insight-value" ng-bind="totalEmails || 0">0</div>
+                <div class="insight-value">{$ totalEmails || 0 $}</div>
                 <div class="insight-label">Emails</div>
-            </div>
+            </a>
             
-            <div class="insight-card">
+            <a href="{% url 'listFTPAccounts' %}" class="insight-card insight-link">
                 <div class="insight-icon">
                     <i class="fas fa-folder"></i>
                 </div>
-                <div class="insight-value" ng-bind="totalFTPUsers || 0">0</div>
+                <div class="insight-value">{$ totalFTPUsers || 0 $}</div>
                 <div class="insight-label">FTP Users</div>
-            </div>
+            </a>
         </div>
     </div>
     
@@ -972,17 +982,16 @@
                                     <strong style="font-size: 12px; color: #1e293b;">Recommendation:</strong>
                                     <p style="margin: 4px 0 0 0; font-size: 12px; color: #475569; white-space: pre-line;">{$ alert.recommendation $}</p>
                                 </div>
-                                <!-- Add to Firewall Button for Brute Force Attacks and Root Login Attempts -->
-                                <div ng-if="(alert.title === 'Brute Force Attack Detected' && alert.details && alert.details['IP Address']) || (alert.title === 'Root Login Attempts Detected' && alert.details && alert.details['Top IP'])" style="margin-top: 12px;">
-                                    <button ng-click="blockIPAddress(alert.details['IP Address'] || alert.details['Top IP']); $event.stopPropagation(); return false;" 
+                                <!-- Add to Firewall Button for all alerts with IP addresses -->
+                                <div ng-if="alert.details && (alert.details['IP Address'] || alert.details['Top IP'])" style="margin-top: 12px;">
+                                    <button ng-click="blockIPAddress(alert.details['IP Address'] || alert.details['Top IP']); $event.stopPropagation()" 
                                             ng-disabled="blockingIP === (alert.details['IP Address'] || alert.details['Top IP'])"
                                             style="background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;"
                                             onmouseover="this.style.background='#b91c1c'" 
-                                            onmouseout="this.style.background='#dc2626'"
-                                            type="button">
+                                            onmouseout="this.style.background='#dc2626'">
                                         <i class="fas fa-ban" ng-if="blockingIP !== (alert.details['IP Address'] || alert.details['Top IP'])"></i>
                                         <i class="fas fa-spinner fa-spin" ng-if="blockingIP === (alert.details['IP Address'] || alert.details['Top IP'])"></i>
-                                        <span ng-if="blockingIP !== (alert.details['IP Address'] || alert.details['Top IP'])">Ban IP</span>
+                                        <span ng-if="blockingIP !== (alert.details['IP Address'] || alert.details['Top IP'])">Ban IP Permanently</span>
                                         <span ng-if="blockingIP === (alert.details['IP Address'] || alert.details['Top IP'])">Banning...</span>
                                     </button>
                                     <a href="/firewall/" target="_blank" style="margin-left: 10px; color: #5b5fcf; font-size: 12px; text-decoration: none;">
@@ -1324,31 +1333,67 @@
             });
         }
         
-        const formData = {
-            'csrfmiddlewaretoken': getCookie('csrftoken'),
-            'ip_address': ipAddress,
-            'reason': 'Brute force attack detected from dashboard'
-        };
-        
-        $.post('/base/blockIPAddress', formData, function(data) {
-            if (data.status === 1) {
-                showNotification('success', data.message);
-                // Refresh the page to update the blocked IPs list
-                setTimeout(() => {
-                    location.reload();
-                }, 1000);
-            } else {
-                showNotification('error', data.message);
-            }
-        }).fail(function() {
-            showNotification('error', 'Failed to block IP address. Please try again.');
-        }).always(function() {
-            // Clear loading state
-            if (typeof angular !== 'undefined' && angular.element(document.body).scope()) {
-                var scope = angular.element(document.body).scope();
-                scope.$apply(function() {
-                    scope.blockingIP = null;
-                });
+        $.ajax({
+            url: '/base/blockIPAddress',
+            type: 'POST',
+            contentType: 'application/json',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            data: JSON.stringify({
+                'ip_address': ipAddress,
+                'reason': 'Security alert detected from dashboard'
+            }),
+            success: function(data) {
+                // Handle both success and error responses
+                if (data.status === 1) {
+                    showNotification('success', data.message || 'IP address blocked successfully');
+                    // Refresh the page to update the blocked IPs list
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    // Handle error response - check for both 'error' and 'error_message' fields
+                    var errorMsg = data.error || data.error_message || data.message || 'Failed to block IP address';
+                    showNotification('error', errorMsg);
+                }
+            },
+            error: function(xhr, status, error) {
+                // Handle network errors and parse JSON errors
+                console.error('Ban IP error:', xhr, status, error);
+                var errorMsg = 'Failed to block IP address. Please try again.';
+                
+                // Log full response for debugging
+                console.log('Response status:', xhr.status);
+                console.log('Response text:', xhr.responseText);
+                
+                if (xhr.responseJSON) {
+                    errorMsg = xhr.responseJSON.error || xhr.responseJSON.error_message || xhr.responseJSON.message || errorMsg;
+                    console.log('Parsed error from JSON:', errorMsg);
+                } else if (xhr.responseText) {
+                    try {
+                        var errorData = JSON.parse(xhr.responseText);
+                        errorMsg = errorData.error || errorData.error_message || errorData.message || errorMsg;
+                        console.log('Parsed error from text:', errorMsg);
+                    } catch(e) {
+                        console.error('Failed to parse error response:', e);
+                        // If parsing fails, try to extract error from response text
+                        if (xhr.responseText.includes('error')) {
+                            errorMsg = xhr.responseText.substring(0, 200);
+                        }
+                    }
+                }
+                
+                showNotification('error', errorMsg);
+            },
+            complete: function() {
+                // Clear loading state
+                if (typeof angular !== 'undefined' && angular.element(document.body).scope()) {
+                    var scope = angular.element(document.body).scope();
+                    scope.$apply(function() {
+                        scope.blockingIP = null;
+                    });
+                }
             }
         });
     }

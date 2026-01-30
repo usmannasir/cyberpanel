@@ -5,6 +5,7 @@
 {% block content %}
 
     {% load static %}
+    <script src="{% static 'userManagment/userManagment.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     {% get_current_language as LANGUAGE_CODE %}
     <!-- Current language: {{ LANGUAGE_CODE }} -->
 
@@ -427,19 +428,19 @@
                         </button>
                     </div>
                 </div>
-                <div ng-hide="userModified" class="alert alert-success">
-                    <i class="fa fa-check-circle"></i> {% trans "Account with username:" %} <strong>{$ userName $}</strong> {% trans "is successfully modified." %}
+                <div ng-cloak ng-show="userModified === false" class="alert alert-success">
+                    <i class="fa fa-check-circle"></i> {% trans "Account with username:" %} <strong><span ng-bind="userName"></span></strong> {% trans "is successfully modified." %}
                 </div>
-                <div ng-hide="canotModifyUser" class="alert alert-danger">
-                    <i class="fa fa-exclamation-circle"></i> {% trans "Cannot modify user. Error message:" %} {$ errorMessage $}
+                <div ng-cloak ng-show="canotModifyUser === true" class="alert alert-danger">
+                    <i class="fa fa-exclamation-circle"></i> {% trans "Cannot modify user. Error message:" %} <span ng-bind="errorMessage || 'Unknown error'"></span>
                 </div>
-                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                <div ng-cloak ng-show="couldNotConnect === false" class="alert alert-danger">
                     <i class="fa fa-times-circle"></i> {% trans "Could not connect to server. Please refresh this page." %}
                 </div>
-                <div ng-hide="canotFetchDetails" class="alert alert-danger">
-                    <i class="fa fa-exclamation-circle"></i> {% trans "Cannot fetch details. Error message:" %} {$ errorMessage $}
+                <div ng-cloak ng-show="canotFetchDetails === true" class="alert alert-danger">
+                    <i class="fa fa-exclamation-circle"></i> {% trans "Cannot fetch details. Error message:" %} <span ng-bind="errorMessage || 'Unknown error'"></span>
                 </div>
-                <div ng-hide="detailsFetched" class="alert alert-success">
+                <div ng-cloak ng-show="detailsFetched === true" class="alert alert-success">
                     <i class="fa fa-info-circle"></i> {% trans "User details loaded successfully." %}
                 </div>
             </form>

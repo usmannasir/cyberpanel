@@ -830,6 +830,7 @@ def getRecentSSHLogs(request):
         if not currentACL.get('admin', 0):
             return HttpResponse(json.dumps({'error': 'Admin only'}), content_type='application/json', status=403)
         from plogical.processUtilities import ProcessUtilities
+        import re
         distro = ProcessUtilities.decideDistro()
         if distro in [ProcessUtilities.ubuntu, ProcessUtilities.ubuntu20]:
             log_path = '/var/log/auth.log'
@@ -841,6 +842,9 @@ def getRecentSSHLogs(request):
             return HttpResponse(json.dumps({'error': f'Failed to read log: {str(e)}'}), content_type='application/json', status=500)
         lines = output.split('\n')
         logs = []
+        # IP address regex patterns (IPv4)
+        ipv4_pattern = r'\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b'
+        
         for line in lines:
             if not line.strip():
                 continue
@@ -851,7 +855,26 @@ def getRecentSSHLogs(request):
             else:
                 timestamp = ''
                 message = line
-            logs.append({'timestamp': timestamp, 'message': message, 'raw': line})
+            
+            # Extract IP address from the log line
+            ip_address = None
+            ip_matches = re.findall(ipv4_pattern, line)
+            if ip_matches:
+                # Filter out localhost and common non-external IPs
+                for ip in ip_matches:
+                    if ip not in ['127.0.0.1', '0.0.0.0', '::1'] and not ip.startswith('192.168.') and not ip.startswith('10.') and not ip.startswith('172.'):
+                        ip_address = ip
+                        break
+                # If no external IP found, use the first match anyway (might be needed for internal attacks)
+                if not ip_address and ip_matches:
+                    ip_address = ip_matches[0]
+            
+            logs.append({
+                'timestamp': timestamp, 
+                'message': message, 
+                'raw': line,
+                'ip_address': ip_address
+            })
         return HttpResponse(json.dumps({'logs': logs}), content_type='application/json')
     except Exception as e:
         return HttpResponse(json.dumps({'error': str(e)}), content_type='application/json', status=500)
@@ -1193,7 +1216,30 @@ def blockIPAddress(request):
                 'error': 'Premium feature required'
             }), content_type='application/json', status=403)
         
-        data = json.loads(request.body)
+        # Parse request body - Django request.body is always bytes
+        try:
+            if not request.body:
+                return HttpResponse(json.dumps({
+                    'status': 0,
+                    'error': 'Request body is empty'
+                }), content_type='application/json', status=400)
+            
+            body_str = request.body.decode('utf-8')
+            if not body_str or body_str.strip() == '':
+                return HttpResponse(json.dumps({
+                    'status': 0,
+                    'error': 'Request body is empty'
+                }), content_type='application/json', status=400)
+            
+            data = json.loads(body_str)
+        except (json.JSONDecodeError, UnicodeDecodeError) as e:
+            import plogical.CyberCPLogFileWriter as logging
+            logging.CyberCPLogFileWriter.writeToFile(f'JSON decode error in blockIPAddress: {str(e)}, body: {request.body[:200] if request.body else "empty"}')
+            return HttpResponse(json.dumps({
+                'status': 0,
+                'error': f'Invalid request format: {str(e)}'
+            }), content_type='application/json', status=400)
+        
         ip_address = data.get('ip_address', '').strip()
         
         if not ip_address:
@@ -1288,6 +1334,54 @@ def blockIPAddress(request):
             error_message = f'Firewall command failed: {str(e)}'
         
         if success:
+            # Add to banned IPs JSON file for consistency with firewall page
+            try:
+                import os
+                import time
+                banned_ips_file = '/etc/cyberpanel/banned_ips.json'
+                banned_ips = []
+                
+                if os.path.exists(banned_ips_file):
+                    try:
+                        with open(banned_ips_file, 'r') as f:
+                            banned_ips = json.load(f)
+                    except:
+                        banned_ips = []
+                
+                # Check if IP is already banned
+                ip_already_banned = False
+                for banned_ip in banned_ips:
+                    if banned_ip.get('ip') == ip_address and banned_ip.get('active', True):
+                        ip_already_banned = True
+                        break
+                
+                if not ip_already_banned:
+                    # Get reason from request data
+                    reason = data.get('reason', 'Security alert detected from dashboard')
+                    
+                    # Add new banned IP
+                    new_banned_ip = {
+                        'id': int(time.time()),
+                        'ip': ip_address,
+                        'reason': reason,
+                        'duration': 'permanent',
+                        'banned_on': time.time(),
+                        'expires': 'Never',
+                        'active': True
+                    }
+                    banned_ips.append(new_banned_ip)
+                    
+                    # Ensure directory exists
+                    os.makedirs(os.path.dirname(banned_ips_file), exist_ok=True)
+                    
+                    # Save to file
+                    with open(banned_ips_file, 'w') as f:
+                        json.dump(banned_ips, f, indent=2)
+            except Exception as e:
+                # Log but don't fail the request if JSON update fails
+                import plogical.CyberCPLogFileWriter as logging
+                logging.CyberCPLogFileWriter.writeToFile(f'Warning: Failed to update banned_ips.json: {str(e)}')
+            
             # Log the action
             import plogical.CyberCPLogFileWriter as logging
             logging.CyberCPLogFileWriter.writeToFile(f'IP address {ip_address} blocked via CyberPanel dashboard by user {user_id}')
@@ -1303,7 +1397,18 @@ def blockIPAddress(request):
                 'error': error_message or 'Failed to block IP address'
             }), content_type='application/json', status=500)
         
+    except json.JSONDecodeError as e:
+        import plogical.CyberCPLogFileWriter as logging
+        logging.CyberCPLogFileWriter.writeToFile(f'JSON decode error in blockIPAddress: {str(e)}, body: {request.body}')
+        return HttpResponse(json.dumps({
+            'status': 0,
+            'error': f'Invalid JSON in request: {str(e)}'
+        }), content_type='application/json', status=400)
     except Exception as e:
+        import plogical.CyberCPLogFileWriter as logging
+        import traceback
+        error_trace = traceback.format_exc()
+        logging.CyberCPLogFileWriter.writeToFile(f'Error in blockIPAddress: {str(e)}\n{error_trace}')
         return HttpResponse(json.dumps({
             'status': 0,
             'error': f'Server error: {str(e)}'
