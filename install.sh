@@ -1,46 +1,15 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 # CyberPanel v2.5.5-dev Installer
 # Simplified approach similar to stable branch
 
-# Logging setup
-LOG_FILE="/var/log/installer.log"
-mkdir -p /var/log 2>/dev/null || true
-touch "$LOG_FILE" 2>/dev/null || true
-exec >>"$LOG_FILE" 2>&1
-echo "[$(date +"%Y-%m-%d %H:%M:%S")] Installer started: $0 $*"
-
-# Re-exec with elevation if not running as root
-if [ "$(id -u)" -ne 0 ]; then
-    SCRIPT_PATH="$(readlink -f "$0" 2>/dev/null || echo "$0")"
-    for elevate in sudo doas run0 pkexec; do
-        if command -v "$elevate" >/dev/null 2>&1; then
-            echo "[$(date +"%Y-%m-%d %H:%M:%S")] Elevating with $elevate"
-            "$elevate" env "XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-}" "SUDO_USER=$(whoami)" "$SCRIPT_PATH" "$@"
-            exit $?
-        fi
-    done
-
-    echo "[$(date +"%Y-%m-%d %H:%M:%S")] ERROR: No elevation tool found."
-    echo "Please install sudo, doas, run0 (systemd), or pkexec (polkit) to continue."
-    exit 1
-fi
-
 # Determine branch from arguments or use default
 BRANCH_NAME="v2.5.5-dev"
-while [ "$#" -gt 0 ]; do
-    case "$1" in
+for arg in "$@"; do
+    case "$arg" in
         -b|--branch)
-            if [ -n "${2:-}" ]; then
-                BRANCH_NAME="$2"
-                shift 2
-            else
-                echo "❌ Missing value for $1"
-                exit 1
-            fi
-            ;;
-        *)
-            shift
+            BRANCH_NAME="$2"
+            shift 2
             ;;
     esac
 done
@@ -53,9 +22,9 @@ check_disk_space() {
             available_gb=$(df / 2>/dev/null | awk 'NR==2 {print $4}' | awk '{printf "%.0f", $1/1024/1024}')
         fi
         if [[ "$available_gb" =~ ^[0-9]+$ ]]; then
-            echo "[$(date +"%Y-%m-%d %H:%M:%S")] Disk space: ${available_gb}GB available (10GB minimum required)"
+            echo "💾 Disk space: ${available_gb}GB available (10GB minimum required)"
             if [ "$available_gb" -lt 10 ]; then
-                echo "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: Less than 10GB available. Installation may fail."
+                echo "⚠️  Warning: Less than 10GB available. Installation may fail."
             fi
         fi
     fi
@@ -63,8 +32,6 @@ check_disk_space() {
 
 # Detect OS and set SERVER_OS (similar to stable branch)
 OUTPUT=$(cat /etc/*release 2>/dev/null || echo "")
-echo "[$(date +"%Y-%m-%d %H:%M:%S")] Detected release info:"
-echo "$OUTPUT"
 
 if echo "$OUTPUT" | grep -q "CentOS Linux 7" ; then
     echo "Checking and installing curl and wget"
@@ -130,13 +97,10 @@ else
 fi
 
 # Check disk space
-echo "[$(date +"%Y-%m-%d %H:%M:%S")] SERVER_OS=$SERVER_OS BRANCH_NAME=$BRANCH_NAME"
-
-# Check disk space
 check_disk_space
 
 # Download and execute cyberpanel.sh for the specified branch
-echo "[$(date +"%Y-%m-%d %H:%M:%S")] Downloading CyberPanel installer for branch: $BRANCH_NAME"
+echo "Downloading CyberPanel installer for branch: $BRANCH_NAME"
 
 # Use absolute path for downloaded script in a writable directory
 TEMP_DIR="/tmp"
@@ -155,15 +119,14 @@ if [ "$BRANCH_NAME" = "v2.5.5-dev" ] || [ "$BRANCH_NAME" = "stable" ]; then
             chmod 755 "$SCRIPT_PATH" 2>/dev/null || true
             # Verify it's executable
             if [ -x "$SCRIPT_PATH" ]; then
-                echo "[$(date +"%Y-%m-%d %H:%M:%S")] Downloaded cyberpanel.sh from branch $BRANCH_NAME"
+                echo "✅ Downloaded cyberpanel.sh from branch $BRANCH_NAME"
                 # Change to temp directory and execute with bash
                 # Use absolute path to avoid any relative path issues
                 cd "$TEMP_DIR" || cd /tmp || cd /
-                echo "[$(date +"%Y-%m-%d %H:%M:%S")] Executing $SCRIPT_PATH"
                 bash "$SCRIPT_PATH" "$@"
                 exit $?
             else
-                echo "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: Could not make script executable, trying alternative method..."
+                echo "⚠️  Warning: Could not make script executable, trying alternative method..."
                 cd "$TEMP_DIR" || cd /tmp || cd /
                 bash -c "bash '$SCRIPT_PATH' $*"
                 exit $?
@@ -180,15 +143,14 @@ if curl --silent -o "$SCRIPT_PATH" "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev
         chmod 755 "$SCRIPT_PATH" 2>/dev/null || true
         # Verify it's executable
         if [ -x "$SCRIPT_PATH" ]; then
-            echo "[$(date +"%Y-%m-%d %H:%M:%S")] Downloaded cyberpanel.sh from standard source"
+            echo "✅ Downloaded cyberpanel.sh from standard source"
             # Change to temp directory and execute with bash
             # Use absolute path to avoid any relative path issues
             cd "$TEMP_DIR" || cd /tmp || cd /
-            echo "[$(date +"%Y-%m-%d %H:%M:%S")] Executing $SCRIPT_PATH"
             bash "$SCRIPT_PATH" "$@"
             exit $?
         else
-            echo "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: Could not make script executable, trying alternative method..."
+            echo "⚠️  Warning: Could not make script executable, trying alternative method..."
             cd "$TEMP_DIR" || cd /tmp || cd /
             bash -c "bash '$SCRIPT_PATH' $*"
             exit $?
@@ -197,6 +159,6 @@ if curl --silent -o "$SCRIPT_PATH" "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev
 fi
 
 # If we get here, download failed
-echo "[$(date +"%Y-%m-%d %H:%M:%S")] ERROR: Failed to download cyberpanel.sh"
+echo "❌ Failed to download cyberpanel.sh"
 echo "Please check your internet connection and try again"
 exit 1
