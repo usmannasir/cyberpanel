@@ -14,28 +14,6 @@
 Sudo_Test=$(set)
 #for SUDO check
 
-# Logging setup
-LOG_FILE="/var/log/installer.log"
-mkdir -p /var/log 2>/dev/null || true
-touch "$LOG_FILE" 2>/dev/null || true
-exec >>"$LOG_FILE" 2>&1
-echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Upgrade started: $0 $*"
-
-# Re-exec with elevation if not running as root
-if [[ $(id -u) != 0 ]]; then
-  SCRIPT_PATH="$(readlink -f "$0" 2>/dev/null || echo "$0")"
-  for elevate in sudo doas run0 pkexec; do
-    if command -v "$elevate" >/dev/null 2>&1; then
-      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Elevating with $elevate"
-      "$elevate" env "XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-}" "SUDO_USER=$(whoami)" "$SCRIPT_PATH" "$@"
-      exit $?
-    fi
-  done
-  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] ERROR: No elevation tool found."
-  echo "Please install sudo, doas, run0 (systemd), or pkexec (polkit) to continue."
-  exit 1
-fi
-
 Set_Default_Variables() {
 
 # Clear old log files
@@ -49,7 +27,6 @@ echo -e "\n\n========================================" > /var/log/cyberpanel_upg
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Starting CyberPanel Upgrade Script" >> /var/log/cyberpanel_upgrade_debug.log
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Old log files have been cleared" >> /var/log/cyberpanel_upgrade_debug.log
 echo -e "========================================\n" >> /var/log/cyberpanel_upgrade_debug.log
-echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Logging to ${LOG_FILE}" >> /var/log/cyberpanel_upgrade_debug.log
 
 #### this is temp code for csf
 
@@ -114,6 +91,12 @@ echo -e "\n${1}" >> /var/log/upgradeLogs.txt
 
 Check_Root() {
 echo -e "\nChecking root privileges..."
+  if echo "$Sudo_Test" | grep SUDO >/dev/null; then
+    echo -e "\nYou are using SUDO, please run as root user...\n"
+    echo -e "\nIf you don't have direct access to root user, please run \e[31msudo su -\e[39m command (do NOT miss the \e[31m-\e[39m at end or it will fail) and then run installation command again."
+    exit
+  fi
+
   if [[ $(id -u) != 0 ]] >/dev/null; then
     echo -e "\nYou must run as root user to install CyberPanel...\n"
     echo -e "or run the following command: (do NOT miss the quotes)"
@@ -166,10 +149,10 @@ elif grep -q -E "CloudLinux 7|CloudLinux 8|CloudLinux 9" /etc/os-release ; then
   Server_OS="CloudLinux"
 elif grep -q -E "Rocky Linux" /etc/os-release ; then
   Server_OS="RockyLinux"
-elif grep -q -E "AlmaLinux( |-)?8|AlmaLinux( |-)?9|AlmaLinux( |-)?10" /etc/os-release ; then
+elif grep -q -E "AlmaLinux-8|AlmaLinux-9|AlmaLinux-10" /etc/os-release ; then
   Server_OS="AlmaLinux"
   # Set specific version for AlmaLinux 9+ to use dnf instead of yum
-  if grep -q -E "AlmaLinux( |-)?9|AlmaLinux( |-)?10" /etc/os-release ; then
+  if grep -q -E "AlmaLinux-9|AlmaLinux-10" /etc/os-release ; then
     Server_OS="AlmaLinux9"
   fi
 elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04|Ubuntu 20.10|Ubuntu 22.04|Ubuntu 24.04|Ubuntu 24.04.3" /etc/os-release ; then
@@ -381,7 +364,6 @@ mysql -uroot -p"$MySQL_Password" -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'loca
 
 Pre_Upgrade_Setup_Repository() {
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Pre_Upgrade_Setup_Repository started for OS: $Server_OS" | tee -a /var/log/cyberpanel_upgrade_debug.log
-echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Pre_Upgrade_Setup_Repository started for OS: $Server_OS"
 
 if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "AlmaLinux9" ]] ; then
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Setting up repositories for $Server_OS..." | tee -a /var/log/cyberpanel_upgrade_debug.log
@@ -545,7 +527,7 @@ elif [[ "$Server_OS" = "Ubuntu" ]] ; then
     groupadd nobody
   fi
 
-  apt-get update -y
+  apt update -y
   export DEBIAN_FRONTEND=noninteractive ; apt-get -o Dpkg::Options::="--force-confold" upgrade -y
 
   if [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] ; then
@@ -595,7 +577,7 @@ elif [[ "$Server_OS" = "Ubuntu" ]] ; then
     #fix ubuntu 20 webmail login issue
 
     rm -f /etc/apt/sources.list.d/dovecot.list
-    apt-get update -y
+    apt update
     DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical apt -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade -y
   fi
 #all pre-upgrade operation for Ubuntu 20
@@ -616,7 +598,6 @@ fi
 
 Download_Requirement() {
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Starting Download_Requirement function..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Download_Requirement started"
 for i in {1..50};
   do
   if [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] || [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]; then
@@ -650,7 +631,6 @@ Pre_Upgrade_Required_Components() {
 
 # Check if CyberCP directory exists but is incomplete/damaged
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Checking CyberCP directory integrity..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Pre_Upgrade_Required_Components started"
 
 # Define essential CyberCP components
 CYBERCP_ESSENTIAL_DIRS=(
@@ -880,6 +860,22 @@ fi
 
 }
 
+Pre_Upgrade_Setup_Git_URL() {
+if [[ $Server_Country != "CN" ]] ; then
+  Git_User="usmannasir"
+  Git_Content_URL="https://raw.githubusercontent.com/${Git_User}/cyberpanel"
+  Git_Clone_URL="https://github.com/${Git_User}/cyberpanel.git"
+else
+  Git_User="qtwrk"
+  Git_Content_URL="https://gitee.com/${Git_User}/cyberpanel/raw"
+  Git_Clone_URL="https://gitee.com/${Git_User}/cyberpanel.git"
+fi
+
+if [[ "$Debug" = "On" ]] ; then
+  Debug_Log "Git_URL" "$Git_Content_URL"
+fi
+}
+
 Pre_Upgrade_Branch_Input() {
   echo -e "\nPress the Enter key to continue with latest version, or enter specific version such as: \e[31m2.3.4\e[39m , \e[31m2.4.4\e[39m ...etc"
   echo -e "\nIf nothing is input in 10 seconds, script will proceed with the latest stable version. "
@@ -896,7 +892,6 @@ Pre_Upgrade_Branch_Input() {
 Main_Upgrade() {
 echo -e "\n[$(date +"%Y-%m-%d %H:%M:%S")] Starting Main_Upgrade function..." | tee -a /var/log/cyberpanel_upgrade_debug.log
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running: /usr/local/CyberPanel/bin/python upgrade.py $Branch_Name" | tee -a /var/log/cyberpanel_upgrade_debug.log
-echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Main_Upgrade started for branch ${Branch_Name}"
 
 # Run upgrade.py and capture output
 upgrade_output=$(/usr/local/CyberPanel/bin/python upgrade.py "$Branch_Name" 2>&1)
@@ -1204,7 +1199,6 @@ echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Main_Upgrade function completed" | tee -
 }
 
 Post_Upgrade_System_Tweak() {
-  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Post_Upgrade_System_Tweak started"
   if [[ "$Server_OS" = "CentOS" ]] ; then
 
   #for cenots 7/8
@@ -1524,7 +1518,6 @@ systemctl restart lscpd
 }
 
 Post_Install_Display_Final_Info() {
-echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Post_Install_Display_Final_Info started"
 echo -e "\n"
 echo "╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╗"
 echo "║                                                                                                               ║"
