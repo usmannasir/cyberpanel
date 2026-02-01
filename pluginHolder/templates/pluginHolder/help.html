@@ -401,6 +401,10 @@ mkdir -p migrations</code></pre>
     &lt;settings_url&gt;/plugins/myFirstPlugin/settings/&lt;/settings_url&gt;
 &lt;/cyberpanelPluginConfig&gt;</code></pre>
         
+        <div class="alert alert-warning">
+            <strong>{% trans "Required: Category (type)" %}:</strong> {% trans "The &lt;type&gt; field is required. Valid categories: Utility, Security, Backup, Performance. Plugins without a valid category will not appear in the Plugin Store." %}
+        </div>
+        
         <h3>{% trans "Step 3: Create urls.py" %}</h3>
         <pre><code>from django.urls import path
 from . import views

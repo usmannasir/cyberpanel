@@ -115,20 +115,27 @@ def installed(request):
                 desc_elem = root.find('description')
                 version_elem = root.find('version')
                 
-                # Type field is optional (testPlugin doesn't have it)
-                if name_elem is None or desc_elem is None or version_elem is None:
-                    errorPlugins.append({'name': plugin, 'error': 'Missing required metadata fields (name, description, or version)'})
+                # All fields required including type (category) - no default
+                if name_elem is None or type_elem is None or desc_elem is None or version_elem is None:
+                    errorPlugins.append({'name': plugin, 'error': 'Missing required metadata fields (name, type/category, description, or version)'})
                     logging.writeToFile(f"Plugin {plugin}: Missing required metadata fields in meta.xml")
                     continue
                 
-                # Check if text is None (empty elements)
-                if name_elem.text is None or desc_elem.text is None or version_elem.text is None:
-                    errorPlugins.append({'name': plugin, 'error': 'Empty metadata fields'})
+                # Check if text is None or empty (all required)
+                type_text = type_elem.text.strip() if type_elem.text else ''
+                if name_elem.text is None or desc_elem.text is None or version_elem.text is None or not type_text:
+                    errorPlugins.append({'name': plugin, 'error': 'Empty metadata fields (name, type/category, description, or version required)'})
                     logging.writeToFile(f"Plugin {plugin}: Empty metadata fields in meta.xml")
                     continue
                 
+                # Valid categories only: Utility, Security, Backup, Performance (Plugin category removed)
+                if type_text.lower() not in ('utility', 'security', 'backup', 'performance'):
+                    errorPlugins.append({'name': plugin, 'error': f'Invalid category "{type_text}". Use: Utility, Security, Backup, or Performance.'})
+                    logging.writeToFile(f"Plugin {plugin}: Invalid category '{type_text}'")
+                    continue
+                
                 data['name'] = name_elem.text
-                data['type'] = type_elem.text if type_elem is not None and type_elem.text is not None else 'Plugin'
+                data['type'] = type_text
                 data['desc'] = desc_elem.text
                 data['version'] = version_elem.text
                 data['plugin_dir'] = plugin  # Plugin directory name
@@ -252,20 +259,28 @@ def installed(request):
                 pluginMetaData = ElementTree.parse(metaXmlPath)
                 root = pluginMetaData.getroot()
                 
-                # Validate required fields
+                # Validate required fields (including type/category - no default)
                 name_elem = root.find('name')
                 type_elem = root.find('type')
                 desc_elem = root.find('description')
                 version_elem = root.find('version')
                 
-                if name_elem is None or desc_elem is None or version_elem is None:
+                if name_elem is None or type_elem is None or desc_elem is None or version_elem is None:
+                    errorPlugins.append({'name': plugin, 'error': 'Missing required metadata (name, type/category, description, or version)'})
                     continue
                 
-                if name_elem.text is None or desc_elem.text is None or version_elem.text is None:
+                type_text = type_elem.text.strip() if type_elem.text else ''
+                if name_elem.text is None or desc_elem.text is None or version_elem.text is None or not type_text:
+                    errorPlugins.append({'name': plugin, 'error': 'Empty metadata (type/category required)'})
+                    continue
+                
+                # Valid categories only: Utility, Security, Backup, Performance (Plugin category removed)
+                if type_text.lower() not in ('utility', 'security', 'backup', 'performance'):
+                    errorPlugins.append({'name': plugin, 'error': f'Invalid category "{type_text}". Use: Utility, Security, Backup, or Performance.'})
                     continue
                 
                 data['name'] = name_elem.text
-                data['type'] = type_elem.text if type_elem is not None and type_elem.text is not None else 'Plugin'
+                data['type'] = type_text
                 data['desc'] = desc_elem.text
                 data['version'] = version_elem.text
                 data['plugin_dir'] = plugin
@@ -943,6 +958,7 @@ def _enrich_store_plugins(plugins):
         elif 'is_paid' not in plugin or plugin.get('is_paid') is None:
             # Try to check from local meta.xml if available
             meta_path = None
+            source_path = os.path.join(plugin_source_dir, plugin_dir)
             if os.path.exists(installed_path):
                 meta_path = os.path.join(installed_path, 'meta.xml')
             elif os.path.exists(source_path):
@@ -1050,10 +1066,20 @@ def _fetch_plugins_from_github():
                     patreon_url_elem = root.find('patreon_url')
                     patreon_url = patreon_url_elem.text if patreon_url_elem is not None else 'https://www.patreon.com/c/newstargeted/membership'
                 
+                # Category (type) is required - valid: Utility, Security, Backup, Performance (Plugin removed)
+                type_elem = root.find('type')
+                if type_elem is None or not type_elem.text or not type_elem.text.strip():
+                    logging.writeToFile(f"Plugin {plugin_name}: Missing required type/category in meta.xml, skipping")
+                    continue
+                type_text = type_elem.text.strip().lower()
+                if type_text not in ('utility', 'security', 'backup', 'performance'):
+                    logging.writeToFile(f"Plugin {plugin_name}: Invalid category '{type_elem.text}', skipping (use Utility, Security, Backup, or Performance)")
+                    continue
+                
                 plugin_data = {
                     'plugin_dir': plugin_name,
                     'name': root.find('name').text if root.find('name') is not None else plugin_name,
-                    'type': root.find('type').text if root.find('type') is not None else 'Plugin',
+                    'type': type_elem.text.strip(),
                     'description': root.find('description').text if root.find('description') is not None else '',
                     'version': root.find('version').text if root.find('version') is not None else '1.0.0',
                     'url': root.find('url').text if root.find('url') is not None else f'/plugins/{plugin_name}/',
@@ -1110,21 +1136,29 @@ def _fetch_plugins_from_github():
 @require_http_methods(["GET"])
 def fetch_plugin_store(request):
     """Fetch plugins from the plugin store with caching"""
-    mailUtilities.checkHome()
-    
-    # Try to get from cache first
-    cached_plugins = _get_cached_plugins()
-    if cached_plugins is not None:
-        # Enrich cached plugins with installed/enabled status
-        enriched_plugins = _enrich_store_plugins(cached_plugins)
-        return JsonResponse({
-            'success': True,
-            'plugins': enriched_plugins,
-            'cached': True
-        })
-    
-    # Cache miss or expired - fetch from GitHub
     try:
+        mailUtilities.checkHome()
+    except Exception as e:
+        logging.writeToFile(f"fetch_plugin_store: checkHome failed: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': 'Authentication required. Please log in again.',
+            'plugins': []
+        }, status=401)
+    
+    try:
+        # Try to get from cache first
+        cached_plugins = _get_cached_plugins()
+        if cached_plugins is not None:
+            # Enrich cached plugins with installed/enabled status
+            enriched_plugins = _enrich_store_plugins(cached_plugins)
+            return JsonResponse({
+                'success': True,
+                'plugins': enriched_plugins,
+                'cached': True
+            })
+        
+        # Cache miss or expired - fetch from GitHub
         plugins = _fetch_plugins_from_github()
         
         # Enrich plugins with installed/enabled status
@@ -1139,7 +1173,7 @@ def fetch_plugin_store(request):
             'plugins': enriched_plugins,
             'cached': False
         })
-    
+        
     except Exception as e:
         error_message = str(e)
         
