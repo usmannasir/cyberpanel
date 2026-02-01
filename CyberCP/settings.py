@@ -65,7 +65,8 @@ INSTALLED_APPS = [
 
     # Apps with multiple or complex dependencies
     'emailPremium',
-    'emailMarketing',   # Depends on websiteFunctions and loginSystem
+    # Optional plugins (e.g. emailMarketing, discordWebhooks) - install via Plugin Store
+    # from https://github.com/master3395/cyberpanel-plugins - plugin installer adds them
     'cloudAPI',         # Depends on websiteFunctions
     'containerization', # Depends on websiteFunctions
     'IncBackups',      # Depends on websiteFunctions and loginSystem

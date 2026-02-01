@@ -51,7 +51,8 @@ urlpatterns = [
     path('CloudLinux/', include('CLManager.urls')),
     path('IncrementalBackups/', include('IncBackups.urls')),
     path('aiscanner/', include('aiScanner.urls')),
-    path('emailMarketing/', include('emailMarketing.urls')),
+    # Optional plugin routes - added by plugin installer when plugins are installed from Plugin Store
+    # path('emailMarketing/', include('emailMarketing.urls')),
     # path('Terminal/', include('WebTerminal.urls')),
     path('', include('loginSystem.urls')),
 ]
