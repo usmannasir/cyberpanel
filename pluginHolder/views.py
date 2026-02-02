@@ -35,6 +35,18 @@ GITHUB_COMMITS_API = 'https://api.github.com/repos/master3395/cyberpanel-plugins
 # Plugin backup configuration
 PLUGIN_BACKUP_DIR = '/home/cyberpanel/plugin_backups'
 
+# Plugin source paths (checked in order; first match wins for install)
+PLUGIN_SOURCE_PATHS = ['/home/cyberpanel/plugins', '/home/cyberpanel-plugins']
+
+def _get_plugin_source_path(plugin_name):
+    """Return the full path to a plugin's source directory, or None if not found."""
+    for base in PLUGIN_SOURCE_PATHS:
+        path = os.path.join(base, plugin_name)
+        meta_path = os.path.join(path, 'meta.xml')
+        if os.path.isdir(path) and os.path.exists(meta_path):
+            return path
+    return None
+
 def _get_plugin_state_file(plugin_name):
     """Get the path to the plugin state file"""
     if not os.path.exists(PLUGIN_STATE_DIR):
@@ -100,15 +112,23 @@ def help_page(request):
 
 def installed(request):
     mailUtilities.checkHome()
-    pluginPath = '/home/cyberpanel/plugins'
     installedPath = '/usr/local/CyberCP'
     pluginList = []
     errorPlugins = []
     processed_plugins = set()  # Track which plugins we've already processed
 
-    # First, process plugins from source directory
-    if os.path.exists(pluginPath):
+    # First, process plugins from source directories (multiple paths: /home/cyberpanel/plugins, /home/cyberpanel-plugins)
+    for pluginPath in PLUGIN_SOURCE_PATHS:
+        if not os.path.exists(pluginPath):
+            continue
+        try:
+            dirs_in_path = [p for p in os.listdir(pluginPath) if os.path.isdir(os.path.join(pluginPath, p))]
+            logging.writeToFile(f"Plugin source path {pluginPath}: directories {sorted(dirs_in_path)}")
+        except Exception as e:
+            logging.writeToFile(f"Plugin source path {pluginPath}: listdir error {e}")
         for plugin in os.listdir(pluginPath):
+            if plugin in processed_plugins:
+                continue
             # Skip files (like .zip files) - only process directories
             pluginDir = os.path.join(pluginPath, plugin)
             if not os.path.isdir(pluginDir):
@@ -130,7 +150,8 @@ def installed(request):
             # Add error handling to prevent 500 errors
             try:
                 if metaXmlPath is None:
-                    # No meta.xml found in either location - skip silently
+                    # No meta.xml found in either location - skip (log for diagnostics)
+                    logging.writeToFile(f"Plugin {plugin}: skipped (no meta.xml in source or installed)")
                     continue
                 
                 pluginMetaData = ElementTree.parse(metaXmlPath)
@@ -383,6 +404,60 @@ def installed(request):
                 logging.writeToFile(f"Installed plugin {plugin}: Error loading - {str(e)}")
                 continue
 
+    # Ensure redisManager and memcacheManager load when present (fallback if missed by listdir)
+    for plugin_name in ('redisManager', 'memcacheManager'):
+        if plugin_name in processed_plugins:
+            continue
+        source_path = _get_plugin_source_path(plugin_name)
+        installed_meta = os.path.join(installedPath, plugin_name, 'meta.xml')
+        meta_xml_path = installed_meta if os.path.exists(installed_meta) else (os.path.join(source_path, 'meta.xml') if source_path else None)
+        if not meta_xml_path or not os.path.exists(meta_xml_path):
+            continue
+        try:
+            root = ElementTree.parse(meta_xml_path).getroot()
+            name_elem = root.find('name')
+            type_elem = root.find('type')
+            desc_elem = root.find('description')
+            version_elem = root.find('version')
+            if name_elem is None or type_elem is None or desc_elem is None or version_elem is None:
+                continue
+            type_text = (type_elem.text or '').strip()
+            if not type_text or name_elem.text is None or desc_elem.text is None or version_elem.text is None:
+                continue
+            if type_text.lower() not in ('utility', 'security', 'backup', 'performance', 'monitoring', 'integration', 'email', 'development', 'analytics'):
+                continue
+            complete_path = os.path.join(installedPath, plugin_name, 'meta.xml')
+            data = {
+                'name': name_elem.text,
+                'type': type_text,
+                'desc': desc_elem.text,
+                'version': version_elem.text,
+                'plugin_dir': plugin_name,
+                'installed': os.path.exists(complete_path),
+                'enabled': _is_plugin_enabled(plugin_name) if os.path.exists(complete_path) else False,
+                'is_paid': False,
+                'patreon_tier': None,
+                'patreon_url': None,
+                'manage_url': f'/plugins/{plugin_name}/',
+                'author': root.find('author').text if root.find('author') is not None and root.find('author').text else 'Unknown',
+            }
+            try:
+                modify_time = os.path.getmtime(meta_xml_path)
+                data['modify_date'] = datetime.fromtimestamp(modify_time).strftime('%Y-%m-%d %H:%M:%S')
+            except Exception:
+                data['modify_date'] = 'N/A'
+            data['freshness_badge'] = _get_freshness_badge(data['modify_date'])
+            paid_elem = root.find('paid')
+            if paid_elem is not None and paid_elem.text and paid_elem.text.lower() == 'true':
+                data['is_paid'] = True
+                data['patreon_tier'] = 'CyberPanel Paid Plugin'
+                data['patreon_url'] = root.find('patreon_url').text if root.find('patreon_url') is not None else 'https://www.patreon.com/membership/27789984'
+            pluginList.append(data)
+            processed_plugins.add(plugin_name)
+            logging.writeToFile(f"Plugin {plugin_name}: added via fallback (source or installed)")
+        except Exception as e:
+            logging.writeToFile(f"Plugin {plugin_name} fallback load error: {str(e)}")
+
     # Calculate installed and active counts
     # Double-check by also counting plugins that actually exist in /usr/local/CyberCP/
     installed_plugins_in_filesystem = set()
@@ -415,6 +490,9 @@ def installed(request):
     # Get cache expiry timestamp for display (will be converted to local time in browser)
     cache_expiry_timestamp, _ = _get_cache_expiry_time()
     
+    # Sort plugins A-Å by name (case-insensitive) for Grid and Table view
+    pluginList.sort(key=lambda p: (p.get('name') or '').lower())
+    
     proc = httpProc(request, 'pluginHolder/plugins.html',
                     {'plugins': pluginList, 'error_plugins': errorPlugins, 
                      'installed_count': installed_count, 'active_count': active_count,
@@ -426,12 +504,12 @@ def installed(request):
 def install_plugin(request, plugin_name):
     """Install a plugin"""
     try:
-        # Check if plugin source exists
-        pluginSource = '/home/cyberpanel/plugins/' + plugin_name
-        if not os.path.exists(pluginSource):
+        # Check if plugin source exists (in any configured source path)
+        pluginSource = _get_plugin_source_path(plugin_name)
+        if not pluginSource:
             return JsonResponse({
                 'success': False,
-                'error': f'Plugin source not found: {plugin_name}'
+                'error': f'Plugin source not found: {plugin_name} (checked: {", ".join(PLUGIN_SOURCE_PATHS)})'
             }, status=404)
         
         # Check if already installed
@@ -1546,9 +1624,9 @@ def install_from_store(request, plugin_name):
             
             # Fallback to local source if GitHub download failed
             if use_local_fallback:
-                pluginSource = '/home/cyberpanel/plugins/' + plugin_name
-                if not os.path.exists(pluginSource):
-                    raise Exception(f'Plugin {plugin_name} not found in GitHub repository and local source not found at {pluginSource}')
+                pluginSource = _get_plugin_source_path(plugin_name)
+                if not pluginSource:
+                    raise Exception(f'Plugin {plugin_name} not found in GitHub repository and local source not found (checked: {", ".join(PLUGIN_SOURCE_PATHS)})')
                 
                 logging.writeToFile(f"Using local source for {plugin_name} from {pluginSource}")
                 
