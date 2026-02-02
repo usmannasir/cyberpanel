@@ -274,6 +274,100 @@
         text-decoration: underline;
     }
     
+    /* Collapsible sections */
+    .help-section {
+        border: 1px solid var(--border-primary, #e8e9ff);
+        border-radius: 8px;
+        margin-bottom: 12px;
+        overflow: hidden;
+    }
+    
+    .help-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        background: var(--bg-secondary, #f8f9ff);
+        cursor: pointer;
+        user-select: none;
+        transition: background 0.2s ease;
+    }
+    
+    .help-section-header:hover {
+        background: #eef0ff;
+    }
+    
+    .help-section-header h2 {
+        margin: 0;
+        padding: 0;
+        border: none;
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-primary, #2f3640);
+    }
+    
+    .help-section-header .section-toggle {
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        background: rgba(88,86,214,0.15);
+        color: #5856d6;
+        transition: transform 0.25s ease;
+    }
+    
+    .help-section.expanded .section-toggle {
+        transform: rotate(180deg);
+    }
+    
+    .help-section-body {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.35s ease-out;
+    }
+    
+    .help-section.expanded .help-section-body {
+        max-height: 8000px;
+        transition: max-height 0.5s ease-in;
+    }
+    
+    .help-section-content {
+        padding: 20px 24px 24px;
+        border-top: 1px solid var(--border-primary, #e8e9ff);
+    }
+    
+    .help-section-content h2 {
+        display: none;
+    }
+    
+    .help-section-content > h3:first-child {
+        margin-top: 0;
+    }
+    
+    .help-expand-all {
+        display: flex;
+        gap: 12px;
+        margin-top: 12px;
+        flex-wrap: wrap;
+    }
+    
+    .help-expand-all button {
+        padding: 6px 14px;
+        font-size: 13px;
+        border-radius: 6px;
+        border: 1px solid var(--border-primary, #e8e9ff);
+        background: var(--bg-primary, white);
+        color: #5856d6;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    
+    .help-expand-all button:hover {
+        background: #eef0ff;
+    }
+    
     @media (max-width: 768px) {
         .help-wrapper {
             padding: 15px;
@@ -314,7 +408,13 @@
     </div>
     
     <div class="help-content">
-        <div class="toc">
+        <div class="help-section toc-collapsible expanded">
+            <div class="help-section-header" data-section="toc">
+                <h2>{% trans "Table of Contents" %}</h2>
+                <span class="section-toggle"><i class="fas fa-chevron-down"></i></span>
+            </div>
+            <div class="help-section-body">
+                <div class="help-section-content toc">
             <h3>{% trans "Table of Contents" %}</h3>
             <ul>
                 <li><a href="#introduction">{% trans "Introduction" %}</a></li>
@@ -335,9 +435,17 @@
                 <li><a href="#troubleshooting">{% trans "Troubleshooting" %}</a></li>
                 <li><a href="#examples">{% trans "Examples & References" %}</a></li>
             </ul>
+            <div class="help-expand-all">
+                <button type="button" onclick="document.querySelectorAll('.help-section').forEach(s=>s.classList.add('expanded'))">{% trans "Expand all" %}</button>
+                <button type="button" onclick="document.querySelectorAll('.help-section').forEach(s=>s.classList.remove('expanded'))">{% trans "Collapse all" %}</button>
+            </div>
+                </div>
+            </div>
         </div>
         
-        <h2 id="introduction">{% trans "Introduction" %}</h2>
+        <div class="help-section expanded" id="section-introduction">
+            <div class="help-section-header" data-section="introduction"><h2 id="introduction">{% trans "Introduction" %}</h2><span class="section-toggle"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="help-section-body"><div class="help-section-content">
         <p>{% trans "CyberPanel's plugin system allows developers to extend the control panel's functionality with custom features. Plugins integrate seamlessly with CyberPanel's Django-based architecture, providing access to the full power of the platform while maintaining security and consistency." %}</p>
         
         <h3>{% trans "What Can Plugins Do?" %}</h3>
@@ -350,8 +458,11 @@
             <li>{% trans "Create custom reporting tools" %}</li>
             <li>{% trans "Integrate security features" %}</li>
         </ul>
+                </div></div></div>
         
-        <h2 id="prerequisites">{% trans "Prerequisites" %}</h2>
+        <div class="help-section" id="section-prerequisites">
+            <div class="help-section-header" data-section="prerequisites"><h2 id="prerequisites">{% trans "Prerequisites" %}</h2><span class="section-toggle"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="help-section-body"><div class="help-section-content">
         <h3>{% trans "Required Knowledge" %}</h3>
         <ul>
             <li><strong>Python 3.6+</strong>: {% trans "Basic to intermediate Python knowledge" %}</li>
@@ -360,8 +471,11 @@
             <li><strong>Linux/Unix</strong>: {% trans "Basic command-line familiarity" %}</li>
             <li><strong>XML</strong>: {% trans "Understanding of XML structure for meta.xml" %}</li>
         </ul>
+                </div></div></div>
         
-        <h2 id="architecture">{% trans "Plugin Architecture Overview" %}</h2>
+        <div class="help-section" id="section-architecture">
+            <div class="help-section-header" data-section="architecture"><h2 id="architecture">{% trans "Plugin Architecture Overview" %}</h2><span class="section-toggle"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="help-section-body"><div class="help-section-content">
         <h3>{% trans "How Plugins Work" %}</h3>
         <ol>
             <li><strong>{% trans "Plugin Source Location" %}</strong>: <code>/home/cyberpanel/plugins/</code>
@@ -377,8 +491,11 @@
                 </ul>
             </li>
         </ol>
+                </div></div></div>
         
-        <h2 id="first-plugin">{% trans "Creating Your First Plugin" %}</h2>
+        <div class="help-section" id="section-first-plugin">
+            <div class="help-section-header" data-section="first-plugin"><h2 id="first-plugin">{% trans "Creating Your First Plugin" %}</h2><span class="section-toggle"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="help-section-body"><div class="help-section-content">
         <h3>{% trans "Step 1: Create Plugin Directory Structure" %}</h3>
         <pre><code># Navigate to plugins directory
 cd /home/cyberpanel/plugins
@@ -465,8 +582,11 @@ def main_view(request):
         <div class="alert alert-info">
             <strong>{% trans "Important" %}:</strong> {% trans "Always use the @cyberpanel_login_required decorator for all views to ensure users are authenticated." %}
         </div>
+                </div></div></div>
         
-        <h2 id="structure">{% trans "Plugin Structure & Files" %}</h2>
+        <div class="help-section" id="section-structure">
+            <div class="help-section-header" data-section="structure"><h2 id="structure">{% trans "Plugin Structure & Files" %}</h2><span class="section-toggle"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="help-section-body"><div class="help-section-content">
         <h3>{% trans "Required Files" %}</h3>
         <ul>
             <li><code>__init__.py</code> - <span class="badge badge-required">{% trans "Required" %}</span> - {% trans "Python package marker" %}</li>
@@ -483,8 +603,11 @@ def main_view(request):
             <li><code>templates/</code> - <span class="badge badge-optional">{% trans "Optional" %}</span> - {% trans "HTML templates" %}</li>
             <li><code>static/</code> - <span class="badge badge-optional">{% trans "Optional" %}</span> - {% trans "CSS, JS, images" %}</li>
         </ul>
+                </div></div></div>
         
-        <h2 id="versioning">{% trans "Version Numbering (Semantic Versioning)" %}</h2>
+        <div class="help-section" id="section-versioning">
+            <div class="help-section-header" data-section="versioning"><h2 id="versioning">{% trans "Version Numbering (Semantic Versioning)" %}</h2><span class="section-toggle"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="help-section-body"><div class="help-section-content">
         <p>{% trans "CyberPanel plugins use semantic versioning (SemVer) with a three-number format (X.Y.Z) to help users understand the impact of each update:" %}</p>
         
         <div style="margin: 25px 0; padding: 20px; background: var(--bg-secondary, #f8f9ff); border-radius: 8px; border-left: 4px solid #5856d6;">
@@ -512,8 +635,11 @@ def main_view(request):
         <h3>{% trans "Version Format in meta.xml" %}</h3>
         <pre><code>&lt;version&gt;1.0.0&lt;/version&gt;</code></pre>
         <p>{% trans "Never use formats like '1.0' or 'v1.0'. Always use the full semantic version: '1.0.0'" %}</p>
+                </div></div></div>
         
-        <h2 id="categories">{% trans "Plugin Categories" %}</h2>
+        <div class="help-section" id="section-categories">
+            <div class="help-section-header" data-section="categories"><h2 id="categories">{% trans "Plugin Categories" %}</h2><span class="section-toggle"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="help-section-body"><div class="help-section-content">
         <p>{% trans "The &lt;type&gt; field in meta.xml determines how your plugin is grouped in the Plugin Store. Use exactly one of these values (case-sensitive):" %}</p>
         <table>
             <thead>
@@ -534,8 +660,11 @@ def main_view(request):
                 <tr><td><code>Analytics</code></td><td>{% trans "Analytics, tracking, and reporting" %}</td></tr>
             </tbody>
         </table>
+                </div></div></div>
         
-        <h2 id="badges">{% trans "Freshness Badges" %}</h2>
+        <div class="help-section" id="section-badges">
+            <div class="help-section-header" data-section="badges"><h2 id="badges">{% trans "Freshness Badges" %}</h2><span class="section-toggle"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="help-section-body"><div class="help-section-content">
         <p>{% trans "The Plugin Store and Installed Plugins views display freshness badges based on the last update date (modify_date from GitHub commit or meta.xml file mtime). These help users quickly see how actively maintained a plugin is:" %}</p>
         <table>
             <thead>
@@ -553,8 +682,11 @@ def main_view(request):
             </tbody>
         </table>
         <p>{% trans "Badges are calculated automatically from the plugin's modify_date. For plugins in the Plugin Store, this comes from the GitHub repository's last commit. For installed plugins, it uses the meta.xml file modification time." %}</p>
+                </div></div></div>
         
-        <h2 id="premium">{% trans "Premium/Paid Plugin Creation" %}</h2>
+        <div class="help-section" id="section-premium">
+            <div class="help-section-header" data-section="premium"><h2 id="premium">{% trans "Premium/Paid Plugin Creation" %}</h2><span class="section-toggle"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="help-section-body"><div class="help-section-content">
         <p>{% trans "You can create premium (paid) plugins and implement your own verification system. This includes optional encryption between the plugin and your verification site to prevent unauthorized bypass." %}</p>
         
         <h3>{% trans "1. Mark Your Plugin as Paid in meta.xml" %}</h3>
@@ -599,8 +731,11 @@ def main_view(request):
         <div class="alert alert-info">
             <strong>{% trans "Tip" %}:</strong> {% trans "Provide multiple verification paths: Patreon for subscribers, PayPal for one-time purchasers, Plugin Grants for beta testers or sponsors, and activation keys for manual grants. Encryption is optional but recommended for paid plugins to deter bypass attempts." %}
         </div>
+                </div></div></div>
         
-        <h2 id="components">{% trans "Core Components" %}</h2>
+        <div class="help-section" id="section-components">
+            <div class="help-section-header" data-section="components"><h2 id="components">{% trans "Core Components" %}</h2><span class="section-toggle"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="help-section-body"><div class="help-section-content">
         <h3>{% trans "1. Authentication & Security" %}</h3>
         <p>{% trans "Always use the cyberpanel_login_required decorator:" %}</p>
         <pre><code>@cyberpanel_login_required
@@ -626,8 +761,11 @@ urlpatterns = [
 {% load static %}
 {% load i18n %}</code></pre>
         {% endverbatim %}
+                </div></div></div>
         
-        <h2 id="advanced">{% trans "Advanced Features" %}</h2>
+        <div class="help-section" id="section-advanced">
+            <div class="help-section-header" data-section="advanced"><h2 id="advanced">{% trans "Advanced Features" %}</h2><span class="section-toggle"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="help-section-body"><div class="help-section-content">
         <h3>{% trans "Database Models" %}</h3>
         <pre><code>from django.db import models
 
@@ -652,8 +790,11 @@ class MyForm(forms.Form):
 def api_endpoint(request):
     data = {'status': 'success'}
     return JsonResponse(data)</code></pre>
+                </div></div></div>
         
-        <h2 id="best-practices">{% trans "Best Practices" %}</h2>
+        <div class="help-section" id="section-best-practices">
+            <div class="help-section-header" data-section="best-practices"><h2 id="best-practices">{% trans "Best Practices" %}</h2><span class="section-toggle"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="help-section-body"><div class="help-section-content">
         <ul>
             <li>{% trans "Keep files under 500 lines - split into modules if needed" %}</li>
             <li>{% trans "Use descriptive names for functions and variables" %}</li>
@@ -663,8 +804,11 @@ def api_endpoint(request):
             <li>{% trans "Use Django ORM instead of raw SQL" %}</li>
             <li>{% trans "Test your plugin thoroughly before distribution" %}</li>
         </ul>
+                </div></div></div>
         
-        <h2 id="security">{% trans "Security Guidelines" %}</h2>
+        <div class="help-section" id="section-security">
+            <div class="help-section-header" data-section="security"><h2 id="security">{% trans "Security Guidelines" %}</h2><span class="section-toggle"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="help-section-body"><div class="help-section-content">
         <div class="alert alert-warning">
             <strong>{% trans "Security is Critical" %}:</strong> {% trans "Always validate input, use parameterized queries, sanitize output, and check user permissions." %}
         </div>
@@ -676,8 +820,11 @@ def api_endpoint(request):
             <li>{% trans "Use HTTPS for sensitive operations" %}</li>
             <li>{% trans "Implement rate limiting for API endpoints" %}</li>
         </ul>
+                </div></div></div>
         
-        <h2 id="testing">{% trans "Testing & Debugging" %}</h2>
+        <div class="help-section" id="section-testing">
+            <div class="help-section-header" data-section="testing"><h2 id="testing">{% trans "Testing & Debugging" %}</h2><span class="section-toggle"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="help-section-body"><div class="help-section-content">
         <h3>{% trans "Common Issues" %}</h3>
         <ul>
             <li><strong>{% trans "Template Not Found" %}</strong>: {% trans "Check template path and name" %}</li>
@@ -695,16 +842,22 @@ xmllint --noout meta.xml
 
 # View logs
 tail -f /usr/local/lscp/logs/error.log</code></pre>
+                </div></div></div>
         
-        <h2 id="packaging">{% trans "Packaging & Distribution" %}</h2>
+        <div class="help-section" id="section-packaging">
+            <div class="help-section-header" data-section="packaging"><h2 id="packaging">{% trans "Packaging & Distribution" %}</h2><span class="section-toggle"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="help-section-body"><div class="help-section-content">
         <h3>{% trans "Create Plugin Package" %}</h3>
         <pre><code>cd /home/cyberpanel/plugins/myPlugin
 zip -r myPlugin-v1.0.0.zip . \
     -x "*.pyc" \
     -x "__pycache__/*" \
     -x "*.log"</code></pre>
+                </div></div></div>
         
-        <h2 id="troubleshooting">{% trans "Troubleshooting" %}</h2>
+        <div class="help-section" id="section-troubleshooting">
+            <div class="help-section-header" data-section="troubleshooting"><h2 id="troubleshooting">{% trans "Troubleshooting" %}</h2><span class="section-toggle"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="help-section-body"><div class="help-section-content">
         <h3>{% trans "Installation Issues" %}</h3>
         <ul>
             <li>{% trans "Check meta.xml format and validity" %}</li>
@@ -720,8 +873,11 @@ zip -r myPlugin-v1.0.0.zip . \
             <li>{% trans "Review template paths" %}</li>
             <li>{% trans "Check for JavaScript errors" %}</li>
         </ul>
+                </div></div></div>
         
-        <h2 id="examples">{% trans "Examples & References" %}</h2>
+        <div class="help-section" id="section-examples">
+            <div class="help-section-header" data-section="examples"><h2 id="examples">{% trans "Examples & References" %}</h2><span class="section-toggle"><i class="fas fa-chevron-down"></i></span></div>
+            <div class="help-section-body"><div class="help-section-content">
         <h3>{% trans "Reference Plugins" %}</h3>
         <ul>
             <li><strong>examplePlugin</strong>: {% trans "Basic plugin structure" %}
@@ -757,6 +913,7 @@ zip -r myPlugin-v1.0.0.zip . \
         <div class="alert alert-success">
             <strong>{% trans "Ready to Start?" %}</strong> {% trans "Begin with a simple plugin and gradually add more features as you become familiar with the system. Check the examplePlugin and testPlugin directories for complete working examples." %}
         </div>
+                </div></div></div>
         
         <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid var(--border-primary, #e8e9ff);">
             <p style="text-align: center; color: var(--text-secondary, #64748b);">
@@ -769,16 +926,27 @@ zip -r myPlugin-v1.0.0.zip . \
 </div>
 
 <script>
-    // Smooth scrolling for anchor links
+    // Collapsible section toggle
+    document.querySelectorAll('.help-section-header').forEach(header => {
+        header.addEventListener('click', function () {
+            const section = this.closest('.help-section');
+            section.classList.toggle('expanded');
+        });
+    });
+    // Smooth scrolling and expand on TOC link click
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
+            const href = this.getAttribute('href');
+            if (href === '#') return;
             e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
+            const id = href.slice(1);
+            const target = document.getElementById(id);
             if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
+                const section = target.closest('.help-section') || document.getElementById('section-' + id);
+                if (section) {
+                    section.classList.add('expanded');
+                }
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         });
     });
