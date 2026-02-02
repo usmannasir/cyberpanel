@@ -1,4 +1,0 @@
-#!/usr/local/CyberCP/bin/python
-RESET = '\033[0;0m'
-GREEN = '\033[0;32m'
-print(GREEN + "Running Pre-Remove Script..." + RESET)
