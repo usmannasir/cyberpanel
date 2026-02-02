@@ -1,4 +1,0 @@
-#!/usr/local/CyberCP/bin/python
-RESET = '\033[0;0m'
-BLUE = "\033[0;34m"
-print(BLUE + "Running Post-Install Script..." + RESET)

@@ -3235,7 +3235,7 @@ password="%s"
         apps_with_migrations = [
             'loginSystem', 'packages', 'websiteFunctions', 'baseTemplate', 'userManagment',
             'dns', 'databases', 'ftp', 'filemanager', 'mailServer', 'emailPremium',
-            'emailMarketing', 'cloudAPI', 'containerization', 'IncBackups', 'CLManager',
+            'cloudAPI', 'containerization', 'IncBackups', 'CLManager',
             's3Backups', 'dockerManager', 'aiScanner', 'firewall', 'tuning', 'serverStatus',
             'serverLogs', 'backup', 'managePHP', 'manageSSL', 'api', 'manageServices',
             'pluginHolder', 'highAvailability', 'WebTerminal'
