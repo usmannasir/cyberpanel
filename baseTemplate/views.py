@@ -129,6 +129,11 @@ def getAdminStatus(request):
 
 
 def getSystemStatus(request):
+    default_fallback = {
+        'cpuUsage': 0, 'ramUsage': 0, 'diskUsage': 0,
+        'cpuCores': 2, 'ramTotalMB': 4096, 'diskTotalGB': 100,
+        'diskFreeGB': 100, 'uptime': 'N/A'
+    }
     try:
         val = request.session['userID']
         currentACL = ACLManager.loadedACL(val)
@@ -215,31 +220,13 @@ def getSystemStatus(request):
             
     except KeyError as e:
         logging.CyberCPLogFileWriter.writeToFile(f'[getSystemStatus] KeyError - No session userID: {str(e)}')
-        # Return default values on error
-        default_data = {
-            'cpuUsage': 0,
-            'ramUsage': 0,
-            'diskUsage': 0,
-            'cpuCores': 2,
-            'ramTotalMB': 4096,
-            'diskTotalGB': 100,
-            'diskFreeGB': 100,
-            'uptime': 'N/A'
-        }
-        return HttpResponse(json.dumps(default_data))
+        return HttpResponse(json.dumps(default_fallback))
     except Exception as e:
-        # Return default values on error
-        default_data = {
-            'cpuUsage': 0,
-            'ramUsage': 0,
-            'diskUsage': 0,
-            'cpuCores': 2,
-            'ramTotalMB': 4096,
-            'diskTotalGB': 100,
-            'diskFreeGB': 100,
-            'uptime': 'N/A'
-        }
-        return HttpResponse(json.dumps(default_data))
+        logging.CyberCPLogFileWriter.writeToFile(f'[getSystemStatus] Exception: {str(e)}')
+        try:
+            return HttpResponse(json.dumps(default_fallback))
+        except Exception:
+            return HttpResponse('{"cpuUsage":0,"ramUsage":0,"diskUsage":0,"cpuCores":2,"ramTotalMB":4096,"diskTotalGB":100,"diskFreeGB":100,"uptime":"N/A"}', content_type='application/json')
 
 
 def getLoadAverage(request):
