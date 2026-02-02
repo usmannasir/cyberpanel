@@ -323,6 +323,9 @@
                 <li><a href="#first-plugin">{% trans "Creating Your First Plugin" %}</a></li>
                 <li><a href="#structure">{% trans "Plugin Structure & Files" %}</a></li>
                 <li><a href="#versioning">{% trans "Version Numbering (Semantic Versioning)" %}</a></li>
+                <li><a href="#categories">{% trans "Plugin Categories" %}</a></li>
+                <li><a href="#badges">{% trans "Freshness Badges" %}</a></li>
+                <li><a href="#premium">{% trans "Premium/Paid Plugin Creation" %}</a></li>
                 <li><a href="#components">{% trans "Core Components" %}</a></li>
                 <li><a href="#advanced">{% trans "Advanced Features" %}</a></li>
                 <li><a href="#best-practices">{% trans "Best Practices" %}</a></li>
@@ -402,7 +405,7 @@ mkdir -p migrations</code></pre>
 &lt;/cyberpanelPluginConfig&gt;</code></pre>
         
         <div class="alert alert-warning">
-            <strong>{% trans "Required: Category (type)" %}:</strong> {% trans "The &lt;type&gt; field is required. Valid categories: Utility, Security, Backup, Performance. Plugins without a valid category will not appear in the Plugin Store." %}
+            <strong>{% trans "Required: Category (type)" %}:</strong> {% trans "The &lt;type&gt; field is required. See the Plugin Categories section below for valid options. Plugins without a valid category will not appear in the Plugin Store." %}
         </div>
         
         <h3>{% trans "Step 3: Create urls.py" %}</h3>
@@ -509,6 +512,93 @@ def main_view(request):
         <h3>{% trans "Version Format in meta.xml" %}</h3>
         <pre><code>&lt;version&gt;1.0.0&lt;/version&gt;</code></pre>
         <p>{% trans "Never use formats like '1.0' or 'v1.0'. Always use the full semantic version: '1.0.0'" %}</p>
+        
+        <h2 id="categories">{% trans "Plugin Categories" %}</h2>
+        <p>{% trans "The &lt;type&gt; field in meta.xml determines how your plugin is grouped in the Plugin Store. Use exactly one of these values (case-sensitive):" %}</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>{% trans "Category" %}</th>
+                    <th>{% trans "Purpose" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><code>Utility</code></td><td>{% trans "General-purpose tools, helpers, and utilities" %}</td></tr>
+                <tr><td><code>Security</code></td><td>{% trans "Security features: firewalls, fail2ban, SSL, etc." %}</td></tr>
+                <tr><td><code>Backup</code></td><td>{% trans "Backup, snapshot, and restore functionality" %}</td></tr>
+                <tr><td><code>Performance</code></td><td>{% trans "Caching, optimization, and performance tuning" %}</td></tr>
+                <tr><td><code>Monitoring</code></td><td>{% trans "Monitoring, alerts, and health checks" %}</td></tr>
+                <tr><td><code>Integration</code></td><td>{% trans "Third-party integrations: Discord, Slack, webhooks, APIs" %}</td></tr>
+                <tr><td><code>Email</code></td><td>{% trans "Email marketing, SMTP, mail management" %}</td></tr>
+                <tr><td><code>Development</code></td><td>{% trans "Developer tools: PM2, Node.js, deployment" %}</td></tr>
+                <tr><td><code>Analytics</code></td><td>{% trans "Analytics, tracking, and reporting" %}</td></tr>
+            </tbody>
+        </table>
+        
+        <h2 id="badges">{% trans "Freshness Badges" %}</h2>
+        <p>{% trans "The Plugin Store and Installed Plugins views display freshness badges based on the last update date (modify_date from GitHub commit or meta.xml file mtime). These help users quickly see how actively maintained a plugin is:" %}</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>{% trans "Badge" %}</th>
+                    <th>{% trans "Condition" %}</th>
+                    <th>{% trans "Meaning" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><span style="background:#fef08a;color:#854d0e;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;">NEW</span></td><td>{% trans "Updated within last 90 days" %}</td><td>{% trans "Recently released or actively maintained" %}</td></tr>
+                <tr><td><span style="background:#bbf7d0;color:#166534;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;">Stable</span></td><td>{% trans "Updated within last 365 days" %}</td><td>{% trans "Updated within the past year" %}</td></tr>
+                <tr><td><span style="background:#e5e7eb;color:#4b5563;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;">Unstable</span></td><td>{% trans "1–2 years since last update" %}</td><td>{% trans "May need maintenance; consider forking or updating" %}</td></tr>
+                <tr><td><span style="background:#fecaca;color:#991b1b;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;">STALE</span></td><td>{% trans "Over 2 years since last update" %}</td><td>{% trans "Not updated recently; use with caution" %}</td></tr>
+            </tbody>
+        </table>
+        <p>{% trans "Badges are calculated automatically from the plugin's modify_date. For plugins in the Plugin Store, this comes from the GitHub repository's last commit. For installed plugins, it uses the meta.xml file modification time." %}</p>
+        
+        <h2 id="premium">{% trans "Premium/Paid Plugin Creation" %}</h2>
+        <p>{% trans "You can create premium (paid) plugins and implement your own verification system. This includes optional encryption between the plugin and your verification site to prevent unauthorized bypass." %}</p>
+        
+        <h3>{% trans "1. Mark Your Plugin as Paid in meta.xml" %}</h3>
+        <pre><code>&lt;paid&gt;true&lt;/paid&gt;
+&lt;patreon_tier&gt;Your Tier Name&lt;/patreon_tier&gt;
+&lt;patreon_url&gt;https://www.patreon.com/your-page&lt;/patreon_url&gt;</code></pre>
+        <p>{% trans "Set &lt;paid&gt;true&lt;/paid&gt; to display the Premium badge and subscription prompts in the Plugin Store." %}</p>
+        
+        <h3>{% trans "2. Build Your Own Verification System" %}</h3>
+        <p>{% trans "Premium plugins typically verify access via a remote API. You can host this on your own site. Common verification methods:" %}</p>
+        <ul>
+            <li><strong>{% trans "Patreon" %}</strong>: {% trans "Verify membership via Patreon OAuth/API" %}</li>
+            <li><strong>{% trans "PayPal" %}</strong>: {% trans "Verify one-time or recurring payments" %}</li>
+            <li><strong>{% trans "Plugin Grants" %}</strong>: {% trans "Admin panel where you manually grant access by email, IP, or domain" %}</li>
+            <li><strong>{% trans "Activation Keys" %}</strong>: {% trans "Generate unique keys when granting access; users enter the key in the plugin" %}</li>
+        </ul>
+        
+        <h3>{% trans "3. Optional: Encrypt Plugin–API Communication" %}</h3>
+        <p>{% trans "To protect against users modifying your plugin to bypass verification, you can encrypt the communication between the plugin and your verification API using AES-256-CBC. This ensures:" %}</p>
+        <ul>
+            <li>{% trans "Verification requests cannot be easily intercepted or forged" %}</li>
+            <li>{% trans "Responses cannot be tampered with" %}</li>
+            <li>{% trans "Your verification logic remains on your server; the plugin only encrypts/decrypts with a shared key" %}</li>
+        </ul>
+        <p>{% trans "Implementation outline:" %}</p>
+        <ol>
+            <li>{% trans "Generate a 32-byte secret key and store it in your API config (e.g. config.php)" %}</li>
+            <li>{% trans "In your plugin (Python), encrypt outgoing requests and decrypt responses using the same key" %}</li>
+            <li>{% trans "On your API (PHP/Python), decrypt incoming requests and encrypt responses" %}</li>
+            <li>{% trans "Use the X-Encrypted: 1 header to indicate encrypted payloads" %}</li>
+        </ol>
+        <p>{% trans "Both sides must use the same AES-256-CBC key. Keep the key secret and never commit it to public repositories. Store it in a protected config file outside the web root or in environment variables." %}</p>
+        
+        <h3>{% trans "4. Typical Premium Plugin Flow" %}</h3>
+        <ol>
+            <li>{% trans "User installs your premium plugin" %}</li>
+            <li>{% trans "Plugin shows an activation screen (Patreon/PayPal links, or activation key input)" %}</li>
+            <li>{% trans "Plugin calls your verification API with user identifier (email, domain, IP) or activation key" %}</li>
+            <li>{% trans "Your API checks: Plugin Grants, activation key, Patreon, or PayPal — in your preferred order" %}</li>
+            <li>{% trans "If access is granted, API returns success; plugin unlocks features and optionally stores the key locally" %}</li>
+        </ol>
+        <div class="alert alert-info">
+            <strong>{% trans "Tip" %}:</strong> {% trans "Provide multiple verification paths: Patreon for subscribers, PayPal for one-time purchasers, Plugin Grants for beta testers or sponsors, and activation keys for manual grants. Encryption is optional but recommended for paid plugins to deter bypass attempts." %}
+        </div>
         
         <h2 id="components">{% trans "Core Components" %}</h2>
         <h3>{% trans "1. Authentication & Security" %}</h3>
@@ -672,7 +762,7 @@ zip -r myPlugin-v1.0.0.zip . \
             <p style="text-align: center; color: var(--text-secondary, #64748b);">
                 <strong>{% trans "Author" %}:</strong> master3395 | 
                 <strong>{% trans "Version" %}:</strong> 2.0.0 | 
-                <strong>{% trans "Last Updated" %}:</strong> 2026-01-04
+                <strong>{% trans "Last Updated" %}:</strong> 2026-02-02
             </p>
         </div>
     </div>

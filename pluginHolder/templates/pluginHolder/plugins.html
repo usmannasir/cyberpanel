@@ -200,6 +200,32 @@
         border: 1px solid #c3e6cb;
     }
     
+    .freshness-badge-new, .freshness-badge-stable, .freshness-badge-stale {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-top: 4px;
+    }
+    .freshness-badge-new {
+        background: #fef08a;
+        color: #854d0e;
+    }
+    .freshness-badge-stable {
+        background: #bbf7d0;
+        color: #166534;
+    }
+    .freshness-badge-stale {
+        background: #fecaca;
+        color: #991b1b;
+    }
+    .freshness-badge-unstable {
+        background: #e5e7eb;
+        color: #4b5563;
+    }
+    
     .plugin-pricing-badge.paid {
         background: #fff3cd;
         color: #856404;
@@ -443,11 +469,62 @@
         margin: 0 auto;
     }
     
-    /* View Toggle */
+    /* View Toggle and Bulk Actions */
+    .view-toggle-wrapper {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
     .view-toggle {
         display: flex;
         gap: 10px;
-        margin-bottom: 20px;
+    }
+    .bulk-actions-header {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    .bulk-actions-header .btn-bulk {
+        margin: 0;
+        flex-shrink: 0;
+    }
+    .btn-bulk {
+        padding: 8px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .btn-activate-all {
+        background: #28a745;
+        color: white;
+        border-color: #218838;
+    }
+    .btn-activate-all:hover:not(:disabled) {
+        background: #218838;
+    }
+    .btn-activate-all:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    .btn-deactivate-all {
+        background: #ffc107;
+        color: #212529;
+        border-color: #e0a800;
+    }
+    .btn-deactivate-all:hover:not(:disabled) {
+        background: #e0a800;
+    }
+    .btn-deactivate-all:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
     }
     
     .view-btn {
@@ -1076,7 +1153,7 @@
     <div class="plugins-container">
         <!-- Page Header -->
         <div class="page-header">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%; flex-wrap: wrap; gap: 16px;">
                 <div>
                     <h1>
                         <div class="icon">
@@ -1086,7 +1163,7 @@
                     </h1>
                     <p>{% trans "List of installed plugins on your CyberPanel" %}</p>
                 </div>
-                <div style="display: flex; gap: 20px; align-items: center; margin-top: 10px;">
+                <div style="display: flex; gap: 20px; align-items: center; margin-top: 10px; flex-wrap: wrap;">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <i class="fas fa-check-circle" style="color: #28a745; font-size: 18px;"></i>
                         <span style="font-weight: 600; color: var(--text-primary, #2f3640);">
@@ -1099,6 +1176,16 @@
                             {% trans "Active:" %} {{ active_count|default:0 }}
                         </span>
                     </div>
+                    {% if plugins %}
+                    <div class="bulk-actions-header" style="display: flex; gap: 10px; margin-left: 8px; padding-left: 16px; border-left: 2px solid #e2e8f0;">
+                        <button type="button" class="btn-bulk btn-activate-all" onclick="activateAllPlugins()" title="{% trans 'Activate all installed plugins' %}">
+                            <i class="fas fa-toggle-on"></i> {% trans "Activate All Plugins" %}
+                        </button>
+                        <button type="button" class="btn-bulk btn-deactivate-all" onclick="deactivateAllPlugins()" title="{% trans 'Deactivate all installed plugins' %}">
+                            <i class="fas fa-toggle-off"></i> {% trans "Deactivate All Plugins" %}
+                        </button>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -1109,23 +1196,25 @@
             
             {% if plugins %}
             <!-- View Toggle -->
-            <div class="view-toggle">
-                <button class="view-btn active" onclick="toggleView('grid', true)">
-                    <i class="fas fa-th-large"></i>
-                    {% trans "Grid View" %}
-                </button>
-                <button class="view-btn" onclick="toggleView('table', true)">
-                    <i class="fas fa-list"></i>
-                    {% trans "Table View" %}
-                </button>
-                <button class="view-btn" onclick="toggleView('store', true)">
-                    <i class="fas fa-store"></i>
-                    {% trans "CyberPanel Plugin Store" %}
-                </button>
-                <a href="/plugins/help/" class="view-btn" style="text-decoration: none;">
-                    <i class="fas fa-book"></i>
-                    {% trans "Plugin Development Guide" %}
-                </a>
+            <div class="view-toggle-wrapper">
+                <div class="view-toggle">
+                    <button class="view-btn active" onclick="toggleView('grid', true)">
+                        <i class="fas fa-th-large"></i>
+                        {% trans "Grid View" %}
+                    </button>
+                    <button class="view-btn" onclick="toggleView('table', true)">
+                        <i class="fas fa-list"></i>
+                        {% trans "Table View" %}
+                    </button>
+                    <button class="view-btn" onclick="toggleView('store', true)">
+                        <i class="fas fa-store"></i>
+                        {% trans "CyberPanel Plugin Store" %}
+                    </button>
+                    <a href="/plugins/help/" class="view-btn" style="text-decoration: none;">
+                        <i class="fas fa-book"></i>
+                        {% trans "Plugin Development Guide" %}
+                    </a>
+                </div>
             </div>
             
             <!-- Grid View -->
@@ -1142,6 +1231,16 @@
                                 <i class="fas fa-tools"></i>
                             {% elif plugin.type|lower == "backup" %}
                                 <i class="fas fa-save"></i>
+                            {% elif plugin.type|lower == "monitoring" %}
+                                <i class="fas fa-heartbeat"></i>
+                            {% elif plugin.type|lower == "integration" %}
+                                <i class="fas fa-plug"></i>
+                            {% elif plugin.type|lower == "email" %}
+                                <i class="fas fa-envelope"></i>
+                            {% elif plugin.type|lower == "development" %}
+                                <i class="fas fa-code"></i>
+                            {% elif plugin.type|lower == "analytics" %}
+                                <i class="fas fa-chart-bar"></i>
                             {% else %}
                                 <i class="fas fa-puzzle-piece"></i>
                             {% endif %}
@@ -1149,6 +1248,9 @@
                         <div class="plugin-info">
                             <h3 class="plugin-name">{{ plugin.name }}{% if plugin.is_paid|default:False|default_if_none:False %} <span class="paid-badge" title="{% trans 'Paid Plugin - Patreon Subscription Required' %}"><i class="fas fa-crown"></i> {% trans "Premium" %}</span>{% endif %}</h3>
                             <div class="plugin-meta">
+                            {% if plugin.freshness_badge %}
+                            <span class="{{ plugin.freshness_badge.class }}" title="{{ plugin.freshness_badge.title }}">{{ plugin.freshness_badge.badge }}</span>
+                            {% endif %}
                             <span class="plugin-type">{{ plugin.type }}</span>
                                 <span class="plugin-version-number">v{{ plugin.version }}</span>
                                 {% if plugin.is_paid|default:False|default_if_none:False %}
@@ -1210,11 +1312,11 @@
                                     </a>
                                 {% endif %}
                                 {% if plugin.enabled %}
-                                    <button class="btn-action btn-deactivate btn-small" onclick="deactivatePlugin('{{ plugin.plugin_dir }}')">
+                                    <button class="btn-action btn-deactivate btn-small" data-plugin-dir="{{ plugin.plugin_dir }}" onclick="deactivatePlugin('{{ plugin.plugin_dir }}')">
                                         <i class="fas fa-toggle-on"></i> {% trans "Deactivate" %}
                                     </button>
                                 {% else %}
-                                    <button class="btn-action btn-activate btn-small" onclick="activatePlugin('{{ plugin.plugin_dir }}')">
+                                    <button class="btn-action btn-activate btn-small" data-plugin-dir="{{ plugin.plugin_dir }}" onclick="activatePlugin('{{ plugin.plugin_dir }}')">
                                         <i class="fas fa-toggle-off"></i> {% trans "Activate" %}
                                     </button>
                                 {% endif %}
@@ -1264,6 +1366,9 @@
                             <tr>
                                 <td>
                                     <strong>{{ plugin.name }}</strong>
+                                    {% if plugin.freshness_badge %}
+                                    <br><span class="{{ plugin.freshness_badge.class }}" title="{{ plugin.freshness_badge.title }}">{{ plugin.freshness_badge.badge }}</span>
+                                    {% endif %}
                                 </td>
                                 <td>
                                     <span class="plugin-version-number">{{ plugin.version }}</span>
@@ -1294,11 +1399,11 @@
                                                 </a>
                                             {% endif %}
                                             {% if plugin.enabled %}
-                                                <button class="btn-action btn-deactivate" onclick="deactivatePlugin('{{ plugin.plugin_dir }}')">
+                                                <button class="btn-action btn-deactivate" data-plugin-dir="{{ plugin.plugin_dir }}" onclick="deactivatePlugin('{{ plugin.plugin_dir }}')">
                                                     <i class="fas fa-toggle-on"></i> {% trans "Deactivate" %}
                                                 </button>
                                             {% else %}
-                                                <button class="btn-action btn-activate" onclick="activatePlugin('{{ plugin.plugin_dir }}')">
+                                                <button class="btn-action btn-activate" data-plugin-dir="{{ plugin.plugin_dir }}" onclick="activatePlugin('{{ plugin.plugin_dir }}')">
                                                     <i class="fas fa-toggle-off"></i> {% trans "Activate" %}
                                                 </button>
                                             {% endif %}
@@ -1443,6 +1548,26 @@
                         <button class="category-btn" onclick="filterByCategory('Performance', event)" data-category="Performance">
                             <i class="fas fa-rocket"></i>
                             {% trans "Performance" %}
+                        </button>
+                        <button class="category-btn" onclick="filterByCategory('Monitoring', event)" data-category="Monitoring">
+                            <i class="fas fa-heartbeat"></i>
+                            {% trans "Monitoring" %}
+                        </button>
+                        <button class="category-btn" onclick="filterByCategory('Integration', event)" data-category="Integration">
+                            <i class="fas fa-plug"></i>
+                            {% trans "Integration" %}
+                        </button>
+                        <button class="category-btn" onclick="filterByCategory('Email', event)" data-category="Email">
+                            <i class="fas fa-envelope"></i>
+                            {% trans "Email" %}
+                        </button>
+                        <button class="category-btn" onclick="filterByCategory('Development', event)" data-category="Development">
+                            <i class="fas fa-code"></i>
+                            {% trans "Development" %}
+                        </button>
+                        <button class="category-btn" onclick="filterByCategory('Analytics', event)" data-category="Analytics">
+                            <i class="fas fa-chart-bar"></i>
+                            {% trans "Analytics" %}
                         </button>
                     </div>
                 
@@ -1628,6 +1753,31 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+function getFreshnessBadgeHtml(freshnessFromApi, modifyDate) {
+    // Use API data if available
+    if (freshnessFromApi && freshnessFromApi.badge && freshnessFromApi.class) {
+        return `<br><span class="${escapeHtml(freshnessFromApi.class)}" title="${escapeHtml(freshnessFromApi.title || '')}">${escapeHtml(freshnessFromApi.badge)}</span>`;
+    }
+    // Compute from modify_date (for cached data without freshness_badge)
+    if (!modifyDate || modifyDate === 'N/A') return '';
+    try {
+        const m = modifyDate.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/);
+        if (!m) return '';
+        const d = new Date(parseInt(m[1]), parseInt(m[2]) - 1, parseInt(m[3]), parseInt(m[4]), parseInt(m[5]), parseInt(m[6]));
+        const daysAgo = Math.floor((Date.now() - d.getTime()) / (24 * 60 * 60 * 1000));
+        if (daysAgo <= 90) {
+            return '<br><span class="freshness-badge-new" title="This plugin was released/updated within the last 3 months">NEW</span>';
+        } else if (daysAgo <= 365) {
+            return '<br><span class="freshness-badge-stable" title="This plugin was updated within the last year">Stable</span>';
+        } else if (daysAgo < 730) {
+            return '<br><span class="freshness-badge-unstable" title="This plugin has not been updated in over 1 year">Unstable</span>';
+        } else {
+            return '<br><span class="freshness-badge-stale" title="This plugin has not been updated in over 2 years">STALE</span>';
+        }
+    } catch (e) {}
+    return '';
+}
+
 function displayStorePlugins() {
     // Version: 2026-01-27-v1 - Added category filtering support
     // CRITICAL: This function MUST create exactly 8 columns (Icon, Plugin Name, Version, Pricing, Modify Date, Action, Help, About)
@@ -1692,6 +1842,16 @@ function displayStorePlugins() {
             iconClass = 'fas fa-tools';
         } else if (pluginType.includes('backup')) {
             iconClass = 'fas fa-save';
+        } else if (pluginType.includes('monitoring')) {
+            iconClass = 'fas fa-heartbeat';
+        } else if (pluginType.includes('integration')) {
+            iconClass = 'fas fa-plug';
+        } else if (pluginType.includes('email')) {
+            iconClass = 'fas fa-envelope';
+        } else if (pluginType.includes('development')) {
+            iconClass = 'fas fa-code';
+        } else if (pluginType.includes('analytics')) {
+            iconClass = 'fas fa-chart-bar';
         }
         const iconHtml = `<div class="plugin-icon" style="width: 40px; height: 40px; background: var(--bg-secondary, #f8f9ff); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #5856d6; margin: 0 auto;">
             <i class="${iconClass}"></i>
@@ -1733,6 +1893,9 @@ function displayStorePlugins() {
         // Modify Date column - show N/A for store plugins (they're from GitHub, not local)
         const modifyDateHtml = plugin.modify_date ? `<small style="color: var(--text-secondary, #64748b);">${escapeHtml(plugin.modify_date)}</small>` : '<small style="color: var(--text-secondary, #64748b);">N/A</small>';
         
+        // Freshness badge (NEW/Stable/STALE) - use API data or compute from modify_date
+        const freshnessBadgeHtml = getFreshnessBadgeHtml(plugin.freshness_badge || null, plugin.modify_date);
+        
         // Pricing badge - ALWAYS show a badge (default to Free if is_paid is missing/undefined/null)
         // Version: 2026-01-25-v4 - Normalize is_paid to handle all possible values
         let isPaid = false;
@@ -1754,6 +1917,7 @@ function displayStorePlugins() {
             <td style="text-align: center;">${iconHtml}</td>
             <td>
                 <strong>${escapeHtml(plugin.name)}</strong>
+                ${freshnessBadgeHtml}
             </td>
             <td>${categoryBadge}</td>
             <td><span class="plugin-version-number">${escapeHtml(plugin.version)}</span></td>
@@ -2398,6 +2562,91 @@ function deactivatePlugin(pluginName) {
         btn.disabled = false;
         btn.innerHTML = originalText;
     });
+}
+
+function activateAllPlugins() {
+    const btns = document.querySelectorAll('#gridView .btn-activate[data-plugin-dir], #tableView .btn-activate[data-plugin-dir]');
+    const plugins = Array.from(btns).map(b => b.getAttribute('data-plugin-dir')).filter(Boolean);
+    if (plugins.length === 0) {
+        if (typeof PNotify !== 'undefined') {
+            new PNotify({ title: 'Info', text: 'No inactive plugins to activate.', type: 'info' });
+        } else {
+            alert('No inactive plugins to activate.');
+        }
+        return;
+    }
+    const activateAllBtn = document.querySelector('.btn-activate-all');
+    if (activateAllBtn) activateAllBtn.disabled = true;
+    let done = 0;
+    const run = () => {
+        if (done >= plugins.length) {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({ title: 'Success!', text: `Activated ${plugins.length} plugin(s).`, type: 'success' });
+            } else {
+                alert(`Activated ${plugins.length} plugin(s).`);
+            }
+            setTimeout(() => location.reload(), 800);
+            return;
+        }
+        const name = plugins[done];
+        fetch(`/plugins/api/enable/${name}/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success && typeof PNotify !== 'undefined') {
+                new PNotify({ title: 'Warning', text: `${name}: ${data.error || 'failed'}`, type: 'error' });
+            }
+            done++;
+            run();
+        })
+        .catch(() => { done++; run(); });
+    };
+    run();
+}
+
+function deactivateAllPlugins() {
+    const btns = document.querySelectorAll('#gridView .btn-deactivate[data-plugin-dir], #tableView .btn-deactivate[data-plugin-dir]');
+    const plugins = Array.from(btns).map(b => b.getAttribute('data-plugin-dir')).filter(Boolean);
+    if (plugins.length === 0) {
+        if (typeof PNotify !== 'undefined') {
+            new PNotify({ title: 'Info', text: 'No active plugins to deactivate.', type: 'info' });
+        } else {
+            alert('No active plugins to deactivate.');
+        }
+        return;
+    }
+    if (!confirm(`Deactivate ${plugins.length} plugin(s)? They will be disabled but remain installed.`)) return;
+    const deactivateAllBtn = document.querySelector('.btn-deactivate-all');
+    if (deactivateAllBtn) deactivateAllBtn.disabled = true;
+    let done = 0;
+    const run = () => {
+        if (done >= plugins.length) {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({ title: 'Success!', text: `Deactivated ${plugins.length} plugin(s).`, type: 'success' });
+            } else {
+                alert(`Deactivated ${plugins.length} plugin(s).`);
+            }
+            setTimeout(() => location.reload(), 800);
+            return;
+        }
+        const name = plugins[done];
+        fetch(`/plugins/api/disable/${name}/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success && typeof PNotify !== 'undefined') {
+                new PNotify({ title: 'Warning', text: `${name}: ${data.error || 'failed'}`, type: 'error' });
+            }
+            done++;
+            run();
+        })
+        .catch(() => { done++; run(); });
+    };
+    run();
 }
 
 function dismissNotice() {

@@ -53,6 +53,33 @@ def _is_plugin_enabled(plugin_name):
             return True  # Default to enabled if file read fails
     return True  # Default to enabled if state file doesn't exist
 
+
+def _get_freshness_badge(modify_date):
+    """
+    Return freshness badge (NEW/Stable/STALE) based on modify_date.
+    modify_date format: 'YYYY-MM-DD HH:MM:SS' or 'N/A'
+    - 0-90 days: NEW (yellow)
+    - 90-365 days: Stable (green)
+    - 730+ days: STALE (red)
+    - 365-730 days: no badge
+    """
+    if not modify_date or modify_date == 'N/A' or not isinstance(modify_date, str):
+        return None
+    try:
+        dt = datetime.strptime(modify_date[:19], '%Y-%m-%d %H:%M:%S')
+        days_ago = (datetime.now() - dt).days
+        if days_ago <= 90:
+            return {'badge': 'NEW', 'class': 'freshness-badge-new', 'title': 'This plugin was released/updated within the last 3 months'}
+        elif days_ago <= 365:
+            return {'badge': 'Stable', 'class': 'freshness-badge-stable', 'title': 'This plugin was updated within the last year'}
+        elif days_ago < 730:
+            return {'badge': 'Unstable', 'class': 'freshness-badge-unstable', 'title': 'This plugin has not been updated in over 1 year'}
+        else:
+            return {'badge': 'STALE', 'class': 'freshness-badge-stale', 'title': 'This plugin has not been updated in over 2 years'}
+    except (ValueError, TypeError):
+        pass
+    return None
+
 def _set_plugin_state(plugin_name, enabled):
     """Set plugin enabled/disabled state"""
     state_file = _get_plugin_state_file(plugin_name)
@@ -129,7 +156,7 @@ def installed(request):
                     continue
                 
                 # Valid categories only: Utility, Security, Backup, Performance (Plugin category removed)
-                if type_text.lower() not in ('utility', 'security', 'backup', 'performance'):
+                if type_text.lower() not in ('utility', 'security', 'backup', 'performance', 'monitoring', 'integration', 'email', 'development', 'analytics'):
                     errorPlugins.append({'name': plugin, 'error': f'Invalid category "{type_text}". Use: Utility, Security, Backup, or Performance.'})
                     logging.writeToFile(f"Plugin {plugin}: Invalid category '{type_text}'")
                     continue
@@ -165,6 +192,7 @@ def installed(request):
                     modify_date = 'N/A'
                 
                 data['modify_date'] = modify_date
+                data['freshness_badge'] = _get_freshness_badge(modify_date)
                 
                 # Extract settings URL or main URL for "Manage" button
                 settings_url_elem = root.find('settings_url')
@@ -275,7 +303,7 @@ def installed(request):
                     continue
                 
                 # Valid categories only: Utility, Security, Backup, Performance (Plugin category removed)
-                if type_text.lower() not in ('utility', 'security', 'backup', 'performance'):
+                if type_text.lower() not in ('utility', 'security', 'backup', 'performance', 'monitoring', 'integration', 'email', 'development', 'analytics'):
                     errorPlugins.append({'name': plugin, 'error': f'Invalid category "{type_text}". Use: Utility, Security, Backup, or Performance.'})
                     continue
                 
@@ -302,6 +330,7 @@ def installed(request):
                     modify_date = 'N/A'
                 
                 data['modify_date'] = modify_date
+                data['freshness_badge'] = _get_freshness_badge(modify_date)
                 
                 # Extract settings URL or main URL
                 settings_url_elem = root.find('settings_url')
@@ -1072,10 +1101,11 @@ def _fetch_plugins_from_github():
                     logging.writeToFile(f"Plugin {plugin_name}: Missing required type/category in meta.xml, skipping")
                     continue
                 type_text = type_elem.text.strip().lower()
-                if type_text not in ('utility', 'security', 'backup', 'performance'):
+                if type_text not in ('utility', 'security', 'backup', 'performance', 'monitoring', 'integration', 'email', 'development', 'analytics'):
                     logging.writeToFile(f"Plugin {plugin_name}: Invalid category '{type_elem.text}', skipping (use Utility, Security, Backup, or Performance)")
                     continue
                 
+                freshness = _get_freshness_badge(modify_date)
                 plugin_data = {
                     'plugin_dir': plugin_name,
                     'name': root.find('name').text if root.find('name') is not None else plugin_name,
@@ -1088,6 +1118,7 @@ def _fetch_plugins_from_github():
                     'github_url': f'https://github.com/master3395/cyberpanel-plugins/tree/main/{plugin_name}',
                     'about_url': f'https://github.com/master3395/cyberpanel-plugins/tree/main/{plugin_name}',
                     'modify_date': modify_date,
+                    'freshness_badge': freshness,
                     'is_paid': is_paid,
                     'patreon_tier': patreon_tier,
                     'patreon_url': patreon_url
