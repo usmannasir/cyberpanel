@@ -447,9 +447,9 @@ app.controller('modifyUser', function ($scope, $http) {
                 $scope.userModificationLoading = true;
                 $scope.acctDetailsFetched = false;
                 $scope.userModified = true;
-                $scope.canotModifyUser = true;
+                $scope.canotModifyUser = false;   // hide modify error (we only fetched details)
                 $scope.couldNotConnect = true;
-                $scope.canotFetchDetails = true;
+                $scope.canotFetchDetails = false;  // hide fetch error on success
                 $scope.detailsFetched = false;
                 $scope.userAccountsLimit = true;
                 $scope.websitesLimit = true;
@@ -459,13 +459,13 @@ app.controller('modifyUser', function ($scope, $http) {
                 $scope.acctDetailsFetched = true;
                 $scope.userAccountsLimit = true;
                 $scope.userModified = true;
-                $scope.canotModifyUser = true;
+                $scope.canotModifyUser = false;   // hide modify error (only fetch failed)
                 $scope.couldNotConnect = true;
-                $scope.canotFetchDetails = false;
-                $scope.detailsFetched = true;
+                $scope.canotFetchDetails = true;   // show fetch error on failure
+                $scope.detailsFetched = false;
 
 
-                $scope.errorMessage = response.data.error_message;
+                $scope.errorMessage = (response.data && (response.data.error_message || response.data.message || response.data.errorMessage)) || 'Unknown error';
 
 
             }
@@ -479,7 +479,7 @@ app.controller('modifyUser', function ($scope, $http) {
             $scope.acctDetailsFetched = true;
             $scope.userAccountsLimit = true;
             $scope.userModified = true;
-            $scope.canotModifyUser = true;
+            $scope.canotModifyUser = false;   // hide modify error (only connection/fetch failed)
             $scope.couldNotConnect = false;
             $scope.canotFetchDetails = true;
             $scope.detailsFetched = true;
@@ -496,7 +496,7 @@ app.controller('modifyUser', function ($scope, $http) {
         $scope.userModificationLoading = false;
         $scope.acctDetailsFetched = false;
         $scope.userModified = true;
-        $scope.canotModifyUser = true;
+        $scope.canotModifyUser = false;  // hide modify error until we know result
         $scope.couldNotConnect = true;
         $scope.canotFetchDetails = true;
         $scope.detailsFetched = true;
@@ -552,7 +552,7 @@ app.controller('modifyUser', function ($scope, $http) {
                 $scope.userModificationLoading = true;
                 $scope.acctDetailsFetched = true;
                 $scope.userModified = false;
-                $scope.canotModifyUser = true;
+                $scope.canotModifyUser = false;  // hide modify error on success
                 $scope.couldNotConnect = true;
                 $scope.canotFetchDetails = true;
                 $scope.detailsFetched = true;
@@ -569,13 +569,13 @@ app.controller('modifyUser', function ($scope, $http) {
                 $scope.userModificationLoading = true;
                 $scope.acctDetailsFetched = false;
                 $scope.userModified = true;
-                $scope.canotModifyUser = false;
+                $scope.canotModifyUser = true;   // show modify error on failure
                 $scope.couldNotConnect = true;
                 $scope.canotFetchDetails = true;
                 $scope.detailsFetched = true;
 
 
-                $scope.errorMessage = response.data.error_message;
+                $scope.errorMessage = (response.data && (response.data.error_message || response.data.message || response.data.errorMessage)) || 'Unknown error';
 
 
             }
@@ -1891,6 +1891,42 @@ app.controller('apiUsersCTRL', function ($scope, $http) {
 
 /* Java script code to list table users */
 
+/* Show modal by id - works with Bootstrap 3 (jQuery) or Bootstrap 5 (native) */
+function showModalById(modalId) {
+    var el = document.getElementById(modalId);
+    if (!el) return;
+    if (typeof jQuery !== 'undefined' && jQuery(el).modal) {
+        jQuery(el).modal('show');
+    } else if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+        var m = bootstrap.Modal.getOrCreateInstance(el);
+        if (m) m.show();
+    } else {
+        el.style.display = 'block';
+        el.classList.add('in');
+        if (el.getAttribute('aria-hidden') !== null) el.setAttribute('aria-hidden', 'false');
+        var backdrop = document.createElement('div');
+        backdrop.className = 'modal-backdrop fade in';
+        backdrop.setAttribute('data-modal-backdrop', modalId);
+        document.body.appendChild(backdrop);
+    }
+}
+
+function hideModalById(modalId) {
+    var el = document.getElementById(modalId);
+    if (!el) return;
+    if (typeof jQuery !== 'undefined' && jQuery(el).modal) {
+        jQuery(el).modal('hide');
+    } else if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+        var m = bootstrap.Modal.getInstance(el);
+        if (m) m.hide();
+    } else {
+        el.style.display = 'none';
+        el.classList.remove('in');
+        if (el.getAttribute('aria-hidden') !== null) el.setAttribute('aria-hidden', 'true');
+        var backdrops = document.querySelectorAll('[data-modal-backdrop="' + modalId + '"]');
+        backdrops.forEach(function (b) { if (b.parentNode) b.parentNode.removeChild(b); });
+    }
+}
 
 app.controller('listTableUsers', function ($scope, $http) {
 
@@ -1954,7 +1990,7 @@ app.controller('listTableUsers', function ($scope, $http) {
     $scope.deleteUserInitial = function (name){
         UserToDelete = name;
         $scope.UserToDelete = name;
-        $('#deleteModal').modal('show');
+        showModalById('deleteModal');
     };
 
     $scope.deleteUserFinal = function () {
@@ -1979,7 +2015,7 @@ app.controller('listTableUsers', function ($scope, $http) {
             $scope.cyberpanelLoading = true;
             if (response.data.deleteStatus === 1) {
                 $scope.populateCurrentRecords();
-                $('#deleteModal').modal('hide');
+                hideModalById('deleteModal');
                 safePNotify({
                     title: 'Success!',
                     text: 'Users successfully deleted!',
@@ -2016,7 +2052,7 @@ app.controller('listTableUsers', function ($scope, $http) {
 
     $scope.editInitial = function (name) {
         $scope.name = name;
-        $('#editModal').modal('show');
+        showModalById('editModal');
     };
 
     $scope.saveResellerChanges = function () {
@@ -2043,7 +2079,7 @@ app.controller('listTableUsers', function ($scope, $http) {
 
             if (response.data.status === 1) {
                 $scope.populateCurrentRecords();
-                $('#editModal').modal('hide');
+                hideModalById('editModal');
                 safePNotify({
                     title: 'Success!',
                     text: 'Changes successfully applied!',
@@ -2097,7 +2133,7 @@ app.controller('listTableUsers', function ($scope, $http) {
 
             if (response.data.status === 1) {
                 $scope.populateCurrentRecords();
-                $('#editModal').modal('hide');
+                hideModalById('editModal');
                 safePNotify({
                     title: 'Success!',
                     text: 'ACL Successfully changed.',
