@@ -250,61 +250,6 @@
         margin-right: 4px;
     }
     
-    .subscription-warning {
-        background: #fff3cd;
-        border: 1px solid #ffc107;
-        border-radius: 8px;
-        padding: 12px;
-        margin-top: 10px;
-        font-size: 12px;
-        color: #856404;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-    
-    .subscription-warning-content {
-        display: flex;
-        align-items: center;
-        flex: 1;
-    }
-    
-    .subscription-warning i {
-        margin-right: 6px;
-        color: #ffc107;
-    }
-    
-    .subscription-warning-button {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 8px 16px;
-        background: linear-gradient(135deg, #f96854 0%, #f96854 100%);
-        color: white;
-        text-decoration: none;
-        border-radius: 6px;
-        font-size: 12px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        white-space: nowrap;
-        box-shadow: 0 2px 4px rgba(249, 104, 84, 0.3);
-    }
-    
-    .subscription-warning-button:hover {
-        background: linear-gradient(135deg, #e55a47 0%, #e55a47 100%);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(249, 104, 84, 0.4);
-        color: white;
-        text-decoration: none;
-    }
-    
-    .subscription-warning-button i {
-        margin-right: 0;
-        color: white;
-    }
-    
     .plugin-description {
         font-size: 13px;
         color: var(--text-secondary, #64748b);
@@ -1246,7 +1191,7 @@
                             {% endif %}
                         </div>
                         <div class="plugin-info">
-                            <h3 class="plugin-name">{{ plugin.name }}{% if plugin.is_paid|default:False|default_if_none:False %} <span class="paid-badge" title="{% trans 'Paid Plugin - Patreon Subscription Required' %}"><i class="fas fa-crown"></i> {% trans "Premium" %}</span>{% endif %}</h3>
+                            <h3 class="plugin-name">{{ plugin.name }}{% if plugin.is_paid|default:False|default_if_none:False %} <span class="paid-badge" title="{% trans 'Premium plugin - activate in Settings' %}"><i class="fas fa-crown"></i> {% trans "Premium" %}</span>{% endif %}</h3>
                             <div class="plugin-meta">
                             {% if plugin.freshness_badge %}
                             <span class="{{ plugin.freshness_badge.class }}" title="{{ plugin.freshness_badge.title }}">{{ plugin.freshness_badge.badge }}</span>
@@ -1264,20 +1209,6 @@
                     
                     <div class="plugin-description">
                         {{ plugin.desc }}
-                        {% if plugin.is_paid|default:False|default_if_none:False %}
-                        <div class="subscription-warning">
-                            <div class="subscription-warning-content">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                <strong>{% trans "Paid Plugin:" %}</strong> {% trans "Requires Patreon subscription to" %} "{{ plugin.patreon_tier|default:'CyberPanel Paid Plugin' }}"
-                            </div>
-                            {% if plugin.patreon_url %}
-                            <a href="{{ plugin.patreon_url }}" target="_blank" rel="noopener noreferrer" class="subscription-warning-button">
-                                <i class="fab fa-patreon"></i>
-                                {% trans "Subscribe on Patreon" %}
-                            </a>
-                            {% endif %}
-                        </div>
-                        {% endif %}
                     </div>
                     
                     <div class="plugin-status-section">
