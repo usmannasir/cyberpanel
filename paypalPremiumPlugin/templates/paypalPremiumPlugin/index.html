@@ -1,0 +1,96 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "PayPal Premium Plugin Example - CyberPanel" %}{% endblock %}
+
+{% block header_scripts %}
+<style>
+    .premium-plugin-container {
+        padding: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .premium-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 20px;
+    }
+    
+    .plugin-header {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        margin-bottom: 25px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    
+    .plugin-header h1 {
+        margin: 0 0 10px 0;
+        color: #2f3640;
+    }
+    
+    .features-list {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    
+    .features-list h2 {
+        margin-top: 0;
+        color: #2f3640;
+    }
+    
+    .features-list ul {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .features-list li {
+        padding: 12px 0;
+        border-bottom: 1px solid #e8e9ff;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .features-list li:last-child {
+        border-bottom: none;
+    }
+    
+    .features-list li::before {
+        content: "✓";
+        color: #28a745;
+        font-weight: bold;
+        font-size: 18px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="premium-plugin-container">
+    <div class="plugin-header">
+        <span class="premium-badge">{% trans "Premium Plugin" %}</span>
+        <h1>{{ plugin_name }}</h1>
+        <p>{{ description }}</p>
+        <p><strong>{% trans "Version:" %}</strong> {{ version }}</p>
+    </div>
+    
+    <div class="features-list">
+        <h2>{% trans "Premium Features" %}</h2>
+        <ul>
+            {% for feature in features %}
+            <li>{{ feature }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}

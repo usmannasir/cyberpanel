@@ -144,6 +144,7 @@ journalctl -u lscpd -f
 
 ## Recent fixes
 
+* **02.02.2026** — Plugin updates: premiumPlugin & paypalPremiumPlugin unified verification (Plugin Grants, activation key, Patreon, PayPal, AES-256-CBC encryption). Installed Plugins UI: bulk activate/deactivate, freshness badges, removed Patreon messaging from front.
 * **15.11.2025** — Hardened MySQL password rotation: `mysqlUtilities.changePassword` now auto-resolves the backing MySQL account (user + host) even when `DBUsers` metadata is missing, preventing the historical `[mysqlUtilities.changePassword] can only concatenate str (not "int")` error. Regression tests live under `Test/mysqlUtilities/`, and you should restart `lscpd` after deploying the patch so the helper reloads.
 
 ---

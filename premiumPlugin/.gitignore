@@ -1,0 +1,6 @@
+# Security - Never commit secrets
+*.secret
+*_secret*
+patreon_config.py
+.env.patreon
+patreon_secrets.env

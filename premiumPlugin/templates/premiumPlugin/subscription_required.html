@@ -1,0 +1,139 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Payment Required - Premium Plugin" %}{% endblock %}
+
+{% block header_scripts %}
+<style>
+    .subscription-required-container { padding: 40px 20px; max-width: 900px; margin: 0 auto; text-align: center; }
+    .subscription-card { background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+    .premium-icon { font-size: 64px; color: #FF6B35; margin-bottom: 20px; }
+    .subscription-card h1 { color: #2f3640; margin-bottom: 15px; }
+    .subscription-card p { color: #64748b; font-size: 16px; line-height: 1.6; margin-bottom: 30px; }
+    .payment-methods { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin: 30px 0; }
+    .payment-method-card { flex: 1; min-width: 250px; max-width: 350px; background: #f8f9ff; border: 2px solid #e2e8f0; border-radius: 12px; padding: 25px; text-align: center; }
+    .payment-method-card.patreon { border-color: #FF424D; }
+    .payment-method-card.paypal { border-color: #0070ba; }
+    .payment-method-card h3 { margin-top: 0; color: #2f3640; font-size: 1.3rem; }
+    .patreon-button, .paypal-button { display: inline-block; color: white; padding: 15px 30px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; transition: all 0.3s ease; width: 100%; box-sizing: border-box; margin-bottom: 10px; }
+    .patreon-button { background: #FF424D; }
+    .patreon-button:hover { background: #E62E37; color: white; text-decoration: none; }
+    .paypal-button { background: #0070ba; }
+    .paypal-button:hover { background: #003087; color: white; text-decoration: none; }
+    .info-box { background: #f8f9ff; border-left: 4px solid #FF6B35; padding: 20px; border-radius: 8px; margin-top: 30px; text-align: left; }
+    .payment-method-selector { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 15px; margin-bottom: 30px; text-align: left; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="subscription-required-container">
+    <div class="subscription-card">
+        <div class="premium-icon"><i class="fas fa-crown"></i></div>
+        <h1>{% trans "Premium Plugin Access Required" %}</h1>
+        <p>{% trans "This plugin requires payment or subscription to access premium features." %}</p>
+
+        <!-- Activation Key Section -->
+        <div style="background: linear-gradient(135deg, #e6f7ff 0%, #f0f9ff 100%); border: 2px solid #17a2b8; border-radius: 12px; padding: 25px; margin: 30px 0; text-align: left;">
+            <h3 style="color: #17a2b8; margin-top: 0;"><i class="fas fa-key"></i> {% trans "Activate Premium Access" %}</h3>
+            <p style="color: #495057; margin-bottom: 20px;">{% trans "If you received an activation key, enter it below." %}</p>
+            <div id="activation-message" style="display: none; margin-bottom: 15px; padding: 12px; border-radius: 6px;"></div>
+            <form id="activation-key-form" style="display: flex; gap: 10px; align-items: flex-end; max-width: 600px;">
+                {% csrf_token %}
+                <div style="flex: 1;">
+                    <label for="activation-key-input" style="font-weight: 600; display: block; margin-bottom: 8px;">{% trans "Activation Key" %}</label>
+                    <input type="text" id="activation-key-input" name="activation_key" placeholder="PREMIUMPLUGIN-XXXX-XXXX-XXXX" style="width: 100%; padding: 12px; border: 2px solid #17a2b8; border-radius: 6px; font-family: monospace; text-transform: uppercase;" required />
+                </div>
+                <button type="submit" style="background: #17a2b8; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; cursor: pointer;" id="activate-btn">
+                    <i class="fas fa-check-circle"></i> {% trans "Activate" %}
+                </button>
+            </form>
+        </div>
+
+        {% if payment_method == 'both' %}
+        <div class="payment-method-selector">
+            <strong>{% trans "Current Payment Method:" %}</strong> {% trans "Check Both (Patreon or PayPal)" %}
+        </div>
+        {% elif payment_method == 'patreon' %}
+        <div class="payment-method-selector">
+            <strong>{% trans "Current Payment Method:" %}</strong> {% trans "Patreon Subscription Only" %}
+        </div>
+        {% elif payment_method == 'paypal' %}
+        <div class="payment-method-selector">
+            <strong>{% trans "Current Payment Method:" %}</strong> {% trans "PayPal Payment Only" %}
+        </div>
+        {% endif %}
+
+        <div class="payment-methods">
+            <div class="payment-method-card patreon">
+                <h3><i class="fab fa-patreon"></i> {% trans "Patreon Subscription" %}</h3>
+                <p>{% trans "Subscribe to" %} <strong>"{{ patreon_tier }}"</strong></p>
+                <a href="{{ patreon_url }}" target="_blank" rel="noopener noreferrer" class="patreon-button">
+                    <i class="fab fa-patreon"></i> {% trans "Subscribe on Patreon" %}
+                </a>
+            </div>
+            <div class="payment-method-card paypal">
+                <h3><i class="fab fa-paypal"></i> {% trans "PayPal Payment" %}</h3>
+                <p>{% trans "Complete one-time payment via PayPal" %}</p>
+                {% if paypal_me_url %}
+                <a href="{{ paypal_me_url }}" target="_blank" rel="noopener noreferrer" class="paypal-button">
+                    <i class="fab fa-paypal"></i> {% trans "Pay with PayPal.me" %}
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="info-box">
+            <h3>{% trans "How it works:" %}</h3>
+            <ul>
+                <li>{% trans "Install the plugin (already done)" %}</li>
+                <li>{% trans "Enter activation key, subscribe on Patreon, or pay via PayPal" %}</li>
+                <li>{% trans "The plugin will automatically unlock" %}</li>
+            </ul>
+        </div>
+
+        {% if error %}
+        <div style="background: #fee; border: 1px solid #fcc; border-radius: 8px; padding: 15px; margin-top: 20px; color: #c33;">
+            <strong>{% trans "Error:" %}</strong> {{ error }}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('activation-key-form');
+    const input = document.getElementById('activation-key-input');
+    const btn = document.getElementById('activate-btn');
+    const msg = document.getElementById('activation-message');
+    if (form) {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const key = input.value.trim().toUpperCase();
+            if (!key) return;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Activating...';
+            try {
+                const res = await fetch('/plugins/premiumPlugin/activate-key/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('input[name=csrfmiddlewaretoken]') ? document.querySelector('input[name=csrfmiddlewaretoken]').value : (document.cookie.match(/csrftoken=([^;]+)/) ? document.cookie.match(/csrftoken=([^;]+)/)[1].trim() : '') },
+                    body: JSON.stringify({ activation_key: key })
+                });
+                const data = await res.json();
+                msg.textContent = data.success ? '✅ ' + data.message : '❌ ' + (data.message || 'Invalid key');
+                msg.style.display = 'block';
+                msg.style.background = data.success ? '#d4edda' : '#f8d7da';
+                msg.style.color = data.success ? '#155724' : '#721c24';
+                if (data.success) { input.value = ''; setTimeout(() => location.reload(), 2000); }
+            } catch (err) {
+                msg.textContent = '❌ ' + err.message;
+                msg.style.display = 'block';
+                msg.style.background = '#f8d7da';
+                msg.style.color = '#721c24';
+            }
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check-circle"></i> Activate';
+        });
+    }
+});
+</script>
+{% endblock %}
