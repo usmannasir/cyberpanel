@@ -1,269 +1,406 @@
 # -*- coding: utf-8 -*-
 """
-Premium Plugin Views - Remote Verification Version
-This version uses remote server verification (no secrets in plugin)
-SECURITY: All Patreon API calls happen on YOUR server, not user's server
+Premium Plugin Views - Unified Verification (same as contaboAutoSnapshot)
+Supports: Plugin Grants, Activation Key, Patreon, PayPal, AES encryption
 """
 
 from django.shortcuts import render, redirect
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
+from django.views.decorators.http import require_http_methods
 from plogical.mailUtilities import mailUtilities
 from plogical.httpProc import httpProc
+from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from functools import wraps
-import sys
-import os
 import urllib.request
 import urllib.error
 import json
 
-# Remote verification server (YOUR server, not user's server)
-REMOTE_VERIFICATION_URL = 'https://api.newstargeted.com/api/verify-patreon-membership'
-PLUGIN_NAME = 'premiumPlugin'  # Patreon Premium Plugin Example
-PLUGIN_VERSION = '1.0.0'
+from .models import PremiumPluginConfig
+from . import api_encryption
+
+PLUGIN_NAME = 'premiumPlugin'
+PLUGIN_VERSION = '1.0.2'
+
+REMOTE_VERIFICATION_PATREON_URL = 'https://api.newstargeted.com/api/verify-patreon-membership.php'
+REMOTE_VERIFICATION_PAYPAL_URL = 'https://api.newstargeted.com/api/verify-paypal-payment.php'
+REMOTE_VERIFICATION_PLUGIN_GRANT_URL = 'https://api.newstargeted.com/api/verify-plugin-grant.php'
+REMOTE_ACTIVATION_KEY_URL = 'https://api.newstargeted.com/api/activate-plugin-key.php'
+
+PATREON_TIER = 'CyberPanel Paid Plugin'
+PATREON_URL = 'https://www.patreon.com/membership/27789984'
+PAYPAL_ME_URL = 'https://paypal.me/KimBS?locale.x=en_US&country.x=NO'
+PAYPAL_PAYMENT_LINK = ''
+
 
 def cyberpanel_login_required(view_func):
-    """
-    Custom decorator that checks for CyberPanel session userID
-    """
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
         try:
-            userID = request.session['userID']
-            # User is authenticated via CyberPanel session
+            if not request.session.get('userID'):
+                from loginSystem.views import loadLoginPage
+                return redirect(loadLoginPage)
             return view_func(request, *args, **kwargs)
         except KeyError:
-            # Not logged in, redirect to login
             from loginSystem.views import loadLoginPage
             return redirect(loadLoginPage)
     return _wrapped_view
 
-def remote_verification_required(view_func):
-    """
-    Decorator that checks Patreon membership via remote server
-    No secrets stored in plugin - all verification happens on your server
-    """
-    @wraps(view_func)
-    def _wrapped_view(request, *args, **kwargs):
-        # First check login
-        try:
-            userID = request.session['userID']
-        except KeyError:
-            from loginSystem.views import loadLoginPage
-            return redirect(loadLoginPage)
-        
-        # Get user email
-        user_email = getattr(request.user, 'email', None) if hasattr(request, 'user') and request.user else None
-        if not user_email:
-            # Try to get from session or username
-            user_email = request.session.get('email', '') or getattr(request.user, 'username', '')
-        
-        # Check membership via remote server
-        verification_result = check_remote_membership(user_email, request.META.get('REMOTE_ADDR', ''))
-        
-        if not verification_result.get('has_access', False):
-            # User doesn't have subscription - show subscription required page
-            context = {
-                'plugin_name': 'Patreon Premium Plugin Example',
-                'is_paid': True,
-                'patreon_tier': verification_result.get('patreon_tier', 'CyberPanel Paid Plugin'),
-                'patreon_url': verification_result.get('patreon_url', 'https://www.patreon.com/c/newstargeted/membership'),
-                'message': verification_result.get('message', 'Patreon subscription required'),
-                'error': verification_result.get('error')
-            }
-            proc = httpProc(request, 'premiumPlugin/subscription_required.html', context, 'admin')
-            return proc.render()
-        
-        # User has access - proceed with view
-        return view_func(request, *args, **kwargs)
-    
-    return _wrapped_view
 
-def check_remote_membership(user_email, user_ip=''):
-    """
-    Check Patreon membership via remote verification server
-    
-    Args:
-        user_email: User's email address
-        user_ip: User's IP address (for logging/security)
-        
-    Returns:
-        dict: {
-            'has_access': bool,
-            'patreon_tier': str,
-            'patreon_url': str,
-            'message': str,
-            'error': str or None
-        }
-    """
+def _api_request(url, data, timeout=10):
+    """Send encrypted API request and return decoded response dict."""
     try:
-        # Prepare request data
+        body, extra_headers = api_encryption.encrypt_payload(data)
+        headers = {
+            'User-Agent': f'CyberPanel-Plugin/{PLUGIN_VERSION}',
+            'X-Plugin-Name': PLUGIN_NAME
+        }
+        headers.update(extra_headers)
+        req = urllib.request.Request(url, data=body, headers=headers)
+        with urllib.request.urlopen(req, timeout=timeout) as response:
+            raw = response.read()
+            ct = response.headers.get('Content-Type', '')
+            expect_enc = extra_headers.get('X-Encrypted') == '1'
+            return api_encryption.decrypt_response(raw, ct, expect_encrypted=expect_enc)
+    except Exception as e:
+        logging.writeToFile(f"Premium Plugin: API request error to {url}: {str(e)}")
+        return {}
+
+
+def check_plugin_grant(user_email, user_ip='', domain=''):
+    try:
+        request_data = {
+            'user_email': user_email or '',
+            'plugin_name': PLUGIN_NAME,
+            'user_ip': user_ip,
+            'domain': domain,
+        }
+        data = _api_request(REMOTE_VERIFICATION_PLUGIN_GRANT_URL, request_data)
+        if data.get('success') and data.get('has_access'):
+            return {'has_access': True, 'message': data.get('message', 'Access granted via Plugin Grants')}
+        return {'has_access': False, 'message': data.get('message', '')}
+    except Exception as e:
+        logging.writeToFile(f"Premium Plugin: Plugin grant check error: {str(e)}")
+        return {'has_access': False, 'message': ''}
+
+
+def check_patreon_membership(user_email, user_ip='', domain=''):
+    try:
         request_data = {
             'user_email': user_email,
             'plugin_name': PLUGIN_NAME,
             'plugin_version': PLUGIN_VERSION,
             'user_ip': user_ip,
-            'tier_id': '27789984'  # CyberPanel Paid Plugin tier ID
+            'domain': domain,
+            'tier_id': '27789984'
         }
-        
-        # Make request to remote verification server
-        req = urllib.request.Request(
-            REMOTE_VERIFICATION_URL,
-            data=json.dumps(request_data).encode('utf-8'),
-            headers={
-                'Content-Type': 'application/json',
-                'User-Agent': f'CyberPanel-Plugin/{PLUGIN_VERSION}',
-                'X-Plugin-Name': PLUGIN_NAME
-            }
-        )
-        
-        # Send request with timeout
-        try:
-            with urllib.request.urlopen(req, timeout=10) as response:
-                response_data = json.loads(response.read().decode('utf-8'))
-                
-                if response_data.get('success', False):
-                    return {
-                        'has_access': response_data.get('has_access', False),
-                        'patreon_tier': response_data.get('patreon_tier', 'CyberPanel Paid Plugin'),
-                        'patreon_url': response_data.get('patreon_url', 'https://www.patreon.com/c/newstargeted/membership'),
-                        'message': response_data.get('message', 'Access granted'),
-                        'error': None
-                    }
-                else:
-                    return {
-                        'has_access': False,
-                        'patreon_tier': response_data.get('patreon_tier', 'CyberPanel Paid Plugin'),
-                        'patreon_url': response_data.get('patreon_url', 'https://www.patreon.com/c/newstargeted/membership'),
-                        'message': response_data.get('message', 'Patreon subscription required'),
-                        'error': response_data.get('error')
-                    }
-        except urllib.error.HTTPError as e:
-            # Server returned error
-            error_body = e.read().decode('utf-8') if e.fp else 'Unknown error'
+        response_data = _api_request(REMOTE_VERIFICATION_PATREON_URL, request_data)
+        if response_data.get('success', False):
             return {
-                'has_access': False,
-                'patreon_tier': 'CyberPanel Paid Plugin',
-                'patreon_url': 'https://www.patreon.com/c/newstargeted/membership',
-                'message': 'Unable to verify subscription. Please try again later.',
-                'error': f'HTTP {e.code}: {error_body}'
+                'has_access': response_data.get('has_access', False),
+                'patreon_tier': response_data.get('patreon_tier', PATREON_TIER),
+                'patreon_url': response_data.get('patreon_url', PATREON_URL),
+                'message': response_data.get('message', 'Access granted'),
+                'error': None
             }
-        except urllib.error.URLError as e:
-            # Network error
-            return {
-                'has_access': False,
-                'patreon_tier': 'CyberPanel Paid Plugin',
-                'patreon_url': 'https://www.patreon.com/c/newstargeted/membership',
-                'message': 'Unable to connect to verification server. Please check your internet connection.',
-                'error': str(e.reason) if hasattr(e, 'reason') else str(e)
-            }
-        except Exception as e:
-            # Other errors
-            return {
-                'has_access': False,
-                'patreon_tier': 'CyberPanel Paid Plugin',
-                'patreon_url': 'https://www.patreon.com/c/newstargeted/membership',
-                'message': 'Verification error occurred. Please try again later.',
-                'error': str(e)
-            }
-            
-    except Exception as e:
-        import logging
-        logging.writeToFile(f"Error in remote membership check: {str(e)}")
         return {
             'has_access': False,
-            'patreon_tier': 'CyberPanel Paid Plugin',
-            'patreon_url': 'https://www.patreon.com/c/newstargeted/membership',
-            'message': 'Verification error occurred. Please try again later.',
+            'patreon_tier': PATREON_TIER,
+            'patreon_url': PATREON_URL,
+            'message': response_data.get('message', 'Patreon subscription required'),
+            'error': response_data.get('error')
+        }
+    except Exception as e:
+        logging.writeToFile(f"Premium Plugin: Patreon check error: {str(e)}")
+        return {
+            'has_access': False,
+            'patreon_tier': PATREON_TIER,
+            'patreon_url': PATREON_URL,
+            'message': 'Unable to verify Patreon membership.',
             'error': str(e)
         }
 
-@cyberpanel_login_required
-def main_view(request):
-    """
-    Main view for premium plugin
-    Shows plugin information and features if subscribed, or subscription required message if not
-    """
-    mailUtilities.checkHome()
-    
-    # Get user email for verification
-    user_email = getattr(request.user, 'email', None) if hasattr(request, 'user') and request.user else None
-    if not user_email:
-        user_email = request.session.get('email', '') or getattr(request.user, 'username', '')
-    
-    # Check membership status (but don't block access)
-    verification_result = check_remote_membership(user_email, request.META.get('REMOTE_ADDR', ''))
-    has_access = verification_result.get('has_access', False)
-    
-    # Determine plugin status
-    plugin_status = 'Active' if has_access else 'Subscription Required'
-    
-    context = {
-        'plugin_name': 'Patreon Premium Plugin Example',
-        'version': PLUGIN_VERSION,
-        'status': plugin_status,
-        'has_access': has_access,
-        'description': 'This is an example paid plugin that requires Patreon subscription.' if not has_access else 'This is an example paid plugin. You have access because you are subscribed to Patreon!',
-        'patreon_tier': verification_result.get('patreon_tier', 'CyberPanel Paid Plugin'),
-        'patreon_url': verification_result.get('patreon_url', 'https://www.patreon.com/membership/27789984'),
-        'features': [
-            'Premium Feature 1',
-            'Premium Feature 2',
-            'Premium Feature 3',
-            'Advanced Configuration',
-            'Priority Support'
-        ] if has_access else []
-    }
-    
-    proc = httpProc(request, 'premiumPlugin/index.html', context, 'admin')
-    return proc.render()
+
+def check_paypal_payment(user_email, user_ip='', domain=''):
+    try:
+        request_data = {
+            'user_email': user_email,
+            'plugin_name': PLUGIN_NAME,
+            'plugin_version': PLUGIN_VERSION,
+            'user_ip': user_ip,
+            'domain': domain,
+            'timestamp': 0,
+        }
+        import time
+        request_data['timestamp'] = int(time.time())
+        response_data = _api_request(REMOTE_VERIFICATION_PAYPAL_URL, request_data)
+        if response_data.get('success', False):
+            return {
+                'has_access': response_data.get('has_access', False),
+                'paypal_me_url': response_data.get('paypal_me_url', PAYPAL_ME_URL),
+                'paypal_payment_link': response_data.get('paypal_payment_link', PAYPAL_PAYMENT_LINK),
+                'message': response_data.get('message', 'Access granted'),
+                'error': None
+            }
+        return {
+            'has_access': False,
+            'paypal_me_url': PAYPAL_ME_URL,
+            'paypal_payment_link': PAYPAL_PAYMENT_LINK,
+            'message': response_data.get('message', 'PayPal payment required'),
+            'error': response_data.get('error')
+        }
+    except Exception as e:
+        logging.writeToFile(f"Premium Plugin: PayPal check error: {str(e)}")
+        return {
+            'has_access': False,
+            'paypal_me_url': PAYPAL_ME_URL,
+            'paypal_payment_link': PAYPAL_PAYMENT_LINK,
+            'message': 'Unable to verify PayPal payment.',
+            'error': str(e)
+        }
+
+
+def unified_verification_required(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        try:
+            if not request.session.get('userID'):
+                from loginSystem.views import loadLoginPage
+                return redirect(loadLoginPage)
+
+            user_email = request.session.get('email', '') or (getattr(request.user, 'email', '') if hasattr(request, 'user') and request.user else '') or getattr(request.user, 'username', '')
+
+            try:
+                config = PremiumPluginConfig.get_config()
+                payment_method = config.payment_method
+            except Exception:
+                payment_method = 'both'
+
+            has_access = False
+            verification_result = {}
+
+            activation_key = request.GET.get('activation_key') or request.POST.get('activation_key')
+            if not activation_key:
+                try:
+                    config = PremiumPluginConfig.get_config()
+                    activation_key = getattr(config, 'activation_key', '') or ''
+                except Exception:
+                    activation_key = ''
+
+            if activation_key:
+                try:
+                    request_data = {
+                        'activation_key': activation_key.strip(),
+                        'plugin_name': PLUGIN_NAME,
+                        'user_email': user_email
+                    }
+                    response_data = _api_request(REMOTE_ACTIVATION_KEY_URL, request_data)
+                    if response_data.get('success', False) and response_data.get('has_access', False):
+                        has_access = True
+                        verification_result = {'method': 'activation_key', 'has_access': True, 'message': response_data.get('message', 'Access activated via key')}
+                        try:
+                            config = PremiumPluginConfig.get_config()
+                            config.activation_key = activation_key.strip()
+                            config.save(update_fields=['activation_key', 'updated_at'])
+                        except Exception as e:
+                            logging.writeToFile(f"Premium Plugin: Could not persist activation key: {str(e)}")
+                    elif not response_data.get('success') and activation_key:
+                        try:
+                            config = PremiumPluginConfig.get_config()
+                            if getattr(config, 'activation_key', '') == activation_key.strip():
+                                config.activation_key = ''
+                                config.save(update_fields=['activation_key', 'updated_at'])
+                        except Exception:
+                            pass
+                except Exception as e:
+                    logging.writeToFile(f"Premium Plugin: Activation key check error: {str(e)}")
+
+            if not has_access:
+                grant_result = check_plugin_grant(user_email, request.META.get('REMOTE_ADDR', ''), request.get_host())
+                if grant_result.get('has_access'):
+                    has_access = True
+                    verification_result = {'method': 'plugin_grant', 'has_access': True, 'message': grant_result.get('message', 'Access granted via Plugin Grants')}
+
+            if not has_access:
+                try:
+                    if payment_method == 'patreon':
+                        result = check_patreon_membership(user_email, request.META.get('REMOTE_ADDR', ''), request.get_host())
+                        has_access = result.get('has_access', False)
+                        verification_result = {
+                            'method': 'patreon', 'has_access': has_access,
+                            'patreon_tier': result.get('patreon_tier', PATREON_TIER),
+                            'patreon_url': result.get('patreon_url', PATREON_URL),
+                            'paypal_me_url': PAYPAL_ME_URL, 'paypal_payment_link': PAYPAL_PAYMENT_LINK,
+                            'message': result.get('message', 'Patreon subscription required'),
+                            'error': result.get('error')
+                        }
+                    elif payment_method == 'paypal':
+                        result = check_paypal_payment(user_email, request.META.get('REMOTE_ADDR', ''), request.get_host())
+                        has_access = result.get('has_access', False)
+                        verification_result = {
+                            'method': 'paypal', 'has_access': has_access,
+                            'patreon_tier': PATREON_TIER, 'patreon_url': PATREON_URL,
+                            'paypal_me_url': result.get('paypal_me_url', PAYPAL_ME_URL),
+                            'paypal_payment_link': result.get('paypal_payment_link', PAYPAL_PAYMENT_LINK),
+                            'message': result.get('message', 'PayPal payment required'),
+                            'error': result.get('error')
+                        }
+                    else:
+                        patreon_result = check_patreon_membership(user_email, request.META.get('REMOTE_ADDR', ''), request.get_host())
+                        paypal_result = check_paypal_payment(user_email, request.META.get('REMOTE_ADDR', ''), request.get_host())
+                        has_access = patreon_result.get('has_access', False) or paypal_result.get('has_access', False)
+                        verification_result = {
+                            'method': 'both', 'has_access': has_access,
+                            'patreon_tier': patreon_result.get('patreon_tier', PATREON_TIER),
+                            'patreon_url': patreon_result.get('patreon_url', PATREON_URL),
+                            'paypal_me_url': paypal_result.get('paypal_me_url', PAYPAL_ME_URL),
+                            'paypal_payment_link': paypal_result.get('paypal_payment_link', PAYPAL_PAYMENT_LINK),
+                            'message': 'Payment or subscription required' if not has_access else 'Access granted'
+                        }
+                except Exception as e:
+                    logging.writeToFile(f"Premium Plugin: Verification error: {str(e)}")
+                    has_access = False
+                    verification_result = {
+                        'method': payment_method, 'has_access': False,
+                        'patreon_tier': PATREON_TIER, 'patreon_url': PATREON_URL,
+                        'paypal_me_url': PAYPAL_ME_URL, 'paypal_payment_link': PAYPAL_PAYMENT_LINK,
+                        'message': 'Unable to verify access.',
+                        'error': str(e)
+                    }
+
+            if not has_access:
+                context = {
+                    'plugin_name': 'Premium Plugin Example',
+                    'is_paid': True,
+                    'payment_method': payment_method,
+                    'verification_result': verification_result,
+                    'patreon_tier': verification_result.get('patreon_tier', PATREON_TIER),
+                    'patreon_url': verification_result.get('patreon_url', PATREON_URL),
+                    'paypal_me_url': verification_result.get('paypal_me_url', PAYPAL_ME_URL),
+                    'paypal_payment_link': verification_result.get('paypal_payment_link', PAYPAL_PAYMENT_LINK),
+                    'message': verification_result.get('message', 'Payment or subscription required'),
+                    'error': verification_result.get('error')
+                }
+                proc = httpProc(request, 'premiumPlugin/subscription_required.html', context, 'admin')
+                return proc.render()
+
+            if has_access and verification_result:
+                request.session['premium_plugin_access_via'] = verification_result.get('method', '')
+
+            return view_func(request, *args, **kwargs)
+        except Exception as e:
+            logging.writeToFile(f"Premium Plugin: Decorator error: {str(e)}")
+            return HttpResponse(f"<div style='padding: 20px;'><h2>Plugin Error</h2><p>{str(e)}</p></div>")
+    return _wrapped_view
+
 
 @cyberpanel_login_required
-def settings_view(request):
-    """
-    Settings page for premium plugin
-    Shows settings but disables them if user doesn't have Patreon subscription
-    """
+def main_view(request):
     mailUtilities.checkHome()
-    
-    # Get user email for verification
-    user_email = getattr(request.user, 'email', None) if hasattr(request, 'user') and request.user else None
-    if not user_email:
-        user_email = request.session.get('email', '') or getattr(request.user, 'username', '')
-    
-    # Check membership status (but don't block access)
-    verification_result = check_remote_membership(user_email, request.META.get('REMOTE_ADDR', ''))
-    has_access = verification_result.get('has_access', False)
-    
-    # Determine plugin status
-    plugin_status = 'Active' if has_access else 'Subscription Required'
-    
+    return redirect('premiumPlugin:settings')
+
+
+@cyberpanel_login_required
+@unified_verification_required
+def settings_view(request):
+    mailUtilities.checkHome()
+    try:
+        config = PremiumPluginConfig.get_config()
+    except Exception:
+        from django.core.management import call_command
+        try:
+            call_command('migrate', 'premiumPlugin', verbosity=0, interactive=False)
+            config = PremiumPluginConfig.get_config()
+        except Exception as e:
+            return HttpResponse(f"<div style='padding: 20px;'><h2>Database Error</h2><p>{str(e)}</p></div>")
+
+    access_via = request.session.get('premium_plugin_access_via', '')
+    show_payment_ui = access_via not in ('plugin_grant', 'activation_key')
+
     context = {
-        'plugin_name': 'Patreon Premium Plugin Example',
+        'plugin_name': 'Premium Plugin Example',
         'version': PLUGIN_VERSION,
-        'plugin_status': plugin_status,
-        'status': plugin_status,  # Keep both for compatibility
-        'description': 'Configure your premium plugin settings',
-        'has_access': has_access,
-        'patreon_tier': verification_result.get('patreon_tier', 'CyberPanel Paid Plugin'),
-        'patreon_url': verification_result.get('patreon_url', 'https://www.patreon.com/membership/27789984'),
-        'verification_message': verification_result.get('message', '')
+        'status': 'Active',
+        'config': config,
+        'has_access': True,
+        'show_payment_ui': show_payment_ui,
+        'access_via_grant_or_key': not show_payment_ui,
+        'patreon_tier': PATREON_TIER,
+        'patreon_url': PATREON_URL,
+        'paypal_me_url': PAYPAL_ME_URL,
+        'paypal_payment_link': PAYPAL_PAYMENT_LINK,
+        'description': 'Configure your premium plugin settings.',
     }
-    
     proc = httpProc(request, 'premiumPlugin/settings.html', context, 'admin')
     return proc.render()
 
+
 @cyberpanel_login_required
-@remote_verification_required
+@require_http_methods(["POST"])
+def activate_key(request):
+    try:
+        if request.content_type == 'application/json':
+            data = json.loads(request.body)
+        else:
+            data = request.POST
+
+        activation_key = data.get('activation_key', '').strip()
+        user_email = data.get('user_email', '').strip()
+        if not user_email:
+            user_email = request.session.get('email', '') or (getattr(request.user, 'email', '') if hasattr(request, 'user') and request.user else '')
+
+        if not activation_key:
+            return JsonResponse({'success': False, 'message': 'Activation key is required'}, status=400)
+
+        request_data = {'activation_key': activation_key, 'plugin_name': PLUGIN_NAME, 'user_email': user_email}
+        response_data = _api_request(REMOTE_ACTIVATION_KEY_URL, request_data)
+
+        if response_data.get('success', False) and response_data.get('has_access', False):
+            try:
+                config = PremiumPluginConfig.get_config()
+                config.activation_key = activation_key
+                config.save(update_fields=['activation_key', 'updated_at'])
+            except Exception as e:
+                logging.writeToFile(f"Premium Plugin: Could not persist activation key: {str(e)}")
+
+            return JsonResponse({
+                'success': True,
+                'has_access': True,
+                'message': response_data.get('message', 'Access activated successfully')
+            })
+
+        return JsonResponse({
+            'success': False,
+            'has_access': False,
+            'message': response_data.get('message', 'Invalid activation key')
+        })
+
+    except Exception as e:
+        logging.writeToFile(f"Premium Plugin: activate_key error: {str(e)}")
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
+@cyberpanel_login_required
+@require_http_methods(["POST"])
+def save_payment_method(request):
+    try:
+        payment_method = request.POST.get('payment_method', 'both')
+        if payment_method not in ('patreon', 'paypal', 'both'):
+            payment_method = 'both'
+        config = PremiumPluginConfig.get_config()
+        config.payment_method = payment_method
+        config.save(update_fields=['payment_method', 'updated_at'])
+        return JsonResponse({'success': True, 'message': 'Payment method saved'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
+@cyberpanel_login_required
+@unified_verification_required
 def api_status_view(request):
-    """
-    API endpoint for plugin status
-    Only accessible with Patreon subscription (verified remotely)
-    """
     return JsonResponse({
-        'plugin_name': 'Patreon Premium Plugin Example',
+        'plugin_name': 'Premium Plugin Example',
         'version': PLUGIN_VERSION,
         'status': 'active',
         'subscription': 'active',
-        'description': 'Premium plugin is active and accessible',
-        'verification_method': 'remote'
+        'verification_method': 'unified'
     })

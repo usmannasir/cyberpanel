@@ -1,0 +1,315 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Premium Plugin Settings - CyberPanel" %}{% endblock %}
+
+{% block header_scripts %}
+<style>
+    .premium-plugin-container {
+        padding: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .premium-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 20px;
+    }
+    
+    .settings-form {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    
+    .subscription-warning {
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        border-radius: 8px;
+        padding: 15px 20px;
+        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .subscription-warning-content {
+        flex: 1;
+        min-width: 250px;
+    }
+    
+    .subscription-warning-title {
+        font-weight: 600;
+        color: #856404;
+        margin-bottom: 5px;
+        font-size: 16px;
+    }
+    
+    .subscription-warning-text {
+        color: #856404;
+        font-size: 14px;
+        margin: 0;
+    }
+    
+    .subscription-warning-button {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: transform 0.2s, box-shadow 0.2s;
+        white-space: nowrap;
+    }
+    
+    .subscription-warning-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .settings-disabled {
+        opacity: 0.6;
+        pointer-events: none;
+        position: relative;
+    }
+    
+    .settings-disabled::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.7);
+        z-index: 1;
+        border-radius: 8px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #2f3640;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 10px 15px;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: #5856d6;
+        box-shadow: 0 0 0 3px rgba(88, 86, 214, 0.1);
+    }
+    
+    .form-control:disabled {
+        background-color: #f5f5f5;
+        cursor: not-allowed;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #5856d6 0%, #4a90e2 100%);
+        color: white;
+    }
+    
+    .btn-primary:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(88, 86, 214, 0.4);
+    }
+    
+    .btn-primary:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+    
+    /* Plugin Information Section - Ensure visibility */
+    .plugin-info-section {
+        background: #d1ecf1 !important;
+        border: 1px solid #bee5eb !important;
+        border-radius: 8px !important;
+        padding: 15px 20px !important;
+        margin-bottom: 25px !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative !important;
+        z-index: 10 !important;
+    }
+    
+    .plugin-info-section ul {
+        list-style: none !important;
+        padding-left: 0 !important;
+        margin-top: 10px !important;
+        margin-bottom: 0 !important;
+    }
+    
+    .plugin-info-section li {
+        margin-bottom: 8px;
+    }
+    
+    .plugin-info-section li:last-child {
+        margin-bottom: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="premium-plugin-container">
+    <div class="settings-form">
+        <span class="premium-badge">{% trans "Premium Plugin" %}</span>
+        <h1>{% trans "Premium Plugin Settings" %}</h1>
+
+        {% if show_payment_ui %}
+        <!-- Activate Premium Access -->
+        <div style="background: #e6f7ff; border: 2px solid #17a2b8; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+            <h3 style="color: #17a2b8; margin-top: 0;"><i class="fas fa-key"></i> {% trans "Activate Premium Access" %}</h3>
+            <p style="color: #495057;">{% trans "If you have an activation key, enter it below." %}</p>
+            <div id="activation-msg" style="display: none; margin-bottom: 10px; padding: 10px; border-radius: 6px;"></div>
+            <form id="activation-form" style="display: flex; gap: 10px; align-items: flex-end;">
+                {% csrf_token %}
+                <input type="text" id="activation-key" name="activation_key" placeholder="PREMIUMPLUGIN-XXXX-XXXX-XXXX" style="flex: 1; padding: 10px; border: 2px solid #17a2b8; border-radius: 6px; font-family: monospace; text-transform: uppercase;" />
+                <button type="submit" class="btn btn-primary" id="activate-btn"><i class="fas fa-check-circle"></i> {% trans "Activate" %}</button>
+            </form>
+        </div>
+        <!-- Payment Method Preference -->
+        <div style="margin-bottom: 25px;">
+            <label style="font-weight: 600;">{% trans "Payment Method Preference" %}</label>
+            <form id="payment-method-form" method="post" action="{% url 'premiumPlugin:save_payment_method' %}" style="display: inline-block; margin-left: 10px;">
+                {% csrf_token %}
+                <select name="payment_method" onchange="this.form.submit()" style="padding: 8px 12px; border-radius: 6px;">
+                    <option value="both" {% if config.payment_method == 'both' %}selected{% endif %}>{% trans "Check Both (Patreon or PayPal)" %}</option>
+                    <option value="patreon" {% if config.payment_method == 'patreon' %}selected{% endif %}>{% trans "Patreon Only" %}</option>
+                    <option value="paypal" {% if config.payment_method == 'paypal' %}selected{% endif %}>{% trans "PayPal Only" %}</option>
+                </select>
+            </form>
+        </div>
+        {% else %}
+        <div style="background: #d4edda; border: 2px solid #28a745; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+            <i class="fas fa-check-circle" style="color: #28a745;"></i> <strong>{% trans "Premium Access Active" %}</strong> — {% trans "Access granted via Plugin Grants or activation key." %}
+        </div>
+        {% endif %}
+        
+        <!-- Plugin Information Section - Always Visible -->
+        <div class="plugin-info-section" style="background: #d1ecf1 !important; border: 1px solid #bee5eb !important; border-radius: 8px !important; padding: 15px 20px !important; margin-bottom: 25px !important; display: block !important; visibility: visible !important; opacity: 1 !important;">
+            <i class="fas fa-info-circle" style="color: #0c5460; margin-right: 8px;"></i>
+            <strong style="color: #0c5460; font-weight: 600;">{% trans "Plugin Information" %}</strong>
+            <ul style="list-style: none !important; padding-left: 0 !important; margin-top: 10px !important; margin-bottom: 0 !important;">
+                <li style="margin-bottom: 8px;"><strong>{% trans "Name" %}:</strong> {{ plugin_name|default:"Premium Plugin Example" }}</li>
+                <li style="margin-bottom: 8px;"><strong>{% trans "Version" %}:</strong> {{ version|default:"1.0.0" }}</li>
+                <li style="margin-bottom: 0;">
+                    <strong>{% trans "Status" %}:</strong> 
+                    <span class="badge" style="background: {% if has_access %}#28a745{% else %}#6c757d{% endif %} !important; color: white !important; padding: 4px 10px !important; border-radius: 4px !important; font-size: 12px !important; font-weight: 600 !important; display: inline-block !important;">
+                        {{ plugin_status|default:status|default:"Active" }}
+                    </span>
+                </li>
+            </ul>
+        </div>
+        
+        <p>{{ description }}</p>
+        
+        <form method="post" id="settings-form">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>{% trans "Setting 1" %}</label>
+                <input type="text" class="form-control" name="setting1" value="" placeholder="{% trans 'Enter setting value' %}">
+            </div>
+            
+            <div class="form-group">
+                <label>{% trans "Setting 2" %}</label>
+                <input type="text" class="form-control" name="setting2" value="" placeholder="{% trans 'Enter setting value' %}">
+            </div>
+            
+            <div class="form-group">
+                <label>{% trans "Setting 3 (Advanced)" %}</label>
+                <textarea class="form-control" name="setting3" rows="4" placeholder="{% trans 'Enter advanced configuration' %}"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="enable_feature">
+                    {% trans "Enable Premium Feature" %}
+                </label>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> {% trans "Save Settings" %}
+            </button>
+        </form>
+
+        {% if show_payment_ui %}
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('activation-form');
+            if (form) {
+                form.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    const key = document.getElementById('activation-key').value.trim().toUpperCase();
+                    if (!key) return;
+                    const btn = document.getElementById('activate-btn');
+                    const msg = document.getElementById('activation-msg');
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Activating...';
+                    try {
+                        const res = await fetch('/plugins/premiumPlugin/activate-key/', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value },
+                            body: JSON.stringify({ activation_key: key })
+                        });
+                        const data = await res.json();
+                        msg.textContent = data.success ? '✅ ' + data.message : '❌ ' + (data.message || 'Invalid key');
+                        msg.style.display = 'block';
+                        msg.style.background = data.success ? '#d4edda' : '#f8d7da';
+                        msg.style.color = data.success ? '#155724' : '#721c24';
+                        if (data.success) { document.getElementById('activation-key').value = ''; setTimeout(function() { location.reload(); }, 2000); }
+                    } catch (err) {
+                        msg.textContent = '❌ ' + err.message;
+                        msg.style.display = 'block';
+                        msg.style.background = '#f8d7da';
+                        msg.style.color = '#721c24';
+                    }
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-check-circle"></i> Activate';
+                });
+            }
+        });
+        </script>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
