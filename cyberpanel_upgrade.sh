@@ -1671,9 +1671,9 @@ if [[ "$*" != *"--branch "* ]] && [[ "$*" != *"-b "* ]] ; then
   Pre_Upgrade_Branch_Input
 fi
 
-# Prompt for MariaDB version if not set via --mariadb-version (default 11.8)
+# Prompt for MariaDB version if not set via --mariadb-version (default 11.8). Downgrade supported (e.g. re-run with --mariadb-version 11.8).
 if [[ "$*" != *"--mariadb-version "* ]]; then
-  echo -e "\nMariaDB version: use \e[31m11.8\e[39m LTS (default) or \e[31m12.1\e[39m."
+  echo -e "\nMariaDB version: \e[31m11.8\e[39m LTS (default) or \e[31m12.1\e[39m. You can switch later by re-running with --mariadb-version 11.8 or 12.1."
   echo -e "Press Enter for 11.8 LTS, or type \e[31m12.1\e[39m and Enter for 12.1 (5 sec timeout): "
   read -r -t 5 Tmp_MariaDB_Ver || true
   if [[ "$Tmp_MariaDB_Ver" = "12.1" ]]; then
