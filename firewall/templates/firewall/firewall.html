@@ -9,6 +9,10 @@
         margin: 0 auto;
         padding: 2rem;
     }
+
+    [ng-cloak], .ng-cloak {
+        display: none !important;
+    }
     
     .page-header {
         text-align: center;
@@ -219,6 +223,34 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .panel-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .btn-panel {
+        background: rgba(255, 255, 255, 0.15);
+        color: var(--text-light, white);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        padding: 0.5rem 0.75rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.8rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        transition: all 0.2s ease;
+    }
+
+    .btn-panel:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-1px);
     }
 
     .panel-title {
@@ -326,6 +358,12 @@
         border: 1px solid var(--border-color, #e8e9ff);
     }
 
+    .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
     .rules-table thead {
         background: var(--bg-tertiary, #f8f9ff);
     }
@@ -354,6 +392,12 @@
 
     .rules-table tbody tr:hover {
         background: var(--bg-hover, #f8f9ff);
+    }
+
+    .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
     }
 
     .rule-id {
@@ -791,8 +835,147 @@
         box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
     }
 
+    .btn-modify {
+        background: var(--accent-color, #5b5fcf);
+        color: var(--bg-secondary, white);
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.8rem;
+    }
+
+    .btn-modify:hover {
+        background: var(--accent-hover, #4f46e5);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(91, 95, 207, 0.3);
+    }
+
+    .modify-modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modify-modal-overlay.show {
+        display: flex;
+    }
+
+    .modify-modal {
+        background: var(--bg-secondary, white);
+        border-radius: 12px;
+        padding: 2rem;
+        max-width: 480px;
+        width: 90%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .modify-modal h3 {
+        margin: 0 0 1.5rem 0;
+        font-size: 1.25rem;
+        color: var(--text-primary, #1e293b);
+    }
+
+    .modify-modal .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .modify-modal .form-label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        color: var(--text-secondary, #64748b);
+    }
+
+    .modify-modal .form-control {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--border-color, #e2e8f0);
+        border-radius: 6px;
+    }
+
+    .modify-modal-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 1.5rem;
+    }
+
+    .modify-modal-actions .btn-cancel {
+        background: #e2e8f0;
+        color: #64748b;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    .modify-modal-actions .btn-save {
+        background: var(--accent-color, #5b5fcf);
+        color: white;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+    }
+
     /* Responsive Design for Banned IPs */
     @media (max-width: 768px) {
+        .status-content {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .control-btn {
+            width: 100%;
+        }
+
+        .rule-form {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .rules-table-section {
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .rules-table {
+            min-width: 720px;
+        }
+
+        .banned-search-section input {
+            max-width: 100% !important;
+            width: 100%;
+        }
+
+        .panel-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .panel-actions {
+            width: 100%;
+        }
+
+        .btn-panel {
+            width: 100%;
+            justify-content: center;
+        }
+
         .banned-form {
             grid-template-columns: 1fr;
             gap: 1rem;
@@ -828,7 +1011,7 @@
 {% get_current_language as LANGUAGE_CODE %}
 <!-- Current language: {{ LANGUAGE_CODE }} -->
 
-<div class="modern-container" ng-controller="firewallController">
+<div class="modern-container" ng-controller="firewallController" ng-cloak>
     <!-- Page Header -->
     <div class="page-header">
         <div class="header-content">
@@ -982,7 +1165,8 @@
         
         <!-- Rules Table -->
         <div ng-hide="rulesDetails" class="rules-table-section">
-            <table class="rules-table" ng-if="rules.length > 0">
+            <div class="table-responsive">
+                <table class="rules-table" ng-if="rules.length > 0">
                 <thead>
                     <tr>
                         <th>{% trans "ID" %}</th>
@@ -1019,7 +1203,8 @@
                         </td>
                     </tr>
                 </tbody>
-            </table>
+                </table>
+            </div>
             
             <!-- Empty State -->
             <div ng-if="rules.length == 0" class="empty-state">
@@ -1057,7 +1242,17 @@
                 </div>
                 {% trans "Banned IP Addresses" %}
             </div>
-            <div ng-show="bannedIPsLoading" class="loading-spinner"></div>
+            <div class="panel-actions">
+                <button type="button" class="btn-panel" ng-click="exportBannedIPs()">
+                    <i class="fas fa-file-export"></i>
+                    {% trans "Export Banned IPs" %}
+                </button>
+                <button type="button" class="btn-panel" ng-click="importBannedIPs()">
+                    <i class="fas fa-file-import"></i>
+                    {% trans "Import Banned IPs" %}
+                </button>
+                <div ng-show="bannedIPsLoading" class="loading-spinner"></div>
+            </div>
         </div>
         
         <!-- Add Banned IP Section -->
@@ -1101,9 +1296,22 @@
             </form>
         </div>
         
+        <!-- Search Banned IPs -->
+        <div class="banned-search-section" style="margin: 1rem 2rem 0;">
+            <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                <i class="fas fa-search"></i> {% trans "Search banned IPs" %}
+            </label>
+            <input type="text"
+                   class="form-control"
+                   ng-model="bannedIPSearch"
+                   placeholder="{% trans 'Search by IP address, reason or status (Active/Expired)...' %}"
+                   style="max-width: 400px;">
+        </div>
+        
         <!-- Banned IPs List -->
         <div class="banned-list-section" ng-init="activeTab === 'banned' && populateBannedIPs()">
-            <table class="banned-table" ng-if="bannedIPs && bannedIPs.length > 0">
+            <div class="table-responsive">
+                <table class="banned-table" ng-if="bannedIPs && bannedIPs.length > 0">
                 <thead>
                     <tr>
                         <th>{% trans "IP Address" %}</th>
@@ -1115,7 +1323,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr ng-repeat="bannedIP in bannedIPs">
+                    <tr ng-repeat="bannedIP in bannedIPs | filter:searchBannedIPFilter as filteredBannedList">
                         <td class="ip-address">
                             <i class="fas fa-globe"></i>
                             {$ bannedIP.ip $}
@@ -1141,7 +1349,15 @@
                         </td>
                         <td class="actions">
                             <button type="button"
-                                    ng-click="removeBannedIP(bannedIP.id, bannedIP.ip)"
+                                    ng-click="$parent.openModifyModal(bannedIP); $event.stopPropagation()"
+                                    class="btn-modify"
+                                    title="{% trans 'Modify Ban' %}"
+                                    ng-if="bannedIP.active">
+                                <i class="fas fa-edit"></i>
+                                {% trans "Modify" %}
+                            </button>
+                            <button type="button"
+                                    ng-click="$parent.removeBannedIP(bannedIP.id, bannedIP.ip); $event.stopPropagation()"
                                     class="btn-unban"
                                     title="{% trans 'Unban IP' %}"
                                     ng-if="bannedIP.active">
@@ -1149,7 +1365,7 @@
                                 {% trans "Unban" %}
                             </button>
                             <button type="button"
-                                    ng-click="deleteBannedIP(bannedIP.id, bannedIP.ip)"
+                                    ng-click="$parent.deleteBannedIP(bannedIP.id, bannedIP.ip); $event.stopPropagation()"
                                     class="btn-delete"
                                     title="{% trans 'Delete Record' %}">
                                 <i class="fas fa-trash"></i>
@@ -1157,31 +1373,71 @@
                         </td>
                     </tr>
                 </tbody>
-            </table>
+                </table>
+            </div>
             
-            <!-- Empty State -->
+            <!-- Empty State: no banned IPs at all -->
             <div ng-if="!bannedIPs || bannedIPs.length == 0" class="empty-state">
                 <i class="fas fa-shield-check empty-icon"></i>
                 <h3 class="empty-title">{% trans "No Banned IPs" %}</h3>
                 <p class="empty-text">{% trans "All IP addresses are currently allowed. Add banned IPs to block suspicious or malicious traffic." %}</p>
             </div>
+            <!-- Empty State: search returned no matches -->
+            <div ng-if="bannedIPs && bannedIPs.length > 0 && (bannedIPSearch || '').length > 0 && ((bannedIPs | filter:searchBannedIPFilter).length === 0)" class="empty-state">
+                <i class="fas fa-search empty-icon"></i>
+                <h3 class="empty-title">{% trans "No matching banned IPs" %}</h3>
+                <p class="empty-text">{% trans "No banned IPs match your search. Try a different IP, reason or status (Active/Expired)." %}</p>
+            </div>
         </div>
         
-        <!-- Messages -->
-        <div style="padding: 0 2rem 2rem;">
-            <div ng-show="bannedIPActionFailed === false" class="alert alert-danger">
+        <!-- Messages: only one visible at a time; use ng-if so nothing shows until we have a message -->
+        <div style="padding: 0 2rem 2rem;" ng-if="bannedIPActionFailed === false || bannedIPActionSuccess === false || bannedIPCouldNotConnect === false">
+            <div ng-if="bannedIPActionFailed === false" class="alert alert-danger">
                 <i class="fas fa-exclamation-circle alert-icon"></i>
-                <span>{% trans "Action failed. Error message:" %} {$ bannedIPErrorMessage $}</span>
+                <span>{% trans "Action failed. Error message:" %} <span ng-bind="bannedIPErrorMessage"></span></span>
             </div>
-            
-            <div ng-show="bannedIPActionSuccess === false" class="alert alert-success">
+            <div ng-if="bannedIPActionFailed !== false && bannedIPActionSuccess === false" class="alert alert-success">
                 <i class="fas fa-check-circle alert-icon"></i>
                 <span>{% trans "Action completed successfully." %}</span>
             </div>
-            
-            <div ng-show="bannedIPCouldNotConnect === false" class="alert alert-danger">
+            <div ng-if="bannedIPActionFailed !== false && bannedIPCouldNotConnect === false" class="alert alert-danger">
                 <i class="fas fa-exclamation-circle alert-icon"></i>
                 <span>{% trans "Could not connect to server. Please refresh this page." %}</span>
+            </div>
+        </div>
+
+        <!-- Modify Banned IP Modal -->
+        <div id="modifyBannedIPModal" class="modify-modal-overlay" ng-class="{'show': showModifyModal}" ng-click="closeModifyModal()">
+            <div class="modify-modal" ng-click="$event.stopPropagation()">
+                <h3>{% trans "Modify Banned IP" %}</h3>
+                <p style="margin: 0 0 1rem 0; color: var(--text-secondary, #64748b);">
+                    <strong>{% trans "IP Address" %}:</strong> {$ modifyBannedIPData.ip $}
+                </p>
+                <div class="form-group">
+                    <label class="form-label">{% trans "Reason" %}</label>
+                    <input type="text" 
+                           class="form-control" 
+                           ng-model="modifyBannedIPData.reason" 
+                           placeholder="{% trans 'e.g., Suspicious activity' %}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{% trans "Duration" %}</label>
+                    <select ng-model="modifyBannedIPData.duration" class="form-control">
+                        <option value="1h">{% trans "1 Hour" %}</option>
+                        <option value="24h">{% trans "24 Hours" %}</option>
+                        <option value="7d">{% trans "7 Days" %}</option>
+                        <option value="30d">{% trans "30 Days" %}</option>
+                        <option value="permanent">{% trans "Permanent" %}</option>
+                    </select>
+                </div>
+                <div class="modify-modal-actions">
+                    <button type="button" class="btn-cancel" ng-click="closeModifyModal()">
+                        {% trans "Cancel" %}
+                    </button>
+                    <button type="button" class="btn-save" ng-click="saveModifyBannedIP()">
+                        <i class="fas fa-save"></i> {% trans "Save Changes" %}
+                    </button>
+                </div>
             </div>
         </div>
     </div>

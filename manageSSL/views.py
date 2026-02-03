@@ -12,23 +12,41 @@ from plogical.acl import ACLManager
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.sslReconcile import SSLReconcile
 from plogical.sslUtilities import sslUtilities
+from loginSystem.models import Administrator
 import json
 
 
 def sslReconcile(request):
     """SSL Reconciliation interface"""
     try:
-        currentACL = ACLManager.loadedACL(request.user.pk)
-        admin = ACLManager.loadedAdmin(request.user.pk)
+        userID = request.session['userID']
+        admin = Administrator.objects.get(pk=userID)
+        currentACL = ACLManager.loadedACL(userID)
 
+        # Principal admin (userName == 'admin') always allowed
+        if getattr(admin, 'userName', None) == 'admin':
+            return render(request, 'manageSSL/sslReconcile.html', {
+                'acls': currentACL,
+                'admin': admin
+            })
+        # Allow if has sslReconcile, or full admin, or manageSSL permission
         if ACLManager.currentContextPermission(currentACL, 'sslReconcile') == 0:
-            return ACLManager.loadErrorJson('sslReconcile', 0)
+            if currentACL.get('admin') != 1 and currentACL.get('manageSSL') != 1:
+                return ACLManager.loadErrorJson('sslReconcile', 0)
 
         return render(request, 'manageSSL/sslReconcile.html', {
             'acls': currentACL,
             'admin': admin
         })
 
+    except KeyError:
+        data_ret = {
+            'status': 0,
+            'errorMessage': 'Session expired or not logged in. Please log in again.',
+            'error_message': 'Session expired or not logged in. Please log in again.',
+            'sslReconcile': 0
+        }
+        return HttpResponse(json.dumps(data_ret))
     except BaseException as msg:
         logging.writeToFile(str(msg) + " [sslReconcile]")
         return ACLManager.loadErrorJson('sslReconcile', 0)
@@ -37,11 +55,14 @@ def sslReconcile(request):
 def reconcileAllSSL(request):
     """Reconcile SSL for all domains"""
     try:
-        currentACL = ACLManager.loadedACL(request.user.pk)
-        admin = ACLManager.loadedAdmin(request.user.pk)
+        userID = request.session['userID']
+        admin = Administrator.objects.get(pk=userID)
+        currentACL = ACLManager.loadedACL(userID)
 
-        if ACLManager.currentContextPermission(currentACL, 'sslReconcile') == 0:
-            return ACLManager.loadErrorJson('sslReconcile', 0)
+        if getattr(admin, 'userName', None) != 'admin':
+            if ACLManager.currentContextPermission(currentACL, 'sslReconcile') == 0:
+                if currentACL.get('admin') != 1 and currentACL.get('manageSSL') != 1:
+                    return ACLManager.loadErrorJson('sslReconcile', 0)
 
         # Run SSL reconciliation
         success = SSLReconcile.reconcile_all()
@@ -54,6 +75,9 @@ def reconcileAllSSL(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+    except KeyError:
+        data_ret = {'reconcileStatus': 0, 'error_message': 'Session expired or not logged in. Please log in again.'}
+        return HttpResponse(json.dumps(data_ret))
     except BaseException as msg:
         logging.writeToFile(str(msg) + " [reconcileAllSSL]")
         data_ret = {'reconcileStatus': 0, 'error_message': str(msg)}
@@ -64,11 +88,14 @@ def reconcileAllSSL(request):
 def reconcileDomainSSL(request):
     """Reconcile SSL for a specific domain"""
     try:
-        currentACL = ACLManager.loadedACL(request.user.pk)
-        admin = ACLManager.loadedAdmin(request.user.pk)
+        userID = request.session['userID']
+        admin = Administrator.objects.get(pk=userID)
+        currentACL = ACLManager.loadedACL(userID)
 
-        if ACLManager.currentContextPermission(currentACL, 'sslReconcile') == 0:
-            return ACLManager.loadErrorJson('sslReconcile', 0)
+        if getattr(admin, 'userName', None) != 'admin':
+            if ACLManager.currentContextPermission(currentACL, 'sslReconcile') == 0:
+                if currentACL.get('admin') != 1 and currentACL.get('manageSSL') != 1:
+                    return ACLManager.loadErrorJson('sslReconcile', 0)
 
         domain = request.POST.get('domain')
         if not domain:
@@ -87,6 +114,9 @@ def reconcileDomainSSL(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+    except KeyError:
+        data_ret = {'reconcileStatus': 0, 'error_message': 'Session expired or not logged in. Please log in again.'}
+        return HttpResponse(json.dumps(data_ret))
     except BaseException as msg:
         logging.writeToFile(str(msg) + " [reconcileDomainSSL]")
         data_ret = {'reconcileStatus': 0, 'error_message': str(msg)}
@@ -97,11 +127,14 @@ def reconcileDomainSSL(request):
 def fixACMEContexts(request):
     """Fix ACME challenge contexts for all domains"""
     try:
-        currentACL = ACLManager.loadedACL(request.user.pk)
-        admin = ACLManager.loadedAdmin(request.user.pk)
+        userID = request.session['userID']
+        admin = Administrator.objects.get(pk=userID)
+        currentACL = ACLManager.loadedACL(userID)
 
-        if ACLManager.currentContextPermission(currentACL, 'sslReconcile') == 0:
-            return ACLManager.loadErrorJson('sslReconcile', 0)
+        if getattr(admin, 'userName', None) != 'admin':
+            if ACLManager.currentContextPermission(currentACL, 'sslReconcile') == 0:
+                if currentACL.get('admin') != 1 and currentACL.get('manageSSL') != 1:
+                    return ACLManager.loadErrorJson('sslReconcile', 0)
 
         from websiteFunctions.models import Websites
         
@@ -128,6 +161,9 @@ def fixACMEContexts(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+    except KeyError:
+        data_ret = {'reconcileStatus': 0, 'error_message': 'Session expired or not logged in. Please log in again.'}
+        return HttpResponse(json.dumps(data_ret))
     except BaseException as msg:
         logging.writeToFile(str(msg) + " [fixACMEContexts]")
         data_ret = {'reconcileStatus': 0, 'error_message': str(msg)}

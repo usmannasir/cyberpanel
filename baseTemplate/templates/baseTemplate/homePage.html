@@ -876,6 +876,29 @@
             </table>
             </div>
             
+            <!-- SSH Logins Pagination -->
+            <div ng-if="!loadingSSHLogins && sshLogins.length > 0" class="pagination-controls" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 16px; padding: 12px 0; border-top: 1px solid #e8e9ff;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="color: #64748b; font-size: 13px;">Show</span>
+                    <select ng-model="sshLoginsPerPage" ng-change="sshLoginsChangePerPage()" style="padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: white;">
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    <span style="color: #64748b; font-size: 13px;">per page</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="color: #64748b; font-size: 13px;">{$ (sshLoginsPage - 1) * sshLoginsPerPage + 1 $}-{$ (sshLoginsPage * sshLoginsPerPage > sshLoginsTotal ? sshLoginsTotal : sshLoginsPage * sshLoginsPerPage) $} of {$ sshLoginsTotal $}</span>
+                    <button ng-click="sshLoginsGoToPage(sshLoginsPage - 1)" ng-disabled="sshLoginsPage <= 1" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="Previous">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button ng-click="sshLoginsGoToPage(sshLoginsPage + 1)" ng-disabled="sshLoginsPage >= sshLoginsTotalPages" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="Next">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+            
             <!-- Dummy data for demonstration -->
             <table class="activity-table records-table" ng-if="loadingSSHLogins">
                 <thead>
@@ -1065,6 +1088,29 @@
                     </tr>
                 </tbody>
             </table>
+            
+            <!-- SSH Logs Pagination -->
+            <div ng-if="!loadingSSHLogs && sshLogs.length > 0" class="pagination-controls" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 16px; padding: 12px 0; border-top: 1px solid #e8e9ff;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="color: #64748b; font-size: 13px;">Show</span>
+                    <select ng-model="sshLogsPerPage" ng-change="sshLogsChangePerPage()" style="padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: white;">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    <span style="color: #64748b; font-size: 13px;">per page</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="color: #64748b; font-size: 13px;">{$ (sshLogsPage - 1) * sshLogsPerPage + 1 $}-{$ (sshLogsPage * sshLogsPerPage > sshLogsTotal ? sshLogsTotal : sshLogsPage * sshLogsPerPage) $} of {$ sshLogsTotal $}</span>
+                    <button ng-click="sshLogsGoToPage(sshLogsPage - 1)" ng-disabled="sshLogsPage <= 1" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="Previous">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button ng-click="sshLogsGoToPage(sshLogsPage + 1)" ng-disabled="sshLogsPage >= sshLogsTotalPages" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="Next">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
         </div>
         
         <!-- Top Process Tab -->

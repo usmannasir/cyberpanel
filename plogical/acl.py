@@ -32,7 +32,7 @@ class ACLManager:
                '"createEmail": 1, "listEmails": 1, "deleteEmail": 1, "emailForwarding": 1, "changeEmailPassword": 1, ' \
                '"dkimManager": 1, "createFTPAccount": 1, "deleteFTPAccount": 1, "listFTPAccounts": 1, "createBackup": 1,' \
                ' "restoreBackup": 1, "addDeleteDestinations": 1, "scheduleBackups": 1, "remoteBackups": 1, "googleDriveBackups": 1, "manageSSL": 1, ' \
-               '"hostnameSSL": 1, "mailServerSSL": 1 }'
+               '"hostnameSSL": 1, "mailServerSSL": 1, "sslReconcile": 1 }'
 
     ResellerACL = '{"adminStatus":0, "versionManagement": 1, "createNewUser": 1, "listUsers": 1, "deleteUser": 1 , "resellerCenter": 1, ' \
                   '"changeUserACL": 0, "createWebsite": 1, "modifyWebsite": 1, "suspendWebsite": 1, "deleteWebsite": 1, ' \
@@ -246,6 +246,7 @@ class ACLManager:
             finalResponse['manageSSL'] = config['manageSSL']
             finalResponse['hostnameSSL'] = config['hostnameSSL']
             finalResponse['mailServerSSL'] = config['mailServerSSL']
+            finalResponse['sslReconcile'] = config.get('sslReconcile', 0)
 
         return finalResponse
 

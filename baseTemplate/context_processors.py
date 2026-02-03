@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+import os
+import time
+
 from .views import VERSION, BUILD
 
 def version_context(request):
@@ -49,4 +52,15 @@ def notification_preferences_context(request):
     return {
         'backup_notification_dismissed': False,
         'ai_scanner_notification_dismissed': False
+    }
+
+def firewall_static_context(request):
+    """Expose a cache-busting token for firewall static assets."""
+    firewall_js_path = '/usr/local/CyberCP/static/firewall/firewall.js'
+    try:
+        version = int(os.path.getmtime(firewall_js_path))
+    except OSError:
+        version = int(time.time())
+    return {
+        'FIREWALL_STATIC_VERSION': version
     }
