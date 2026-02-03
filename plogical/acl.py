@@ -155,6 +155,41 @@ class ACLManager:
             logging.writeToFile('%s. [32:commandInjectionCheck]' % (str(msg)))
 
     @staticmethod
+    def isPathInsideHome(path, home_path):
+        """
+        Check if path is inside the allowed home directory. Uses normpath to correctly
+        allow filenames like 'file..name.txt' while rejecting path traversal (e.g. ../../etc).
+        """
+        try:
+            if not path or not isinstance(path, str):
+                return False
+            path = os.path.normpath(path)
+            if not os.path.isabs(path):
+                return False
+            base = os.path.realpath(home_path)
+            if base == '/':
+                return True
+            return path == base or path.startswith(base + os.sep)
+        except (OSError, TypeError) as msg:
+            logging.writeToFile('%s. [isPathInsideHome]' % (str(msg)))
+            return False
+
+    @staticmethod
+    def isFilePathSafeForShell(path):
+        """
+        Check if path is safe for shell when passed in single quotes. Only blocks
+        characters that break single-quoted strings: quote, null, newline.
+        Allows ( ) : & [ ] etc. since they are harmless inside single quotes.
+        """
+        try:
+            if not path or not isinstance(path, str):
+                return False
+            return "'" not in path and '\0' not in path and '\n' not in path
+        except (TypeError, AttributeError) as msg:
+            logging.writeToFile('%s. [isFilePathSafeForShell]' % (str(msg)))
+            return False
+
+    @staticmethod
     def loadedACL(val):
 
         admin = Administrator.objects.get(pk=val)

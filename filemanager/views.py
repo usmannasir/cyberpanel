@@ -210,11 +210,18 @@ def upload(request):
             admin = Administrator.objects.get(pk=userID)
             currentACL = ACLManager.loadedACL(userID)
 
-            if ACLManager.checkOwnership(data['domainName'], admin, currentACL) == 1:
+            domainName = data.get('domainName', '')
+            if domainName == '':
+                # Root File Manager: allow only admin
+                if currentACL['admin'] == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson()
+            elif ACLManager.checkOwnership(domainName, admin, currentACL) == 1:
                 pass
             else:
                 return ACLManager.loadErrorJson()
-        except:
+        except Exception:
             return ACLManager.loadErrorJson()
 
         fm = FM(request, data)
