@@ -592,6 +592,7 @@ def install_plugin(request, plugin_name):
             # Set plugin to enabled by default after installation
             _set_plugin_state(plugin_name, True)
             
+            logging.writeToFile(f"Plugin {plugin_name} installed successfully (upload)")
             return JsonResponse({
                 'success': True,
                 'message': f'Plugin {plugin_name} installed successfully'
