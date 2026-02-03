@@ -461,11 +461,11 @@ if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "AlmaLinux9" ]] ; then
     fi
     
     cat << EOF > /etc/yum.repos.d/MariaDB.repo
-# MariaDB 12.1 repository list - updated 2025-09-25
+# MariaDB 11.8 LTS repository list - updated 2026-02
 # https://downloads.mariadb.org/mariadb/repositories/
 [mariadb]
 name = MariaDB
-baseurl = https://mirror.mariadb.org/yum/12.1/$MARIADB_REPO
+baseurl = https://mirror.mariadb.org/yum/11.8/$MARIADB_REPO
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1
 EOF

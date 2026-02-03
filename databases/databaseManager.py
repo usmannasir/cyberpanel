@@ -134,7 +134,7 @@ class DatabaseManager:
 
     def Upgardemysql(self, request = None, userID = None):
         data={}
-        data['mysqlversions']=['10.6','10.11']
+        data['mysqlversions']=['10.6','10.11','11.8']
         template = 'databases/Updatemysql.html'
         proc = httpProc(request, template, data, 'admin')
         return proc.render()

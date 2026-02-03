@@ -4326,7 +4326,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         Upgrade.stdOut("Applying AlmaLinux 9 MariaDB fixes...", 1)
         
         try:
-            # CRITICAL: Remove MariaDB-server-compat* before any MariaDB install (conflicts with 10.11)
+            # CRITICAL: Remove MariaDB-server-compat* before any MariaDB install (conflicts with 11.x)
             Upgrade.stdOut("Removing conflicting MariaDB-server-compat packages...", 1)
             try:
                 # Multiple aggressive removal attempts to ensure compat package is gone
@@ -4334,7 +4334,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                 subprocess.run("dnf remove -y --allowerasing 'MariaDB-server-compat*' 2>/dev/null || true", shell=True, timeout=60)
                 
                 # Step 2: Force remove with rpm
-                subprocess.run("rpm -e --nodeps MariaDB-server-compat-12.1.2-1.el9.noarch 2>/dev/null; true", shell=True, timeout=30)
+                subprocess.run("rpm -e --nodeps MariaDB-server-compat-12.1.2-1.el9.noarch 2>/dev/null; true", shell=True, timeout=30)  # cleanup if present from previous 12.1
                 
                 # Step 3: Find and remove any remaining compat packages
                 r = subprocess.run("rpm -qa 2>/dev/null | grep -i MariaDB-server-compat", shell=True, capture_output=True, text=True, timeout=30)
@@ -4376,9 +4376,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = "dnf clean all"
             subprocess.run(command, shell=True, capture_output=True)
             
-            # Install MariaDB 10.11 from official repository (avoid 12.1 compat conflicts)
-            Upgrade.stdOut("Setting up official MariaDB repository...", 1)
-            command = "curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version='10.11'"
+            # Install MariaDB 11.8 LTS from official repository
+            Upgrade.stdOut("Setting up official MariaDB 11.8 LTS repository...", 1)
+            command = "curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version='11.8'"
             result = subprocess.run(command, shell=True, capture_output=True, text=True)
             if result.returncode != 0:
                 Upgrade.stdOut(f"Warning: MariaDB repo setup failed: {result.stderr}", 0)
