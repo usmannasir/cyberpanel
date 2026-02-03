@@ -1360,7 +1360,7 @@ Signed-By: /etc/apt/keyrings/mariadb-keyring.pgp
             RepoContent = f"""
 [mariadb]
 name = MariaDB
-baseurl = http://yum.mariadb.org/{versionToInstall}/rhel8-amd64
+baseurl = https://mirror.mariadb.org/yum/{versionToInstall}/rhel8-amd64
 module_hotfixes=1
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1            

@@ -476,14 +476,14 @@ class UniversalOSFixes:
                 cmd = [
                     'curl', '-LsS', 
                     'https://downloads.mariadb.com/MariaDB/mariadb_repo_setup',
-                    '|', 'sudo', 'bash', '-s', '--', '--mariadb-server-version=12.1'
+                    '|', 'sudo', 'bash', '-s', '--', '--mariadb-server-version=11.8'
                 ]
             else:
                 # RHEL family MariaDB setup
                 cmd = [
                     'curl', '-LsS',
                     'https://downloads.mariadb.com/MariaDB/mariadb_repo_setup',
-                    '|', 'sudo', 'bash', '-s', '--', '--mariadb-server-version=12.1'
+                    '|', 'sudo', 'bash', '-s', '--', '--mariadb-server-version=11.8'
                 ]
             
             subprocess.run(' '.join(cmd), shell=True, check=True)
