@@ -228,7 +228,7 @@ class FirewallUtilities:
                 else:
                     rootLogin = "PermitRootLogin no\n"
 
-                sshPort = "Port " + sshPort + "\n"
+                sshPortLine = "Port " + sshPort + "\n"
 
                 pathToSSH = "/etc/ssh/sshd_config"
 
@@ -236,16 +236,36 @@ class FirewallUtilities:
 
                 writeToFile = open(pathToSSH, "w")
 
+                # Only one Port line must be written (sshd binds once per Port directive;
+                # duplicates cause "Address already in use"). Only match actual "Port N"
+                # directive, not GatewayPorts or other lines containing "Port".
+                port_line_written = False
+
+                def is_ssh_port_directive(line):
+                    stripped = line.strip()
+                    if 'GatewayPorts' in line or not stripped.startswith('Port '):
+                        return False
+                    parts = stripped.split()
+                    return len(parts) >= 2 and parts[0] == 'Port' and parts[1].isdigit()
+
                 for items in data:
                     if items.find("PermitRootLogin") > -1:
                         if items.find("Yes") > -1 or items.find("yes"):
                             writeToFile.writelines(rootLogin)
                             continue
-                    elif items.find("Port") > -1:
-                        writeToFile.writelines(sshPort)
+                    elif is_ssh_port_directive(items):
+                        if not port_line_written:
+                            writeToFile.writelines(sshPortLine)
+                            port_line_written = True
+                        # skip duplicate Port lines (do not write again)
                     else:
                         writeToFile.writelines(items)
                 writeToFile.close()
+
+                # If no Port line was present in config, append one (sshd defaults to 22 otherwise)
+                if not port_line_written:
+                    with open(pathToSSH, 'a') as appendFile:
+                        appendFile.write(sshPortLine)
 
                 command = 'systemctl restart sshd'
                 ProcessUtilities.normalExecutioner(command)

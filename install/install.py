@@ -78,6 +78,47 @@ class preFlightsChecks:
     def is_debian_family(self):
         """Check if distro is Ubuntu or Debian 12"""
         return self.distro in [ubuntu, debian12]
+
+    def add_litespeed_repo(self):
+        """Add LiteSpeed repository so OpenLiteSpeed 1.8.5+ is available (repo.litespeed.sh)"""
+        try:
+            self.stdOut("Adding LiteSpeed repository for OpenLiteSpeed 1.8.5+...", 1)
+            cmd = 'wget -q -O - https://repo.litespeed.sh | bash'
+            ret = subprocess.run(cmd, shell=True, timeout=120, capture_output=True, universal_newlines=True)
+            if ret.returncode != 0 and ret.stderr:
+                self.stdOut(f"LiteSpeed repo script warning: {ret.stderr[:200]}", 1)
+            if ret.returncode == 0:
+                self.stdOut("LiteSpeed repository added", 1)
+                return True
+            # Non-fatal: distro openlitespeed may still be used
+            self.stdOut("Could not add LiteSpeed repo; using distro package", 1)
+            return False
+        except Exception as e:
+            self.stdOut(f"LiteSpeed repo add failed: {e}", 1)
+            return False
+
+    def get_installed_ols_version(self):
+        """Return installed OpenLiteSpeed version as (major, minor, patch) or None"""
+        try:
+            for binary in ('/usr/local/lsws/bin/lshttpd', '/usr/local/lsws/bin/openlitespeed'):
+                if not os.path.exists(binary):
+                    continue
+                result = subprocess.run(
+                    [binary, '-v'],
+                    capture_output=True,
+                    timeout=5,
+                    universal_newlines=True,
+                    env=dict(os.environ, PATH=os.environ.get('PATH', '/usr/bin:/bin'))
+                )
+                out = (result.stdout or '') + (result.stderr or '')
+                # e.g. "OpenLiteSpeed/1.8.5" or "1.8.5"
+                import re
+                m = re.search(r'(\d+)\.(\d+)\.(\d+)', out)
+                if m:
+                    return (int(m.group(1)), int(m.group(2)), int(m.group(3)))
+            return None
+        except Exception:
+            return None
     
     def detect_os_info(self):
         """Detect OS information for all supported platforms"""
@@ -1172,7 +1213,7 @@ class preFlightsChecks:
             platform = self.detectPlatform()
             self.stdOut(f"Detected platform: {platform}", 1)
 
-            # Platform-specific URLs and checksums (OpenLiteSpeed v1.8.4.1 - v2.0.5 Static Build)
+            # Platform-specific URLs and checksums (OpenLiteSpeed 1.8.5+ preferred from repo; fallback static build)
             # Module Build Date: December 28, 2025 - v2.2.0 Brute Force with Progressive Throttle
             BINARY_CONFIGS = {
                 'rhel8': {
@@ -1381,16 +1422,20 @@ module cyberpanel_ols {
             self.stdOut("Installing LiteSpeed Web Server...", 1)
             
             if ent == 0:
-                # Install OpenLiteSpeed
-                self.stdOut("Installing OpenLiteSpeed...", 1)
-                if self.distro == ubuntu:
+                # Install OpenLiteSpeed 1.8.5+ from LiteSpeed repo when possible
+                self.stdOut("Installing OpenLiteSpeed (target 1.8.5+)...", 1)
+                self.add_litespeed_repo()
+                if self.distro == ubuntu or self.distro == debian12:
                     self.install_package('openlitespeed')
                 else:
                     self.install_package('openlitespeed')
-                
-                # Install custom binaries with PHP config support
-                # This replaces the standard binary with enhanced version
-                self.installCustomOLSBinaries()
+                # Use official OLS 1.8.5+ when available; only overlay custom binary if older
+                ols_ver = self.get_installed_ols_version()
+                if ols_ver and ols_ver >= (1, 8, 5):
+                    self.stdOut("Using official OpenLiteSpeed 1.8.5+ (no custom binary overlay)", 1)
+                else:
+                    # Install custom binaries with PHP config support (for pre-1.8.5 or when repo not used)
+                    self.installCustomOLSBinaries()
                 
                 # Configure OpenLiteSpeed
                 self.fix_ols_configs()
@@ -1486,19 +1531,18 @@ module cyberpanel_ols {
             return False
 
     def disableMariaDB12RepositoryIfNeeded(self):
-        """Disable MariaDB 12.1 repository if MariaDB 10.x is already installed to prevent upgrade attempts"""
+        """Disable MariaDB 12.x repository if MariaDB 10.x is already installed so 11.8 LTS upgrade can be used"""
         try:
             is_installed, installed_version, major_minor = self.checkExistingMariaDB()
             
             if is_installed and major_minor and major_minor != "unknown":
                 try:
                     major_ver = float(major_minor)
-                    if major_ver < 12.0:
-                        # MariaDB 10.x is installed, disable 12.1 repository to prevent upgrade attempts
-                        self.stdOut(f"MariaDB {installed_version} detected, disabling MariaDB 12.1 repository to prevent upgrade conflicts", 1)
-                        logging.InstallLog.writeToFile(f"MariaDB {installed_version} detected, disabling MariaDB 12.1 repository")
+                    if major_ver < 11.0:
+                        # MariaDB 10.x is installed, disable 12.x repo so we use 11.8 LTS
+                        self.stdOut(f"MariaDB {installed_version} detected, disabling MariaDB 12.x repository", 1)
+                        logging.InstallLog.writeToFile(f"MariaDB {installed_version} detected, disabling MariaDB 12.x repository")
                         
-                        # Disable MariaDB 12.1 repository - check all possible repo file locations
                         repo_files = [
                             '/etc/yum.repos.d/mariadb-main.repo',
                             '/etc/yum.repos.d/mariadb.repo',
@@ -1655,7 +1699,7 @@ module cyberpanel_ols {
             return False, None, None
 
     def _attemptMariaDBUpgrade(self):
-        """Attempt to upgrade MariaDB to 12.1. Returns True if successful, False otherwise."""
+        """Attempt to upgrade MariaDB to 11.8 LTS. Returns True if successful, False otherwise."""
         try:
             if self.distro == ubuntu:
                 # Ubuntu MariaDB upgrade
@@ -1674,8 +1718,8 @@ module cyberpanel_ols {
                     logging.InstallLog.writeToFile(f"Failed to download MariaDB keyring: {result.stderr}")
                     return False
                 
-                # Setup MariaDB 12.1 repository
-                command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=12.1'
+                # Setup MariaDB 11.8 LTS repository
+                command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=11.8'
                 result = subprocess.run(command, shell=True, capture_output=True, universal_newlines=True)
                 if result.returncode != 0:
                     logging.InstallLog.writeToFile(f"Failed to setup MariaDB repository: {result.stderr}")
@@ -1702,15 +1746,14 @@ module cyberpanel_ols {
                 return True
             else:
                 # RHEL-based MariaDB upgrade
-                # Setup MariaDB 12.1 repository
-                command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=12.1'
+                # Setup MariaDB 11.8 LTS repository
+                command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=11.8'
                 result = subprocess.run(command, shell=True, capture_output=True, universal_newlines=True)
                 if result.returncode != 0:
                     logging.InstallLog.writeToFile(f"Failed to setup MariaDB repository: {result.stderr}")
                     return False
                 
-                # Attempt to install MariaDB 12.1
-                # Use --allowerasing to allow package replacements if needed
+                # Attempt to install MariaDB 11.8 LTS (repo already set above)
                 command = 'dnf install mariadb-server mariadb-devel mariadb-client-utils -y --allowerasing'
                 result = subprocess.run(command, shell=True, capture_output=True, universal_newlines=True)
                 if result.returncode != 0:
@@ -1742,26 +1785,26 @@ module cyberpanel_ols {
                 if major_minor and major_minor != "unknown":
                     try:
                         major_ver = float(major_minor)
-                        if major_ver < 12.0:
+                        if major_ver < 11.0:
                             should_try_upgrade = True
-                            self.stdOut(f"Existing MariaDB {major_minor} detected. Attempting to upgrade to MariaDB 12.1...", 1)
+                            self.stdOut(f"Existing MariaDB {major_minor} detected. Attempting to upgrade to MariaDB 11.8 LTS...", 1)
                             self.stdOut("If upgrade fails, we will use the existing MariaDB installation.", 1)
                     except (ValueError, TypeError):
                         pass
                 
-                # If MariaDB 10.x is installed, try to upgrade to 12.1 first
+                # If MariaDB 10.x is installed, try to upgrade to 11.8 LTS first
                 if should_try_upgrade:
                     try:
-                        self.stdOut("Attempting to install MariaDB 12.1...", 1)
+                        self.stdOut("Attempting to install MariaDB 11.8 LTS...", 1)
                         upgrade_success = self._attemptMariaDBUpgrade()
                         if upgrade_success:
-                            self.stdOut("✅ Successfully upgraded to MariaDB 12.1", 1)
+                            self.stdOut("✅ Successfully upgraded to MariaDB 11.8 LTS", 1)
                             self.startMariaDB()
                             self.changeMYSQLRootPassword()
                             self.fixMariaDB()
                             return True
                         else:
-                            self.stdOut("⚠️  MariaDB 12.1 upgrade failed, using existing MariaDB installation", 1)
+                            self.stdOut("⚠️  MariaDB 11.8 LTS upgrade failed, using existing MariaDB installation", 1)
                             self.startMariaDB()
                             return True
                     except Exception as upgrade_error:
@@ -1812,7 +1855,7 @@ module cyberpanel_ols {
             else:
                 # RHEL-based MariaDB installation
                 # CRITICAL: Remove conflicting MariaDB compat packages first
-                # These packages from MariaDB 12.1 can conflict with MariaDB 10.11
+                # These packages from MariaDB 12.x can conflict with 10.x/11.x
                 self.stdOut("Removing conflicting MariaDB compat packages...", 1)
                 try:
                     # Multiple aggressive removal attempts to ensure compat package is gone
@@ -1846,13 +1889,12 @@ module cyberpanel_ols {
                 
                 if is_installed:
                     self.stdOut(f"MariaDB/MySQL is already installed (version: {installed_version}), skipping installation", 1)
-                    # Don't set up 12.1 repository if 10.x is installed to avoid upgrade issues
+                    # Use existing if already on 11.x or 12.x
                     if major_minor and major_minor != "unknown":
                         try:
                             major_ver = float(major_minor)
-                            if major_ver < 12.0:
-                                self.stdOut("Skipping MariaDB 12.1 repository setup to avoid upgrade conflicts", 1)
-                                self.stdOut("Using existing MariaDB installation", 1)
+                            if major_ver >= 11.0:
+                                self.stdOut("Using existing MariaDB installation (11.x/12.x)", 1)
                                 self.startMariaDB()
                                 self.changeMYSQLRootPassword()
                                 self.fixMariaDB()
@@ -1860,8 +1902,9 @@ module cyberpanel_ols {
                         except (ValueError, TypeError):
                             pass
                 
-                # Set up MariaDB 12.1 repository only if not already installed
-                command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version=12.1'
+                # Set up MariaDB repository only if not already installed (version from --mariadb-version, default 11.8)
+                mariadb_ver = getattr(preFlightsChecks, 'mariadb_version', '11.8')
+                command = f'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version={mariadb_ver}'
                 self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
                 
                 command = 'dnf install mariadb-server mariadb-devel mariadb-client-utils -y'
@@ -3235,7 +3278,7 @@ password="%s"
         apps_with_migrations = [
             'loginSystem', 'packages', 'websiteFunctions', 'baseTemplate', 'userManagment',
             'dns', 'databases', 'ftp', 'filemanager', 'mailServer', 'emailPremium',
-            'emailMarketing', 'cloudAPI', 'containerization', 'IncBackups', 'CLManager',
+            'cloudAPI', 'containerization', 'IncBackups', 'CLManager',
             's3Backups', 'dockerManager', 'aiScanner', 'firewall', 'tuning', 'serverStatus',
             'serverLogs', 'backup', 'managePHP', 'manageSSL', 'api', 'manageServices',
             'pluginHolder', 'highAvailability', 'WebTerminal'
@@ -3683,24 +3726,40 @@ class Migration(migrations.Migration):
 
     def download_install_phpmyadmin(self):
         try:
-
             if not os.path.exists("/usr/local/CyberCP/public"):
                 os.mkdir("/usr/local/CyberCP/public")
+            try:
+                shutil.rmtree("/usr/local/CyberCP/public/phpmyadmin")
+            except Exception:
+                pass
 
-            command = 'wget -O /usr/local/CyberCP/public/phpmyadmin.zip https://github.com/usmannasir/cyberpanel/raw/stable/phpmyadmin.zip'
+            # Resolve phpMyAdmin version (same as upgrade path)
+            phpmyadmin_version = '5.2.3'
+            try:
+                from plogical.versionFetcher import get_latest_phpmyadmin_version
+                latest_version = get_latest_phpmyadmin_version()
+                if latest_version and latest_version != phpmyadmin_version:
+                    self.stdOut(f"Using latest phpMyAdmin version: {latest_version}", 1)
+                    phpmyadmin_version = latest_version
+                else:
+                    self.stdOut(f"Using fallback phpMyAdmin version: {phpmyadmin_version}", 1)
+            except Exception as e:
+                self.stdOut(f"Failed to fetch latest phpMyAdmin version, using fallback: {e}", 1)
 
-            preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
+            self.stdOut("Installing phpMyAdmin...", 1)
+            command = (
+                f'wget -q -O /usr/local/CyberCP/public/phpmyadmin.tar.gz '
+                f'https://files.phpmyadmin.net/phpMyAdmin/{phpmyadmin_version}/phpMyAdmin-{phpmyadmin_version}-all-languages.tar.gz'
+            )
+            preFlightsChecks.call(command, self.distro, f'[download_install_phpmyadmin] {phpmyadmin_version}',
                                   command, 1, 0, os.EX_OSERR)
-
-            command = 'unzip /usr/local/CyberCP/public/phpmyadmin.zip -d /usr/local/CyberCP/public'
-            preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
+            command = 'tar -xzf /usr/local/CyberCP/public/phpmyadmin.tar.gz -C /usr/local/CyberCP/public/'
+            preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin] extract',
                                   command, 1, 0, os.EX_OSERR)
-
             command = 'mv /usr/local/CyberCP/public/phpMyAdmin-*-all-languages /usr/local/CyberCP/public/phpmyadmin'
             subprocess.call(command, shell=True)
-
-            command = 'rm -f /usr/local/CyberCP/public/phpmyadmin.zip'
-            preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
+            command = 'rm -f /usr/local/CyberCP/public/phpmyadmin.tar.gz'
+            preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin] cleanup',
                                   command, 1, 0, os.EX_OSERR)
 
             ## Write secret phrase
@@ -6412,8 +6471,14 @@ def main():
     parser.add_argument('--mysqluser', help='MySQL user if remote is chosen.')
     parser.add_argument('--mysqlpassword', help='MySQL password if remote is chosen.')
     parser.add_argument('--mysqlport', help='MySQL port if remote is chosen.')
+    parser.add_argument('--mariadb-version', default='11.8', help='MariaDB version: 11.8 (LTS, default) or 12.1')
 
     args = parser.parse_args()
+    # Normalize and validate MariaDB version choice (default 11.8)
+    mariadb_ver = (getattr(args, 'mariadb_version', None) or '11.8').strip()
+    if mariadb_ver not in ('11.8', '12.1'):
+        mariadb_ver = '11.8'
+    preFlightsChecks.mariadb_version = mariadb_ver
 
     logging.InstallLog.ServerIP = args.publicip
     logging.InstallLog.writeToFile("Starting CyberPanel installation..,10")

@@ -32,7 +32,7 @@ class ACLManager:
                '"createEmail": 1, "listEmails": 1, "deleteEmail": 1, "emailForwarding": 1, "changeEmailPassword": 1, ' \
                '"dkimManager": 1, "createFTPAccount": 1, "deleteFTPAccount": 1, "listFTPAccounts": 1, "createBackup": 1,' \
                ' "restoreBackup": 1, "addDeleteDestinations": 1, "scheduleBackups": 1, "remoteBackups": 1, "googleDriveBackups": 1, "manageSSL": 1, ' \
-               '"hostnameSSL": 1, "mailServerSSL": 1 }'
+               '"hostnameSSL": 1, "mailServerSSL": 1, "sslReconcile": 1 }'
 
     ResellerACL = '{"adminStatus":0, "versionManagement": 1, "createNewUser": 1, "listUsers": 1, "deleteUser": 1 , "resellerCenter": 1, ' \
                   '"changeUserACL": 0, "createWebsite": 1, "modifyWebsite": 1, "suspendWebsite": 1, "deleteWebsite": 1, ' \
@@ -155,6 +155,41 @@ class ACLManager:
             logging.writeToFile('%s. [32:commandInjectionCheck]' % (str(msg)))
 
     @staticmethod
+    def isPathInsideHome(path, home_path):
+        """
+        Check if path is inside the allowed home directory. Uses normpath to correctly
+        allow filenames like 'file..name.txt' while rejecting path traversal (e.g. ../../etc).
+        """
+        try:
+            if not path or not isinstance(path, str):
+                return False
+            path = os.path.normpath(path)
+            if not os.path.isabs(path):
+                return False
+            base = os.path.realpath(home_path)
+            if base == '/':
+                return True
+            return path == base or path.startswith(base + os.sep)
+        except (OSError, TypeError) as msg:
+            logging.writeToFile('%s. [isPathInsideHome]' % (str(msg)))
+            return False
+
+    @staticmethod
+    def isFilePathSafeForShell(path):
+        """
+        Check if path is safe for shell when passed in single quotes. Only blocks
+        characters that break single-quoted strings: quote, null, newline.
+        Allows ( ) : & [ ] etc. since they are harmless inside single quotes.
+        """
+        try:
+            if not path or not isinstance(path, str):
+                return False
+            return "'" not in path and '\0' not in path and '\n' not in path
+        except (TypeError, AttributeError) as msg:
+            logging.writeToFile('%s. [isFilePathSafeForShell]' % (str(msg)))
+            return False
+
+    @staticmethod
     def loadedACL(val):
 
         admin = Administrator.objects.get(pk=val)
@@ -246,6 +281,7 @@ class ACLManager:
             finalResponse['manageSSL'] = config['manageSSL']
             finalResponse['hostnameSSL'] = config['hostnameSSL']
             finalResponse['mailServerSSL'] = config['mailServerSSL']
+            finalResponse['sslReconcile'] = config.get('sslReconcile', 0)
 
         return finalResponse
 

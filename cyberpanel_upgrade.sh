@@ -72,6 +72,10 @@ LSWS_Latest_URL="https://cyberpanel.sh/update.litespeedtech.com/ws/latest.php"
 LSWS_Tmp=$(curl --silent --max-time 30 -4 "$LSWS_Latest_URL")
 LSWS_Stable_Line=$(echo "$LSWS_Tmp" | grep "LSWS_STABLE")
 LSWS_Stable_Version=$(expr "$LSWS_Stable_Line" : '.*LSWS_STABLE=\(.*\) BUILD .*')
+# Fallback to LSWS 6.3.4 (Stable) if fetch failed or empty
+if [ -z "$LSWS_Stable_Version" ]; then
+    LSWS_Stable_Version="6.3.4"
+fi
 #grab the LSWS latest stable version.
 
 Debug_Log2 "Starting Upgrade...1"
@@ -316,20 +320,61 @@ do
 done
 }
 
+# Optional GitHub user override (same repo structure as usmannasir/cyberpanel)
+# Set via --repo USER or -r USER to use any GitHub user's cyberpanel repo
+Git_User_Override=""
+# Skip full system package update (yum/dnf update -y) to speed up upgrade; use when system is already updated
+Skip_System_Update=""
+# MariaDB version for repo setup: 11.8 (LTS, default) or 12.1
+MARIADB_VER="11.8"
+
 Check_Argument() {
-if [[ "$*" = *"--branch "* ]] || [[ "$*" = *"-b "* ]]; then
-  Branch_Name=$(echo "$*" | sed -e "s/--branch //" -e "s/--mirror//" -e "s/-b //")
-  Branch_Check "$Branch_Name"
+# Parse --branch / -b (extract first word after -b or --branch)
+if [[ "$*" = *"--branch "* ]]; then
+  Branch_Name=$(echo "$*" | sed -n 's/.*--branch \([^ ]*\).*/\1/p' | head -1)
+  [[ -n "$Branch_Name" ]] && Branch_Check "$Branch_Name"
+elif [[ "$*" = *"-b "* ]]; then
+  Branch_Name=$(echo "$*" | sed -n 's/.*-b \([^ ]*\).*/\1/p' | head -1)
+  [[ -n "$Branch_Name" ]] && Branch_Check "$Branch_Name"
+fi
+# Parse --repo / -r to use any GitHub user (same URL structure as usmannasir/cyberpanel)
+if [[ "$*" = *"--repo "* ]]; then
+  Git_User_Override=$(echo "$*" | sed -n 's/.*--repo \([^ ]*\).*/\1/p' | head -1)
+fi
+if [[ "$*" = *"-r "* ]] && [[ -z "$Git_User_Override" ]]; then
+  Git_User_Override=$(echo "$*" | sed -n 's/.*-r \([^ ]*\).*/\1/p' | head -1)
+fi
+# Parse --no-system-update to skip yum/dnf update -y (faster upgrade when system is already updated)
+if [[ "$*" = *"--no-system-update"* ]]; then
+  Skip_System_Update="yes"
+  echo -e "\nUsing --no-system-update: skipping full system package update.\n"
+fi
+# Parse --mariadb-version 11.8|12.1 (default 11.8)
+if [[ "$*" = *"--mariadb-version "* ]]; then
+  MARIADB_VER=$(echo "$*" | sed -n 's/.*--mariadb-version \([^ ]*\).*/\1/p' | head -1)
+  MARIADB_VER="${MARIADB_VER:-11.8}"
+fi
+if [[ "$MARIADB_VER" != "11.8" ]] && [[ "$MARIADB_VER" != "12.1" ]]; then
+  MARIADB_VER="11.8"
 fi
 }
 
 Pre_Upgrade_Setup_Git_URL() {
   if [[ $Server_Country != "CN" ]] ; then
-    Git_User="usmannasir"
+    if [[ -n "$Git_User_Override" ]]; then
+      Git_User="$Git_User_Override"
+      echo -e "\nUsing GitHub repo: ${Git_User}/cyberpanel (same URL structure as usmannasir)\n"
+    else
+      Git_User="usmannasir"
+    fi
     Git_Content_URL="https://raw.githubusercontent.com/${Git_User}/cyberpanel"
     Git_Clone_URL="https://github.com/${Git_User}/cyberpanel.git"
   else
-    Git_User="qtwrk"
+    if [[ -n "$Git_User_Override" ]]; then
+      Git_User="$Git_User_Override"
+    else
+      Git_User="qtwrk"
+    fi
     Git_Content_URL="https://gitee.com/${Git_User}/cyberpanel/raw"
     Git_Clone_URL="https://gitee.com/${Git_User}/cyberpanel.git"
   fi
@@ -375,7 +420,11 @@ if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "AlmaLinux9" ]] ; then
     curl -o /etc/yum.repos.d/litespeed.repo https://cyberpanel.sh/litespeed/litespeed.repo
   fi
   yum clean all
-  yum update -y
+  if [[ -z "$Skip_System_Update" ]]; then
+    yum update -y
+  else
+    echo -e "[$(date +"%Y-%m-%d %H:%M-%S")] Skipping yum update (--no-system-update)" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  fi
   yum autoremove epel-release -y
   rm -f /etc/yum.repos.d/epel.repo
   rm -f /etc/yum.repos.d/epel.repo.rpmsave
@@ -422,11 +471,11 @@ if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "AlmaLinux9" ]] ; then
     fi
     
     cat << EOF > /etc/yum.repos.d/MariaDB.repo
-# MariaDB 12.1 repository list - updated 2025-09-25
+# MariaDB $MARIADB_VER repository list - updated 2026-02
 # https://downloads.mariadb.org/mariadb/repositories/
 [mariadb]
 name = MariaDB
-baseurl = https://mirror.mariadb.org/yum/12.1/$MARIADB_REPO
+baseurl = https://mirror.mariadb.org/yum/$MARIADB_VER/$MARIADB_REPO
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1
 EOF
@@ -507,8 +556,8 @@ EOF
                    sqlite-devel libxml2-devel libxslt-devel curl-devel libedit-devel \
                    readline-devel pkgconfig cmake gcc-c++
     
-    # Install MariaDB
-    dnf install -y mariadb-server mariadb-devel mariadb-client
+    # Install MariaDB (use MariaDB-* names when official 11.8 repo is configured)
+    dnf install -y MariaDB-server MariaDB-client MariaDB-devel 2>/dev/null || dnf install -y mariadb-server mariadb-devel mariadb-client
     
     # Install additional required packages
     dnf install -y wget curl unzip zip rsync firewalld psmisc git python3 python3-pip python3-devel
@@ -528,7 +577,11 @@ elif [[ "$Server_OS" = "Ubuntu" ]] ; then
   fi
 
   apt update -y
-  export DEBIAN_FRONTEND=noninteractive ; apt-get -o Dpkg::Options::="--force-confold" upgrade -y
+  if [[ -z "$Skip_System_Update" ]]; then
+    export DEBIAN_FRONTEND=noninteractive ; apt-get -o Dpkg::Options::="--force-confold" upgrade -y
+  else
+    echo -e "[$(date +"%Y-%m-%d %H:%M-%S")] Skipping apt upgrade (--no-system-update)" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  fi
 
   if [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] ; then
     if [[ "$Server_OS_Version" = "24" ]]; then
@@ -663,7 +716,7 @@ if [ $CYBERCP_MISSING -eq 1 ]; then
     cd /usr/local
     rm -rf CyberCP_recovery_tmp
     
-    if git clone https://github.com/usmannasir/cyberpanel CyberCP_recovery_tmp; then
+    if git clone "$Git_Clone_URL" CyberCP_recovery_tmp; then
         echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Repository cloned successfully for recovery" | tee -a /var/log/cyberpanel_upgrade_debug.log
         
         # Checkout the appropriate branch
@@ -860,21 +913,7 @@ fi
 
 }
 
-Pre_Upgrade_Setup_Git_URL() {
-if [[ $Server_Country != "CN" ]] ; then
-  Git_User="usmannasir"
-  Git_Content_URL="https://raw.githubusercontent.com/${Git_User}/cyberpanel"
-  Git_Clone_URL="https://github.com/${Git_User}/cyberpanel.git"
-else
-  Git_User="qtwrk"
-  Git_Content_URL="https://gitee.com/${Git_User}/cyberpanel/raw"
-  Git_Clone_URL="https://gitee.com/${Git_User}/cyberpanel.git"
-fi
-
-if [[ "$Debug" = "On" ]] ; then
-  Debug_Log "Git_URL" "$Git_Content_URL"
-fi
-}
+# (Pre_Upgrade_Setup_Git_URL is defined earlier; this duplicate removed so --repo is respected)
 
 Pre_Upgrade_Branch_Input() {
   echo -e "\nPress the Enter key to continue with latest version, or enter specific version such as: \e[31m2.3.4\e[39m , \e[31m2.4.4\e[39m ...etc"
@@ -1260,6 +1299,8 @@ Post_Upgrade_System_Tweak() {
 sed -i "s|lsws-5.3.8|lsws-$LSWS_Stable_Version|g" /usr/local/CyberCP/serverStatus/serverStatusUtil.py
 sed -i "s|lsws-5.4.2|lsws-$LSWS_Stable_Version|g" /usr/local/CyberCP/serverStatus/serverStatusUtil.py
 sed -i "s|lsws-5.3.5|lsws-$LSWS_Stable_Version|g" /usr/local/CyberCP/serverStatus/serverStatusUtil.py
+sed -i "s|lsws-6.0|lsws-$LSWS_Stable_Version|g" /usr/local/CyberCP/serverStatus/serverStatusUtil.py
+sed -i "s|lsws-6.3.4|lsws-$LSWS_Stable_Version|g" /usr/local/CyberCP/serverStatus/serverStatusUtil.py
 
 if [[ "$Server_Country" = "CN" ]] ; then
   sed -i 's|https://www.litespeedtech.com/|https://cyberpanel.sh/www.litespeedtech.com/|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
@@ -1629,6 +1670,26 @@ Check_Argument "$@"
 if [[ "$*" != *"--branch "* ]] && [[ "$*" != *"-b "* ]] ; then
   Pre_Upgrade_Branch_Input
 fi
+
+# Prompt for MariaDB version if not set via --mariadb-version (default 11.8). Downgrade supported (e.g. re-run with --mariadb-version 11.8).
+if [[ "$*" != *"--mariadb-version "* ]]; then
+  echo -e "\nMariaDB version: \e[31m11.8\e[39m LTS (default) or \e[31m12.1\e[39m. You can switch later by re-running with --mariadb-version 11.8 or 12.1."
+  echo -e "Press Enter for 11.8 LTS, or type \e[31m12.1\e[39m and Enter for 12.1 (5 sec timeout): "
+  read -r -t 5 Tmp_MariaDB_Ver || true
+  if [[ "$Tmp_MariaDB_Ver" = "12.1" ]]; then
+    MARIADB_VER="12.1"
+    echo -e "MariaDB 12.1 selected.\n"
+  else
+    MARIADB_VER="11.8"
+    echo -e "MariaDB 11.8 LTS (default).\n"
+  fi
+fi
+
+# Write chosen MariaDB version for upgrade.py (e.g. fix_almalinux9_mariadb)
+mkdir -p /etc/cyberpanel
+echo "$MARIADB_VER" > /etc/cyberpanel/mariadb_version
+chmod 644 /etc/cyberpanel/mariadb_version
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB version set to: $MARIADB_VER" | tee -a /var/log/cyberpanel_upgrade_debug.log
 
 Pre_Upgrade_Setup_Repository
 

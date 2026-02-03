@@ -250,61 +250,6 @@
         margin-right: 4px;
     }
     
-    .subscription-warning {
-        background: #fff3cd;
-        border: 1px solid #ffc107;
-        border-radius: 8px;
-        padding: 12px;
-        margin-top: 10px;
-        font-size: 12px;
-        color: #856404;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-    
-    .subscription-warning-content {
-        display: flex;
-        align-items: center;
-        flex: 1;
-    }
-    
-    .subscription-warning i {
-        margin-right: 6px;
-        color: #ffc107;
-    }
-    
-    .subscription-warning-button {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 8px 16px;
-        background: linear-gradient(135deg, #f96854 0%, #f96854 100%);
-        color: white;
-        text-decoration: none;
-        border-radius: 6px;
-        font-size: 12px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        white-space: nowrap;
-        box-shadow: 0 2px 4px rgba(249, 104, 84, 0.3);
-    }
-    
-    .subscription-warning-button:hover {
-        background: linear-gradient(135deg, #e55a47 0%, #e55a47 100%);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(249, 104, 84, 0.4);
-        color: white;
-        text-decoration: none;
-    }
-    
-    .subscription-warning-button i {
-        margin-right: 0;
-        color: white;
-    }
-    
     .plugin-description {
         font-size: 13px;
         color: var(--text-secondary, #64748b);
@@ -480,6 +425,52 @@
     .view-toggle {
         display: flex;
         gap: 10px;
+    }
+    /* Sort/Filter bar for Grid and Table view */
+    .installed-sort-filter-bar {
+        flex-basis: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        margin-top: 12px;
+        padding: 12px 0;
+        border-top: 1px solid var(--border-primary, #e2e8f0);
+    }
+    .installed-sort-filter-bar .sort-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary, #64748b);
+        margin-right: 4px;
+    }
+    .installed-sort-filter-bar .sort-btns {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .installed-sort-filter-bar .sort-btn {
+        padding: 6px 14px;
+        border: 1px solid var(--border-primary, #e8e9ff);
+        background: var(--bg-primary, white);
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: var(--text-secondary, #64748b);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .installed-sort-filter-bar .sort-btn:hover {
+        background: var(--bg-hover, #f0f1ff);
+        border-color: #5856d6;
+        color: #5856d6;
+    }
+    .installed-sort-filter-bar .sort-btn.active {
+        background: #5856d6;
+        color: white;
+        border-color: #5856d6;
     }
     .bulk-actions-header {
         display: flex !important;
@@ -714,6 +705,16 @@
         position: relative;
         margin-bottom: 15px;
         max-width: 480px;
+    }
+    
+    /* Search bar in page header (same row as Activate/Deactivate All) */
+    .header-search-bar {
+        margin-bottom: 0;
+        min-width: 220px;
+        max-width: 320px;
+        margin-left: 8px;
+        padding-left: 16px;
+        border-left: 2px solid #e2e8f0;
     }
     
     .store-search-icon {
@@ -1146,6 +1147,7 @@
 {% endblock %}
 
 {% block content %}
+<!-- plugins-v2026-02-02-no-patreon-front -->
 {% load static %}
 {% get_current_language as LANGUAGE_CODE %}
 
@@ -1177,6 +1179,13 @@
                         </span>
                     </div>
                     {% if plugins %}
+                    <div id="installedPluginsSearchWrapper" class="header-search-bar store-search-bar">
+                        <i class="fas fa-search store-search-icon"></i>
+                        <input type="text" id="installedPluginSearchInput" class="store-search-input" placeholder="{% trans 'Search plugins by name or description...' %}" aria-label="{% trans 'Search installed plugins' %}">
+                        <button type="button" class="store-search-clear" id="installedPluginSearchClear" onclick="clearInstalledPluginSearch()" style="display: none;" aria-label="{% trans 'Clear search' %}">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
                     <div class="bulk-actions-header" style="display: flex; gap: 10px; margin-left: 8px; padding-left: 16px; border-left: 2px solid #e2e8f0;">
                         <button type="button" class="btn-bulk btn-activate-all" onclick="activateAllPlugins()" title="{% trans 'Activate all installed plugins' %}">
                             <i class="fas fa-toggle-on"></i> {% trans "Activate All Plugins" %}
@@ -1215,12 +1224,29 @@
                         {% trans "Plugin Development Guide" %}
                     </a>
                 </div>
+                <!-- Sort bar for Grid and Table view (visible when grid or table is active) -->
+                <div id="installedSortFilterBar" class="installed-sort-filter-bar" style="display: none;"
+                     data-trans-name-asc="{% trans 'Name A-Å' %}" data-trans-name-desc="{% trans 'Name Å-A' %}"
+                     data-trans-date-newest="{% trans 'Date (newest)' %}" data-trans-date-oldest="{% trans 'Date (oldest)' %}">
+                    <span class="sort-label">{% trans "Sort by:" %}</span>
+                    <div class="sort-btns">
+                        <button type="button" class="sort-btn active" data-sort-field="name" id="installedSortBtnName" onclick="toggleInstalledSort('name')" title="{% trans 'Click to toggle A-Å / Å-A' %}">
+                            <i class="fas fa-sort-alpha-down"></i> <span class="sort-btn-label">{% trans "Name A-Å" %}</span>
+                        </button>
+                        <button type="button" class="sort-btn" data-sort-field="type" id="installedSortBtnType" onclick="toggleInstalledSort('type')" title="{% trans 'By category/type' %}">
+                            <i class="fas fa-tag"></i> <span class="sort-btn-label">{% trans "Type" %}</span>
+                        </button>
+                        <button type="button" class="sort-btn" data-sort-field="date" id="installedSortBtnDate" onclick="toggleInstalledSort('date')" title="{% trans 'Click to toggle newest / oldest' %}">
+                            <i class="fas fa-calendar-alt"></i> <span class="sort-btn-label">{% trans "Date (newest)" %}</span>
+                        </button>
+                    </div>
+                </div>
             </div>
             
             <!-- Grid View -->
             <div id="gridView" class="plugins-grid">
                 {% for plugin in plugins %}
-                <div class="plugin-card">
+                <div class="plugin-card" data-plugin-name="{{ plugin.name }}" data-plugin-desc="{{ plugin.desc }}" data-plugin-type="{{ plugin.type }}" data-modify-date="{{ plugin.modify_date|default:'0000-00-00 00:00:00' }}">
                     <div class="plugin-header">
                         <div class="plugin-icon">
                             {% if plugin.type|lower == "security" %}
@@ -1246,7 +1272,7 @@
                             {% endif %}
                         </div>
                         <div class="plugin-info">
-                            <h3 class="plugin-name">{{ plugin.name }}{% if plugin.is_paid|default:False|default_if_none:False %} <span class="paid-badge" title="{% trans 'Paid Plugin - Patreon Subscription Required' %}"><i class="fas fa-crown"></i> {% trans "Premium" %}</span>{% endif %}</h3>
+                            <h3 class="plugin-name">{{ plugin.name }}{% if plugin.is_paid|default:False|default_if_none:False %} <span class="paid-badge" title="{% trans 'Premium plugin - activate in Settings' %}"><i class="fas fa-crown"></i> {% trans "Premium" %}</span>{% endif %}</h3>
                             <div class="plugin-meta">
                             {% if plugin.freshness_badge %}
                             <span class="{{ plugin.freshness_badge.class }}" title="{{ plugin.freshness_badge.title }}">{{ plugin.freshness_badge.badge }}</span>
@@ -1264,20 +1290,6 @@
                     
                     <div class="plugin-description">
                         {{ plugin.desc }}
-                        {% if plugin.is_paid|default:False|default_if_none:False %}
-                        <div class="subscription-warning">
-                            <div class="subscription-warning-content">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                <strong>{% trans "Paid Plugin:" %}</strong> {% trans "Requires Patreon subscription to" %} "{{ plugin.patreon_tier|default:'CyberPanel Paid Plugin' }}"
-                            </div>
-                            {% if plugin.patreon_url %}
-                            <a href="{{ plugin.patreon_url }}" target="_blank" rel="noopener noreferrer" class="subscription-warning-button">
-                                <i class="fab fa-patreon"></i>
-                                {% trans "Subscribe on Patreon" %}
-                            </a>
-                            {% endif %}
-                        </div>
-                        {% endif %}
                     </div>
                     
                     <div class="plugin-status-section">
@@ -1343,6 +1355,10 @@
                     </div>
                 </div>
                 {% endfor %}
+                <div id="installedPluginsNoResultsGrid" class="installed-no-results" style="display: none; grid-column: 1 / -1; text-align: center; padding: 24px; color: var(--text-secondary, #64748b);">
+                    <i class="fas fa-search" style="font-size: 32px; margin-bottom: 8px; opacity: 0.6;"></i>
+                    <p style="margin: 0;">{% trans "No plugins match your search." %}</p>
+                </div>
             </div>
             
             <!-- Table View -->
@@ -1363,7 +1379,7 @@
                         </thead>
                         <tbody>
                             {% for plugin in plugins %}
-                            <tr>
+                            <tr data-plugin-name="{{ plugin.name }}" data-plugin-desc="{{ plugin.desc }}" data-plugin-type="{{ plugin.type }}" data-modify-date="{{ plugin.modify_date|default:'0000-00-00 00:00:00' }}">
                                 <td>
                                     <strong>{{ plugin.name }}</strong>
                                     {% if plugin.freshness_badge %}
@@ -1443,6 +1459,12 @@
                                 </td>
                             </tr>
                             {% endfor %}
+                            <tr id="installedPluginsNoResultsTable" style="display: none;">
+                                <td colspan="8" style="text-align: center; padding: 24px; color: var(--text-secondary, #64748b);">
+                                    <i class="fas fa-search" style="font-size: 24px; margin-bottom: 8px; opacity: 0.6;"></i>
+                                    <p style="margin: 0;">{% trans "No plugins match your search." %}</p>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -1571,17 +1593,20 @@
                         </button>
                     </div>
                 
-                <!-- Alphabetical Filter (collapsible, hidden by default) -->
+                <!-- Letter filter (A-Å, collapsible, hidden by default) -->
                 <div class="alphabet-filter-wrapper">
                     <button type="button" class="alphabet-toggle-btn" id="alphabetToggleBtn" onclick="toggleAlphabetFilter()" aria-expanded="false">
                         <i class="fas fa-sort-alpha-down alphabet-toggle-icon"></i>
-                        <span>{% trans "A-Å Filter" %}</span>
+                        <span>A-Å {% trans "Filter" %}</span>
                         <i class="fas fa-chevron-down alphabet-chevron"></i>
                     </button>
                     <div class="alphabet-filter" id="alphabetFilter" aria-hidden="true" style="display: none;">
                         {% for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" %}
                             <button class="alpha-btn" onclick="filterByLetter('{{ letter }}', event)">{{ letter }}</button>
                         {% endfor %}
+                        <button class="alpha-btn" onclick="filterByLetter('Æ', event)">Æ</button>
+                        <button class="alpha-btn" onclick="filterByLetter('Ø', event)">Ø</button>
+                        <button class="alpha-btn" onclick="filterByLetter('Å', event)">Å</button>
                         <button class="alpha-btn active" onclick="filterByLetter('all', event)">{% trans "All" %}</button>
                     </div>
                 </div>
@@ -1623,6 +1648,7 @@ let currentFilter = 'all';
 let currentCategory = 'all';
 let currentSearchQuery = '';
 let isSettingHash = false; // Flag to prevent infinite loops
+let currentInstalledSort = 'name-asc'; // name-asc, name-desc, type, date-desc, date-asc
 
 // Get CSRF cookie helper function
 function getCookie(name) {
@@ -1665,17 +1691,31 @@ function toggleView(view, updateHash = true) {
         setTimeout(() => { isSettingHash = false; }, 100);
     }
     
+    const installedSearchWrapper = document.getElementById('installedPluginsSearchWrapper');
+    const installedSortFilterBar = document.getElementById('installedSortFilterBar');
     if (view === 'grid') {
         gridView.style.display = 'grid';
         tableView.style.display = 'none';
         storeView.style.display = 'none';
         viewBtns[0].classList.add('active');
+        if (installedSearchWrapper) installedSearchWrapper.style.display = 'block';
+        if (installedSortFilterBar) installedSortFilterBar.style.display = 'flex';
+        if (typeof updateInstalledSortButtons === 'function') updateInstalledSortButtons();
+        if (typeof doApplyInstalledSort === 'function') doApplyInstalledSort();
+        filterInstalledPlugins();
     } else if (view === 'table') {
         gridView.style.display = 'none';
         tableView.style.display = 'block';
         storeView.style.display = 'none';
         viewBtns[1].classList.add('active');
+        if (installedSearchWrapper) installedSearchWrapper.style.display = 'block';
+        if (installedSortFilterBar) installedSortFilterBar.style.display = 'flex';
+        if (typeof updateInstalledSortButtons === 'function') updateInstalledSortButtons();
+        if (typeof doApplyInstalledSort === 'function') doApplyInstalledSort();
+        filterInstalledPlugins();
     } else if (view === 'store') {
+        if (installedSearchWrapper) installedSearchWrapper.style.display = 'none';
+        if (installedSortFilterBar) installedSortFilterBar.style.display = 'none';
         gridView.style.display = 'none';
         tableView.style.display = 'none';
         storeView.style.display = 'block';
@@ -1976,6 +2016,137 @@ function clearPluginSearch() {
         if (clearBtn) clearBtn.style.display = 'none';
         displayStorePlugins();
         input.focus();
+    }
+}
+
+function filterInstalledPlugins() {
+    const query = (document.getElementById('installedPluginSearchInput') && document.getElementById('installedPluginSearchInput').value) || '';
+    const terms = query.trim().toLowerCase().split(/\s+/).filter(function(t) { return t.length > 0; });
+    const gridView = document.getElementById('gridView');
+    const tableView = document.getElementById('tableView');
+    const noResultsGrid = document.getElementById('installedPluginsNoResultsGrid');
+    const noResultsTable = document.getElementById('installedPluginsNoResultsTable');
+    var visibleCount = 0;
+    if (gridView) {
+        var cards = gridView.querySelectorAll('.plugin-card');
+        cards.forEach(function(card) {
+            var name = (card.getAttribute('data-plugin-name') || '').toLowerCase();
+            var desc = (card.getAttribute('data-plugin-desc') || '').toLowerCase();
+            var type = (card.getAttribute('data-plugin-type') || '').toLowerCase();
+            var combined = name + ' ' + desc + ' ' + type;
+            var show = terms.length === 0 || terms.every(function(term) { return combined.indexOf(term) !== -1; });
+            card.style.display = show ? '' : 'none';
+            if (show) visibleCount++;
+        });
+    }
+    if (tableView) {
+        var tbody = tableView.querySelector('.plugins-table-wrapper tbody');
+        if (tbody) {
+            var rows = tbody.querySelectorAll('tr');
+            rows.forEach(function(row) {
+                if (row.id === 'installedPluginsNoResultsTable') return;
+                var name = (row.getAttribute('data-plugin-name') || '').toLowerCase();
+                var desc = (row.getAttribute('data-plugin-desc') || '').toLowerCase();
+                var type = (row.getAttribute('data-plugin-type') || '').toLowerCase();
+                var combined = name + ' ' + desc + ' ' + type;
+                var show = terms.length === 0 || terms.every(function(term) { return combined.indexOf(term) !== -1; });
+                row.style.display = show ? '' : 'none';
+                if (show) visibleCount++;
+            });
+        }
+    }
+    if (noResultsGrid) {
+        noResultsGrid.style.display = (terms.length > 0 && visibleCount === 0) ? 'block' : 'none';
+    }
+    if (noResultsTable) {
+        noResultsTable.style.display = (terms.length > 0 && visibleCount === 0) ? 'table-row' : 'none';
+    }
+}
+
+function clearInstalledPluginSearch() {
+    var input = document.getElementById('installedPluginSearchInput');
+    var clearBtn = document.getElementById('installedPluginSearchClear');
+    if (input) {
+        input.value = '';
+        if (clearBtn) clearBtn.style.display = 'none';
+        filterInstalledPlugins();
+        input.focus();
+    }
+}
+
+function toggleInstalledSort(field) {
+    if (field === 'name') {
+        currentInstalledSort = currentInstalledSort === 'name-asc' ? 'name-desc' : 'name-asc';
+    } else if (field === 'date') {
+        currentInstalledSort = currentInstalledSort === 'date-desc' ? 'date-asc' : 'date-desc';
+    } else {
+        currentInstalledSort = 'type';
+    }
+    updateInstalledSortButtons();
+    doApplyInstalledSort();
+}
+
+function updateInstalledSortButtons() {
+    var bar = document.getElementById('installedSortFilterBar');
+    var transNameAsc = bar && bar.getAttribute('data-trans-name-asc') || 'Name A-Å';
+    var transNameDesc = bar && bar.getAttribute('data-trans-name-desc') || 'Name Å-A';
+    var transDateNewest = bar && bar.getAttribute('data-trans-date-newest') || 'Date (newest)';
+    var transDateOldest = bar && bar.getAttribute('data-trans-date-oldest') || 'Date (oldest)';
+    var nameBtn = document.getElementById('installedSortBtnName');
+    var typeBtn = document.getElementById('installedSortBtnType');
+    var dateBtn = document.getElementById('installedSortBtnDate');
+    if (nameBtn) {
+        nameBtn.classList.toggle('active', currentInstalledSort === 'name-asc' || currentInstalledSort === 'name-desc');
+        var nameLabel = nameBtn.querySelector('.sort-btn-label');
+        var nameIcon = nameBtn.querySelector('i');
+        if (nameLabel) nameLabel.textContent = currentInstalledSort === 'name-desc' ? transNameDesc : transNameAsc;
+        if (nameIcon) nameIcon.className = currentInstalledSort === 'name-desc' ? 'fas fa-sort-alpha-down-alt' : 'fas fa-sort-alpha-down';
+    }
+    if (typeBtn) typeBtn.classList.toggle('active', currentInstalledSort === 'type');
+    if (dateBtn) {
+        dateBtn.classList.toggle('active', currentInstalledSort === 'date-asc' || currentInstalledSort === 'date-desc');
+        var dateLabel = dateBtn.querySelector('.sort-btn-label');
+        var dateIcon = dateBtn.querySelector('i');
+        if (dateLabel) dateLabel.textContent = currentInstalledSort === 'date-asc' ? transDateOldest : transDateNewest;
+        if (dateIcon) dateIcon.className = currentInstalledSort === 'date-asc' ? 'fas fa-calendar' : 'fas fa-calendar-alt';
+    }
+}
+
+function doApplyInstalledSort() {
+    var sortKey = currentInstalledSort;
+    var gridView = document.getElementById('gridView');
+    var tableView = document.getElementById('tableView');
+    var noResultsGrid = document.getElementById('installedPluginsNoResultsGrid');
+    var noResultsTable = document.getElementById('installedPluginsNoResultsTable');
+    function compareCards(a, b) {
+        var nameA = (a.getAttribute('data-plugin-name') || '').toLowerCase();
+        var nameB = (b.getAttribute('data-plugin-name') || '').toLowerCase();
+        var typeA = (a.getAttribute('data-plugin-type') || '').toLowerCase();
+        var typeB = (b.getAttribute('data-plugin-type') || '').toLowerCase();
+        var dateA = a.getAttribute('data-modify-date') || '0000-00-00 00:00:00';
+        var dateB = b.getAttribute('data-modify-date') || '0000-00-00 00:00:00';
+        if (sortKey === 'name-asc') return nameA.localeCompare(nameB);
+        if (sortKey === 'name-desc') return nameB.localeCompare(nameA);
+        if (sortKey === 'type') { var c = typeA.localeCompare(typeB); return c !== 0 ? c : nameA.localeCompare(nameB); }
+        if (sortKey === 'date-desc') return dateB.localeCompare(dateA);
+        if (sortKey === 'date-asc') return dateA.localeCompare(dateB);
+        return 0;
+    }
+    if (gridView) {
+        var cards = Array.prototype.slice.call(gridView.querySelectorAll('.plugin-card'));
+        cards.sort(compareCards);
+        cards.forEach(function(card) { gridView.appendChild(card); });
+        if (noResultsGrid) gridView.appendChild(noResultsGrid);
+    }
+    if (tableView) {
+        var tbody = tableView.querySelector('.plugins-table-wrapper tbody');
+        if (tbody) {
+            var rows = Array.prototype.slice.call(tbody.querySelectorAll('tr'));
+            var dataRows = rows.filter(function(r) { return r.id !== 'installedPluginsNoResultsTable'; });
+            dataRows.sort(compareCards);
+            dataRows.forEach(function(row) { tbody.appendChild(row); });
+            if (noResultsTable) tbody.appendChild(noResultsTable);
+        }
     }
 }
 
@@ -2743,6 +2914,24 @@ document.addEventListener('DOMContentLoaded', function() {
         searchInput.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 clearPluginSearch();
+                e.preventDefault();
+            }
+        });
+    }
+    
+    // Installed plugins search (Grid View and Table View)
+    const installedSearchInput = document.getElementById('installedPluginSearchInput');
+    const installedSearchClearBtn = document.getElementById('installedPluginSearchClear');
+    if (installedSearchInput) {
+        installedSearchInput.addEventListener('input', function() {
+            if (installedSearchClearBtn) {
+                installedSearchClearBtn.style.display = this.value.trim() ? 'block' : 'none';
+            }
+            filterInstalledPlugins();
+        });
+        installedSearchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                clearInstalledPluginSearch();
                 e.preventDefault();
             }
         });

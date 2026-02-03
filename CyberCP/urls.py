@@ -20,6 +20,10 @@ from django.conf.urls.static import static
 from django.views.static import serve
 from firewall import views as firewall_views
 
+# Plugin routes are no longer hardcoded here; pluginHolder.urls dynamically
+# includes each installed plugin (under /plugins/<name>/) so settings and
+# other plugin pages work for any installed plugin.
+
 urlpatterns = [
     # Serve static files first (before catch-all routes)
     re_path(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
@@ -43,6 +47,7 @@ urlpatterns = [
     path('api/', include('api.urls')),
     path('filemanager/', include('filemanager.urls')),
     path('emailPremium/', include('emailPremium.urls')),
+    path('emailMarketing/', include('emailMarketing.urls')),  # Default-installed (sidebar links to it)
     path('manageservices/', include('manageServices.urls')),
     path('plugins/', include('pluginHolder.urls')),
     path('cloudAPI/', include('cloudAPI.urls')),
@@ -51,8 +56,6 @@ urlpatterns = [
     path('CloudLinux/', include('CLManager.urls')),
     path('IncrementalBackups/', include('IncBackups.urls')),
     path('aiscanner/', include('aiScanner.urls')),
-    # Optional plugin routes - added by plugin installer when plugins are installed from Plugin Store
-    # path('emailMarketing/', include('emailMarketing.urls')),
     # path('Terminal/', include('WebTerminal.urls')),
     path('', include('loginSystem.urls')),
 ]
