@@ -546,8 +546,8 @@ EOF
                    sqlite-devel libxml2-devel libxslt-devel curl-devel libedit-devel \
                    readline-devel pkgconfig cmake gcc-c++
     
-    # Install MariaDB
-    dnf install -y mariadb-server mariadb-devel mariadb-client
+    # Install MariaDB (use MariaDB-* names when official 11.8 repo is configured)
+    dnf install -y MariaDB-server MariaDB-client MariaDB-devel 2>/dev/null || dnf install -y mariadb-server mariadb-devel mariadb-client
     
     # Install additional required packages
     dnf install -y wget curl unzip zip rsync firewalld psmisc git python3 python3-pip python3-devel
