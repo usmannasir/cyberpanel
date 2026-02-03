@@ -501,6 +501,33 @@ class Upgrade:
             return False
 
     @staticmethod
+    def add_litespeed_repo():
+        """Add LiteSpeed repository so OpenLiteSpeed 1.8.5+ is available (repo.litespeed.sh)."""
+        return Upgrade.executioner_silent('wget -q -O - https://repo.litespeed.sh | bash', 'LiteSpeed repo', 0, shell=True)
+
+    @staticmethod
+    def get_installed_ols_version():
+        """Return installed OpenLiteSpeed version as (major, minor, patch) or None."""
+        try:
+            for binary in ('/usr/local/lsws/bin/lshttpd', '/usr/local/lsws/bin/openlitespeed'):
+                if not os.path.exists(binary):
+                    continue
+                result = subprocess.run(
+                    [binary, '-v'],
+                    capture_output=True,
+                    timeout=5,
+                    universal_newlines=True,
+                    env=dict(os.environ, PATH=os.environ.get('PATH', '/usr/bin:/bin'))
+                )
+                out = (result.stdout or '') + (result.stderr or '')
+                m = re.search(r'(\d+)\.(\d+)\.(\d+)', out)
+                if m:
+                    return (int(m.group(1)), int(m.group(2)), int(m.group(3)))
+            return None
+        except Exception:
+            return None
+
+    @staticmethod
     def updateRepoURL():
         command = "sed -i 's|sgp.cyberpanel.sh|cdn.cyberpanel.sh|g' /etc/yum.repos.d/MariaDB.repo"
         Upgrade.executioner(command, command, 0)
@@ -939,7 +966,7 @@ class Upgrade:
             platform = Upgrade.detectPlatform()
             Upgrade.stdOut(f"Detected platform: {platform}", 0)
 
-            # Platform-specific URLs and checksums (OpenLiteSpeed v1.8.4.1 with PHPConfig + Header unset fix + Static Linking)
+            # Platform-specific URLs and checksums (OpenLiteSpeed 1.8.5+ preferred from repo; fallback static build)
             # Module Build Date: December 28, 2025 - v2.2.0 Brute Force with Progressive Throttle
             BINARY_CONFIGS = {
                 'rhel8': {
@@ -5684,9 +5711,18 @@ slowlog = /var/log/php{version}-fpm-slow.log
         Upgrade.setupPHPSymlink()
         Upgrade.setupComposer()
         
-        # Install custom OpenLiteSpeed binaries if OLS is installed
+        # OpenLiteSpeed: ensure 1.8.5+ (add LiteSpeed repo, upgrade package); only overlay custom binary if still < 1.8.5
         if os.path.exists('/usr/local/lsws/bin/openlitespeed'):
-            Upgrade.installCustomOLSBinaries()
+            Upgrade.add_litespeed_repo()
+            if os.path.exists(Upgrade.CentOSPath) or os.path.exists(Upgrade.openEulerPath):
+                Upgrade.executioner('dnf install -y openlitespeed || yum install -y openlitespeed', 'Upgrade OpenLiteSpeed package', 0)
+            else:
+                Upgrade.executioner('DEBIAN_FRONTEND=noninteractive apt-get -y install --only-upgrade openlitespeed 2>/dev/null || DEBIAN_FRONTEND=noninteractive apt-get -y install openlitespeed', 'Upgrade OpenLiteSpeed package', 0, shell=True)
+            ols_ver = Upgrade.get_installed_ols_version()
+            if ols_ver and ols_ver >= (1, 8, 5):
+                Upgrade.stdOut("OpenLiteSpeed 1.8.5+ detected; keeping official binary (no custom overlay).")
+            else:
+                Upgrade.installCustomOLSBinaries()
 
         ##
 
