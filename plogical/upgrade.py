@@ -4376,9 +4376,19 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = "dnf clean all"
             subprocess.run(command, shell=True, capture_output=True)
             
-            # Install MariaDB 11.8 LTS from official repository
-            Upgrade.stdOut("Setting up official MariaDB 11.8 LTS repository...", 1)
-            command = "curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version='11.8'"
+            # Install MariaDB from official repository (version from /etc/cyberpanel/mariadb_version or default 11.8)
+            mariadb_ver = "11.8"
+            try:
+                mariadb_version_file = "/etc/cyberpanel/mariadb_version"
+                if os.path.isfile(mariadb_version_file):
+                    with open(mariadb_version_file, "r") as f:
+                        raw = f.read().strip()
+                        if raw in ("11.8", "12.1"):
+                            mariadb_ver = raw
+            except Exception:
+                pass
+            Upgrade.stdOut("Setting up official MariaDB %s repository..." % mariadb_ver, 1)
+            command = "curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version='%s'" % mariadb_ver
             result = subprocess.run(command, shell=True, capture_output=True, text=True)
             if result.returncode != 0:
                 Upgrade.stdOut(f"Warning: MariaDB repo setup failed: {result.stderr}", 0)

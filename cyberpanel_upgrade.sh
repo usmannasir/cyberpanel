@@ -325,6 +325,8 @@ done
 Git_User_Override=""
 # Skip full system package update (yum/dnf update -y) to speed up upgrade; use when system is already updated
 Skip_System_Update=""
+# MariaDB version for repo setup: 11.8 (LTS, default) or 12.1
+MARIADB_VER="11.8"
 
 Check_Argument() {
 # Parse --branch / -b (extract first word after -b or --branch)
@@ -346,6 +348,14 @@ fi
 if [[ "$*" = *"--no-system-update"* ]]; then
   Skip_System_Update="yes"
   echo -e "\nUsing --no-system-update: skipping full system package update.\n"
+fi
+# Parse --mariadb-version 11.8|12.1 (default 11.8)
+if [[ "$*" = *"--mariadb-version "* ]]; then
+  MARIADB_VER=$(echo "$*" | sed -n 's/.*--mariadb-version \([^ ]*\).*/\1/p' | head -1)
+  MARIADB_VER="${MARIADB_VER:-11.8}"
+fi
+if [[ "$MARIADB_VER" != "11.8" ]] && [[ "$MARIADB_VER" != "12.1" ]]; then
+  MARIADB_VER="11.8"
 fi
 }
 
@@ -461,11 +471,11 @@ if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "AlmaLinux9" ]] ; then
     fi
     
     cat << EOF > /etc/yum.repos.d/MariaDB.repo
-# MariaDB 11.8 LTS repository list - updated 2026-02
+# MariaDB $MARIADB_VER repository list - updated 2026-02
 # https://downloads.mariadb.org/mariadb/repositories/
 [mariadb]
 name = MariaDB
-baseurl = https://mirror.mariadb.org/yum/11.8/$MARIADB_REPO
+baseurl = https://mirror.mariadb.org/yum/$MARIADB_VER/$MARIADB_REPO
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1
 EOF
@@ -1660,6 +1670,26 @@ Check_Argument "$@"
 if [[ "$*" != *"--branch "* ]] && [[ "$*" != *"-b "* ]] ; then
   Pre_Upgrade_Branch_Input
 fi
+
+# Prompt for MariaDB version if not set via --mariadb-version (default 11.8)
+if [[ "$*" != *"--mariadb-version "* ]]; then
+  echo -e "\nMariaDB version: use \e[31m11.8\e[39m LTS (default) or \e[31m12.1\e[39m."
+  echo -e "Press Enter for 11.8 LTS, or type \e[31m12.1\e[39m and Enter for 12.1 (5 sec timeout): "
+  read -r -t 5 Tmp_MariaDB_Ver || true
+  if [[ "$Tmp_MariaDB_Ver" = "12.1" ]]; then
+    MARIADB_VER="12.1"
+    echo -e "MariaDB 12.1 selected.\n"
+  else
+    MARIADB_VER="11.8"
+    echo -e "MariaDB 11.8 LTS (default).\n"
+  fi
+fi
+
+# Write chosen MariaDB version for upgrade.py (e.g. fix_almalinux9_mariadb)
+mkdir -p /etc/cyberpanel
+echo "$MARIADB_VER" > /etc/cyberpanel/mariadb_version
+chmod 644 /etc/cyberpanel/mariadb_version
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB version set to: $MARIADB_VER" | tee -a /var/log/cyberpanel_upgrade_debug.log
 
 Pre_Upgrade_Setup_Repository
 

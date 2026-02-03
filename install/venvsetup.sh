@@ -19,6 +19,7 @@ KEY_SIZE=""
 ADMIN_PASS="1234567"
 MEMCACHED="ON"
 REDIS="ON"
+MARIADB_VER="11.8"
 TOTAL_RAM=$(free -m | awk '/Mem\:/ { print $2 }')
 
 # Robust pip install function to handle broken pipe errors
@@ -873,6 +874,17 @@ if [[ $TMP_YN =~ ^(no|n|N) ]] ; then
 else
 	REDIS="ON"
 fi
+
+echo -e "\nWhich MariaDB version do you want to install? \e[31m11.8\e[39m (LTS, default) or \e[31m12.1\e[39m?"
+printf "%s" "Choose [1] for 11.8 LTS (recommended), [2] for 12.1, or press Enter for default [1]: "
+read TMP_YN
+if [[ $TMP_YN =~ ^(2|12\.1) ]] ; then
+	MARIADB_VER="12.1"
+	echo -e "\nMariaDB 12.1 will be installed.\n"
+else
+	MARIADB_VER="11.8"
+	echo -e "\nMariaDB 11.8 LTS will be installed (default).\n"
+fi
 }
 
 main_install() {
@@ -909,9 +921,9 @@ fi
 
 if [[ $debug == "1" ]] ; then
 	if [[ $DEV == "ON" ]] ; then
-	/usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY
+	/usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --mariadb-version "${MARIADB_VER:-11.8}"
 	else
-	/usr/local/CyberPanel/bin/python2 install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY
+	/usr/local/CyberPanel/bin/python2 install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --mariadb-version "${MARIADB_VER:-11.8}"
 	fi
 	
 	if grep "CyberPanel installation successfully completed" /var/log/installLogs.txt > /dev/null; then 
