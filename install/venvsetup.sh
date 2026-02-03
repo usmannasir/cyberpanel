@@ -19,6 +19,7 @@ KEY_SIZE=""
 ADMIN_PASS="1234567"
 MEMCACHED="ON"
 REDIS="ON"
+MARIADB_VER="11.8"
 TOTAL_RAM=$(free -m | awk '/Mem\:/ { print $2 }')
 
 # Robust pip install function to handle broken pipe errors
@@ -116,6 +117,10 @@ LATEST_URL="https://update.litespeedtech.com/ws/latest.php"
 curl --silent -o /tmp/lsws_latest $LATEST_URL 2>/dev/null
 LSWS_STABLE_LINE=`cat /tmp/lsws_latest | grep LSWS_STABLE`
 LSWS_STABLE_VER=`expr "$LSWS_STABLE_LINE" : '.*LSWS_STABLE=\(.*\) BUILD .*'`
+# Fallback to LSWS 6.3.4 (Stable) if fetch failed or empty
+if [ -z "$LSWS_STABLE_VER" ]; then
+    LSWS_STABLE_VER="6.3.4"
+fi
 
 if [[ $SERVER_COUNTRY == "CN" ]] ; then
 #line1="$(grep -n "github.com/usmannasir/cyberpanel" install.py | head -n 1 | cut -d: -f1)"
@@ -869,6 +874,17 @@ if [[ $TMP_YN =~ ^(no|n|N) ]] ; then
 else
 	REDIS="ON"
 fi
+
+echo -e "\nWhich MariaDB version do you want to install? \e[31m11.8\e[39m (LTS, default) or \e[31m12.1\e[39m?"
+printf "%s" "Choose [1] for 11.8 LTS (recommended), [2] for 12.1, or press Enter for default [1]: "
+read TMP_YN
+if [[ $TMP_YN =~ ^(2|12\.1) ]] ; then
+	MARIADB_VER="12.1"
+	echo -e "\nMariaDB 12.1 will be installed.\n"
+else
+	MARIADB_VER="11.8"
+	echo -e "\nMariaDB 11.8 LTS will be installed (default).\n"
+fi
 }
 
 main_install() {
@@ -890,6 +906,8 @@ fi
 
 sed -i 's|lsws-5.4.2|lsws-'$LSWS_STABLE_VER'|g' installCyberPanel.py
 sed -i 's|lsws-5.3.5|lsws-'$LSWS_STABLE_VER'|g' installCyberPanel.py
+sed -i 's|lsws-6.0|lsws-'$LSWS_STABLE_VER'|g' installCyberPanel.py
+sed -i 's|lsws-6.3.4|lsws-'$LSWS_STABLE_VER'|g' installCyberPanel.py
 #this sed must be done after license validation
 	
 echo -e "Preparing..."
@@ -903,9 +921,9 @@ fi
 
 if [[ $debug == "1" ]] ; then
 	if [[ $DEV == "ON" ]] ; then
-	/usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY
+	/usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --mariadb-version "${MARIADB_VER:-11.8}"
 	else
-	/usr/local/CyberPanel/bin/python2 install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY
+	/usr/local/CyberPanel/bin/python2 install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --mariadb-version "${MARIADB_VER:-11.8}"
 	fi
 	
 	if grep "CyberPanel installation successfully completed" /var/log/installLogs.txt > /dev/null; then 
@@ -1229,6 +1247,8 @@ fi
 sed -i 's|lsws-5.3.8|lsws-'$LSWS_STABLE_VER'|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
 sed -i 's|lsws-5.4.2|lsws-'$LSWS_STABLE_VER'|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
 sed -i 's|lsws-5.3.5|lsws-'$LSWS_STABLE_VER'|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
+sed -i 's|lsws-6.0|lsws-'$LSWS_STABLE_VER'|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
+sed -i 's|lsws-6.3.4|lsws-'$LSWS_STABLE_VER'|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
 
 if [[ $SILENT != "ON" ]] ; then
 printf "%s" "Would you like to restart your server now? [y/N]: "

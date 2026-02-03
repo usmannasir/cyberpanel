@@ -82,6 +82,15 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
     $scope.showUploadBox = function () {
         $('#uploadBox').modal('show');
     };
+    // Fix aria-hidden a11y: move focus out of modal before hide so no focused descendant retains focus
+    $(document).on('hide.bs.modal', '.modal', function () {
+        var modal = this;
+        if (document.activeElement && modal.contains(document.activeElement)) {
+            var trigger = document.getElementById('uploadTriggerBtn');
+            if (trigger && modal.id === 'uploadBox') { trigger.focus(); }
+            else { document.activeElement.blur(); }
+        }
+    });
 
     $scope.showHTMLEditorModal = function (MainFM= 0) {
         $scope.htmlEditorLoading = false;
@@ -1147,7 +1156,8 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
                 });
                 $scope.fetchForTableSecondary(null, 'refresh');
             } else {
-                var notification = alertify.notify('Files/Folders can not be deleted', 'error', 5, function () {
+                var errMsg = (response.data && response.data.error_message) ? response.data.error_message : 'Files/Folders can not be deleted';
+                var notification = alertify.notify(errMsg, 'error', 8, function () {
                     console.log('dismissed');
                 });
             }
@@ -1155,6 +1165,10 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         }
 
         function cantLoadInitialDatas(response) {
+            var err = (response && response.data && (response.data.error_message || response.data.message)) ||
+                (response && response.statusText) || 'Request failed';
+            if (response && response.status === 0) err = 'Network error';
+            alertify.notify(err, 'error', 8);
         }
 
     };
