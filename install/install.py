@@ -1902,8 +1902,9 @@ module cyberpanel_ols {
                         except (ValueError, TypeError):
                             pass
                 
-                # Set up MariaDB 11.8 LTS repository only if not already installed
-                command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version=11.8'
+                # Set up MariaDB repository only if not already installed (version from --mariadb-version, default 11.8)
+                mariadb_ver = getattr(preFlightsChecks, 'mariadb_version', '11.8')
+                command = f'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version={mariadb_ver}'
                 self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
                 
                 command = 'dnf install mariadb-server mariadb-devel mariadb-client-utils -y'
@@ -6470,8 +6471,14 @@ def main():
     parser.add_argument('--mysqluser', help='MySQL user if remote is chosen.')
     parser.add_argument('--mysqlpassword', help='MySQL password if remote is chosen.')
     parser.add_argument('--mysqlport', help='MySQL port if remote is chosen.')
+    parser.add_argument('--mariadb-version', default='11.8', help='MariaDB version: 11.8 (LTS, default) or 12.1')
 
     args = parser.parse_args()
+    # Normalize and validate MariaDB version choice (default 11.8)
+    mariadb_ver = (getattr(args, 'mariadb_version', None) or '11.8').strip()
+    if mariadb_ver not in ('11.8', '12.1'):
+        mariadb_ver = '11.8'
+    preFlightsChecks.mariadb_version = mariadb_ver
 
     logging.InstallLog.ServerIP = args.publicip
     logging.InstallLog.writeToFile("Starting CyberPanel installation..,10")
