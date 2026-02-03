@@ -8,7 +8,13 @@ https://docs.djangoproject.com/en/1.11/howto/deployment/wsgi/
 """
 
 import os
+import sys
 
+# Ensure CyberPanel app path takes precedence over system 'firewall' package
+PROJECT_ROOT = '/usr/local/CyberCP'
+while PROJECT_ROOT in sys.path:
+    sys.path.remove(PROJECT_ROOT)
+sys.path.insert(0, PROJECT_ROOT)
 
 from django.core.wsgi import get_wsgi_application
 

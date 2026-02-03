@@ -716,9 +716,19 @@ def getRecentSSHLogins(request):
         import re, time
         from collections import OrderedDict
 
-        # Run 'last -n 20' to get recent SSH logins
+        # Pagination params
         try:
-            output = ProcessUtilities.outputExecutioner('last -n 20')
+            page = max(1, int(request.GET.get('page', 1)))
+        except (ValueError, TypeError):
+            page = 1
+        try:
+            per_page = min(100, max(5, int(request.GET.get('per_page', 20))))
+        except (ValueError, TypeError):
+            per_page = 20
+
+        # Run 'last -n 500' to get enough entries for pagination
+        try:
+            output = ProcessUtilities.outputExecutioner('last -n 500')
         except Exception as e:
             return HttpResponse(json.dumps({'error': 'Failed to run last: %s' % str(e)}), content_type='application/json', status=500)
 
@@ -802,7 +812,19 @@ def getRecentSSHLogins(request):
                 'is_active': is_active,
                 'raw': line
             })
-        return HttpResponse(json.dumps({'logins': logins}), content_type='application/json')
+        total = len(logins)
+        total_pages = (total + per_page - 1) // per_page if total > 0 else 1
+        page = min(page, total_pages) if total_pages > 0 else 1
+        start = (page - 1) * per_page
+        end = start + per_page
+        paginated_logins = logins[start:end]
+        return HttpResponse(json.dumps({
+            'logins': paginated_logins,
+            'total': total,
+            'page': page,
+            'per_page': per_page,
+            'total_pages': total_pages
+        }), content_type='application/json')
     except Exception as e:
         return HttpResponse(json.dumps({'error': str(e)}), content_type='application/json', status=500)
 
@@ -816,6 +838,17 @@ def getRecentSSHLogs(request):
         currentACL = ACLManager.loadedACL(user_id)
         if not currentACL.get('admin', 0):
             return HttpResponse(json.dumps({'error': 'Admin only'}), content_type='application/json', status=403)
+
+        # Pagination params
+        try:
+            page = max(1, int(request.GET.get('page', 1)))
+        except (ValueError, TypeError):
+            page = 1
+        try:
+            per_page = min(100, max(5, int(request.GET.get('per_page', 25))))
+        except (ValueError, TypeError):
+            per_page = 25
+
         from plogical.processUtilities import ProcessUtilities
         import re
         distro = ProcessUtilities.decideDistro()
@@ -824,7 +857,7 @@ def getRecentSSHLogs(request):
         else:
             log_path = '/var/log/secure'
         try:
-            output = ProcessUtilities.outputExecutioner(f'tail -n 100 {log_path}')
+            output = ProcessUtilities.outputExecutioner(f'tail -n 500 {log_path}')
         except Exception as e:
             return HttpResponse(json.dumps({'error': f'Failed to read log: {str(e)}'}), content_type='application/json', status=500)
         lines = output.split('\n')
@@ -862,7 +895,21 @@ def getRecentSSHLogs(request):
                 'raw': line,
                 'ip_address': ip_address
             })
-        return HttpResponse(json.dumps({'logs': logs}), content_type='application/json')
+        # Reverse so newest logs appear first (page 1 = most recent)
+        logs.reverse()
+        total = len(logs)
+        total_pages = (total + per_page - 1) // per_page if total > 0 else 1
+        page = min(page, total_pages) if total_pages > 0 else 1
+        start = (page - 1) * per_page
+        end = start + per_page
+        paginated_logs = logs[start:end]
+        return HttpResponse(json.dumps({
+            'logs': paginated_logs,
+            'total': total,
+            'page': page,
+            'per_page': per_page,
+            'total_pages': total_pages
+        }), content_type='application/json')
     except Exception as e:
         return HttpResponse(json.dumps({'error': str(e)}), content_type='application/json', status=500)
 
@@ -1325,7 +1372,9 @@ def blockIPAddress(request):
             try:
                 import os
                 import time
-                banned_ips_file = '/etc/cyberpanel/banned_ips.json'
+                primary_file = '/usr/local/CyberCP/data/banned_ips.json'
+                legacy_file = '/etc/cyberpanel/banned_ips.json'
+                banned_ips_file = primary_file if os.path.exists(primary_file) else legacy_file if os.path.exists(legacy_file) else primary_file
                 banned_ips = []
                 
                 if os.path.exists(banned_ips_file):
@@ -1359,10 +1408,10 @@ def blockIPAddress(request):
                     banned_ips.append(new_banned_ip)
                     
                     # Ensure directory exists
-                    os.makedirs(os.path.dirname(banned_ips_file), exist_ok=True)
+                    os.makedirs(os.path.dirname(primary_file), exist_ok=True)
                     
                     # Save to file
-                    with open(banned_ips_file, 'w') as f:
+                    with open(primary_file, 'w') as f:
                         json.dump(banned_ips, f, indent=2)
             except Exception as e:
                 # Log but don't fail the request if JSON update fails

@@ -671,33 +671,110 @@ def addBannedIP(request):
     try:
         userID = request.session['userID']
         fm = FirewallManager()
-        return fm.addBannedIP(userID, json.loads(request.body))
+        try:
+            body = request.body
+            if isinstance(body, bytes):
+                body = body.decode('utf-8')
+            request_data = json.loads(body) if body and body.strip() else {}
+        except json.JSONDecodeError as e:
+            final_dic = {'status': 0, 'error_message': 'Invalid JSON in request: %s' % str(e)}
+            return HttpResponse(json.dumps(final_dic), content_type='application/json', status=400)
+        except Exception as e:
+            final_dic = {'status': 0, 'error_message': 'Error parsing request: %s' % str(e)}
+            return HttpResponse(json.dumps(final_dic), content_type='application/json', status=400)
+        result = fm.addBannedIP(userID, request_data)
+        return result
     except KeyError:
-        return redirect(loadLoginPage)
+        final_dic = {'status': 0, 'error_message': 'Session expired. Please refresh the page and try again.'}
+        return HttpResponse(json.dumps(final_dic), content_type='application/json', status=403)
+    except Exception as e:
+        import traceback
+        from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as _log
+        error_trace = traceback.format_exc()
+        _log.writeToFile('Error in addBannedIP view: %s\n%s' % (str(e), error_trace))
+        final_dic = {'status': 0, 'error_message': 'Server error: %s' % str(e)}
+        return HttpResponse(json.dumps(final_dic), content_type='application/json', status=500)
 
 def modifyBannedIP(request):
     try:
         userID = request.session['userID']
         fm = FirewallManager()
-        return fm.modifyBannedIP(userID, json.loads(request.body))
+        try:
+            body = request.body
+            if isinstance(body, bytes):
+                body = body.decode('utf-8')
+            request_data = json.loads(body) if body and body.strip() else {}
+        except json.JSONDecodeError as e:
+            final_dic = {'status': 0, 'error_message': 'Invalid JSON in request: %s' % str(e)}
+            return HttpResponse(json.dumps(final_dic), content_type='application/json', status=400)
+        except Exception as e:
+            final_dic = {'status': 0, 'error_message': 'Error parsing request: %s' % str(e)}
+            return HttpResponse(json.dumps(final_dic), content_type='application/json', status=400)
+        return fm.modifyBannedIP(userID, request_data)
     except KeyError:
-        return redirect(loadLoginPage)
+        final_dic = {'status': 0, 'error_message': 'Session expired. Please refresh the page and try again.'}
+        return HttpResponse(json.dumps(final_dic), content_type='application/json', status=403)
+    except Exception as e:
+        import traceback
+        from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as _log
+        error_trace = traceback.format_exc()
+        _log.writeToFile('Error in modifyBannedIP view: %s\n%s' % (str(e), error_trace))
+        final_dic = {'status': 0, 'error_message': 'Server error: %s' % str(e)}
+        return HttpResponse(json.dumps(final_dic), content_type='application/json', status=500)
 
 def removeBannedIP(request):
     try:
         userID = request.session['userID']
         fm = FirewallManager()
-        return fm.removeBannedIP(userID, json.loads(request.body))
+        try:
+            body = request.body
+            if isinstance(body, bytes):
+                body = body.decode('utf-8')
+            request_data = json.loads(body) if body and body.strip() else {}
+        except json.JSONDecodeError as e:
+            final_dic = {'status': 0, 'error_message': 'Invalid JSON in request: %s' % str(e)}
+            return HttpResponse(json.dumps(final_dic), content_type='application/json', status=400)
+        except Exception as e:
+            final_dic = {'status': 0, 'error_message': 'Error parsing request: %s' % str(e)}
+            return HttpResponse(json.dumps(final_dic), content_type='application/json', status=400)
+        return fm.removeBannedIP(userID, request_data)
     except KeyError:
-        return redirect(loadLoginPage)
+        final_dic = {'status': 0, 'error_message': 'Session expired. Please refresh the page and try again.'}
+        return HttpResponse(json.dumps(final_dic), content_type='application/json', status=403)
+    except Exception as e:
+        import traceback
+        from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as _log
+        error_trace = traceback.format_exc()
+        _log.writeToFile('Error in removeBannedIP view: %s\n%s' % (str(e), error_trace))
+        final_dic = {'status': 0, 'error_message': 'Server error: %s' % str(e)}
+        return HttpResponse(json.dumps(final_dic), content_type='application/json', status=500)
 
 def deleteBannedIP(request):
     try:
         userID = request.session['userID']
         fm = FirewallManager()
-        return fm.deleteBannedIP(userID, json.loads(request.body))
+        try:
+            body = request.body
+            if isinstance(body, bytes):
+                body = body.decode('utf-8')
+            request_data = json.loads(body) if body and body.strip() else {}
+        except json.JSONDecodeError as e:
+            final_dic = {'status': 0, 'error_message': 'Invalid JSON in request: %s' % str(e)}
+            return HttpResponse(json.dumps(final_dic), content_type='application/json', status=400)
+        except Exception as e:
+            final_dic = {'status': 0, 'error_message': 'Error parsing request: %s' % str(e)}
+            return HttpResponse(json.dumps(final_dic), content_type='application/json', status=400)
+        return fm.deleteBannedIP(userID, request_data)
     except KeyError:
-        return redirect(loadLoginPage)
+        final_dic = {'status': 0, 'error_message': 'Session expired. Please refresh the page and try again.'}
+        return HttpResponse(json.dumps(final_dic), content_type='application/json', status=403)
+    except Exception as e:
+        import traceback
+        from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as _log
+        error_trace = traceback.format_exc()
+        _log.writeToFile('Error in deleteBannedIP view: %s\n%s' % (str(e), error_trace))
+        final_dic = {'status': 0, 'error_message': 'Server error: %s' % str(e)}
+        return HttpResponse(json.dumps(final_dic), content_type='application/json', status=500)
 
 
 def exportFirewallRules(request):

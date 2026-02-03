@@ -1835,9 +1835,7 @@
             <a href="{% url 'manageSSL' %}" class="menu-item">
                 <span>Manage SSL</span>
             </a>
-            <a href="{% url 'sslReconcile' %}" class="menu-item">
-                <span>SSL Reconciliation</span>
-            </a>
+            {% comment %}SSL Reconciliation - hidden; URL /manageSSL/sslReconcile still works if needed{% endcomment %}
             {% endif %}
             {% if admin or hostnameSSL %}
             <a href="{% url 'sslForHostName' %}" class="menu-item">
@@ -2190,7 +2188,7 @@
     <script src="{% static 'managePHP/managePHP.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'serverLogs/serverLogs.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'serverStatus/serverStatus.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
-    <script src="{% static 'firewall/firewall.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'firewall/firewall.js' %}?v={{ CP_VERSION }}&fw={{ FIREWALL_STATIC_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'emailPremium/emailPremium.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'manageServices/manageServices.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'CLManager/CLManager.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
