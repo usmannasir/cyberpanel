@@ -72,6 +72,10 @@ LSWS_Latest_URL="https://cyberpanel.sh/update.litespeedtech.com/ws/latest.php"
 LSWS_Tmp=$(curl --silent --max-time 30 -4 "$LSWS_Latest_URL")
 LSWS_Stable_Line=$(echo "$LSWS_Tmp" | grep "LSWS_STABLE")
 LSWS_Stable_Version=$(expr "$LSWS_Stable_Line" : '.*LSWS_STABLE=\(.*\) BUILD .*')
+# Fallback to LSWS 6.3.4 (Stable) if fetch failed or empty
+if [ -z "$LSWS_Stable_Version" ]; then
+    LSWS_Stable_Version="6.3.4"
+fi
 #grab the LSWS latest stable version.
 
 Debug_Log2 "Starting Upgrade...1"
@@ -1285,6 +1289,8 @@ Post_Upgrade_System_Tweak() {
 sed -i "s|lsws-5.3.8|lsws-$LSWS_Stable_Version|g" /usr/local/CyberCP/serverStatus/serverStatusUtil.py
 sed -i "s|lsws-5.4.2|lsws-$LSWS_Stable_Version|g" /usr/local/CyberCP/serverStatus/serverStatusUtil.py
 sed -i "s|lsws-5.3.5|lsws-$LSWS_Stable_Version|g" /usr/local/CyberCP/serverStatus/serverStatusUtil.py
+sed -i "s|lsws-6.0|lsws-$LSWS_Stable_Version|g" /usr/local/CyberCP/serverStatus/serverStatusUtil.py
+sed -i "s|lsws-6.3.4|lsws-$LSWS_Stable_Version|g" /usr/local/CyberCP/serverStatus/serverStatusUtil.py
 
 if [[ "$Server_Country" = "CN" ]] ; then
   sed -i 's|https://www.litespeedtech.com/|https://cyberpanel.sh/www.litespeedtech.com/|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py

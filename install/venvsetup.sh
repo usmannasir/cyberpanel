@@ -116,6 +116,10 @@ LATEST_URL="https://update.litespeedtech.com/ws/latest.php"
 curl --silent -o /tmp/lsws_latest $LATEST_URL 2>/dev/null
 LSWS_STABLE_LINE=`cat /tmp/lsws_latest | grep LSWS_STABLE`
 LSWS_STABLE_VER=`expr "$LSWS_STABLE_LINE" : '.*LSWS_STABLE=\(.*\) BUILD .*'`
+# Fallback to LSWS 6.3.4 (Stable) if fetch failed or empty
+if [ -z "$LSWS_STABLE_VER" ]; then
+    LSWS_STABLE_VER="6.3.4"
+fi
 
 if [[ $SERVER_COUNTRY == "CN" ]] ; then
 #line1="$(grep -n "github.com/usmannasir/cyberpanel" install.py | head -n 1 | cut -d: -f1)"
@@ -890,6 +894,8 @@ fi
 
 sed -i 's|lsws-5.4.2|lsws-'$LSWS_STABLE_VER'|g' installCyberPanel.py
 sed -i 's|lsws-5.3.5|lsws-'$LSWS_STABLE_VER'|g' installCyberPanel.py
+sed -i 's|lsws-6.0|lsws-'$LSWS_STABLE_VER'|g' installCyberPanel.py
+sed -i 's|lsws-6.3.4|lsws-'$LSWS_STABLE_VER'|g' installCyberPanel.py
 #this sed must be done after license validation
 	
 echo -e "Preparing..."
@@ -1229,6 +1235,8 @@ fi
 sed -i 's|lsws-5.3.8|lsws-'$LSWS_STABLE_VER'|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
 sed -i 's|lsws-5.4.2|lsws-'$LSWS_STABLE_VER'|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
 sed -i 's|lsws-5.3.5|lsws-'$LSWS_STABLE_VER'|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
+sed -i 's|lsws-6.0|lsws-'$LSWS_STABLE_VER'|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
+sed -i 's|lsws-6.3.4|lsws-'$LSWS_STABLE_VER'|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
 
 if [[ $SILENT != "ON" ]] ; then
 printf "%s" "Would you like to restart your server now? [y/N]: "

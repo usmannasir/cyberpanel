@@ -78,6 +78,47 @@ class preFlightsChecks:
     def is_debian_family(self):
         """Check if distro is Ubuntu or Debian 12"""
         return self.distro in [ubuntu, debian12]
+
+    def add_litespeed_repo(self):
+        """Add LiteSpeed repository so OpenLiteSpeed 1.8.5+ is available (repo.litespeed.sh)"""
+        try:
+            self.stdOut("Adding LiteSpeed repository for OpenLiteSpeed 1.8.5+...", 1)
+            cmd = 'wget -q -O - https://repo.litespeed.sh | bash'
+            ret = subprocess.run(cmd, shell=True, timeout=120, capture_output=True, universal_newlines=True)
+            if ret.returncode != 0 and ret.stderr:
+                self.stdOut(f"LiteSpeed repo script warning: {ret.stderr[:200]}", 1)
+            if ret.returncode == 0:
+                self.stdOut("LiteSpeed repository added", 1)
+                return True
+            # Non-fatal: distro openlitespeed may still be used
+            self.stdOut("Could not add LiteSpeed repo; using distro package", 1)
+            return False
+        except Exception as e:
+            self.stdOut(f"LiteSpeed repo add failed: {e}", 1)
+            return False
+
+    def get_installed_ols_version(self):
+        """Return installed OpenLiteSpeed version as (major, minor, patch) or None"""
+        try:
+            for binary in ('/usr/local/lsws/bin/lshttpd', '/usr/local/lsws/bin/openlitespeed'):
+                if not os.path.exists(binary):
+                    continue
+                result = subprocess.run(
+                    [binary, '-v'],
+                    capture_output=True,
+                    timeout=5,
+                    universal_newlines=True,
+                    env=dict(os.environ, PATH=os.environ.get('PATH', '/usr/bin:/bin'))
+                )
+                out = (result.stdout or '') + (result.stderr or '')
+                # e.g. "OpenLiteSpeed/1.8.5" or "1.8.5"
+                import re
+                m = re.search(r'(\d+)\.(\d+)\.(\d+)', out)
+                if m:
+                    return (int(m.group(1)), int(m.group(2)), int(m.group(3)))
+            return None
+        except Exception:
+            return None
     
     def detect_os_info(self):
         """Detect OS information for all supported platforms"""
@@ -1172,7 +1213,7 @@ class preFlightsChecks:
             platform = self.detectPlatform()
             self.stdOut(f"Detected platform: {platform}", 1)
 
-            # Platform-specific URLs and checksums (OpenLiteSpeed v1.8.4.1 - v2.0.5 Static Build)
+            # Platform-specific URLs and checksums (OpenLiteSpeed 1.8.5+ preferred from repo; fallback static build)
             # Module Build Date: December 28, 2025 - v2.2.0 Brute Force with Progressive Throttle
             BINARY_CONFIGS = {
                 'rhel8': {
@@ -1381,16 +1422,20 @@ module cyberpanel_ols {
             self.stdOut("Installing LiteSpeed Web Server...", 1)
             
             if ent == 0:
-                # Install OpenLiteSpeed
-                self.stdOut("Installing OpenLiteSpeed...", 1)
-                if self.distro == ubuntu:
+                # Install OpenLiteSpeed 1.8.5+ from LiteSpeed repo when possible
+                self.stdOut("Installing OpenLiteSpeed (target 1.8.5+)...", 1)
+                self.add_litespeed_repo()
+                if self.distro == ubuntu or self.distro == debian12:
                     self.install_package('openlitespeed')
                 else:
                     self.install_package('openlitespeed')
-                
-                # Install custom binaries with PHP config support
-                # This replaces the standard binary with enhanced version
-                self.installCustomOLSBinaries()
+                # Use official OLS 1.8.5+ when available; only overlay custom binary if older
+                ols_ver = self.get_installed_ols_version()
+                if ols_ver and ols_ver >= (1, 8, 5):
+                    self.stdOut("Using official OpenLiteSpeed 1.8.5+ (no custom binary overlay)", 1)
+                else:
+                    # Install custom binaries with PHP config support (for pre-1.8.5 or when repo not used)
+                    self.installCustomOLSBinaries()
                 
                 # Configure OpenLiteSpeed
                 self.fix_ols_configs()
