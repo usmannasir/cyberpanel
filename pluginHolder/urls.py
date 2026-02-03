@@ -1,5 +1,87 @@
-from django.urls import path
+# -*- coding: utf-8 -*-
+"""
+PluginHolder URL configuration.
+Static routes are defined first; then URLs for each installed plugin are
+included dynamically so /plugins/<plugin_name>/... (e.g. settings/) works
+without hardcoding plugin names in the main CyberCP urls.py.
+
+Discovery order: /usr/local/CyberCP first (installed), then source paths
+(/home/cyberpanel/plugins, /home/cyberpanel-plugins) so settings work even
+when the plugin is only present in source.
+"""
+from django.urls import path, include
+import os
+import sys
+
 from . import views
+
+# Installed plugins live under this path (must match pluginInstaller and pluginHolder.views)
+INSTALLED_PLUGINS_PATH = '/usr/local/CyberCP'
+
+# Source paths for plugins (same as pluginHolder.views PLUGIN_SOURCE_PATHS)
+# Checked when plugin is not under INSTALLED_PLUGINS_PATH so URLs still work
+PLUGIN_SOURCE_PATHS = ['/home/cyberpanel/plugins', '/home/cyberpanel-plugins']
+
+# Plugin directory names that must not be routed here (core apps or reserved paths)
+RESERVED_PLUGIN_PATHS = frozenset([
+    'installed', 'help', 'api',  # pluginHolder's own path segments
+    'emailMarketing', 'emailPremium', 'pluginHolder', 'loginSystem', 'baseTemplate',
+    'packages', 'websiteFunctions', 'userManagment', 'dns', 'databases', 'ftp',
+    'filemanager', 'mailServer', 'cloudAPI', 'containerization', 'IncBackups',
+    'CLManager', 's3Backups', 'dockerManager', 'aiScanner', 'firewall', 'tuning',
+    'serverStatus', 'serverLogs', 'backup', 'managePHP', 'manageSSL', 'manageServices',
+    'highAvailability',
+])
+
+
+def _plugin_has_urls(plugin_dir):
+    """Return True if plugin_dir has meta.xml and urls.py."""
+    if not os.path.isdir(plugin_dir):
+        return False
+    return (os.path.exists(os.path.join(plugin_dir, 'meta.xml')) and
+            os.path.exists(os.path.join(plugin_dir, 'urls.py')))
+
+
+def _get_installed_plugin_list():
+    """
+    Return sorted list of (plugin_name, path_parent) to mount at /plugins/<name>/.
+    path_parent is the directory that must be on sys.path to import the plugin
+    (e.g. /usr/local/CyberCP or /home/cyberpanel/plugins).
+    First discovers from INSTALLED_PLUGINS_PATH, then from PLUGIN_SOURCE_PATHS.
+    """
+    seen = set()
+    result = []  # (name, path_parent)
+
+    # 1) Installed location (canonical)
+    if os.path.isdir(INSTALLED_PLUGINS_PATH):
+        try:
+            for name in os.listdir(INSTALLED_PLUGINS_PATH):
+                if name in RESERVED_PLUGIN_PATHS or name.startswith('.'):
+                    continue
+                plugin_dir = os.path.join(INSTALLED_PLUGINS_PATH, name)
+                if _plugin_has_urls(plugin_dir):
+                    seen.add(name)
+                    result.append((name, INSTALLED_PLUGINS_PATH))
+        except (OSError, IOError):
+            pass
+
+    # 2) Source paths (fallback so /plugins/PluginName/settings/ works even if not in CyberCP)
+    for base in PLUGIN_SOURCE_PATHS:
+        if not os.path.isdir(base):
+            continue
+        try:
+            for name in os.listdir(base):
+                if name in seen or name in RESERVED_PLUGIN_PATHS or name.startswith('.'):
+                    continue
+                plugin_dir = os.path.join(base, name)
+                if _plugin_has_urls(plugin_dir):
+                    seen.add(name)
+                    result.append((name, base))
+        except (OSError, IOError):
+            pass
+
+    return sorted(result, key=lambda x: x[0])
+
 
 urlpatterns = [
     path('installed', views.installed, name='installed'),
@@ -15,3 +97,21 @@ urlpatterns = [
     path('api/revert/<str:plugin_name>/', views.revert_plugin, name='revert_plugin'),
     path('<str:plugin_name>/help/', views.plugin_help, name='plugin_help'),
 ]
+
+# Dynamically include each installed plugin's URLs so /plugins/<plugin_name>/settings/ etc. work
+for _plugin_name, _path_parent in _get_installed_plugin_list():
+    try:
+        # If plugin is from a source path, ensure it is on sys.path so import works
+        if _path_parent not in sys.path:
+            sys.path.insert(0, _path_parent)
+        __import__(_plugin_name + '.urls')
+        urlpatterns.append(path(_plugin_name + '/', include(_plugin_name + '.urls')))
+    except (ImportError, AttributeError) as e:
+        try:
+            from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as _logging
+            _logging.writeToFile(
+                'pluginHolder.urls: Skipping plugin "%s" (urls not loadable): %s'
+                % (_plugin_name, e)
+            )
+        except Exception:
+            pass
