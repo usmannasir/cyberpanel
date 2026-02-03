@@ -316,20 +316,51 @@ do
 done
 }
 
+# Optional GitHub user override (same repo structure as usmannasir/cyberpanel)
+# Set via --repo USER or -r USER to use any GitHub user's cyberpanel repo
+Git_User_Override=""
+# Skip full system package update (yum/dnf update -y) to speed up upgrade; use when system is already updated
+Skip_System_Update=""
+
 Check_Argument() {
-if [[ "$*" = *"--branch "* ]] || [[ "$*" = *"-b "* ]]; then
-  Branch_Name=$(echo "$*" | sed -e "s/--branch //" -e "s/--mirror//" -e "s/-b //")
-  Branch_Check "$Branch_Name"
+# Parse --branch / -b (extract first word after -b or --branch)
+if [[ "$*" = *"--branch "* ]]; then
+  Branch_Name=$(echo "$*" | sed -n 's/.*--branch \([^ ]*\).*/\1/p' | head -1)
+  [[ -n "$Branch_Name" ]] && Branch_Check "$Branch_Name"
+elif [[ "$*" = *"-b "* ]]; then
+  Branch_Name=$(echo "$*" | sed -n 's/.*-b \([^ ]*\).*/\1/p' | head -1)
+  [[ -n "$Branch_Name" ]] && Branch_Check "$Branch_Name"
+fi
+# Parse --repo / -r to use any GitHub user (same URL structure as usmannasir/cyberpanel)
+if [[ "$*" = *"--repo "* ]]; then
+  Git_User_Override=$(echo "$*" | sed -n 's/.*--repo \([^ ]*\).*/\1/p' | head -1)
+fi
+if [[ "$*" = *"-r "* ]] && [[ -z "$Git_User_Override" ]]; then
+  Git_User_Override=$(echo "$*" | sed -n 's/.*-r \([^ ]*\).*/\1/p' | head -1)
+fi
+# Parse --no-system-update to skip yum/dnf update -y (faster upgrade when system is already updated)
+if [[ "$*" = *"--no-system-update"* ]]; then
+  Skip_System_Update="yes"
+  echo -e "\nUsing --no-system-update: skipping full system package update.\n"
 fi
 }
 
 Pre_Upgrade_Setup_Git_URL() {
   if [[ $Server_Country != "CN" ]] ; then
-    Git_User="usmannasir"
+    if [[ -n "$Git_User_Override" ]]; then
+      Git_User="$Git_User_Override"
+      echo -e "\nUsing GitHub repo: ${Git_User}/cyberpanel (same URL structure as usmannasir)\n"
+    else
+      Git_User="usmannasir"
+    fi
     Git_Content_URL="https://raw.githubusercontent.com/${Git_User}/cyberpanel"
     Git_Clone_URL="https://github.com/${Git_User}/cyberpanel.git"
   else
-    Git_User="qtwrk"
+    if [[ -n "$Git_User_Override" ]]; then
+      Git_User="$Git_User_Override"
+    else
+      Git_User="qtwrk"
+    fi
     Git_Content_URL="https://gitee.com/${Git_User}/cyberpanel/raw"
     Git_Clone_URL="https://gitee.com/${Git_User}/cyberpanel.git"
   fi
@@ -375,7 +406,11 @@ if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "AlmaLinux9" ]] ; then
     curl -o /etc/yum.repos.d/litespeed.repo https://cyberpanel.sh/litespeed/litespeed.repo
   fi
   yum clean all
-  yum update -y
+  if [[ -z "$Skip_System_Update" ]]; then
+    yum update -y
+  else
+    echo -e "[$(date +"%Y-%m-%d %H:%M-%S")] Skipping yum update (--no-system-update)" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  fi
   yum autoremove epel-release -y
   rm -f /etc/yum.repos.d/epel.repo
   rm -f /etc/yum.repos.d/epel.repo.rpmsave
@@ -528,7 +563,11 @@ elif [[ "$Server_OS" = "Ubuntu" ]] ; then
   fi
 
   apt update -y
-  export DEBIAN_FRONTEND=noninteractive ; apt-get -o Dpkg::Options::="--force-confold" upgrade -y
+  if [[ -z "$Skip_System_Update" ]]; then
+    export DEBIAN_FRONTEND=noninteractive ; apt-get -o Dpkg::Options::="--force-confold" upgrade -y
+  else
+    echo -e "[$(date +"%Y-%m-%d %H:%M-%S")] Skipping apt upgrade (--no-system-update)" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  fi
 
   if [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] ; then
     if [[ "$Server_OS_Version" = "24" ]]; then
@@ -663,7 +702,7 @@ if [ $CYBERCP_MISSING -eq 1 ]; then
     cd /usr/local
     rm -rf CyberCP_recovery_tmp
     
-    if git clone https://github.com/usmannasir/cyberpanel CyberCP_recovery_tmp; then
+    if git clone "$Git_Clone_URL" CyberCP_recovery_tmp; then
         echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Repository cloned successfully for recovery" | tee -a /var/log/cyberpanel_upgrade_debug.log
         
         # Checkout the appropriate branch
@@ -860,21 +899,7 @@ fi
 
 }
 
-Pre_Upgrade_Setup_Git_URL() {
-if [[ $Server_Country != "CN" ]] ; then
-  Git_User="usmannasir"
-  Git_Content_URL="https://raw.githubusercontent.com/${Git_User}/cyberpanel"
-  Git_Clone_URL="https://github.com/${Git_User}/cyberpanel.git"
-else
-  Git_User="qtwrk"
-  Git_Content_URL="https://gitee.com/${Git_User}/cyberpanel/raw"
-  Git_Clone_URL="https://gitee.com/${Git_User}/cyberpanel.git"
-fi
-
-if [[ "$Debug" = "On" ]] ; then
-  Debug_Log "Git_URL" "$Git_Content_URL"
-fi
-}
+# (Pre_Upgrade_Setup_Git_URL is defined earlier; this duplicate removed so --repo is respected)
 
 Pre_Upgrade_Branch_Input() {
   echo -e "\nPress the Enter key to continue with latest version, or enter specific version such as: \e[31m2.3.4\e[39m , \e[31m2.4.4\e[39m ...etc"
