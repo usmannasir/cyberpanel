@@ -8801,7 +8801,8 @@ StrictHostKeyChecking no
 
     def enableFTPQuota(self, userID=None, data=None):
         """
-        Enable FTP quota system
+        Enable FTP quota: ensure Quota yes in existing config (do not overwrite), restart Pure-FTPd.
+        Uses correct service name (pure-ftpd-mysql on Debian/Ubuntu, pure-ftpd on RHEL/Alma).
         """
         try:
             currentACL = ACLManager.loadedACL(userID)
@@ -8811,60 +8812,79 @@ StrictHostKeyChecking no
             if not (currentACL.get('admin', 0) == 1):
                 return ACLManager.loadErrorJson('status', 0)
             
-            # Backup existing configurations
-            logging.CyberCPLogFileWriter.writeToFile("Backing up existing Pure-FTPd configurations...")
+            # Resolve Pure-FTPd service name (Debian/Ubuntu use pure-ftpd-mysql)
+            if os.path.exists('/etc/lsb-release'):
+                ftp_service = 'pure-ftpd-mysql'
+            else:
+                ftp_service = 'pure-ftpd'
             
-            import shutil
-            from datetime import datetime
-            
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            
-            # Backup pure-ftpd.conf
-            if os.path.exists('/etc/pure-ftpd/pure-ftpd.conf'):
-                shutil.copy('/etc/pure-ftpd/pure-ftpd.conf', f'/etc/pure-ftpd/pure-ftpd.conf.backup.{timestamp}')
-            
-            # Backup pureftpd-mysql.conf
-            if os.path.exists('/etc/pure-ftpd/pureftpd-mysql.conf'):
-                shutil.copy('/etc/pure-ftpd/pureftpd-mysql.conf', f'/etc/pure-ftpd/pureftpd-mysql.conf.backup.{timestamp}')
-            
-            # Apply new configurations
-            logging.CyberCPLogFileWriter.writeToFile("Applying FTP quota configurations...")
-            
-            # Copy updated configurations
-            if os.path.exists('/usr/local/CyberCP/install/pure-ftpd/pure-ftpd.conf'):
-                shutil.copy('/usr/local/CyberCP/install/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pure-ftpd.conf')
-            
-            if os.path.exists('/usr/local/CyberCP/install/pure-ftpd/pureftpd-mysql.conf'):
-                shutil.copy('/usr/local/CyberCP/install/pure-ftpd/pureftpd-mysql.conf', '/etc/pure-ftpd/pureftpd-mysql.conf')
+            conf_path = '/etc/pure-ftpd/pure-ftpd.conf'
+            # Only ensure Quota is enabled; do not overwrite existing config (preserves DB credentials, paths)
+            if os.path.exists(conf_path):
+                # If service is not running, try restoring latest backup (in case a previous run overwrote working config)
+                try:
+                    out = ProcessUtilities.outputExecutioner(
+                        "systemctl is-active %s 2>/dev/null || true" % ftp_service, 'root', True)
+                    if not (out and out.strip() == 'active'):
+                        # Restore latest backups if present
+                        ProcessUtilities.executioner(
+                            "ls -t /etc/pure-ftpd/pure-ftpd.conf.backup.* 2>/dev/null | head -1 | xargs -r -I {} cp {} /etc/pure-ftpd/pure-ftpd.conf",
+                            'root', True)
+                        ProcessUtilities.executioner(
+                            "ls -t /etc/pure-ftpd/pureftpd-mysql.conf.backup.* 2>/dev/null | head -1 | xargs -r -I {} cp {} /etc/pure-ftpd/pureftpd-mysql.conf",
+                            'root', True)
+                except Exception:
+                    pass
+                # Add or replace Quota line via root (Pure-FTPd expects maxfiles:maxsizeMB, not "yes")
+                ProcessUtilities.executioner(
+                    "grep -q '^Quota' %s && sed -i 's/^Quota.*/Quota 100000:100000/' %s || echo 'Quota 100000:100000' >> %s" % (conf_path, conf_path, conf_path),
+                    'root', True)
+                logging.CyberCPLogFileWriter.writeToFile("Set Quota yes in existing pure-ftpd.conf")
+            else:
+                # First-time: copy from repo
+                from datetime import datetime
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                if os.path.exists('/usr/local/CyberCP/install/pure-ftpd/pure-ftpd.conf'):
+                    ProcessUtilities.executioner(
+                        'cp /usr/local/CyberCP/install/pure-ftpd/pure-ftpd.conf /etc/pure-ftpd/pure-ftpd.conf', 'root', True)
+                if os.path.exists('/usr/local/CyberCP/install/pure-ftpd/pureftpd-mysql.conf'):
+                    ProcessUtilities.executioner(
+                        'cp /usr/local/CyberCP/install/pure-ftpd/pureftpd-mysql.conf /etc/pure-ftpd/pureftpd-mysql.conf', 'root', True)
             
             # Restart Pure-FTPd
-            logging.CyberCPLogFileWriter.writeToFile("Restarting Pure-FTPd service...")
-            ProcessUtilities.executioner('systemctl restart pure-ftpd')
+            logging.CyberCPLogFileWriter.writeToFile("Restarting Pure-FTPd service (%s)..." % ftp_service)
+            ProcessUtilities.executioner('systemctl restart %s' % ftp_service, 'root', True)
+            time.sleep(1)
             
-            # Verify configuration
-            if ProcessUtilities.executioner('systemctl is-active --quiet pure-ftpd'):
+            try:
+                output = ProcessUtilities.outputExecutioner('systemctl is-active %s' % ftp_service, 'root', True)
+                is_active = (output and output.strip() == 'active')
+            except Exception:
+                is_active = False
+            
+            if is_active:
                 logging.CyberCPLogFileWriter.writeToFile("FTP quota system enabled successfully")
-                
-                data_ret = {
-                    'status': 1,
-                    'message': 'FTP quota system enabled successfully'
-                }
+                data_ret = {'status': 1, 'message': 'FTP quota system enabled successfully'}
             else:
-                data_ret = {
-                    'status': 0,
-                    'message': 'Failed to restart Pure-FTPd service'
-                }
+                # Capture failure reason for the user
+                try:
+                    status_out = ProcessUtilities.outputExecutioner(
+                        'systemctl status %s --no-pager -l 2>&1 | head -20' % ftp_service, 'root', True)
+                    status_preview = (status_out or '').strip().replace('\n', ' ')[:300]
+                except Exception:
+                    status_preview = ''
+                logging.CyberCPLogFileWriter.writeToFile("Pure-FTPd service not active after restart")
+                msg = 'Pure-FTPd did not start. Run: systemctl status %s' % ftp_service
+                if status_preview:
+                    msg += '. ' + status_preview
+                data_ret = {'status': 0, 'message': msg}
             
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
+            return HttpResponse(json.dumps(data_ret), content_type='application/json')
             
         except Exception as e:
-            data_ret = {
-                'status': 0,
-                'message': f'Error enabling FTP quota: {str(e)}'
-            }
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
+            logging.CyberCPLogFileWriter.writeToFile("Error enabling FTP quota: %s" % str(e))
+            data_ret = {'status': 0, 'message': 'Error enabling FTP quota: %s' % str(e)}
+            return HttpResponse(json.dumps(data_ret), content_type='application/json')
 
     def getFTPQuotas(self, userID=None, data=None):
         """

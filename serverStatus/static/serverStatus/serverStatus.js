@@ -641,11 +641,15 @@ app.controller('servicesManager', function ($scope, $http) {
                     getServiceStatus();
                     $scope.ActionSuccessfull = true;
                     $scope.ActionFailed = false;
+                    $scope.actionErrorMsg = '';
                     $scope.couldNotConnect = false;
                     $scope.actionLoader = false;
                     $scope.btnDisable = false;
                 }, 3000);
             } else {
+                var errMsg = (response.data && response.data.error_message) ? response.data.error_message : 'Action failed';
+                if (errMsg === 0) errMsg = 'Action failed';
+                $scope.actionErrorMsg = errMsg;
                 setTimeout(function () {
                     getServiceStatus();
                     $scope.ActionSuccessfull = false;
@@ -654,7 +658,6 @@ app.controller('servicesManager', function ($scope, $http) {
                     $scope.actionLoader = false;
                     $scope.btnDisable = false;
                 }, 5000);
-
             }
 
         }
