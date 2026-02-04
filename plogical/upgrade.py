@@ -1307,18 +1307,26 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
     @staticmethod
     def setupComposer():
-
-        if os.path.exists('composer.sh'):
-            os.remove('composer.sh')
-
-        command = "wget https://cyberpanel.sh/composer.sh"
-        Upgrade.executioner(command, 0)
-
-        command = "chmod +x composer.sh"
-        Upgrade.executioner(command, 0)
-
-        command = "./composer.sh"
-        Upgrade.executioner(command, 0)
+        composer_sh = '/tmp/composer.sh'
+        try:
+            if os.path.exists(composer_sh):
+                os.remove(composer_sh)
+            # Download to known path so chmod/run work regardless of cwd
+            command = "wget -q https://cyberpanel.sh/composer.sh -O " + composer_sh
+            Upgrade.executioner(command, 0)
+            if not os.path.isfile(composer_sh):
+                command = "curl -sSL https://cyberpanel.sh/composer.sh -o " + composer_sh
+                Upgrade.executioner(command, 0)
+            if not os.path.isfile(composer_sh):
+                Upgrade.stdOut("composer.sh download failed, skipping", 0)
+                return
+            command = "chmod +x " + composer_sh
+            Upgrade.executioner(command, 0)
+            command = "bash " + composer_sh
+            Upgrade.executioner(command, 0)
+        except Exception as e:
+            ErrorSanitizer.log_error_securely(e, 'setupComposer')
+            Upgrade.stdOut("setupComposer error (non-fatal)", 0)
 
     @staticmethod
     def downoad_and_install_raindloop():

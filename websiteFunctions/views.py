@@ -2263,6 +2263,14 @@ def securityManagementPage(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def getFTPQuotaStatus(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.getFTPQuotaStatus(userID, request.POST)
+    except KeyError:
+        return redirect(loadLoginPage)
+
 def enableFTPQuota(request):
     try:
         userID = request.session['userID']

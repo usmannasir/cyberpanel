@@ -580,7 +580,37 @@ cleanup_existing_cyberpanel() {
 
 # Function to install CyberPanel directly using the working method
 install_cyberpanel_direct() {
-    # Ask MariaDB version first (even in no-confirmation/auto mode) if not set via --mariadb-version
+    # Ask web server (OpenLiteSpeed vs LiteSpeed Enterprise) BEFORE MariaDB; default OpenLiteSpeed
+    if [ -z "$LS_ENT" ]; then
+        if [ "$AUTO_INSTALL" = true ]; then
+            LS_ENT=""
+            echo "  Using OpenLiteSpeed (auto mode)."
+        else
+            echo ""
+            echo "  Web server: 1) OpenLiteSpeed (default), 2) LiteSpeed Enterprise"
+            read -r -t 60 -p "  Enter 1 or 2 [1]: " LS_CHOICE || true
+            LS_CHOICE="${LS_CHOICE:-1}"
+            LS_CHOICE="${LS_CHOICE// /}"
+            if [ "$LS_CHOICE" = "2" ]; then
+                echo "  LiteSpeed Enterprise selected. Enter serial/key (required):"
+                read -r -t 120 -p "  Serial: " LS_SERIAL || true
+                LS_SERIAL="${LS_SERIAL:-}"
+                if [ -z "$LS_SERIAL" ]; then
+                    echo "  No serial provided. Defaulting to OpenLiteSpeed."
+                    LS_ENT=""
+                else
+                    LS_ENT="ent"
+                    echo "  Using LiteSpeed Enterprise with provided serial."
+                fi
+            else
+                LS_ENT=""
+                echo "  Using OpenLiteSpeed."
+            fi
+            echo ""
+        fi
+    fi
+
+    # Ask MariaDB version (after web server choice) if not set via --mariadb-version
     if [ -z "$MARIADB_VER" ]; then
         echo ""
         echo "  MariaDB version: 10.11, 11.8 (LTS, default) or 12.1?"
@@ -1090,7 +1120,10 @@ except:
         # install.py requires publicip as first positional argument
         local install_args=("$server_ip")
         
-        # Add optional arguments based on user preferences
+        # Web server: OpenLiteSpeed (default) or LiteSpeed Enterprise (--ent + --serial)
+        if [ -n "$LS_ENT" ] && [ -n "$LS_SERIAL" ]; then
+            install_args+=("--ent" "$LS_ENT" "--serial" "$LS_SERIAL")
+        fi
         # Default: OpenLiteSpeed, Full installation (postfix, powerdns, ftp), Local MySQL
         install_args+=("--postfix" "ON")
         install_args+=("--powerdns" "ON")
@@ -2686,9 +2719,9 @@ parse_arguments() {
                 echo "Options:"
                 echo "  -b, --branch BRANCH    Install from specific branch/commit"
                 echo "  -v, --version VER      Install specific version (auto-adds v prefix)"
-                echo "  --mariadb-version VER  MariaDB version: 10.11, 11.8 or 12.1 (asked first if omitted)"
+                echo "  --mariadb-version VER  MariaDB version: 10.11, 11.8 or 12.1 (asked after web server)"
                 echo "  --debug               Enable debug mode"
-                echo "  --auto                Auto mode without prompts (MariaDB still asked first unless --mariadb-version)"
+                echo "  --auto                Auto mode: OpenLiteSpeed + MariaDB 11.8 unless --mariadb-version set"
                 echo "  -h, --help            Show this help message"
                 echo ""
                 echo "Examples:"

@@ -405,48 +405,11 @@ class preFlightsChecks:
             except Exception as e:
                 self.stdOut("Warning: Could not remove compat packages: " + str(e), 0)
             
-            # Check if MariaDB is already installed before attempting installation
+            # Do NOT install MariaDB here with plain dnf (that would install distro default 10.11).
+            # installMySQL() runs later with the user's chosen version (--mariadb-version: 10.11, 11.8 or 12.1).
             is_installed, installed_version, major_minor = self.checkExistingMariaDB()
-            
             if is_installed:
-                self.stdOut(f"MariaDB/MySQL is already installed (version: {installed_version}), skipping installation", 1)
-                mariadb_installed = True
-            else:
-                # Install MariaDB with enhanced AlmaLinux 9.6 support
-                self.stdOut("Installing MariaDB for AlmaLinux 9.6...", 1)
-                
-                # Try multiple installation methods for maximum compatibility
-                mariadb_commands = [
-                    "dnf install -y mariadb-server mariadb-devel mariadb-client --skip-broken --nobest",
-                    "dnf install -y mariadb-server mariadb-devel mariadb-client --allowerasing",
-                    "dnf install -y mariadb-server mariadb-devel --skip-broken --nobest --allowerasing",
-                    "dnf install -y mariadb-server --skip-broken --nobest --allowerasing"
-                ]
-                
-                mariadb_installed = False
-                for cmd in mariadb_commands:
-                    try:
-                        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=300)
-                        if result.returncode == 0:
-                            mariadb_installed = True
-                            self.stdOut(f"MariaDB installed successfully with command: {cmd}", 1)
-                            break
-                    except subprocess.TimeoutExpired:
-                        self.stdOut(f"Timeout installing MariaDB with command: {cmd}", 0)
-                        continue
-                    except Exception as e:
-                        self.stdOut(f"Error installing MariaDB with command: {cmd} - {str(e)}", 0)
-                        continue
-                
-                if not mariadb_installed:
-                    self.stdOut("MariaDB installation failed, trying MySQL as fallback...", 0)
-                    try:
-                        command = "dnf install -y mysql-server mysql-devel --skip-broken --nobest --allowerasing"
-                        self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-                        self.stdOut("MySQL installed as fallback for MariaDB", 1)
-                        mariadb_installed = True
-                    except:
-                        self.stdOut("Both MariaDB and MySQL installation failed", 0)
+                self.stdOut(f"MariaDB/MySQL already installed (version: {installed_version}), skipping", 1)
             
             # Install additional required packages
             self.stdOut("Installing additional required packages...", 1)
@@ -5804,18 +5767,22 @@ milter_default_action = accept
 
             os.chdir(self.cwd)
 
-            # Download composer.sh if missing (e.g. when run from temp dir without repo file)
-            composer_sh = os.path.join(self.cwd, "composer.sh")
-            if not os.path.exists(composer_sh) or not os.path.isfile(composer_sh):
+            # Download composer.sh to a known path so chmod never fails with "cannot access 'composer.sh'"
+            composer_sh = "/tmp/composer.sh"
+            if not os.path.isfile(composer_sh):
                 command = "wget -q https://cyberpanel.sh/composer.sh -O " + composer_sh
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            if os.path.exists(composer_sh):
-                command = "chmod +x " + composer_sh
+            if not os.path.isfile(composer_sh):
+                command = "curl -sSL https://cyberpanel.sh/composer.sh -o " + composer_sh
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-                command = "bash " + os.path.abspath(composer_sh)
-                preFlightsChecks.call(command, self.distro, "./composer.sh", command, 1, 0, os.EX_OSERR, True)
+            if os.path.isfile(composer_sh):
+                command = "chmod +x " + composer_sh
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                command = "bash " + composer_sh
+                preFlightsChecks.call(command, self.distro, "composer.sh", command, 1, 0, os.EX_OSERR, True)
+            else:
+                logging.InstallLog.writeToFile("composer.sh download failed, skipping [setupPHPAndComposer]", 0)
 
         except OSError as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [setupPHPAndComposer]")
