@@ -558,6 +558,15 @@ def call(command, distro, bracket, message, log=0, do_exit=0, code=os.EX_OK, she
             if os.path.isfile(fallback):
                 command = command.replace(bad_path, fallback)
                 shell = True
+        # Use /tmp/composer.sh when command references relative composer.sh (avoids "chmod: cannot access 'composer.sh'")
+        # Only replace local file refs, not URLs (e.g. https://cyberpanel.sh/composer.sh)
+        if not os.path.isfile(os.path.join(os.getcwd(), 'composer.sh')):
+            if './composer.sh' in command:
+                command = command.replace('./composer.sh', '/tmp/composer.sh')
+                shell = True
+            elif ' composer.sh' in command and 'http' not in command.split('composer.sh')[0][-20:]:
+                command = command.replace(' composer.sh', ' /tmp/composer.sh')
+                shell = True
 
     # Check for apt lock before running apt commands
     if 'apt-get' in command or 'apt ' in command:
@@ -568,8 +577,8 @@ def call(command, distro, bracket, message, log=0, do_exit=0, code=os.EX_OK, she
             return False
 
     # CRITICAL: Use shell=True for commands with shell metacharacters
-    # Avoids "No matching repo to modify: 2>/dev/null, true, ||" when shlex.split splits them
-    if not shell and any(x in command for x in (' || ', ' 2>/dev', ' 2>', ' | ', '; true', '|| true')):
+    # Avoids "No matching repo to modify: 2>/dev/null, true, ||" and "Could not resolve host: |" when shlex.split splits them
+    if not shell and (any(x in command for x in (' || ', ' 2>/dev', ' 2>', ' | ', '; true', '|| true')) or '|' in command):
         shell = True
 
     # CRITICAL: For mysql/mariadb commands, always use shell=True and full binary path
