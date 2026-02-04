@@ -1,5 +1,6 @@
 {% extends "baseTemplate/index.html" %}
 {% load i18n %}
+{% load static %}
 {% block title %}{% trans "Email Limits - CyberPanel" %}{% endblock %}
 {% block content %}
 
@@ -387,4 +388,13 @@
         </div>
     </div>
 
+{% endblock %}
+
+{% block footer_scripts %}
+    {# EmailLimitsNew controller: inline from view (preferred) or fallback to static file #}
+    {% if email_limits_controller_js %}
+    <script data-cfasync="false">{{ email_limits_controller_js|safe }}</script>
+    {% else %}
+    <script src="{% static 'mailServer/emailLimitsController.js' %}?v=2.4.4.1" data-cfasync="false"></script>
+    {% endif %}
 {% endblock %}

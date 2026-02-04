@@ -1130,19 +1130,12 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                         console.log('Parsed responseData from string:', responseData);
                     } catch (e) {
                         console.error('Failed to parse response as JSON:', e);
-                        console.error('Raw response string:', responseData);
-                        // Try to extract error from string
-                        if (responseData.includes('error')) {
-                            if (typeof PNotify !== 'undefined') {
-                                new PNotify({
-                                    title: 'Error',
-                                    text: 'Failed to block IP address: ' + responseData,
-                                    type: 'error',
-                                    delay: 5000
-                                });
-                            }
-                            return;
+                        var errorMsg = responseData && responseData.length ? responseData : 'Failed to block IP address';
+                        if (typeof PNotify !== 'undefined') {
+                            new PNotify({ title: 'Error', text: errorMsg, type: 'error', delay: 5000 });
                         }
+                        $scope.blockingIP = null;
+                        return;
                     }
                 }
                 
@@ -1217,28 +1210,20 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                 $scope.lastErrorTime = Date.now();
                 
                 var errorMessage = 'Failed to block IP address';
-                if (err.data) {
-                    var errData = err.data;
-                    if (typeof errData === 'string') {
-                        try {
-                            errData = JSON.parse(errData);
-                        } catch (e) {
-                            errorMessage = errData || errorMessage;
+                var errData = err.data;
+                if (typeof errData === 'string') {
+                    try {
+                        errData = JSON.parse(errData);
+                    } catch (e) {
+                        if (errData && errData.length) {
+                            errorMessage = errData.length > 200 ? errData.substring(0, 200) + '...' : errData;
                         }
                     }
-                    if (errData && typeof errData === 'object') {
-                        if (errData.error_message) {
-                            errorMessage = errData.error_message;
-                        } else if (errData.error) {
-                            errorMessage = errData.error;
-                        } else if (errData.message) {
-                            errorMessage = errData.message;
-                        }
-                    }
-                } else if (err.statusText) {
-                    errorMessage = err.statusText;
+                }
+                if (errData && typeof errData === 'object') {
+                    errorMessage = errData.error_message || errData.error || errData.message || errorMessage;
                 } else if (err.status) {
-                    errorMessage = `HTTP ${err.status}: ${err.statusText || 'Unknown error'}`;
+                    errorMessage = 'HTTP ' + err.status + ': ' + (errorMessage);
                 }
                 
                 console.error('Final error message:', errorMessage);

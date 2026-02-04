@@ -622,6 +622,7 @@
                 <div ng-show="ActionFailed" class="alert alert-danger">
                     <i class="fas fa-exclamation-circle alert-icon"></i>
                     <span>{% trans "Action Failed" %}</span>
+                    <span ng-show="actionErrorMsg" class="d-block mt-2"><strong>{% trans "Details:" %}</strong> <span ng-bind="actionErrorMsg"></span></span>
                 </div>
                 <div ng-show="ActionSuccessfull" class="alert alert-success">
                     <i class="fas fa-check-circle alert-icon"></i>
