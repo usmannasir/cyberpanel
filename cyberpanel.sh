@@ -1162,6 +1162,21 @@ except:
             export DEBUG_MODE=true
         fi
         
+        # CRITICAL: If CyberPanel Python does not exist yet, patch installer to use system Python.
+        # Fixes FileNotFoundError when archive is cached/old and still references /usr/local/CyberPanel/bin/python.
+        if [ ! -f /usr/local/CyberPanel/bin/python ]; then
+            sys_python="/usr/bin/python3"
+            [ -x "$sys_python" ] || sys_python="/usr/local/bin/python3"
+            if [ -x "$sys_python" ]; then
+                for f in install/install_utils.py install/install.py; do
+                    if [ -f "$f" ] && grep -q '/usr/local/CyberPanel/bin/python' "$f" 2>/dev/null; then
+                        sed -i "s|/usr/local/CyberPanel/bin/python|$sys_python|g" "$f"
+                        print_status "Patched $f to use $sys_python (CyberPanel python not yet installed)"
+                    fi
+                done
+            fi
+        fi
+        
         # Run the Python installer directly
         if [ "$DEBUG_MODE" = true ]; then
             python3 "$installer_py" "${install_args[@]}" 2>&1 | tee /var/log/CyberPanel/install_output.log
@@ -1354,6 +1369,7 @@ EOF
         systemctl start lsws || true
     else
         echo "  • LiteSpeed/OpenLiteSpeed not found at /usr/local/lsws - skipping lsws.service (install may have skipped web server)"
+        echo "  • If the installer failed earlier (e.g. Python error), re-run the installer. Once it completes, open ports 8090 and 7080 in your cloud security group (e.g. AWS EC2 Security Group inbound rules)."
         systemctl disable lsws 2>/dev/null || true
         rm -f /etc/systemd/system/lsws.service
         systemctl daemon-reload
@@ -1409,6 +1425,7 @@ EOF
             echo "  ✓ Port 8090 and 7080 are now listening"
         else
             echo "  ⚠ One or both ports not yet listening. Run: systemctl start mariadb lsws lscpd"
+            echo "  ⚠ On AWS/cloud: add inbound rules for TCP 8090 and 7080 in the instance security group."
         fi
     fi
 
