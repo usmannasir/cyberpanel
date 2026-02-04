@@ -789,19 +789,23 @@ except:
     echo "Downloading from: https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/cyberpanel.sh"
     
     # First, try to download the repository archive to get the correct installer
-    local archive_url="https://github.com/master3395/cyberpanel/archive/v2.5.5-dev.tar.gz"
+    # GitHub: branch archives use refs/heads/BRANCH; tag archives use refs/tags/TAG or /TAG
+    local archive_url=""
     local installer_url="https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/cyberpanel.sh"
-    
-    # Test if the development branch archive exists
-    if curl -s --head "$archive_url" | grep -q "200 OK"; then
+    if curl -s --head "https://github.com/master3395/cyberpanel/archive/refs/heads/v2.5.5-dev.tar.gz" | grep -q "200 OK"; then
+        archive_url="https://github.com/master3395/cyberpanel/archive/refs/heads/v2.5.5-dev.tar.gz"
+        echo "    Using development branch (v2.5.5-dev) from master3395/cyberpanel"
+    elif curl -s --head "https://github.com/master3395/cyberpanel/archive/v2.5.5-dev.tar.gz" | grep -q "200 OK"; then
+        archive_url="https://github.com/master3395/cyberpanel/archive/v2.5.5-dev.tar.gz"
         echo "    Using development branch (v2.5.5-dev) from master3395/cyberpanel"
     else
         echo "    Development branch archive not available, trying installer script directly..."
-        # Test if the installer script exists
         if ! curl -s --head "$installer_url" | grep -q "200 OK"; then
             echo "    Development branch not available, falling back to stable"
             installer_url="https://raw.githubusercontent.com/master3395/cyberpanel/stable/cyberpanel.sh"
             archive_url="https://github.com/master3395/cyberpanel/archive/stable.tar.gz"
+        else
+            archive_url="https://github.com/master3395/cyberpanel/archive/refs/heads/v2.5.5-dev.tar.gz"
         fi
     fi
     
@@ -811,81 +815,18 @@ except:
         return 1
     fi
     
-    # CRITICAL: Patch the installer script to skip MariaDB installation if 10.x is already installed
-    if [ -n "$MARIADB_VERSION" ] && [ "$major_ver" -lt 12 ] 2>/dev/null; then
-        print_status "Patching installer script to skip MariaDB installation..."
-        
-        # Create a backup
-        cp cyberpanel_installer.sh cyberpanel_installer.sh.backup
-        
-        # Use Python to properly patch the installer script
-        python3 -c "
-import re
-import sys
-
-try:
-    with open('cyberpanel_installer.sh', 'r') as f:
-        content = f.read()
+    # Do NOT patch installer to add --exclude=MariaDB-server*: it blocks initial MariaDB install
+    # and causes "MariaDB-server requires MariaDB-client but none of the providers can be installed".
     
-    original_content = content
-    
-    # Pattern: Add --exclude=MariaDB-server* to dnf/yum install commands that install mariadb-server
-    # Match: (dnf|yum) install [flags] [packages including mariadb-server]
-    def add_exclude(match):
-        cmd = match.group(0)
-        # Check if --exclude is already present
-        if '--exclude=MariaDB-server' in cmd:
-            return cmd
-        # Add --exclude=MariaDB-server* after install and flags, before packages
-        return re.sub(r'((?:dnf|yum)\s+install\s+(?:-[^\s]+\s+)*)', r'\1--exclude=MariaDB-server* ', cmd, flags=re.IGNORECASE)
-    
-    # Find all dnf/yum install commands that mention mariadb-server
-    content = re.sub(
-        r'(?:dnf|yum)\s+install[^;]*?mariadb-server[^;]*',
-        add_exclude,
-        content,
-        flags=re.IGNORECASE | re.MULTILINE
-    )
-    
-    # Also handle MariaDB-server (capitalized)
-    content = re.sub(
-        r'(?:dnf|yum)\s+install[^;]*?MariaDB-server[^;]*',
-        add_exclude,
-        content,
-        flags=re.IGNORECASE | re.MULTILINE
-    )
-    
-    # Only write if content changed
-    if content != original_content:
-        with open('cyberpanel_installer.sh', 'w') as f:
-            f.write(content)
-        print('Installer script patched successfully')
-    else:
-        print('No changes needed in installer script')
-        
-except Exception as e:
-    print(f'Error patching installer script: {e}')
-    sys.exit(1)
-" 2>/dev/null && print_status "Installer script patched successfully" || {
-        # Fallback: Simple sed-based patching if Python fails
-        sed -i 's/\(dnf\|yum\) install\([^;]*\)mariadb-server/\1 install\2--exclude=MariaDB-server* mariadb-server/gi' cyberpanel_installer.sh 2>/dev/null
-        sed -i 's/\(dnf\|yum\) install\([^;]*\)MariaDB-server/\1 install\2--exclude=MariaDB-server* MariaDB-server/gi' cyberpanel_installer.sh 2>/dev/null
-        print_status "Installer script patched (fallback method)"
-    }
-        
-        print_status "Installer script patched to exclude MariaDB-server from installation"
-    fi
-    
-    # Make script executable and verify
-    chmod 755 cyberpanel_installer.sh 2>/dev/null || true
+    # Make script executable (use full path in case cwd has noexec)
+    chmod 755 cyberpanel_installer.sh 2>/dev/null || chmod +x cyberpanel_installer.sh 2>/dev/null || true
     if [ ! -x "cyberpanel_installer.sh" ]; then
-        print_status "WARNING: Could not make cyberpanel_installer.sh executable, will use bash to execute"
+        print_status "Note: Script will be run with bash (executable bit not set)"
     fi
     
-    # Download the install directory
+    # Download the install directory (use archive_url set above; may be branch or stable)
     echo "Downloading installation files..."
-    local archive_url="https://github.com/master3395/cyberpanel/archive/v2.5.5-dev.tar.gz"
-    if [ "$installer_url" = "https://raw.githubusercontent.com/master3395/cyberpanel/stable/cyberpanel.sh" ]; then
+    if [ -z "$archive_url" ] || [ "$installer_url" = "https://raw.githubusercontent.com/master3395/cyberpanel/stable/cyberpanel.sh" ]; then
         archive_url="https://github.com/master3395/cyberpanel/archive/stable.tar.gz"
     fi
     
@@ -971,6 +912,19 @@ except Exception as e:
         # NOTE: We do NOT patch install.py to add --exclude=MariaDB-server* to dnf install.
         # That would block the initial MariaDB-server install. install.py now clears dnf exclude
         # before installing MariaDB and uses official MariaDB-server packages.
+        
+        # Clear MariaDB-server from dnf/yum exclude so the installer can install or reinstall it
+        # (cyberpanel.sh may have added it earlier when 10.x was detected; partial installs leave exclude in place)
+        for conf in /etc/dnf/dnf.conf /etc/yum.conf; do
+            if [ -f "$conf" ] && grep -q "exclude=.*MariaDB-server" "$conf" 2>/dev/null; then
+                sed -i '/^exclude=/s/MariaDB-server\*\s*//g' "$conf"
+                sed -i '/^exclude=/s/\s*MariaDB-server\*//g' "$conf"
+                sed -i '/^exclude=/s/MariaDB-server\s*//g' "$conf"
+                sed -i '/^exclude=\s*$/d' "$conf"
+                sed -i '/^exclude=$/d' "$conf"
+                print_status "Cleared MariaDB-server from exclude in $conf for installation"
+            fi
+        done
         
         # If MariaDB 10.x is installed, disable repositories right before running installer
         if [ -n "$MARIADB_VERSION" ] && [ -f /tmp/cyberpanel_repo_monitor.pid ]; then
@@ -1698,7 +1652,7 @@ show_version_selection() {
     echo ""
     echo "   1.  Latest Stable (Recommended)"
     echo "   2.  v2.5.5-dev (Development)"
-    echo "   3.  v2.5.4 (Previous Stable)"
+    echo "   3.  v2.4.4 (Previous Stable)"
     echo "   4.  Custom Branch Name"
     echo "   5.  Custom Commit Hash"
     echo ""
@@ -1719,7 +1673,7 @@ show_version_selection() {
                 break
                 ;;
             3)
-                BRANCH_NAME="v2.5.4"
+                BRANCH_NAME="v2.4.4"
                 break
                 ;;
             4)
