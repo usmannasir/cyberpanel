@@ -1682,69 +1682,69 @@ LogFile /var/log/clamav/clamav.log
 
                             # Query each DNS server
                             for url in urls:
-                try:
-                    response = requests.get(f'{url}/index.php?ip={ip_address}', timeout=5)
+                                try:
+                                    response = requests.get(f'{url}/index.php?ip={ip_address}', timeout=5)
 
-                    if os.path.exists(ProcessUtilities.debugPath):
-                        logging.CyberCPLogFileWriter.writeToFile(f'url to call {ip_address} is {url}')
+                                    if os.path.exists(ProcessUtilities.debugPath):
+                                        logging.CyberCPLogFileWriter.writeToFile(f'url to call {ip_address} is {url}')
 
-                    if response.status_code == 200:
-                        try:
-                            data = response.json()
+                                    if response.status_code == 200:
+                                        try:
+                                            data = response.json()
 
-                            if os.path.exists(ProcessUtilities.debugPath):
-                                logging.CyberCPLogFileWriter.writeToFile(f'response from dns system {str(data)}')
+                                            if os.path.exists(ProcessUtilities.debugPath):
+                                                logging.CyberCPLogFileWriter.writeToFile(f'response from dns system {str(data)}')
 
-                            # Validate response structure
-                            if not isinstance(data, dict):
-                                logging.CyberCPLogFileWriter.writeToFile(f'Invalid response format from {url}: not a dictionary')
-                                continue
+                                            # Validate response structure
+                                            if not isinstance(data, dict):
+                                                logging.CyberCPLogFileWriter.writeToFile(f'Invalid response format from {url}: not a dictionary')
+                                                continue
 
-                            if 'status' not in data:
-                                logging.CyberCPLogFileWriter.writeToFile(f'Response from {url} missing "status" key')
-                                continue
+                                            if 'status' not in data:
+                                                logging.CyberCPLogFileWriter.writeToFile(f'Response from {url} missing "status" key')
+                                                continue
 
-                            if data['status'] == 1:
-                                # Validate results structure
-                                if 'results' not in data or not isinstance(data['results'], dict):
-                                    logging.CyberCPLogFileWriter.writeToFile(f'Response from {url} missing or invalid "results" key')
+                                            if data['status'] == 1:
+                                                # Validate results structure
+                                                if 'results' not in data or not isinstance(data['results'], dict):
+                                                    logging.CyberCPLogFileWriter.writeToFile(f'Response from {url} missing or invalid "results" key')
+                                                    continue
+
+                                                results_dict = data['results']
+
+                                                # Safely extract results from different DNS servers
+                                                dns_servers = ['8.8.8.8', '1.1.1.1', '9.9.9.9']
+                                                for dns_server in dns_servers:
+                                                    if dns_server in results_dict:
+                                                        result_value = results_dict[dns_server]
+                                                        if result_value and result_value not in results:
+                                                            results.append(result_value)
+
+                                                successful_queries += 1
+                                            else:
+                                                if os.path.exists(ProcessUtilities.debugPath):
+                                                    logging.CyberCPLogFileWriter.writeToFile(f'DNS server {url} returned status != 1: {data.get("status", "unknown")}')
+                                        except ValueError as e:
+                                            logging.CyberCPLogFileWriter.writeToFile(f'Failed to parse JSON response from {url}: {str(e)}')
+                                            continue
+                                        except KeyError as e:
+                                            logging.CyberCPLogFileWriter.writeToFile(f'Missing key in response from {url}: {str(e)}')
+                                            continue
+                                    else:
+                                        if os.path.exists(ProcessUtilities.debugPath):
+                                            logging.CyberCPLogFileWriter.writeToFile(f'DNS server {url} returned HTTP {response.status_code}')
+                                except Timeout as e:
+                                    logging.CyberCPLogFileWriter.writeToFile(f'Timeout while querying DNS server {url}: {str(e)}')
                                     continue
-
-                                results_dict = data['results']
-                                
-                                # Safely extract results from different DNS servers
-                                dns_servers = ['8.8.8.8', '1.1.1.1', '9.9.9.9']
-                                for dns_server in dns_servers:
-                                    if dns_server in results_dict:
-                                        result_value = results_dict[dns_server]
-                                        if result_value and result_value not in results:
-                                            results.append(result_value)
-                                
-                                successful_queries += 1
-                            else:
-                                if os.path.exists(ProcessUtilities.debugPath):
-                                    logging.CyberCPLogFileWriter.writeToFile(f'DNS server {url} returned status != 1: {data.get("status", "unknown")}')
-                        except ValueError as e:
-                            logging.CyberCPLogFileWriter.writeToFile(f'Failed to parse JSON response from {url}: {str(e)}')
-                            continue
-                        except KeyError as e:
-                            logging.CyberCPLogFileWriter.writeToFile(f'Missing key in response from {url}: {str(e)}')
-                            continue
-                    else:
-                        if os.path.exists(ProcessUtilities.debugPath):
-                            logging.CyberCPLogFileWriter.writeToFile(f'DNS server {url} returned HTTP {response.status_code}')
-                except Timeout as e:
-                    logging.CyberCPLogFileWriter.writeToFile(f'Timeout while querying DNS server {url}: {str(e)}')
-                    continue
-                except ConnectionError as e:
-                    logging.CyberCPLogFileWriter.writeToFile(f'Connection error while querying DNS server {url}: {str(e)}')
-                    continue
-                except RequestException as e:
-                    logging.CyberCPLogFileWriter.writeToFile(f'Request error while querying DNS server {url}: {str(e)}')
-                    continue
-                except Exception as e:
-                    logging.CyberCPLogFileWriter.writeToFile(f'Unexpected error while querying DNS server {url}: {str(e)}')
-                    continue
+                                except ConnectionError as e:
+                                    logging.CyberCPLogFileWriter.writeToFile(f'Connection error while querying DNS server {url}: {str(e)}')
+                                    continue
+                                except RequestException as e:
+                                    logging.CyberCPLogFileWriter.writeToFile(f'Request error while querying DNS server {url}: {str(e)}')
+                                    continue
+                                except Exception as e:
+                                    logging.CyberCPLogFileWriter.writeToFile(f'Unexpected error while querying DNS server {url}: {str(e)}')
+                                    continue
 
                             if os.path.exists(ProcessUtilities.debugPath):
                                 logging.CyberCPLogFileWriter.writeToFile(f'rDNS result of {ip_address} is {str(results)} (successful queries: {successful_queries}/{len(urls)})')

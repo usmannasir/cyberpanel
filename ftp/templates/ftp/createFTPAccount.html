@@ -452,18 +452,65 @@
                                 <div class="col-md-8">
                                     <div class="form-group">
                                         <label class="form-label">{% trans "Select Website" %}</label>
-                                        <select ng-model="ftpDomain" ng-change="showFTPDetails()" class="form-control create-ftp-acct-select">
+                                        <select id="create-ftp-website-select" ng-model="ftpDomain" ng-change="showFTPDetails()" class="form-control create-ftp-acct-select">
                                             <option value="">{% trans "Choose a website..." %}</option>
                                             {% for items in websiteList %}
                                                 <option value="{{ items }}">{{ items }}</option>
                                             {% endfor %}
                                         </select>
+                                        <script data-cfasync="false">
+                                        (function() {
+                                            function hasWebsiteSelected() {
+                                                var sel = document.getElementById('create-ftp-website-select');
+                                                if (!sel) return false;
+                                                if (sel.value && sel.value !== '') return true;
+                                                var rendered = document.querySelector('.select2-selection__rendered');
+                                                var text = rendered ? (rendered.title || rendered.textContent || '').trim() : '';
+                                                return text !== '' && text.indexOf('Choose') === -1;
+                                            }
+                                            function showFTPFormSection() {
+                                                var sel = document.getElementById('create-ftp-website-select');
+                                                var section = document.querySelector('.account-details.ftpDetails');
+                                                var container = document.querySelector('.modern-container[ng-controller="createFTPAccount"]');
+                                                if (section && hasWebsiteSelected()) {
+                                                    section.classList.remove('ng-hide');
+                                                    section.style.setProperty('display', 'block', 'important');
+                                                    try { section.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
+                                                    if (typeof angular !== 'undefined' && container) {
+                                                        try {
+                                                            var scope = angular.element(container).scope();
+                                                            if (scope) {
+                                                                scope.ftpDetails = false;
+                                                                scope.$evalAsync(function() { scope.ftpDetails = false; });
+                                                            }
+                                                        } catch (e) {}
+                                                    }
+                                                }
+                                            }
+                                            document.addEventListener('DOMContentLoaded', function() {
+                                                var sel = document.getElementById('create-ftp-website-select');
+                                                if (!sel) return;
+                                                sel.addEventListener('change', showFTPFormSection);
+                                                sel.addEventListener('input', showFTPFormSection);
+                                                if (sel.value) showFTPFormSection();
+                                                var delays = [50, 150, 350, 600, 1000, 1500, 2200, 3000];
+                                                for (var i = 0; i < delays.length; i++) {
+                                                    setTimeout(showFTPFormSection, delays[i]);
+                                                }
+                                                var pollCount = 0;
+                                                var pollId = setInterval(function() {
+                                                    showFTPFormSection();
+                                                    if (++pollCount >= 20) clearInterval(pollId);
+                                                }, 200);
+                                            });
+                                        })();
+                                        </script>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div ng-hide="ftpDetails" class="account-details">
+                        <div ng-hide="ftpDetails" class="account-details ftpDetails">
                             <h3><i class="fas fa-cog"></i> {% trans "FTP Account Details" %}</h3>
                             
                             <div class="row">
