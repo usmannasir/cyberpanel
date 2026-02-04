@@ -789,18 +789,18 @@ except:
     echo "Downloading from: https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/cyberpanel.sh"
     
     # First, try to download the repository archive to get the correct installer
-    # GitHub: branch archives use refs/heads/BRANCH; tag archives use refs/tags/TAG or /TAG
+    # GitHub: branch archives use refs/heads/BRANCH; GitHub returns 302 redirect to codeload, so we must use -L
     local archive_url=""
     local installer_url="https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/cyberpanel.sh"
-    if curl -s --head "https://github.com/master3395/cyberpanel/archive/refs/heads/v2.5.5-dev.tar.gz" | grep -q "200 OK"; then
+    if curl -s -L --head "https://github.com/master3395/cyberpanel/archive/refs/heads/v2.5.5-dev.tar.gz" | grep -q "200 OK"; then
         archive_url="https://github.com/master3395/cyberpanel/archive/refs/heads/v2.5.5-dev.tar.gz"
         echo "    Using development branch (v2.5.5-dev) from master3395/cyberpanel"
-    elif curl -s --head "https://github.com/master3395/cyberpanel/archive/v2.5.5-dev.tar.gz" | grep -q "200 OK"; then
+    elif curl -s -L --head "https://github.com/master3395/cyberpanel/archive/v2.5.5-dev.tar.gz" | grep -q "200 OK"; then
         archive_url="https://github.com/master3395/cyberpanel/archive/v2.5.5-dev.tar.gz"
         echo "    Using development branch (v2.5.5-dev) from master3395/cyberpanel"
     else
         echo "    Development branch archive not available, trying installer script directly..."
-        if ! curl -s --head "$installer_url" | grep -q "200 OK"; then
+        if ! curl -s -L --head "$installer_url" | grep -q "200 OK"; then
             echo "    Development branch not available, falling back to stable"
             installer_url="https://raw.githubusercontent.com/master3395/cyberpanel/stable/cyberpanel.sh"
             archive_url="https://github.com/master3395/cyberpanel/archive/stable.tar.gz"
