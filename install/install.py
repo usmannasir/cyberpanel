@@ -2839,6 +2839,13 @@ module cyberpanel_ols {
     # Using shared function from install_utils
     @staticmethod
     def call(command, distro, bracket, message, log=0, do_exit=0, code=os.EX_OK, shell=False):
+        # Fix missing /usr/local/CyberPanel/bin/python on install/upgrade (avoid FileNotFoundError)
+        if isinstance(command, str) and '/usr/local/CyberPanel/bin/python' in command:
+            if not os.path.isfile('/usr/local/CyberPanel/bin/python'):
+                fallback = '/usr/bin/python3' if os.path.isfile('/usr/bin/python3') else '/usr/local/bin/python3'
+                if os.path.isfile(fallback):
+                    command = command.replace('/usr/local/CyberPanel/bin/python', fallback, 1)
+                    shell = True
         return install_utils.call(command, distro, bracket, message, log, do_exit, code, shell)
 
     def checkIfSeLinuxDisabled(self):
