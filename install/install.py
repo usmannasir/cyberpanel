@@ -3367,19 +3367,16 @@ password="%s"
         if not self.ensureVirtualEnvironmentSetup():
             logging.InstallLog.writeToFile("WARNING: No venv found; will try system Python", 1)
 
-        # Find Python: try system Python first so we never use missing /usr/local/CyberPanel/bin/python
-        # (venv may not exist yet; /usr/local/CyberPanel is legacy and often missing on fresh install)
+        # Find Python: use only system Python or CyberCP venv (never /usr/local/CyberPanel - often missing on fresh install)
         python_paths = [
             "/usr/bin/python3",
             "/usr/local/bin/python3",
         ]
         if sys.executable and sys.executable not in python_paths:
             python_paths.append(sys.executable)
-        python_paths.extend([
-            "/usr/local/CyberCP/bin/python",
-            "/usr/local/CyberPanel/bin/python",
-            "/usr/local/CyberPanel-venv/bin/python",
-        ])
+        # Only add venv if it exists (avoid FileNotFoundError)
+        if os.path.isfile("/usr/local/CyberCP/bin/python"):
+            python_paths.append("/usr/local/CyberCP/bin/python")
 
         python_path = None
         for path in python_paths:
