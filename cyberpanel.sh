@@ -659,19 +659,19 @@ install_cyberpanel_direct() {
     mkdir -p "$temp_dir"
     cd "$temp_dir" || return 1
     
-    # CRITICAL: Disable MariaDB 12.1 repository and add dnf exclude if MariaDB 10.x is installed
-    # This must be done BEFORE Pre_Install_Setup_Repository runs
+    # Only add dnf exclude when we want to KEEP the current MariaDB (same version as user chose).
+    # If user chose 11.8 but 10.11 is installed, do NOT exclude — allow install.py to upgrade.
     if command -v rpm >/dev/null 2>&1; then
-        # Check if MariaDB 10.x is installed
         if rpm -qa | grep -qiE "^(mariadb-server|mysql-server|MariaDB-server)" 2>/dev/null; then
             local mariadb_version=$(mysql --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
             if [ -n "$mariadb_version" ]; then
                 local major_ver=$(echo "$mariadb_version" | cut -d. -f1)
                 local minor_ver=$(echo "$mariadb_version" | cut -d. -f2)
-                
-                # Check if it's MariaDB 10.x (major version < 12)
-                if [ "$major_ver" -lt 12 ]; then
-                    print_status "MariaDB $mariadb_version detected, adding dnf exclude to prevent upgrade attempts"
+                local installed_majmin="${major_ver}.${minor_ver}"
+                local chosen_ver="${MARIADB_VER:-11.8}"
+                # Only add exclude when installed version matches user's choice (preserve, no upgrade)
+                if [ "$installed_majmin" = "$chosen_ver" ]; then
+                    print_status "MariaDB $mariadb_version matches chosen $chosen_ver, adding dnf exclude to preserve it"
                     
                     # Add MariaDB-server to dnf excludes (multiple formats for compatibility)
                     local dnf_conf="/etc/dnf/dnf.conf"
@@ -808,6 +808,19 @@ except:
                     local monitor_pid=$!
                     echo "$monitor_pid" > /tmp/cyberpanel_repo_monitor.pid
                     print_status "Started background process to monitor and disable MariaDB repositories"
+                else
+                    # User chose a different version (e.g. 11.8) than installed (e.g. 10.11) — allow upgrade
+                    print_status "MariaDB $mariadb_version installed but you chose $chosen_ver; not adding dnf exclude (installer will upgrade)"
+                    # Remove any existing MariaDB exclude from a previous run so install can proceed
+                    for c in /etc/dnf/dnf.conf /etc/yum.conf; do
+                        if [ -f "$c" ] && grep -q "exclude=.*MariaDB-server" "$c" 2>/dev/null; then
+                            sed -i 's/ *MariaDB-server\* *//g; s/exclude= *$/exclude=/; s/exclude=\s*$/exclude=/' "$c" 2>/dev/null
+                            if grep -q "^exclude=\s*$" "$c" 2>/dev/null; then
+                                sed -i '/^exclude=\s*$/d' "$c" 2>/dev/null
+                            fi
+                            print_status "Removed MariaDB-server from excludes in $c to allow upgrade"
+                        fi
+                    done
                 fi
             fi
         fi
