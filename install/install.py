@@ -3367,7 +3367,8 @@ password="%s"
         if not self.ensureVirtualEnvironmentSetup():
             logging.InstallLog.writeToFile("WARNING: No venv found; will try system Python", 1)
 
-        # Find Python: prefer venv, then system python3 (avoids FileNotFoundError for /usr/local/CyberPanel/bin/python)
+        # Find Python: prefer venv, then system python3 (avoid FileNotFoundError for broken /usr/local/CyberPanel/bin/python)
+        # Check resolved path so broken symlinks are skipped
         python_paths = [
             "/usr/local/CyberCP/bin/python",
             "/usr/local/CyberPanel/bin/python",
@@ -3380,15 +3381,26 @@ password="%s"
 
         python_path = None
         for path in python_paths:
-            if path and os.path.exists(path):
-                try:
-                    r = subprocess.run([path, "--version"], capture_output=True, text=True, timeout=5)
-                    if r.returncode == 0:
-                        python_path = path
-                        logging.InstallLog.writeToFile(f"Using Python at: {path}")
-                        break
-                except Exception:
+            if not path:
+                continue
+            try:
+                # Skip broken symlinks: resolve and require executable file
+                if os.path.lexists(path):
+                    resolved = os.path.realpath(path)
+                    if not os.path.isfile(resolved) or not os.access(resolved, os.X_OK):
+                        continue
+                elif not os.path.isfile(path) or not os.access(path, os.X_OK):
                     continue
+            except OSError:
+                continue
+            try:
+                r = subprocess.run([path, "--version"], capture_output=True, text=True, timeout=5)
+                if r.returncode == 0:
+                    python_path = path
+                    logging.InstallLog.writeToFile(f"Using Python at: {path}")
+                    break
+            except (FileNotFoundError, OSError, subprocess.SubprocessError):
+                continue
 
         if not python_path:
             logging.InstallLog.writeToFile("ERROR: No working Python found for migrations!", 0)
