@@ -1569,17 +1569,17 @@
                         <span style="background: #f0fdf4; color: #10b981; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">
                             <i class="fas fa-lock" style="margin-right: 5px;"></i>{% trans "Secure" %}
                         </span>
-                        <span style="color: #64748b;">• {% trans "Valid for" %} {{ days }} {% trans "days" %}</span>
+                        <span style="color: #64748b;">• {% trans "Valid for" %} {{ days }} {% trans "days" %}{% if renewal_when %} • {% trans "Renews" %} {{ renewal_when }}{% endif %}</span>
                     {% elif days|add:0 >= 7 %}
                         <span style="background: #fef3c7; color: #f59e0b; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">
                             <i class="fas fa-clock" style="margin-right: 5px;"></i>{% trans "Expiring Soon" %}
                         </span>
-                        <span style="color: #64748b;">• {{ days }} {% trans "days left" %}</span>
+                        <span style="color: #64748b;">• {{ days }} {% trans "days left" %}{% if renewal_when %} • {% trans "Renews" %} {{ renewal_when }}{% endif %}</span>
                     {% else %}
                         <span style="background: #fee2e2; color: #ef4444; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">
                             <i class="fas fa-exclamation" style="margin-right: 5px;"></i>{% trans "Critical" %}
                         </span>
-                        <span style="color: #64748b;">• {{ days }} {% trans "days left" %}</span>
+                        <span style="color: #64748b;">• {{ days }} {% trans "days left" %}{% if renewal_when %} • {% trans "Renews" %} {{ renewal_when }}{% endif %}</span>
                     {% endif %}
                 </div>
                 {% endif %}
