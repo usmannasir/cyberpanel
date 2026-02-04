@@ -3367,17 +3367,19 @@ password="%s"
         if not self.ensureVirtualEnvironmentSetup():
             logging.InstallLog.writeToFile("WARNING: No venv found; will try system Python", 1)
 
-        # Find Python: prefer venv, then system python3 (avoid FileNotFoundError for broken /usr/local/CyberPanel/bin/python)
-        # Check resolved path so broken symlinks are skipped
+        # Find Python: try system Python first so we never use missing /usr/local/CyberPanel/bin/python
+        # (venv may not exist yet; /usr/local/CyberPanel is legacy and often missing on fresh install)
         python_paths = [
-            "/usr/local/CyberCP/bin/python",
-            "/usr/local/CyberPanel/bin/python",
-            "/usr/local/CyberPanel-venv/bin/python",
             "/usr/bin/python3",
             "/usr/local/bin/python3",
         ]
         if sys.executable and sys.executable not in python_paths:
             python_paths.append(sys.executable)
+        python_paths.extend([
+            "/usr/local/CyberCP/bin/python",
+            "/usr/local/CyberPanel/bin/python",
+            "/usr/local/CyberPanel-venv/bin/python",
+        ])
 
         python_path = None
         for path in python_paths:
@@ -3407,19 +3409,25 @@ password="%s"
             preFlightsChecks.stdOut("ERROR: No working Python found!", 0)
             return False
 
+        manage_py = "/usr/local/CyberCP/manage.py"
+        if not os.path.isfile(manage_py):
+            logging.InstallLog.writeToFile("ERROR: %s not found" % manage_py, 0)
+            preFlightsChecks.stdOut("ERROR: manage.py not found at %s" % manage_py, 0)
+            return False
+
         # Create migrations in dependency order - loginSystem first since other apps depend on it
         logging.InstallLog.writeToFile("Creating migrations for loginSystem first...")
-        command = f"{python_path} manage.py makemigrations loginSystem --noinput"
+        command = f"{python_path} {manage_py} makemigrations loginSystem --noinput"
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
         # Now create migrations for all other apps
         logging.InstallLog.writeToFile("Creating migrations for all other apps...")
-        command = f"{python_path} manage.py makemigrations --noinput"
+        command = f"{python_path} {manage_py} makemigrations --noinput"
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
         # Apply all migrations
         logging.InstallLog.writeToFile("Applying all migrations...")
-        command = f"{python_path} manage.py migrate --noinput"
+        command = f"{python_path} {manage_py} migrate --noinput"
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
         logging.InstallLog.writeToFile("Django migrations completed successfully!")
@@ -3431,7 +3439,7 @@ password="%s"
         # Download CDN libraries before collectstatic runs
         self.downloadCDNLibraries()
 
-        command = f"{python_path} manage.py collectstatic --noinput --clear"
+        command = f"{python_path} {manage_py} collectstatic --noinput --clear"
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
         ## Moving static content to lscpd location
@@ -5380,16 +5388,29 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
                 os.mkdir(path)
 
             # Remove existing key files so ssh-keygen never prompts "Overwrite (y/n)?"
-            # This keeps unattended / no-confirmation installs fully non-interactive
-            for f in (key_path, key_pub):
-                if os.path.exists(f):
-                    try:
-                        os.remove(f)
-                    except OSError:
-                        subprocess.run(["rm", "-f", f], timeout=5, capture_output=True)
+            # Use shell rm -f so removal is reliable (avoids os.remove permission/state issues)
+            subprocess.run(
+                "rm -f /root/.ssh/cyberpanel /root/.ssh/cyberpanel.pub",
+                shell=True,
+                timeout=5,
+                capture_output=True,
+            )
 
+            # Run ssh-keygen with stdin=input so we never block on "Overwrite (y/n)?"
             command = "ssh-keygen -f /root/.ssh/cyberpanel -t rsa -N ''"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR, True)
+            preFlightsChecks.stdOut("Running: %s" % command, 1)
+            res = subprocess.run(
+                ["ssh-keygen", "-f", "/root/.ssh/cyberpanel", "-t", "rsa", "-N", ""],
+                stdin=subprocess.PIPE,
+                input=b"y\n",
+                timeout=30,
+                capture_output=True,
+            )
+            if res.returncode != 0:
+                err = (res.stderr or b"").decode("utf-8", errors="replace").strip()
+                preFlightsChecks.stdOut("[ERROR] ssh-keygen failed (return %s). %s" % (res.returncode, err), 1)
+                return 0
+            preFlightsChecks.stdOut("Successfully ran: %s." % command, 1)
 
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [install_default_keys]")
