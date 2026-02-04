@@ -2839,7 +2839,10 @@ main() {
                 
                 print_status "SUCCESS: Installation completed successfully!"
             else
-                # Run interactive mode
+                # Run interactive mode - ensure stdin is the terminal for prompts (e.g. when script was piped from curl)
+                if [ ! -t 0 ]; then
+                    exec 0</dev/tty
+                fi
                 show_main_menu
             fi
             ;;
