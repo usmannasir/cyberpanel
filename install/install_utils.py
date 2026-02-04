@@ -573,6 +573,15 @@ def call(command, distro, bracket, message, log=0, do_exit=0, code=os.EX_OK, she
             command = re.sub(r'^(\s*)(?:sudo\s+)?(mysql|mariadb)(\s)', r'\g<1>' + mysql_bin + r'\g<3>', command, count=1)
         shell = True
 
+    # CRITICAL: /usr/local/CyberPanel/bin/python often missing on fresh install; use system Python for manage.py
+    if '/usr/local/CyberPanel/bin/python' in command and not os.path.isfile('/usr/local/CyberPanel/bin/python'):
+        fallback = '/usr/bin/python3'
+        if not os.path.isfile(fallback):
+            fallback = '/usr/local/bin/python3'
+        if os.path.isfile(fallback):
+            command = command.replace('/usr/local/CyberPanel/bin/python', fallback, 1)
+        shell = True  # ensure shell so path with spaces is not split
+
     finalMessage = 'Running: %s' % (message)
     stdOut(finalMessage, log)
     count = 0
