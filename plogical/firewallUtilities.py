@@ -118,22 +118,23 @@ class FirewallUtilities:
             
             logging.CyberCPLogFileWriter.writeToFile(f"Blocking IP address: {ip_address} - Reason: {reason}")
             
+            # executioner returns 1 on success, 0 on failure
             result = ProcessUtilities.executioner(command)
-            if result == 0:
+            if result == 1:
                 logging.CyberCPLogFileWriter.writeToFile(f"Successfully blocked IP: {ip_address}")
-                
-                # Reload firewall to apply changes
                 ProcessUtilities.executioner('firewall-cmd --reload')
-                
-                # Log the block in a dedicated file
-                block_log_path = "/usr/local/lscp/logs/blocked_ips.log"
-                with open(block_log_path, "a") as f:
-                    from datetime import datetime
-                    f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {ip_address} - {reason}\n")
-                
+                block_log_path = "/usr/local/CyberCP/data/blocked_ips.log"
+                try:
+                    import os
+                    os.makedirs(os.path.dirname(block_log_path), exist_ok=True)
+                    with open(block_log_path, "a") as f:
+                        from datetime import datetime
+                        f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {ip_address} - {reason}\n")
+                except Exception as log_err:
+                    logging.CyberCPLogFileWriter.writeToFile(f"Warning: could not write blocked_ips.log: {log_err}")
                 return True, f"IP {ip_address} blocked successfully"
             else:
-                logging.CyberCPLogFileWriter.writeToFile(f"Failed to block IP: {ip_address}")
+                logging.CyberCPLogFileWriter.writeToFile(f"Failed to block IP: {ip_address} (executioner returned %s)" % result)
                 return False, f"Failed to block IP: {ip_address}"
                 
         except Exception as e:
@@ -154,16 +155,14 @@ class FirewallUtilities:
             
             logging.CyberCPLogFileWriter.writeToFile(f"Unblocking IP address: {ip_address}")
             
+            # executioner returns 1 on success, 0 on failure
             result = ProcessUtilities.executioner(command)
-            if result == 0:
+            if result == 1:
                 logging.CyberCPLogFileWriter.writeToFile(f"Successfully unblocked IP: {ip_address}")
-                
-                # Reload firewall to apply changes
                 ProcessUtilities.executioner('firewall-cmd --reload')
-                
                 return True, f"IP {ip_address} unblocked successfully"
             else:
-                logging.CyberCPLogFileWriter.writeToFile(f"Failed to unblock IP: {ip_address}")
+                logging.CyberCPLogFileWriter.writeToFile(f"Failed to unblock IP: {ip_address} (executioner returned %s)" % result)
                 return False, f"Failed to unblock IP: {ip_address}"
                 
         except Exception as e:
