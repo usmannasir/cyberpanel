@@ -16,6 +16,7 @@ from plogical.acl import ACLManager
 from manageServices.models import PDNSStatus
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from plogical.processUtilities import ProcessUtilities
+from plogical.firewallUtilities import FirewallUtilities
 from plogical.httpProc import httpProc
 from websiteFunctions.models import Websites, WPSites
 from databases.models import Databases
@@ -1318,54 +1319,14 @@ def blockIPAddress(request):
                 'error': 'Invalid IP address'
             }), content_type='application/json', status=400)
         
-        # Use firewalld (CSF has been discontinued)
+        # Use FirewallUtilities so firewall-cmd runs with proper privileges (root/lscpd)
         firewall_cmd = 'firewalld'
+        reason = data.get('reason', 'Security alert detected from dashboard')
         try:
-            # Verify firewalld is active using subprocess for better security
-            import subprocess
-            firewalld_check = subprocess.run(['systemctl', 'is-active', 'firewalld'], 
-                                           capture_output=True, text=True, timeout=10)
-            if not (firewalld_check.returncode == 0 and 'active' in firewalld_check.stdout):
-                return HttpResponse(json.dumps({
-                    'status': 0,
-                    'error': 'Firewalld is not active. Please enable firewalld service.'
-                }), content_type='application/json', status=500)
-        except subprocess.TimeoutExpired:
-            return HttpResponse(json.dumps({
-                'status': 0,
-                'error': 'Timeout checking firewalld status'
-            }), content_type='application/json', status=500)
+            success, msg = FirewallUtilities.blockIP(ip_address, reason)
         except Exception as e:
-            return HttpResponse(json.dumps({
-                'status': 0,
-                'error': f'Cannot check firewalld status: {str(e)}'
-            }), content_type='application/json', status=500)
-        
-        # Block the IP address using firewalld with subprocess for better security
-        success = False
-        error_message = ''
-        
-        try:
-            # Use subprocess with explicit argument lists to prevent injection
-            rich_rule = f'rule family=ipv4 source address={ip_address} drop'
-            add_rule_cmd = ['firewall-cmd', '--permanent', '--add-rich-rule', rich_rule]
-            
-            # Execute the add rule command
-            result = subprocess.run(add_rule_cmd, capture_output=True, text=True, timeout=30)
-            if result.returncode == 0:
-                # Reload firewall rules
-                reload_cmd = ['firewall-cmd', '--reload']
-                reload_result = subprocess.run(reload_cmd, capture_output=True, text=True, timeout=30)
-                if reload_result.returncode == 0:
-                    success = True
-                else:
-                    error_message = f'Failed to reload firewall rules: {reload_result.stderr}'
-            else:
-                error_message = f'Failed to add firewall rule: {result.stderr}'
-        except subprocess.TimeoutExpired:
-            error_message = 'Firewall command timed out'
-        except Exception as e:
-            error_message = f'Firewall command failed: {str(e)}'
+            success = False
+            msg = str(e)
         
         if success:
             # Add to banned IPs JSON file for consistency with firewall page
@@ -1430,7 +1391,7 @@ def blockIPAddress(request):
         else:
             return HttpResponse(json.dumps({
                 'status': 0,
-                'error': error_message or 'Failed to block IP address'
+                'error': msg or 'Failed to block IP address'
             }), content_type='application/json', status=500)
         
     except json.JSONDecodeError as e:

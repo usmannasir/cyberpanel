@@ -1380,56 +1380,38 @@
         }
         
         $.ajax({
-            url: '/base/blockIPAddress',
+            url: '/firewall/addBannedIP',
             type: 'POST',
             contentType: 'application/json',
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
             },
             data: JSON.stringify({
-                'ip_address': ipAddress,
-                'reason': 'Security alert detected from dashboard'
+                'ip': ipAddress,
+                'reason': 'Brute force attack detected from SSH Security Analysis',
+                'duration': 'permanent'
             }),
             success: function(data) {
                 // Handle both success and error responses
-                if (data.status === 1) {
-                    showNotification('success', data.message || 'IP address blocked successfully');
+                if (data && data.status === 1) {
+                    showNotification('success', data.message || 'IP address blocked successfully. Manage in Firewall > Banned IPs.');
                     // Refresh the page to update the blocked IPs list
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1000);
+                    setTimeout(function() { location.reload(); }, 1000);
                 } else {
-                    // Handle error response - check for both 'error' and 'error_message' fields
-                    var errorMsg = data.error || data.error_message || data.message || 'Failed to block IP address';
+                    var errorMsg = (data && (data.error_message || data.error || data.message)) || 'Failed to block IP address';
                     showNotification('error', errorMsg);
                 }
             },
             error: function(xhr, status, error) {
-                // Handle network errors and parse JSON errors
-                console.error('Ban IP error:', xhr, status, error);
+                console.error('Ban IP error:', xhr.status, xhr.responseText);
                 var errorMsg = 'Failed to block IP address. Please try again.';
-                
-                // Log full response for debugging
-                console.log('Response status:', xhr.status);
-                console.log('Response text:', xhr.responseText);
-                
-                if (xhr.responseJSON) {
-                    errorMsg = xhr.responseJSON.error || xhr.responseJSON.error_message || xhr.responseJSON.message || errorMsg;
-                    console.log('Parsed error from JSON:', errorMsg);
-                } else if (xhr.responseText) {
-                    try {
-                        var errorData = JSON.parse(xhr.responseText);
-                        errorMsg = errorData.error || errorData.error_message || errorData.message || errorMsg;
-                        console.log('Parsed error from text:', errorMsg);
-                    } catch(e) {
-                        console.error('Failed to parse error response:', e);
-                        // If parsing fails, try to extract error from response text
-                        if (xhr.responseText.includes('error')) {
-                            errorMsg = xhr.responseText.substring(0, 200);
-                        }
-                    }
+                var data = xhr.responseJSON;
+                if (!data && xhr.responseText) {
+                    try { data = JSON.parse(xhr.responseText); } catch(e) {}
                 }
-                
+                if (data && (data.error_message || data.error || data.message)) {
+                    errorMsg = data.error_message || data.error || data.message;
+                }
                 showNotification('error', errorMsg);
             },
             complete: function() {
