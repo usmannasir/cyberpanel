@@ -922,6 +922,25 @@ gpgcheck=1
                 command = 'dnf clean all'
                 install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
+                # Allow MariaDB-server to be installed: remove from dnf exclude if present
+                dnf_conf = '/etc/dnf/dnf.conf'
+                if os.path.exists(dnf_conf):
+                    try:
+                        with open(dnf_conf, 'r') as f:
+                            dnf_content = f.read()
+                        if 'MariaDB-server' in dnf_content and 'exclude=' in dnf_content:
+                            new_content = re.sub(
+                                r'(exclude=[^\n]*)',
+                                lambda m: re.sub(r'\bMariaDB-server\*?\s*', '', m.group(1)).strip(),
+                                dnf_content
+                            )
+                            if new_content != dnf_content:
+                                with open(dnf_conf, 'w') as f:
+                                    f.write(new_content)
+                                install_utils.writeToFile("Removed MariaDB-server from dnf exclude for installation")
+                    except Exception:
+                        pass
+
                 # Use --nobest so server+client resolve from same repo (avoids AlmaLinux 9 dependency conflict)
                 command = 'dnf install -y --nobest MariaDB-server MariaDB-client MariaDB-backup'
 
