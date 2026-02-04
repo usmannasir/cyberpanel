@@ -2,6 +2,14 @@
  * Created by usman on 8/15/17.
  */
 
+// Ensure app is available (get existing CyberCP module so controllers register correctly)
+if (typeof app === 'undefined') {
+    if (typeof window !== 'undefined' && typeof window.app !== 'undefined') {
+        app = window.app;
+    } else {
+        app = angular.module('CyberCP');
+    }
+}
 
 /* Java script code to create account */
 app.controller('createEmailAccount', function ($scope, $http) {
@@ -1506,6 +1514,7 @@ app.controller('EmailLimitsNew', function ($scope, $http) {
         // Given email to search for
         var givenEmail = $scope.selectedEmail;
 
+        if ($scope.emails) {
         for (var i = 0; i < $scope.emails.length; i++) {
             if ($scope.emails[i].email === givenEmail) {
                 // Extract numberofEmails and duration
@@ -1515,13 +1524,10 @@ app.controller('EmailLimitsNew', function ($scope, $http) {
                 $scope.numberofEmails = numberofEmails;
                 $scope.duration = duration;
 
-                // Use numberofEmails and duration as needed
-                console.log("Number of emails:", numberofEmails);
-                console.log("Duration:", duration);
-
                 // Break out of the loop since the email is found
                 break;
             }
+        }
         }
 
     };

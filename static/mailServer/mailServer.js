@@ -2,6 +2,14 @@
  * Created by usman on 8/15/17.
  */
 
+// Ensure app is available (get existing CyberCP module so controllers register correctly)
+if (typeof app === 'undefined') {
+    if (typeof window !== 'undefined' && typeof window.app !== 'undefined') {
+        app = window.app;
+    } else {
+        app = angular.module('CyberCP');
+    }
+}
 
 /* Java script code to create account */
 app.controller('createEmailAccount', function ($scope, $http) {
