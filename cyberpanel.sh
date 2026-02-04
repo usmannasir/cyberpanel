@@ -929,8 +929,13 @@ except:
     echo "This may take several minutes. Please be patient."
     echo ""
     
-    # Create log directory
+    # Create log directory (same as v2.4.4: installer logs go here)
     mkdir -p /var/log/CyberPanel
+    echo "  Installation logs:"
+    echo "    • /var/log/CyberPanel/install.log       (installer script messages)"
+    echo "    • /var/log/CyberPanel/install_output.log (Python installer stdout/stderr)"
+    echo "    • /var/log/installLogs.txt              (install.py detailed log)"
+    echo ""
     
     # Run the installer with live output monitoring
     echo "Starting CyberPanel installer with live progress monitoring..."
@@ -1222,6 +1227,11 @@ except:
     echo "==============================================================================================================="
     echo "                                    INSTALLATION COMPLETED"
     echo "==============================================================================================================="
+    echo ""
+    echo "  Installation logs (for troubleshooting):"
+    echo "    • /var/log/CyberPanel/install.log       (installer script messages)"
+    echo "    • /var/log/CyberPanel/install_output.log (Python installer stdout/stderr)"
+    echo "    • /var/log/installLogs.txt              (install.py detailed log)"
     echo ""
     
     # Check if installation was successful

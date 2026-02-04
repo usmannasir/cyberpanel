@@ -2258,10 +2258,11 @@ module cyberpanel_ols {
                         if e.errno != errno.EEXIST:
                             raise
 
-            # Copy the PowerDNS configuration file
+            # Copy the PowerDNS configuration file (cwd may be temp dir with install/ subdir when run from cyberpanel.sh)
             source_file = os.path.join(self.cwd, "dns-one", "pdns.conf")
             if not os.path.exists(source_file):
-                # Try alternative location
+                source_file = os.path.join(self.cwd, "install", "dns-one", "pdns.conf")
+            if not os.path.exists(source_file):
                 source_file = os.path.join(self.cwd, "dns", "pdns.conf")
 
             if os.path.exists(source_file):
@@ -6250,8 +6251,10 @@ vmail
                 dnsPath = "/etc/powerdns/pdns.conf"
                 os.makedirs("/etc/powerdns", exist_ok=True)
 
-            # Copy the PowerDNS configuration file
+            # Copy the PowerDNS configuration file (cwd may be temp dir with install/ subdir)
             source_file = os.path.join(self.cwd, "dns-one", "pdns.conf")
+            if not os.path.exists(source_file):
+                source_file = os.path.join(self.cwd, "install", "dns-one", "pdns.conf")
             if not os.path.exists(source_file):
                 source_file = os.path.join(self.cwd, "dns", "pdns.conf")
 

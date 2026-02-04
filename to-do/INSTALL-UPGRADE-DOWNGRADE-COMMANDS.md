@@ -4,6 +4,27 @@ Reference for all standard and branch-specific install/upgrade/downgrade command
 
 ---
 
+## Installation logs (v2.4.4 / v2.5.5-dev)
+
+When you run the installer (cyberpanel.sh or install.py), logs are written to:
+
+| Log | Location | Description |
+|-----|----------|--------------|
+| Installer script | `/var/log/CyberPanel/install.log` | Messages from cyberpanel.sh (print_status) |
+| Installer output | `/var/log/CyberPanel/install_output.log` | Full stdout/stderr of the Python installer (tee) |
+| Python installer | `/var/log/installLogs.txt` | Detailed log from install.py (installLog module) |
+
+To inspect after a failed install:
+
+```bash
+tail -100 /var/log/CyberPanel/install_output.log
+tail -100 /var/log/installLogs.txt
+```
+
+**If you see ERR_CONNECTION_TIMED_OUT** when opening the panel URL: the install may have failed before LiteSpeed was set up, or ports are blocked. Ensure ports **8090** (panel) and **7080** (LSWS admin) are open in the server firewall and in your cloud security group (e.g. AWS). Re-run the installer after pulling the latest fixes so the install can complete.
+
+---
+
 ## Fresh install
 
 ### One-liner (official / upstream)
