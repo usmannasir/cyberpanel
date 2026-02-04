@@ -1889,12 +1889,12 @@ module cyberpanel_ols {
                 
                 if is_installed:
                     self.stdOut(f"MariaDB/MySQL is already installed (version: {installed_version}), skipping installation", 1)
-                    # Use existing if already on 11.x or 12.x
+                    # Use existing if already on 10.x, 11.x or 12.x
                     if major_minor and major_minor != "unknown":
                         try:
                             major_ver = float(major_minor)
-                            if major_ver >= 11.0:
-                                self.stdOut("Using existing MariaDB installation (11.x/12.x)", 1)
+                            if major_ver >= 10.0:
+                                self.stdOut("Using existing MariaDB installation (10.x/11.x/12.x)", 1)
                                 self.startMariaDB()
                                 self.changeMYSQLRootPassword()
                                 self.fixMariaDB()
@@ -1902,12 +1902,15 @@ module cyberpanel_ols {
                         except (ValueError, TypeError):
                             pass
                 
-                # Set up MariaDB repository only if not already installed (version from --mariadb-version, default 11.8)
+                # Set up MariaDB repository only if not already installed (version from --mariadb-version: 10.11, 11.8 or 12.1)
                 mariadb_ver = getattr(preFlightsChecks, 'mariadb_version', '11.8')
                 command = f'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version={mariadb_ver}'
                 self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
-                
-                command = 'dnf install mariadb-server mariadb-devel mariadb-client-utils -y'
+                # Use --nobest for 10.11 and 11.8 on el9 to avoid MariaDB-client dependency resolution issues
+                if mariadb_ver in ('10.11', '11.8'):
+                    command = 'dnf install -y --nobest mariadb-server mariadb-devel mariadb-client-utils'
+                else:
+                    command = 'dnf install mariadb-server mariadb-devel mariadb-client-utils -y'
                 self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
             
             # Verify MariaDB was installed successfully before proceeding
@@ -6485,12 +6488,12 @@ def main():
     parser.add_argument('--mysqluser', help='MySQL user if remote is chosen.')
     parser.add_argument('--mysqlpassword', help='MySQL password if remote is chosen.')
     parser.add_argument('--mysqlport', help='MySQL port if remote is chosen.')
-    parser.add_argument('--mariadb-version', default='11.8', help='MariaDB version: 11.8 (LTS, default) or 12.1')
+    parser.add_argument('--mariadb-version', default='11.8', help='MariaDB version: 10.11, 11.8 (LTS, default) or 12.1')
 
     args = parser.parse_args()
     # Normalize and validate MariaDB version choice (default 11.8)
     mariadb_ver = (getattr(args, 'mariadb_version', None) or '11.8').strip()
-    if mariadb_ver not in ('11.8', '12.1'):
+    if mariadb_ver not in ('10.11', '11.8', '12.1'):
         mariadb_ver = '11.8'
     preFlightsChecks.mariadb_version = mariadb_ver
 

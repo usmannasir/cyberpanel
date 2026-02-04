@@ -583,11 +583,11 @@ install_cyberpanel_direct() {
     # Ask MariaDB version first (even in no-confirmation/auto mode) if not set via --mariadb-version
     if [ -z "$MARIADB_VER" ]; then
         echo ""
-        echo "  MariaDB version: 11.8 (LTS, default) or 12.1?"
-        read -r -t 60 -p "  Enter 11.8 or 12.1 [11.8]: " MARIADB_VER || true
+        echo "  MariaDB version: 10.11, 11.8 (LTS, default) or 12.1?"
+        read -r -t 60 -p "  Enter 10.11, 11.8 or 12.1 [11.8]: " MARIADB_VER || true
         MARIADB_VER="${MARIADB_VER:-11.8}"
         MARIADB_VER="${MARIADB_VER// /}"
-        if [ "$MARIADB_VER" != "11.8" ] && [ "$MARIADB_VER" != "12.1" ]; then
+        if [ "$MARIADB_VER" != "10.11" ] && [ "$MARIADB_VER" != "11.8" ] && [ "$MARIADB_VER" != "12.1" ]; then
             MARIADB_VER="11.8"
         fi
         echo "  Using MariaDB $MARIADB_VER"
@@ -1176,9 +1176,10 @@ except Exception as e:
             fi
         fi
         
-        # Verify MySQLdb is available
+        # Verify MySQLdb is available (mysqlclient; some builds lack __version__)
         print_status "Verifying MySQLdb module availability..."
-        if python3 -c "import MySQLdb; print('MySQLdb version:', MySQLdb.__version__)" 2>&1; then
+        if python3 -c "import MySQLdb; getattr(MySQLdb, '__version__', 'ok'); print('MySQLdb OK')" 2>/dev/null || \
+           python3 -c "import MySQLdb; MySQLdb; print('MySQLdb OK')" 2>/dev/null; then
             print_status "✓ MySQLdb module is available and working"
         else
             print_status "⚠️  WARNING: MySQLdb module not available"
@@ -1195,12 +1196,14 @@ except Exception as e:
         
         # Add optional arguments based on user preferences
         # Default: OpenLiteSpeed, Full installation (postfix, powerdns, ftp), Local MySQL
-        # These match what the user selected in the interactive prompts
         install_args+=("--postfix" "ON")
         install_args+=("--powerdns" "ON")
         install_args+=("--ftp" "ON")
         install_args+=("--remotemysql" "OFF")
-        install_args+=("--mariadb-version" "${MARIADB_VER:-11.8}")
+        # Only pass --mariadb-version if this install.py supports it (avoids "unrecognized arguments" on older archives)
+        if grep -q "mariadb-version\|mariadb_version" "$installer_py" 2>/dev/null; then
+            install_args+=("--mariadb-version" "${MARIADB_VER:-11.8}")
+        fi
         
         if [ "$DEBUG_MODE" = true ]; then
             # Note: install.py doesn't have --debug, but we can set it via environment
@@ -2698,14 +2701,17 @@ parse_arguments() {
                 shift
                 ;;
             --mariadb-version)
-                if [ -n "$2" ] && [ "$2" = "11.8" ]; then
+                if [ -n "$2" ] && [ "$2" = "10.11" ]; then
+                    MARIADB_VER="10.11"
+                    shift 2
+                elif [ -n "$2" ] && [ "$2" = "11.8" ]; then
                     MARIADB_VER="11.8"
                     shift 2
                 elif [ -n "$2" ] && [ "$2" = "12.1" ]; then
                     MARIADB_VER="12.1"
                     shift 2
                 else
-                    echo "ERROR: --mariadb-version requires 11.8 or 12.1"
+                    echo "ERROR: --mariadb-version requires 10.11, 11.8 or 12.1"
                     exit 1
                 fi
                 ;;
@@ -2718,7 +2724,7 @@ parse_arguments() {
                 echo "Options:"
                 echo "  -b, --branch BRANCH    Install from specific branch/commit"
                 echo "  -v, --version VER      Install specific version (auto-adds v prefix)"
-                echo "  --mariadb-version VER  MariaDB version: 11.8 or 12.1 (asked first if omitted)"
+                echo "  --mariadb-version VER  MariaDB version: 10.11, 11.8 or 12.1 (asked first if omitted)"
                 echo "  --debug               Enable debug mode"
                 echo "  --auto                Auto mode without prompts (MariaDB still asked first unless --mariadb-version)"
                 echo "  -h, --help            Show this help message"
@@ -2732,6 +2738,7 @@ parse_arguments() {
                 echo "  $0 -v 2.4.3           # Install version 2.4.3"
                 echo "  $0 -b main            # Install from main branch"
                 echo "  $0 -b a1b2c3d4        # Install from specific commit"
+                echo "  $0 --mariadb-version 10.11  # Use MariaDB 10.11 (same as v2.4.4 style)"
                 echo "  $0 --mariadb-version 12.1   # Use MariaDB 12.1 (no prompt)"
                 echo "  $0 --auto --mariadb-version 11.8   # Fully non-interactive with MariaDB 11.8"
                 echo ""
