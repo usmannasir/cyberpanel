@@ -43,6 +43,27 @@ import bcrypt
 import threading as multi
 import argparse
 
+
+def _get_email_limits_controller_js():
+    """Return EmailLimitsNew controller JS: from file or hardcoded fallback so it always works."""
+    try:
+        from django.conf import settings
+        for base in (os.path.dirname(__file__), getattr(settings, 'BASE_DIR', None)):
+            if not base:
+                continue
+            for script_path in (
+                os.path.join(base, 'static', 'mailServer', 'emailLimitsController.js'),
+                os.path.join(base, 'mailServer', 'static', 'mailServer', 'emailLimitsController.js'),
+            ):
+                if os.path.isfile(script_path):
+                    with open(script_path, 'r') as f:
+                        return f.read()
+    except Exception:
+        pass
+    # Hardcoded fallback so page works even when static file is missing or path wrong
+    return r"""(function(){'use strict';var app=typeof window.app!=='undefined'?window.app:angular.module('CyberCP');if(!app)return;app.controller('EmailLimitsNew',function($scope,$http){$scope.creationBox=true;$scope.emailDetails=true;$scope.forwardLoading=false;$scope.forwardError=true;$scope.forwardSuccess=true;$scope.couldNotConnect=true;$scope.notifyBox=true;$scope.showEmailDetails=function(){$scope.creationBox=true;$scope.emailDetails=true;$scope.forwardLoading=true;$scope.forwardError=true;$scope.forwardSuccess=true;$scope.couldNotConnect=true;$scope.notifyBox=true;var url="/email/getEmailsForDomain",data={domain:$scope.emailDomain},config={headers:{'X-CSRFToken':getCookie('csrftoken')}};$http.post(url,data,config).then(function(r){if(r.data.fetchStatus===1){$scope.emails=JSON.parse(r.data.data);$scope.creationBox=true;$scope.emailDetails=false;$scope.forwardLoading=false;$scope.notifyBox=false;}else{$scope.creationBox=true;$scope.emailDetails=true;$scope.forwardLoading=false;$scope.forwardError=false;$scope.errorMessage=r.data.error_message;}},function(){$scope.creationBox=true;$scope.emailDetails=true;$scope.couldNotConnect=false;$scope.notifyBox=false;});};$scope.selectForwardingEmail=function(){$scope.creationBox=false;$scope.emailDetails=false;$scope.forwardLoading=true;$scope.notifyBox=true;var g=$scope.selectedEmail;if($scope.emails)for(var i=0;i<$scope.emails.length;i++)if($scope.emails[i].email===g){$scope.numberofEmails=$scope.emails[i].numberofEmails;$scope.duration=$scope.emails[i].duration;break;}};$scope.SaveChanges=function(){$scope.forwardLoading=true;var url="/email/SaveEmailLimitsNew",data={numberofEmails:$scope.numberofEmails,source:$scope.selectedEmail,duration:$scope.duration},config={headers:{'X-CSRFToken':getCookie('csrftoken')}};$http.post(url,data,config).then(function(r){if(r.data.status===1){$scope.forwardLoading=false;if(typeof PNotify!=='undefined')new PNotify({title:'Success!',text:'Changes applied.',type:'success'});$scope.showEmailDetails();}else{$scope.forwardError=false;$scope.notifyBox=false;if(typeof PNotify!=='undefined')new PNotify({title:'Error!',text:r.data.error_message||'Error',type:'error'});}},function(){$scope.creationBox=true;$scope.couldNotConnect=false;});};});})();"""
+
+
 class MailServerManager(multi.Thread):
 
     def __init__(self, request = None, function = None, extraArgs = None):
@@ -177,7 +198,9 @@ class MailServerManager(multi.Thread):
             userID = self.request.session['userID']
             currentACL = ACLManager.loadedACL(userID)
 
-            if ACLManager.currentContextPermission(currentACL, 'deleteEmail') == 0:
+            # Allow fetch for List Emails (deleteEmail) or Email Limits (emailForwarding)
+            if (ACLManager.currentContextPermission(currentACL, 'deleteEmail') == 0 and
+                    ACLManager.currentContextPermission(currentACL, 'emailForwarding') == 0):
                 return ACLManager.loadErrorJson('fetchStatus', 0)
 
             data = json.loads(self.request.body)
@@ -1971,9 +1994,13 @@ protocol sieve {
         except BaseException as msg:
             template = 'mailServer/EmailLimits.html'
 
+        # Embed controller script inline so page works (no 404, no file path issues)
+        email_limits_controller_js = _get_email_limits_controller_js()
+        # Prevent </script> in JS from closing the HTML script tag
+        email_limits_controller_js = email_limits_controller_js.replace('</script>', '<\\/script>')
 
         proc = httpProc(self.request, template,
-                        {'websiteList': websitesName, "status": 1}, 'emailForwarding')
+                        {'websiteList': websitesName, "status": 1, 'email_limits_controller_js': email_limits_controller_js}, 'emailForwarding')
         return proc.render()
 
     def SaveEmailLimitsNew(self):
