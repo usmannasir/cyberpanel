@@ -49,6 +49,65 @@ from django.http import JsonResponse
 import ipaddress
 
 
+def _get_ssl_renewal_schedule():
+    """Get formatted SSL renewal schedule (e.g. 'Thursday 12:00 AM').
+    Reads from world-readable config file first (web server can't read root crontab).
+    Cron day_of_week: 0=Sun, 1=Mon, ..., 6=Sat. Python weekday: Mon=0, ..., Sun=6."""
+    try:
+        from datetime import datetime, timedelta
+        # Config file is world-readable; web server (lscpd) cannot read /var/spool/cron/root
+        config_path = '/usr/local/CyberCP/ssl_renewal_schedule.conf'
+        if os.path.exists(config_path):
+            try:
+                with open(config_path, 'r') as f:
+                    line = f.read().strip()
+                if line:
+                    return line
+            except (IOError, OSError):
+                pass
+        cron_paths = ['/var/spool/cron/root', '/var/spool/cron/crontabs/root']
+        cron_content = None
+        for path in cron_paths:
+            if os.path.exists(path):
+                try:
+                    with open(path, 'r') as f:
+                        cron_content = f.read()
+                except (IOError, OSError):
+                    continue
+                break
+        if not cron_content:
+            return None
+        renew_hour, renew_minute, renew_weekday_cron = 0, 0, 4  # default Thursday
+        for line in cron_content.splitlines():
+            line = line.strip()
+            if 'renew.py' in line and not line.startswith('#'):
+                parts = line.split()
+                if len(parts) >= 5:
+                    try:
+                        renew_minute = int(parts[0]) if parts[0].isdigit() else 0
+                        renew_hour = int(parts[1]) if parts[1].isdigit() else 0
+                        dow = parts[4]
+                        renew_weekday_cron = int(dow) if dow.isdigit() and 0 <= int(dow) <= 7 else 4
+                    except (ValueError, IndexError):
+                        pass
+                elif len(parts) >= 2:
+                    renew_minute = int(parts[0]) if parts[0].isdigit() else 0
+                    renew_hour = int(parts[1]) if parts[1].isdigit() else 0
+                break
+        now = datetime.now()
+        # Cron: 0/7=Sun, 1=Mon, ..., 6=Sat -> Python: Mon=0, Tue=1, ..., Sun=6
+        target_weekday = (renew_weekday_cron - 1) % 7 if renew_weekday_cron else 6
+        days_until = (target_weekday - now.weekday()) % 7
+        if days_until == 0 and (now.hour > renew_hour or (now.hour == renew_hour and now.minute >= renew_minute)):
+            days_until = 7
+        next_run = now.replace(hour=renew_hour, minute=renew_minute, second=0, microsecond=0)
+        next_run += timedelta(days=days_until)
+        return next_run.strftime('%B %d, %Y %I:%M %p')
+    except Exception as e:
+        logging.CyberCPLogFileWriter.writeToFile('_get_ssl_renewal_schedule: ' + str(e))
+        return None
+
+
 class WebsiteManager:
     apache = 1
     ols = 2
@@ -3782,6 +3841,8 @@ context /cyberpanel_suspension_page.html {
                 Data['viewSSL'] = 1
                 Data['days'] = str(diff.days)
                 Data['authority'] = x509.get_issuer().get_components()[1][1].decode('utf-8')
+                renewal_when = _get_ssl_renewal_schedule()
+                Data['renewal_when'] = renewal_when
 
                 if Data['authority'] == 'Denial':
                     Data['authority'] = '%s has SELF-SIGNED SSL.' % (self.domain)
@@ -3790,6 +3851,7 @@ context /cyberpanel_suspension_page.html {
 
             except BaseException as msg:
                 Data['viewSSL'] = 0
+                Data['renewal_when'] = None
                 logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
             servicePath = '/home/cyberpanel/pureftpd'
@@ -4009,6 +4071,7 @@ context /cyberpanel_suspension_page.html {
                 Data['viewSSL'] = 1
                 Data['days'] = str(diff.days)
                 Data['authority'] = x509.get_issuer().get_components()[1][1].decode('utf-8')
+                Data['renewal_when'] = _get_ssl_renewal_schedule()
 
                 if Data['authority'] == 'Denial':
                     Data['authority'] = '%s has SELF-SIGNED SSL.' % (self.childDomain)
@@ -4017,6 +4080,7 @@ context /cyberpanel_suspension_page.html {
 
             except BaseException as msg:
                 Data['viewSSL'] = 0
+                Data['renewal_when'] = None
                 logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
             proc = httpProc(request, 'websiteFunctions/launchChild.html', Data)
