@@ -11,6 +11,7 @@ OS_FAMILY=""
 PACKAGE_MANAGER=""
 ARCHITECTURE=""
 BRANCH_NAME=""
+MARIADB_VER=""
 DEBUG_MODE=false
 AUTO_INSTALL=false
 INSTALLATION_TYPE=""
@@ -579,6 +580,20 @@ cleanup_existing_cyberpanel() {
 
 # Function to install CyberPanel directly using the working method
 install_cyberpanel_direct() {
+    # Ask MariaDB version first (even in no-confirmation/auto mode) if not set via --mariadb-version
+    if [ -z "$MARIADB_VER" ]; then
+        echo ""
+        echo "  MariaDB version: 11.8 (LTS, default) or 12.1?"
+        read -r -t 60 -p "  Enter 11.8 or 12.1 [11.8]: " MARIADB_VER || true
+        MARIADB_VER="${MARIADB_VER:-11.8}"
+        MARIADB_VER="${MARIADB_VER// /}"
+        if [ "$MARIADB_VER" != "11.8" ] && [ "$MARIADB_VER" != "12.1" ]; then
+            MARIADB_VER="11.8"
+        fi
+        echo "  Using MariaDB $MARIADB_VER"
+        echo ""
+    fi
+
     echo "  🔄 Downloading CyberPanel installation files..."
     
     # Check if CyberPanel is already installed
@@ -1185,6 +1200,7 @@ except Exception as e:
         install_args+=("--powerdns" "ON")
         install_args+=("--ftp" "ON")
         install_args+=("--remotemysql" "OFF")
+        install_args+=("--mariadb-version" "${MARIADB_VER:-11.8}")
         
         if [ "$DEBUG_MODE" = true ]; then
             # Note: install.py doesn't have --debug, but we can set it via environment
@@ -1352,8 +1368,9 @@ apply_fixes() {
     systemctl start mariadb 2>/dev/null || true
     systemctl enable mariadb 2>/dev/null || true
 
-    # Fix LiteSpeed service
-    cat > /etc/systemd/system/lsws.service << 'EOF'
+    # Fix LiteSpeed service only if the web server was actually installed
+    if [ -x /usr/local/lsws/bin/lswsctrl ] || [ -x /usr/local/lsws/bin/lsctrl ] || [ -f /usr/local/lsws/bin/openlitespeed ]; then
+        cat > /etc/systemd/system/lsws.service << 'EOF'
 [Unit]
 Description=LiteSpeed Web Server
 After=network.target
@@ -1372,9 +1389,15 @@ RestartSec=5
 WantedBy=multi-user.target
 EOF
 
-    systemctl daemon-reload
-    systemctl enable lsws
-    systemctl start lsws
+        systemctl daemon-reload
+        systemctl enable lsws
+        systemctl start lsws || true
+    else
+        echo "  • LiteSpeed/OpenLiteSpeed not found at /usr/local/lsws - skipping lsws.service (install may have skipped web server)"
+        systemctl disable lsws 2>/dev/null || true
+        rm -f /etc/systemd/system/lsws.service
+        systemctl daemon-reload
+    fi
 
     # Set OpenLiteSpeed admin password to match CyberPanel
     echo "  • Configuring OpenLiteSpeed admin password..."
@@ -2674,6 +2697,18 @@ parse_arguments() {
                 set -x
                 shift
                 ;;
+            --mariadb-version)
+                if [ -n "$2" ] && [ "$2" = "11.8" ]; then
+                    MARIADB_VER="11.8"
+                    shift 2
+                elif [ -n "$2" ] && [ "$2" = "12.1" ]; then
+                    MARIADB_VER="12.1"
+                    shift 2
+                else
+                    echo "ERROR: --mariadb-version requires 11.8 or 12.1"
+                    exit 1
+                fi
+                ;;
             --auto)
                 AUTO_INSTALL=true
                 shift
@@ -2683,8 +2718,9 @@ parse_arguments() {
                 echo "Options:"
                 echo "  -b, --branch BRANCH    Install from specific branch/commit"
                 echo "  -v, --version VER      Install specific version (auto-adds v prefix)"
+                echo "  --mariadb-version VER  MariaDB version: 11.8 or 12.1 (asked first if omitted)"
                 echo "  --debug               Enable debug mode"
-                echo "  --auto                Auto mode without prompts"
+                echo "  --auto                Auto mode without prompts (MariaDB still asked first unless --mariadb-version)"
                 echo "  -h, --help            Show this help message"
                 echo ""
                 echo "Examples:"
@@ -2696,6 +2732,8 @@ parse_arguments() {
                 echo "  $0 -v 2.4.3           # Install version 2.4.3"
                 echo "  $0 -b main            # Install from main branch"
                 echo "  $0 -b a1b2c3d4        # Install from specific commit"
+                echo "  $0 --mariadb-version 12.1   # Use MariaDB 12.1 (no prompt)"
+                echo "  $0 --auto --mariadb-version 11.8   # Fully non-interactive with MariaDB 11.8"
                 echo ""
                 echo "Standard CyberPanel Installation Methods:"
                 echo "  sh <(curl https://cyberpanel.net/install.sh)"

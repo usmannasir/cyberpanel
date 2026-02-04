@@ -85,15 +85,15 @@ class InstallCyberPanel:
             command = "dnf clean all"
             install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             
-            # Install MariaDB from official repository
-            self.stdOut("Setting up official MariaDB repository...", 1)
-            command = "curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version='10.11'"
+            # Install MariaDB from official repository (11.8 LTS for el9 to avoid client dependency issues)
+            self.stdOut("Setting up official MariaDB repository (11.8 LTS)...", 1)
+            command = "curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version='11.8'"
             install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             
-            # Install MariaDB packages
+            # Install MariaDB packages (server + client from same repo to satisfy dependencies)
             self.stdOut("Installing MariaDB packages...", 1)
             mariadb_packages = "MariaDB-server MariaDB-client MariaDB-backup MariaDB-devel"
-            command = f"dnf install -y {mariadb_packages}"
+            command = f"dnf install -y --nobest {mariadb_packages}"
             install_utils.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             
             self.stdOut("AlmaLinux 9 MariaDB fixes completed", 1)
@@ -902,7 +902,7 @@ gpgcheck=1
 
             else:
 
-                command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=10.11'
+                command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=11.8'
                 install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
                 command = 'yum remove mariadb* -y'
@@ -922,7 +922,8 @@ gpgcheck=1
                 command = 'dnf clean all'
                 install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
-                command = 'dnf install MariaDB-server MariaDB-client MariaDB-backup -y'
+                # Use --nobest so server+client resolve from same repo (avoids AlmaLinux 9 dependency conflict)
+                command = 'dnf install -y --nobest MariaDB-server MariaDB-client MariaDB-backup'
 
         install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
