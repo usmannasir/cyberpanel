@@ -548,6 +548,17 @@ def call(command, distro, bracket, message, log=0, do_exit=0, code=os.EX_OK, she
     Returns:
         bool: True if successful, False if failed
     """
+    # CRITICAL (first): Replace missing CyberPanel Python so old/cached installers never hit FileNotFoundError
+    if isinstance(command, str):
+        bad_path = '/usr/local/CyberPanel/bin/python'
+        if bad_path in command and not os.path.isfile(bad_path):
+            fallback = '/usr/bin/python3'
+            if not os.path.isfile(fallback):
+                fallback = '/usr/local/bin/python3'
+            if os.path.isfile(fallback):
+                command = command.replace(bad_path, fallback)
+                shell = True
+
     # Check for apt lock before running apt commands
     if 'apt-get' in command or 'apt ' in command:
         if not wait_for_apt_lock():
@@ -573,23 +584,30 @@ def call(command, distro, bracket, message, log=0, do_exit=0, code=os.EX_OK, she
             command = re.sub(r'^(\s*)(?:sudo\s+)?(mysql|mariadb)(\s)', r'\g<1>' + mysql_bin + r'\g<3>', command, count=1)
         shell = True
 
-    # CRITICAL: /usr/local/CyberPanel/bin/python often missing on fresh install; use system Python for manage.py
-    if '/usr/local/CyberPanel/bin/python' in command and not os.path.isfile('/usr/local/CyberPanel/bin/python'):
-        fallback = '/usr/bin/python3'
-        if not os.path.isfile(fallback):
-            fallback = '/usr/local/bin/python3'
-        if os.path.isfile(fallback):
-            command = command.replace('/usr/local/CyberPanel/bin/python', fallback, 1)
-        shell = True  # ensure shell so path with spaces is not split
-
     finalMessage = 'Running: %s' % (message)
     stdOut(finalMessage, log)
     count = 0
     while True:
-        if shell:
-            res = subprocess.call(command, shell=True)
-        else:
-            res = subprocess.call(shlex.split(command))
+        try:
+            if shell:
+                res = subprocess.call(command, shell=True)
+            else:
+                res = subprocess.call(shlex.split(command))
+        except FileNotFoundError as e:
+            # Old installer may pass /usr/local/CyberPanel/bin/python; retry with system python once
+            if isinstance(command, str) and '/usr/local/CyberPanel/bin/python' in command:
+                fallback = '/usr/bin/python3'
+                if not os.path.isfile(fallback):
+                    fallback = '/usr/local/bin/python3'
+                if os.path.isfile(fallback):
+                    command = command.replace('/usr/local/CyberPanel/bin/python', fallback)
+                    shell = True
+                    stdOut("Retrying with %s (CyberPanel python missing)" % fallback, log)
+                    res = subprocess.call(command, shell=True)
+                else:
+                    raise
+            else:
+                raise
 
         if resFailed(distro, res):
             count = count + 1

@@ -654,6 +654,9 @@ install_cyberpanel_direct() {
     systemctl enable mariadb 2>/dev/null || true
     systemctl enable lsws 2>/dev/null || true
     
+    # Clear any previous install temp folders so we never use stale extracted files
+    rm -rf /tmp/cyberpanel_install_* 2>/dev/null || true
+    
     # Create temporary directory for installation
     local temp_dir="/tmp/cyberpanel_install_$$"
     mkdir -p "$temp_dir"
@@ -872,6 +875,8 @@ except:
     if [ -z "$archive_url" ] || [ "$installer_url" = "https://raw.githubusercontent.com/master3395/cyberpanel/stable/cyberpanel.sh" ]; then
         archive_url="https://github.com/master3395/cyberpanel/archive/stable.tar.gz"
     fi
+    # Append cache-bust so CDNs/proxies don't serve old installer (GitHub ignores query params)
+    archive_url="${archive_url}?nocache=$(date +%s 2>/dev/null || echo 0)"
     
     curl --silent -L -o install_files.tar.gz "$archive_url" 2>/dev/null
     if [ $? -ne 0 ] || [ ! -s "install_files.tar.gz" ]; then
