@@ -968,67 +968,9 @@ except Exception as e:
     if [ -f "$installer_py" ]; then
         print_status "Using install/install.py directly for installation (non-interactive mode)"
         
-        # CRITICAL: Patch install.py to exclude MariaDB-server from dnf/yum commands
-        if [ -n "$MARIADB_VERSION" ] && [ "$major_ver" -lt 12 ] 2>/dev/null; then
-            print_status "Patching install.py to exclude MariaDB-server from installation commands..."
-            
-            # Create backup
-            cp "$installer_py" "${installer_py}.backup" 2>/dev/null || true
-            
-            # Patch install.py to add --exclude=MariaDB-server* to dnf/yum install commands
-            python3 -c "
-import re
-import sys
-
-try:
-    with open('$installer_py', 'r') as f:
-        content = f.read()
-    
-    original_content = content
-    
-    # Pattern: Add --exclude=MariaDB-server* to dnf/yum install commands that install mariadb-server
-    def add_exclude(match):
-        cmd = match.group(0)
-        # Check if --exclude is already present
-        if '--exclude=MariaDB-server' in cmd:
-            return cmd
-        # Add --exclude=MariaDB-server* after install and flags, before packages
-        return re.sub(r'((?:dnf|yum)\s+install\s+(?:-[^\s]+\s+)*)', r'\1--exclude=MariaDB-server* ', cmd, flags=re.IGNORECASE)
-    
-    # Find all dnf/yum install commands that mention mariadb-server
-    content = re.sub(
-        r'(?:dnf|yum)\s+install[^;]*?mariadb-server[^;]*',
-        add_exclude,
-        content,
-        flags=re.IGNORECASE | re.MULTILINE
-    )
-    
-    # Also handle MariaDB-server (capitalized) and in Python strings
-    content = re.sub(
-        r'(\"|\')(?:dnf|yum)\s+install[^\"]*?mariadb-server[^\"]*(\"|\')',
-        lambda m: m.group(1) + re.sub(r'((?:dnf|yum)\s+install\s+(?:-[^\s]+\s+)*)', r'\1--exclude=MariaDB-server* ', m.group(0)[1:-1], flags=re.IGNORECASE) + m.group(2),
-        content,
-        flags=re.IGNORECASE | re.MULTILINE
-    )
-    
-    # Only write if content changed
-    if content != original_content:
-        with open('$installer_py', 'w') as f:
-            f.write(content)
-        print('install.py patched successfully')
-    else:
-        print('No changes needed in install.py')
-        
-except Exception as e:
-    print(f'Error patching install.py: {e}')
-    sys.exit(1)
-" 2>/dev/null && print_status "install.py patched successfully" || {
-            # Fallback: Simple sed-based patching if Python fails
-            sed -i 's/\(dnf\|yum\) install\([^;]*\)mariadb-server/\1 install\2--exclude=MariaDB-server* mariadb-server/gi' "$installer_py" 2>/dev/null
-            sed -i 's/\(dnf\|yum\) install\([^;]*\)MariaDB-server/\1 install\2--exclude=MariaDB-server* MariaDB-server/gi' "$installer_py" 2>/dev/null
-            print_status "install.py patched (fallback method)"
-        }
-        fi
+        # NOTE: We do NOT patch install.py to add --exclude=MariaDB-server* to dnf install.
+        # That would block the initial MariaDB-server install. install.py now clears dnf exclude
+        # before installing MariaDB and uses official MariaDB-server packages.
         
         # If MariaDB 10.x is installed, disable repositories right before running installer
         if [ -n "$MARIADB_VERSION" ] && [ -f /tmp/cyberpanel_repo_monitor.pid ]; then
@@ -1421,11 +1363,61 @@ EOF
     # Give services a moment to start
     sleep 3
 
+    # Ensure both 8090 (CyberPanel) and 7080 (LiteSpeed/OLS) are accessible
+    echo "  • Ensuring ports 8090 and 7080 are accessible..."
+    port_check() {
+        local port=$1
+        command -v ss >/dev/null 2>&1 && ss -tlnp 2>/dev/null | grep -q ":$port " && return 0
+        command -v netstat >/dev/null 2>&1 && netstat -tlnp 2>/dev/null | grep -q ":$port " && return 0
+        return 1
+    }
+    max_attempts=18
+    attempt=0
+    while [ $attempt -lt $max_attempts ]; do
+        need_restart=false
+        systemctl is-active --quiet mariadb || { systemctl start mariadb 2>/dev/null; need_restart=true; }
+        systemctl is-active --quiet lsws 2>/dev/null || { [ -x /usr/local/lsws/bin/lswsctrl ] && systemctl start lsws 2>/dev/null; need_restart=true; }
+        systemctl is-active --quiet lscpd 2>/dev/null || { systemctl start lscpd 2>/dev/null; need_restart=true; }
+        [ "$need_restart" = true ] && sleep 5
+        if port_check 8090 && port_check 7080; then
+            echo "  ✓ Port 8090 (CyberPanel) and 7080 (OpenLiteSpeed) are listening"
+            break
+        fi
+        attempt=$((attempt + 1))
+        [ $attempt -lt $max_attempts ] && sleep 5
+    done
+    if ! port_check 8090 || ! port_check 7080; then
+        systemctl start lscpd 2>/dev/null
+        systemctl start lsws 2>/dev/null
+        sleep 10
+        if port_check 8090 && port_check 7080; then
+            echo "  ✓ Port 8090 and 7080 are now listening"
+        else
+            echo "  ⚠ One or both ports not yet listening. Run: systemctl start mariadb lsws lscpd"
+        fi
+    fi
+
     echo "  ✓ Post-installation configurations completed"
+}
+
+# Helper: check if a port is listening
+_port_listening() {
+    local port=$1
+    command -v ss >/dev/null 2>&1 && ss -tlnp 2>/dev/null | grep -q ":$port " && return 0
+    command -v netstat >/dev/null 2>&1 && netstat -tlnp 2>/dev/null | grep -q ":$port " && return 0
+    return 1
 }
 
 # Function to show status summary
 show_status_summary() {
+    # Last-chance: try to start services so 8090 and 7080 are accessible
+    if ! _port_listening 8090 || ! _port_listening 7080; then
+        systemctl start mariadb 2>/dev/null || true
+        systemctl start lsws 2>/dev/null || true
+        systemctl start lscpd 2>/dev/null || true
+        sleep 8
+    fi
+
     echo "==============================================================================================================="
     echo "                                    FINAL STATUS CHECK"
     echo "==============================================================================================================="
@@ -1453,6 +1445,22 @@ show_status_summary() {
         echo "  ✓ CyberPanel Application - Running"
     else
         echo "  ✗ CyberPanel Application - Not Running (may take a moment to start)"
+        all_services_running=false
+    fi
+
+    echo ""
+    echo "Port Accessibility:"
+    if _port_listening 8090; then
+        echo "  ✓ Port 8090 (CyberPanel) - Accessible"
+    else
+        echo "  ✗ Port 8090 (CyberPanel) - Not listening (run: systemctl start lscpd)"
+        all_services_running=false
+    fi
+    if _port_listening 7080; then
+        echo "  ✓ Port 7080 (OpenLiteSpeed) - Accessible"
+    else
+        echo "  ✗ Port 7080 (OpenLiteSpeed) - Not listening (run: systemctl start lsws)"
+        all_services_running=false
     fi
 
     # Get the actual password that was set
@@ -1481,7 +1489,7 @@ show_status_summary() {
     echo "==============================================================================================================="
 
     if [ "$all_services_running" = true ]; then
-        echo "✓ Installation completed successfully!"
+        echo "✓ Installation completed successfully! Ports 8090 and 7080 are accessible."
     else
         echo "⚠ Installation completed with warnings. Some services may need attention."
     fi

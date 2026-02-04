@@ -1906,11 +1906,34 @@ module cyberpanel_ols {
                 mariadb_ver = getattr(preFlightsChecks, 'mariadb_version', '11.8')
                 command = f'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version={mariadb_ver}'
                 self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
-                # Use --nobest for 10.11 and 11.8 on el9 to avoid MariaDB-client dependency resolution issues
+                # Allow MariaDB-server to be installed: remove from dnf exclude if present (e.g. from previous run or cyberpanel.sh)
+                dnf_conf = '/etc/dnf/dnf.conf'
+                if os.path.exists(dnf_conf):
+                    try:
+                        with open(dnf_conf, 'r') as f:
+                            dnf_content = f.read()
+                        if 'MariaDB-server' in (dnf_content or '') and 'exclude=' in (dnf_content or ''):
+                            # Remove MariaDB-server and MariaDB-server* from exclude= line(s)
+                            def strip_mariadb_exclude(match):
+                                line = match.group(0)
+                                rest = re.sub(r'\bMariaDB-server\*?\s*', '', line).strip()
+                                if rest == 'exclude=' or rest == 'exclude':
+                                    return ''
+                                return rest.rstrip() + '\n'
+                            new_content = re.sub(r'exclude=[^\n]*', strip_mariadb_exclude, dnf_content)
+                            new_content = re.sub(r'\n\n+', '\n', new_content)
+                            if new_content != dnf_content:
+                                with open(dnf_conf, 'w') as f:
+                                    f.write(new_content)
+                                self.stdOut("Temporarily removed MariaDB-server from dnf exclude for installation", 1)
+                    except Exception as e:
+                        self.stdOut(f"Warning: Could not adjust dnf exclude: {e}", 1)
+                # Install from official MariaDB repo (capitalized package names); --nobest for 10.11/11.8 on el9
+                mariadb_packages = 'MariaDB-server MariaDB-client MariaDB-backup MariaDB-devel'
                 if mariadb_ver in ('10.11', '11.8'):
-                    command = 'dnf install -y --nobest mariadb-server mariadb-devel mariadb-client-utils'
+                    command = f'dnf install -y --nobest {mariadb_packages}'
                 else:
-                    command = 'dnf install mariadb-server mariadb-devel mariadb-client-utils -y'
+                    command = f'dnf install -y {mariadb_packages}'
                 self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
             
             # Verify MariaDB was installed successfully before proceeding
@@ -3267,7 +3290,36 @@ password="%s"
 
         logging.InstallLog.writeToFile("settings.py updated!")
 
-        # self.setupVirtualEnv(self.distro)
+        # Create Python venv at /usr/local/CyberCP if missing (install.py run from temp dir does not run venvsetup.sh)
+        if not os.path.exists("/usr/local/CyberCP/bin/python"):
+            logging.InstallLog.writeToFile("Creating Python virtual environment at /usr/local/CyberCP...")
+            preFlightsChecks.stdOut("Creating Python virtual environment...")
+            try:
+                r = subprocess.run(
+                    [sys.executable or "python3", "-m", "venv", "/usr/local/CyberCP"],
+                    timeout=120, capture_output=True, text=True, cwd="/usr/local/CyberCP"
+                )
+                if r.returncode != 0:
+                    logging.InstallLog.writeToFile("venv create stderr: " + (r.stderr or "")[:500])
+                if r.returncode == 0 and os.path.exists("/usr/local/CyberCP/bin/pip"):
+                    req_file = "/usr/local/CyberCP/requirments.txt"
+                    if not os.path.exists(req_file):
+                        req_file = "/usr/local/CyberCP/requirements.txt"
+                    if os.path.exists(req_file):
+                        subprocess.run(
+                            ["/usr/local/CyberCP/bin/pip", "install", "-r", req_file, "--quiet"],
+                            timeout=600, cwd="/usr/local/CyberCP", capture_output=True
+                        )
+                    else:
+                        subprocess.run(
+                            ["/usr/local/CyberCP/bin/pip", "install", "Django", "PyMySQL", "requests", "cryptography", "psutil", "--quiet"],
+                            timeout=180, cwd="/usr/local/CyberCP", capture_output=True
+                        )
+                if os.path.exists("/usr/local/CyberCP/bin/python"):
+                    logging.InstallLog.writeToFile("Virtual environment created successfully")
+                    preFlightsChecks.stdOut("Virtual environment created", 1)
+            except Exception as e:
+                logging.InstallLog.writeToFile("Venv create warning: " + str(e))
 
         # Now run Django migrations since we're in /usr/local/CyberCP and database exists
         os.chdir("/usr/local/CyberCP")
@@ -3303,46 +3355,53 @@ password="%s"
 
         logging.InstallLog.writeToFile("Migration cleanup completed")
 
-        # Ensure virtual environment is properly set up
-        logging.InstallLog.writeToFile("Ensuring virtual environment is properly set up...")
+        # Ensure virtual environment or system Python is available
+        logging.InstallLog.writeToFile("Ensuring Python is available for migrations...")
         if not self.ensureVirtualEnvironmentSetup():
-            logging.InstallLog.writeToFile("ERROR: Virtual environment setup failed!", 0)
-            preFlightsChecks.stdOut("ERROR: Virtual environment setup failed!", 0)
-            return False
+            logging.InstallLog.writeToFile("WARNING: No venv found; will try system Python", 1)
 
-        # Find the correct Python virtual environment path (prefer CyberCP - app install path)
+        # Find Python: prefer venv, then system python3 (avoids FileNotFoundError for /usr/local/CyberPanel/bin/python)
         python_paths = [
             "/usr/local/CyberCP/bin/python",
             "/usr/local/CyberPanel/bin/python",
-            "/usr/local/CyberPanel-venv/bin/python"
+            "/usr/local/CyberPanel-venv/bin/python",
+            "/usr/bin/python3",
+            "/usr/local/bin/python3",
         ]
-        
+        if sys.executable and sys.executable not in python_paths:
+            python_paths.append(sys.executable)
+
         python_path = None
         for path in python_paths:
-            if os.path.exists(path):
-                python_path = path
-                logging.InstallLog.writeToFile(f"Found Python virtual environment at: {path}")
-                break
-        
+            if path and os.path.exists(path):
+                try:
+                    r = subprocess.run([path, "--version"], capture_output=True, text=True, timeout=5)
+                    if r.returncode == 0:
+                        python_path = path
+                        logging.InstallLog.writeToFile(f"Using Python at: {path}")
+                        break
+                except Exception:
+                    continue
+
         if not python_path:
-            logging.InstallLog.writeToFile("ERROR: No Python virtual environment found!", 0)
-            preFlightsChecks.stdOut("ERROR: No Python virtual environment found!", 0)
+            logging.InstallLog.writeToFile("ERROR: No working Python found for migrations!", 0)
+            preFlightsChecks.stdOut("ERROR: No working Python found!", 0)
             return False
 
         # Create migrations in dependency order - loginSystem first since other apps depend on it
         logging.InstallLog.writeToFile("Creating migrations for loginSystem first...")
         command = f"{python_path} manage.py makemigrations loginSystem --noinput"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
         # Now create migrations for all other apps
         logging.InstallLog.writeToFile("Creating migrations for all other apps...")
         command = f"{python_path} manage.py makemigrations --noinput"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
         # Apply all migrations
         logging.InstallLog.writeToFile("Applying all migrations...")
         command = f"{python_path} manage.py migrate --noinput"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
         logging.InstallLog.writeToFile("Django migrations completed successfully!")
         preFlightsChecks.stdOut("Django migrations completed successfully!")
@@ -3354,7 +3413,7 @@ password="%s"
         self.downloadCDNLibraries()
 
         command = f"{python_path} manage.py collectstatic --noinput --clear"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
         ## Moving static content to lscpd location
         command = 'mv static /usr/local/CyberCP/public/'
@@ -5308,10 +5367,10 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
                     try:
                         os.remove(f)
                     except OSError:
-                        pass
+                        subprocess.run(["rm", "-f", f], timeout=5, capture_output=True)
 
             command = "ssh-keygen -f /root/.ssh/cyberpanel -t rsa -N ''"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR, True)
 
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [install_default_keys]")
@@ -5701,11 +5760,18 @@ milter_default_action = accept
 
             os.chdir(self.cwd)
 
-            command = "chmod +x composer.sh"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            # Download composer.sh if missing (e.g. when run from temp dir without repo file)
+            composer_sh = os.path.join(self.cwd, "composer.sh")
+            if not os.path.exists(composer_sh) or not os.path.isfile(composer_sh):
+                command = "wget -q https://cyberpanel.sh/composer.sh -O " + composer_sh
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            command = "./composer.sh"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            if os.path.exists(composer_sh):
+                command = "chmod +x " + composer_sh
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+                command = "bash " + os.path.abspath(composer_sh)
+                preFlightsChecks.call(command, self.distro, "./composer.sh", command, 1, 0, os.EX_OSERR, True)
 
         except OSError as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [setupPHPAndComposer]")
