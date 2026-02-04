@@ -3307,10 +3307,10 @@ password="%s"
             preFlightsChecks.stdOut("ERROR: Virtual environment setup failed!", 0)
             return False
 
-        # Find the correct Python virtual environment path
+        # Find the correct Python virtual environment path (prefer CyberCP - app install path)
         python_paths = [
-            "/usr/local/CyberPanel/bin/python",
             "/usr/local/CyberCP/bin/python",
+            "/usr/local/CyberPanel/bin/python",
             "/usr/local/CyberPanel-venv/bin/python"
         ]
         
@@ -4956,8 +4956,8 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
 
             # Determine the correct Python path
             python_paths = [
-                "/usr/local/CyberPanel/bin/python",
                 "/usr/local/CyberCP/bin/python",
+                "/usr/local/CyberPanel/bin/python",
                 "/usr/bin/python3",
                 "/usr/local/bin/python3"
             ]
@@ -5026,7 +5026,7 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
     def ensureVirtualEnvironmentSetup(self):
         """Ensure virtual environment is properly set up and accessible"""
         try:
-            # Check multiple possible virtual environment locations
+            # Check multiple possible virtual environment locations (prefer CyberCP - app path)
             venv_paths = [
                 '/usr/local/CyberCP/bin/python',
                 '/usr/local/CyberPanel/bin/python',
@@ -5077,8 +5077,8 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
             
             # Determine the correct Python path
             python_paths = [
-                "/usr/local/CyberPanel/bin/python",
                 "/usr/local/CyberCP/bin/python",
+                "/usr/local/CyberPanel/bin/python",
                 "/usr/bin/python3",
                 "/usr/local/bin/python3"
             ]
@@ -5292,9 +5292,20 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
     def install_default_keys(self):
         try:
             path = "/root/.ssh"
+            key_path = "/root/.ssh/cyberpanel"
+            key_pub = "/root/.ssh/cyberpanel.pub"
 
             if not os.path.exists(path):
                 os.mkdir(path)
+
+            # Remove existing key files so ssh-keygen never prompts "Overwrite (y/n)?"
+            # This keeps unattended / no-confirmation installs fully non-interactive
+            for f in (key_path, key_pub):
+                if os.path.exists(f):
+                    try:
+                        os.remove(f)
+                    except OSError:
+                        pass
 
             command = "ssh-keygen -f /root/.ssh/cyberpanel -t rsa -N ''"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
