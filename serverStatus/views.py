@@ -319,18 +319,36 @@ def servicesAction(request):
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
 
-                else:
-                    if service == 'pure-ftpd':
-                        if os.path.exists("/etc/lsb-release"):
-                            service = 'pure-ftpd-mysql'
-                        else:
-                            service = 'pure-ftpd'
+                if service == 'pure-ftpd':
+                    if os.path.exists("/etc/lsb-release"):
+                        service = 'pure-ftpd-mysql'
+                    else:
+                        service = 'pure-ftpd'
 
-                    command = 'sudo systemctl %s %s' % (action, service)
-                    ProcessUtilities.executioner(command)
-                    final_dic = {'serviceAction': 1, "error_message": 0}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
+                # Run as root with shell so systemctl has permission (panel may run as lscpd)
+                command = 'systemctl %s %s' % (action, service)
+                ProcessUtilities.executioner(command, 'root', True)
+                time.sleep(1)
+
+                # For start action, verify service actually came up; return error if not
+                if action == 'start':
+                    try:
+                        out = ProcessUtilities.outputExecutioner('systemctl is-active %s' % service, 'root', True)
+                        if not (out and out.strip() == 'active'):
+                            status_out = ProcessUtilities.outputExecutioner(
+                                'systemctl status %s --no-pager -l 2>&1 | head -15' % service, 'root', True)
+                            err_msg = (status_out or '').strip().replace('\n', ' ')[:400]
+                            final_dic = {'serviceAction': 0, 'error_message': 'Service did not start. ' + err_msg}
+                            final_json = json.dumps(final_dic)
+                            return HttpResponse(final_json)
+                    except Exception as e:
+                        final_dic = {'serviceAction': 0, 'error_message': 'Service did not start: %s' % str(e)}
+                        final_json = json.dumps(final_dic)
+                        return HttpResponse(final_json)
+
+                final_dic = {'serviceAction': 1, "error_message": 0}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
 
 
         except BaseException as msg:
