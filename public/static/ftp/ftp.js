@@ -8,20 +8,44 @@ app.controller('createFTPAccount', function ($scope, $http) {
 
 
 
+    $scope.ftpLoading = false;
+    $scope.ftpDetails = true;
+
     $(document).ready(function () {
-        $( ".ftpDetails" ).hide();
+        $( ".ftpDetails, .account-details" ).hide();
         $( ".ftpPasswordView" ).hide();
-        $('.create-ftp-acct-select').select2();
+        if (typeof $ !== 'undefined' && $ && typeof $.fn !== 'undefined' && typeof $.fn.select2 === 'function') {
+            try {
+                var $sel = $('.create-ftp-acct-select');
+                if ($sel.length) {
+                    $sel.select2();
+                    $sel.on('select2:select', function (e) {
+                        var data = e.params.data;
+                        $scope.ftpDomain = data.text;
+                        $scope.ftpDetails = false;
+                        $scope.$apply();
+                        $(".ftpDetails, .account-details").show();
+                    });
+                }
+            } catch (err) {}
+        }
+        $('.create-ftp-acct-select').off('select2:select').on('change', function () {
+            $scope.ftpDomain = $(this).val();
+            $scope.ftpDetails = ($scope.ftpDomain && $scope.ftpDomain !== '') ? false : true;
+            $scope.$apply();
+            $(".ftpDetails, .account-details").show();
+        });
     });
 
-    $('.create-ftp-acct-select').on('select2:select', function (e) {
-        var data = e.params.data;
-        $scope.ftpDomain = data.text;
-        $( ".ftpDetails" ).show();
-
-    });
-
-    $scope.ftpLoading = true;
+    $scope.showFTPDetails = function() {
+        if ($scope.ftpDomain && $scope.ftpDomain !== "") {
+            $scope.ftpDetails = false;
+            $(".ftpDetails, .account-details").show();
+        } else {
+            $scope.ftpDetails = true;
+            $(".ftpDetails, .account-details").hide();
+        }
+    };
 
     $scope.createFTPAccount = function () {
 

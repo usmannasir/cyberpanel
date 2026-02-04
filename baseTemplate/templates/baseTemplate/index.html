@@ -1,6 +1,6 @@
 {% load i18n %}
 {% get_current_language as LANGUAGE_CODE %}
-{% with CP_VERSION="2.4.4.1" %}
+{% with CP_VERSION=CYBERPANEL_FULL_VERSION|default:"2.5.5.dev" %}
 <!DOCTYPE html>
 <html lang="en" ng-app="CyberCP">
 <head>

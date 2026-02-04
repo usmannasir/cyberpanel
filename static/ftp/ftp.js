@@ -15,7 +15,7 @@ app.controller('createFTPAccount', function ($scope, $http) {
     $scope.generatedPasswordView = true;
 
     $(document).ready(function () {
-        $( ".ftpDetails" ).hide();
+        $( ".ftpDetails, .account-details" ).hide();
         $( ".ftpPasswordView" ).hide();
         
         // Only use select2 if it's actually a function (avoids errors when Rocket Loader defers scripts)
@@ -27,8 +27,9 @@ app.controller('createFTPAccount', function ($scope, $http) {
                     $sel.on('select2:select', function (e) {
                         var data = e.params.data;
                         $scope.ftpDomain = data.text;
+                        $scope.ftpDetails = false;
                         $scope.$apply();
-                        $(".ftpDetails").show();
+                        $(".ftpDetails, .account-details").show();
                     });
                 } else {
                     initNativeSelect();
@@ -42,19 +43,20 @@ app.controller('createFTPAccount', function ($scope, $http) {
         function initNativeSelect() {
             $('.create-ftp-acct-select').off('select2:select').on('change', function () {
                 $scope.ftpDomain = $(this).val();
+                $scope.ftpDetails = ($scope.ftpDomain && $scope.ftpDomain !== '') ? false : true;
                 $scope.$apply();
-                $(".ftpDetails").show();
+                $(".ftpDetails, .account-details").show();
             });
         }
     });
     
     $scope.showFTPDetails = function() {
         if ($scope.ftpDomain && $scope.ftpDomain !== "") {
-            $(".ftpDetails").show();
             $scope.ftpDetails = false;
+            $(".ftpDetails, .account-details").show();
         } else {
-            $(".ftpDetails").hide();
             $scope.ftpDetails = true;
+            $(".ftpDetails, .account-details").hide();
         }
     };
 

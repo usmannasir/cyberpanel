@@ -378,8 +378,8 @@ class ProcessUtilities(multi.Thread):
             if getpass.getuser() == 'root':
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(f"[executioner] Running as root, using normalExecutioner")
-                ProcessUtilities.normalExecutioner(command, shell, user)
-                return 1
+                res = ProcessUtilities.normalExecutioner(command, shell, user)
+                return 1 if res == 1 else 0
 
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.writeToFile(f"[executioner] Not root, using sendCommand via lscpd")
