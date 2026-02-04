@@ -1908,7 +1908,7 @@ module cyberpanel_ols {
                 self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
                 # Allow MariaDB-server to be installed: remove from dnf exclude if present (e.g. from previous run or cyberpanel.sh)
                 dnf_conf = '/etc/dnf/dnf.conf'
-                if os.path.exists(dnf_conf):
+                if os.path.exists(dnf_conf) and ('MariaDB-server' in open(dnf_conf).read()):
                     try:
                         with open(dnf_conf, 'r') as f:
                             dnf_content = f.read()
@@ -1928,6 +1928,13 @@ module cyberpanel_ols {
                                 self.stdOut("Temporarily removed MariaDB-server from dnf exclude for installation", 1)
                     except Exception as e:
                         self.stdOut(f"Warning: Could not adjust dnf exclude: {e}", 1)
+                    # Fallback: use sed so exclude is cleared even if Python path failed
+                    if 'MariaDB-server' in open(dnf_conf).read():
+                        subprocess.run(
+                            "sed -i '/^exclude=/s/MariaDB-server\\*\\s*//g; /^exclude=/s/\\s*MariaDB-server\\*//g; /^exclude=\\s*$/d' " + dnf_conf,
+                            shell=True, timeout=5, capture_output=True
+                        )
+                        self.stdOut("Temporarily removed MariaDB-server from dnf exclude for installation (fallback)", 1)
                 # Install from official MariaDB repo (capitalized package names); --nobest for 10.11/11.8 on el9
                 mariadb_packages = 'MariaDB-server MariaDB-client MariaDB-backup MariaDB-devel'
                 if mariadb_ver in ('10.11', '11.8'):
