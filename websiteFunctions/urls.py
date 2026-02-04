@@ -208,6 +208,7 @@ urlpatterns = [
     path('fixSubdomainLogsAction', views.fixSubdomainLogsAction, name='fixSubdomainLogsAction'),
 
     # FTP Quota Management (API endpoints only; page is at /ftp/quotaManagement)
+    path('getFTPQuotaStatus', views.getFTPQuotaStatus, name='getFTPQuotaStatus'),
     path('enableFTPQuota', views.enableFTPQuota, name='enableFTPQuota'),
     path('getFTPQuotas', views.getFTPQuotas, name='getFTPQuotas'),
     path('updateFTPQuota', views.updateFTPQuota, name='updateFTPQuota'),
