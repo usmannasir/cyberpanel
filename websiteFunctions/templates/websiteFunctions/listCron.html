@@ -8,6 +8,64 @@
 <!-- Current language: {{ LANGUAGE_CODE }} -->
 
 <style>
+    /* Text visibility fixes - ensure buttons and text have sufficient contrast */
+    .cron-management-page .btn-primary {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+        color: #ffffff !important;
+        border: none !important;
+    }
+    .cron-management-page .btn-primary:hover {
+        color: #ffffff !important;
+    }
+    .cron-management-page .btn-border {
+        background: transparent !important;
+        color: #6366f1 !important;
+        border: 2px solid #6366f1 !important;
+    }
+    .cron-management-page .btn-border:hover {
+        background: #6366f1 !important;
+        color: #ffffff !important;
+    }
+    .cron-management-page .btn-link {
+        color: #ffffff !important;
+        border: 2px solid rgba(255, 255, 255, 0.8) !important;
+    }
+    .cron-management-page .btn-link:hover {
+        color: #ffffff !important;
+        background: rgba(255, 255, 255, 0.2) !important;
+    }
+    .cron-management-page .btn-warning {
+        background: linear-gradient(135deg, #f59e0b 0%, #dc2626 100%) !important;
+        color: #ffffff !important;
+    }
+    .cron-management-page .btn-warning:hover {
+        color: #ffffff !important;
+    }
+    .cron-management-page #cronTable thead {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+    }
+    .cron-management-page #cronTable thead th {
+        color: #ffffff !important;
+    }
+    .cron-management-page #cronTable tbody td {
+        color: #1e293b !important;
+    }
+    .cron-management-page #cronTable tbody td code {
+        color: #1e293b !important;
+        background: #f1f5f9 !important;
+    }
+    [data-theme="dark"] .cron-management-page #cronTable tbody td,
+    [data-theme="dark"] .cron-management-page #cronTable tbody td code {
+        color: #e4e4e7 !important;
+    }
+    [data-theme="dark"] .cron-management-page #cronTable tbody td code {
+        background: #252550 !important;
+    }
+    /* Page title - ensure gradient for Cron Docs button visibility */
+    .cron-management-page #page-title {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+    }
+    
     /* Modern page styles matching new design with dark mode support */
     .page-wrapper {
         background: transparent;
@@ -652,7 +710,7 @@
     }
 </style>
 
-<div ng-controller="manageCronController" class="container">
+<div ng-controller="manageCronController" class="container cron-management-page">
     
     <div id="page-title">
         <h2>

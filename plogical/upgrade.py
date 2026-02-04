@@ -5292,17 +5292,20 @@ vmail
             data = open(cronPath, 'r').read()
 
             if data.find('findBWUsage') == -1:
-                # Randomize acme.sh cron schedule to avoid traffic spikes to Let's Encrypt
-                # Generate random hour (0-23) and minute (0-59) for each installation
+                # Randomize acme.sh and renew.py cron schedules to avoid traffic spikes to Let's Encrypt
+                # Each installation gets a random day (0-6 Sun-Sat), hour, and minute to spread load
                 acme_hour = random.randint(0, 23)
                 acme_minute = random.randint(0, 59)
+                renew_weekday = random.randint(0, 6)  # 0=Sun, 1=Mon, ..., 6=Sat
+                renew_hour = random.randint(0, 23)
+                renew_minute = random.randint(0, 59)
                 
                 content = """
 0 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/findBWUsage.py >/dev/null 2>&1
 0 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py hourlyCleanup >/dev/null 2>&1
 0 0 1 * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py monthlyCleanup >/dev/null 2>&1
 0 2 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/upgradeCritical.py >/dev/null 2>&1
-0 0 * * 4 /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew.py >/dev/null 2>&1
+%d %d * * %d /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew.py >/dev/null 2>&1
 %d %d * * * "/root/.acme.sh"/acme.sh --cron --home "/root/.acme.sh" > /dev/null
 0 1 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/manage.py ssl_reconcile --all >/dev/null 2>&1
 */3 * * * * if ! find /home/*/public_html/ -maxdepth 2 -type f -newer /usr/local/lsws/cgid -name '.htaccess' -exec false {} +; then /usr/local/lsws/bin/lswsctrl restart; fi
@@ -5310,7 +5313,7 @@ vmail
 """
 
                 writeToFile = open(cronPath, 'w')
-                writeToFile.write(content % (acme_minute, acme_hour))
+                writeToFile.write(content % (renew_minute, renew_hour, renew_weekday, acme_minute, acme_hour))
                 writeToFile.close()
 
             if data.find('IncScheduler.py') == -1:
@@ -5347,23 +5350,26 @@ vmail
 
 
         else:
-            # Randomize acme.sh cron schedule to avoid traffic spikes to Let's Encrypt
-            # Generate random hour (0-23) and minute (0-59) for each installation
+            # Randomize acme.sh and renew.py cron schedules to avoid traffic spikes to Let's Encrypt
+            # Each installation gets a random day (0-6 Sun-Sat), hour, and minute to spread load
             acme_hour = random.randint(0, 23)
             acme_minute = random.randint(0, 59)
+            renew_weekday = random.randint(0, 6)  # 0=Sun, 1=Mon, ..., 6=Sat
+            renew_hour = random.randint(0, 23)
+            renew_minute = random.randint(0, 59)
             
             content = """
 0 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/findBWUsage.py >/dev/null 2>&1
 0 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py hourlyCleanup >/dev/null 2>&1
 0 0 1 * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py monthlyCleanup >/dev/null 2>&1
 0 2 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/upgradeCritical.py >/dev/null 2>&1
-0 0 * * 4 /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew.py >/dev/null 2>&1
+%d %d * * %d /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew.py >/dev/null 2>&1
 %d %d * * * "/root/.acme.sh"/acme.sh --cron --home "/root/.acme.sh" > /dev/null
 0 1 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/manage.py ssl_reconcile --all >/dev/null 2>&1
 0 0 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Daily
 0 0 * * 0 /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Weekly
 * * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/manage.py run_scheduled_scans >/usr/local/lscp/logs/scheduled_scans.log 2>&1
-""" % (acme_minute, acme_hour)
+""" % (renew_minute, renew_hour, renew_weekday, acme_minute, acme_hour)
             writeToFile = open(cronPath, 'w')
             writeToFile.write(content)
             writeToFile.close()
