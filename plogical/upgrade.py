@@ -1715,8 +1715,8 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
         cwd = os.getcwd()
 
         os.chdir('/usr/local/CyberCP')
-
-        command = '/usr/local/CyberPanel/bin/python manage.py collectstatic --noinput --clear'
+        py = Upgrade._python_for_manage()
+        command = py + ' manage.py collectstatic --noinput --clear'
         Upgrade.executioner(command, 'Remove old static content', 0)
 
         os.chdir(cwd)
@@ -3085,17 +3085,26 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
             pass
 
     @staticmethod
+    def _python_for_manage():
+        """Resolve Python for manage.py (avoid FileNotFoundError when /usr/local/CyberPanel/bin/python missing)."""
+        for path in ('/usr/local/CyberPanel/bin/python', '/usr/local/CyberCP/bin/python', '/usr/bin/python3', '/usr/local/bin/python3'):
+            if path and os.path.isfile(path) and os.access(path, os.X_OK):
+                return path
+        return '/usr/bin/python3'
+
+    @staticmethod
     def GeneralMigrations():
         try:
 
             cwd = os.getcwd()
             os.chdir('/usr/local/CyberCP')
+            py = Upgrade._python_for_manage()
 
-            command = '/usr/local/CyberPanel/bin/python manage.py makemigrations'
+            command = py + ' manage.py makemigrations'
             Upgrade.executioner(command, 'python manage.py makemigrations', 0)
 
-            command = '/usr/local/CyberPanel/bin/python manage.py makemigrations'
-            Upgrade.executioner(command, '/usr/local/CyberPanel/bin/python manage.py migrate', 0)
+            command = py + ' manage.py makemigrations'
+            Upgrade.executioner(command, py + ' manage.py migrate', 0)
 
             os.chdir(cwd)
 
@@ -4606,21 +4615,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         """Upgrade pip to latest version for better package compatibility"""
         try:
             Upgrade.stdOut("Upgrading pip to latest version...", 1)
-            
-            # Determine the correct Python path
-            python_paths = [
-                "/usr/local/CyberPanel/bin/python",
-                "/usr/local/CyberCP/bin/python",
-                "/usr/bin/python3",
-                "/usr/local/bin/python3"
-            ]
-            
-            python_path = None
-            for path in python_paths:
-                if os.path.exists(path):
-                    python_path = path
-                    break
-            
+            python_path = Upgrade._python_for_manage()
             if not python_path:
                 Upgrade.stdOut("No Python executable found for pip upgrade", 0)
                 return False

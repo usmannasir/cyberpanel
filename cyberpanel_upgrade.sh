@@ -947,10 +947,21 @@ Pre_Upgrade_Branch_Input() {
 
 Main_Upgrade() {
 echo -e "\n[$(date +"%Y-%m-%d %H:%M:%S")] Starting Main_Upgrade function..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running: /usr/local/CyberPanel/bin/python upgrade.py $Branch_Name" | tee -a /var/log/cyberpanel_upgrade_debug.log
+
+# Resolve Python for upgrade (avoid FileNotFoundError when /usr/local/CyberPanel/bin/python missing)
+CP_PYTHON=""
+for py in /usr/local/CyberPanel/bin/python /usr/local/CyberCP/bin/python /usr/bin/python3 /usr/local/bin/python3; do
+  if [[ -x "$py" ]]; then CP_PYTHON="$py"; break; fi
+done
+if [[ -z "$CP_PYTHON" ]]; then
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] ERROR: No Python found for upgrade (tried CyberPanel, CyberCP, python3)" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  exit 1
+fi
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Using Python: $CP_PYTHON" | tee -a /var/log/cyberpanel_upgrade_debug.log
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running: $CP_PYTHON upgrade.py $Branch_Name" | tee -a /var/log/cyberpanel_upgrade_debug.log
 
 # Run upgrade.py and capture output
-upgrade_output=$(/usr/local/CyberPanel/bin/python upgrade.py "$Branch_Name" 2>&1)
+upgrade_output=$("$CP_PYTHON" upgrade.py "$Branch_Name" 2>&1)
 RETURN_CODE=$?
 echo "$upgrade_output" | tee -a /var/log/cyberpanel_upgrade_debug.log
 
@@ -1217,7 +1228,9 @@ tar xf wsgi-lsapi-2.1.tgz
 cd wsgi-lsapi-2.1 || exit
 
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Configuring WSGI..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-/usr/local/CyberPanel/bin/python ./configure.py 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+PYTHON_CFG="${CP_PYTHON:-/usr/bin/python3}"
+[[ -x "$PYTHON_CFG" ]] || PYTHON_CFG="/usr/bin/python3"
+"$PYTHON_CFG" ./configure.py 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
 
 # Fix Makefile to use proper optimization flags to avoid _FORTIFY_SOURCE warnings
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Optimizing Makefile for proper compilation..." | tee -a /var/log/cyberpanel_upgrade_debug.log
