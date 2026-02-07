@@ -578,10 +578,15 @@ class preFlightsChecks:
 
         os.chdir('/usr/local')
 
-        command = "git clone https://github.com/usmannasir/cyberpanel"
+        command = "git clone https://github.com/ksaltik/cyberpanel-debian-support"
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-        shutil.move('cyberpanel', 'CyberCP')
+        shutil.move('cyberpanel-debian-support', 'CyberCP')
+
+        os.chdir('/usr/local/CyberCP')
+        command = "git checkout add-debian-13-support"
+        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+        os.chdir('/usr/local')
 
         ##
 
@@ -913,7 +918,7 @@ password="%s"
             if not os.path.exists("/usr/local/CyberCP/public"):
                 os.mkdir("/usr/local/CyberCP/public")
 
-            command = 'wget -O /usr/local/CyberCP/public/phpmyadmin.zip https://github.com/usmannasir/cyberpanel/raw/stable/phpmyadmin.zip'
+            command = 'wget -O /usr/local/CyberCP/public/phpmyadmin.zip https://raw.githubusercontent.com/ksaltik/cyberpanel-debian-support/add-debian-13-support/phpmyadmin.zip'
 
             preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
                                   command, 1, 0, os.EX_OSERR)
