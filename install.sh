@@ -45,6 +45,15 @@ apt install -y -qq wget curl
 elif echo $OUTPUT | grep -q "Ubuntu 22.04" ; then
 apt install -y -qq wget curl
                 SERVER_OS="Ubuntu"
+elif echo $OUTPUT | grep -q "Debian GNU/Linux 11" ; then
+apt install -y -qq wget curl
+                SERVER_OS="Ubuntu"
+elif echo $OUTPUT | grep -q "Debian GNU/Linux 12" ; then
+apt install -y -qq wget curl
+                SERVER_OS="Ubuntu"
+elif echo $OUTPUT | grep -q "Debian GNU/Linux 13" ; then
+apt install -y -qq wget curl
+                SERVER_OS="Ubuntu"
 elif echo $OUTPUT | grep -q "openEuler 20.03" ; then
         echo -e "\nDetecting openEuler 20.03...\n"
         SERVER_OS="openEuler"
@@ -58,7 +67,7 @@ yum update curl wget ca-certificates -y 1> /dev/null
 else
 
                 echo -e "\nUnable to detect your OS...\n"
-                echo -e "\nCyberPanel is supported on Ubuntu 18.04, Ubuntu 20.04 Ubuntu 22.04, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10 and CloudLinux 7.x...\n"
+                echo -e "\nCyberPanel is supported on Ubuntu 18.04, Ubuntu 20.04 Ubuntu 22.04, Debian 11, Debian 12, Debian 13, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10 and CloudLinux 7.x...\n"
                 exit 1
 fi
 
