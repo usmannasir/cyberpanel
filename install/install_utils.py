@@ -42,7 +42,7 @@ def FetchCloudLinuxAlmaVersionVersion():
 
 def get_Ubuntu_release(use_print=False, exit_on_error=True):
     """
-    Get Ubuntu release version from /etc/lsb-release
+    Get Ubuntu release version from /etc/lsb-release or /etc/debian_version or /etc/os-release
     
     Args:
         use_print: If True, use print() for errors, otherwise use the provided output function
@@ -66,7 +66,30 @@ def get_Ubuntu_release(use_print=False, exit_on_error=True):
                 # This will be overridden by the calling module
                 return -1
 
-    else:
+    elif exists("/etc/debian_version"):
+        try:
+            with open("/etc/debian_version") as f:
+                content = f.read().strip()
+                # Handle cases like "12.5" or "13.0"
+                release = float(content.split('.')[0])
+        except Exception:
+            pass
+
+    # Fallback to os-release if debian_version check failed or file didn't exist
+    if release == -1 and exists("/etc/os-release"):
+        try:
+            with open("/etc/os-release") as f:
+                for line in f:
+                    if line.startswith("VERSION_ID="):
+                        version_str = line.split('=')[1].strip().strip('"')
+                        # Handle purely numeric versions (e.g. "12", "13")
+                        if version_str.isdigit():
+                            release = float(version_str)
+                            break
+        except Exception:
+            pass
+
+    if release == -1:
         error_msg = "Can't find linux release file - fatal error"
         if hasattr(logging, 'InstallLog'):
             logging.InstallLog.writeToFile(error_msg)
@@ -197,6 +220,10 @@ def get_distro():
             for line in f:
                 if line == "DISTRIB_ID=Ubuntu\n":
                     distro = ubuntu
+
+    elif exists("/etc/debian_version"):
+        distro_file = "/etc/debian_version"
+        distro = ubuntu
 
     elif exists("/etc/redhat-release"):
         distro_file = "/etc/redhat-release"
