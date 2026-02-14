@@ -367,7 +367,11 @@ if [[ "$*" = *"--no-system-update"* ]]; then
   echo -e "\nUsing --no-system-update: skipping full system package update.\n"
 fi
 # Parse --mariadb-version 10.11|11.8|12.1 (default 11.8)
-if [[ "$*" = *"--mariadb-version "* ]]; then
+# --mariadb is shorthand for --mariadb-version 10.11 (MariaDB default, matches 10.11.x-MariaDB Server)
+if [[ "$*" = *"--mariadb"* ]] && [[ "$*" != *"--mariadb-version "* ]]; then
+  MARIADB_VER="10.11"
+  echo -e "\nUsing --mariadb: MariaDB 10.11 selected (non-interactive).\n"
+elif [[ "$*" = *"--mariadb-version "* ]]; then
   MARIADB_VER=$(echo "$*" | sed -n 's/.*--mariadb-version \([^ ]*\).*/\1/p' | head -1)
   MARIADB_VER="${MARIADB_VER:-11.8}"
 fi
@@ -1768,8 +1772,8 @@ if [[ "$*" != *"--branch "* ]] && [[ "$*" != *"-b "* ]] ; then
   Pre_Upgrade_Branch_Input
 fi
 
-# Prompt for MariaDB version if not set via --mariadb-version (default 11.8). Options: 10.11, 11.8, 12.1.
-if [[ "$*" != *"--mariadb-version "* ]]; then
+# Prompt for MariaDB version if not set via --mariadb or --mariadb-version (default 11.8). Options: 10.11, 11.8, 12.1.
+if [[ "$*" != *"--mariadb"* ]] && [[ "$*" != *"--mariadb-version "* ]]; then
   echo -e "\nMariaDB version: \e[31m10.11\e[39m, \e[31m11.8\e[39m LTS (default) or \e[31m12.1\e[39m. You can switch later by re-running with --mariadb-version 10.11, 11.8 or 12.1."
   echo -e "Press Enter for 11.8 LTS, or type \e[31m10.11\e[39m or \e[31m12.1\e[39m (5 sec timeout): "
   read -r -t 5 Tmp_MariaDB_Ver || true
