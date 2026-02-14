@@ -38,7 +38,15 @@ FTP Quota Management - CyberPanel
                     <!-- Enable FTP Quota Section -->
                     <div class="row mb-4 ftp-quota-info">
                         <div class="col-12">
-                            <div class="alert alert-info">
+                            <div id="ftpDisabledWarning" class="alert alert-warning" style="display: none;">
+                                <h5><i class="fas fa-exclamation-triangle"></i> Pure-FTPd is not running</h5>
+                                <p class="mb-0">Please enable Pure-FTPd first (e.g. from <strong>Server Status → Services</strong>) before enabling the FTP Quota system.</p>
+                            </div>
+                            <div id="ftpQuotaAlreadyEnabled" class="alert alert-success" style="display: none;">
+                                <h5><i class="fas fa-check-circle"></i> FTP Quota system is already enabled</h5>
+                                <p class="mb-0">Pure-FTPd is running with quota support. You can manage per-user quotas in the table below.</p>
+                            </div>
+                            <div id="ftpQuotaInfoDefault" class="alert alert-info">
                                 <h5><i class="fas fa-info-circle"></i> FTP Quota System</h5>
                                 <p>Enable and manage individual FTP user quotas. This allows you to set storage limits for each FTP user.</p>
                                 <button type="button" id="btnEnableFTPQuota" class="btn btn-primary" onclick="enableFTPQuota()">
@@ -159,10 +167,48 @@ function showNotification(type, message) {
     }
 }
 
+function updateFTPQuotaStatus() {
+    $.ajax({
+        url: '{% url "getFTPQuotaStatus" %}',
+        type: 'POST',
+        data: { 'csrfmiddlewaretoken': getCsrfToken() },
+        headers: { 'X-CSRFToken': getCsrfToken() },
+        dataType: 'json',
+        success: function(data) {
+            var warning = document.getElementById('ftpDisabledWarning');
+            var already = document.getElementById('ftpQuotaAlreadyEnabled');
+            var defaultBox = document.getElementById('ftpQuotaInfoDefault');
+            var btn = document.getElementById('btnEnableFTPQuota');
+            var btnText = document.getElementById('btnEnableFTPQuotaText');
+            if (!data || data.status !== 1) return;
+            if (!data.ftp_running) {
+                if (warning) warning.style.display = 'block';
+                if (already) already.style.display = 'none';
+                if (defaultBox) defaultBox.style.display = 'none';
+                if (btn) { btn.disabled = true; btn.title = 'Start Pure-FTPd from Server Status → Services first'; }
+                if (btnText) btnText.textContent = 'Enable FTP Quota System (start Pure-FTPd first)';
+            } else if (data.quota_configured) {
+                if (warning) warning.style.display = 'none';
+                if (already) already.style.display = 'block';
+                if (defaultBox) defaultBox.style.display = 'none';
+                if (btn) { btn.disabled = true; btn.title = ''; }
+                if (btnText) btnText.textContent = 'FTP Quota system is already enabled';
+            } else {
+                if (warning) warning.style.display = 'none';
+                if (already) already.style.display = 'none';
+                if (defaultBox) defaultBox.style.display = 'block';
+                if (btn) { btn.disabled = false; btn.title = ''; }
+                if (btnText) btnText.textContent = 'Enable FTP Quota System';
+            }
+        }
+    });
+}
+
 function enableFTPQuota() {
     var btn = document.getElementById('btnEnableFTPQuota');
     var btnText = document.getElementById('btnEnableFTPQuotaText');
     if (!btn || !btnText) return;
+    if (btn.disabled) return;
     var originalHtml = btnText.innerHTML;
     btn.disabled = true;
     btnText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enabling...';
@@ -175,6 +221,7 @@ function enableFTPQuota() {
         success: function(data) {
             if (data && data.status === 1) {
                 showNotification('success', data.message || 'FTP quota system enabled successfully');
+                updateFTPQuotaStatus();
                 refreshQuotas();
             } else {
                 showNotification('error', (data && (data.message || data.error_message)) || 'Enable failed');
@@ -198,6 +245,7 @@ function enableFTPQuota() {
         complete: function() {
             btn.disabled = false;
             btnText.innerHTML = originalHtml;
+            updateFTPQuotaStatus();
         }
     });
 }
@@ -294,8 +342,9 @@ function saveQuota() {
     });
 }
 
-// Load quotas on page load
+// Load status and quotas on page load
 $(document).ready(function() {
+    updateFTPQuotaStatus();
     refreshQuotas();
 });
 </script>

@@ -11,6 +11,7 @@ OS_FAMILY=""
 PACKAGE_MANAGER=""
 ARCHITECTURE=""
 BRANCH_NAME=""
+MARIADB_VER=""
 DEBUG_MODE=false
 AUTO_INSTALL=false
 INSTALLATION_TYPE=""
@@ -579,6 +580,50 @@ cleanup_existing_cyberpanel() {
 
 # Function to install CyberPanel directly using the working method
 install_cyberpanel_direct() {
+    # Ask web server (OpenLiteSpeed vs LiteSpeed Enterprise) BEFORE MariaDB; default OpenLiteSpeed
+    if [ -z "$LS_ENT" ]; then
+        if [ "$AUTO_INSTALL" = true ]; then
+            LS_ENT=""
+            echo "  Using OpenLiteSpeed (auto mode)."
+        else
+            echo ""
+            echo "  Web server: 1) OpenLiteSpeed (default), 2) LiteSpeed Enterprise"
+            read -r -t 60 -p "  Enter 1 or 2 [1]: " LS_CHOICE || true
+            LS_CHOICE="${LS_CHOICE:-1}"
+            LS_CHOICE="${LS_CHOICE// /}"
+            if [ "$LS_CHOICE" = "2" ]; then
+                echo "  LiteSpeed Enterprise selected. Enter serial/key (required):"
+                read -r -t 120 -p "  Serial: " LS_SERIAL || true
+                LS_SERIAL="${LS_SERIAL:-}"
+                if [ -z "$LS_SERIAL" ]; then
+                    echo "  No serial provided. Defaulting to OpenLiteSpeed."
+                    LS_ENT=""
+                else
+                    LS_ENT="ent"
+                    echo "  Using LiteSpeed Enterprise with provided serial."
+                fi
+            else
+                LS_ENT=""
+                echo "  Using OpenLiteSpeed."
+            fi
+            echo ""
+        fi
+    fi
+
+    # Ask MariaDB version (after web server choice) if not set via --mariadb-version
+    if [ -z "$MARIADB_VER" ]; then
+        echo ""
+        echo "  MariaDB version: 10.11, 11.8 (LTS, default) or 12.1?"
+        read -r -t 60 -p "  Enter 10.11, 11.8 or 12.1 [11.8]: " MARIADB_VER || true
+        MARIADB_VER="${MARIADB_VER:-11.8}"
+        MARIADB_VER="${MARIADB_VER// /}"
+        if [ "$MARIADB_VER" != "10.11" ] && [ "$MARIADB_VER" != "11.8" ] && [ "$MARIADB_VER" != "12.1" ]; then
+            MARIADB_VER="11.8"
+        fi
+        echo "  Using MariaDB $MARIADB_VER"
+        echo ""
+    fi
+
     echo "  🔄 Downloading CyberPanel installation files..."
     
     # Check if CyberPanel is already installed
@@ -609,24 +654,27 @@ install_cyberpanel_direct() {
     systemctl enable mariadb 2>/dev/null || true
     systemctl enable lsws 2>/dev/null || true
     
+    # Clear any previous install temp folders so we never use stale extracted files
+    rm -rf /tmp/cyberpanel_install_* 2>/dev/null || true
+    
     # Create temporary directory for installation
     local temp_dir="/tmp/cyberpanel_install_$$"
     mkdir -p "$temp_dir"
     cd "$temp_dir" || return 1
     
-    # CRITICAL: Disable MariaDB 12.1 repository and add dnf exclude if MariaDB 10.x is installed
-    # This must be done BEFORE Pre_Install_Setup_Repository runs
+    # Only add dnf exclude when we want to KEEP the current MariaDB (same version as user chose).
+    # If user chose 11.8 but 10.11 is installed, do NOT exclude — allow install.py to upgrade.
     if command -v rpm >/dev/null 2>&1; then
-        # Check if MariaDB 10.x is installed
         if rpm -qa | grep -qiE "^(mariadb-server|mysql-server|MariaDB-server)" 2>/dev/null; then
             local mariadb_version=$(mysql --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
             if [ -n "$mariadb_version" ]; then
                 local major_ver=$(echo "$mariadb_version" | cut -d. -f1)
                 local minor_ver=$(echo "$mariadb_version" | cut -d. -f2)
-                
-                # Check if it's MariaDB 10.x (major version < 12)
-                if [ "$major_ver" -lt 12 ]; then
-                    print_status "MariaDB $mariadb_version detected, adding dnf exclude to prevent upgrade attempts"
+                local installed_majmin="${major_ver}.${minor_ver}"
+                local chosen_ver="${MARIADB_VER:-11.8}"
+                # Only add exclude when installed version matches user's choice (preserve, no upgrade)
+                if [ "$installed_majmin" = "$chosen_ver" ]; then
+                    print_status "MariaDB $mariadb_version matches chosen $chosen_ver, adding dnf exclude to preserve it"
                     
                     # Add MariaDB-server to dnf excludes (multiple formats for compatibility)
                     local dnf_conf="/etc/dnf/dnf.conf"
@@ -763,6 +811,19 @@ except:
                     local monitor_pid=$!
                     echo "$monitor_pid" > /tmp/cyberpanel_repo_monitor.pid
                     print_status "Started background process to monitor and disable MariaDB repositories"
+                else
+                    # User chose a different version (e.g. 11.8) than installed (e.g. 10.11) — allow upgrade
+                    print_status "MariaDB $mariadb_version installed but you chose $chosen_ver; not adding dnf exclude (installer will upgrade)"
+                    # Remove any existing MariaDB exclude from a previous run so install can proceed
+                    for c in /etc/dnf/dnf.conf /etc/yum.conf; do
+                        if [ -f "$c" ] && grep -q "exclude=.*MariaDB-server" "$c" 2>/dev/null; then
+                            sed -i 's/ *MariaDB-server\* *//g; s/exclude= *$/exclude=/; s/exclude=\s*$/exclude=/' "$c" 2>/dev/null
+                            if grep -q "^exclude=\s*$" "$c" 2>/dev/null; then
+                                sed -i '/^exclude=\s*$/d' "$c" 2>/dev/null
+                            fi
+                            print_status "Removed MariaDB-server from excludes in $c to allow upgrade"
+                        fi
+                    done
                 fi
             fi
         fi
@@ -774,19 +835,23 @@ except:
     echo "Downloading from: https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/cyberpanel.sh"
     
     # First, try to download the repository archive to get the correct installer
-    local archive_url="https://github.com/master3395/cyberpanel/archive/v2.5.5-dev.tar.gz"
+    # GitHub: branch archives use refs/heads/BRANCH; GitHub returns 302 redirect to codeload, so we must use -L
+    local archive_url=""
     local installer_url="https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/cyberpanel.sh"
-    
-    # Test if the development branch archive exists
-    if curl -s --head "$archive_url" | grep -q "200 OK"; then
+    if curl -s -L --head "https://github.com/master3395/cyberpanel/archive/refs/heads/v2.5.5-dev.tar.gz" | grep -q "200 OK"; then
+        archive_url="https://github.com/master3395/cyberpanel/archive/refs/heads/v2.5.5-dev.tar.gz"
+        echo "    Using development branch (v2.5.5-dev) from master3395/cyberpanel"
+    elif curl -s -L --head "https://github.com/master3395/cyberpanel/archive/v2.5.5-dev.tar.gz" | grep -q "200 OK"; then
+        archive_url="https://github.com/master3395/cyberpanel/archive/v2.5.5-dev.tar.gz"
         echo "    Using development branch (v2.5.5-dev) from master3395/cyberpanel"
     else
         echo "    Development branch archive not available, trying installer script directly..."
-        # Test if the installer script exists
-        if ! curl -s --head "$installer_url" | grep -q "200 OK"; then
+        if ! curl -s -L --head "$installer_url" | grep -q "200 OK"; then
             echo "    Development branch not available, falling back to stable"
             installer_url="https://raw.githubusercontent.com/master3395/cyberpanel/stable/cyberpanel.sh"
             archive_url="https://github.com/master3395/cyberpanel/archive/stable.tar.gz"
+        else
+            archive_url="https://github.com/master3395/cyberpanel/archive/refs/heads/v2.5.5-dev.tar.gz"
         fi
     fi
     
@@ -796,83 +861,22 @@ except:
         return 1
     fi
     
-    # CRITICAL: Patch the installer script to skip MariaDB installation if 10.x is already installed
-    if [ -n "$MARIADB_VERSION" ] && [ "$major_ver" -lt 12 ] 2>/dev/null; then
-        print_status "Patching installer script to skip MariaDB installation..."
-        
-        # Create a backup
-        cp cyberpanel_installer.sh cyberpanel_installer.sh.backup
-        
-        # Use Python to properly patch the installer script
-        python3 -c "
-import re
-import sys
-
-try:
-    with open('cyberpanel_installer.sh', 'r') as f:
-        content = f.read()
+    # Do NOT patch installer to add --exclude=MariaDB-server*: it blocks initial MariaDB install
+    # and causes "MariaDB-server requires MariaDB-client but none of the providers can be installed".
     
-    original_content = content
-    
-    # Pattern: Add --exclude=MariaDB-server* to dnf/yum install commands that install mariadb-server
-    # Match: (dnf|yum) install [flags] [packages including mariadb-server]
-    def add_exclude(match):
-        cmd = match.group(0)
-        # Check if --exclude is already present
-        if '--exclude=MariaDB-server' in cmd:
-            return cmd
-        # Add --exclude=MariaDB-server* after install and flags, before packages
-        return re.sub(r'((?:dnf|yum)\s+install\s+(?:-[^\s]+\s+)*)', r'\1--exclude=MariaDB-server* ', cmd, flags=re.IGNORECASE)
-    
-    # Find all dnf/yum install commands that mention mariadb-server
-    content = re.sub(
-        r'(?:dnf|yum)\s+install[^;]*?mariadb-server[^;]*',
-        add_exclude,
-        content,
-        flags=re.IGNORECASE | re.MULTILINE
-    )
-    
-    # Also handle MariaDB-server (capitalized)
-    content = re.sub(
-        r'(?:dnf|yum)\s+install[^;]*?MariaDB-server[^;]*',
-        add_exclude,
-        content,
-        flags=re.IGNORECASE | re.MULTILINE
-    )
-    
-    # Only write if content changed
-    if content != original_content:
-        with open('cyberpanel_installer.sh', 'w') as f:
-            f.write(content)
-        print('Installer script patched successfully')
-    else:
-        print('No changes needed in installer script')
-        
-except Exception as e:
-    print(f'Error patching installer script: {e}')
-    sys.exit(1)
-" 2>/dev/null && print_status "Installer script patched successfully" || {
-        # Fallback: Simple sed-based patching if Python fails
-        sed -i 's/\(dnf\|yum\) install\([^;]*\)mariadb-server/\1 install\2--exclude=MariaDB-server* mariadb-server/gi' cyberpanel_installer.sh 2>/dev/null
-        sed -i 's/\(dnf\|yum\) install\([^;]*\)MariaDB-server/\1 install\2--exclude=MariaDB-server* MariaDB-server/gi' cyberpanel_installer.sh 2>/dev/null
-        print_status "Installer script patched (fallback method)"
-    }
-        
-        print_status "Installer script patched to exclude MariaDB-server from installation"
-    fi
-    
-    # Make script executable and verify
-    chmod 755 cyberpanel_installer.sh 2>/dev/null || true
+    # Make script executable (use full path in case cwd has noexec)
+    chmod 755 cyberpanel_installer.sh 2>/dev/null || chmod +x cyberpanel_installer.sh 2>/dev/null || true
     if [ ! -x "cyberpanel_installer.sh" ]; then
-        print_status "WARNING: Could not make cyberpanel_installer.sh executable, will use bash to execute"
+        print_status "Note: Script will be run with bash (executable bit not set)"
     fi
     
-    # Download the install directory
+    # Download the install directory (use archive_url set above; may be branch or stable)
     echo "Downloading installation files..."
-    local archive_url="https://github.com/master3395/cyberpanel/archive/v2.5.5-dev.tar.gz"
-    if [ "$installer_url" = "https://raw.githubusercontent.com/master3395/cyberpanel/stable/cyberpanel.sh" ]; then
+    if [ -z "$archive_url" ] || [ "$installer_url" = "https://raw.githubusercontent.com/master3395/cyberpanel/stable/cyberpanel.sh" ]; then
         archive_url="https://github.com/master3395/cyberpanel/archive/stable.tar.gz"
     fi
+    # Append cache-bust so CDNs/proxies don't serve old installer (GitHub ignores query params)
+    archive_url="${archive_url}?nocache=$(date +%s 2>/dev/null || echo 0)"
     
     curl --silent -L -o install_files.tar.gz "$archive_url" 2>/dev/null
     if [ $? -ne 0 ] || [ ! -s "install_files.tar.gz" ]; then
@@ -925,8 +929,13 @@ except Exception as e:
     echo "This may take several minutes. Please be patient."
     echo ""
     
-    # Create log directory
+    # Create log directory (same as v2.4.4: installer logs go here)
     mkdir -p /var/log/CyberPanel
+    echo "  Installation logs:"
+    echo "    • /var/log/CyberPanel/install.log       (installer script messages)"
+    echo "    • /var/log/CyberPanel/install_output.log (Python installer stdout/stderr)"
+    echo "    • /var/log/installLogs.txt              (install.py detailed log)"
+    echo ""
     
     # Run the installer with live output monitoring
     echo "Starting CyberPanel installer with live progress monitoring..."
@@ -953,67 +962,22 @@ except Exception as e:
     if [ -f "$installer_py" ]; then
         print_status "Using install/install.py directly for installation (non-interactive mode)"
         
-        # CRITICAL: Patch install.py to exclude MariaDB-server from dnf/yum commands
-        if [ -n "$MARIADB_VERSION" ] && [ "$major_ver" -lt 12 ] 2>/dev/null; then
-            print_status "Patching install.py to exclude MariaDB-server from installation commands..."
-            
-            # Create backup
-            cp "$installer_py" "${installer_py}.backup" 2>/dev/null || true
-            
-            # Patch install.py to add --exclude=MariaDB-server* to dnf/yum install commands
-            python3 -c "
-import re
-import sys
-
-try:
-    with open('$installer_py', 'r') as f:
-        content = f.read()
-    
-    original_content = content
-    
-    # Pattern: Add --exclude=MariaDB-server* to dnf/yum install commands that install mariadb-server
-    def add_exclude(match):
-        cmd = match.group(0)
-        # Check if --exclude is already present
-        if '--exclude=MariaDB-server' in cmd:
-            return cmd
-        # Add --exclude=MariaDB-server* after install and flags, before packages
-        return re.sub(r'((?:dnf|yum)\s+install\s+(?:-[^\s]+\s+)*)', r'\1--exclude=MariaDB-server* ', cmd, flags=re.IGNORECASE)
-    
-    # Find all dnf/yum install commands that mention mariadb-server
-    content = re.sub(
-        r'(?:dnf|yum)\s+install[^;]*?mariadb-server[^;]*',
-        add_exclude,
-        content,
-        flags=re.IGNORECASE | re.MULTILINE
-    )
-    
-    # Also handle MariaDB-server (capitalized) and in Python strings
-    content = re.sub(
-        r'(\"|\')(?:dnf|yum)\s+install[^\"]*?mariadb-server[^\"]*(\"|\')',
-        lambda m: m.group(1) + re.sub(r'((?:dnf|yum)\s+install\s+(?:-[^\s]+\s+)*)', r'\1--exclude=MariaDB-server* ', m.group(0)[1:-1], flags=re.IGNORECASE) + m.group(2),
-        content,
-        flags=re.IGNORECASE | re.MULTILINE
-    )
-    
-    # Only write if content changed
-    if content != original_content:
-        with open('$installer_py', 'w') as f:
-            f.write(content)
-        print('install.py patched successfully')
-    else:
-        print('No changes needed in install.py')
+        # NOTE: We do NOT patch install.py to add --exclude=MariaDB-server* to dnf install.
+        # That would block the initial MariaDB-server install. install.py now clears dnf exclude
+        # before installing MariaDB and uses official MariaDB-server packages.
         
-except Exception as e:
-    print(f'Error patching install.py: {e}')
-    sys.exit(1)
-" 2>/dev/null && print_status "install.py patched successfully" || {
-            # Fallback: Simple sed-based patching if Python fails
-            sed -i 's/\(dnf\|yum\) install\([^;]*\)mariadb-server/\1 install\2--exclude=MariaDB-server* mariadb-server/gi' "$installer_py" 2>/dev/null
-            sed -i 's/\(dnf\|yum\) install\([^;]*\)MariaDB-server/\1 install\2--exclude=MariaDB-server* MariaDB-server/gi' "$installer_py" 2>/dev/null
-            print_status "install.py patched (fallback method)"
-        }
-        fi
+        # Clear MariaDB-server from dnf/yum exclude so the installer can install or reinstall it
+        # (cyberpanel.sh may have added it earlier when 10.x was detected; partial installs leave exclude in place)
+        for conf in /etc/dnf/dnf.conf /etc/yum.conf; do
+            if [ -f "$conf" ] && grep -q "exclude=.*MariaDB-server" "$conf" 2>/dev/null; then
+                sed -i '/^exclude=/s/MariaDB-server\*\s*//g' "$conf"
+                sed -i '/^exclude=/s/\s*MariaDB-server\*//g' "$conf"
+                sed -i '/^exclude=/s/MariaDB-server\s*//g' "$conf"
+                sed -i '/^exclude=\s*$/d' "$conf"
+                sed -i '/^exclude=$/d' "$conf"
+                print_status "Cleared MariaDB-server from exclude in $conf for installation"
+            fi
+        done
         
         # If MariaDB 10.x is installed, disable repositories right before running installer
         if [ -n "$MARIADB_VERSION" ] && [ -f /tmp/cyberpanel_repo_monitor.pid ]; then
@@ -1161,9 +1125,10 @@ except Exception as e:
             fi
         fi
         
-        # Verify MySQLdb is available
+        # Verify MySQLdb is available (mysqlclient; some builds lack __version__)
         print_status "Verifying MySQLdb module availability..."
-        if python3 -c "import MySQLdb; print('MySQLdb version:', MySQLdb.__version__)" 2>&1; then
+        if python3 -c "import MySQLdb; getattr(MySQLdb, '__version__', 'ok'); print('MySQLdb OK')" 2>/dev/null || \
+           python3 -c "import MySQLdb; MySQLdb; print('MySQLdb OK')" 2>/dev/null; then
             print_status "✓ MySQLdb module is available and working"
         else
             print_status "⚠️  WARNING: MySQLdb module not available"
@@ -1178,17 +1143,38 @@ except Exception as e:
         # install.py requires publicip as first positional argument
         local install_args=("$server_ip")
         
-        # Add optional arguments based on user preferences
+        # Web server: OpenLiteSpeed (default) or LiteSpeed Enterprise (--ent + --serial)
+        if [ -n "$LS_ENT" ] && [ -n "$LS_SERIAL" ]; then
+            install_args+=("--ent" "$LS_ENT" "--serial" "$LS_SERIAL")
+        fi
         # Default: OpenLiteSpeed, Full installation (postfix, powerdns, ftp), Local MySQL
-        # These match what the user selected in the interactive prompts
         install_args+=("--postfix" "ON")
         install_args+=("--powerdns" "ON")
         install_args+=("--ftp" "ON")
         install_args+=("--remotemysql" "OFF")
+        # Only pass --mariadb-version if this install.py supports it (avoids "unrecognized arguments" on older archives)
+        if grep -q "mariadb-version\|mariadb_version" "$installer_py" 2>/dev/null; then
+            install_args+=("--mariadb-version" "${MARIADB_VER:-11.8}")
+        fi
         
         if [ "$DEBUG_MODE" = true ]; then
             # Note: install.py doesn't have --debug, but we can set it via environment
             export DEBUG_MODE=true
+        fi
+        
+        # CRITICAL: If CyberPanel Python does not exist yet, patch installer to use system Python.
+        # Fixes FileNotFoundError when archive is cached/old and still references /usr/local/CyberPanel/bin/python.
+        if [ ! -f /usr/local/CyberPanel/bin/python ]; then
+            sys_python="/usr/bin/python3"
+            [ -x "$sys_python" ] || sys_python="/usr/local/bin/python3"
+            if [ -x "$sys_python" ]; then
+                for f in install/install_utils.py install/install.py; do
+                    if [ -f "$f" ] && grep -q '/usr/local/CyberPanel/bin/python' "$f" 2>/dev/null; then
+                        sed -i "s|/usr/local/CyberPanel/bin/python|$sys_python|g" "$f"
+                        print_status "Patched $f to use $sys_python (CyberPanel python not yet installed)"
+                    fi
+                done
+            fi
         fi
         
         # Run the Python installer directly
@@ -1256,6 +1242,11 @@ except Exception as e:
     echo "==============================================================================================================="
     echo "                                    INSTALLATION COMPLETED"
     echo "==============================================================================================================="
+    echo ""
+    echo "  Installation logs (for troubleshooting):"
+    echo "    • /var/log/CyberPanel/install.log       (installer script messages)"
+    echo "    • /var/log/CyberPanel/install_output.log (Python installer stdout/stderr)"
+    echo "    • /var/log/installLogs.txt              (install.py detailed log)"
     echo ""
     
     # Check if installation was successful
@@ -1352,8 +1343,9 @@ apply_fixes() {
     systemctl start mariadb 2>/dev/null || true
     systemctl enable mariadb 2>/dev/null || true
 
-    # Fix LiteSpeed service
-    cat > /etc/systemd/system/lsws.service << 'EOF'
+    # Fix LiteSpeed service only if the web server was actually installed
+    if [ -x /usr/local/lsws/bin/lswsctrl ] || [ -x /usr/local/lsws/bin/lsctrl ] || [ -f /usr/local/lsws/bin/openlitespeed ]; then
+        cat > /etc/systemd/system/lsws.service << 'EOF'
 [Unit]
 Description=LiteSpeed Web Server
 After=network.target
@@ -1372,9 +1364,16 @@ RestartSec=5
 WantedBy=multi-user.target
 EOF
 
-    systemctl daemon-reload
-    systemctl enable lsws
-    systemctl start lsws
+        systemctl daemon-reload
+        systemctl enable lsws
+        systemctl start lsws || true
+    else
+        echo "  • LiteSpeed/OpenLiteSpeed not found at /usr/local/lsws - skipping lsws.service (install may have skipped web server)"
+        echo "  • If the installer failed earlier (e.g. Python error), re-run the installer. Once it completes, open ports 8090 and 7080 in your cloud security group (e.g. AWS EC2 Security Group inbound rules)."
+        systemctl disable lsws 2>/dev/null || true
+        rm -f /etc/systemd/system/lsws.service
+        systemctl daemon-reload
+    fi
 
     # Set OpenLiteSpeed admin password to match CyberPanel
     echo "  • Configuring OpenLiteSpeed admin password..."
@@ -1395,11 +1394,62 @@ EOF
     # Give services a moment to start
     sleep 3
 
+    # Ensure both 8090 (CyberPanel) and 7080 (LiteSpeed/OLS) are accessible
+    echo "  • Ensuring ports 8090 and 7080 are accessible..."
+    port_check() {
+        local port=$1
+        command -v ss >/dev/null 2>&1 && ss -tlnp 2>/dev/null | grep -q ":$port " && return 0
+        command -v netstat >/dev/null 2>&1 && netstat -tlnp 2>/dev/null | grep -q ":$port " && return 0
+        return 1
+    }
+    max_attempts=18
+    attempt=0
+    while [ $attempt -lt $max_attempts ]; do
+        need_restart=false
+        systemctl is-active --quiet mariadb || { systemctl start mariadb 2>/dev/null; need_restart=true; }
+        systemctl is-active --quiet lsws 2>/dev/null || { [ -x /usr/local/lsws/bin/lswsctrl ] && systemctl start lsws 2>/dev/null; need_restart=true; }
+        systemctl is-active --quiet lscpd 2>/dev/null || { systemctl start lscpd 2>/dev/null; need_restart=true; }
+        [ "$need_restart" = true ] && sleep 5
+        if port_check 8090 && port_check 7080; then
+            echo "  ✓ Port 8090 (CyberPanel) and 7080 (OpenLiteSpeed) are listening"
+            break
+        fi
+        attempt=$((attempt + 1))
+        [ $attempt -lt $max_attempts ] && sleep 5
+    done
+    if ! port_check 8090 || ! port_check 7080; then
+        systemctl start lscpd 2>/dev/null
+        systemctl start lsws 2>/dev/null
+        sleep 10
+        if port_check 8090 && port_check 7080; then
+            echo "  ✓ Port 8090 and 7080 are now listening"
+        else
+            echo "  ⚠ One or both ports not yet listening. Run: systemctl start mariadb lsws lscpd"
+            echo "  ⚠ On AWS/cloud: add inbound rules for TCP 8090 and 7080 in the instance security group."
+        fi
+    fi
+
     echo "  ✓ Post-installation configurations completed"
+}
+
+# Helper: check if a port is listening
+_port_listening() {
+    local port=$1
+    command -v ss >/dev/null 2>&1 && ss -tlnp 2>/dev/null | grep -q ":$port " && return 0
+    command -v netstat >/dev/null 2>&1 && netstat -tlnp 2>/dev/null | grep -q ":$port " && return 0
+    return 1
 }
 
 # Function to show status summary
 show_status_summary() {
+    # Last-chance: try to start services so 8090 and 7080 are accessible
+    if ! _port_listening 8090 || ! _port_listening 7080; then
+        systemctl start mariadb 2>/dev/null || true
+        systemctl start lsws 2>/dev/null || true
+        systemctl start lscpd 2>/dev/null || true
+        sleep 8
+    fi
+
     echo "==============================================================================================================="
     echo "                                    FINAL STATUS CHECK"
     echo "==============================================================================================================="
@@ -1427,6 +1477,22 @@ show_status_summary() {
         echo "  ✓ CyberPanel Application - Running"
     else
         echo "  ✗ CyberPanel Application - Not Running (may take a moment to start)"
+        all_services_running=false
+    fi
+
+    echo ""
+    echo "Port Accessibility:"
+    if _port_listening 8090; then
+        echo "  ✓ Port 8090 (CyberPanel) - Accessible"
+    else
+        echo "  ✗ Port 8090 (CyberPanel) - Not listening (run: systemctl start lscpd)"
+        all_services_running=false
+    fi
+    if _port_listening 7080; then
+        echo "  ✓ Port 7080 (OpenLiteSpeed) - Accessible"
+    else
+        echo "  ✗ Port 7080 (OpenLiteSpeed) - Not listening (run: systemctl start lsws)"
+        all_services_running=false
     fi
 
     # Get the actual password that was set
@@ -1455,7 +1521,7 @@ show_status_summary() {
     echo "==============================================================================================================="
 
     if [ "$all_services_running" = true ]; then
-        echo "✓ Installation completed successfully!"
+        echo "✓ Installation completed successfully! Ports 8090 and 7080 are accessible."
     else
         echo "⚠ Installation completed with warnings. Some services may need attention."
     fi
@@ -1664,7 +1730,7 @@ show_version_selection() {
     echo ""
     echo "   1.  Latest Stable (Recommended)"
     echo "   2.  v2.5.5-dev (Development)"
-    echo "   3.  v2.5.4 (Previous Stable)"
+    echo "   3.  v2.4.4 (Previous Stable)"
     echo "   4.  Custom Branch Name"
     echo "   5.  Custom Commit Hash"
     echo ""
@@ -1685,7 +1751,7 @@ show_version_selection() {
                 break
                 ;;
             3)
-                BRANCH_NAME="v2.5.4"
+                BRANCH_NAME="v2.4.4"
                 break
                 ;;
             4)
@@ -2674,6 +2740,21 @@ parse_arguments() {
                 set -x
                 shift
                 ;;
+            --mariadb-version)
+                if [ -n "$2" ] && [ "$2" = "10.11" ]; then
+                    MARIADB_VER="10.11"
+                    shift 2
+                elif [ -n "$2" ] && [ "$2" = "11.8" ]; then
+                    MARIADB_VER="11.8"
+                    shift 2
+                elif [ -n "$2" ] && [ "$2" = "12.1" ]; then
+                    MARIADB_VER="12.1"
+                    shift 2
+                else
+                    echo "ERROR: --mariadb-version requires 10.11, 11.8 or 12.1"
+                    exit 1
+                fi
+                ;;
             --auto)
                 AUTO_INSTALL=true
                 shift
@@ -2683,8 +2764,9 @@ parse_arguments() {
                 echo "Options:"
                 echo "  -b, --branch BRANCH    Install from specific branch/commit"
                 echo "  -v, --version VER      Install specific version (auto-adds v prefix)"
+                echo "  --mariadb-version VER  MariaDB version: 10.11, 11.8 or 12.1 (asked after web server)"
                 echo "  --debug               Enable debug mode"
-                echo "  --auto                Auto mode without prompts"
+                echo "  --auto                Auto mode: OpenLiteSpeed + MariaDB 11.8 unless --mariadb-version set"
                 echo "  -h, --help            Show this help message"
                 echo ""
                 echo "Examples:"
@@ -2696,6 +2778,9 @@ parse_arguments() {
                 echo "  $0 -v 2.4.3           # Install version 2.4.3"
                 echo "  $0 -b main            # Install from main branch"
                 echo "  $0 -b a1b2c3d4        # Install from specific commit"
+                echo "  $0 --mariadb-version 10.11  # Use MariaDB 10.11 (same as v2.4.4 style)"
+                echo "  $0 --mariadb-version 12.1   # Use MariaDB 12.1 (no prompt)"
+                echo "  $0 --auto --mariadb-version 11.8   # Fully non-interactive with MariaDB 11.8"
                 echo ""
                 echo "Standard CyberPanel Installation Methods:"
                 echo "  sh <(curl https://cyberpanel.net/install.sh)"
@@ -2832,7 +2917,10 @@ main() {
                 
                 print_status "SUCCESS: Installation completed successfully!"
             else
-                # Run interactive mode
+                # Run interactive mode - ensure stdin is the terminal for prompts (e.g. when script was piped from curl)
+                if [ ! -t 0 ]; then
+                    exec 0</dev/tty
+                fi
                 show_main_menu
             fi
             ;;

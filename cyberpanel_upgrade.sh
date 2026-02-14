@@ -11,6 +11,16 @@
 #Please use variable/functions name as MySomething or My_Something, and please try not to use too-short abbreviation :)
 #Please use On/Off,  True/False, Yes/No.
 
+# Require root immediately so all later steps (logs, /root, /usr/local/CyberCP) succeed
+if [[ $(id -u) -ne 0 ]] 2>/dev/null; then
+    echo ""
+    echo "This script must be run as root."
+    echo "Run: sudo bash <(curl -sL https://raw.githubusercontent.com/master3395/cyberpanel/stable/cyberpanel_upgrade.sh) -b v2.5.5-dev"
+    echo "Or:   sudo su -   then run the same command without sudo"
+    echo ""
+    exit 1
+fi
+
 Sudo_Test=$(set)
 #for SUDO check
 
@@ -95,20 +105,21 @@ echo -e "\n${1}" >> /var/log/upgradeLogs.txt
 
 Check_Root() {
 echo -e "\nChecking root privileges..."
+  # If we're actually root (uid 0), allow regardless of SUDO in environment (e.g. curl | sudo bash)
+  if [[ $(id -u) -eq 0 ]] 2>/dev/null; then
+    echo -e "\nYou are running as root...\n"
+    return 0
+  fi
+
   if echo "$Sudo_Test" | grep SUDO >/dev/null; then
     echo -e "\nYou are using SUDO, please run as root user...\n"
     echo -e "\nIf you don't have direct access to root user, please run \e[31msudo su -\e[39m command (do NOT miss the \e[31m-\e[39m at end or it will fail) and then run installation command again."
-    exit
+    exit 1
   fi
 
-  if [[ $(id -u) != 0 ]] >/dev/null; then
-    echo -e "\nYou must run as root user to install CyberPanel...\n"
-    echo -e "or run the following command: (do NOT miss the quotes)"
-    echo -e "\e[31msudo su -c \"sh <(curl https://cyberpanel.sh || wget -O - https://cyberpanel.sh)\"\e[39m"
-    exit 1
-  else
-    echo -e "\nYou are running as root...\n"
-  fi
+  echo -e "\nYou must run as root user to install CyberPanel...\n"
+  echo -e "Run: \e[31msudo su -\e[39m then run this script again, or: curl -sL <url> | sudo bash -s -- <args>"
+  exit 1
 }
 
 Check_Server_IP() {
@@ -234,7 +245,13 @@ if [[ "$1" = *.*.* ]]; then
     echo -e "\nYou must use version number higher than 2.3.4"
     exit
   else
-    Branch_Name="v${1//[[:space:]]/}"
+    raw="${1//[[:space:]]/}"
+    # Do not add "v" if user already passed e.g. v2.5.5-dev (avoids vv2.5.5-dev)
+    if [[ "$raw" = v* ]]; then
+      Branch_Name="$raw"
+    else
+      Branch_Name="v$raw"
+    fi
     echo -e "\nSet branch name to $Branch_Name...\n"
   fi
 else
@@ -349,12 +366,12 @@ if [[ "$*" = *"--no-system-update"* ]]; then
   Skip_System_Update="yes"
   echo -e "\nUsing --no-system-update: skipping full system package update.\n"
 fi
-# Parse --mariadb-version 11.8|12.1 (default 11.8)
+# Parse --mariadb-version 10.11|11.8|12.1 (default 11.8)
 if [[ "$*" = *"--mariadb-version "* ]]; then
   MARIADB_VER=$(echo "$*" | sed -n 's/.*--mariadb-version \([^ ]*\).*/\1/p' | head -1)
   MARIADB_VER="${MARIADB_VER:-11.8}"
 fi
-if [[ "$MARIADB_VER" != "11.8" ]] && [[ "$MARIADB_VER" != "12.1" ]]; then
+if [[ "$MARIADB_VER" != "10.11" ]] && [[ "$MARIADB_VER" != "11.8" ]] && [[ "$MARIADB_VER" != "12.1" ]]; then
   MARIADB_VER="11.8"
 fi
 }
@@ -930,10 +947,21 @@ Pre_Upgrade_Branch_Input() {
 
 Main_Upgrade() {
 echo -e "\n[$(date +"%Y-%m-%d %H:%M:%S")] Starting Main_Upgrade function..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running: /usr/local/CyberPanel/bin/python upgrade.py $Branch_Name" | tee -a /var/log/cyberpanel_upgrade_debug.log
+
+# Resolve Python for upgrade (avoid FileNotFoundError when /usr/local/CyberPanel/bin/python missing)
+CP_PYTHON=""
+for py in /usr/local/CyberPanel/bin/python /usr/local/CyberCP/bin/python /usr/bin/python3 /usr/local/bin/python3; do
+  if [[ -x "$py" ]]; then CP_PYTHON="$py"; break; fi
+done
+if [[ -z "$CP_PYTHON" ]]; then
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] ERROR: No Python found for upgrade (tried CyberPanel, CyberCP, python3)" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  exit 1
+fi
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Using Python: $CP_PYTHON" | tee -a /var/log/cyberpanel_upgrade_debug.log
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running: $CP_PYTHON upgrade.py $Branch_Name" | tee -a /var/log/cyberpanel_upgrade_debug.log
 
 # Run upgrade.py and capture output
-upgrade_output=$(/usr/local/CyberPanel/bin/python upgrade.py "$Branch_Name" 2>&1)
+upgrade_output=$("$CP_PYTHON" upgrade.py "$Branch_Name" 2>&1)
 RETURN_CODE=$?
 echo "$upgrade_output" | tee -a /var/log/cyberpanel_upgrade_debug.log
 
@@ -1200,7 +1228,9 @@ tar xf wsgi-lsapi-2.1.tgz
 cd wsgi-lsapi-2.1 || exit
 
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Configuring WSGI..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-/usr/local/CyberPanel/bin/python ./configure.py 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+PYTHON_CFG="${CP_PYTHON:-/usr/bin/python3}"
+[[ -x "$PYTHON_CFG" ]] || PYTHON_CFG="/usr/bin/python3"
+"$PYTHON_CFG" ./configure.py 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
 
 # Fix Makefile to use proper optimization flags to avoid _FORTIFY_SOURCE warnings
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Optimizing Makefile for proper compilation..." | tee -a /var/log/cyberpanel_upgrade_debug.log
@@ -1671,12 +1701,16 @@ if [[ "$*" != *"--branch "* ]] && [[ "$*" != *"-b "* ]] ; then
   Pre_Upgrade_Branch_Input
 fi
 
-# Prompt for MariaDB version if not set via --mariadb-version (default 11.8). Downgrade supported (e.g. re-run with --mariadb-version 11.8).
+# Prompt for MariaDB version if not set via --mariadb-version (default 11.8). Options: 10.11, 11.8, 12.1.
 if [[ "$*" != *"--mariadb-version "* ]]; then
-  echo -e "\nMariaDB version: \e[31m11.8\e[39m LTS (default) or \e[31m12.1\e[39m. You can switch later by re-running with --mariadb-version 11.8 or 12.1."
-  echo -e "Press Enter for 11.8 LTS, or type \e[31m12.1\e[39m and Enter for 12.1 (5 sec timeout): "
+  echo -e "\nMariaDB version: \e[31m10.11\e[39m, \e[31m11.8\e[39m LTS (default) or \e[31m12.1\e[39m. You can switch later by re-running with --mariadb-version 10.11, 11.8 or 12.1."
+  echo -e "Press Enter for 11.8 LTS, or type \e[31m10.11\e[39m or \e[31m12.1\e[39m (5 sec timeout): "
   read -r -t 5 Tmp_MariaDB_Ver || true
-  if [[ "$Tmp_MariaDB_Ver" = "12.1" ]]; then
+  Tmp_MariaDB_Ver="${Tmp_MariaDB_Ver// /}"
+  if [[ "$Tmp_MariaDB_Ver" = "10.11" ]]; then
+    MARIADB_VER="10.11"
+    echo -e "MariaDB 10.11 selected.\n"
+  elif [[ "$Tmp_MariaDB_Ver" = "12.1" ]]; then
     MARIADB_VER="12.1"
     echo -e "MariaDB 12.1 selected.\n"
   else

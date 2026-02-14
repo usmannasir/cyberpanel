@@ -1412,6 +1412,13 @@ class backupUtilities:
             if os.path.exists('/root/.ssh/cyberpanel.pub'):
                 pass
             else:
+                # Remove existing key files so ssh-keygen never prompts "Overwrite (y/n)?"
+                for f in ('/root/.ssh/cyberpanel', '/root/.ssh/cyberpanel.pub'):
+                    if os.path.exists(f):
+                        try:
+                            os.remove(f)
+                        except OSError:
+                            pass
                 command = "ssh-keygen -f /root/.ssh/cyberpanel -t rsa -N ''"
                 ProcessUtilities.executioner(command, 'root', True)
 
