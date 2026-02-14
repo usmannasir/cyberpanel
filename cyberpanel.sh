@@ -157,17 +157,14 @@ Temp_Value=$(curl --silent --max-time 30 -4 https://cyberpanel.net/version.txt)
 Panel_Version=${Temp_Value:12:3}
 Panel_Build=${Temp_Value:25:1}
 
-Branch_Name="v${Panel_Version}.${Panel_Build}"
+Branch_Name="add-debian-13-support"
 
 if [[ $Branch_Name = v*.*.* ]] ; then
   echo -e  "\nBranch name fetched...$Branch_Name"
   log_info "Branch name fetched: $Branch_Name"
 else
-  echo -e "\nUnable to fetch Branch name..."
-  echo -e "\nPlease try again in few moments, if this error still happens, please contact support"
-  log_error "Unable to fetch branch name from version.txt"
-  log_function_end "Set_Default_Variables" 1
-  exit
+  echo -e  "\nBranch name set to...$Branch_Name"
+  log_info "Branch name set: $Branch_Name"
 fi
 
 Base_Number="1.9.3"
@@ -178,9 +175,9 @@ Remote_MySQL="Off"
 
 Final_Flags=()
 
-Git_User=""
-Git_Content_URL=""
-Git_Clone_URL=""
+Git_User="ksaltik"
+Git_Content_URL="https://raw.githubusercontent.com/${Git_User}/cyberpanel-debian-support"
+Git_Clone_URL="https://github.com/${Git_User}/cyberpanel-debian-support.git"
 
 LSWS_Latest_URL="https://cyberpanel.sh/update.litespeedtech.com/ws/latest.php"
 LSWS_Tmp=$(curl --silent --max-time 30 -4 "$LSWS_Latest_URL")
@@ -2285,9 +2282,9 @@ chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib64 || true
 
 Pre_Install_Setup_Git_URL() {
 if [[ $Server_Country != "CN" ]] ; then
-  Git_User="usmannasir"
-  Git_Content_URL="https://raw.githubusercontent.com/${Git_User}/cyberpanel"
-  Git_Clone_URL="https://github.com/${Git_User}/cyberpanel.git"
+  Git_User="ksaltik"
+  Git_Content_URL="https://raw.githubusercontent.com/${Git_User}/cyberpanel-debian-support"
+  Git_Clone_URL="https://github.com/${Git_User}/cyberpanel-debian-support.git"
 else
   Git_User="qtwrk"
   Git_Content_URL="https://gitee.com/${Git_User}/cyberpanel/raw"
