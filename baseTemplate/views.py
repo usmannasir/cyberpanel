@@ -26,6 +26,7 @@ from loginSystem.models import Administrator
 from packages.models import Package
 from django.views.decorators.http import require_GET, require_POST
 import pwd
+import re
 
 # Create your views here.
 
@@ -310,15 +311,19 @@ def versionManagment(request):
 
     branch_ref = 'v%s.%s' % (latestVersion, latestBuild)
 
+    # Always fetch local HEAD for display
+    head_cmd = 'git -C /usr/local/CyberCP rev-parse HEAD 2>/dev/null || true'
+    Currentcomt = (ProcessUtilities.outputExecutioner(head_cmd) or '').rstrip('\n')
+
+    remote_cmd = 'git -C /usr/local/CyberCP remote get-url origin 2>/dev/null || true'
+    remote_out = ProcessUtilities.outputExecutioner(remote_cmd)
+    is_usmannasir = 'usmannasir/cyberpanel' in (remote_out or '')
+
     if notechk and (currentVersion == '2.5.5' and currentBuild == 'dev'):
         notechk = False
     elif notechk and _version_compare(currentVersion, latestVersion) > 0:
         notechk = False
     elif notechk:
-        remote_cmd = 'git -C /usr/local/CyberCP remote get-url origin 2>/dev/null || true'
-        remote_out = ProcessUtilities.outputExecutioner(remote_cmd)
-        is_usmannasir = 'usmannasir/cyberpanel' in (remote_out or '')
-
         if is_usmannasir:
             u = "https://api.github.com/repos/usmannasir/cyberpanel/commits?sha=%s" % branch_ref
             logging.CyberCPLogFileWriter.writeToFile(u)
@@ -328,12 +333,25 @@ def versionManagment(request):
                 latestcomit = r.json()[0]['sha']
             except (requests.RequestException, IndexError, KeyError) as e:
                 logging.CyberCPLogFileWriter.writeToFile('[versionManagment] GitHub API failed: %s' % str(e))
-            head_cmd = 'git -C /usr/local/CyberCP rev-parse HEAD 2>/dev/null || true'
-            Currentcomt = ProcessUtilities.outputExecutioner(head_cmd).rstrip('\n')
             if latestcomit and Currentcomt == latestcomit:
                 notechk = False
         else:
             notechk = False
+
+    # For forks: fetch latest commit from the actual remote for display
+    if not latestcomit and remote_out:
+        m = re.search(r'github\.com[:/]([^/]+)/([^/]+?)(?:\.git)?$', remote_out.strip())
+        if m:
+            owner, repo = m.group(1), m.group(2).rstrip('.git')
+            branch_cmd = 'git -C /usr/local/CyberCP rev-parse --abbrev-ref HEAD 2>/dev/null || true'
+            local_branch = ProcessUtilities.outputExecutioner(branch_cmd).rstrip('\n') or 'v2.5.5-dev'
+            try:
+                u = "https://api.github.com/repos/%s/%s/commits?sha=%s" % (owner, repo, local_branch)
+                r = requests.get(u, timeout=10)
+                r.raise_for_status()
+                latestcomit = r.json()[0]['sha']
+            except (requests.RequestException, IndexError, KeyError):
+                pass
 
     template = 'baseTemplate/versionManagment.html'
     finalData = {'build': currentBuild, 'currentVersion': currentVersion, 'latestVersion': latestVersion,
