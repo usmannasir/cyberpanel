@@ -795,13 +795,20 @@ if [ "$Server_OS" = "Ubuntu" ]; then
   fi
 else
   rm -rf /usr/local/CyberPanel
-  if [ -e /usr/bin/pip3 ]; then
-    PIP3="/usr/bin/pip3"
+  # AlmaLinux 9/10, Rocky 9: use python3 -m venv (no virtualenv pkg needed)
+  if [[ "$Server_OS" = "AlmaLinux" ]] || [[ "$Server_OS" = "AlmaLinux9" ]] || [[ "$Server_OS" = "RockyLinux" ]]; then
+    if [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]; then
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] AlmaLinux/Rocky $Server_OS_Version: will use python3 -m venv, skipping virtualenv package" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    else
+      if [ -e /usr/bin/pip3 ]; then PIP3="/usr/bin/pip3"; else PIP3="pip3.6"; fi
+      $PIP3 install --default-timeout=3600 virtualenv
+      Check_Return
+    fi
   else
-    PIP3="pip3.6"
+    if [ -e /usr/bin/pip3 ]; then PIP3="/usr/bin/pip3"; else PIP3="pip3.6"; fi
+    $PIP3 install --default-timeout=3600 virtualenv
+    Check_Return
   fi
-  $PIP3 install --default-timeout=3600 virtualenv
-  Check_Return
 fi
 
 if [[ -f /usr/local/CyberPanel/bin/python2 ]]; then
@@ -809,10 +816,15 @@ if [[ -f /usr/local/CyberPanel/bin/python2 ]]; then
   rm -rf /usr/local/CyberPanel/bin
   if [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]]); then
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Ubuntu $Server_OS_Version detected, using python3 -m venv..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-    python3 -m venv /usr/local/CyberPanel
-  elif [[ "$Server_OS" = "CentOS" ]] && ([[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]); then
-    PYTHON_PATH=$(which python3 2>/dev/null || which python3.9 2>/dev/null || echo "/usr/bin/python3")
-    virtualenv -p "$PYTHON_PATH" --system-site-packages /usr/local/CyberPanel
+    python3 -m venv --system-site-packages /usr/local/CyberPanel
+  elif [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "AlmaLinux" ]] || [[ "$Server_OS" = "AlmaLinux9" ]] || [[ "$Server_OS" = "RockyLinux" ]]; then
+    if [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]; then
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] AlmaLinux/Rocky $Server_OS_Version detected, using python3 -m venv..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+      python3 -m venv --system-site-packages /usr/local/CyberPanel
+    else
+      PYTHON_PATH=$(which python3 2>/dev/null || which python3.9 2>/dev/null || echo "/usr/bin/python3")
+      virtualenv -p "$PYTHON_PATH" --system-site-packages /usr/local/CyberPanel
+    fi
   else
     virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
   fi
@@ -828,14 +840,19 @@ echo -e "\nNothing found, need fresh setup...\n"
 if [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]]); then
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Ubuntu $Server_OS_Version detected, using python3 -m venv..." | tee -a /var/log/cyberpanel_upgrade_debug.log
   python3 -m venv /usr/local/CyberPanel
-elif [[ "$Server_OS" = "CentOS" ]] && ([[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]); then
-  PYTHON_PATH=$(which python3 2>/dev/null || which python3.9 2>/dev/null || echo "/usr/bin/python3")
-  virtualenv -p "$PYTHON_PATH" --system-site-packages /usr/local/CyberPanel
+elif [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "AlmaLinux" ]] || [[ "$Server_OS" = "AlmaLinux9" ]] || [[ "$Server_OS" = "RockyLinux" ]]; then
+  if [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] AlmaLinux/Rocky $Server_OS_Version: using python3 -m venv (no virtualenv pkg needed)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    python3 -m venv --system-site-packages /usr/local/CyberPanel
+  else
+    PYTHON_PATH=$(which python3 2>/dev/null || which python3.9 2>/dev/null || echo "/usr/bin/python3")
+    virtualenv -p "$PYTHON_PATH" --system-site-packages /usr/local/CyberPanel
+  fi
 else
   virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
 fi
 
-# Check if the virtualenv command failed
+# Check if the virtualenv/venv command failed
 if [ $? -ne 0 ]; then
     echo "virtualenv command failed."
 
@@ -861,11 +878,15 @@ if [ $? -ne 0 ]; then
                 if [ $? -eq 0 ]; then
                     echo "'packaging' module reinstalled and upgraded successfully."
                     if [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]]); then
-                        echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Ubuntu $Server_OS_Version detected, using python3 -m venv..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-                        python3 -m venv /usr/local/CyberPanel
-                    elif [[ "$Server_OS" = "CentOS" ]] && ([[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]); then
-                        PYTHON_PATH=$(which python3 2>/dev/null || which python3.9 2>/dev/null || echo "/usr/bin/python3")
-                        virtualenv -p "$PYTHON_PATH" --system-site-packages /usr/local/CyberPanel
+                        echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Ubuntu: using python3 -m venv..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+                        python3 -m venv --system-site-packages /usr/local/CyberPanel
+                    elif [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "AlmaLinux" ]] || [[ "$Server_OS" = "AlmaLinux9" ]] || [[ "$Server_OS" = "RockyLinux" ]]; then
+                        if [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]; then
+                          python3 -m venv --system-site-packages /usr/local/CyberPanel
+                        else
+                          PYTHON_PATH=$(which python3 2>/dev/null || which python3.9 2>/dev/null || echo "/usr/bin/python3")
+                          virtualenv -p "$PYTHON_PATH" --system-site-packages /usr/local/CyberPanel
+                        fi
                     else
                         virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
                     fi
@@ -888,7 +909,7 @@ fi
 
 # shellcheck disable=SC1091
 . /usr/local/CyberPanel/bin/activate
-pip install --upgrade setuptools packaging
+pip install --upgrade pip setuptools packaging
 
 Download_Requirement
 
