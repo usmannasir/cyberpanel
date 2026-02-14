@@ -291,19 +291,30 @@ def versionManagment(request):
     currentVersion = VERSION
     currentBuild = str(BUILD)
 
-    getVersion = requests.get('https://cyberpanel.net/version.txt')
-    latest = getVersion.json()
-    latestVersion = latest['version']
-    latestBuild = latest['build']
-    branch_ref = 'v%s.%s' % (latestVersion, latestBuild)
-
     notechk = True
     Currentcomt = ''
     latestcomit = ''
+    latestVersion = '0'
+    latestBuild = '0'
 
-    if _version_compare(currentVersion, latestVersion) > 0:
+    try:
+        getVersion = requests.get('https://cyberpanel.net/version.txt', timeout=10)
+        getVersion.raise_for_status()
+        latest = getVersion.json()
+        latestVersion = str(latest.get('version', '0'))
+        latestBuild = str(latest.get('build', '0'))
+    except (requests.RequestException, ValueError, KeyError) as e:
+        logging.CyberCPLogFileWriter.writeToFile('[versionManagment] cyberpanel.net/version.txt failed: %s' % str(e))
+        if currentVersion == '2.5.5' and currentBuild == 'dev':
+            notechk = False
+
+    branch_ref = 'v%s.%s' % (latestVersion, latestBuild)
+
+    if notechk and (currentVersion == '2.5.5' and currentBuild == 'dev'):
         notechk = False
-    else:
+    elif notechk and _version_compare(currentVersion, latestVersion) > 0:
+        notechk = False
+    elif notechk:
         remote_cmd = 'git -C /usr/local/CyberCP remote get-url origin 2>/dev/null || true'
         remote_out = ProcessUtilities.outputExecutioner(remote_cmd)
         is_usmannasir = 'usmannasir/cyberpanel' in (remote_out or '')
