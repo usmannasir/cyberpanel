@@ -1,0 +1,307 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Panel Access (Custom Domain) - CyberPanel" %}{% endblock %}
+{% block content %}
+{% load static %}
+<style>
+    body { background-color: var(--bg-primary, #f0f0ff); }
+    .page-wrapper { background: transparent; padding: 20px; }
+    .page-container { max-width: 800px; margin: 0 auto; }
+    .page-header { margin-bottom: 30px; }
+    .page-title { font-size: 28px; font-weight: 700; color: var(--text-heading, #2f3640); margin-bottom: 8px; }
+    .page-subtitle { font-size: 14px; color: var(--text-secondary, #8893a7); }
+    .content-card {
+        background: var(--bg-secondary, white);
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 2px 8px var(--shadow-color, rgba(0,0,0,0.08));
+        border: 1px solid var(--border-color, #e8e9ff);
+        margin-bottom: 25px;
+    }
+    .card-title { font-size: 18px; font-weight: 700; color: var(--text-primary, #2f3640); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+    .card-title::before { content: ''; width: 4px; height: 24px; background: var(--accent-color, #5b5fcf); border-radius: 2px; }
+    .form-label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary, #64748b); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .btn-primary { background: var(--accent-color, #5b5fcf); color: white; padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    .btn-primary:hover { background: var(--accent-hover, #4a4fc4); }
+    .alert { padding: 16px 20px; border-radius: 10px; margin-bottom: 20px; }
+    .alert-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+    .alert-danger { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+    .info-box { background: var(--bg-hover, #f8f9ff); border: 1px solid var(--border-color, #e8e9ff); border-radius: 8px; padding: 15px; font-size: 14px; color: var(--text-secondary, #64748b); margin-top: 16px; }
+    #save-status { margin-top: 12px; }
+    
+    /* Searchable Select Styles */
+    .domain-select-wrapper { position: relative; width: 100%; }
+    .domain-search-input {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid var(--border-color, #e8e9ff);
+        border-radius: 8px;
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+    .domain-select-container {
+        border: 1px solid var(--border-color, #e8e9ff);
+        border-radius: 8px;
+        max-height: 300px;
+        overflow-y: auto;
+        background: white;
+        display: none;
+    }
+    .domain-select-container.show { display: block; }
+    .domain-option {
+        padding: 10px 14px;
+        cursor: pointer;
+        border-bottom: 1px solid var(--border-color, #f0f0f0);
+        transition: background 0.2s;
+    }
+    .domain-option:hover { background: var(--bg-hover, #f8f9ff); }
+    .domain-option:last-child { border-bottom: none; }
+    .domain-option.selected { background: var(--accent-color, #5b5fcf); color: white; }
+    .selected-domains {
+        margin-top: 12px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .selected-domain-tag {
+        background: var(--accent-color, #5b5fcf);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 13px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .selected-domain-tag .remove {
+        cursor: pointer;
+        font-weight: bold;
+        opacity: 0.8;
+    }
+    .selected-domain-tag .remove:hover { opacity: 1; }
+</style>
+<div class="page-wrapper">
+    <div class="page-container">
+        <div class="page-header">
+            <h1 class="page-title">{% trans "Panel Access (Custom Domain)" %}</h1>
+            <p class="page-subtitle">{% trans "Select domain(s) from your CyberPanel websites to use for accessing the panel behind a reverse proxy. This fixes 403 errors on POST requests (e.g. Ban IP) and CSRF verification." %}</p>
+        </div>
+        <div class="content-card">
+            <h2 class="card-title">{% trans "Trusted origins" %}</h2>
+            <p class="text-muted small">{% trans "Search and select domain(s) from your existing websites. Both HTTPS and HTTP versions will be added automatically." %}</p>
+            <form id="panel-access-form" method="post" action="/plugins/panelAccess/save">
+                {% csrf_token %}
+                <label class="form-label" for="domain-search">{% trans "Select domain(s)" %}</label>
+                <div class="domain-select-wrapper">
+                    <input type="text" id="domain-search" class="domain-search-input" placeholder="{% trans 'Search domains...' %}" autocomplete="off">
+                    <div id="domain-select-container" class="domain-select-container"></div>
+                </div>
+                <div id="selected-domains" class="selected-domains"></div>
+                <input type="hidden" name="setup_ols_proxy" value="0">
+                <div class="form-group" style="margin-top: 16px;">
+                    <label class="form-label">
+                        <input type="checkbox" name="setup_ols_proxy" value="1" checked id="id_setup_ols_proxy">
+                        {% trans "Also add domain in OpenLiteSpeed (reverse proxy to panel)" %}
+                    </label>
+                    <p class="text-muted small" style="margin-top: 4px;">{% trans "Creates a proxy vhost so the panel is reachable at the custom domain without manual OLS configuration. HTTP (port 80) only; for HTTPS use Manage SSL or your own certificate." %}</p>
+                </div>
+                <div id="save-status"></div>
+                <button type="submit" class="btn-primary" style="margin-top: 16px;">{% trans "Save" %}</button>
+            </form>
+            <div class="info-box">
+                <p><strong>{% trans "Note:" %}</strong> {% trans "Save will restart the CyberPanel backend (lscpd) automatically so CSRF changes take effect. If restart fails (e.g. permissions), run systemctl restart lscpd manually. Config file: " %}<code>{{ config_path }}</code></p>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+(function() {
+    // Parse domains from JSON string
+    var allDomains = [];
+    try {
+        var domainsJson = {% if all_domains %}{{ all_domains|safe }}{% else %}'[]'{% endif %};
+        if (typeof domainsJson === 'string') {
+            allDomains = JSON.parse(domainsJson);
+        } else {
+            allDomains = domainsJson || [];
+        }
+    } catch(e) {
+        console.error('Error parsing domains:', e);
+        allDomains = [];
+    }
+    
+    var selectedDomains = [];
+    var currentOrigins = [];
+    try {
+        var originsJson = {% if origins_json %}{{ origins_json|safe }}{% else %}'[]'{% endif %};
+        if (typeof originsJson === 'string') {
+            currentOrigins = JSON.parse(originsJson);
+        } else {
+            currentOrigins = originsJson || [];
+        }
+    } catch(e) {
+        console.error('Error parsing origins:', e);
+        currentOrigins = [];
+    }
+    
+    // Extract domains from current origins (remove https:// and http://)
+    if (currentOrigins && currentOrigins.length) {
+        currentOrigins.forEach(function(origin) {
+            var domain = origin.replace(/^https?:\/\//, '').replace(/\/$/, '');
+            if (domain && selectedDomains.indexOf(domain) === -1) {
+                selectedDomains.push(domain);
+            }
+        });
+    }
+    
+    var searchInput = document.getElementById('domain-search');
+    var selectContainer = document.getElementById('domain-select-container');
+    var selectedContainer = document.getElementById('selected-domains');
+    
+    function renderSelectedDomains() {
+        selectedContainer.innerHTML = '';
+        selectedDomains.forEach(function(domain) {
+            var tag = document.createElement('div');
+            tag.className = 'selected-domain-tag';
+            tag.innerHTML = domain + ' <span class="remove" onclick="removeDomain(\'' + domain + '\')">×</span>';
+            selectedContainer.appendChild(tag);
+        });
+    }
+    
+    function filterDomains(query) {
+        query = (query || '').toLowerCase();
+        var filtered = allDomains.filter(function(domain) {
+            return domain.toLowerCase().indexOf(query) !== -1 && selectedDomains.indexOf(domain) === -1;
+        });
+        return filtered;
+    }
+    
+    function renderDomainOptions(query) {
+        var filtered = filterDomains(query);
+        selectContainer.innerHTML = '';
+        if (filtered.length === 0) {
+            selectContainer.innerHTML = '<div class="domain-option" style="color: #999; cursor: default;">No domains found</div>';
+        } else {
+            filtered.forEach(function(domain) {
+                var option = document.createElement('div');
+                option.className = 'domain-option';
+                option.textContent = domain;
+                option.onclick = function() {
+                    addDomain(domain);
+                };
+                selectContainer.appendChild(option);
+            });
+        }
+    }
+    
+    function addDomain(domain) {
+        if (selectedDomains.indexOf(domain) === -1) {
+            selectedDomains.push(domain);
+            renderSelectedDomains();
+            searchInput.value = '';
+            selectContainer.classList.remove('show');
+        }
+    }
+    
+    window.removeDomain = function(domain) {
+        var index = selectedDomains.indexOf(domain);
+        if (index !== -1) {
+            selectedDomains.splice(index, 1);
+            renderSelectedDomains();
+        }
+    };
+    
+    searchInput.addEventListener('focus', function() {
+        renderDomainOptions(this.value);
+        selectContainer.classList.add('show');
+    });
+    
+    searchInput.addEventListener('input', function() {
+        renderDomainOptions(this.value);
+        selectContainer.classList.add('show');
+    });
+    
+    searchInput.addEventListener('blur', function() {
+        setTimeout(function() {
+            selectContainer.classList.remove('show');
+        }, 200);
+    });
+    
+    // Load domains from API if not provided or empty
+    if (!allDomains || allDomains.length === 0) {
+        var domainsUrl = '/plugins/panelAccess/domains';
+        fetch(domainsUrl, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+        })
+            .then(function(r) {
+                if (!r.ok) {
+                    throw new Error('HTTP ' + r.status);
+                }
+                return r.json();
+            })
+            .then(function(data) {
+                if (data.domains && Array.isArray(data.domains)) {
+                    allDomains = data.domains;
+                    console.log('Loaded ' + allDomains.length + ' domains from API');
+                    renderDomainOptions('');
+                } else {
+                    console.error('Invalid domains data:', data);
+                }
+            })
+            .catch(function(err) {
+                console.error('Failed to load domains from API:', err);
+                // Show error to user
+                var status = document.getElementById('save-status');
+                if (status) {
+                    status.innerHTML = '<div class="alert alert-danger">Failed to load domains. Please refresh the page.</div>';
+                }
+            });
+    } else {
+        console.log('Using ' + allDomains.length + ' domains from template');
+        renderDomainOptions('');
+    }
+    
+    // Form submission
+    document.getElementById('panel-access-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        var form = this;
+        var status = document.getElementById('save-status');
+        status.innerHTML = '<span class="text-muted">Saving…</span>';
+        
+        var fd = new FormData(form);
+        // Add selected domains as array (without brackets to avoid security middleware blocking)
+        selectedDomains.forEach(function(domain) {
+            fd.append('origins_list', domain);
+        });
+        // CSRF token is already in the form from {% csrf_token %}, don't add it again
+        
+        fetch(form.action, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+            .then(function(o) {
+                if (o.ok && o.data.save === 1) {
+                    var msg = o.data.message || 'Saved.';
+                    if (o.data.proxy_results && o.data.proxy_results.length) {
+                        msg += '<br><br><strong>OpenLiteSpeed:</strong><br>';
+                        o.data.proxy_results.forEach(function(r) {
+                            msg += (r.success ? '&#10004; ' : '&#10008; ') + r.domain + ': ' + r.message + '<br>';
+                        });
+                    }
+                    status.innerHTML = '<div class="alert alert-success">' + msg + '</div>';
+                } else {
+                    status.innerHTML = '<div class="alert alert-danger">' + (o.data.error_message || 'Save failed.') + '</div>';
+                }
+            })
+            .catch(function() {
+                status.innerHTML = '<div class="alert alert-danger">Request failed.</div>';
+            });
+    });
+    
+    // Initial render
+    renderSelectedDomains();
+})();
+</script>
+{% endblock %}

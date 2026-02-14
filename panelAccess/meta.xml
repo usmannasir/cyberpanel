@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cyberpanelPluginConfig>
+    <name>Panel Access (Custom Domain)</name>
+    <type>Utility</type>
+    <description>Configure custom domain(s) for accessing CyberPanel behind a reverse proxy. Fixes 403 CSRF errors on POST (e.g. Ban IP) and optionally sets up OpenLiteSpeed proxy so the panel is reachable at your domain without manual OLS config. Detects panel port from bind.conf (2087/8090).</description>
+        <version>1.0.1</version>
+    <author>master3395</author>
+    <url>/plugins/panelAccess/</url>
+    <settings_url>/plugins/panelAccess/</settings_url>
+    <paid>false</paid>
+</cyberpanelPluginConfig>
