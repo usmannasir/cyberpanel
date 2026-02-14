@@ -33,6 +33,27 @@ VERSION = '2.5.5'
 BUILD = 'dev'
 
 
+def _version_compare(a, b):
+    """Return 1 if a > b, -1 if a < b, 0 if equal."""
+    def parse(v):
+        parts = []
+        for p in str(v).split('.'):
+            try:
+                parts.append(int(p))
+            except ValueError:
+                parts.append(0)
+        return parts
+    pa, pb = parse(a), parse(b)
+    for i in range(max(len(pa), len(pb))):
+        va = pa[i] if i < len(pa) else 0
+        vb = pb[i] if i < len(pb) else 0
+        if va > vb:
+            return 1
+        if va < vb:
+            return -1
+    return 0
+
+
 @ensure_csrf_cookie
 def renderBase(request):
     template = 'baseTemplate/homePage.html'
@@ -45,27 +66,41 @@ def renderBase(request):
 
 @ensure_csrf_cookie
 def versionManagement(request):
+    currentVersion = VERSION
+    currentBuild = str(BUILD)
+
     getVersion = requests.get('https://cyberpanel.net/version.txt')
     latest = getVersion.json()
     latestVersion = latest['version']
     latestBuild = latest['build']
+    branch_ref = 'v%s.%s' % (latestVersion, latestBuild)
 
-    currentVersion = VERSION
-    currentBuild = str(BUILD)
-
-    u = "https://api.github.com/repos/usmannasir/cyberpanel/commits?sha=v%s.%s" % (latestVersion, latestBuild)
-    logging.writeToFile(u)
-    r = requests.get(u)
-    latestcomit = r.json()[0]['sha']
-
-    command = "git -C /usr/local/CyberCP/ rev-parse HEAD"
-    output = ProcessUtilities.outputExecutioner(command)
-
-    Currentcomt = output.rstrip("\n")
     notechk = True
+    Currentcomt = ''
+    latestcomit = ''
 
-    if Currentcomt == latestcomit:
+    if _version_compare(currentVersion, latestVersion) > 0:
         notechk = False
+    else:
+        remote_cmd = 'git -C /usr/local/CyberCP remote get-url origin 2>/dev/null || true'
+        remote_out = ProcessUtilities.outputExecutioner(remote_cmd)
+        is_usmannasir = 'usmannasir/cyberpanel' in (remote_out or '')
+
+        if is_usmannasir:
+            u = "https://api.github.com/repos/usmannasir/cyberpanel/commits?sha=%s" % branch_ref
+            logging.CyberCPLogFileWriter.writeToFile(u)
+            try:
+                r = requests.get(u, timeout=10)
+                r.raise_for_status()
+                latestcomit = r.json()[0]['sha']
+            except (requests.RequestException, IndexError, KeyError) as e:
+                logging.CyberCPLogFileWriter.writeToFile('[versionManagement] GitHub API failed: %s' % str(e))
+            head_cmd = 'git -C /usr/local/CyberCP rev-parse HEAD 2>/dev/null || true'
+            Currentcomt = ProcessUtilities.outputExecutioner(head_cmd).rstrip('\n')
+            if latestcomit and Currentcomt == latestcomit:
+                notechk = False
+        else:
+            notechk = False
 
     template = 'baseTemplate/versionManagment.html'
     finalData = {'build': currentBuild, 'currentVersion': currentVersion, 'latestVersion': latestVersion,
@@ -253,31 +288,41 @@ def getLoadAverage(request):
 
 @ensure_csrf_cookie
 def versionManagment(request):
-    ## Get latest version
+    currentVersion = VERSION
+    currentBuild = str(BUILD)
 
     getVersion = requests.get('https://cyberpanel.net/version.txt')
     latest = getVersion.json()
     latestVersion = latest['version']
     latestBuild = latest['build']
+    branch_ref = 'v%s.%s' % (latestVersion, latestBuild)
 
-    ## Get local version
-
-    currentVersion = VERSION
-    currentBuild = str(BUILD)
-
-    u = "https://api.github.com/repos/usmannasir/cyberpanel/commits?sha=v%s.%s" % (latestVersion, latestBuild)
-    logging.CyberCPLogFileWriter.writeToFile(u)
-    r = requests.get(u)
-    latestcomit = r.json()[0]['sha']
-
-    command = "git -C /usr/local/CyberCP/ rev-parse HEAD"
-    output = ProcessUtilities.outputExecutioner(command)
-
-    Currentcomt = output.rstrip("\n")
     notechk = True
+    Currentcomt = ''
+    latestcomit = ''
 
-    if (Currentcomt == latestcomit):
+    if _version_compare(currentVersion, latestVersion) > 0:
         notechk = False
+    else:
+        remote_cmd = 'git -C /usr/local/CyberCP remote get-url origin 2>/dev/null || true'
+        remote_out = ProcessUtilities.outputExecutioner(remote_cmd)
+        is_usmannasir = 'usmannasir/cyberpanel' in (remote_out or '')
+
+        if is_usmannasir:
+            u = "https://api.github.com/repos/usmannasir/cyberpanel/commits?sha=%s" % branch_ref
+            logging.CyberCPLogFileWriter.writeToFile(u)
+            try:
+                r = requests.get(u, timeout=10)
+                r.raise_for_status()
+                latestcomit = r.json()[0]['sha']
+            except (requests.RequestException, IndexError, KeyError) as e:
+                logging.CyberCPLogFileWriter.writeToFile('[versionManagment] GitHub API failed: %s' % str(e))
+            head_cmd = 'git -C /usr/local/CyberCP rev-parse HEAD 2>/dev/null || true'
+            Currentcomt = ProcessUtilities.outputExecutioner(head_cmd).rstrip('\n')
+            if latestcomit and Currentcomt == latestcomit:
+                notechk = False
+        else:
+            notechk = False
 
     template = 'baseTemplate/versionManagment.html'
     finalData = {'build': currentBuild, 'currentVersion': currentVersion, 'latestVersion': latestVersion,
