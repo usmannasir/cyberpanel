@@ -13,7 +13,7 @@
    - `cyberpanel_standalone.sh`
    - `fix_installation_issues.sh`
    - `install_phpmyadmin.sh`
-   - `simple_install.sh`
+   - ~~`simple_install.sh`~~ (removed; use official install.sh)
    - `INSTALLER_SUMMARY.md`
    - `UNIVERSAL_OS_COMPATIBILITY.md`
    - `to-do/MARIADB_INSTALLATION_FIXES.md`
