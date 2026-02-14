@@ -18,6 +18,16 @@ def securityHome(request):
         return redirect(loadLoginPage)
 
 
+def firewallRedirect(request):
+    """Redirect /firewall/ to /firewall/firewall-rules/ so the default tab has a clear URL."""
+    try:
+        if request.session.get('userID'):
+            return redirect('/firewall/firewall-rules/')
+        return redirect(loadLoginPage)
+    except Exception:
+        return redirect(loadLoginPage)
+
+
 def firewallHome(request):
     try:
         userID = request.session['userID']
@@ -41,7 +51,14 @@ def getCurrentRules(request):
     try:
         userID = request.session['userID']
         fm = FirewallManager()
-        return fm.getCurrentRules(userID)
+        try:
+            body = request.body
+            if isinstance(body, bytes):
+                body = body.decode('utf-8')
+            data = json.loads(body) if body and body.strip() else {}
+        except (json.JSONDecodeError, Exception):
+            data = {}
+        return fm.getCurrentRules(userID, data)
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -663,7 +680,14 @@ def getBannedIPs(request):
     try:
         userID = request.session['userID']
         fm = FirewallManager()
-        return fm.getBannedIPs(userID)
+        try:
+            body = request.body
+            if isinstance(body, bytes):
+                body = body.decode('utf-8')
+            data = json.loads(body) if body and body.strip() else {}
+        except (json.JSONDecodeError, Exception):
+            data = {}
+        return fm.getBannedIPs(userID, data)
     except KeyError:
         return redirect(loadLoginPage)
 

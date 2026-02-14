@@ -34,13 +34,12 @@
     <script src="{% static 'baseTemplate/assets/bootstrap/js/bootstrap.min.js' %}?v={{ CP_VERSION }}"></script>
     <script src="{% static 'baseTemplate/bootstrap-toggle.min.js' %}?v={{ CP_VERSION }}"></script>
     <script src="{% static 'baseTemplate/custom-js/qrious.min.js' %}?v={{ CP_VERSION }}"></script>
+    <!-- Chart.js must load before system-status.js (dashboard charts depend on it) -->
+    <script src="{% static 'baseTemplate/custom-js/chart.umd.min.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'baseTemplate/custom-js/system-status.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Chart.js -->
-    <script src="{% static 'baseTemplate/custom-js/chart.umd.min.js' %}?v={{ CP_VERSION }}"></script>
     
     <!-- PNotify (data-cfasync=false ensures it loads before controllers that use it) -->
     <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/custom-js/pnotify.custom.min.css' %}?v={{ CP_VERSION }}">

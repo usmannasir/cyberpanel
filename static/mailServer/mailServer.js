@@ -1514,6 +1514,7 @@ app.controller('EmailLimitsNew', function ($scope, $http) {
         // Given email to search for
         var givenEmail = $scope.selectedEmail;
 
+        if ($scope.emails) {
         for (var i = 0; i < $scope.emails.length; i++) {
             if ($scope.emails[i].email === givenEmail) {
                 // Extract numberofEmails and duration
@@ -1523,13 +1524,10 @@ app.controller('EmailLimitsNew', function ($scope, $http) {
                 $scope.numberofEmails = numberofEmails;
                 $scope.duration = duration;
 
-                // Use numberofEmails and duration as needed
-                console.log("Number of emails:", numberofEmails);
-                console.log("Duration:", duration);
-
                 // Break out of the loop since the email is found
                 break;
             }
+        }
         }
 
     };

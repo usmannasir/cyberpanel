@@ -31,9 +31,61 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
     $scope.couldNotConnect = true;
     $scope.rulesDetails = false;
 
-    // Banned IPs variables
-    $scope.activeTab = 'rules';
+    // Banned IPs variables – tab from hash so we stay on /firewall/ (avoids 404 on servers without /firewall/firewall-rules/)
+    function tabFromHash() {
+        var h = (window.location.hash || '').replace(/^#/, '');
+        return (h === 'banned-ips') ? 'banned' : 'rules';
+    }
+    $scope.activeTab = tabFromHash();
     $scope.bannedIPs = [];  // Initialize as empty array
+
+    // Re-apply tab from hash after load (hash can be set after controller init in some browsers)
+    function applyTabFromHash() {
+        var tab = tabFromHash();
+        if ($scope.activeTab !== tab) {
+            $scope.activeTab = tab;
+            if (tab === 'banned') { populateBannedIPs(); } else { populateCurrentRecords(); }
+            if (!$scope.$$phase && !$scope.$root.$$phase) { $scope.$apply(); }
+        }
+    }
+    $timeout(applyTabFromHash, 0);
+    if (document.readyState === 'complete') {
+        $timeout(applyTabFromHash, 50);
+    } else {
+        window.addEventListener('load', function() { $timeout(applyTabFromHash, 0); });
+    }
+
+    // Sync tab with hash and load that tab's data on switch
+    $scope.setFirewallTab = function(tab) {
+        $timeout(function() {
+            $scope.activeTab = tab;
+            window.location.hash = (tab === 'banned') ? '#banned-ips' : '#rules';
+            if (tab === 'banned') { populateBannedIPs(); } else { populateCurrentRecords(); }
+        }, 0);
+    };
+
+    // Back/forward or direct hash change: sync tab and load its data
+    function syncTabFromHash() {
+        var tab = tabFromHash();
+        if ($scope.activeTab !== tab) {
+            $scope.activeTab = tab;
+            if (tab === 'banned') { populateBannedIPs(); } else { populateCurrentRecords(); }
+            if (!$scope.$$phase && !$scope.$root.$$phase) { $scope.$apply(); }
+        }
+    }
+    window.addEventListener('hashchange', syncTabFromHash);
+    
+    // Pagination: Firewall Rules (default 10 per page, options 5–100)
+    $scope.rulesPage = 1;
+    $scope.rulesPageSize = 10;
+    $scope.rulesPageSizeOptions = [5, 10, 20, 30, 50, 100];
+    $scope.rulesTotalCount = 0;
+    
+    // Pagination: Banned IPs
+    $scope.bannedPage = 1;
+    $scope.bannedPageSize = 10;
+    $scope.bannedPageSizeOptions = [5, 10, 20, 30, 50, 100];
+    $scope.bannedTotalCount = 0;
     
     // Initialize banned IPs array - start as null so template shows empty state
     // Will be set to array after API call
@@ -47,9 +99,21 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
 
     firewallStatus();
 
+    // Load both tabs on init; also load on tab change (watch) so content always shows
     populateCurrentRecords();
-    
-    // Load banned IPs immediately when controller initializes
+    populateBannedIPs();
+
+    $scope.$watch('activeTab', function(newVal, oldVal) {
+        if (newVal === oldVal || !newVal) return;
+        $timeout(function() {
+            try {
+                if (newVal === 'banned' && typeof populateBannedIPs === 'function') populateBannedIPs();
+                else if (newVal === 'rules' && typeof populateCurrentRecords === 'function') populateCurrentRecords();
+            } catch (e) {}
+        }, 0);
+    });
+
+    // Log for debugging
     console.log('=== FIREWALL CONTROLLER INITIALIZING ===');
     console.log('Initializing firewall controller, loading banned IPs...');
     
@@ -69,14 +133,19 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
             }
         };
 
-        console.log('Making request to:', url);
+        var postData = {
+            page: $scope.bannedPage || 1,
+            page_size: $scope.bannedPageSize || 10
+        };
+        console.log('Making request to:', url, 'page:', postData.page, 'page_size:', postData.page_size);
         console.log('CSRF Token:', csrfToken ? 'Found (' + csrfToken.substring(0, 10) + '...)' : 'MISSING!');
         
-        $http.post(url, {}, config).then(
+        $http.post(url, postData, config).then(
             function(response) {
+                var res = (typeof response.data === 'string') ? (function() { try { return JSON.parse(response.data); } catch (e) { return {}; } })() : response.data;
                 console.log('=== API RESPONSE RECEIVED ===');
                 console.log('Response status:', response.status);
-                console.log('Response data:', JSON.stringify(response.data, null, 2));
+                console.log('Response data (parsed):', res);
                 
                 $scope.bannedIPsLoading = false;
                 // Reset error flags
@@ -84,8 +153,8 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
                 $scope.bannedIPActionSuccess = true;
                 $scope.bannedIPCouldNotConnect = true;
                 
-                if (response.data && response.data.status === 1) {
-                    var bannedIPsArray = response.data.bannedIPs || [];
+                if (res && res.status === 1) {
+                    var bannedIPsArray = res.bannedIPs || [];
                     console.log('Raw bannedIPs from API:', bannedIPsArray);
                     console.log('Banned IPs count:', bannedIPsArray.length);
                     console.log('Is array?', Array.isArray(bannedIPsArray));
@@ -99,6 +168,9 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
                     // Assign to scope - Angular $http callbacks already run within $apply
                     console.log('Assigning to scope.bannedIPs...');
                     $scope.bannedIPs = bannedIPsArray;
+                    $scope.bannedTotalCount = res.total_count != null ? res.total_count : bannedIPsArray.length;
+                    $scope.bannedPage = Math.max(1, res.page != null ? res.page : 1);
+                    $scope.bannedPageSize = res.page_size != null ? res.page_size : 10;
                     console.log('After assignment - scope.bannedIPs:', $scope.bannedIPs);
                     console.log('After assignment - scope.bannedIPs.length:', $scope.bannedIPs ? $scope.bannedIPs.length : 'undefined');
                     console.log('After assignment - activeTab:', $scope.activeTab);
@@ -109,10 +181,10 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
                     console.log('=== populateBannedIPs() SUCCESS ===');
                 } else {
                     console.error('ERROR: API returned status !== 1');
-                    console.error('Response data:', response.data);
+                    console.error('Response data:', res);
                     $scope.bannedIPs = [];
                     $scope.bannedIPActionFailed = false;
-                    $scope.bannedIPErrorMessage = (response.data && response.data.error_message) || 'Unknown error';
+                    $scope.bannedIPErrorMessage = (res && res.error_message) || 'Unknown error';
                 }
             },
             function(error) {
@@ -144,6 +216,52 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
         console.log('$scope.populateBannedIPs() called from template');
         populateBannedIPs();
     };
+
+    $scope.goToBannedPage = function(page) {
+        var totalP = $scope.bannedTotalPages();
+        if (page < 1 || page > totalP) return;
+        $scope.bannedPage = page;
+        populateBannedIPs();
+    };
+    $scope.goToBannedPageByInput = function() {
+        var n = parseInt($scope.bannedPageInput, 10);
+        if (isNaN(n) || n < 1) n = 1;
+        var maxP = $scope.bannedTotalPages();
+        if (n > maxP) n = maxP;
+        $scope.bannedPageInput = n;
+        $scope.goToBannedPage(n);
+    };
+    $scope.bannedTotalPages = function() {
+        var size = $scope.bannedPageSize || 10;
+        var total = $scope.bannedTotalCount || ($scope.bannedIPs ? $scope.bannedIPs.length : 0) || 0;
+        return size > 0 ? Math.max(1, Math.ceil(total / size)) : 1;
+    };
+    $scope.bannedRangeStart = function() {
+        var total = $scope.bannedTotalCount || ($scope.bannedIPs ? $scope.bannedIPs.length : 0) || 0;
+        if (total === 0) return 0;
+        var page = Math.max(1, $scope.bannedPage || 1);
+        var size = $scope.bannedPageSize || 10;
+        return (page - 1) * size + 1;
+    };
+    $scope.bannedRangeEnd = function() {
+        var start = $scope.bannedRangeStart();
+        var size = $scope.bannedPageSize || 10;
+        var total = $scope.bannedTotalCount || ($scope.bannedIPs ? $scope.bannedIPs.length : 0) || 0;
+        return total === 0 ? 0 : Math.min(start + size - 1, total);
+    };
+    $scope.setBannedPageSize = function() {
+        $scope.bannedPage = 1;
+        populateBannedIPs();
+    };
+
+    if (typeof window !== 'undefined') {
+        window.__firewallLoadTab = function(tab) {
+            $scope.$evalAsync(function() {
+                $scope.activeTab = tab;
+                if (tab === 'banned') { populateBannedIPs(); } else { populateCurrentRecords(); }
+            });
+        };
+    }
     
     // Load banned IPs on page load - use $timeout for Angular compatibility
     // Wrap in try-catch to ensure it executes even if there are other errors
@@ -160,33 +278,6 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
         console.error('Error setting up timeout for populateBannedIPs:', e);
     }
     
-    // Also load when switching to banned tab - use deep watch for immediate trigger
-    try {
-        $scope.$watch('activeTab', function(newVal, oldVal) {
-            console.log('=== activeTab WATCH TRIGGERED ===');
-            console.log('activeTab changed from', oldVal, 'to', newVal);
-            if (newVal === 'banned') {
-                console.log('Switched to banned IPs tab, calling populateBannedIPs...');
-                // Call immediately
-                try {
-                    if (typeof populateBannedIPs === 'function') {
-                        console.log('Calling populateBannedIPs from $watch...');
-                        populateBannedIPs();
-                    } else if (typeof $scope.populateBannedIPs === 'function') {
-                        console.log('Calling $scope.populateBannedIPs from $watch...');
-                        $scope.populateBannedIPs();
-                    } else {
-                        console.error('ERROR: populateBannedIPs is not available!');
-                    }
-                } catch(e) {
-                    console.error('Error calling populateBannedIPs from watch:', e);
-                }
-            }
-        }, true);  // Use deep watch (true parameter)
-    } catch(e) {
-        console.error('Error setting up $watch for activeTab:', e);
-    }
-
     $scope.addRule = function () {
 
         $scope.rulesLoading = false;
@@ -278,38 +369,75 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
         $scope.actionFailed = true;
         $scope.actionSuccess = true;
 
-
         url = "/firewall/getCurrentRules";
-
-        var data = {};
-
+        var data = {
+            page: $scope.rulesPage || 1,
+            page_size: $scope.rulesPageSize || 10
+        };
         var config = {
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
             }
         };
 
-
         $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
-
         function ListInitialDatas(response) {
-            if (response.data.fetchStatus === 1) {
-                $scope.rules = JSON.parse(response.data.data);
+            var res = (typeof response.data === 'string') ? (function() { try { return JSON.parse(response.data); } catch (e) { return {}; } })() : response.data;
+            if (res && res.fetchStatus === 1) {
+                $scope.rules = typeof res.data === 'string' ? JSON.parse(res.data) : (res.data || []);
+                $scope.rulesTotalCount = res.total_count != null ? res.total_count : ($scope.rules ? $scope.rules.length : 0);
+                $scope.rulesPage = Math.max(1, res.page != null ? res.page : 1);
+                $scope.rulesPageSize = res.page_size != null ? res.page_size : 10;
                 $scope.rulesLoading = true;
             }
             else {
                 $scope.rulesLoading = true;
-                $scope.errorMessage = response.data.error_message;
+                $scope.errorMessage = (res && res.error_message) ? res.error_message : '';
             }
         }
 
         function cantLoadInitialDatas(response) {
             $scope.couldNotConnect = false;
-
         }
-
     }
+
+    $scope.goToRulesPage = function(page) {
+        var totalP = $scope.rulesTotalPages();
+        if (page < 1 || page > totalP) return;
+        $scope.rulesPage = page;
+        populateCurrentRecords();
+    };
+    $scope.goToRulesPageByInput = function() {
+        var n = parseInt($scope.rulesPageInput, 10);
+        if (isNaN(n) || n < 1) n = 1;
+        var maxP = $scope.rulesTotalPages();
+        if (n > maxP) n = maxP;
+        $scope.rulesPageInput = n;
+        $scope.goToRulesPage(n);
+    };
+    $scope.rulesTotalPages = function() {
+        var size = $scope.rulesPageSize || 10;
+        var total = $scope.rulesTotalCount || ($scope.rules && $scope.rules.length) || 0;
+        return size > 0 ? Math.max(1, Math.ceil(total / size)) : 1;
+    };
+    $scope.rulesRangeStart = function() {
+        var total = $scope.rulesTotalCount || ($scope.rules && $scope.rules.length) || 0;
+        if (total === 0) return 0;
+        var page = Math.max(1, $scope.rulesPage || 1);
+        var size = $scope.rulesPageSize || 10;
+        return (page - 1) * size + 1;
+    };
+    $scope.rulesRangeEnd = function() {
+        var start = $scope.rulesRangeStart();
+        var size = $scope.rulesPageSize || 10;
+        var total = $scope.rulesTotalCount || ($scope.rules && $scope.rules.length) || 0;
+        return total === 0 ? 0 : Math.min(start + size - 1, total);
+    };
+    $scope.setRulesPageSize = function() {
+        $scope.rulesPage = 1;
+        populateCurrentRecords();
+    };
 
     $scope.deleteRule = function (id, proto, port, ruleIP) {
 
@@ -2838,3 +2966,25 @@ app.controller('litespeed_ent_conf', function ($scope, $http, $timeout, $window)
     }
 
 });
+
+(function() {
+    // Do not capture tab clicks – let Angular ng-click run setFirewallTab() so data loads.
+    // Only sync tab from hash on load and hashchange (back/forward) via __firewallLoadTab.
+    function syncFirewallTabFromHash() {
+        var nav = document.getElementById('firewall-tab-nav');
+        if (!nav) return;
+        var h = (window.location.hash || '').replace(/^#/, '');
+        var tab = (h === 'banned-ips') ? 'banned' : 'rules';
+        if (window.__firewallLoadTab) {
+            try { window.__firewallLoadTab(tab); } catch (e) {}
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', syncFirewallTabFromHash);
+    } else {
+        syncFirewallTabFromHash();
+    }
+    setTimeout(syncFirewallTabFromHash, 100);
+    window.addEventListener('hashchange', syncFirewallTabFromHash);
+})();

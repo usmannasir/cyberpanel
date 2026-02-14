@@ -1317,7 +1317,14 @@
                     
                     <div class="plugin-footer">
                         <div class="plugin-actions">
-                            {% if plugin.installed %}
+                            {% if plugin.builtin %}
+                                <span class="status-installed-small" style="margin-right: 8px;">{% trans "Built-in" %}</span>
+                                {% if plugin.manage_url %}
+                                    <a href="{{ plugin.manage_url }}" class="btn-action btn-settings btn-small" title="{% trans 'Settings' %}">
+                                        <i class="fas fa-cog"></i> {% trans "Settings" %}
+                                    </a>
+                                {% endif %}
+                            {% elif plugin.installed %}
                                 {% if plugin.manage_url %}
                                     <a href="{{ plugin.manage_url }}" class="btn-action btn-settings btn-small" title="{% trans 'Plugin Settings' %}">
                                         <i class="fas fa-cog"></i> {% trans "Settings" %}
@@ -1344,6 +1351,7 @@
                                 </button>
                             {% endif %}
                         </div>
+                        {% if not plugin.builtin %}
                         <div class="plugin-links">
                             <a href="/plugins/{{ plugin.plugin_dir }}/help/" class="btn-link btn-link-small" title="{% trans 'Plugin Help' %}">
                                 <i class="fas fa-question-circle"></i> {% trans "Help" %}
@@ -1352,6 +1360,7 @@
                                 <i class="fas fa-info-circle"></i> {% trans "About" %}
                             </a>
                         </div>
+                        {% endif %}
                     </div>
                 </div>
                 {% endfor %}
@@ -1437,7 +1446,7 @@
                                     </div>
                                 </td>
                                 <td class="active-column">
-                                    {% if plugin.installed %}
+                                    {% if plugin.builtin or plugin.installed %}
                                         {% if plugin.enabled %}
                                             <span class="active-status active-yes"><i class="fas fa-check-circle"></i></span>
                                         {% else %}
@@ -1693,11 +1702,18 @@ function toggleView(view, updateHash = true) {
     
     const installedSearchWrapper = document.getElementById('installedPluginsSearchWrapper');
     const installedSortFilterBar = document.getElementById('installedSortFilterBar');
+    
+    // Add null checks to prevent errors if elements don't exist
+    if (!gridView || !tableView || !storeView) {
+        console.warn('toggleView: One or more view elements not found');
+        return;
+    }
+    
     if (view === 'grid') {
         gridView.style.display = 'grid';
         tableView.style.display = 'none';
         storeView.style.display = 'none';
-        viewBtns[0].classList.add('active');
+        if (viewBtns[0]) viewBtns[0].classList.add('active');
         if (installedSearchWrapper) installedSearchWrapper.style.display = 'block';
         if (installedSortFilterBar) installedSortFilterBar.style.display = 'flex';
         if (typeof updateInstalledSortButtons === 'function') updateInstalledSortButtons();
@@ -1707,7 +1723,7 @@ function toggleView(view, updateHash = true) {
         gridView.style.display = 'none';
         tableView.style.display = 'block';
         storeView.style.display = 'none';
-        viewBtns[1].classList.add('active');
+        if (viewBtns[1]) viewBtns[1].classList.add('active');
         if (installedSearchWrapper) installedSearchWrapper.style.display = 'block';
         if (installedSortFilterBar) installedSortFilterBar.style.display = 'flex';
         if (typeof updateInstalledSortButtons === 'function') updateInstalledSortButtons();
@@ -1719,7 +1735,7 @@ function toggleView(view, updateHash = true) {
         gridView.style.display = 'none';
         tableView.style.display = 'none';
         storeView.style.display = 'block';
-        viewBtns[2].classList.add('active');
+        if (viewBtns[2]) viewBtns[2].classList.add('active');
         
         // Load plugins from store if not already loaded
         if (storePlugins.length === 0) {
@@ -2941,22 +2957,34 @@ document.addEventListener('DOMContentLoaded', function() {
     const hash = window.location.hash.substring(1); // Remove #
     const validViews = ['grid', 'table', 'store'];
     
-    let initialView = 'grid'; // Default
-    if (validViews.includes(hash)) {
-        initialView = hash;
-    } else {
-        // Default to grid view if plugins exist, otherwise show store
-        const gridView = document.getElementById('gridView');
-        if (gridView && gridView.children.length > 0) {
-            initialView = 'grid';
+    // Check if view elements exist before calling toggleView
+    const gridView = document.getElementById('gridView');
+    const tableView = document.getElementById('tableView');
+    const storeView = document.getElementById('storeView');
+    
+    // Only proceed if all view elements exist (plugins are installed)
+    if (gridView && tableView && storeView) {
+        let initialView = 'grid'; // Default
+        if (validViews.includes(hash)) {
+            initialView = hash;
         } else {
-            initialView = 'store';
+            // Default to grid view if plugins exist, otherwise show store
+            if (gridView.children.length > 0) {
+                initialView = 'grid';
+            } else {
+                initialView = 'store';
+            }
+        }
+        
+        // Set initial view without updating hash (only update hash if there was already one)
+        const hadHash = hash.length > 0;
+        toggleView(initialView, hadHash);
+    } else {
+        // Elements don't exist (no plugins installed), just show store view directly
+        if (storeView) {
+            storeView.style.display = 'block';
         }
     }
-    
-    // Set initial view without updating hash (only update hash if there was already one)
-    const hadHash = hash.length > 0;
-    toggleView(initialView, hadHash);
     
     // Load store plugins if store view is visible (either from toggleView or already displayed)
     setTimeout(function() {

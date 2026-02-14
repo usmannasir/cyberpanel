@@ -3,7 +3,11 @@ from . import views
 
 urlpatterns = [
     path('securityHome', views.securityHome, name='securityHome'),
-    path('', views.firewallHome, name='firewallHome'),
+    path('firewall-rules/', views.firewallHome, name='firewallRules'),
+    path('firewall-rules', views.firewallHome, name='firewallRulesNoSlash'),
+    path('banned-ips/', views.firewallHome, name='firewallBannedIPs'),
+    path('banned-ips', views.firewallHome, name='firewallBannedIPsNoSlash'),
+    path('', views.firewallHome, name='firewallHome'),  # /firewall/ also serves the page so 404 is avoided
     path('getCurrentRules', views.getCurrentRules, name='getCurrentRules'),
     path('addRule', views.addRule, name='addRule'),
     path('modifyRule', views.modifyRule, name='modifyRule'),

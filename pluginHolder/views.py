@@ -38,6 +38,10 @@ PLUGIN_BACKUP_DIR = '/home/cyberpanel/plugin_backups'
 # Plugin source paths (checked in order; first match wins for install)
 PLUGIN_SOURCE_PATHS = ['/home/cyberpanel/plugins', '/home/cyberpanel-plugins']
 
+# Builtin/core plugins that are part of CyberPanel (not user-installable plugins)
+# These plugins show "Built-in" badge and only Settings button (no Deactivate/Uninstall)
+BUILTIN_PLUGINS = frozenset(['emailMarketing', 'emailPremium'])
+
 def _get_plugin_source_path(plugin_name):
     """Return the full path to a plugin's source directory, or None if not found."""
     for base in PLUGIN_SOURCE_PATHS:
@@ -118,6 +122,7 @@ def installed(request):
     processed_plugins = set()  # Track which plugins we've already processed
 
     # First, process plugins from source directories (multiple paths: /home/cyberpanel/plugins, /home/cyberpanel-plugins)
+    # BUT: Skip plugins that are already installed - we'll process those from the installed location instead
     for pluginPath in PLUGIN_SOURCE_PATHS:
         if not os.path.exists(pluginPath):
             continue
@@ -128,6 +133,12 @@ def installed(request):
             logging.writeToFile(f"Plugin source path {pluginPath}: listdir error {e}")
         for plugin in os.listdir(pluginPath):
             if plugin in processed_plugins:
+                continue
+            # Skip if plugin is already installed - we'll process it from installed location instead
+            completePath = installedPath + '/' + plugin + '/meta.xml'
+            if os.path.exists(completePath):
+                # Plugin is installed, skip source path - DON'T mark as processed yet
+                # The installed location loop will handle it and mark it as processed
                 continue
             # Skip files (like .zip files) - only process directories
             pluginDir = os.path.join(pluginPath, plugin)
@@ -187,6 +198,8 @@ def installed(request):
                 data['desc'] = desc_elem.text
                 data['version'] = version_elem.text
                 data['plugin_dir'] = plugin  # Plugin directory name
+                # Set builtin flag (core CyberPanel plugins vs user-installable plugins)
+                data['builtin'] = plugin in BUILTIN_PLUGINS
                 # Check if plugin is installed (only if it exists in /usr/local/CyberCP/)
                 # Source directory presence doesn't mean installed - it just means the source files are available
                 data['installed'] = os.path.exists(completePath)
@@ -333,6 +346,8 @@ def installed(request):
                 data['desc'] = desc_elem.text
                 data['version'] = version_elem.text
                 data['plugin_dir'] = plugin
+                # Set builtin flag (core CyberPanel plugins vs user-installable plugins)
+                data['builtin'] = plugin in BUILTIN_PLUGINS
                 data['installed'] = True  # This is an installed plugin
                 data['enabled'] = _is_plugin_enabled(plugin)
                 
@@ -394,6 +409,7 @@ def installed(request):
                 # else: is_paid already False from initialization above
 
                 pluginList.append(data)
+                processed_plugins.add(plugin)  # Mark as processed to prevent duplicates
                 
             except ElementTree.ParseError as e:
                 errorPlugins.append({'name': plugin, 'error': f'XML parse error: {str(e)}'})
@@ -433,6 +449,7 @@ def installed(request):
                 'desc': desc_elem.text,
                 'version': version_elem.text,
                 'plugin_dir': plugin_name,
+                'builtin': plugin_name in BUILTIN_PLUGINS,  # Set builtin flag
                 'installed': os.path.exists(complete_path),
                 'enabled': _is_plugin_enabled(plugin_name) if os.path.exists(complete_path) else False,
                 'is_paid': False,
