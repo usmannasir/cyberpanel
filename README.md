@@ -70,13 +70,13 @@ Fast • Secure • Scalable — Simplify hosting management with style.
 
 | OS family                  | Recommended / Supported |
 | -------------------------- | ----------------------: |
-| Ubuntu 24.04, 22.04, 20.04 |          ✅ Recommended |
 | AlmaLinux 10, 9, 8         |          ✅ Recommended |
-| Debian 13, 12, 11          |            ✅ Supported |
-| RockyLinux 9, 8            |            ✅ Supported |
-| RHEL 9, 8                  |            ✅ Supported |
-| CloudLinux 9, 8            |            ✅ Supported |
 | CentOS 7                   |      ⚠️ Legacy — EOL |
+| CloudLinux 9, 8            |            ✅ Supported |
+| Debian 13, 12, 11          |            ✅ Supported |
+| RHEL 9, 8                  |            ✅ Supported |
+| RockyLinux 9, 8            |            ✅ Supported |
+| Ubuntu 24.04, 22.04, 20.04 |          ✅ Recommended |
 
 > **Architectures:** x86_64 (primary), aarch64/ARM64 (supported). AlmaLinux is the recommended RHEL-compatible distribution. Test unsupported OS in staging first.
 
