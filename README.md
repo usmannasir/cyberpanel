@@ -70,25 +70,25 @@ Fast • Secure • Scalable — Simplify hosting management with style.
 
 | OS family                  | Recommended / Supported |
 | -------------------------- | ----------------------: |
-| Ubuntu 24.04, 22.04, 20.04 |          ✅ Recommended |
-| Debian 13, 12, 11          |            ✅ Supported |
-| AlmaLinux 10, 9, 8         |            ✅ Supported |
-| RockyLinux 9, 8            |            ✅ Supported |
-| RHEL 9, 8                  |            ✅ Supported |
-| CloudLinux 9, 8            |            ✅ Supported |
+| AlmaLinux 10, 9, 8         |          ✅ Recommended |
 | CentOS 7                   |      ⚠️ Legacy — EOL |
+| CloudLinux 9, 8            |            ✅ Supported |
+| Debian 13, 12, 11          |            ✅ Supported |
+| RHEL 9, 8                  |            ✅ Supported |
+| RockyLinux 9, 8            |            ✅ Supported |
+| Ubuntu 24.04, 22.04, 20.04 |          ✅ Recommended |
 
-> CyberPanel targets x86\_64 only. Test the unsupported OS in staging first.
+> **Architectures:** x86_64 (primary), aarch64/ARM64 (supported). AlmaLinux is the recommended RHEL-compatible distribution. Test unsupported OS in staging first.
 
 ---
 
 ## PHP support (short)
 
-* ✅ **Recommended**: PHP 8.5 (beta), 8.4, 8.3, 8.2, 8.1
-* ⚠️ **Legacy**: PHP 8.0, PHP 7.4 (security-only)
-* ❌ **Deprecated**: PHP 7.1, 7.2, 7.3 (no longer installed)
+* ✅ **Recommended**: PHP 8.5, 8.4
+* ⚠️ **Security fixes only**: PHP 8.3, 8.2, 8.1
+* ❌ **EOL / Deprecated**: PHP 8.0, 7.4, 7.1, 7.2, 7.3 (no longer supported)
 
-Third-party repositories (Remi, Ondrej) may provide older or niche versions; verify compatibility before use.
+Third-party repositories may provide older or niche versions; verify compatibility before use. RHEL/Alma/Rocky: [Remi RPM](https://rpms.remirepo.net/). Ubuntu/Debian: [Ondrej PPA](https://launchpad.net/~ondrej/+archive/ubuntu/php). See [php.net/supported-versions](https://www.php.net/supported-versions.php).
 
 ---
 

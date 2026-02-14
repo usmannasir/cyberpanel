@@ -1459,6 +1459,12 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     var pollInterval = 2000; // ms
     var maxPoints = 30;
 
+    // Expose so switchTab can create charts on first tab click if they weren't created at load
+    window.cyberPanelSetupChartsIfNeeded = function() {
+        if (window.trafficChart && window.diskIOChart && window.cpuChart) return;
+        try { setupCharts(); } catch (e) { console.error('cyberPanelSetupChartsIfNeeded:', e); }
+    };
+
     function pollDashboardStats() {
         console.log('[dashboardStatsController] pollDashboardStats() called');
         console.log('[dashboardStatsController] Fetching dashboard stats from /base/getDashboardStats');
@@ -1517,8 +1523,8 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     }
 
     function pollTraffic() {
-        console.log('pollTraffic called');
         $http.get('/base/getTrafficStats').then(function(response) {
+            if (!response || !response.data) return;
             if (response.data.admin_only) {
                 // Hide chart for non-admin users
                 $scope.hideSystemCharts = true;
@@ -1566,13 +1572,16 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                 }
                 lastRx = rx; lastTx = tx;
             } else {
-                console.log('pollTraffic error or no data:', response);
+                console.warn('pollTraffic: no data or status', response.data);
             }
+        }).catch(function(err) {
+            console.warn('pollTraffic failed:', err);
         });
     }
 
     function pollDiskIO() {
         $http.get('/base/getDiskIOStats').then(function(response) {
+            if (!response || !response.data) return;
             if (response.data.admin_only) {
                 // Hide chart for non-admin users
                 $scope.hideSystemCharts = true;
@@ -1611,11 +1620,14 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                 }
                 lastDiskRead = read; lastDiskWrite = write;
             }
+        }).catch(function(err) {
+            console.warn('pollDiskIO failed:', err);
         });
     }
 
     function pollCPU() {
         $http.get('/base/getCPULoadGraph').then(function(response) {
+            if (!response || !response.data) return;
             if (response.data.admin_only) {
                 // Hide chart for non-admin users
                 $scope.hideSystemCharts = true;
@@ -1654,13 +1666,34 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                 }
                 lastCPUTimes = cpuTimes;
             }
+        }).catch(function(err) {
+            console.warn('pollCPU failed:', err);
         });
     }
 
-    function setupCharts() {
-        console.log('setupCharts called, initializing charts...');
-        var trafficCtx = document.getElementById('trafficChart').getContext('2d');
-        trafficChart = new Chart(trafficCtx, {
+    function setupCharts(retryCount) {
+        retryCount = retryCount || 0;
+        if (typeof Chart === 'undefined') {
+            if (retryCount < 3) {
+                $timeout(function() { setupCharts(retryCount + 1); }, 400);
+            }
+            return;
+        }
+        var trafficEl = document.getElementById('trafficChart');
+        if (!trafficEl) {
+            if (retryCount < 5) {
+                $timeout(function() { setupCharts(retryCount + 1); }, 300);
+            }
+            return;
+        }
+        try {
+            var trafficCtx = trafficEl.getContext('2d');
+        } catch (e) {
+            console.error('trafficChart getContext failed:', e);
+            return;
+        }
+        try {
+            trafficChart = new Chart(trafficCtx, {
             type: 'line',
             data: {
                 labels: [],
@@ -1752,7 +1785,9 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                 console.log('trafficChart resized and updated after setup.');
             }
         }, 500);
-        var diskCtx = document.getElementById('diskIOChart').getContext('2d');
+        var diskEl = document.getElementById('diskIOChart');
+        if (!diskEl) { console.warn('diskIOChart canvas not found'); return; }
+        var diskCtx = diskEl.getContext('2d');
         diskIOChart = new Chart(diskCtx, {
             type: 'line',
             data: {
@@ -1837,7 +1872,10 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                 layout: { padding: { top: 10, bottom: 10, left: 10, right: 10 } }
             }
         });
-        var cpuCtx = document.getElementById('cpuChart').getContext('2d');
+        window.diskIOChart = diskIOChart;
+        var cpuEl = document.getElementById('cpuChart');
+        if (!cpuEl) { console.warn('cpuChart canvas not found'); return; }
+        var cpuCtx = cpuEl.getContext('2d');
         cpuChart = new Chart(cpuCtx, {
             type: 'line',
             data: {
@@ -1910,6 +1948,10 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                 layout: { padding: { top: 10, bottom: 10, left: 10, right: 10 } }
             }
         });
+        window.cpuChart = cpuChart;
+        } catch (e) {
+            console.error('setupCharts error:', e);
+        }
 
         // Redraw charts on tab shown
         $("a[data-toggle='tab']").on('shown.bs.tab', function (e) {
@@ -1942,19 +1984,20 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     $scope.refreshSSHLogs();
     
     $timeout(function() {
-        // Check if user is admin before setting up charts
+        // Always create charts so Traffic/Disk IO/CPU tabs have something to show; admin check only affects hideSystemCharts
+        setupCharts();
         $http.get('/base/getAdminStatus').then(function(response) {
-            if (response.data && response.data.admin === 1) {
-                setupCharts();
+            if (response.data && (response.data.admin === 1 || response.data.admin === true)) {
+                $scope.hideSystemCharts = false;
             } else {
                 $scope.hideSystemCharts = true;
             }
-        }).catch(function() {
-            // If error, assume non-admin and hide charts
+        }).catch(function(err) {
+            console.warn('getAdminStatus failed:', err);
             $scope.hideSystemCharts = true;
         });
         
-        // Start polling for all stats
+        // Start polling for all stats (data feeds charts)
         function pollAll() {
             pollDashboardStats();
             pollTraffic();
@@ -1964,7 +2007,7 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
             $timeout(pollAll, pollInterval);
         }
         pollAll();
-    }, 500);
+    }, 800);
 
     // SSH User Activity Modal
     $scope.showSSHActivityModal = false;

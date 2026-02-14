@@ -21,7 +21,7 @@ check_OS() {
 	  Server_OS="AlmaLinux"
 	elif grep -q -E "CloudLinux 7|CloudLinux 8" /etc/os-release ; then
 	  Server_OS="CloudLinux"
-	elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04|Ubuntu 20.10|Ubuntu 22.04" /etc/os-release ; then
+	elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04|Ubuntu 20.10|Ubuntu 22.04|Ubuntu 24.04" /etc/os-release ; then
 	  Server_OS="Ubuntu"
 	elif grep -q -E "Rocky Linux" /etc/os-release ; then
 	  Server_OS="RockyLinux"
@@ -29,7 +29,7 @@ check_OS() {
 	  Server_OS="openEuler"
 	else
 	  echo -e "Unable to detect your system..."
-	  echo -e "\nCyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, CentOS 7, CentOS 8, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03...\n"
+	  echo -e "\nCyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, CentOS 7, CentOS 8, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03...\n"
   	  exit
 	fi
 
