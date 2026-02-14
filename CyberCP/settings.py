@@ -13,15 +13,15 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 import os
 from django.utils.translation import gettext_lazy as _
 
-# Patreon OAuth Configuration for Paid Plugins
-# SECURITY: Environment variables take precedence. Hardcoded values are fallback for this server only.
-# For repository version, use empty defaults and set via environment variables.
-PATREON_CLIENT_ID = os.environ.get('PATREON_CLIENT_ID', 'LFXeXUcfrM8MeVbUcmGbB7BgeJ9RzZi2v_H9wL4d9vG6t1dV4SUnQ4ibn9IYzvt7')
-PATREON_CLIENT_SECRET = os.environ.get('PATREON_CLIENT_SECRET', 'APuJ5qoL3TLFmNnGDVkgl-qr3sCzp2CQsKfslBbp32hhnhlD0y6-ZcSCkb_FaUJv')
+# Patreon OAuth (optional): for paid-plugin verification via Patreon membership.
+# Set these only if you use Patreon-gated plugins; leave unset otherwise.
+# Use environment variables; no defaults so the repo stays generic and safe to push to GitHub.
+PATREON_CLIENT_ID = os.environ.get('PATREON_CLIENT_ID', '')
+PATREON_CLIENT_SECRET = os.environ.get('PATREON_CLIENT_SECRET', '')
 PATREON_CREATOR_ID = os.environ.get('PATREON_CREATOR_ID', '')
-PATREON_MEMBERSHIP_TIER_ID = os.environ.get('PATREON_MEMBERSHIP_TIER_ID', '27789984')  # CyberPanel Paid Plugin tier
-PATREON_CREATOR_ACCESS_TOKEN = os.environ.get('PATREON_CREATOR_ACCESS_TOKEN', 'niAHRiI9SgrRCMmaf5exoXXphy3RWXWsX4kO5Yv9SQI')
-PATREON_CREATOR_REFRESH_TOKEN = os.environ.get('PATREON_CREATOR_REFRESH_TOKEN', 'VZlCQoPwJUr4NLni1N82-K_CpJHTAOYUOCx2PujdjQg')
+PATREON_MEMBERSHIP_TIER_ID = os.environ.get('PATREON_MEMBERSHIP_TIER_ID', '')
+PATREON_CREATOR_ACCESS_TOKEN = os.environ.get('PATREON_CREATOR_ACCESS_TOKEN', '')
+PATREON_CREATOR_REFRESH_TOKEN = os.environ.get('PATREON_CREATOR_REFRESH_TOKEN', '')
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -36,6 +36,22 @@ SECRET_KEY = 'xr%j*p!*$0d%(-(e%@-*hyoz4$f%y77coq0u)6pwmjg4)q&19f'
 DEBUG = False
 
 ALLOWED_HOSTS = ['*']
+
+# When the panel is behind a reverse proxy (e.g. https://panel.example.com -> http://backend:port),
+# the browser sends Origin/Referer with the public domain while the proxy may send Host as the
+# backend address. Django then fails CSRF (Referer vs Host mismatch) and POSTs get 403.
+# Set CSRF_TRUSTED_ORIGINS to your public origin(s) so CSRF passes. Optional; leave unset if
+# you access the panel by IP:port only.
+# Example: export CSRF_TRUSTED_ORIGINS="https://panel.example.com,http://panel.example.com"
+_csrf_origins_env = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
+_csrf_origins_list = [o.strip() for o in _csrf_origins_env.split(',') if o.strip()]
+# Add default trusted origins for common CyberPanel domains
+_default_origins = [
+    'https://cyberpanel.newstargeted.com',
+    'http://cyberpanel.newstargeted.com',
+]
+# Merge environment and default origins, avoiding duplicates
+CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(_csrf_origins_list + _default_origins))
 
 # Application definition
 

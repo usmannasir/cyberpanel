@@ -26,9 +26,10 @@ app.controller('createFTPAccount', function ($scope, $http) {
                     $sel.select2();
                     $sel.on('select2:select', function (e) {
                         var data = e.params.data;
-                        $scope.ftpDomain = data.text;
-                        $scope.ftpDetails = false;
-                        $scope.$apply();
+                        $scope.$evalAsync(function () {
+                            $scope.ftpDomain = data.text;
+                            $scope.ftpDetails = false;
+                        });
                         $(".ftpDetails, .account-details").show();
                     });
                 } else {
@@ -42,9 +43,11 @@ app.controller('createFTPAccount', function ($scope, $http) {
         }
         function initNativeSelect() {
             $('.create-ftp-acct-select').off('select2:select').on('change', function () {
-                $scope.ftpDomain = $(this).val();
-                $scope.ftpDetails = ($scope.ftpDomain && $scope.ftpDomain !== '') ? false : true;
-                $scope.$apply();
+                var val = $(this).val();
+                $scope.$evalAsync(function () {
+                    $scope.ftpDomain = val;
+                    $scope.ftpDetails = (val && val !== '') ? false : true;
+                });
                 $(".ftpDetails, .account-details").show();
             });
         }

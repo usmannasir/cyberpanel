@@ -156,6 +156,14 @@ function findFileExtension(fileName) {
     $scope.showUploadBox = function () {
         $("#uploadBox").modal();
     };
+    $(document).on("hide.bs.modal", ".modal", function () {
+        var modal = this;
+        if (document.activeElement && modal.contains(document.activeElement)) {
+            var trigger = document.getElementById("uploadTriggerBtn");
+            if (trigger && modal.id === "uploadBox") { trigger.focus(); }
+            else { document.activeElement.blur(); }
+        }
+    });
     
     $scope.showHTMLEditorModal = function (MainFM = 0) {
         $scope.fileInEditor = allFilesAndFolders[0];

@@ -82,7 +82,12 @@ class FirewallManager:
                             None, 'admin')
             return proc.render()
 
-    def getCurrentRules(self, userID = None):
+    def getCurrentRules(self, userID=None, data=None):
+        """
+        Get firewall rules with optional pagination.
+        data may contain: page (1-based), page_size (default 10).
+        Returns: fetchStatus 1, data (JSON array), total_count, page, page_size.
+        """
         try:
             currentACL = ACLManager.loadedACL(userID)
 
@@ -91,58 +96,69 @@ class FirewallManager:
             else:
                 return ACLManager.loadErrorJson('fetchStatus', 0)
 
-            rules = FirewallRules.objects.all()
+            rules_qs = FirewallRules.objects.all().order_by('id')
 
             # Ensure CyberPanel port 7080 rule exists in database for visibility
-            cyberpanel_rule_exists = False
-            for rule in rules:
-                if rule.port == '7080':
-                    cyberpanel_rule_exists = True
-                    break
-            
+            cyberpanel_rule_exists = rules_qs.filter(port='7080').exists()
             if not cyberpanel_rule_exists:
-                # Create database entry for port 7080 (already enabled in system firewall)
                 try:
-                    cyberpanel_rule = FirewallRules(
+                    FirewallRules(
                         name="CyberPanel Admin",
                         proto="tcp",
                         port="7080",
                         ipAddress="0.0.0.0/0"
-                    )
-                    cyberpanel_rule.save()
+                    ).save()
                     logging.CyberCPLogFileWriter.writeToFile("Added CyberPanel port 7080 to firewall database for UI visibility")
                 except Exception as e:
                     logging.CyberCPLogFileWriter.writeToFile(f"Failed to add CyberPanel port 7080 to database: {str(e)}")
+                rules_qs = FirewallRules.objects.all().order_by('id')
 
-            # Refresh rules after potential creation
-            rules = FirewallRules.objects.all()
+            total_count = rules_qs.count()
+            page = 1
+            page_size = 10
+            if data:
+                try:
+                    page = max(1, int(data.get('page', 1)))
+                except (TypeError, ValueError):
+                    pass
+                try:
+                    page_size = max(1, min(100, int(data.get('page_size', 10))))
+                except (TypeError, ValueError):
+                    pass
+
+            start = (page - 1) * page_size
+            end = start + page_size
+            rules = list(rules_qs[start:end])
 
             json_data = "["
-            checker = 0
-
-            for items in rules:
+            for i, items in enumerate(rules):
                 dic = {
-                       'id': items.id,
-                       'name': items.name,
-                       'proto': items.proto,
-                       'port': items.port,
-                       'ipAddress': items.ipAddress,
-                       }
+                    'id': items.id,
+                    'name': items.name,
+                    'proto': items.proto,
+                    'port': items.port,
+                    'ipAddress': items.ipAddress,
+                }
+                if i > 0:
+                    json_data += ','
+                json_data += json.dumps(dic)
+            json_data += ']'
 
-                if checker == 0:
-                    json_data = json_data + json.dumps(dic)
-                    checker = 1
-                else:
-                    json_data = json_data + ',' + json.dumps(dic)
-
-            json_data = json_data + ']'
-            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
-            return HttpResponse(final_json)
+            final_json = json.dumps({
+                'status': 1,
+                'fetchStatus': 1,
+                'error_message': "None",
+                "data": json_data,
+                "total_count": total_count,
+                "page": page,
+                "page_size": page_size
+            })
+            return HttpResponse(final_json, content_type='application/json')
 
         except BaseException as msg:
             final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
-            return HttpResponse(final_json)
+            return HttpResponse(final_json, content_type='application/json')
 
     def addRule(self, userID = None, data = None):
         try:
@@ -1841,9 +1857,11 @@ class FirewallManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def getBannedIPs(self, userID=None):
+    def getBannedIPs(self, userID=None, data=None):
         """
-        Get list of banned IP addresses from database, or fall back to JSON file.
+        Get list of banned IP addresses with optional pagination.
+        data may contain: page (1-based), page_size (default 10).
+        Returns: status 1, bannedIPs (array), total_count, page, page_size.
         """
         try:
             admin = Administrator.objects.get(pk=userID)
@@ -1876,12 +1894,10 @@ class FirewallManager:
                     if ip_data['active']:
                         active_banned_ips.append(ip_data)
             except (ImportError, AttributeError) as e:
-                # Fall back to JSON file when BannedIP model unavailable
                 import plogical.CyberCPLogFileWriter as _log
                 _log.CyberCPLogFileWriter.writeToFile('getBannedIPs: using JSON fallback (%s)' % str(e))
                 active_banned_ips = []
 
-            # If DB returns nothing (or model not available), merge in JSON fallback
             if not active_banned_ips:
                 banned_ips, _ = self._load_banned_ips_store()
                 for b in banned_ips:
@@ -1917,7 +1933,30 @@ class FirewallManager:
                         'active': True
                     })
 
-            final_dic = {'status': 1, 'bannedIPs': active_banned_ips}
+            total_count = len(active_banned_ips)
+            page = 1
+            page_size = 10
+            if data:
+                try:
+                    page = max(1, int(data.get('page', 1)))
+                except (TypeError, ValueError):
+                    pass
+                try:
+                    page_size = max(1, min(100, int(data.get('page_size', 10))))
+                except (TypeError, ValueError):
+                    pass
+
+            start = (page - 1) * page_size
+            end = start + page_size
+            paged_list = active_banned_ips[start:end]
+
+            final_dic = {
+                'status': 1,
+                'bannedIPs': paged_list,
+                'total_count': total_count,
+                'page': page,
+                'page_size': page_size
+            }
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json, content_type='application/json')
 
@@ -1926,11 +1965,12 @@ class FirewallManager:
             logging.CyberCPLogFileWriter.writeToFile('Error in getBannedIPs: %s' % str(msg))
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
-            return HttpResponse(final_json)
+            return HttpResponse(final_json, content_type='application/json')
 
     def addBannedIP(self, userID=None, data=None):
         """
-        Add a banned IP address
+        Add a banned IP address. Uses database (BannedIP model) as primary storage;
+        JSON file is used only when the model is unavailable (fallback). Export/Import use JSON format.
         """
         try:
             admin = Administrator.objects.get(pk=userID)
@@ -1940,7 +1980,7 @@ class FirewallManager:
 
             ip = data.get('ip', '').strip()
             reason = data.get('reason', '').strip()
-            duration = data.get('duration', '24h')
+            duration = (data.get('duration') or '24h').strip().lower()
 
             if not ip or not reason:
                 final_dic = {'status': 0, 'error_message': 'IP address and reason are required', 'error': 'IP address and reason are required'}
@@ -1954,66 +1994,102 @@ class FirewallManager:
                 final_dic = {'status': 0, 'error_message': 'Invalid IP address format', 'error': 'Invalid IP address format'}
                 return HttpResponse(json.dumps(final_dic), content_type='application/json')
 
-            # Calculate expiration time
             current_time = time.time()
+            duration_map = {
+                '1h': 3600,
+                '24h': 86400,
+                '7d': 604800,
+                '30d': 2592000
+            }
             if duration == 'permanent':
-                expires = 'Never'
+                expires_ts = None  # Never expires
             else:
-                duration_map = {
-                    '1h': 3600,
-                    '24h': 86400,
-                    '7d': 604800,
-                    '30d': 2592000
-                }
                 duration_seconds = duration_map.get(duration, 86400)
-                expires = current_time + duration_seconds
+                expires_ts = int(current_time) + duration_seconds
 
-            # Load existing banned IPs
-            banned_ips, _ = self._load_banned_ips_store()
+            # Prefer database (BannedIP model) for primary storage
+            try:
+                from firewall.models import BannedIP
+            except Exception as e:
+                BannedIP = None
+                logging.CyberCPLogFileWriter.writeToFile('addBannedIP: BannedIP model unavailable, using JSON fallback: %s' % str(e))
 
-            # Check if IP is already banned
-            for banned_ip in banned_ips:
-                if banned_ip.get('ip') == ip and banned_ip.get('active', True):
+            if BannedIP is not None:
+                # Primary path: save to database
+                existing = BannedIP.objects.filter(ip_address=ip, active=True).first()
+                if existing:
                     msg = 'IP address %s is already banned' % ip
                     final_dic = {'status': 0, 'error_message': msg, 'error': msg}
                     return HttpResponse(json.dumps(final_dic), content_type='application/json')
+                try:
+                    new_ban = BannedIP(
+                        ip_address=ip,
+                        reason=reason,
+                        duration=duration,
+                        expires=expires_ts,
+                        active=True
+                    )
+                    new_ban.save()
+                except Exception as e:
+                    logging.CyberCPLogFileWriter.writeToFile('addBannedIP: failed to save to DB: %s' % str(e))
+                    final_dic = {'status': 0, 'error_message': 'Failed to save banned IP to database: %s' % str(e), 'error': str(e)}
+                    return HttpResponse(json.dumps(final_dic), content_type='application/json')
+            else:
+                # Fallback: JSON store (only when DB unavailable)
+                banned_ips, _ = self._load_banned_ips_store()
+                for banned_ip in banned_ips:
+                    if banned_ip.get('ip') == ip and banned_ip.get('active', True):
+                        msg = 'IP address %s is already banned' % ip
+                        final_dic = {'status': 0, 'error_message': msg, 'error': msg}
+                        return HttpResponse(json.dumps(final_dic), content_type='application/json')
+                new_banned_ip = {
+                    'id': int(current_time),
+                    'ip': ip,
+                    'reason': reason,
+                    'duration': duration,
+                    'banned_on': current_time,
+                    'expires': 'Never' if expires_ts is None else expires_ts,
+                    'active': True
+                }
+                banned_ips.append(new_banned_ip)
+                try:
+                    self._save_banned_ips_store(banned_ips)
+                except Exception as e:
+                    logging.CyberCPLogFileWriter.writeToFile('addBannedIP: failed to save JSON store: %s' % str(e))
+                    final_dic = {'status': 0, 'error_message': 'Failed to save banned IP: %s' % str(e), 'error': str(e)}
+                    return HttpResponse(json.dumps(final_dic), content_type='application/json')
 
-            # Add new banned IP
-            new_banned_ip = {
-                'id': int(time.time()),
-                'ip': ip,
-                'reason': reason,
-                'duration': duration,
-                'banned_on': current_time,
-                'expires': expires,
-                'active': True
-            }
-            banned_ips.append(new_banned_ip)
-
-            # Save to file
-            self._save_banned_ips_store(banned_ips)
-
-            # Apply firewall rule using FirewallUtilities (runs with proper privileges via ProcessUtilities/lscpd)
+            # Apply firewall rule (same for DB and JSON path)
             try:
                 block_ok, block_msg = FirewallUtilities.blockIP(ip, reason)
                 if not block_ok:
-                    # Rollback: remove the IP we just added from the store
-                    banned_ips_rollback = [b for b in banned_ips if b.get('ip') != ip or not b.get('active', True)]
-                    if len(banned_ips_rollback) < len(banned_ips):
-                        self._save_banned_ips_store(banned_ips_rollback)
+                    if BannedIP is not None:
+                        try:
+                            BannedIP.objects.filter(ip_address=ip, active=True).delete()
+                        except Exception:
+                            pass
+                    else:
+                        banned_ips_rollback = [b for b in banned_ips if b.get('ip') != ip or not b.get('active', True)]
+                        if len(banned_ips_rollback) < len(banned_ips):
+                            self._save_banned_ips_store(banned_ips_rollback)
                     logging.CyberCPLogFileWriter.writeToFile('Failed to add firewalld rule for %s: %s' % (ip, block_msg))
                     err_msg = block_msg or 'Failed to add firewall rule'
                     final_dic = {'status': 0, 'error_message': err_msg, 'error': err_msg}
                     return HttpResponse(json.dumps(final_dic), content_type='application/json')
-                logging.CyberCPLogFileWriter.writeToFile(f'Banned IP {ip} with reason: {reason}')
+                logging.CyberCPLogFileWriter.writeToFile('Banned IP %s with reason: %s' % (ip, reason))
             except Exception as e:
-                # Rollback store on any exception
-                try:
-                    banned_ips_rollback = [b for b in banned_ips if b.get('ip') != ip or not b.get('active', True)]
-                    if len(banned_ips_rollback) < len(banned_ips):
-                        self._save_banned_ips_store(banned_ips_rollback)
-                except Exception:
-                    pass
+                if BannedIP is not None:
+                    try:
+                        BannedIP.objects.filter(ip_address=ip, active=True).delete()
+                    except Exception:
+                        pass
+                else:
+                    try:
+                        banned_ips_rollback = [b for b in banned_ips if b.get('ip') != ip or not b.get('active', True)]
+                        if len(banned_ips_rollback) < len(banned_ips):
+                            self._save_banned_ips_store(banned_ips_rollback)
+                    except Exception:
+                        pass
                 logging.CyberCPLogFileWriter.writeToFile('Failed to add firewalld rule for %s: %s' % (ip, str(e)))
                 err_msg = 'Firewall command failed: %s' % str(e)
                 final_dic = {'status': 0, 'error_message': err_msg, 'error': err_msg}

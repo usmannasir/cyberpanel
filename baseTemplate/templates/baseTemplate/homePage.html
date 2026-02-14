@@ -1357,11 +1357,25 @@
         // Add active class to clicked tab
         tabButton.classList.add('active');
         
-        // Trigger chart resize if switching to chart tabs
+        // Chart tabs: ensure charts exist (lazy init on first click), then resize/update
         if (tabId === 'traffic' || tabId === 'diskio' || tabId === 'cpu-usage') {
+            if (typeof window.cyberPanelSetupChartsIfNeeded === 'function') {
+                window.cyberPanelSetupChartsIfNeeded();
+            }
             setTimeout(() => {
+                var ch;
+                if (tabId === 'traffic' && (ch = window.trafficChart) && typeof ch.resize === 'function') {
+                    ch.resize();
+                    if (typeof ch.update === 'function') ch.update();
+                } else if (tabId === 'diskio' && (ch = window.diskIOChart) && typeof ch.resize === 'function') {
+                    ch.resize();
+                    if (typeof ch.update === 'function') ch.update();
+                } else if (tabId === 'cpu-usage' && (ch = window.cpuChart) && typeof ch.resize === 'function') {
+                    ch.resize();
+                    if (typeof ch.update === 'function') ch.update();
+                }
                 window.dispatchEvent(new Event('resize'));
-            }, 100);
+            }, 200);
         }
     }
 
