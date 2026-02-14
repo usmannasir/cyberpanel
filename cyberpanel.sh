@@ -117,6 +117,11 @@ detect_os() {
         OS_FAMILY="rhel"
         PACKAGE_MANAGER="yum"
         print_status "Detected: Rocky Linux 8"
+    elif echo $OUTPUT | grep -q "Ubuntu 24.04" ; then
+        SERVER_OS="Ubuntu2404"
+        OS_FAMILY="debian"
+        PACKAGE_MANAGER="apt"
+        print_status "Detected: Ubuntu 24.04"
     elif echo $OUTPUT | grep -q "Ubuntu 22.04" ; then
         SERVER_OS="Ubuntu2204"
         OS_FAMILY="debian"
@@ -127,6 +132,11 @@ detect_os() {
         OS_FAMILY="debian"
         PACKAGE_MANAGER="apt"
         print_status "Detected: Ubuntu 20.04"
+    elif echo $OUTPUT | grep -q "Debian GNU/Linux 13" ; then
+        SERVER_OS="Debian13"
+        OS_FAMILY="debian"
+        PACKAGE_MANAGER="apt"
+        print_status "Detected: Debian GNU/Linux 13"
     elif echo $OUTPUT | grep -q "Debian GNU/Linux 12" ; then
         SERVER_OS="Debian12"
         OS_FAMILY="debian"
@@ -139,7 +149,7 @@ detect_os() {
         print_status "Detected: Debian GNU/Linux 11"
     else
         print_status "ERROR: Unsupported OS detected"
-        print_status "Supported OS: AlmaLinux 8/9/10, CentOS 8/9, Rocky Linux 8/9, Ubuntu 20.04/22.04, Debian 11/12"
+        print_status "Supported OS: AlmaLinux 8/9/10, CentOS 8/9, Rocky Linux 8/9, Ubuntu 20.04/22.04/24.04, Debian 11/12/13"
         return 1
     fi
     

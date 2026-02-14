@@ -6,14 +6,22 @@
 OUTPUT=$(cat /etc/*release)
 
 # Detect OS and set appropriate variables
-if echo $OUTPUT | grep -q "AlmaLinux 9" ; then
+if echo $OUTPUT | grep -q "AlmaLinux 10" ; then
+    echo -e "\nDetecting AlmaLinux 10...\n"
+    SERVER_OS="AlmaLinux10"
+    PKG_MGR="dnf"
+elif echo $OUTPUT | grep -q "AlmaLinux 9" ; then
     echo -e "\nDetecting AlmaLinux 9...\n"
     SERVER_OS="AlmaLinux9"
     PKG_MGR="dnf"
 elif echo $OUTPUT | grep -q "AlmaLinux 8" ; then
     echo -e "\nDetecting AlmaLinux 8...\n"
     SERVER_OS="AlmaLinux8"
-    PKG_MGR="yum"
+    PKG_MGR="dnf"
+elif echo $OUTPUT | grep -q "Ubuntu 24.04" ; then
+    echo -e "\nDetecting Ubuntu 24.04...\n"
+    SERVER_OS="Ubuntu2404"
+    PKG_MGR="apt"
 elif echo $OUTPUT | grep -q "Ubuntu 22.04" ; then
     echo -e "\nDetecting Ubuntu 22.04...\n"
     SERVER_OS="Ubuntu2204"
@@ -28,8 +36,8 @@ elif echo $OUTPUT | grep -q "CentOS Linux 8" ; then
     PKG_MGR="yum"
 else
     echo -e "\nUnsupported OS detected. This script supports:\n"
-    echo -e "AlmaLinux: 8, 9\n"
-    echo -e "Ubuntu: 20.04, 22.04\n"
+    echo -e "AlmaLinux: 8, 9, 10\n"
+    echo -e "Ubuntu: 20.04, 22.04, 24.04\n"
     echo -e "CentOS: 8\n"
     exit 1
 fi
