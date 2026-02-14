@@ -1,9 +1,17 @@
 import sys
+import os
+import re
+
+# Ensure install dir is on path for ols_binaries_config
+_install_dir = os.path.dirname(os.path.abspath(__file__))
+if _install_dir not in sys.path:
+    sys.path.insert(0, _install_dir)
+import ols_binaries_config
+
 import subprocess
 import shutil
 import installLog as logging
 import argparse
-import os
 import errno
 import shlex
 from firewallUtilities import FirewallUtilities
@@ -1176,30 +1184,7 @@ class preFlightsChecks:
             platform = self.detectPlatform()
             self.stdOut(f"Detected platform: {platform}", 1)
 
-            # Platform-specific URLs and checksums (OpenLiteSpeed 1.8.5+ preferred from repo; fallback static build)
-            # Module Build Date: December 28, 2025 - v2.2.0 Brute Force with Progressive Throttle
-            BINARY_CONFIGS = {
-                'rhel8': {
-                    'url': 'https://cyberpanel.net/openlitespeed-phpconfig-x86_64-rhel8-static',
-                    'sha256': '6ce688a237615102cc1603ee1999b3cede0ff3482d31e1f65705e92396d34b3a',
-                    'module_url': 'https://cyberpanel.net/binaries/rhel8/cyberpanel_ols.so',
-                    'module_sha256': '7c33d89c7fbcd3ed7b0422fee3f49b5e041713c2c2b7316a5774f6defa147572'
-                },
-                'rhel9': {
-                    'url': 'https://cyberpanel.net/openlitespeed-phpconfig-x86_64-rhel9-static',
-                    'sha256': '709093d99d5d3e789134c131893614968e17eefd9ade2200f811d9b076b2f02e',
-                    'module_url': 'https://cyberpanel.net/binaries/rhel9/cyberpanel_ols.so',
-                    'module_sha256': 'ae65337e2d13babc0c675bb4264d469daffa2efb7627c9bf39ac59e42e3ebede'
-                },
-                'ubuntu': {
-                    'url': 'https://cyberpanel.net/openlitespeed-phpconfig-x86_64-ubuntu-static',
-                    'sha256': '89aaf66474e78cb3c1666784e0e7a417550bd317e6ab148201bdc318d36710cb',
-                    'module_url': 'https://cyberpanel.net/binaries/ubuntu/cyberpanel_ols.so',
-                    'module_sha256': '62978ede1f174dd2885e5227a3d9cc463d0c27acd77cfc23743d7309ee0c54ea'
-                }
-            }
-
-            config = BINARY_CONFIGS.get(platform)
+            config = ols_binaries_config.BINARY_CONFIGS.get(platform)
             if not config:
                 self.stdOut(f"ERROR: No binaries available for platform {platform}", 1)
                 self.stdOut("Skipping custom binary installation", 1)
@@ -1329,6 +1314,24 @@ class preFlightsChecks:
                     self.stdOut("=" * 50, 1)
                     # Configure module after installation
                     self.configureCustomModule()
+                    # Enable Auto-SSL if not already configured
+                    conf_path = '/usr/local/lsws/conf/httpd_config.conf'
+                    try:
+                        if os.path.exists(conf_path):
+                            with open(conf_path, 'r') as f:
+                                content = f.read()
+                            if 'autoSSL' not in content:
+                                content = re.sub(
+                                    r'(adminEmails\s+\S+)',
+                                    r'\1\nautoSSL                   1\nacmeEmail                 admin@cyberpanel.net',
+                                    content,
+                                    count=1
+                                )
+                                with open(conf_path, 'w') as f:
+                                    f.write(content)
+                                self.stdOut("Auto-SSL enabled in httpd_config.conf", 1)
+                    except Exception as e:
+                        self.stdOut(f"WARNING: Could not enable Auto-SSL: {e}", 1)
                     return True
 
             self.stdOut("ERROR: Installation verification failed", 1)
