@@ -7,6 +7,7 @@ urlpatterns = [
     re_path(r'^getAdminStatus$', views.getAdminStatus, name='getSystemInformation'),
     re_path(r'^getLoadAverage$', views.getLoadAverage, name='getLoadAverage'),
     re_path(r'^versionManagment$', views.versionManagment, name='versionManagment'),
+    re_path(r'^versionManagement$', views.versionManagment, name='versionManagement'),
     re_path(r'^design$', views.design, name='design'),
     re_path(r'^getthemedata$', views.getthemedata, name='getthemedata'),
     re_path(r'^upgrade$', views.upgrade, name='upgrade'),
