@@ -1,5 +1,9 @@
 import sys
 sys.path.append('/usr/local/CyberCP')
+_install_dir = '/usr/local/CyberCP/install'
+if _install_dir not in sys.path:
+    sys.path.insert(0, _install_dir)
+import ols_binaries_config
 from plogical import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
@@ -18,22 +22,8 @@ class modSec:
     tempRulesFile = "/home/cyberpanel/tempModSecRules"
     mirrorPath = "cyberpanel.net"
 
-    # Compatible ModSecurity binaries (built against custom OLS headers)
-    # These prevent ABI incompatibility crashes (Signal 11/SIGSEGV)
-    MODSEC_COMPATIBLE = {
-        'rhel8': {
-            'url': 'https://cyberpanel.net/mod_security-compatible-rhel8.so',
-            'sha256': 'bbbf003bdc7979b98f09b640dffe2cbbe5f855427f41319e4c121403c05837b2'
-        },
-        'rhel9': {
-            'url': 'https://cyberpanel.net/mod_security-compatible-rhel.so',
-            'sha256': '19deb2ffbaf1334cf4ce4d46d53f747a75b29e835bf5a01f91ebcc0c78e98629'
-        },
-        'ubuntu': {
-            'url': 'https://cyberpanel.net/mod_security-compatible-ubuntu.so',
-            'sha256': 'ed02c813136720bd4b9de5925f6e41bdc8392e494d7740d035479aaca6d1e0cd'
-        }
-    }
+    # Compatible ModSecurity binaries (from ols_binaries_config - v2.4.4)
+    MODSEC_COMPATIBLE = ols_binaries_config.MODSEC_COMPATIBLE
 
     @staticmethod
     def detectPlatform():
