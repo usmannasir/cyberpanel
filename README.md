@@ -88,7 +88,7 @@ Fast • Secure • Scalable — Simplify hosting management with style.
 * ⚠️ **Security fixes only**: PHP 8.3, 8.2, 8.1
 * ❌ **EOL / Deprecated**: PHP 8.0, 7.4, 7.1, 7.2, 7.3 (no longer supported)
 
-Third-party repositories (Remi, Ondrej) may provide older or niche versions; verify compatibility before use. See [php.net/supported-versions](https://www.php.net/supported-versions.php).
+Third-party repositories may provide older or niche versions; verify compatibility before use. RHEL/Alma/Rocky: [Remi RPM](https://rpms.remirepo.net/). Ubuntu/Debian: [Ondrej PPA](https://launchpad.net/~ondrej/+archive/ubuntu/php). See [php.net/supported-versions](https://www.php.net/supported-versions.php).
 
 ---
 
