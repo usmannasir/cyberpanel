@@ -114,7 +114,7 @@
                     $scope.forwardSuccess = true;
                     $scope.couldNotConnect = true;
                     $scope.notifyBox = true;
-                    if (typeof new PNotify === 'function') {
+                    if (typeof PNotify === 'function') {
                         new PNotify({ title: 'Success!', text: 'Changes applied.', type: 'success' });
                     }
                     $scope.showEmailDetails();
@@ -126,7 +126,7 @@
                     $scope.forwardSuccess = true;
                     $scope.couldNotConnect = true;
                     $scope.notifyBox = false;
-                    if (typeof new PNotify === 'function') {
+                    if (typeof PNotify === 'function') {
                         new PNotify({ title: 'Error!', text: response.data.error_message || 'Error', type: 'error' });
                     }
                 }

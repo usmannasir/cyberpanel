@@ -207,6 +207,8 @@
 
     /* Rules Panel */
     .rules-panel {
+        position: relative;
+        z-index: 1;
         background: var(--bg-secondary, white);
         border-radius: 16px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 10px 40px rgba(0,0,0,0.08);
@@ -565,6 +567,121 @@
         100% { transform: rotate(360deg); }
     }
 
+    /* Pagination */
+    .pagination-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+        padding: 1rem 2rem;
+        border-top: 1px solid var(--border-color, #e8e9ff);
+        background: var(--bg-tertiary, #f8f9ff);
+        font-size: 0.875rem;
+        color: var(--text-secondary, #64748b);
+    }
+    .pagination-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .pagination-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .pagination-controls button {
+        padding: 0.4rem 0.75rem;
+        border-radius: 6px;
+        border: 1px solid var(--border-color, #e2e8f0);
+        background: var(--bg-secondary, white);
+        color: var(--text-primary, #1e293b);
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .pagination-controls button:hover:not(:disabled) {
+        background: var(--firewall-accent, #ef4444);
+        color: white;
+        border-color: var(--firewall-accent, #ef4444);
+    }
+    .pagination-controls button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .pagination-controls .page-num {
+        min-width: 2rem;
+        text-align: center;
+        font-weight: 600;
+        color: var(--firewall-accent, #ef4444);
+    }
+    .pagination-size {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        margin-left: 1rem;
+    }
+    .pagination-size select {
+        min-width: 4rem;
+    }
+    .pagination-size-btns {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        flex-wrap: wrap;
+    }
+    .pagination-size-btn {
+        min-width: 2rem;
+        padding: 0.35rem 0.5rem;
+        border: 1px solid var(--border-color, #e2e8f0);
+        border-radius: 4px;
+        background: var(--bg-secondary, white);
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+    }
+    .pagination-size-btn:hover {
+        border-color: var(--firewall-accent, #ef4444);
+        color: var(--firewall-accent, #ef4444);
+    }
+    .pagination-size-btn.active {
+        background: var(--firewall-accent, #ef4444);
+        color: white;
+        border-color: var(--firewall-accent, #ef4444);
+    }
+    .pagination-goto {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .pagination-goto-label {
+        font-size: 0.8rem;
+        color: var(--text-secondary, #64748b);
+        white-space: nowrap;
+    }
+    .pagination-goto-input {
+        width: 3.5rem;
+        padding: 0.35rem 0.5rem;
+        border: 1px solid var(--border-color, #e2e8f0);
+        border-radius: 4px;
+        font-size: 0.875rem;
+        text-align: center;
+    }
+    .pagination-goto-btn {
+        padding: 0.35rem 0.6rem;
+        border-radius: 4px;
+        border: 1px solid var(--border-color, #e2e8f0);
+        background: var(--bg-secondary, white);
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+    }
+    .pagination-goto-btn:hover {
+        background: var(--firewall-accent, #ef4444);
+        color: white;
+        border-color: var(--firewall-accent, #ef4444);
+    }
+
     /* Responsive */
     @media (max-width: 1024px) {
         .rule-form {
@@ -606,7 +723,7 @@
         }
     }
 
-    /* Tab Navigation Styles */
+    /* Tab Navigation – always on top, clearly clickable */
     .tab-navigation {
         display: flex;
         background: var(--bg-secondary, white);
@@ -615,6 +732,9 @@
         margin-bottom: 2rem;
         box-shadow: 0 2px 8px var(--shadow-light, rgba(0,0,0,0.1));
         border: 1px solid var(--border-color, #e8e9ff);
+        position: relative;
+        z-index: 100;
+        isolation: isolate;
     }
 
     .tab-button {
@@ -627,16 +747,26 @@
         font-weight: 500;
         font-size: 0.9rem;
         cursor: pointer;
-        transition: all 0.3s ease;
+        pointer-events: auto;
+        transition: all 0.2s ease;
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 0.5rem;
+        text-decoration: none;
+        font-family: inherit;
+        -webkit-appearance: none;
+        appearance: none;
     }
 
     .tab-button:hover {
         background: var(--bg-hover, #f8f9ff);
         color: var(--accent-color, #5b5fcf);
+    }
+
+    .tab-button:focus {
+        outline: 2px solid var(--accent-color, #5b5fcf);
+        outline-offset: 2px;
     }
 
     .tab-button.tab-active {
@@ -647,10 +777,13 @@
 
     .tab-button i {
         font-size: 1rem;
+        pointer-events: none;
     }
 
-    /* Banned IPs Panel Styles */
+    /* Banned IPs Panel – below tab bar (z-index) */
     .banned-ips-panel {
+        position: relative;
+        z-index: 1;
         background: var(--bg-secondary, white);
         border-radius: 16px;
         box-shadow: 0 4px 12px var(--shadow-medium, rgba(0,0,0,0.15));
@@ -1068,26 +1201,20 @@
         </div>
     </div>
 
-    <!-- Tab Navigation -->
-    <div class="tab-navigation">
-        <button type="button" 
-                ng-click="activeTab = 'rules'" 
-                ng-class="{'tab-active': activeTab === 'rules'}"
-                class="tab-button">
+    <!-- Tab Navigation: buttons with native fallback so clicks always work -->
+    <div class="tab-navigation" role="tablist" id="firewall-tab-nav">
+        <button type="button" class="tab-button" role="tab" data-tab="rules" title="{% trans 'Firewall Rules' %}" ng-class="{'tab-active': activeTab === 'rules'}" ng-click="setFirewallTab('rules')">
             <i class="fas fa-list-alt"></i>
             {% trans "Firewall Rules" %}
         </button>
-        <button type="button" 
-                ng-click="activeTab = 'banned'; populateBannedIPs();" 
-                ng-class="{'tab-active': activeTab === 'banned'}"
-                class="tab-button">
+        <button type="button" class="tab-button" role="tab" data-tab="banned" title="{% trans 'Banned IPs' %}" ng-class="{'tab-active': activeTab === 'banned'}" ng-click="setFirewallTab('banned')">
             <i class="fas fa-ban"></i>
             {% trans "Banned IPs" %}
         </button>
     </div>
 
-    <!-- Rules Panel -->
-    <div class="rules-panel" ng-show="activeTab === 'rules'">
+    <!-- Rules Panel (ng-if so second tab is not in DOM until needed; $watch loads data when switching) -->
+    <div class="rules-panel" ng-if="activeTab === 'rules'">
         <div class="panel-header">
             <div class="panel-title">
                 <div class="panel-icon">
@@ -1206,6 +1333,33 @@
                 </table>
             </div>
             
+            <!-- Firewall Rules Pagination (show when there are rules or a total count) -->
+            <div class="pagination-bar" ng-if="(rules && rules.length > 0) || (rulesTotalCount > 0)">
+                <div class="pagination-info">
+                    <span>{% trans "Showing" %} {$ rulesRangeStart() || 0 $} – {$ rulesRangeEnd() || 0 $} {% trans "of" %} {$ rulesTotalCount || rules.length || 0 $}</span>
+                    <span class="pagination-size">
+                        <span class="pagination-goto-label">{% trans "Per page:" %}</span>
+                        <span class="pagination-size-btns">
+                            <button type="button" ng-repeat="n in rulesPageSizeOptions" class="pagination-size-btn" ng-class="{active: rulesPageSize === n}" ng-click="rulesPageSize = n; setRulesPageSize()">{$ n $}</button>
+                        </span>
+                    </span>
+                </div>
+                <div class="pagination-controls">
+                    <button type="button" ng-click="goToRulesPage(rulesPage - 1)" ng-disabled="rulesPage <= 1" title="{% trans 'Previous' %}">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span class="page-num">{$ rulesPage $} / {$ rulesTotalPages() $}</span>
+                    <button type="button" ng-click="goToRulesPage(rulesPage + 1)" ng-disabled="rulesPage >= rulesTotalPages()" title="{% trans 'Next' %}">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <span class="pagination-goto">
+                        <label class="pagination-goto-label">{% trans "Go to page" %}</label>
+                        <input type="number" min="1" ng-attr-max="rulesTotalPages()" ng-model="rulesPageInput" class="pagination-goto-input" placeholder="{$ rulesPage $}">
+                        <button type="button" class="pagination-goto-btn" ng-click="goToRulesPageByInput()" title="{% trans 'Go' %}">{% trans "Go" %}</button>
+                    </span>
+                </div>
+            </div>
+            
             <!-- Empty State -->
             <div ng-if="rules.length == 0" class="empty-state">
                 <i class="fas fa-shield-alt empty-icon"></i>
@@ -1234,7 +1388,7 @@
     </div>
 
     <!-- Banned IPs Panel -->
-    <div class="banned-ips-panel" ng-show="activeTab === 'banned'">
+    <div class="banned-ips-panel" ng-if="activeTab === 'banned'">
         <div class="panel-header">
             <div class="panel-title">
                 <div class="panel-icon">
@@ -1376,6 +1530,33 @@
                 </table>
             </div>
             
+            <!-- Banned IPs Pagination (show when there are rows or a total count) -->
+            <div class="pagination-bar" ng-if="(bannedIPs && bannedIPs.length > 0) || (bannedTotalCount > 0)">
+                <div class="pagination-info">
+                    <span>{% trans "Showing" %} {$ bannedRangeStart() || 0 $} – {$ bannedRangeEnd() || 0 $} {% trans "of" %} {$ bannedTotalCount || bannedIPs.length || 0 $}</span>
+                    <span class="pagination-size">
+                        <span class="pagination-goto-label">{% trans "Per page:" %}</span>
+                        <span class="pagination-size-btns">
+                            <button type="button" ng-repeat="n in bannedPageSizeOptions" class="pagination-size-btn" ng-class="{active: bannedPageSize === n}" ng-click="bannedPageSize = n; setBannedPageSize()">{$ n $}</button>
+                        </span>
+                    </span>
+                </div>
+                <div class="pagination-controls">
+                    <button type="button" ng-click="goToBannedPage(bannedPage - 1)" ng-disabled="bannedPage <= 1" title="{% trans 'Previous' %}">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span class="page-num">{$ bannedPage $} / {$ bannedTotalPages() $}</span>
+                    <button type="button" ng-click="goToBannedPage(bannedPage + 1)" ng-disabled="bannedPage >= bannedTotalPages()" title="{% trans 'Next' %}">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <span class="pagination-goto">
+                        <label class="pagination-goto-label">{% trans "Go to page" %}</label>
+                        <input type="number" min="1" ng-attr-max="bannedTotalPages()" ng-model="bannedPageInput" class="pagination-goto-input" placeholder="{$ bannedPage $}">
+                        <button type="button" class="pagination-goto-btn" ng-click="goToBannedPageByInput()" title="{% trans 'Go' %}">{% trans "Go" %}</button>
+                    </span>
+                </div>
+            </div>
+            
             <!-- Empty State: no banned IPs at all -->
             <div ng-if="!bannedIPs || bannedIPs.length == 0" class="empty-state">
                 <i class="fas fa-shield-check empty-icon"></i>
@@ -1442,5 +1623,81 @@
         </div>
     </div>
 </div>
+
+<script>
+(function(){
+  var nav = document.getElementById('firewall-tab-nav');
+  if (!nav) return;
+
+  function loadTabViaAngularScope(tab) {
+    if (!window.angular) return false;
+    var container = document.querySelector('.modern-container[ng-controller="firewallController"]') || document.querySelector('.modern-container');
+    if (!container) return false;
+    try {
+      var scope = window.angular.element(container).scope();
+      if (!scope) return false;
+      scope.$evalAsync(function() {
+        scope.activeTab = tab;
+        if (tab === 'banned' && scope.populateBannedIPs) scope.populateBannedIPs();
+        else if (tab === 'rules' && scope.populateCurrentRecords) scope.populateCurrentRecords();
+      });
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function loadTab(tab) {
+    if (!tab || (tab !== 'rules' && tab !== 'banned')) return;
+    var done = false;
+    if (window.__firewallLoadTab) {
+      try { window.__firewallLoadTab(tab); done = true; } catch (e) {}
+    }
+    if (!done) {
+      done = loadTabViaAngularScope(tab);
+    }
+    if (!done) {
+      setTimeout(function() {
+        if (window.__firewallLoadTab) try { window.__firewallLoadTab(tab); } catch (e) {};
+        else loadTabViaAngularScope(tab);
+      }, 50);
+      setTimeout(function() {
+        if (window.__firewallLoadTab) try { window.__firewallLoadTab(tab); } catch (e) {};
+        else loadTabViaAngularScope(tab);
+      }, 200);
+      setTimeout(function() {
+        if (window.__firewallLoadTab) try { window.__firewallLoadTab(tab); } catch (e) {};
+        else loadTabViaAngularScope(tab);
+      }, 500);
+    }
+  }
+
+  function onTabButtonActivate(btn) {
+    var tab = btn && btn.getAttribute('data-tab');
+    if (!tab) return;
+    window.location.hash = (tab === 'banned') ? '#banned-ips' : '#rules';
+    loadTab(tab);
+  }
+  nav.addEventListener('click', function(e) {
+    var btn = (e.target && e.target.closest) ? e.target.closest('.tab-button[data-tab]') : null;
+    if (btn && nav.contains(btn)) onTabButtonActivate(btn);
+  }, false);
+  nav.addEventListener('mousedown', function(e) {
+    var btn = (e.target && e.target.closest) ? e.target.closest('.tab-button[data-tab]') : null;
+    if (btn && nav.contains(btn)) onTabButtonActivate(btn);
+  }, false);
+
+  function loadTabFromHash() {
+    var h = (window.location.hash || '').replace(/^#/, '');
+    var tab = (h === 'banned-ips') ? 'banned' : 'rules';
+    loadTab(tab);
+  }
+  var h = (window.location.hash || '').replace(/^#/, '');
+  if (h === 'banned-ips') loadTabFromHash();
+  window.addEventListener('hashchange', loadTabFromHash);
+  setTimeout(loadTabFromHash, 150);
+  setTimeout(loadTabFromHash, 500);
+})();
+</script>
 
 {% endblock %}

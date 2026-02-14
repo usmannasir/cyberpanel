@@ -5,7 +5,7 @@
 
 /* Java script code to ADD Firewall Rules */
 
-app.controller('firewallController', function ($scope, $http) {
+app.controller('firewallController', function ($scope, $http, $timeout) {
 
     $scope.rulesLoading = true;
     $scope.actionFailed = true;
@@ -16,9 +16,51 @@ app.controller('firewallController', function ($scope, $http) {
     $scope.couldNotConnect = true;
     $scope.rulesDetails = false;
 
-    // Banned IPs variables
-    $scope.activeTab = 'rules';
+    // Tab from hash so we stay on /firewall/ (avoids 404 on servers without /firewall/firewall-rules/)
+    function tabFromHash() {
+        var h = (window.location.hash || '').replace(/^#/, '');
+        return (h === 'banned-ips') ? 'banned' : 'rules';
+    }
+    $scope.activeTab = tabFromHash();
     $scope.bannedIPs = [];
+    // Re-apply tab from hash after load (hash can be set after controller init in some browsers)
+    function applyTabFromHash() {
+        var tab = tabFromHash();
+        if ($scope.activeTab !== tab) {
+            $scope.activeTab = tab;
+            if (tab === 'banned') { populateBannedIPs(); } else { populateCurrentRecords(); }
+            if (!$scope.$$phase && !$scope.$root.$$phase) { $scope.$apply(); }
+        }
+    }
+    $timeout(applyTabFromHash, 0);
+    if (document.readyState === 'complete') {
+        $timeout(applyTabFromHash, 50);
+    } else {
+        window.addEventListener('load', function() { $timeout(applyTabFromHash, 0); });
+    }
+    $scope.setFirewallTab = function(tab) {
+        $timeout(function() {
+            $scope.activeTab = tab;
+            window.location.hash = (tab === 'banned') ? '#banned-ips' : '#rules';
+            if (tab === 'banned') { populateBannedIPs(); } else { populateCurrentRecords(); }
+        }, 0);
+    };
+    window.addEventListener('hashchange', function() {
+        var tab = tabFromHash();
+        if ($scope.activeTab !== tab) {
+            $scope.activeTab = tab;
+            if (tab === 'banned') { populateBannedIPs(); } else { populateCurrentRecords(); }
+            if (!$scope.$$phase && !$scope.$root.$$phase) { $scope.$apply(); }
+        }
+    });
+    $scope.rulesPage = 1;
+    $scope.rulesPageSize = 10;
+    $scope.rulesPageSizeOptions = [5, 10, 20, 30, 50, 100];
+    $scope.rulesTotalCount = 0;
+    $scope.bannedPage = 1;
+    $scope.bannedPageSize = 10;
+    $scope.bannedPageSizeOptions = [5, 10, 20, 30, 50, 100];
+    $scope.bannedTotalCount = 0;
     $scope.bannedIPsLoading = false;
     $scope.bannedIPActionFailed = true;
     $scope.bannedIPActionSuccess = true;
@@ -29,8 +71,17 @@ app.controller('firewallController', function ($scope, $http) {
 
     firewallStatus();
 
+    // Load both tabs on init
     populateCurrentRecords();
     populateBannedIPs();
+
+    // Whenever activeTab changes, load that tab's data (ensures second tab loads even if click/apply failed)
+    $scope.$watch('activeTab', function(newVal, oldVal) {
+        if (newVal === oldVal || !newVal) return;
+        $timeout(function() {
+            if (newVal === 'banned') { populateBannedIPs(); } else if (newVal === 'rules') { populateCurrentRecords(); }
+        }, 0);
+    });
 
     $scope.addRule = function () {
 
@@ -123,37 +174,67 @@ app.controller('firewallController', function ($scope, $http) {
         $scope.actionFailed = true;
         $scope.actionSuccess = true;
 
-
         url = "/firewall/getCurrentRules";
-
-        var data = {};
-
-        var config = {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        };
-
+        var data = { page: $scope.rulesPage || 1, page_size: $scope.rulesPageSize || 10 };
+        var config = { headers: { 'X-CSRFToken': getCookie('csrftoken') } };
 
         $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
-
         function ListInitialDatas(response) {
-            if (response.data.fetchStatus === 1) {
-                $scope.rules = JSON.parse(response.data.data);
+            var res = (typeof response.data === 'string') ? (function() { try { return JSON.parse(response.data); } catch (e) { return {}; } })() : response.data;
+            if (res && res.fetchStatus === 1) {
+                $scope.rules = typeof res.data === 'string' ? JSON.parse(res.data) : (res.data || []);
+                $scope.rulesTotalCount = res.total_count != null ? res.total_count : ($scope.rules ? $scope.rules.length : 0);
+                $scope.rulesPage = Math.max(1, res.page != null ? res.page : 1);
+                $scope.rulesPageSize = res.page_size != null ? res.page_size : 10;
                 $scope.rulesLoading = true;
             }
             else {
                 $scope.rulesLoading = true;
-                $scope.errorMessage = response.data.error_message;
+                $scope.errorMessage = (res && res.error_message) ? res.error_message : '';
             }
         }
 
         function cantLoadInitialDatas(response) {
             $scope.couldNotConnect = false;
-
         }
+    }
 
+    $scope.goToRulesPage = function(page) {
+        var totalP = $scope.rulesTotalPages();
+        if (page < 1 || page > totalP) return;
+        $scope.rulesPage = page;
+        populateCurrentRecords();
+    };
+    $scope.goToRulesPageByInput = function() {
+        var n = parseInt($scope.rulesPageInput, 10);
+        if (isNaN(n) || n < 1) n = 1;
+        var maxP = $scope.rulesTotalPages();
+        if (n > maxP) n = maxP;
+        $scope.rulesPageInput = n;
+        $scope.goToRulesPage(n);
+    };
+    $scope.rulesTotalPages = function() {
+        var size = $scope.rulesPageSize || 10;
+        var total = $scope.rulesTotalCount || ($scope.rules && $scope.rules.length) || 0;
+        return size > 0 ? Math.max(1, Math.ceil(total / size)) : 1;
+    };
+    $scope.rulesRangeStart = function() {
+        var total = $scope.rulesTotalCount || ($scope.rules && $scope.rules.length) || 0;
+        if (total === 0) return 0;
+        var page = Math.max(1, $scope.rulesPage || 1);
+        var size = $scope.rulesPageSize || 10;
+        return (page - 1) * size + 1;
+    };
+    $scope.rulesRangeEnd = function() {
+        var start = $scope.rulesRangeStart();
+        var size = $scope.rulesPageSize || 10;
+        var total = $scope.rulesTotalCount || ($scope.rules && $scope.rules.length) || 0;
+        return total === 0 ? 0 : Math.min(start + size - 1, total);
+    };
+    $scope.setRulesPageSize = function() {
+        $scope.rulesPage = 1;
+        populateCurrentRecords();
     };
 
     $scope.deleteRule = function (id, proto, port, ruleIP) {
@@ -2417,25 +2498,77 @@ app.controller('litespeed_ent_conf', function ($scope, $http, $timeout, $window)
     function populateBannedIPs() {
         $scope.bannedIPsLoading = true;
         var url = "/firewall/getBannedIPs";
+        var postData = { page: $scope.bannedPage || 1, page_size: $scope.bannedPageSize || 10 };
         var config = {
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
             }
         };
 
-        $http.post(url, {}, config).then(function(response) {
+        $http.post(url, postData, config).then(function(response) {
             $scope.bannedIPsLoading = false;
-            if (response.data.status === 1) {
-                $scope.bannedIPs = response.data.bannedIPs || [];
+            var res = (typeof response.data === 'string') ? (function() { try { return JSON.parse(response.data); } catch (e) { return {}; } })() : response.data;
+            if (res && res.status === 1) {
+                $scope.bannedIPs = res.bannedIPs || [];
+                $scope.bannedTotalCount = res.total_count != null ? res.total_count : ($scope.bannedIPs ? $scope.bannedIPs.length : 0);
+                $scope.bannedPage = Math.max(1, res.page != null ? res.page : 1);
+                $scope.bannedPageSize = res.page_size != null ? res.page_size : 10;
             } else {
                 $scope.bannedIPs = [];
                 $scope.bannedIPActionFailed = false;
-                $scope.bannedIPErrorMessage = response.data.error_message;
+                $scope.bannedIPErrorMessage = (res && res.error_message) ? res.error_message : '';
             }
         }, function(error) {
             $scope.bannedIPsLoading = false;
             $scope.bannedIPCouldNotConnect = false;
         });
+    }
+
+    $scope.goToBannedPage = function(page) {
+        var totalP = $scope.bannedTotalPages();
+        if (page < 1 || page > totalP) return;
+        $scope.bannedPage = page;
+        populateBannedIPs();
+    };
+    $scope.goToBannedPageByInput = function() {
+        var n = parseInt($scope.bannedPageInput, 10);
+        if (isNaN(n) || n < 1) n = 1;
+        var maxP = $scope.bannedTotalPages();
+        if (n > maxP) n = maxP;
+        $scope.bannedPageInput = n;
+        $scope.goToBannedPage(n);
+    };
+    $scope.bannedTotalPages = function() {
+        var size = $scope.bannedPageSize || 10;
+        var total = $scope.bannedTotalCount || ($scope.bannedIPs ? $scope.bannedIPs.length : 0) || 0;
+        return size > 0 ? Math.max(1, Math.ceil(total / size)) : 1;
+    };
+    $scope.bannedRangeStart = function() {
+        var total = $scope.bannedTotalCount || ($scope.bannedIPs ? $scope.bannedIPs.length : 0) || 0;
+        if (total === 0) return 0;
+        var page = Math.max(1, $scope.bannedPage || 1);
+        var size = $scope.bannedPageSize || 10;
+        return (page - 1) * size + 1;
+    };
+    $scope.bannedRangeEnd = function() {
+        var start = $scope.bannedRangeStart();
+        var size = $scope.bannedPageSize || 10;
+        var total = $scope.bannedTotalCount || ($scope.bannedIPs ? $scope.bannedIPs.length : 0) || 0;
+        return total === 0 ? 0 : Math.min(start + size - 1, total);
+    };
+    $scope.setBannedPageSize = function() {
+        $scope.bannedPage = 1;
+        populateBannedIPs();
+    };
+    $scope.populateBannedIPs = populateBannedIPs;
+
+    if (typeof window !== 'undefined') {
+        window.__firewallLoadTab = function(tab) {
+            $scope.$evalAsync(function() {
+                $scope.activeTab = tab;
+                if (tab === 'banned') { populateBannedIPs(); } else { populateCurrentRecords(); }
+            });
+        };
     }
 
     $scope.addBannedIP = function() {
@@ -2697,3 +2830,25 @@ app.controller('litespeed_ent_conf', function ($scope, $http, $timeout, $window)
     }
 
 });
+
+(function() {
+    // Do not capture tab clicks – let Angular ng-click run setFirewallTab() so data loads.
+    // Only sync tab from hash on load and hashchange (back/forward) via __firewallLoadTab.
+    function syncFirewallTabFromHash() {
+        var nav = document.getElementById('firewall-tab-nav');
+        if (!nav) return;
+        var h = (window.location.hash || '').replace(/^#/, '');
+        var tab = (h === 'banned-ips') ? 'banned' : 'rules';
+        if (window.__firewallLoadTab) {
+            try { window.__firewallLoadTab(tab); } catch (e) {}
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', syncFirewallTabFromHash);
+    } else {
+        syncFirewallTabFromHash();
+    }
+    setTimeout(syncFirewallTabFromHash, 100);
+    window.addEventListener('hashchange', syncFirewallTabFromHash);
+})();

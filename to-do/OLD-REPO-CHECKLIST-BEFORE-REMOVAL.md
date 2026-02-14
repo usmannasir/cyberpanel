@@ -35,7 +35,7 @@ These were only in the old fix and were copied into repo during the merge:
 | `cyberpanel_standalone.sh` | Standalone install script |
 | `fix_installation_issues.sh` | Installation fixes |
 | `install_phpmyadmin.sh` | phpMyAdmin installer |
-| `simple_install.sh` | Simple installer |
+| ~~`simple_install.sh`~~ | Removed – use official install.sh one-liner |
 | `INSTALLER_SUMMARY.md` | Installer docs |
 | `UNIVERSAL_OS_COMPATIBILITY.md` | OS compatibility docs |
 | `to-do/MARIADB_INSTALLATION_FIXES.md` | MariaDB fixes |
