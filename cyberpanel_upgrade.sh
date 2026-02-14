@@ -428,6 +428,26 @@ Pre_Upgrade_Setup_Repository() {
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Pre_Upgrade_Setup_Repository started for OS: $Server_OS" | tee -a /var/log/cyberpanel_upgrade_debug.log
 
 if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "AlmaLinux9" ]] ; then
+  # Reduce dnf/yum timeouts and mirror issues (e.g. ftp.lip6.fr connection timeout)
+  for dnf_conf in /etc/dnf/dnf.conf /etc/yum.conf; do
+    if [[ -f "$dnf_conf" ]]; then
+      grep -q '^timeout=' "$dnf_conf" 2>/dev/null || echo 'timeout=120' >> "$dnf_conf"
+      grep -q '^minrate=' "$dnf_conf" 2>/dev/null || echo 'minrate=1000' >> "$dnf_conf"
+      grep -q '^retries=' "$dnf_conf" 2>/dev/null || echo 'retries=5' >> "$dnf_conf"
+      break
+    fi
+  done
+  # For AlmaLinux 9: switch to repo.almalinux.org baseurl to avoid slow mirrors (e.g. ftp.lip6.fr timeout)
+  if [[ "$Server_OS" = "AlmaLinux9" ]] && [[ -d /etc/yum.repos.d ]]; then
+    for repo in /etc/yum.repos.d/almalinux*.repo /etc/yum.repos.d/AlmaLinux*.repo; do
+      [[ ! -f "$repo" ]] && continue
+      if grep -q '^mirrorlist=' "$repo" 2>/dev/null; then
+        echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Switching AlmaLinux repos to repo.almalinux.org to avoid mirror timeouts" | tee -a /var/log/cyberpanel_upgrade_debug.log
+        sed -i 's|^mirrorlist=|#mirrorlist=|g' "$repo"
+        sed -i 's|^#baseurl=\(.*repo\.almalinux\.org.*\)|baseurl=\1|' "$repo"
+      fi
+    done
+  fi
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Setting up repositories for $Server_OS..." | tee -a /var/log/cyberpanel_upgrade_debug.log
   rm -f /etc/yum.repos.d/CyberPanel.repo
   rm -f /etc/yum.repos.d/litespeed.repo
@@ -979,6 +999,18 @@ if [[ -z "$CP_PYTHON" ]]; then
   exit 1
 fi
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Using Python: $CP_PYTHON" | tee -a /var/log/cyberpanel_upgrade_debug.log
+
+# Ensure ols_binaries_config exists (required by upgrade.py; may be missing when upgrading from older versions)
+mkdir -p /usr/local/CyberCP/install
+if [[ ! -f /usr/local/CyberCP/install/ols_binaries_config.py ]]; then
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Downloading ols_binaries_config.py (required for upgrade)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  wget -q -O /usr/local/CyberCP/install/ols_binaries_config.py "${Git_Content_URL}/${Branch_Name}/install/ols_binaries_config.py" 2>/dev/null || \
+  curl -sL -o /usr/local/CyberCP/install/ols_binaries_config.py "${Git_Content_URL}/${Branch_Name}/install/ols_binaries_config.py" 2>/dev/null || true
+fi
+if [[ ! -f /usr/local/CyberCP/install/ols_binaries_config.py ]]; then
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: ols_binaries_config.py not found; upgrade.py may fail with ModuleNotFoundError" | tee -a /var/log/cyberpanel_upgrade_debug.log
+fi
+
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running: $CP_PYTHON upgrade.py $Branch_Name" | tee -a /var/log/cyberpanel_upgrade_debug.log
 
 # Run upgrade.py and capture output
@@ -1631,6 +1663,20 @@ echo "╚═══════════════════════�
 Panel_Port=$(cat /usr/local/lscp/conf/bind.conf)
 if [[ $Panel_Port = "" ]] ; then
   Panel_Port="8090"
+fi
+
+# Resolve server IP for remote access URL (avoid empty Remote: https://:2087)
+if [[ -z "$SERVER_IP" ]]; then
+  SERVER_IP=$(hostname -I 2>/dev/null | awk '{print $1}')
+fi
+if [[ -z "$SERVER_IP" ]]; then
+  SERVER_IP=$(ip -4 route get 1 2>/dev/null | awk '/src/ {print $7; exit}')
+fi
+if [[ -z "$SERVER_IP" ]]; then
+  SERVER_IP=$(curl -s --max-time 3 ifconfig.me 2>/dev/null || curl -s --max-time 3 icanhazip.com 2>/dev/null)
+fi
+if [[ -z "$SERVER_IP" ]]; then
+  SERVER_IP="YOUR_SERVER_IP"
 fi
 
 # Test if CyberPanel is accessible
