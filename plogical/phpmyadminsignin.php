@@ -32,11 +32,14 @@ try {
         echo '<script>document.getElementById("redirectForm").submit();</script>';
 
     } else if (isset($_POST['logout']) || isset($_GET['logout'])) {
+        session_name(PMA_SIGNON_SESSIONNAME);
+        @session_start();
+        $_SESSION = array();
         $params = session_get_cookie_params();
         setcookie(session_name(), '', time() - 86400, $params["path"], $params["domain"], $params["secure"], $params["httponly"]);
         session_destroy();
         header('Location: /base/');
-        return;
+        exit;
     } else if (isset($_POST['password'])) {
 
         session_name(PMA_SIGNON_SESSIONNAME);
