@@ -7,7 +7,7 @@
 **Web Hosting Control Panel powered by OpenLiteSpeed**
 Fast • Secure • Scalable — Simplify hosting management with style.
 
-**Version**: 2.5.5-dev • **Updated**: November 15, 2025
+**Version**: 2.5.5-dev • **Updated**: January 15, 2026
 
 [![GitHub](https://img.shields.io/badge/GitHub-Repo-000?style=flat-square\&logo=github)](https://github.com/usmannasir/cyberpanel)
 [![Docs](https://img.shields.io/badge/Docs-Read-green?style=flat-square\&logo=gitbook)](https://cyberpanel.net/KnowledgeBase/)
@@ -109,6 +109,30 @@ sh <(curl -s https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preU
 ```
 
 **Post-upgrade checklist:** verify email, DNS, SSL, and run a smoke test on key sites.
+
+---
+
+## Upgrade to v2.5.5-dev (non-interactive)
+
+Upgrade to v2.5.5-dev without branch or MariaDB prompts:
+
+```bash
+# Upgrade to v2.5.5-dev without prompts
+sh <(curl -s https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev
+
+# With MariaDB 10.11 (non-interactive)
+sh <(curl -s https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev --mariadb
+
+# Or use --mariadb-version for other versions
+sh <(curl -s https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev --mariadb-version 10.11
+sh <(curl -s https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev --mariadb-version 11.8
+```
+
+**Full non-interactive command** (v2.5.5-dev + MariaDB 10.11):
+
+```bash
+sh <(curl -s https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev --mariadb
+```
 
 ---
 
