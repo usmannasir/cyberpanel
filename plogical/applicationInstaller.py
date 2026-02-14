@@ -101,19 +101,24 @@ class ApplicationInstaller(multi.Thread):
 
     @staticmethod
     def setupComposer():
-
-        if os.path.exists('composer.sh'):
-            os.remove('composer.sh')
-
+        composer_sh = '/tmp/composer.sh'
         if not os.path.exists('/usr/bin/composer'):
-            command = "wget https://cyberpanel.sh/composer.sh"
-            ProcessUtilities.executioner(command, 'root', True)
-
-            command = "chmod +x composer.sh"
-            ProcessUtilities.executioner(command, 'root', True)
-
-            command = "./composer.sh"
-            ProcessUtilities.executioner(command, 'root', True)
+            try:
+                if os.path.exists(composer_sh):
+                    os.remove(composer_sh)
+                command = "wget -q https://cyberpanel.sh/composer.sh -O " + composer_sh
+                ProcessUtilities.executioner(command, 'root', True)
+                if not os.path.isfile(composer_sh):
+                    command = "curl -sSL https://cyberpanel.sh/composer.sh -o " + composer_sh
+                    ProcessUtilities.executioner(command, 'root', True)
+                if not os.path.isfile(composer_sh):
+                    return
+                command = "chmod +x " + composer_sh
+                ProcessUtilities.executioner(command, 'root', True)
+                command = "bash " + composer_sh
+                ProcessUtilities.executioner(command, 'root', True)
+            except Exception:
+                pass
 
     def InstallNodeJS(self):
 

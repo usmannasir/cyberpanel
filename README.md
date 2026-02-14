@@ -149,6 +149,22 @@ journalctl -u lscpd -f
 
 ---
 
+## Testing
+
+### OLS Feature Test Suite
+
+The OpenLiteSpeed feature test suite (128 tests) validates binary integrity, CyberPanel module, Auto-SSL config, SSL listener auto-mapping, .htaccess processing, ReadApacheConf directives, and more.
+
+```bash
+# Run from CyberPanel repo root
+./tests/ols_test_setup.sh   # One-time setup
+./tests/ols_feature_tests.sh
+```
+
+Requires a live CyberPanel + OLS installation.
+
+---
+
 ## Resources
 
 * Official site: [https://cyberpanel.net](https://cyberpanel.net)
