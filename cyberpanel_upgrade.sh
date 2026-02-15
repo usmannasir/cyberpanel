@@ -441,14 +441,27 @@ if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "AlmaLinux9" ]] ; then
       break
     fi
   done
-  # For AlmaLinux 9: switch to repo.almalinux.org baseurl to avoid slow mirrors (e.g. ftp.lip6.fr timeout)
+  # For AlmaLinux 9: switch to repo.almalinux.org baseurl to avoid "Cannot find valid baseurl for repo: appstream"
   if [[ "$Server_OS" = "AlmaLinux9" ]] && [[ -d /etc/yum.repos.d ]]; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Fixing AlmaLinux 9 repos (appstream/baseos) for reliable mirror access" | tee -a /var/log/cyberpanel_upgrade_debug.log
     for repo in /etc/yum.repos.d/almalinux*.repo /etc/yum.repos.d/AlmaLinux*.repo; do
       [[ ! -f "$repo" ]] && continue
       if grep -q '^mirrorlist=' "$repo" 2>/dev/null; then
-        echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Switching AlmaLinux repos to repo.almalinux.org to avoid mirror timeouts" | tee -a /var/log/cyberpanel_upgrade_debug.log
         sed -i 's|^mirrorlist=|#mirrorlist=|g' "$repo"
+        sed -i 's|^#\s*baseurl=\(.*repo\.almalinux\.org.*\)|baseurl=\1|' "$repo"
         sed -i 's|^#baseurl=\(.*repo\.almalinux\.org.*\)|baseurl=\1|' "$repo"
+      fi
+    done
+    # Fallback: ensure appstream/baseos have explicit baseurl (avoids "Cannot find valid baseurl")
+    ALMA_VER="${Server_OS_Version:-9}"
+    ARCH="x86_64"
+    for repofile in /etc/yum.repos.d/almalinux*.repo /etc/yum.repos.d/AlmaLinux*.repo; do
+      [[ ! -f "$repofile" ]] && continue
+      if grep -q '^\[appstream\]' "$repofile" 2>/dev/null; then
+        sed -i "/^\[appstream\]/,/^\[/ { s|^#\?baseurl=.*|baseurl=https://repo.almalinux.org/almalinux/${ALMA_VER}/AppStream/${ARCH}/os/|; s|^mirrorlist=.*|#mirrorlist=disabled| }" "$repofile"
+      fi
+      if grep -q '^\[baseos\]' "$repofile" 2>/dev/null; then
+        sed -i "/^\[baseos\]/,/^\[/ { s|^#\?baseurl=.*|baseurl=https://repo.almalinux.org/almalinux/${ALMA_VER}/BaseOS/${ARCH}/os/|; s|^mirrorlist=.*|#mirrorlist=disabled| }" "$repofile"
       fi
     done
   fi
