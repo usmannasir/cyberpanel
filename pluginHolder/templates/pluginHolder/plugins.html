@@ -826,6 +826,71 @@
         border-radius: 8px;
     }
     
+    /* Collapsible Category Filter for Grid/Table (installed view) - same style as A-Å filter */
+    .installed-category-filter-wrapper {
+        margin-top: 12px;
+        margin-bottom: 0;
+    }
+    .installed-category-toggle-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border: 1px solid var(--border-primary, #e8e9ff);
+        background: var(--bg-primary, white);
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary, #64748b);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .installed-category-toggle-btn:hover {
+        background: var(--bg-hover, #f8f9ff);
+        border-color: #5856d6;
+        color: #5856d6;
+    }
+    .installed-category-toggle-btn[aria-expanded="true"] .installed-category-chevron {
+        transform: rotate(180deg);
+    }
+    .installed-category-chevron {
+        font-size: 10px;
+        transition: transform 0.2s;
+    }
+    .installed-category-filter {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+        padding: 15px;
+        background: var(--bg-secondary, #f8f9ff);
+        border-radius: 8px;
+    }
+    .installed-category-btn {
+        padding: 6px 12px;
+        border: 1px solid var(--border-primary, #e8e9ff);
+        background: var(--bg-primary, white);
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: var(--text-secondary, #64748b);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .installed-category-btn:hover {
+        background: var(--bg-hover, #f0f1ff);
+        border-color: #5856d6;
+        color: #5856d6;
+    }
+    .installed-category-btn.active {
+        background: #5856d6;
+        color: white;
+        border-color: #5856d6;
+    }
+    
     .alpha-btn {
         padding: 6px 12px;
         border: 1px solid var(--border-primary, #e8e9ff);
@@ -1263,6 +1328,26 @@
                         </button>
                     </div>
                     </div>
+                    <!-- Category filter (collapsible, same style as A-Å Filter in store) -->
+                    <div class="installed-category-filter-wrapper">
+                        <button type="button" class="installed-category-toggle-btn" id="installedCategoryToggleBtn" onclick="toggleInstalledCategoryFilter()" aria-expanded="false">
+                            <i class="fas fa-tag"></i>
+                            <span>{% trans "Category Filter" %}</span>
+                            <i class="fas fa-chevron-down installed-category-chevron"></i>
+                        </button>
+                        <div class="installed-category-filter" id="installedCategoryFilter" aria-hidden="true" style="display: none;">
+                            <button type="button" class="installed-category-btn active" data-category="all" onclick="filterByCategoryInstalled('all', event)">{% trans "All" %}</button>
+                            <button type="button" class="installed-category-btn" data-category="Utility" onclick="filterByCategoryInstalled('Utility', event)"><i class="fas fa-tools"></i> {% trans "Utility" %}</button>
+                            <button type="button" class="installed-category-btn" data-category="Security" onclick="filterByCategoryInstalled('Security', event)"><i class="fas fa-shield-alt"></i> {% trans "Security" %}</button>
+                            <button type="button" class="installed-category-btn" data-category="Backup" onclick="filterByCategoryInstalled('Backup', event)"><i class="fas fa-save"></i> {% trans "Backup" %}</button>
+                            <button type="button" class="installed-category-btn" data-category="Performance" onclick="filterByCategoryInstalled('Performance', event)"><i class="fas fa-rocket"></i> {% trans "Performance" %}</button>
+                            <button type="button" class="installed-category-btn" data-category="Monitoring" onclick="filterByCategoryInstalled('Monitoring', event)"><i class="fas fa-heartbeat"></i> {% trans "Monitoring" %}</button>
+                            <button type="button" class="installed-category-btn" data-category="Integration" onclick="filterByCategoryInstalled('Integration', event)"><i class="fas fa-plug"></i> {% trans "Integration" %}</button>
+                            <button type="button" class="installed-category-btn" data-category="Email" onclick="filterByCategoryInstalled('Email', event)"><i class="fas fa-envelope"></i> {% trans "Email" %}</button>
+                            <button type="button" class="installed-category-btn" data-category="Development" onclick="filterByCategoryInstalled('Development', event)"><i class="fas fa-code"></i> {% trans "Development" %}</button>
+                            <button type="button" class="installed-category-btn" data-category="Analytics" onclick="filterByCategoryInstalled('Analytics', event)"><i class="fas fa-chart-bar"></i> {% trans "Analytics" %}</button>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -1674,7 +1759,7 @@
 </div>
 
 <script>
-// Cache-busting version: 2026-02-01-v1 - Fixed category filter, added search bar, collapsible A-Å
+// Cache-busting version: 2026-02-15-v1 - Grid/Table: collapsible Category Filter (like A-Å in store)
 let storePlugins = [];
 let currentFilter = 'all';
 let currentCategory = 'all';
@@ -1682,6 +1767,7 @@ let currentSearchQuery = '';
 let isSettingHash = false; // Flag to prevent infinite loops
 let currentInstalledSort = 'name-asc'; // name-asc, name-desc, type, date-desc, date-asc
 let currentInstalledFilter = 'all';    // all, installed, active
+let currentInstalledCategory = 'all';  // all, Utility, Security, ...
 
 // Get CSRF cookie helper function
 function getCookie(name) {
@@ -2090,6 +2176,12 @@ function filterInstalledPlugins() {
         if (filter === 'active') return installed === 'true' && enabled === 'true';
         return true;
     }
+    var cat = (typeof currentInstalledCategory !== 'undefined' ? currentInstalledCategory : 'all');
+    function matchesCategory(typeAttr) {
+        if (cat === 'all') return true;
+        var t = (typeAttr || '').trim().toLowerCase();
+        return t === (cat || '').trim().toLowerCase();
+    }
     if (gridView) {
         var cards = gridView.querySelectorAll('.plugin-card');
         cards.forEach(function(card) {
@@ -2101,7 +2193,8 @@ function filterInstalledPlugins() {
             var installed = card.getAttribute('data-installed') || 'false';
             var enabled = card.getAttribute('data-enabled') || 'false';
             var filterMatch = matchesFilter(installed, enabled);
-            var show = searchMatch && filterMatch;
+            var categoryMatch = matchesCategory(card.getAttribute('data-plugin-type'));
+            var show = searchMatch && filterMatch && categoryMatch;
             card.style.display = show ? '' : 'none';
             if (show) visibleCount++;
         });
@@ -2120,13 +2213,14 @@ function filterInstalledPlugins() {
                 var installed = row.getAttribute('data-installed') || 'false';
                 var enabled = row.getAttribute('data-enabled') || 'false';
                 var filterMatch = matchesFilter(installed, enabled);
-                var show = searchMatch && filterMatch;
+                var categoryMatch = matchesCategory(row.getAttribute('data-plugin-type'));
+                var show = searchMatch && filterMatch && categoryMatch;
                 row.style.display = show ? '' : 'none';
                 if (show) visibleCount++;
             });
         }
     }
-    var hasFilterOrSearch = terms.length > 0 || (filter !== 'all');
+    var hasFilterOrSearch = terms.length > 0 || (filter !== 'all') || (cat !== 'all');
     if (noResultsGrid) {
         noResultsGrid.style.display = (hasFilterOrSearch && visibleCount === 0) ? 'block' : 'none';
     }
@@ -2230,6 +2324,30 @@ function toggleAlphabetFilter() {
     filter.style.display = isExpanded ? 'none' : 'flex';
     filter.setAttribute('aria-hidden', isExpanded ? 'true' : 'false');
     toggleBtn.setAttribute('aria-expanded', isExpanded ? 'false' : 'true');
+}
+
+function toggleInstalledCategoryFilter() {
+    const filter = document.getElementById('installedCategoryFilter');
+    const toggleBtn = document.getElementById('installedCategoryToggleBtn');
+    if (!filter || !toggleBtn) return;
+    const isExpanded = toggleBtn.getAttribute('aria-expanded') === 'true';
+    filter.style.display = isExpanded ? 'none' : 'flex';
+    filter.setAttribute('aria-hidden', isExpanded ? 'true' : 'false');
+    toggleBtn.setAttribute('aria-expanded', isExpanded ? 'false' : 'true');
+}
+
+function filterByCategoryInstalled(category, evt) {
+    currentInstalledCategory = category;
+    const btns = document.querySelectorAll('.installed-category-btn');
+    btns.forEach(function(btn) { btn.classList.remove('active'); });
+    const clickedBtn = evt && (evt.currentTarget || (evt.target && evt.target.closest('.installed-category-btn')));
+    if (clickedBtn) clickedBtn.classList.add('active');
+    else {
+        btns.forEach(function(btn) {
+            if ((btn.getAttribute('data-category') || '') === category) btn.classList.add('active');
+        });
+    }
+    try { filterInstalledPlugins(); } catch (e) { console.warn('filterByCategoryInstalled', e); }
 }
 
 function upgradePlugin(pluginName, currentVersion, newVersion) {
