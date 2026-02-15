@@ -666,6 +666,12 @@ EOF
       MARIADB_REPO="rhel8-amd64"
     fi
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Configuring MariaDB $MARIADB_VER repo for EL$Server_OS_Version..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    # Remove or backup any existing MariaDB repo that points to a different version (e.g. 10.11), so dnf uses only our repo
+    for f in /etc/yum.repos.d/mariadb.repo /etc/yum.repos.d/MariaDB.repo.rpmsave; do
+      if [[ -f "$f" ]] && grep -q '10\.11\|10.6\|10.5' "$f" 2>/dev/null && [[ "$MARIADB_VER" != "10.11" ]]; then
+        mv -f "$f" "${f}.bak.cyberpanel" 2>/dev/null && echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Backed up old repo $f to ${f}.bak.cyberpanel (was 10.x, we want $MARIADB_VER)" | tee -a /var/log/cyberpanel_upgrade_debug.log || true
+      fi
+    done
     cat << EOF > /etc/yum.repos.d/MariaDB.repo
 # MariaDB $MARIADB_VER repository - CyberPanel upgrade
 # https://downloads.mariadb.org/mariadb/repositories/
