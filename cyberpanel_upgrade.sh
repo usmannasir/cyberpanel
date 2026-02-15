@@ -470,6 +470,20 @@ if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "AlmaLinux9" ]] ; then
           sed -i "/^\[baseos\]/a baseurl=https://repo.almalinux.org/almalinux/${ALMA_VER}/BaseOS/${ARCH}/os/" "$repofile"
         fi
       fi
+      # CRB (CodeReady Builder) - avoids "Cannot find a valid baseurl for repo: crb"
+      if grep -q '^\[crb\]' "$repofile" 2>/dev/null; then
+        sed -i "/^\[crb\]/,/^\[/ { s|^#\?baseurl=.*|baseurl=https://repo.almalinux.org/almalinux/${ALMA_VER}/CRB/${ARCH}/os/|; s|^mirrorlist=.*|#mirrorlist=disabled| }" "$repofile"
+        if ! sed -n '/^\[crb\]/,/^\[/p' "$repofile" | grep -q '^baseurl='; then
+          sed -i "/^\[crb\]/a baseurl=https://repo.almalinux.org/almalinux/${ALMA_VER}/CRB/${ARCH}/os/" "$repofile"
+        fi
+      fi
+      # Extras - avoids "Cannot find a valid baseurl for repo: extras"
+      if grep -q '^\[extras\]' "$repofile" 2>/dev/null; then
+        sed -i "/^\[extras\]/,/^\[/ { s|^#\?baseurl=.*|baseurl=https://repo.almalinux.org/almalinux/${ALMA_VER}/extras/${ARCH}/os/|; s|^mirrorlist=.*|#mirrorlist=disabled| }" "$repofile"
+        if ! sed -n '/^\[extras\]/,/^\[/p' "$repofile" | grep -q '^baseurl='; then
+          sed -i "/^\[extras\]/a baseurl=https://repo.almalinux.org/almalinux/${ALMA_VER}/extras/${ARCH}/os/" "$repofile"
+        fi
+      fi
     done
   fi
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Setting up repositories for $Server_OS..." | tee -a /var/log/cyberpanel_upgrade_debug.log
@@ -607,7 +621,31 @@ EOF
       dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm 2>/dev/null || true
     fi
   }
-  
+
+  # MariaDB repo for EL8/EL9 so --mariadb-version 11.8 (or 10.11/12.1) is actually used (distro default is 10.11)
+  if [[ "$Server_OS_Version" = "8" ]] || [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]; then
+    if [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]; then
+      MARIADB_REPO="rhel9-amd64"
+    else
+      MARIADB_REPO="rhel8-amd64"
+    fi
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Configuring MariaDB $MARIADB_VER repo for EL$Server_OS_Version..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    cat << EOF > /etc/yum.repos.d/MariaDB.repo
+# MariaDB $MARIADB_VER repository - CyberPanel upgrade
+# https://downloads.mariadb.org/mariadb/repositories/
+[mariadb]
+name = MariaDB $MARIADB_VER
+baseurl = https://mirror.mariadb.org/yum/$MARIADB_VER/$MARIADB_REPO
+gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+gpgcheck=1
+EOF
+    if [[ "$Server_Country" = "CN" ]]; then
+      sed -i 's|http://yum.mariadb.org|https://cyberpanel.sh/yum.mariadb.org|g' /etc/yum.repos.d/MariaDB.repo
+      sed -i 's|https://yum.mariadb.org/RPM-GPG-KEY-MariaDB|https://cyberpanel.sh/yum.mariadb.org/RPM-GPG-KEY-MariaDB|g' /etc/yum.repos.d/MariaDB.repo
+    fi
+    dnf clean metadata --disablerepo='*' --enablerepo=mariadb 2>/dev/null || true
+  fi
+
   # AlmaLinux 9 specific package installation
   if [[ "$Server_OS" = "AlmaLinux9" ]] ; then
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing AlmaLinux 9 specific packages..." | tee -a /var/log/cyberpanel_upgrade_debug.log
@@ -623,9 +661,12 @@ EOF
                    sqlite-devel libxml2-devel libxslt-devel curl-devel libedit-devel \
                    readline-devel pkgconfig cmake gcc-c++
     
-    # Install MariaDB (use MariaDB-* names when official 11.8 repo is configured)
+    # Install/upgrade MariaDB from configured repo (11.8, 10.11, or 12.1 per --mariadb-version)
     dnf install -y MariaDB-server MariaDB-client MariaDB-devel 2>/dev/null || dnf install -y mariadb-server mariadb-devel mariadb-client
-    
+    # Upgrade to chosen version if already installed (e.g. 10.11 -> 11.8)
+    dnf upgrade -y MariaDB-server MariaDB-client MariaDB-devel 2>/dev/null || true
+    systemctl restart mariadb 2>/dev/null || true
+
     # Install additional required packages
     dnf install -y wget curl unzip zip rsync firewalld psmisc git python3 python3-pip python3-devel
   fi
@@ -1691,7 +1732,7 @@ _b "  ▒▒▒▒▒▒▒▒▒    ▒▒▒▒▒███ ▒▒▒▒▒▒
 _b "              ███ ▒███"
 _b "             ▒▒██████"
 _b "              ▒▒▒▒▒▒"
-_b "                             🚀 UPGRADE COMPLETED SUCCESSFULLY! 🚀"
+_b "                    *** UPGRADE COMPLETED SUCCESSFULLY! ***"
 _b ""
 _bl
 
@@ -1721,47 +1762,47 @@ echo -e "\n🔍 Testing CyberPanel accessibility..."
 if systemctl is-active --quiet lscpd 2>/dev/null; then
   _br
   _b ""
-  _b "  🌐 ACCESS YOUR CYBERPANEL:"
+  _b "  ACCESS YOUR CYBERPANEL:"
   _b ""
-  _b "  • Local:  https://127.0.0.1:${Panel_Port#*:}"
-  _b "  • Remote: https://${SERVER_IP}:${Panel_Port#*:}"
+  _b "  Local:  https://127.0.0.1:${Panel_Port#*:}"
+  _b "  Remote: https://${SERVER_IP}:${Panel_Port#*:}"
   _b ""
-  _b "  🔐 Default Login: admin / 1234567890"
-  _b "  ⚠️  Please change the default password immediately!"
+  _b "  Default Login: admin / 1234567890"
+  _b "  >> Please change the default password immediately!"
   _b ""
   _bl
 
-  # Binary confirmation + versions
+  # Binary confirmation + versions (ASCII-only so box alignment is correct)
   echo -e "\n"
   _br
   _b ""
-  _b "  🎯 UPGRADE STATUS: [████████████████████████████████████████████████████████] 100%"
+  _b "  UPGRADE STATUS: [====================================================] 100%"
   _b ""
-  _b "  ✅ All components installed successfully"
-  _b "  ✅ Python dependencies resolved"
-  _b "  ✅ WSGI-LSAPI compiled with optimizations"
-  _b "  ✅ CyberPanel service is running"
-  _b "  ✅ Web interface is accessible"
+  _b "  [OK] All components installed successfully"
+  _b "  [OK] Python dependencies resolved"
+  _b "  [OK] WSGI-LSAPI compiled with optimizations"
+  _b "  [OK] CyberPanel service is running"
+  _b "  [OK] Web interface is accessible"
   _b ""
-  _b "  📦 CyberPanel: ${Branch_Name:-unknown}"
-  _b "  📦 Database (MariaDB): ${MARIADB_VER:-unknown}"
+  _b "  CyberPanel: ${Branch_Name:-unknown}"
+  _b "  Database (MariaDB): ${MARIADB_VER:-unknown}"
   _b ""
-  _b "  🎉 UPGRADE COMPLETED SUCCESSFULLY! 🎉"
+  _b "  *** UPGRADE COMPLETED SUCCESSFULLY! ***"
   _b ""
   _bl
 
 else
-  echo -e "❌ CyberPanel may not be running properly. Please check the logs."
+  echo -e "CyberPanel may not be running properly. Please check the logs."
   echo -e "\n"
   _br
   _b ""
-  _b "  ⚠️  UPGRADE COMPLETED WITH WARNINGS"
+  _b "  UPGRADE COMPLETED WITH WARNINGS"
   _b ""
-  _b "  • CyberPanel files have been updated"
-  _b "  • Some services may need manual restart"
-  _b "  • Please check logs at /var/log/cyberpanel_upgrade_debug.log"
+  _b "  - CyberPanel files have been updated"
+  _b "  - Some services may need manual restart"
+  _b "  - Please check logs at /var/log/cyberpanel_upgrade_debug.log"
   _b ""
-  _b "  🔧 Try running: systemctl restart lscpd"
+  _b "  Try running: systemctl restart lscpd"
   _b ""
   _bl
 fi
