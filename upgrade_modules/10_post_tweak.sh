@@ -1,0 +1,336 @@
+#!/usr/bin/env bash
+# CyberPanel upgrade – post-upgrade system tweaks (PHP, LSWS, SnappyMail, etc.). Sourced by cyberpanel_upgrade.sh.
+
+Post_Upgrade_System_Tweak() {
+  if [[ "$Server_OS" = "CentOS" ]] ; then
+
+  #for cenots 7/8
+    if [[ "$Server_OS_Version" = "7" ]] ; then
+      sed -i 's|error_reporting = E_ALL \&amp; ~E_DEPRECATED \&amp; ~E_STRICT|error_reporting = E_ALL \& ~E_DEPRECATED \& ~E_STRICT|g' /usr/local/lsws/{lsphp72,lsphp73}/etc/php.ini
+    #fix php.ini &amp; issue
+        if ! yum list installed lsphp74-devel ; then
+          yum install -y lsphp74-devel
+        fi
+        if [[ ! -f /usr/local/lsws/lsphp74/lib64/php/modules/zip.so ]] ; then
+        if yum list installed libzip-devel >/dev/null 2>&1 ; then
+          yum remove -y libzip-devel
+        fi
+        yum install -y https://cyberpanel.sh/misc/libzip-0.11.2-6.el7.psychotic.x86_64.rpm
+        yum install -y https://cyberpanel.sh/misc/libzip-devel-0.11.2-6.el7.psychotic.x86_64.rpm
+        yum install lsphp74-devel
+        if [[ ! -d /usr/local/lsws/lsphp74/tmp ]]; then
+          mkdir /usr/local/lsws/lsphp74/tmp
+        fi
+        /usr/local/lsws/lsphp74/bin/pecl channel-update pecl.php.net
+        /usr/local/lsws/lsphp74/bin/pear config-set temp_dir /usr/local/lsws/lsphp74/tmp
+        if /usr/local/lsws/lsphp74/bin/pecl install zip ; then
+          echo "extension=zip.so" >/usr/local/lsws/lsphp74/etc/php.d/20-zip.ini
+          chmod 755 /usr/local/lsws/lsphp74/lib64/php/modules/zip.so
+        else
+          echo -e "\nlsphp74-zip compilation failed..."
+        fi
+        #fix old legacy lsphp74-zip issue on centos 7
+      fi
+
+
+    #for centos 7
+    elif [[ "$Server_OS_Version" = "8" ]] ; then
+    :
+    #for centos 8
+    fi
+  fi
+
+  if [[ "$Server_OS" = "Ubuntu" ]] ; then
+
+  if ! dpkg -l lsphp74-dev >/dev/null 2>&1 ; then
+    apt install -y lsphp74-dev
+  fi
+
+    if [[ ! -f /usr/sbin/ipset ]] ; then
+    ln -s /sbin/ipset /usr/sbin/ipset
+    fi
+
+  #for ubuntu 18/20
+    if [[ "$Server_OS_Version" = "18" ]] ; then
+    :
+    #for ubuntu 18
+    elif [[ "$Server_OS_Version" = "20" ]] ; then
+    :
+    #for ubuntu 20
+    fi
+  fi
+
+sed -i "s|lsws-5.3.8|lsws-$LSWS_Stable_Version|g" /usr/local/CyberCP/serverStatus/serverStatusUtil.py
+sed -i "s|lsws-5.4.2|lsws-$LSWS_Stable_Version|g" /usr/local/CyberCP/serverStatus/serverStatusUtil.py
+sed -i "s|lsws-5.3.5|lsws-$LSWS_Stable_Version|g" /usr/local/CyberCP/serverStatus/serverStatusUtil.py
+sed -i "s|lsws-6.0|lsws-$LSWS_Stable_Version|g" /usr/local/CyberCP/serverStatus/serverStatusUtil.py
+sed -i "s|lsws-6.3.4|lsws-$LSWS_Stable_Version|g" /usr/local/CyberCP/serverStatus/serverStatusUtil.py
+
+if [[ "$Server_Country" = "CN" ]] ; then
+  sed -i 's|https://www.litespeedtech.com/|https://cyberpanel.sh/www.litespeedtech.com/|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
+  sed -i 's|http://license.litespeedtech.com/|https://cyberpanel.sh/license.litespeedtech.com/|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
+fi
+
+sed -i 's|python2|python|g' /usr/bin/adminPass
+chmod 700 /usr/bin/adminPass
+
+rm -f /usr/bin/php
+ln -s /usr/local/lsws/lsphp74/bin/php /usr/bin/php
+
+if [[ -f /etc/cyberpanel/webadmin_passwd ]]; then
+  chmod 600 /etc/cyberpanel/webadmin_passwd
+fi
+
+chown lsadm:lsadm /usr/local/lsws/admin/conf/htpasswd
+chmod 600 /usr/local/lsws/admin/conf/htpasswd
+
+if [[ -f /etc/pure-ftpd/pure-ftpd.conf ]]; then
+  sed -i 's|NoAnonymous                 no|NoAnonymous                 yes|g' /etc/pure-ftpd/pure-ftpd.conf
+fi
+
+Tmp_Output=$(timeout 3 openssl s_client -connect 127.0.0.1:8090 2>/dev/null)
+if echo "$Tmp_Output" | grep -q "mail@example.com" ; then
+  # it is using default installer generated cert
+  Regenerate_Cert 8090
+fi
+
+
+Tmp_Output=$(timeout 3 openssl s_client -connect 127.0.0.1:7080 2>/dev/null)
+if echo "$Tmp_Output" | grep -q "mail@example.com" ; then
+  Regenerate_Cert 7080
+fi
+
+if [[ ! -f /usr/bin/cyberpanel_utility ]]; then
+  wget -q -O /usr/bin/cyberpanel_utility https://cyberpanel.sh/misc/cyberpanel_utility.sh
+  chmod 700 /usr/bin/cyberpanel_utility
+fi
+
+if [[ -f /etc/cyberpanel/watchdog.sh ]] ; then
+	watchdog kill
+	rm -f /etc/cyberpanel/watchdog.sh
+	rm -f /usr/local/bin/watchdog
+	wget -O /etc/cyberpanel/watchdog.sh "${Git_Content_URL}/${Branch_Name}/CPScripts/watchdog.sh"
+	chmod 700 /etc/cyberpanel/watchdog.sh
+	ln -s /etc/cyberpanel/watchdog.sh /usr/local/bin/watchdog
+	watchdog status
+fi
+
+
+rm -f /usr/local/composer.sh
+rm -f /usr/local/requirments.txt
+
+chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib
+chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib64
+
+# Fix missing lsphp binary in /usr/local/lscp/fcgi-bin/ after upgrade
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Checking and restoring lsphp binary if missing..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+if [[ ! -f /usr/local/lscp/fcgi-bin/lsphp ]] || [[ ! -s /usr/local/lscp/fcgi-bin/lsphp ]]; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] lsphp binary missing or empty, attempting to restore..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+
+    # Ensure fcgi-bin directory exists
+    mkdir -p /usr/local/lscp/fcgi-bin
+
+    # Find the latest available PHP version and use it
+    PHP_RESTORED=0
+    
+    # Try to find the latest lsphp version (check from newest to oldest)
+    # Priority: 85 (beta), 84, 83, 82, 81, 80, 74
+    for PHP_VER in 85 84 83 82 81 80 74; do
+        if [[ -f /usr/local/lsws/lsphp${PHP_VER}/bin/lsphp ]]; then
+            # Try to create symlink first (preferred)
+            if ln -sf /usr/local/lsws/lsphp${PHP_VER}/bin/lsphp /usr/local/lscp/fcgi-bin/lsphp 2>/dev/null; then
+                echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] lsphp symlink created from lsphp${PHP_VER}" | tee -a /var/log/cyberpanel_upgrade_debug.log
+            else
+                # If symlink fails, copy the file
+                cp -f /usr/local/lsws/lsphp${PHP_VER}/bin/lsphp /usr/local/lscp/fcgi-bin/lsphp
+                echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] lsphp binary copied from lsphp${PHP_VER}" | tee -a /var/log/cyberpanel_upgrade_debug.log
+            fi
+            chown root:root /usr/local/lscp/fcgi-bin/lsphp
+            chmod 755 /usr/local/lscp/fcgi-bin/lsphp
+            PHP_RESTORED=1
+            break
+        fi
+    done
+
+    # If no lsphp version found, try php binary as fallback
+    if [[ $PHP_RESTORED -eq 0 ]]; then
+        for PHP_VER in 83 82 81 80 74 73 72; do
+            if [[ -f /usr/local/lsws/lsphp${PHP_VER}/bin/php ]]; then
+                # Try to create symlink first (preferred)
+                if ln -sf /usr/local/lsws/lsphp${PHP_VER}/bin/php /usr/local/lscp/fcgi-bin/lsphp 2>/dev/null; then
+                    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] lsphp symlink created from php${PHP_VER} (lsphp fallback)" | tee -a /var/log/cyberpanel_upgrade_debug.log
+                else
+                    # If symlink fails, copy the file
+                    cp -f /usr/local/lsws/lsphp${PHP_VER}/bin/php /usr/local/lscp/fcgi-bin/lsphp
+                    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] lsphp binary copied from php${PHP_VER} (lsphp fallback)" | tee -a /var/log/cyberpanel_upgrade_debug.log
+                fi
+                chown root:root /usr/local/lscp/fcgi-bin/lsphp
+                chmod 755 /usr/local/lscp/fcgi-bin/lsphp
+                PHP_RESTORED=1
+                break
+            fi
+        done
+    fi
+    
+    # If no lsphp version found, try admin_php5 as fallback
+    if [[ $PHP_RESTORED -eq 0 ]]; then
+        if [[ -f /usr/local/lscp/admin/fcgi-bin/admin_php5 ]]; then
+            cp -f /usr/local/lscp/admin/fcgi-bin/admin_php5 /usr/local/lscp/fcgi-bin/lsphp
+            chown root:root /usr/local/lscp/fcgi-bin/lsphp
+            chmod 755 /usr/local/lscp/fcgi-bin/lsphp
+            echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] lsphp binary restored from admin_php5 (fallback)" | tee -a /var/log/cyberpanel_upgrade_debug.log
+        elif [[ -f /usr/local/lscp/admin/fcgi-bin/admin_php ]]; then
+            cp -f /usr/local/lscp/admin/fcgi-bin/admin_php /usr/local/lscp/fcgi-bin/lsphp
+            chown root:root /usr/local/lscp/fcgi-bin/lsphp
+            chmod 755 /usr/local/lscp/fcgi-bin/lsphp
+            echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] lsphp binary restored from admin_php (fallback)" | tee -a /var/log/cyberpanel_upgrade_debug.log
+        elif [[ -f /usr/local/lsws/admin/fcgi-bin/admin_php5 ]]; then
+            cp -f /usr/local/lsws/admin/fcgi-bin/admin_php5 /usr/local/lscp/fcgi-bin/lsphp
+            chown root:root /usr/local/lscp/fcgi-bin/lsphp
+            chmod 755 /usr/local/lscp/fcgi-bin/lsphp
+            echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] lsphp binary restored from lsws admin_php5 (fallback)" | tee -a /var/log/cyberpanel_upgrade_debug.log
+        else
+            echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] ERROR: Could not find any PHP binary to restore lsphp" | tee -a /var/log/cyberpanel_upgrade_debug.log
+        fi
+    fi
+    
+    # Create symlinks if they don't exist
+    if [[ -f /usr/local/lscp/fcgi-bin/lsphp ]]; then
+        if [[ ! -f /usr/local/lscp/fcgi-bin/lsphp4 ]]; then
+            ln -sf ./lsphp /usr/local/lscp/fcgi-bin/lsphp4
+        fi
+        if [[ ! -f /usr/local/lscp/fcgi-bin/lsphp5 ]]; then
+            ln -sf ./lsphp /usr/local/lscp/fcgi-bin/lsphp5
+        fi
+    fi
+fi
+
+# Fix missing lscpd binary in /usr/local/lscp/bin/ after upgrade
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Checking and restoring lscpd binary if missing..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+if [[ ! -f /usr/local/lscp/bin/lscpd ]] || [[ ! -s /usr/local/lscp/bin/lscpd ]]; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] lscpd binary missing or empty, attempting to restore..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+
+    # Ensure lscp bin directory exists
+    mkdir -p /usr/local/lscp/bin
+
+    # Select the correct lscpd binary based on OS and version
+    lscpd_selection='lscpd-0.3.1'
+
+    # Check if this is an ARM system
+    if uname -a | grep -q 'aarch64'; then
+        lscpd_selection='lscpd.aarch64'
+    else
+        # For x86_64 systems, check Ubuntu version
+        if [[ "$Server_OS" = "Ubuntu" ]] && [[ -f /etc/lsb-release ]]; then
+            ubuntu_version=$(grep 'DISTRIB_RELEASE' /etc/lsb-release | cut -d'=' -f2 | cut -d'.' -f1)
+            if [[ "$ubuntu_version" = "22" ]] || [[ "$ubuntu_version" = "24" ]]; then
+                lscpd_selection='lscpd.0.4.0'
+            fi
+        fi
+    fi
+
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Selected lscpd binary: $lscpd_selection" | tee -a /var/log/cyberpanel_upgrade_debug.log
+
+    # Copy the selected binary from CyberCP to lscp bin
+    if [[ -f /usr/local/CyberCP/${lscpd_selection} ]]; then
+        cp -f /usr/local/CyberCP/${lscpd_selection} /usr/local/lscp/bin/${lscpd_selection}
+        rm -f /usr/local/lscp/bin/lscpd
+        mv /usr/local/lscp/bin/${lscpd_selection} /usr/local/lscp/bin/lscpd
+        chmod 755 /usr/local/lscp/bin/lscpd
+        chown root:root /usr/local/lscp/bin/lscpd
+        echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] lscpd binary restored successfully from ${lscpd_selection}" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    else
+        echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] ERROR: Could not find lscpd source binary ${lscpd_selection} in /usr/local/CyberCP/" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    fi
+else
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] lscpd binary exists and is valid" | tee -a /var/log/cyberpanel_upgrade_debug.log
+fi
+
+if [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]] || [[ "$Server_OS_Version" = "18" ]] || [[ "$Server_OS_Version" = "8" ]] || [[ "$Server_OS_Version" = "20" ]] || [[ "$Server_OS_Version" = "24" ]]; then
+    echo "PYTHONHOME=/usr" > /usr/local/lscp/conf/pythonenv.conf
+  else
+    # Uncomment and use the following lines if necessary for other OS versions
+    # rsync -av --ignore-existing /usr/lib64/python3.9/ /usr/local/CyberCP/lib64/python3.9/
+    # Check_Return
+    :
+fi
+
+# Fix SnappyMail directory permissions for Ubuntu 24.04 and other systems
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Checking SnappyMail directories..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+
+# Migrate data from old rainloop folder to new snappymail folder (2.4.4 -> 2.5.5 upgrade)
+if [ -d "/usr/local/lscp/cyberpanel/rainloop/data" ] && [ "$(ls -A /usr/local/lscp/cyberpanel/rainloop/data 2>/dev/null)" ]; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Migrating rainloop data to snappymail..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    
+    # Check if snappymail data already exists with content
+    if [ -d "/usr/local/lscp/cyberpanel/snappymail/data" ] && [ -d "/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs" ]; then
+        echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] SnappyMail data already exists, skipping migration" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    else
+        # Create SnappyMail data directories if they don't exist
+        mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/
+        mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/domains/
+        mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/storage/
+        mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/temp/
+        mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/cache/
+        
+        # Migrate data using rsync (preserves permissions and ownership)
+        rsync -av --ignore-existing /usr/local/lscp/cyberpanel/rainloop/data/ /usr/local/lscp/cyberpanel/snappymail/data/ 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+        
+        if [ $? -eq 0 ]; then
+            echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Successfully migrated rainloop data to snappymail" | tee -a /var/log/cyberpanel_upgrade_debug.log
+            
+            # Update include.php to use snappymail path
+            if [ -f "/usr/local/CyberCP/public/snappymail/include.php" ]; then
+                sed -i 's|/usr/local/lscp/cyberpanel/rainloop/data|/usr/local/lscp/cyberpanel/snappymail/data|g' /usr/local/CyberCP/public/snappymail/include.php
+                echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Updated include.php to use snappymail data path" | tee -a /var/log/cyberpanel_upgrade_debug.log
+            fi
+        else
+            echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: Data migration completed with errors" | tee -a /var/log/cyberpanel_upgrade_debug.log
+        fi
+    fi
+else
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] No old rainloop data found, creating new SnappyMail directories..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    
+    # Create SnappyMail data directories if they don't exist
+    mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/
+    mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/domains/
+    mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/storage/
+    mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/temp/
+    mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/cache/
+fi
+
+# Ensure proper ownership for SnappyMail data directories
+if id -u lscpd >/dev/null 2>&1; then
+    chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Set SnappyMail ownership to lscpd:lscpd" | tee -a /var/log/cyberpanel_upgrade_debug.log
+else
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: lscpd user not found, skipping ownership change" | tee -a /var/log/cyberpanel_upgrade_debug.log
+fi
+
+# Set proper permissions for SnappyMail data directories (group writable)
+chmod -R 775 /usr/local/lscp/cyberpanel/snappymail/data/
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Set SnappyMail data directory permissions to 775 (group writable)" | tee -a /var/log/cyberpanel_upgrade_debug.log
+
+# Ensure web server users are in the lscpd group for access
+usermod -a -G lscpd nobody 2>/dev/null || true
+
+# Fix SnappyMail public directory ownership (critical fix)
+chown -R lscpd:lscpd /usr/local/CyberCP/public/snappymail/data 2>/dev/null || true
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Added web server users to lscpd group and fixed SnappyMail ownership" | tee -a /var/log/cyberpanel_upgrade_debug.log
+
+# Force phpMyAdmin to use 127.0.0.1 (TCP) so it shows the same MariaDB version as CLI (main instance on 3306)
+if [ -f /usr/local/CyberCP/public/phpmyadmin/config.inc.php ]; then
+  if ! grep -q "\$cfg\['Servers'\]\[\$i\]\['host'\] = '127.0.0.1'" /usr/local/CyberCP/public/phpmyadmin/config.inc.php 2>/dev/null; then
+    sed -i "/SignonURL/a \$cfg['Servers'][\$i]['host'] = '127.0.0.1';\n\$cfg['Servers'][\$i]['port'] = '3306';" /usr/local/CyberCP/public/phpmyadmin/config.inc.php 2>/dev/null || true
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Set phpMyAdmin server host to 127.0.0.1" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  fi
+fi
+if [ -f /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php ]; then
+  sed -i "/trim.*\$_POST.*host.*localhost/s/'localhost'/'127.0.0.1'/g" /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php 2>/dev/null || true
+  grep -q "127.0.0.1" /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php && echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] phpMyAdmin signon default host set to 127.0.0.1" | tee -a /var/log/cyberpanel_upgrade_debug.log
+fi
+
+systemctl restart lscpd
+
+}
+

@@ -5,6 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from plogical.mailUtilities import mailUtilities
 import os
+import shutil
 import subprocess
 import shlex
 import json
@@ -42,6 +43,17 @@ PLUGIN_SOURCE_PATHS = ['/home/cyberpanel/plugins', '/home/cyberpanel-plugins']
 # These plugins show "Built-in" badge and only Settings button (no Deactivate/Uninstall)
 BUILTIN_PLUGINS = frozenset(['emailMarketing', 'emailPremium'])
 
+# Core CyberPanel app dirs under /usr/local/CyberCP that must not be counted as "installed plugins"
+# (matches pluginHolder.urls so Installed count = store/plugin dirs only, not core apps)
+RESERVED_PLUGIN_DIRS = frozenset([
+    'api', 'backup', 'baseTemplate', 'cloudAPI', 'CLManager', 'containerization', 'CyberCP',
+    'databases', 'dns', 'dockerManager', 'emailMarketing', 'emailPremium', 'filemanager',
+    'firewall', 'ftp', 'highAvailability', 'IncBackups', 'loginSystem', 'mailServer',
+    'managePHP', 'manageSSL', 'manageServices', 'packages', 'pluginHolder', 'plogical',
+    'pluginInstaller', 'serverLogs', 'serverStatus', 's3Backups', 'tuning', 'userManagment',
+    'websiteFunctions', 'aiScanner', 'dns', 'help', 'installed',
+])
+
 def _get_plugin_source_path(plugin_name):
     """Return the full path to a plugin's source directory, or None if not found."""
     for base in PLUGIN_SOURCE_PATHS:
@@ -50,6 +62,30 @@ def _get_plugin_source_path(plugin_name):
         if os.path.isdir(path) and os.path.exists(meta_path):
             return path
     return None
+
+def _ensure_plugin_meta_xml(plugin_name):
+    """
+    If plugin is installed (directory exists) but meta.xml is missing,
+    restore it from source or from GitHub so the grid and version checks work.
+    """
+    installed_dir = os.path.join('/usr/local/CyberCP', plugin_name)
+    installed_meta = os.path.join(installed_dir, 'meta.xml')
+    if not os.path.isdir(installed_dir) or os.path.exists(installed_meta):
+        return
+    source_path = _get_plugin_source_path(plugin_name)
+    if source_path:
+        source_meta = os.path.join(source_path, 'meta.xml')
+        if os.path.exists(source_meta):
+            try:
+                shutil.copy2(source_meta, installed_meta)
+                logging.writeToFile(f"Restored meta.xml for {plugin_name} from source")
+            except Exception as e:
+                logging.writeToFile(f"Could not restore meta.xml for {plugin_name}: {e}")
+            return
+    try:
+        _sync_meta_xml_from_github(plugin_name)
+    except Exception:
+        pass
 
 def _get_plugin_state_file(plugin_name):
     """Get the path to the plugin state file"""
@@ -121,6 +157,15 @@ def installed(request):
     errorPlugins = []
     processed_plugins = set()  # Track which plugins we've already processed
 
+    # Repair pass: ensure every installed plugin dir has meta.xml (from source or GitHub) so counts and grid are correct
+    if os.path.exists(installedPath):
+        for plugin in os.listdir(installedPath):
+            if plugin.startswith('.') or plugin in RESERVED_PLUGIN_DIRS:
+                continue
+            plugin_dir = os.path.join(installedPath, plugin)
+            if os.path.isdir(plugin_dir):
+                _ensure_plugin_meta_xml(plugin)
+
     # First, process plugins from source directories (multiple paths: /home/cyberpanel/plugins, /home/cyberpanel-plugins)
     # BUT: Skip plugins that are already installed - we'll process those from the installed location instead
     for pluginPath in PLUGIN_SOURCE_PATHS:
@@ -134,20 +179,20 @@ def installed(request):
         for plugin in os.listdir(pluginPath):
             if plugin in processed_plugins:
                 continue
-            # Skip if plugin is already installed - we'll process it from installed location instead
-            completePath = installedPath + '/' + plugin + '/meta.xml'
-            if os.path.exists(completePath):
-                # Plugin is installed, skip source path - DON'T mark as processed yet
-                # The installed location loop will handle it and mark it as processed
-                continue
             # Skip files (like .zip files) - only process directories
             pluginDir = os.path.join(pluginPath, plugin)
             if not os.path.isdir(pluginDir):
                 continue
             
+            # Use same "installed" criterion as install endpoint: plugin directory in /usr/local/CyberCP/
+            installed_dir = os.path.join(installedPath, plugin)
+            completePath = os.path.join(installedPath, plugin, 'meta.xml')
+            if os.path.exists(completePath):
+                # Plugin is fully installed (dir + meta.xml), skip - second loop will add it
+                continue
+            
             data = {}
             # Try installed location first, then fallback to source location
-            completePath = installedPath + '/' + plugin + '/meta.xml'
             sourcePath = os.path.join(pluginDir, 'meta.xml')
             
             # Determine which meta.xml to use
@@ -200,9 +245,9 @@ def installed(request):
                 data['plugin_dir'] = plugin  # Plugin directory name
                 # Set builtin flag (core CyberPanel plugins vs user-installable plugins)
                 data['builtin'] = plugin in BUILTIN_PLUGINS
-                # Check if plugin is installed (only if it exists in /usr/local/CyberCP/)
-                # Source directory presence doesn't mean installed - it just means the source files are available
-                data['installed'] = os.path.exists(completePath)
+                # Installed = plugin directory exists (must match install endpoint which uses directory existence)
+                # Fixes grid showing "Not Installed" when directory exists but meta.xml is missing
+                data['installed'] = os.path.isdir(installed_dir)
                 
                 # Get plugin enabled state (only for installed plugins)
                 if data['installed']:
@@ -247,11 +292,9 @@ def installed(request):
                     # Special handling for emailMarketing
                     if plugin == 'emailMarketing':
                         data['manage_url'] = '/emailMarketing/'
-                    elif os.path.exists(completePath):
-                        # Check if settings route exists, otherwise use main plugin URL
-                        settings_route = f'/plugins/{plugin}/settings/'
+                    elif data['installed']:
+                        # Plugin directory exists; use main plugin URL
                         main_route = f'/plugins/{plugin}/'
-                        # Default to main route - most plugins have a main route even if no settings
                         data['manage_url'] = main_route
                     else:
                         data['manage_url'] = None
@@ -282,20 +325,14 @@ def installed(request):
                 errorPlugins.append({'name': plugin, 'error': f'XML parse error: {str(e)}'})
                 logging.writeToFile(f"Plugin {plugin}: XML parse error - {str(e)}")
                 # Don't mark as processed if it failed - let installed check handle it
-                # This ensures plugins that exist in /usr/local/CyberCP/ but have bad source meta.xml still get counted
-                if not os.path.exists(completePath):
-                    # Only skip if it's not actually installed
+                if not os.path.isdir(installed_dir):
                     continue
-                # If it exists in installed location, don't mark as processed so it gets checked there
                 continue
             except Exception as e:
                 errorPlugins.append({'name': plugin, 'error': f'Error loading plugin: {str(e)}'})
                 logging.writeToFile(f"Plugin {plugin}: Error loading - {str(e)}")
-                # Don't mark as processed if it failed - let installed check handle it
-                if not os.path.exists(completePath):
-                    # Only skip if it's not actually installed
+                if not os.path.isdir(installed_dir):
                     continue
-                # If it exists in installed location, don't mark as processed so it gets checked there
                 continue
     
     # Also check for installed plugins that don't have source directories
@@ -311,6 +348,7 @@ def installed(request):
             if not os.path.isdir(pluginInstalledDir):
                 continue
             
+            _ensure_plugin_meta_xml(plugin)
             metaXmlPath = os.path.join(pluginInstalledDir, 'meta.xml')
             if not os.path.exists(metaXmlPath):
                 continue
@@ -475,29 +513,30 @@ def installed(request):
         except Exception as e:
             logging.writeToFile(f"Plugin {plugin_name} fallback load error: {str(e)}")
 
-    # Calculate installed and active counts
-    # Double-check by also counting plugins that actually exist in /usr/local/CyberCP/
+    # Calculate installed and active counts: only count real plugins (have meta.xml, not core apps)
     installed_plugins_in_filesystem = set()
     if os.path.exists(installedPath):
         for plugin in os.listdir(installedPath):
+            if plugin.startswith('.') or plugin in RESERVED_PLUGIN_DIRS:
+                continue
             pluginInstalledDir = os.path.join(installedPath, plugin)
-            if os.path.isdir(pluginInstalledDir):
-                metaXmlPath = os.path.join(pluginInstalledDir, 'meta.xml')
-                if os.path.exists(metaXmlPath):
-                    installed_plugins_in_filesystem.add(plugin)
+            if not os.path.isdir(pluginInstalledDir):
+                continue
+            if not os.path.exists(os.path.join(pluginInstalledDir, 'meta.xml')):
+                continue
+            installed_plugins_in_filesystem.add(plugin)
     
-    # Count installed plugins from the list
     installed_count = len([p for p in pluginList if p.get('installed', False)])
     active_count = len([p for p in pluginList if p.get('installed', False) and p.get('enabled', False)])
     
-    # If there's a discrepancy, use the filesystem count as the source of truth
+    # Use the larger of list count and filesystem count so header never shows less than grid
     filesystem_installed_count = len(installed_plugins_in_filesystem)
-    if filesystem_installed_count != installed_count:
-        logging.writeToFile(f"WARNING: Plugin count mismatch! List says {installed_count}, filesystem has {filesystem_installed_count}")
-        logging.writeToFile(f"Plugins in filesystem: {sorted(installed_plugins_in_filesystem)}")
-        logging.writeToFile(f"Plugins in list with installed=True: {[p.get('plugin_dir') for p in pluginList if p.get('installed', False)]}")
-        # Use filesystem count as source of truth
-        installed_count = filesystem_installed_count
+    list_installed_count = len([p for p in pluginList if p.get('installed', False)])
+    if filesystem_installed_count != list_installed_count:
+        logging.writeToFile(f"Plugin count: list installed={list_installed_count}, filesystem with meta.xml={filesystem_installed_count}")
+    installed_count = max(list_installed_count, filesystem_installed_count)
+    if active_count > installed_count:
+        active_count = installed_count
     
     # Debug logging to help identify discrepancies
     logging.writeToFile(f"Plugin count: Total={len(pluginList)}, Installed={installed_count}, Active={active_count}")
@@ -609,6 +648,7 @@ def install_plugin(request, plugin_name):
             # Set plugin to enabled by default after installation
             _set_plugin_state(plugin_name, True)
             
+            _ensure_plugin_meta_xml(plugin_name)
             logging.writeToFile(f"Plugin {plugin_name} installed successfully (upload)")
             return JsonResponse({
                 'success': True,
@@ -1783,6 +1823,7 @@ def install_from_store(request, plugin_name):
                 # Set plugin to enabled by default after installation
                 _set_plugin_state(plugin_name, True)
                 
+                _ensure_plugin_meta_xml(plugin_name)
                 return JsonResponse({
                     'success': True,
                     'message': f'Plugin {plugin_name} installed successfully from store'
@@ -1812,6 +1853,24 @@ def install_from_store(request, plugin_name):
             'success': False,
             'error': str(e)
         }, status=500)
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def debug_loaded_plugins(request):
+    """Return which plugins have URL routes loaded and which failed (for diagnosing 404s)."""
+    try:
+        import pluginHolder.urls as urls_mod
+        loaded = list(getattr(urls_mod, '_loaded_plugins', []))
+        failed = dict(getattr(urls_mod, '_failed_plugins', {}))
+        return JsonResponse({
+            'success': True,
+            'loaded': loaded,
+            'failed': failed,
+            'loaded_count': len(loaded),
+            'failed_count': len(failed),
+        }, json_dumps_params={'indent': 2})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 def plugin_help(request, plugin_name):
     """Plugin-specific help page - shows plugin information, version history, and help content"""

@@ -430,12 +430,19 @@
     .installed-sort-filter-bar {
         flex-basis: 100%;
         display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 12px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
         margin-top: 12px;
         padding: 12px 0;
         border-top: 1px solid var(--border-primary, #e2e8f0);
+    }
+    .installed-sort-filter-bar .installed-filter-row,
+    .installed-sort-filter-bar .installed-sort-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
     }
     .installed-sort-filter-bar .sort-label {
         font-size: 13px;
@@ -817,6 +824,82 @@
         padding: 15px;
         background: var(--bg-secondary, #f8f9ff);
         border-radius: 8px;
+    }
+    
+    /* Collapsible Category Filter for Grid/Table (installed view) - same style as A-Å filter */
+    .installed-category-filter-wrapper {
+        margin-top: 12px;
+        margin-bottom: 0;
+    }
+    .installed-category-toggle-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border: 1px solid var(--border-primary, #e8e9ff);
+        background: var(--bg-primary, white);
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary, #64748b);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .installed-category-toggle-btn:hover {
+        background: var(--bg-hover, #f8f9ff);
+        border-color: #5856d6;
+        color: #5856d6;
+    }
+    .installed-category-toggle-btn[aria-expanded="true"] .installed-category-chevron {
+        transform: rotate(180deg);
+    }
+    .installed-category-chevron {
+        font-size: 10px;
+        transition: transform 0.2s;
+    }
+    .installed-category-filter {
+        display: block;
+        margin-top: 12px;
+        padding: 15px;
+        background: var(--bg-secondary, #f8f9ff);
+        border-radius: 8px;
+    }
+    .installed-category-filter .installed-filter-row,
+    .installed-category-filter .installed-sort-row {
+        margin-bottom: 12px;
+    }
+    .installed-category-filter .installed-sort-row:last-of-type {
+        margin-bottom: 0;
+    }
+    .installed-category-filter-btns {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+    }
+    .installed-category-btn {
+        padding: 6px 12px;
+        border: 1px solid var(--border-primary, #e8e9ff);
+        background: var(--bg-primary, white);
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: var(--text-secondary, #64748b);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .installed-category-btn:hover {
+        background: var(--bg-hover, #f0f1ff);
+        border-color: #5856d6;
+        color: #5856d6;
+    }
+    .installed-category-btn.active {
+        background: #5856d6;
+        color: white;
+        border-color: #5856d6;
     }
     
     .alpha-btn {
@@ -1224,21 +1307,58 @@
                         {% trans "Plugin Development Guide" %}
                     </a>
                 </div>
-                <!-- Sort bar for Grid and Table view (visible when grid or table is active) -->
+                <!-- Filter + Sort bar for Grid and Table view (visible when grid or table is active). All controls in collapsible "Filter". -->
                 <div id="installedSortFilterBar" class="installed-sort-filter-bar" style="display: none;"
                      data-trans-name-asc="{% trans 'Name A-Å' %}" data-trans-name-desc="{% trans 'Name Å-A' %}"
-                     data-trans-date-newest="{% trans 'Date (newest)' %}" data-trans-date-oldest="{% trans 'Date (oldest)' %}">
-                    <span class="sort-label">{% trans "Sort by:" %}</span>
-                    <div class="sort-btns">
-                        <button type="button" class="sort-btn active" data-sort-field="name" id="installedSortBtnName" onclick="toggleInstalledSort('name')" title="{% trans 'Click to toggle A-Å / Å-A' %}">
-                            <i class="fas fa-sort-alpha-down"></i> <span class="sort-btn-label">{% trans "Name A-Å" %}</span>
+                     data-trans-date-newest="{% trans 'Date (newest)' %}" data-trans-date-oldest="{% trans 'Date (oldest)' }}">
+                    <div class="installed-category-filter-wrapper">
+                        <button type="button" class="installed-category-toggle-btn" id="installedCategoryToggleBtn" onclick="toggleInstalledCategoryFilter()" aria-expanded="false">
+                            <i class="fas fa-filter"></i>
+                            <span>{% trans "Filter" %}</span>
+                            <i class="fas fa-chevron-down installed-category-chevron"></i>
                         </button>
-                        <button type="button" class="sort-btn" data-sort-field="type" id="installedSortBtnType" onclick="toggleInstalledSort('type')" title="{% trans 'By category/type' %}">
-                            <i class="fas fa-tag"></i> <span class="sort-btn-label">{% trans "Type" %}</span>
-                        </button>
-                        <button type="button" class="sort-btn" data-sort-field="date" id="installedSortBtnDate" onclick="toggleInstalledSort('date')" title="{% trans 'Click to toggle newest / oldest' %}">
-                            <i class="fas fa-calendar-alt"></i> <span class="sort-btn-label">{% trans "Date (newest)" %}</span>
-                        </button>
+                        <div class="installed-category-filter" id="installedCategoryFilter" aria-hidden="true" style="display: none;">
+                            <div class="installed-filter-row">
+                                <span class="sort-label">{% trans "Show:" %}</span>
+                                <div class="filter-btns sort-btns">
+                                    <button type="button" class="sort-btn filter-btn active" data-filter="all" id="installedFilterBtnAll" onclick="setInstalledFilter('all')" title="{% trans 'Show all plugins' %}">
+                                        <i class="fas fa-th-list"></i> <span class="filter-btn-label">{% trans "All" %}</span>
+                                    </button>
+                                    <button type="button" class="sort-btn filter-btn" data-filter="installed" id="installedFilterBtnInstalled" onclick="setInstalledFilter('installed')" title="{% trans 'Show only installed plugins' %}">
+                                        <i class="fas fa-check-circle"></i> <span class="filter-btn-label">{% trans "Installed only" %}</span>
+                                    </button>
+                                    <button type="button" class="sort-btn filter-btn" data-filter="active" id="installedFilterBtnActive" onclick="setInstalledFilter('active')" title="{% trans 'Show only active (enabled) plugins' %}">
+                                        <i class="fas fa-power-off"></i> <span class="filter-btn-label">{% trans "Active only" %}</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="installed-sort-row">
+                                <span class="sort-label">{% trans "Sort by:" %}</span>
+                                <div class="sort-btns">
+                                    <button type="button" class="sort-btn active" data-sort-field="name" id="installedSortBtnName" onclick="toggleInstalledSort('name')" title="{% trans 'Click to toggle A-Å / Å-A' %}">
+                                        <i class="fas fa-sort-alpha-down"></i> <span class="sort-btn-label">{% trans "Name A-Å" %}</span>
+                                    </button>
+                                    <button type="button" class="sort-btn" data-sort-field="type" id="installedSortBtnType" onclick="toggleInstalledSort('type')" title="{% trans 'By category/type' %}">
+                                        <i class="fas fa-tag"></i> <span class="sort-btn-label">{% trans "Type" %}</span>
+                                    </button>
+                                    <button type="button" class="sort-btn" data-sort-field="date" id="installedSortBtnDate" onclick="toggleInstalledSort('date')" title="{% trans 'Click to toggle newest / oldest' %}">
+                                        <i class="fas fa-calendar-alt"></i> <span class="sort-btn-label">{% trans "Date (newest)" %}</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="installed-category-filter-btns">
+                                <button type="button" class="installed-category-btn active" data-category="all" onclick="filterByCategoryInstalled('all', event)">{% trans "All" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Utility" onclick="filterByCategoryInstalled('Utility', event)"><i class="fas fa-tools"></i> {% trans "Utility" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Security" onclick="filterByCategoryInstalled('Security', event)"><i class="fas fa-shield-alt"></i> {% trans "Security" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Backup" onclick="filterByCategoryInstalled('Backup', event)"><i class="fas fa-save"></i> {% trans "Backup" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Performance" onclick="filterByCategoryInstalled('Performance', event)"><i class="fas fa-rocket"></i> {% trans "Performance" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Monitoring" onclick="filterByCategoryInstalled('Monitoring', event)"><i class="fas fa-heartbeat"></i> {% trans "Monitoring" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Integration" onclick="filterByCategoryInstalled('Integration', event)"><i class="fas fa-plug"></i> {% trans "Integration" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Email" onclick="filterByCategoryInstalled('Email', event)"><i class="fas fa-envelope"></i> {% trans "Email" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Development" onclick="filterByCategoryInstalled('Development', event)"><i class="fas fa-code"></i> {% trans "Development" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Analytics" onclick="filterByCategoryInstalled('Analytics', event)"><i class="fas fa-chart-bar"></i> {% trans "Analytics" %}</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1246,7 +1366,7 @@
             <!-- Grid View -->
             <div id="gridView" class="plugins-grid">
                 {% for plugin in plugins %}
-                <div class="plugin-card" data-plugin-name="{{ plugin.name }}" data-plugin-desc="{{ plugin.desc }}" data-plugin-type="{{ plugin.type }}" data-modify-date="{{ plugin.modify_date|default:'0000-00-00 00:00:00' }}">
+                <div class="plugin-card" data-plugin-name="{{ plugin.name }}" data-plugin-desc="{{ plugin.desc }}" data-plugin-type="{{ plugin.type }}" data-modify-date="{{ plugin.modify_date|default:'0000-00-00 00:00:00' }}" data-installed="{{ plugin.installed|yesno:'true,false' }}" data-enabled="{{ plugin.enabled|yesno:'true,false' }}">
                     <div class="plugin-header">
                         <div class="plugin-icon">
                             {% if plugin.type|lower == "security" %}
@@ -1388,7 +1508,7 @@
                         </thead>
                         <tbody>
                             {% for plugin in plugins %}
-                            <tr data-plugin-name="{{ plugin.name }}" data-plugin-desc="{{ plugin.desc }}" data-plugin-type="{{ plugin.type }}" data-modify-date="{{ plugin.modify_date|default:'0000-00-00 00:00:00' }}">
+                            <tr data-plugin-name="{{ plugin.name }}" data-plugin-desc="{{ plugin.desc }}" data-plugin-type="{{ plugin.type }}" data-modify-date="{{ plugin.modify_date|default:'0000-00-00 00:00:00' }}" data-installed="{{ plugin.installed|yesno:'true,false' }}" data-enabled="{{ plugin.enabled|yesno:'true,false' }}">
                                 <td>
                                     <strong>{{ plugin.name }}</strong>
                                     {% if plugin.freshness_badge %}
@@ -1651,13 +1771,15 @@
 </div>
 
 <script>
-// Cache-busting version: 2026-02-01-v1 - Fixed category filter, added search bar, collapsible A-Å
+// Cache-busting version: 2026-02-15-v1 - Grid/Table: collapsible Category Filter (like A-Å in store)
 let storePlugins = [];
 let currentFilter = 'all';
 let currentCategory = 'all';
 let currentSearchQuery = '';
 let isSettingHash = false; // Flag to prevent infinite loops
 let currentInstalledSort = 'name-asc'; // name-asc, name-desc, type, date-desc, date-asc
+let currentInstalledFilter = 'all';    // all, installed, active
+let currentInstalledCategory = 'all';  // all, Utility, Security, ...
 
 // Get CSRF cookie helper function
 function getCookie(name) {
@@ -2035,14 +2157,43 @@ function clearPluginSearch() {
     }
 }
 
+function setInstalledFilter(filter) {
+    currentInstalledFilter = filter;
+    var bar = document.getElementById('installedSortFilterBar');
+    if (bar) {
+        try {
+            bar.querySelectorAll('.filter-btn').forEach(function(btn) {
+                btn.classList.toggle('active', (btn.getAttribute('data-filter') || '') === filter);
+            });
+        } catch (e) { console.warn('setInstalledFilter: filter buttons', e); }
+    }
+    try {
+        filterInstalledPlugins();
+    } catch (e) { console.warn('setInstalledFilter: filterInstalledPlugins', e); }
+}
+
 function filterInstalledPlugins() {
     const query = (document.getElementById('installedPluginSearchInput') && document.getElementById('installedPluginSearchInput').value) || '';
     const terms = query.trim().toLowerCase().split(/\s+/).filter(function(t) { return t.length > 0; });
+    const filter = currentInstalledFilter || 'all';
     const gridView = document.getElementById('gridView');
     const tableView = document.getElementById('tableView');
     const noResultsGrid = document.getElementById('installedPluginsNoResultsGrid');
     const noResultsTable = document.getElementById('installedPluginsNoResultsTable');
+    if (!gridView && !tableView) return;
     var visibleCount = 0;
+    function matchesFilter(installed, enabled) {
+        if (filter === 'all') return true;
+        if (filter === 'installed') return installed === 'true';
+        if (filter === 'active') return installed === 'true' && enabled === 'true';
+        return true;
+    }
+    var cat = (typeof currentInstalledCategory !== 'undefined' ? currentInstalledCategory : 'all');
+    function matchesCategory(typeAttr) {
+        if (cat === 'all') return true;
+        var t = (typeAttr || '').trim().toLowerCase();
+        return t === (cat || '').trim().toLowerCase();
+    }
     if (gridView) {
         var cards = gridView.querySelectorAll('.plugin-card');
         cards.forEach(function(card) {
@@ -2050,7 +2201,12 @@ function filterInstalledPlugins() {
             var desc = (card.getAttribute('data-plugin-desc') || '').toLowerCase();
             var type = (card.getAttribute('data-plugin-type') || '').toLowerCase();
             var combined = name + ' ' + desc + ' ' + type;
-            var show = terms.length === 0 || terms.every(function(term) { return combined.indexOf(term) !== -1; });
+            var searchMatch = terms.length === 0 || terms.every(function(term) { return combined.indexOf(term) !== -1; });
+            var installed = card.getAttribute('data-installed') || 'false';
+            var enabled = card.getAttribute('data-enabled') || 'false';
+            var filterMatch = matchesFilter(installed, enabled);
+            var categoryMatch = matchesCategory(card.getAttribute('data-plugin-type'));
+            var show = searchMatch && filterMatch && categoryMatch;
             card.style.display = show ? '' : 'none';
             if (show) visibleCount++;
         });
@@ -2065,17 +2221,23 @@ function filterInstalledPlugins() {
                 var desc = (row.getAttribute('data-plugin-desc') || '').toLowerCase();
                 var type = (row.getAttribute('data-plugin-type') || '').toLowerCase();
                 var combined = name + ' ' + desc + ' ' + type;
-                var show = terms.length === 0 || terms.every(function(term) { return combined.indexOf(term) !== -1; });
+                var searchMatch = terms.length === 0 || terms.every(function(term) { return combined.indexOf(term) !== -1; });
+                var installed = row.getAttribute('data-installed') || 'false';
+                var enabled = row.getAttribute('data-enabled') || 'false';
+                var filterMatch = matchesFilter(installed, enabled);
+                var categoryMatch = matchesCategory(row.getAttribute('data-plugin-type'));
+                var show = searchMatch && filterMatch && categoryMatch;
                 row.style.display = show ? '' : 'none';
                 if (show) visibleCount++;
             });
         }
     }
+    var hasFilterOrSearch = terms.length > 0 || (filter !== 'all') || (cat !== 'all');
     if (noResultsGrid) {
-        noResultsGrid.style.display = (terms.length > 0 && visibleCount === 0) ? 'block' : 'none';
+        noResultsGrid.style.display = (hasFilterOrSearch && visibleCount === 0) ? 'block' : 'none';
     }
     if (noResultsTable) {
-        noResultsTable.style.display = (terms.length > 0 && visibleCount === 0) ? 'table-row' : 'none';
+        noResultsTable.style.display = (hasFilterOrSearch && visibleCount === 0) ? 'table-row' : 'none';
     }
 }
 
@@ -2174,6 +2336,30 @@ function toggleAlphabetFilter() {
     filter.style.display = isExpanded ? 'none' : 'flex';
     filter.setAttribute('aria-hidden', isExpanded ? 'true' : 'false');
     toggleBtn.setAttribute('aria-expanded', isExpanded ? 'false' : 'true');
+}
+
+function toggleInstalledCategoryFilter() {
+    const filter = document.getElementById('installedCategoryFilter');
+    const toggleBtn = document.getElementById('installedCategoryToggleBtn');
+    if (!filter || !toggleBtn) return;
+    const isExpanded = toggleBtn.getAttribute('aria-expanded') === 'true';
+    filter.style.display = isExpanded ? 'none' : 'block';
+    filter.setAttribute('aria-hidden', isExpanded ? 'true' : 'false');
+    toggleBtn.setAttribute('aria-expanded', isExpanded ? 'false' : 'true');
+}
+
+function filterByCategoryInstalled(category, evt) {
+    currentInstalledCategory = category;
+    const btns = document.querySelectorAll('.installed-category-btn');
+    btns.forEach(function(btn) { btn.classList.remove('active'); });
+    const clickedBtn = evt && (evt.currentTarget || (evt.target && evt.target.closest('.installed-category-btn')));
+    if (clickedBtn) clickedBtn.classList.add('active');
+    else {
+        btns.forEach(function(btn) {
+            if ((btn.getAttribute('data-category') || '') === category) btn.classList.add('active');
+        });
+    }
+    try { filterInstalledPlugins(); } catch (e) { console.warn('filterByCategoryInstalled', e); }
 }
 
 function upgradePlugin(pluginName, currentVersion, newVersion) {
@@ -2386,43 +2572,54 @@ function installPlugin(pluginName) {
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Installing...';
     
-    fetch(`/plugins/api/install/${pluginName}/`, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': getCookie('csrftoken'),
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        } else {
-            if (typeof PNotify !== 'undefined') {
-                new PNotify({
-                    title: 'Installation Failed!',
-                    text: data.error || 'Failed to install plugin',
-                    type: 'error'
-                });
-            } else {
-                alert('Error: ' + (data.error || 'Failed to install plugin'));
-            }
-            btn.disabled = false;
-            btn.innerHTML = originalText;
-        }
-    })
-    .catch(error => {
+    const headers = {
+        'X-CSRFToken': getCookie('csrftoken'),
+        'Content-Type': 'application/json'
+    };
+    
+    function showError(msg) {
         if (typeof PNotify !== 'undefined') {
-            new PNotify({
-                title: 'Error!',
-                text: 'Failed to install plugin: ' + error.message,
-                type: 'error'
-            });
+            new PNotify({ title: 'Installation Failed!', text: msg || 'Failed to install plugin', type: 'error' });
         } else {
-            alert('Error: Failed to install plugin - ' + error.message);
+            alert('Error: ' + (msg || 'Failed to install plugin'));
         }
         btn.disabled = false;
         btn.innerHTML = originalText;
+    }
+    
+    function tryLocalInstall() {
+        return fetch(`/plugins/api/install/${pluginName}/`, { method: 'POST', headers: headers })
+            .then(function(r) { return r.json().then(function(data) { return { response: r, data: data }; }); });
+    }
+    
+    function tryStoreInstall() {
+        return fetch(`/plugins/api/store/install/${pluginName}/`, { method: 'POST', headers: headers })
+            .then(function(r) { return r.json().then(function(data) { return { response: r, data: data }; }); });
+    }
+    
+    tryLocalInstall()
+    .then(function(result) {
+        if (result.data.success) {
+            location.reload();
+            return;
+        }
+        var err = result.data.error || '';
+        if (result.response.status === 404 || (err && err.indexOf('Plugin source not found') !== -1)) {
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Installing from store...';
+            return tryStoreInstall();
+        }
+        showError(err);
+    })
+    .then(function(result) {
+        if (!result || !result.data) return;
+        if (result.data.success) {
+            location.reload();
+        } else {
+            showError(result.data.error || 'Failed to install plugin');
+        }
+    })
+    .catch(function(error) {
+        showError(error && error.message ? error.message : 'Failed to install plugin');
     });
 }
 
@@ -2978,7 +3175,14 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Set initial view without updating hash (only update hash if there was already one)
         const hadHash = hash.length > 0;
-        toggleView(initialView, hadHash);
+        try {
+            toggleView(initialView, hadHash);
+        } catch (e) {
+            console.warn('plugins: toggleView on load failed', e);
+            if (storeView) storeView.style.display = 'block';
+            if (gridView) gridView.style.display = 'none';
+            if (tableView) tableView.style.display = 'none';
+        }
     } else {
         // Elements don't exist (no plugins installed), just show store view directly
         if (storeView) {
