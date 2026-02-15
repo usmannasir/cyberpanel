@@ -114,24 +114,28 @@ sh <(curl -s https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preU
 
 ## Upgrade to v2.5.5-dev (non-interactive)
 
-Upgrade to v2.5.5-dev without branch or MariaDB prompts:
+Upgrade to v2.5.5-dev without branch or MariaDB prompts.
+
+**MariaDB version options:** `10.11`, `11.8` (LTS default), `12.1` (latest). Use `--mariadb` for 10.11, or `--mariadb-version X` to choose explicitly. If you want to **default to 11.8** and skip the prompt, use `--mariadb-version 11.8`.
 
 ```bash
-# Upgrade to v2.5.5-dev without prompts
+# Upgrade to v2.5.5-dev without prompts (script will prompt for MariaDB unless you pass a flag)
 sh <(curl -s https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev
 
-# With MariaDB 10.11 (non-interactive)
+# Default to MariaDB 11.8 (LTS) — recommended, non-interactive
+sh <(curl -s https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev --mariadb-version 11.8
+
+# MariaDB 10.11 (non-interactive)
 sh <(curl -s https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev --mariadb
 
-# Or use --mariadb-version for other versions
-sh <(curl -s https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev --mariadb-version 10.11
-sh <(curl -s https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev --mariadb-version 11.8
+# MariaDB 12.1 (latest)
+sh <(curl -s https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev --mariadb-version 12.1
 ```
 
-**Full non-interactive command** (v2.5.5-dev + MariaDB 10.11):
+**Full non-interactive (v2.5.5-dev + MariaDB 11.8):**
 
 ```bash
-sh <(curl -s https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev --mariadb
+sh <(curl -s https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev --mariadb-version 11.8
 ```
 
 ---
