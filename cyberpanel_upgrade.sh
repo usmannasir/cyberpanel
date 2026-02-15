@@ -1425,6 +1425,12 @@ Sync_CyberCP_To_Latest() {
     cp /tmp/cyberpanel_settings_backup.py /usr/local/CyberCP/CyberCP/settings.py
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Restored settings.py after sync" | tee -a /var/log/cyberpanel_upgrade_debug.log
   fi
+  # LiteSpeed serves /static/ from public/static/; ensure it has latest baseTemplate static files (e.g. dashboard JS)
+  if [[ -d /usr/local/CyberCP/public/static ]] && [[ -d /usr/local/CyberCP/baseTemplate/static/baseTemplate ]]; then
+    rsync -a /usr/local/CyberCP/baseTemplate/static/baseTemplate/ /usr/local/CyberCP/public/static/baseTemplate/ 2>/dev/null || \
+    cp -r /usr/local/CyberCP/baseTemplate/static/baseTemplate/* /usr/local/CyberCP/public/static/baseTemplate/ 2>/dev/null || true
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Synced baseTemplate static to public/static" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  fi
   if [[ $sync_code -eq 0 ]]; then
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Sync completed. Current HEAD: $(git -C /usr/local/CyberCP rev-parse HEAD 2>/dev/null || echo 'unknown')" | tee -a /var/log/cyberpanel_upgrade_debug.log
   else
