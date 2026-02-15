@@ -47,10 +47,11 @@ try {
 
         $username = htmlspecialchars($_POST['username'], ENT_QUOTES, 'UTF-8');
         $password = $_POST['password'];
+        $host = isset($_POST['host']) ? trim($_POST['host']) : 'localhost';
 
         $_SESSION['PMA_single_signon_user'] = $username;
         $_SESSION['PMA_single_signon_password'] = $password;
-        $_SESSION['PMA_single_signon_host'] = 'localhost';
+        $_SESSION['PMA_single_signon_host'] = $host;
 
         @session_write_close();
 

@@ -294,6 +294,11 @@ def fetchDetailsPHPMYAdmin(request):
                     data = {}
                     data['userName'] = mysqluser
                     data['password'] = password
+                    # Use 127.0.0.1 so phpMyAdmin connects via TCP (port 3306), same as main MariaDB
+                    data['host'] = jsonData.get('mysqlhost', '127.0.0.1') or '127.0.0.1'
+                    if data['host'] == 'localhost':
+                        data['host'] = '127.0.0.1'
+                    data['port'] = str(jsonData.get('mysqlport', 3306))
 
                     proc = httpProc(request, 'databases/AutoLogin.html',
                                     data, 'admin')
@@ -309,6 +314,8 @@ def fetchDetailsPHPMYAdmin(request):
                     data = {}
                     data['userName'] = 'root'
                     data['password'] = password
+                    data['host'] = '127.0.0.1'
+                    data['port'] = '3306'
                     # return redirect(returnURL)
 
                     proc = httpProc(request, 'databases/AutoLogin.html',
@@ -333,6 +340,8 @@ def fetchDetailsPHPMYAdmin(request):
             data = {}
             data['userName'] = admin.userName
             data['password'] = password.decode()
+            data['host'] = '127.0.0.1'
+            data['port'] = '3306'
             # return redirect(returnURL)
 
             proc = httpProc(request, 'databases/AutoLogin.html',
