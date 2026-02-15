@@ -1217,19 +1217,33 @@ module cyberpanel_ols {
                 Upgrade.stdOut(f"Failed to fetch latest phpMyAdmin version, using fallback: {e}", 0)
 
             Upgrade.stdOut("Installing phpMyAdmin...", 0)
-            
-            command = f'wget -q -O /usr/local/CyberCP/public/phpmyadmin.tar.gz https://files.phpmyadmin.net/phpMyAdmin/{phpmyadmin_version}/phpMyAdmin-{phpmyadmin_version}-all-languages.tar.gz'
+
+            tarball = '/usr/local/CyberCP/public/phpmyadmin.tar.gz'
+            command = f'wget -q -O {tarball} https://files.phpmyadmin.net/phpMyAdmin/{phpmyadmin_version}/phpMyAdmin-{phpmyadmin_version}-all-languages.tar.gz'
             Upgrade.executioner_silent(command, f'Download phpMyAdmin {phpmyadmin_version}')
+            if not os.path.isfile(tarball) or os.path.getsize(tarball) < 1000000:
+                raise RuntimeError('phpMyAdmin download failed or file too small (check files.phpmyadmin.net)')
 
             command = 'tar -xzf /usr/local/CyberCP/public/phpmyadmin.tar.gz -C /usr/local/CyberCP/public/'
             Upgrade.executioner_silent(command, 'Extract phpMyAdmin')
 
-            command = 'mv /usr/local/CyberCP/public/phpMyAdmin-*-all-languages /usr/local/CyberCP/public/phpmyadmin'
-            subprocess.call(command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            # Move extracted dir to phpmyadmin (support phpMyAdmin-X.Y.Z-all-languages or similar)
+            import glob
+            extracted = glob.glob('/usr/local/CyberCP/public/phpMyAdmin-*-all-languages')
+            if not extracted:
+                extracted = glob.glob('/usr/local/CyberCP/public/phpMyAdmin-*')
+            if extracted:
+                if os.path.exists('/usr/local/CyberCP/public/phpmyadmin'):
+                    shutil.rmtree('/usr/local/CyberCP/public/phpmyadmin')
+                os.rename(extracted[0], '/usr/local/CyberCP/public/phpmyadmin')
+            else:
+                Upgrade.executioner('mv /usr/local/CyberCP/public/phpMyAdmin-*-all-languages /usr/local/CyberCP/public/phpmyadmin', 0)
 
             command = 'rm -f /usr/local/CyberCP/public/phpmyadmin.tar.gz'
             Upgrade.executioner_silent(command, 'Cleanup phpMyAdmin tar.gz')
-            
+
+            if not os.path.isdir('/usr/local/CyberCP/public/phpmyadmin'):
+                raise RuntimeError('phpMyAdmin directory was not created after extract/mv')
             Upgrade.stdOut("phpMyAdmin installation completed.", 0)
 
             ## Write secret phrase
@@ -1290,6 +1304,11 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             except:
                 pass
+
+            command = 'chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin'
+            Upgrade.executioner_silent(command, 'chown phpMyAdmin')
+            command = 'chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin/tmp'
+            Upgrade.executioner_silent(command, 'chown phpMyAdmin tmp')
 
             os.chdir(cwd)
 
