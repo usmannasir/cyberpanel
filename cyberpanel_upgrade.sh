@@ -343,8 +343,11 @@ done
 Git_User_Override=""
 # Skip full system package update (yum/dnf update -y) to speed up upgrade; use when system is already updated
 Skip_System_Update=""
-# MariaDB version for repo setup: 11.8 (LTS, default) or 12.1
+# Migrate MariaDB from latin1 to utf8mb4 after upgrade (only when --migrate-to-utf8 and upgrading to 11.x/12.x)
+Migrate_MariaDB_To_UTF8_Requested=""
+# MariaDB version: any X.Y or X.Y.Z supported; highlighted: 10.11.16, 11.8 LTS, 12.x (default 11.8)
 MARIADB_VER="11.8"
+MARIADB_VER_REPO="11.8"
 
 Check_Argument() {
 # Parse --branch / -b (extract first word after -b or --branch)
@@ -367,8 +370,13 @@ if [[ "$*" = *"--no-system-update"* ]]; then
   Skip_System_Update="yes"
   echo -e "\nUsing --no-system-update: skipping full system package update.\n"
 fi
-# Parse --mariadb-version 10.11|11.8|12.1 (default 11.8)
-# --mariadb is shorthand for --mariadb-version 10.11 (MariaDB default, matches 10.11.x-MariaDB Server)
+# Parse --migrate-to-utf8: after upgrading to MariaDB 11.x/12.x, convert DBs/tables from latin1 to utf8mb4 (only if your apps support UTF-8)
+if [[ "$*" = *"--migrate-to-utf8"* ]]; then
+  Migrate_MariaDB_To_UTF8_Requested="yes"
+  echo -e "\nUsing --migrate-to-utf8: will convert databases to UTF-8 (utf8mb4) after MariaDB upgrade.\n"
+fi
+# Parse --mariadb-version (any version: 10.6, 10.11, 10.11.16, 11.8, 12.1, 12.2, 12.3, etc.). Default 11.8.
+# --mariadb is shorthand for --mariadb-version 10.11
 if [[ "$*" = *"--mariadb"* ]] && [[ "$*" != *"--mariadb-version "* ]]; then
   MARIADB_VER="10.11"
   echo -e "\nUsing --mariadb: MariaDB 10.11 selected (non-interactive).\n"
@@ -376,9 +384,7 @@ elif [[ "$*" = *"--mariadb-version "* ]]; then
   MARIADB_VER=$(echo "$*" | sed -n 's/.*--mariadb-version \([^ ]*\).*/\1/p' | head -1)
   MARIADB_VER="${MARIADB_VER:-11.8}"
 fi
-if [[ "$MARIADB_VER" != "10.11" ]] && [[ "$MARIADB_VER" != "11.8" ]] && [[ "$MARIADB_VER" != "12.1" ]]; then
-  MARIADB_VER="11.8"
-fi
+# Allow any version; repo paths use major.minor (normalized later)
 }
 
 Pre_Upgrade_Setup_Git_URL() {
@@ -429,6 +435,53 @@ fi
 
 # Prefer mariadb CLI to avoid "mysql: Deprecated program name" warning
 mariadb -uroot -p"$MySQL_Password" -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '$MySQL_Password';flush privileges" 2>/dev/null || mysql -uroot -p"$MySQL_Password" -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '$MySQL_Password';flush privileges"
+}
+
+# Backup all MariaDB/MySQL databases before upgrade. Uses /etc/cyberpanel/mysqlPassword. Skips on failure (logs warning).
+Backup_MariaDB_Before_Upgrade() {
+  local pass="" backup_dir="/root/cyberpanel_mariadb_backups" backup_file=""
+  [[ -f /etc/cyberpanel/mysqlPassword ]] || return 0
+  if grep -q '"mysqlpassword"' /etc/cyberpanel/mysqlPassword 2>/dev/null; then
+    pass=$(python3 -c "import json; print(json.load(open('/etc/cyberpanel/mysqlPassword')).get('mysqlpassword',''))" 2>/dev/null)
+  else
+    pass=$(head -1 /etc/cyberpanel/mysqlPassword 2>/dev/null | tr -d '\r\n')
+  fi
+  [[ -z "$pass" ]] && echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: Could not read MariaDB password, skipping pre-upgrade backup." | tee -a /var/log/cyberpanel_upgrade_debug.log && return 0
+  mkdir -p "$backup_dir"
+  backup_file="${backup_dir}/mariadb_backup_before_upgrade_$(date +%Y%m%d_%H%M%S).sql.gz"
+  if mariadb --skip-ssl -u root -p"$pass" -e "SELECT 1" 2>/dev/null | grep -q 1; then
+    (mariadb-dump --skip-ssl -u root -p"$pass" --all-databases --single-transaction --routines --triggers --events 2>/dev/null || mysqldump --skip-ssl -u root -p"$pass" --all-databases --single-transaction --routines --triggers --events 2>/dev/null) | gzip > "$backup_file" 2>/dev/null
+    if [[ -s "$backup_file" ]]; then
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB backup created: $backup_file" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    else
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: MariaDB backup file empty or failed." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    fi
+  else
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: Could not connect to MariaDB for backup (skip-ssl). Skipping backup." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  fi
+}
+
+# Convert MariaDB databases/tables from latin1 to utf8mb4 (only run when apps support UTF-8). Skips system DBs.
+Migrate_MariaDB_To_UTF8() {
+  local pass="" dbs="" db="" t=""
+  [[ -f /etc/cyberpanel/mysqlPassword ]] || return 0
+  if grep -q '"mysqlpassword"' /etc/cyberpanel/mysqlPassword 2>/dev/null; then
+    pass=$(python3 -c "import json; print(json.load(open('/etc/cyberpanel/mysqlPassword')).get('mysqlpassword',''))" 2>/dev/null)
+  else
+    pass=$(head -1 /etc/cyberpanel/mysqlPassword 2>/dev/null | tr -d '\r\n')
+  fi
+  [[ -z "$pass" ]] && return 0
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Migrating MariaDB to UTF-8 (utf8mb4)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  mariadb --skip-ssl -u root -p"$pass" -e "SET GLOBAL character_set_server = 'utf8mb4'; SET GLOBAL collation_server = 'utf8mb4_unicode_ci';" 2>/dev/null || true
+  dbs=$(mariadb --skip-ssl -u root -p"$pass" -sN -e "SHOW DATABASES;" 2>/dev/null) || true
+  for db in $dbs; do
+    [[ "$db" = "information_schema" ]] || [[ "$db" = "performance_schema" ]] || [[ "$db" = "sys" ]] || [[ "$db" = "mysql" ]] && continue
+    mariadb --skip-ssl -u root -p"$pass" -e "ALTER DATABASE \`$db\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" 2>/dev/null || true
+    for t in $(mariadb --skip-ssl -u root -p"$pass" -sN -e "SHOW TABLES FROM \`$db\`;" 2>/dev/null); do
+      mariadb --skip-ssl -u root -p"$pass" "$db" -e "ALTER TABLE \`$t\` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" 2>/dev/null || true
+    done
+  done
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB UTF-8 (utf8mb4) migration completed." | tee -a /var/log/cyberpanel_upgrade_debug.log
 }
 
 Pre_Upgrade_Setup_Repository() {
@@ -582,11 +635,11 @@ EOF
     fi
     
     cat << EOF > /etc/yum.repos.d/MariaDB.repo
-# MariaDB $MARIADB_VER repository list - updated 2026-02
+# MariaDB $MARIADB_VER_REPO repository list - updated 2026-02
 # https://downloads.mariadb.org/mariadb/repositories/
 [mariadb]
-name = MariaDB
-baseurl = https://mirror.mariadb.org/yum/$MARIADB_VER/$MARIADB_REPO
+name = MariaDB $MARIADB_VER_REPO
+baseurl = https://mirror.mariadb.org/yum/$MARIADB_VER_REPO/$MARIADB_REPO
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1
 EOF
@@ -658,26 +711,27 @@ EOF
     fi
   }
 
-  # MariaDB repo for EL8/EL9 so --mariadb-version 11.8 (or 10.11/12.1) is actually used (distro default is 10.11)
+  # MariaDB repo for EL8/EL9: any version (repo path uses major.minor: 10.11, 11.8, 12.1, 12.2, 12.3, etc.)
   if [[ "$Server_OS_Version" = "8" ]] || [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]; then
+    Backup_MariaDB_Before_Upgrade
     if [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]; then
       MARIADB_REPO="rhel9-amd64"
     else
       MARIADB_REPO="rhel8-amd64"
     fi
-    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Configuring MariaDB $MARIADB_VER repo for EL$Server_OS_Version..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-    # Remove or backup any existing MariaDB repo that points to a different version (e.g. 10.11), so dnf uses only our repo
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Configuring MariaDB $MARIADB_VER_REPO repo for EL$Server_OS_Version (version $MARIADB_VER)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    # Remove or backup any existing MariaDB repo that points to a different version, so dnf uses only our repo
     for f in /etc/yum.repos.d/mariadb.repo /etc/yum.repos.d/MariaDB.repo.rpmsave; do
-      if [[ -f "$f" ]] && grep -q '10\.11\|10.6\|10.5' "$f" 2>/dev/null && [[ "$MARIADB_VER" != "10.11" ]]; then
-        mv -f "$f" "${f}.bak.cyberpanel" 2>/dev/null && echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Backed up old repo $f to ${f}.bak.cyberpanel (was 10.x, we want $MARIADB_VER)" | tee -a /var/log/cyberpanel_upgrade_debug.log || true
+      if [[ -f "$f" ]] && grep -q '10\.11\|10.6\|10.5' "$f" 2>/dev/null && [[ "$MARIADB_VER_REPO" != "10.11" ]]; then
+        mv -f "$f" "${f}.bak.cyberpanel" 2>/dev/null && echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Backed up old repo $f to ${f}.bak.cyberpanel (was 10.x, we want $MARIADB_VER_REPO)" | tee -a /var/log/cyberpanel_upgrade_debug.log || true
       fi
     done
     cat << EOF > /etc/yum.repos.d/MariaDB.repo
-# MariaDB $MARIADB_VER repository - CyberPanel upgrade
+# MariaDB $MARIADB_VER_REPO repository - CyberPanel upgrade
 # https://downloads.mariadb.org/mariadb/repositories/
 [mariadb]
-name = MariaDB $MARIADB_VER
-baseurl = https://mirror.mariadb.org/yum/$MARIADB_VER/$MARIADB_REPO
+name = MariaDB $MARIADB_VER_REPO
+baseurl = https://mirror.mariadb.org/yum/$MARIADB_VER_REPO/$MARIADB_REPO
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1
 EOF
@@ -688,8 +742,8 @@ EOF
     dnf clean metadata --disablerepo='*' --enablerepo=mariadb 2>/dev/null || true
     # MariaDB 10 -> 11: RPM scriptlet blocks in-place upgrade; do manual stop, remove old server, install 11.x, start, mariadb-upgrade
     MARIADB_OLD_10=$(rpm -qa 'MariaDB-server-10*' 2>/dev/null | head -1)
-    if [[ -n "$MARIADB_OLD_10" ]] && { [[ "$MARIADB_VER" = "11.8" ]] || [[ "$MARIADB_VER" = "12.1" ]]; }; then
-      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB 10.x detected; performing manual upgrade to $MARIADB_VER (stop, remove, install, start, mariadb-upgrade)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    if [[ -n "$MARIADB_OLD_10" ]] && { [[ "$MARIADB_VER_REPO" =~ ^11\. ]] || [[ "$MARIADB_VER_REPO" =~ ^12\. ]]; }; then
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB 10.x detected; performing manual upgrade to $MARIADB_VER_REPO (stop, remove, install, start, mariadb-upgrade)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
       systemctl stop mariadb 2>/dev/null || true
       sleep 2
       [[ -f /etc/my.cnf ]] && cp -a /etc/my.cnf /etc/my.cnf.bak.cyberpanel 2>/dev/null || true
@@ -701,7 +755,7 @@ EOF
       systemctl start mariadb 2>/dev/null || true
       sleep 2
       mariadb-upgrade -u root 2>/dev/null || true
-      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB manual upgrade to $MARIADB_VER completed." | tee -a /var/log/cyberpanel_upgrade_debug.log
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB manual upgrade to $MARIADB_VER_REPO completed." | tee -a /var/log/cyberpanel_upgrade_debug.log
     else
       # Normal install/upgrade (same version or 10.11)
       dnf install -y --enablerepo=mariadb MariaDB-server MariaDB-client MariaDB-devel 2>/dev/null || true
@@ -711,6 +765,10 @@ EOF
     # Allow local client to connect without SSL (11.x client defaults to SSL; 10.x server may not have it)
     mkdir -p /etc/my.cnf.d
     printf "[client]\nskip-ssl = true\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
+    # Optional: migrate from latin1 to UTF-8 (utf8mb4) when --migrate-to-utf8 and 11.x/12.x
+    if [[ "$Migrate_MariaDB_To_UTF8_Requested" = "yes" ]] && { [[ "$MARIADB_VER_REPO" =~ ^11\. ]] || [[ "$MARIADB_VER_REPO" =~ ^12\. ]]; }; then
+      Migrate_MariaDB_To_UTF8
+    fi
   fi
 
   # AlmaLinux 9 specific package installation
@@ -728,10 +786,10 @@ EOF
                    sqlite-devel libxml2-devel libxslt-devel curl-devel libedit-devel \
                    readline-devel pkgconfig cmake gcc-c++
     
-    # Install/upgrade MariaDB from our repo (chosen version 11.8 / 10.11 / 12.1)
+    # Install/upgrade MariaDB from our repo (any version: 10.11, 11.8, 12.x)
     MARIADB_OLD_10_AL9=$(rpm -qa 'MariaDB-server-10*' 2>/dev/null | head -1)
-    if [[ -n "$MARIADB_OLD_10_AL9" ]] && { [[ "$MARIADB_VER" = "11.8" ]] || [[ "$MARIADB_VER" = "12.1" ]]; }; then
-      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB 10.x detected (AlmaLinux 9); manual upgrade to $MARIADB_VER..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    if [[ -n "$MARIADB_OLD_10_AL9" ]] && { [[ "$MARIADB_VER_REPO" =~ ^11\. ]] || [[ "$MARIADB_VER_REPO" =~ ^12\. ]]; }; then
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB 10.x detected (AlmaLinux 9); manual upgrade to $MARIADB_VER_REPO..." | tee -a /var/log/cyberpanel_upgrade_debug.log
       systemctl stop mariadb 2>/dev/null || true
       sleep 2
       [[ -f /etc/my.cnf ]] && cp -a /etc/my.cnf /etc/my.cnf.bak.cyberpanel 2>/dev/null || true
@@ -743,7 +801,7 @@ EOF
       systemctl start mariadb 2>/dev/null || true
       sleep 2
       mariadb-upgrade -u root 2>/dev/null || true
-      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB manual upgrade to $MARIADB_VER completed (AlmaLinux 9)." | tee -a /var/log/cyberpanel_upgrade_debug.log
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB manual upgrade to $MARIADB_VER_REPO completed (AlmaLinux 9)." | tee -a /var/log/cyberpanel_upgrade_debug.log
     else
       dnf install -y --enablerepo=mariadb MariaDB-server MariaDB-devel 2>/dev/null || dnf install -y mariadb-server mariadb-devel
       dnf upgrade -y --enablerepo=mariadb MariaDB-server MariaDB-devel 2>/dev/null || true
@@ -778,16 +836,20 @@ elif [[ "$Server_OS" = "Ubuntu" ]] ; then
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Skipping apt upgrade (--no-system-update)" | tee -a /var/log/cyberpanel_upgrade_debug.log
   fi
 
-  # MariaDB: add official repo and install/upgrade to chosen version on Ubuntu/Debian
-  if [[ -n "$MARIADB_VER" ]] && { [[ "$MARIADB_VER" = "10.11" ]] || [[ "$MARIADB_VER" = "11.8" ]] || [[ "$MARIADB_VER" = "12.1" ]]; }; then
-    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Configuring MariaDB $MARIADB_VER repo for Ubuntu/Debian..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-    curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version="$MARIADB_VER" 2>/dev/null || true
+  # MariaDB: add official repo and install/upgrade to chosen version on Ubuntu/Debian (any version)
+  if [[ -n "$MARIADB_VER_REPO" ]]; then
+    Backup_MariaDB_Before_Upgrade
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Configuring MariaDB $MARIADB_VER_REPO repo for Ubuntu/Debian (version $MARIADB_VER)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version="$MARIADB_VER_REPO" 2>/dev/null || true
     # Must run apt-get update after adding repo so 11.8 packages are visible (otherwise apt keeps 10.11)
     apt-get update -qq 2>/dev/null || apt-get update
     export DEBIAN_FRONTEND=noninteractive
     apt-get install -y mariadb-server mariadb-client 2>/dev/null || true
     apt-get install -y -o Dpkg::Options::="--force-confold" mariadb-server mariadb-client 2>/dev/null || true
     systemctl restart mariadb 2>/dev/null || systemctl restart mysql 2>/dev/null || true
+    if [[ "$Migrate_MariaDB_To_UTF8_Requested" = "yes" ]] && { [[ "$MARIADB_VER_REPO" =~ ^11\. ]] || [[ "$MARIADB_VER_REPO" =~ ^12\. ]]; }; then
+      Migrate_MariaDB_To_UTF8
+    fi
   fi
 
   if [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] ; then
@@ -1979,6 +2041,9 @@ echo -e "   2. Change the default admin password"
 echo -e "   3. Configure your domains and websites"
 echo -e "   4. Check system status in the dashboard"
 echo -e "   5. Check DB version with: mariadb -V  (use mariadb, not mysql, to avoid deprecation warning)"
+echo -e "   6. Pre-upgrade DB backup (if created): /root/cyberpanel_mariadb_backups/"
+echo -e "   7. To migrate DBs to UTF-8 (utf8mb4) after upgrade, re-run with: --migrate-to-utf8  (only if your apps support UTF-8)"
+echo -e "   8. If you downgrade to MariaDB 10.11.16, server charset stays latin1 for backward compatibility."
 
 echo -e "\n🧹 Cleaning up temporary files..."
 rm -rf /root/cyberpanel_upgrade_tmp
@@ -2014,23 +2079,25 @@ if [[ "$*" != *"--branch "* ]] && [[ "$*" != *"-b "* ]] ; then
   Pre_Upgrade_Branch_Input
 fi
 
-# Prompt for MariaDB version if not set via --mariadb or --mariadb-version (default 11.8). Options: 10.11, 11.8, 12.1.
+# Prompt for MariaDB version if not set. Any version supported; highlighted: 10.11.16, 11.8 LTS, 12.x
 if [[ "$*" != *"--mariadb"* ]] && [[ "$*" != *"--mariadb-version "* ]]; then
-  echo -e "\nMariaDB version: \e[31m10.11\e[39m, \e[31m11.8\e[39m LTS (default) or \e[31m12.1\e[39m. You can switch later by re-running with --mariadb-version 10.11, 11.8 or 12.1."
-  echo -e "Press Enter for 11.8 LTS, or type \e[31m10.11\e[39m or \e[31m12.1\e[39m (5 sec timeout): "
+  echo -e "\nMariaDB version: any X.Y or X.Y.Z supported."
+  echo -e "Highlighted: \e[31m10.11.16\e[39m, \e[31m11.8\e[39m LTS (default), \e[31m12.x\e[39m (e.g. 12.1, 12.2, 12.3)."
+  echo -e "Press Enter for 11.8 LTS, or type version (5 sec timeout): "
   read -r -t 5 Tmp_MariaDB_Ver || true
   Tmp_MariaDB_Ver="${Tmp_MariaDB_Ver// /}"
-  if [[ "$Tmp_MariaDB_Ver" = "10.11" ]]; then
-    MARIADB_VER="10.11"
-    echo -e "MariaDB 10.11 selected.\n"
-  elif [[ "$Tmp_MariaDB_Ver" = "12.1" ]]; then
-    MARIADB_VER="12.1"
-    echo -e "MariaDB 12.1 selected.\n"
+  if [[ -n "$Tmp_MariaDB_Ver" ]]; then
+    MARIADB_VER="$Tmp_MariaDB_Ver"
+    echo -e "MariaDB $MARIADB_VER selected.\n"
   else
     MARIADB_VER="11.8"
     echo -e "MariaDB 11.8 LTS (default).\n"
   fi
 fi
+
+# Normalize to major.minor for repo paths (e.g. 10.11.16 -> 10.11, 12.2.2 -> 12.2)
+MARIADB_VER_REPO=$(echo "$MARIADB_VER" | sed -n 's/^\([0-9]*\.[0-9]*\).*/\1/p')
+[[ -z "$MARIADB_VER_REPO" ]] && MARIADB_VER_REPO="11.8" && MARIADB_VER="11.8"
 
 # Write chosen MariaDB version for upgrade.py (e.g. fix_almalinux9_mariadb)
 mkdir -p /etc/cyberpanel
