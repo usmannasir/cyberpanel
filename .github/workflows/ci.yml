@@ -114,7 +114,7 @@ jobs:
               echo "=== Installing deps (apt or yum/dnf) ==="
               if command -v apt-get >/dev/null 2>&1; then
                 apt-get update -qq
-                apt-get install -y -qq python3 python3-pip >/dev/null
+                apt-get install -y -qq python3 python3-pip python3-venv >/dev/null
                 pip3 install -q requests 2>/dev/null || pip3 install -q --break-system-packages requests 2>/dev/null || true
               else
                 if [ "$IMAGE" = "centos:7" ]; then
@@ -140,7 +140,12 @@ jobs:
               done
               test -f preUpgrade.sh && test -f cyberpanel_upgrade.sh || { echo "Missing required scripts"; exit 1; }
               echo "=== Python version fetcher ==="
-              PYTHONPATH=. python3 -c "
+              PYEXE=python3
+              if python3 -m venv /tmp/venv 2>/dev/null; then
+                /tmp/venv/bin/pip install -q requests 2>/dev/null
+                PYEXE=/tmp/venv/bin/python
+              fi
+              PYTHONPATH=. $PYEXE -c "
               from plogical.versionFetcher import get_latest_phpmyadmin_version, get_latest_snappymail_version
               pma = get_latest_phpmyadmin_version()
               snappy = get_latest_snappymail_version()
