@@ -444,6 +444,8 @@ if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "AlmaLinux9" ]] ; then
   # For AlmaLinux 9: switch to repo.almalinux.org baseurl to avoid "Cannot find valid baseurl for repo: appstream"
   if [[ "$Server_OS" = "AlmaLinux9" ]] && [[ -d /etc/yum.repos.d ]]; then
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Fixing AlmaLinux 9 repos (appstream/baseos) for reliable mirror access" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    ALMA_VER="${Server_OS_Version:-9}"
+    ARCH="x86_64"
     for repo in /etc/yum.repos.d/almalinux*.repo /etc/yum.repos.d/AlmaLinux*.repo; do
       [[ ! -f "$repo" ]] && continue
       if grep -q '^mirrorlist=' "$repo" 2>/dev/null; then
@@ -452,16 +454,21 @@ if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "AlmaLinux9" ]] ; then
         sed -i 's|^#baseurl=\(.*repo\.almalinux\.org.*\)|baseurl=\1|' "$repo"
       fi
     done
-    # Fallback: ensure appstream/baseos have explicit baseurl (avoids "Cannot find valid baseurl")
-    ALMA_VER="${Server_OS_Version:-9}"
-    ARCH="x86_64"
-    for repofile in /etc/yum.repos.d/almalinux*.repo /etc/yum.repos.d/AlmaLinux*.repo; do
+    # Ensure appstream/baseos have explicit baseurl (avoids "Cannot find valid baseurl"); process any .repo that has these sections
+    for repofile in /etc/yum.repos.d/almalinux.repo /etc/yum.repos.d/almalinux*.repo /etc/yum.repos.d/AlmaLinux*.repo; do
       [[ ! -f "$repofile" ]] && continue
       if grep -q '^\[appstream\]' "$repofile" 2>/dev/null; then
         sed -i "/^\[appstream\]/,/^\[/ { s|^#\?baseurl=.*|baseurl=https://repo.almalinux.org/almalinux/${ALMA_VER}/AppStream/${ARCH}/os/|; s|^mirrorlist=.*|#mirrorlist=disabled| }" "$repofile"
+        # Add baseurl if section had only mirrorlist (no baseurl line)
+        if ! sed -n '/^\[appstream\]/,/^\[/p' "$repofile" | grep -q '^baseurl='; then
+          sed -i "/^\[appstream\]/a baseurl=https://repo.almalinux.org/almalinux/${ALMA_VER}/AppStream/${ARCH}/os/" "$repofile"
+        fi
       fi
       if grep -q '^\[baseos\]' "$repofile" 2>/dev/null; then
         sed -i "/^\[baseos\]/,/^\[/ { s|^#\?baseurl=.*|baseurl=https://repo.almalinux.org/almalinux/${ALMA_VER}/BaseOS/${ARCH}/os/|; s|^mirrorlist=.*|#mirrorlist=disabled| }" "$repofile"
+        if ! sed -n '/^\[baseos\]/,/^\[/p' "$repofile" | grep -q '^baseurl='; then
+          sed -i "/^\[baseos\]/a baseurl=https://repo.almalinux.org/almalinux/${ALMA_VER}/BaseOS/${ARCH}/os/" "$repofile"
+        fi
       fi
     done
   fi
@@ -593,7 +600,13 @@ EOF
     dnf --nogpg install -y https://mirror.ghettoforge.net/distributions/gf/gf-release-latest.gf.el9.noarch.rpm
   fi
 
-  dnf install epel-release -y
+  dnf install epel-release -y 2>/dev/null || {
+    # Fallback when appstream was broken or epel-release not in repo (e.g. AlmaLinux 9)
+    if [[ "$Server_OS_Version" = "9" ]]; then
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing EPEL from Fedora RPM (epel-release not in repo)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+      dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm 2>/dev/null || true
+    fi
+  }
   
   # AlmaLinux 9 specific package installation
   if [[ "$Server_OS" = "AlmaLinux9" ]] ; then
@@ -1308,7 +1321,7 @@ if [[ -f Makefile ]]; then
     # Replace -O0 -g3 with -O2 -g to satisfy _FORTIFY_SOURCE
     sed -i 's/-O0 -g3/-O2 -g/g' Makefile
     # Ensure we have proper optimization flags
-    if grep -q "CFLAGS" Makefile && ! grep -q "-O2" Makefile; then
+    if grep -q "CFLAGS" Makefile && ! grep -q -e "-O2" Makefile; then
         sed -i 's/CFLAGS =/CFLAGS = -O2/' Makefile
     fi
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Makefile optimized for proper compilation" | tee -a /var/log/cyberpanel_upgrade_debug.log
