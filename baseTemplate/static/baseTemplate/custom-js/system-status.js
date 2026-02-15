@@ -122,9 +122,17 @@ app.controller('systemStatusInfo', function ($scope, $http, $timeout) {
 
     $scope.uptimeLoaded = false;
     $scope.uptime = 'Loading...';
-    
+    // Defaults so template never shows undefined (avoids raw {$ cpuUsage $} when API is slow or fails)
+    $scope.cpuUsage = 0;
+    $scope.ramUsage = 0;
+    $scope.diskUsage = 0;
+    $scope.cpuCores = 0;
+    $scope.ramTotalMB = 0;
+    $scope.diskTotalGB = 0;
+    $scope.diskFreeGB = 0;
+
     getStuff();
-    
+
     $scope.getSystemStatus = function() {
         getStuff();
     };
@@ -138,17 +146,15 @@ app.controller('systemStatusInfo', function ($scope, $http, $timeout) {
 
         function ListInitialData(response) {
 
-            $scope.cpuUsage = response.data.cpuUsage;
-            $scope.ramUsage = response.data.ramUsage;
-            $scope.diskUsage = response.data.diskUsage;
-            
-            // Total system information
-            $scope.cpuCores = response.data.cpuCores;
-            $scope.ramTotalMB = response.data.ramTotalMB;
-            $scope.diskTotalGB = response.data.diskTotalGB;
-            $scope.diskFreeGB = response.data.diskFreeGB;
-            
-            // Get uptime if available
+            $scope.cpuUsage = response.data.cpuUsage != null ? response.data.cpuUsage : 0;
+            $scope.ramUsage = response.data.ramUsage != null ? response.data.ramUsage : 0;
+            $scope.diskUsage = response.data.diskUsage != null ? response.data.diskUsage : 0;
+
+            $scope.cpuCores = response.data.cpuCores != null ? response.data.cpuCores : 0;
+            $scope.ramTotalMB = response.data.ramTotalMB != null ? response.data.ramTotalMB : 0;
+            $scope.diskTotalGB = response.data.diskTotalGB != null ? response.data.diskTotalGB : 0;
+            $scope.diskFreeGB = response.data.diskFreeGB != null ? response.data.diskFreeGB : 0;
+
             if (response.data.uptime) {
                 $scope.uptime = response.data.uptime;
                 $scope.uptimeLoaded = true;
@@ -162,6 +168,9 @@ app.controller('systemStatusInfo', function ($scope, $http, $timeout) {
         function cantLoadInitialData(response) {
             $scope.uptime = 'Unavailable';
             $scope.uptimeLoaded = true;
+            $scope.cpuUsage = 0;
+            $scope.ramUsage = 0;
+            $scope.diskUsage = 0;
         }
 
         $timeout(getStuff, 60000); // Update every minute
@@ -902,7 +911,8 @@ app.controller('OnboardingCP', function ($scope, $http, $timeout, $window) {
 
 });
 
-app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
+// Single implementation registered under both names for compatibility (some templates/caches use newDashboardStat)
+var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
     console.log('dashboardStatsController initialized');
     
     // Card values
@@ -2455,4 +2465,6 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
             $scope.closeSSHActivityModal();
         }
     };
-});
+};
+app.controller('dashboardStatsController', dashboardStatsControllerFn);
+app.controller('newDashboardStat', dashboardStatsControllerFn);

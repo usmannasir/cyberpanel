@@ -24,6 +24,13 @@ from firewall import views as firewall_views
 # includes each installed plugin (under /plugins/<name>/) so settings and
 # other plugin pages work for any installed plugin.
 
+# Optional app: may be missing after clean clone or git clean -fd (not in all repo trees)
+_optional_email_marketing = []
+try:
+    _optional_email_marketing.append(path('emailMarketing/', include('emailMarketing.urls')))
+except ModuleNotFoundError:
+    pass
+
 urlpatterns = [
     # Serve static files first (before catch-all routes)
     re_path(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
@@ -47,7 +54,7 @@ urlpatterns = [
     path('api/', include('api.urls')),
     path('filemanager/', include('filemanager.urls')),
     path('emailPremium/', include('emailPremium.urls')),
-    path('emailMarketing/', include('emailMarketing.urls')),  # Default-installed (sidebar links to it)
+    *_optional_email_marketing,
     path('manageservices/', include('manageServices.urls')),
     path('plugins/', include('pluginHolder.urls')),
     path('cloudAPI/', include('cloudAPI.urls')),
