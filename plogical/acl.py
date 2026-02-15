@@ -247,10 +247,10 @@ class ACLManager:
 
             ## DNS Management
 
-            finalResponse['createNameServer'] = config['createNameServer']
-            finalResponse['createDNSZone'] = config['createDNSZone']
-            finalResponse['deleteZone'] = config['deleteZone']
-            finalResponse['addDeleteRecords'] = config['addDeleteRecords']
+            finalResponse['createNameServer'] = config.get('createNameServer', 0)
+            finalResponse['createDNSZone'] = config.get('createDNSZone', 0)
+            finalResponse['deleteZone'] = config.get('deleteZone', 0)
+            finalResponse['addDeleteRecords'] = config.get('addDeleteRecords', 0)
 
             ## Email Management
 
@@ -1325,7 +1325,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = "chown -R root:root /usr/local/lscp"
             ProcessUtilities.executioner(command, 'root', True)
 
-            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop"
+            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail"
             ProcessUtilities.executioner(command, 'root', True)
 
             command = "chmod 700 /usr/local/CyberCP/cli/cyberPanel.py"
