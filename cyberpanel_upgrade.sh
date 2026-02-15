@@ -804,14 +804,14 @@ CYBERCP_ESSENTIAL_DIRS=(
 CYBERCP_MISSING=0
 for dir in "${CYBERCP_ESSENTIAL_DIRS[@]}"; do
     if [ ! -d "$dir" ]; then
-        echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: Essential directory missing: $dir" | tee -a /var/log/cyberpanel_upgrade_debug.log
+        echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] INFO: Essential directory missing (will restore): $dir" | tee -a /var/log/cyberpanel_upgrade_debug.log
         CYBERCP_MISSING=1
     fi
 done
 
-# If essential directories are missing, perform recovery
+# If essential directories are missing, perform automatic recovery (normal on some upgrade paths)
 if [ $CYBERCP_MISSING -eq 1 ]; then
-    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] INFO: Some CyberCP directories are missing. Performing automatic recovery..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] INFO: Restoring missing CyberCP directories from repository..." | tee -a /var/log/cyberpanel_upgrade_debug.log
     
     # Backup any remaining configuration files if they exist
     if [ -f "/usr/local/CyberCP/CyberCP/settings.py" ]; then
@@ -853,7 +853,7 @@ if [ $CYBERCP_MISSING -eq 1 ]; then
         # Clean up temporary clone
         rm -rf /usr/local/CyberCP_recovery_tmp
         
-        echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Recovery completed successfully. CyberCP structure restored." | tee -a /var/log/cyberpanel_upgrade_debug.log
+        echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Recovery completed. All essential CyberCP directories restored." | tee -a /var/log/cyberpanel_upgrade_debug.log
     else
         echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] ERROR: Failed to clone repository for recovery" | tee -a /var/log/cyberpanel_upgrade_debug.log
         echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Please run full installation instead of upgrade" | tee -a /var/log/cyberpanel_upgrade_debug.log
@@ -925,7 +925,7 @@ elif [[ -d /usr/local/CyberPanel/bin/ ]]; then
 else
   #!/bin/bash
 
-echo -e "\nNothing found, need fresh setup...\n"
+echo -e "\nNo existing virtualenv found; creating fresh Python environment...\n"
 
 # Attempt to create a virtual environment
 if [[ "$Server_OS" = "Ubuntu" ]] && ([[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]]); then
@@ -1369,6 +1369,7 @@ if [[ -f Makefile ]]; then
 fi
 
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Compiling WSGI with optimized flags..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] (Upstream WSGI source may show harmless strncpy/gstate warnings; build can still succeed.)" | tee -a /var/log/cyberpanel_upgrade_debug.log
 make clean 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
 make 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
 
