@@ -24,9 +24,10 @@ fi
 echo "Upgrading CyberPanel from branch: $BRANCH_NAME"
 
 rm -f /usr/local/cyberpanel_upgrade.sh
-# Use same repo as this script (master3395); fallback to usmannasir for compatibility
-wget -O /usr/local/cyberpanel_upgrade.sh https://raw.githubusercontent.com/master3395/cyberpanel/$BRANCH_NAME/cyberpanel_upgrade.sh 2>/dev/null || \
-wget -O /usr/local/cyberpanel_upgrade.sh https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel_upgrade.sh 2>/dev/null
+# Use same repo as this script (master3395); fallback to usmannasir for compatibility. Prefer curl with no-cache so --mariadb-version is respected.
+curl -sL -H 'Cache-Control: no-cache' -H 'Pragma: no-cache' -o /usr/local/cyberpanel_upgrade.sh "https://raw.githubusercontent.com/master3395/cyberpanel/$BRANCH_NAME/cyberpanel_upgrade.sh" 2>/dev/null || \
+wget -q -O /usr/local/cyberpanel_upgrade.sh "https://raw.githubusercontent.com/master3395/cyberpanel/$BRANCH_NAME/cyberpanel_upgrade.sh" 2>/dev/null || \
+wget -q -O /usr/local/cyberpanel_upgrade.sh "https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel_upgrade.sh" 2>/dev/null
 chmod 700 /usr/local/cyberpanel_upgrade.sh
 # Pass -b so upgrade script skips branch prompt and uses our branch
 /usr/local/cyberpanel_upgrade.sh -b "$BRANCH_NAME" $EXTRA_ARGS
