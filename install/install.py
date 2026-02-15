@@ -3807,17 +3807,31 @@ class Migration(migrations.Migration):
                 self.stdOut(f"Failed to fetch latest phpMyAdmin version, using fallback: {e}", 1)
 
             self.stdOut("Installing phpMyAdmin...", 1)
+            tarball = '/usr/local/CyberCP/public/phpmyadmin.tar.gz'
             command = (
-                f'wget -q -O /usr/local/CyberCP/public/phpmyadmin.tar.gz '
+                f'wget -q -O {tarball} '
                 f'https://files.phpmyadmin.net/phpMyAdmin/{phpmyadmin_version}/phpMyAdmin-{phpmyadmin_version}-all-languages.tar.gz'
             )
             preFlightsChecks.call(command, self.distro, f'[download_install_phpmyadmin] {phpmyadmin_version}',
                                   command, 1, 0, os.EX_OSERR)
+            if not os.path.isfile(tarball) or os.path.getsize(tarball) < 1000000:
+                raise RuntimeError('phpMyAdmin download failed or file too small')
             command = 'tar -xzf /usr/local/CyberCP/public/phpmyadmin.tar.gz -C /usr/local/CyberCP/public/'
             preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin] extract',
                                   command, 1, 0, os.EX_OSERR)
-            command = 'mv /usr/local/CyberCP/public/phpMyAdmin-*-all-languages /usr/local/CyberCP/public/phpmyadmin'
-            subprocess.call(command, shell=True)
+            import glob
+            extracted = glob.glob('/usr/local/CyberCP/public/phpMyAdmin-*-all-languages')
+            if not extracted:
+                extracted = glob.glob('/usr/local/CyberCP/public/phpMyAdmin-*')
+            if extracted:
+                if os.path.exists('/usr/local/CyberCP/public/phpmyadmin'):
+                    shutil.rmtree('/usr/local/CyberCP/public/phpmyadmin')
+                os.rename(extracted[0], '/usr/local/CyberCP/public/phpmyadmin')
+            else:
+                command = 'mv /usr/local/CyberCP/public/phpMyAdmin-*-all-languages /usr/local/CyberCP/public/phpmyadmin'
+                subprocess.call(command, shell=True)
+            if not os.path.isdir('/usr/local/CyberCP/public/phpmyadmin'):
+                raise RuntimeError('phpMyAdmin directory was not created after extract/mv')
             command = 'rm -f /usr/local/CyberCP/public/phpmyadmin.tar.gz'
             preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin] cleanup',
                                   command, 1, 0, os.EX_OSERR)
