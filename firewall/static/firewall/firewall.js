@@ -31,6 +31,8 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
     $scope.couldNotConnect = true;
     $scope.rulesDetails = false;
 
+    // Initialize rules array - prevents "Cannot read 'length' of undefined" when template evaluates rules.length before API loads
+    $scope.rules = [];
     // Banned IPs variables – tab from hash so we stay on /firewall/ (avoids 404 on servers without /firewall/firewall-rules/)
     function tabFromHash() {
         var h = (window.location.hash || '').replace(/^#/, '');

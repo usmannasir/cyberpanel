@@ -13,11 +13,13 @@ Including another URLconf
     1. Import the include() function: from django.urls import path, include
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+import os
 from django.urls import path, re_path, include
 from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.static import serve
+from django.views.generic import RedirectView
 from firewall import views as firewall_views
 
 # Plugin routes are no longer hardcoded here; pluginHolder.urls dynamically
@@ -34,6 +36,11 @@ except ModuleNotFoundError:
 urlpatterns = [
     # Serve static files first (before catch-all routes)
     re_path(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
+    # Serve SnappyMail and phpMyAdmin from public directory (fixes 404 when panel is served by Django/lscpd on :2087/:8090)
+    re_path(r'^snappymail/?$', RedirectView.as_view(url='/snappymail/index.php', permanent=False)),
+    re_path(r'^snappymail/(?P<path>.*)$', serve, {'document_root': os.path.join(settings.PUBLIC_ROOT, 'snappymail')}),
+    re_path(r'^phpmyadmin/?$', RedirectView.as_view(url='/phpmyadmin/index.php', permanent=False)),
+    re_path(r'^phpmyadmin/(?P<path>.*)$', serve, {'document_root': os.path.join(settings.PUBLIC_ROOT, 'phpmyadmin')}),
     path('base/', include('baseTemplate.urls')),
     path('imunifyav/', firewall_views.imunifyAV, name='imunifyav_root'),
     path('ImunifyAV/', firewall_views.imunifyAV, name='imunifyav_root_legacy'),
