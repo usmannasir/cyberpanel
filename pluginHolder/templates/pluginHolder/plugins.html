@@ -858,13 +858,24 @@
         transition: transform 0.2s;
     }
     .installed-category-filter {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
+        display: block;
         margin-top: 12px;
         padding: 15px;
         background: var(--bg-secondary, #f8f9ff);
         border-radius: 8px;
+    }
+    .installed-category-filter .installed-filter-row,
+    .installed-category-filter .installed-sort-row {
+        margin-bottom: 12px;
+    }
+    .installed-category-filter .installed-sort-row:last-of-type {
+        margin-bottom: 0;
+    }
+    .installed-category-filter-btns {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
     }
     .installed-category-btn {
         padding: 6px 12px;
@@ -1296,56 +1307,57 @@
                         {% trans "Plugin Development Guide" %}
                     </a>
                 </div>
-                <!-- Filter + Sort bar for Grid and Table view (visible when grid or table is active) -->
+                <!-- Filter + Sort bar for Grid and Table view (visible when grid or table is active). All controls in collapsible "Filter". -->
                 <div id="installedSortFilterBar" class="installed-sort-filter-bar" style="display: none;"
                      data-trans-name-asc="{% trans 'Name A-Å' %}" data-trans-name-desc="{% trans 'Name Å-A' %}"
                      data-trans-date-newest="{% trans 'Date (newest)' %}" data-trans-date-oldest="{% trans 'Date (oldest)' }}">
-                    <div class="installed-filter-row">
-                        <span class="sort-label">{% trans "Show:" %}</span>
-                        <div class="filter-btns sort-btns">
-                            <button type="button" class="sort-btn filter-btn active" data-filter="all" id="installedFilterBtnAll" onclick="setInstalledFilter('all')" title="{% trans 'Show all plugins' %}">
-                                <i class="fas fa-th-list"></i> <span class="filter-btn-label">{% trans "All" %}</span>
-                            </button>
-                            <button type="button" class="sort-btn filter-btn" data-filter="installed" id="installedFilterBtnInstalled" onclick="setInstalledFilter('installed')" title="{% trans 'Show only installed plugins' %}">
-                                <i class="fas fa-check-circle"></i> <span class="filter-btn-label">{% trans "Installed only" %}</span>
-                            </button>
-                            <button type="button" class="sort-btn filter-btn" data-filter="active" id="installedFilterBtnActive" onclick="setInstalledFilter('active')" title="{% trans 'Show only active (enabled) plugins' %}">
-                                <i class="fas fa-power-off"></i> <span class="filter-btn-label">{% trans "Active only" %}</span>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="installed-sort-row">
-                    <span class="sort-label">{% trans "Sort by:" %}</span>
-                    <div class="sort-btns">
-                        <button type="button" class="sort-btn active" data-sort-field="name" id="installedSortBtnName" onclick="toggleInstalledSort('name')" title="{% trans 'Click to toggle A-Å / Å-A' %}">
-                            <i class="fas fa-sort-alpha-down"></i> <span class="sort-btn-label">{% trans "Name A-Å" %}</span>
-                        </button>
-                        <button type="button" class="sort-btn" data-sort-field="type" id="installedSortBtnType" onclick="toggleInstalledSort('type')" title="{% trans 'By category/type' %}">
-                            <i class="fas fa-tag"></i> <span class="sort-btn-label">{% trans "Type" %}</span>
-                        </button>
-                        <button type="button" class="sort-btn" data-sort-field="date" id="installedSortBtnDate" onclick="toggleInstalledSort('date')" title="{% trans 'Click to toggle newest / oldest' %}">
-                            <i class="fas fa-calendar-alt"></i> <span class="sort-btn-label">{% trans "Date (newest)" %}</span>
-                        </button>
-                    </div>
-                    </div>
-                    <!-- Category filter (collapsible, same style as A-Å Filter in store) -->
                     <div class="installed-category-filter-wrapper">
                         <button type="button" class="installed-category-toggle-btn" id="installedCategoryToggleBtn" onclick="toggleInstalledCategoryFilter()" aria-expanded="false">
-                            <i class="fas fa-tag"></i>
-                            <span>{% trans "Category Filter" %}</span>
+                            <i class="fas fa-filter"></i>
+                            <span>{% trans "Filter" %}</span>
                             <i class="fas fa-chevron-down installed-category-chevron"></i>
                         </button>
                         <div class="installed-category-filter" id="installedCategoryFilter" aria-hidden="true" style="display: none;">
-                            <button type="button" class="installed-category-btn active" data-category="all" onclick="filterByCategoryInstalled('all', event)">{% trans "All" %}</button>
-                            <button type="button" class="installed-category-btn" data-category="Utility" onclick="filterByCategoryInstalled('Utility', event)"><i class="fas fa-tools"></i> {% trans "Utility" %}</button>
-                            <button type="button" class="installed-category-btn" data-category="Security" onclick="filterByCategoryInstalled('Security', event)"><i class="fas fa-shield-alt"></i> {% trans "Security" %}</button>
-                            <button type="button" class="installed-category-btn" data-category="Backup" onclick="filterByCategoryInstalled('Backup', event)"><i class="fas fa-save"></i> {% trans "Backup" %}</button>
-                            <button type="button" class="installed-category-btn" data-category="Performance" onclick="filterByCategoryInstalled('Performance', event)"><i class="fas fa-rocket"></i> {% trans "Performance" %}</button>
-                            <button type="button" class="installed-category-btn" data-category="Monitoring" onclick="filterByCategoryInstalled('Monitoring', event)"><i class="fas fa-heartbeat"></i> {% trans "Monitoring" %}</button>
-                            <button type="button" class="installed-category-btn" data-category="Integration" onclick="filterByCategoryInstalled('Integration', event)"><i class="fas fa-plug"></i> {% trans "Integration" %}</button>
-                            <button type="button" class="installed-category-btn" data-category="Email" onclick="filterByCategoryInstalled('Email', event)"><i class="fas fa-envelope"></i> {% trans "Email" %}</button>
-                            <button type="button" class="installed-category-btn" data-category="Development" onclick="filterByCategoryInstalled('Development', event)"><i class="fas fa-code"></i> {% trans "Development" %}</button>
-                            <button type="button" class="installed-category-btn" data-category="Analytics" onclick="filterByCategoryInstalled('Analytics', event)"><i class="fas fa-chart-bar"></i> {% trans "Analytics" %}</button>
+                            <div class="installed-filter-row">
+                                <span class="sort-label">{% trans "Show:" %}</span>
+                                <div class="filter-btns sort-btns">
+                                    <button type="button" class="sort-btn filter-btn active" data-filter="all" id="installedFilterBtnAll" onclick="setInstalledFilter('all')" title="{% trans 'Show all plugins' %}">
+                                        <i class="fas fa-th-list"></i> <span class="filter-btn-label">{% trans "All" %}</span>
+                                    </button>
+                                    <button type="button" class="sort-btn filter-btn" data-filter="installed" id="installedFilterBtnInstalled" onclick="setInstalledFilter('installed')" title="{% trans 'Show only installed plugins' %}">
+                                        <i class="fas fa-check-circle"></i> <span class="filter-btn-label">{% trans "Installed only" %}</span>
+                                    </button>
+                                    <button type="button" class="sort-btn filter-btn" data-filter="active" id="installedFilterBtnActive" onclick="setInstalledFilter('active')" title="{% trans 'Show only active (enabled) plugins' %}">
+                                        <i class="fas fa-power-off"></i> <span class="filter-btn-label">{% trans "Active only" %}</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="installed-sort-row">
+                                <span class="sort-label">{% trans "Sort by:" %}</span>
+                                <div class="sort-btns">
+                                    <button type="button" class="sort-btn active" data-sort-field="name" id="installedSortBtnName" onclick="toggleInstalledSort('name')" title="{% trans 'Click to toggle A-Å / Å-A' %}">
+                                        <i class="fas fa-sort-alpha-down"></i> <span class="sort-btn-label">{% trans "Name A-Å" %}</span>
+                                    </button>
+                                    <button type="button" class="sort-btn" data-sort-field="type" id="installedSortBtnType" onclick="toggleInstalledSort('type')" title="{% trans 'By category/type' %}">
+                                        <i class="fas fa-tag"></i> <span class="sort-btn-label">{% trans "Type" %}</span>
+                                    </button>
+                                    <button type="button" class="sort-btn" data-sort-field="date" id="installedSortBtnDate" onclick="toggleInstalledSort('date')" title="{% trans 'Click to toggle newest / oldest' %}">
+                                        <i class="fas fa-calendar-alt"></i> <span class="sort-btn-label">{% trans "Date (newest)" %}</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="installed-category-filter-btns">
+                                <button type="button" class="installed-category-btn active" data-category="all" onclick="filterByCategoryInstalled('all', event)">{% trans "All" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Utility" onclick="filterByCategoryInstalled('Utility', event)"><i class="fas fa-tools"></i> {% trans "Utility" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Security" onclick="filterByCategoryInstalled('Security', event)"><i class="fas fa-shield-alt"></i> {% trans "Security" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Backup" onclick="filterByCategoryInstalled('Backup', event)"><i class="fas fa-save"></i> {% trans "Backup" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Performance" onclick="filterByCategoryInstalled('Performance', event)"><i class="fas fa-rocket"></i> {% trans "Performance" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Monitoring" onclick="filterByCategoryInstalled('Monitoring', event)"><i class="fas fa-heartbeat"></i> {% trans "Monitoring" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Integration" onclick="filterByCategoryInstalled('Integration', event)"><i class="fas fa-plug"></i> {% trans "Integration" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Email" onclick="filterByCategoryInstalled('Email', event)"><i class="fas fa-envelope"></i> {% trans "Email" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Development" onclick="filterByCategoryInstalled('Development', event)"><i class="fas fa-code"></i> {% trans "Development" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Analytics" onclick="filterByCategoryInstalled('Analytics', event)"><i class="fas fa-chart-bar"></i> {% trans "Analytics" %}</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2331,7 +2343,7 @@ function toggleInstalledCategoryFilter() {
     const toggleBtn = document.getElementById('installedCategoryToggleBtn');
     if (!filter || !toggleBtn) return;
     const isExpanded = toggleBtn.getAttribute('aria-expanded') === 'true';
-    filter.style.display = isExpanded ? 'none' : 'flex';
+    filter.style.display = isExpanded ? 'none' : 'block';
     filter.setAttribute('aria-hidden', isExpanded ? 'true' : 'false');
     toggleBtn.setAttribute('aria-expanded', isExpanded ? 'false' : 'true');
 }
