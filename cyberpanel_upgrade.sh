@@ -440,24 +440,28 @@ mariadb -uroot -p"$MySQL_Password" -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'lo
 # Backup all MariaDB/MySQL databases before upgrade. Uses /etc/cyberpanel/mysqlPassword. Skips on failure (logs warning).
 Backup_MariaDB_Before_Upgrade() {
   local pass="" backup_dir="/root/cyberpanel_mariadb_backups" backup_file=""
-  [[ -f /etc/cyberpanel/mysqlPassword ]] || return 0
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Starting MariaDB pre-upgrade backup... (this may take a few minutes)" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  [[ -f /etc/cyberpanel/mysqlPassword ]] || { echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB pre-upgrade backup: skipped (no password file)." | tee -a /var/log/cyberpanel_upgrade_debug.log; return 0; }
   if grep -q '"mysqlpassword"' /etc/cyberpanel/mysqlPassword 2>/dev/null; then
     pass=$(python3 -c "import json; print(json.load(open('/etc/cyberpanel/mysqlPassword')).get('mysqlpassword',''))" 2>/dev/null)
   else
     pass=$(head -1 /etc/cyberpanel/mysqlPassword 2>/dev/null | tr -d '\r\n')
   fi
-  [[ -z "$pass" ]] && echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: Could not read MariaDB password, skipping pre-upgrade backup." | tee -a /var/log/cyberpanel_upgrade_debug.log && return 0
+  [[ -z "$pass" ]] && echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: Could not read MariaDB password, skipping pre-upgrade backup." | tee -a /var/log/cyberpanel_upgrade_debug.log && echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB pre-upgrade backup: skipped." | tee -a /var/log/cyberpanel_upgrade_debug.log && return 0
   mkdir -p "$backup_dir"
   backup_file="${backup_dir}/mariadb_backup_before_upgrade_$(date +%Y%m%d_%H%M%S).sql.gz"
   if mariadb --skip-ssl -u root -p"$pass" -e "SELECT 1" 2>/dev/null | grep -q 1; then
     (mariadb-dump --skip-ssl -u root -p"$pass" --all-databases --single-transaction --routines --triggers --events 2>/dev/null || mysqldump --skip-ssl -u root -p"$pass" --all-databases --single-transaction --routines --triggers --events 2>/dev/null) | gzip > "$backup_file" 2>/dev/null
     if [[ -s "$backup_file" ]]; then
       echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB backup created: $backup_file" | tee -a /var/log/cyberpanel_upgrade_debug.log
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB pre-upgrade backup: done." | tee -a /var/log/cyberpanel_upgrade_debug.log
     else
       echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: MariaDB backup file empty or failed." | tee -a /var/log/cyberpanel_upgrade_debug.log
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB pre-upgrade backup: skipped (dump failed)." | tee -a /var/log/cyberpanel_upgrade_debug.log
     fi
   else
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: Could not connect to MariaDB for backup (skip-ssl). Skipping backup." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB pre-upgrade backup: skipped (no connection)." | tee -a /var/log/cyberpanel_upgrade_debug.log
   fi
 }
 
@@ -713,7 +717,9 @@ EOF
 
   # MariaDB repo for EL8/EL9: any version (repo path uses major.minor: 10.11, 11.8, 12.1, 12.2, 12.3, etc.)
   if [[ "$Server_OS_Version" = "8" ]] || [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Configuring MariaDB $MARIADB_VER_REPO repository and upgrading MariaDB..." | tee -a /var/log/cyberpanel_upgrade_debug.log
     Backup_MariaDB_Before_Upgrade
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Writing MariaDB $MARIADB_VER_REPO repo and installing/upgrading packages..." | tee -a /var/log/cyberpanel_upgrade_debug.log
     if [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]; then
       MARIADB_REPO="rhel9-amd64"
     else
@@ -788,9 +794,10 @@ EOF
 
   # AlmaLinux 9 specific package installation
   if [[ "$Server_OS" = "AlmaLinux9" ]] ; then
-    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing AlmaLinux 9 specific packages..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing AlmaLinux 9 specific packages (Development Tools, PHP deps, MariaDB)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
     
     # Install essential build tools
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running: dnf groupinstall -y 'Development Tools' (may take a few minutes)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
     dnf groupinstall -y 'Development Tools'
     
     # Install PHP dependencies that are missing on AlmaLinux 9
