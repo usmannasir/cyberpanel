@@ -1293,7 +1293,7 @@
         <!-- Rules Table -->
         <div ng-hide="rulesDetails" class="rules-table-section">
             <div class="table-responsive">
-                <table class="rules-table" ng-if="rules.length > 0">
+                <table class="rules-table" ng-if="rules && rules.length > 0">
                 <thead>
                     <tr>
                         <th>{% trans "ID" %}</th>
@@ -1361,7 +1361,7 @@
             </div>
             
             <!-- Empty State -->
-            <div ng-if="rules.length == 0" class="empty-state">
+            <div ng-if="!rules || rules.length == 0" class="empty-state">
                 <i class="fas fa-shield-alt empty-icon"></i>
                 <h3 class="empty-title">{% trans "No Firewall Rules" %}</h3>
                 <p class="empty-text">{% trans "Add your first firewall rule to control network access to your server." %}</p>

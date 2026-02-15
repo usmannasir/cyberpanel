@@ -99,6 +99,14 @@ fi
 # Check disk space
 check_disk_space
 
+# If running from repo with modular installer, use it
+INSTALL_SCRIPT_DIR="$(cd "$(dirname "$0")" 2>/dev/null && pwd)"
+if [ -n "$INSTALL_SCRIPT_DIR" ] && [ -f "$INSTALL_SCRIPT_DIR/cyberpanel.sh" ] && [ -d "$INSTALL_SCRIPT_DIR/install_modules" ]; then
+    echo "Using local CyberPanel installer (modular)"
+    cd "$INSTALL_SCRIPT_DIR" || exit 1
+    exec bash ./cyberpanel.sh -b "${BRANCH_NAME}" "$@"
+fi
+
 # Download and execute cyberpanel.sh for the specified branch
 echo "Downloading CyberPanel installer for branch: $BRANCH_NAME"
 

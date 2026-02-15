@@ -1945,6 +1945,19 @@ fi
 # Fix SnappyMail directory permissions for Ubuntu 24.04 and other systems
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Checking SnappyMail directories..." | tee -a /var/log/cyberpanel_upgrade_debug.log
 
+# If public web app is still named rainloop, rename to snappymail so /snappymail/ URL works
+if [ -d "/usr/local/CyberCP/public/rainloop" ] && [ ! -d "/usr/local/CyberCP/public/snappymail" ]; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Renaming public/rainloop to public/snappymail..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    mv /usr/local/CyberCP/public/rainloop /usr/local/CyberCP/public/snappymail
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Renamed public/rainloop -> public/snappymail" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    if [ -f "/usr/local/CyberCP/public/snappymail/include.php" ]; then
+        sed -i 's|/usr/local/lscp/cyberpanel/rainloop/data|/usr/local/lscp/cyberpanel/snappymail/data|g' /usr/local/CyberCP/public/snappymail/include.php
+    fi
+    for inc in /usr/local/CyberCP/public/snappymail/snappymail/v/*/include.php /usr/local/CyberCP/public/snappymail/rainloop/v/*/include.php; do
+        [ -f "$inc" ] && sed -i 's|/usr/local/lscp/cyberpanel/rainloop/data|/usr/local/lscp/cyberpanel/snappymail/data|g' "$inc" && break
+    done 2>/dev/null
+fi
+
 # Migrate data from old rainloop folder to new snappymail folder (2.4.4 -> 2.5.5 upgrade)
 if [ -d "/usr/local/lscp/cyberpanel/rainloop/data" ] && [ "$(ls -A /usr/local/lscp/cyberpanel/rainloop/data 2>/dev/null)" ]; then
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Migrating rainloop data to snappymail..." | tee -a /var/log/cyberpanel_upgrade_debug.log
@@ -1971,6 +1984,14 @@ if [ -d "/usr/local/lscp/cyberpanel/rainloop/data" ] && [ "$(ls -A /usr/local/ls
                 sed -i 's|/usr/local/lscp/cyberpanel/rainloop/data|/usr/local/lscp/cyberpanel/snappymail/data|g' /usr/local/CyberCP/public/snappymail/include.php
                 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Updated include.php to use snappymail data path" | tee -a /var/log/cyberpanel_upgrade_debug.log
             fi
+            
+            # Replace ALL rainloop path/URL references in migrated SnappyMail data (configs, domains, plugins)
+            if [ -d "/usr/local/lscp/cyberpanel/snappymail/data" ]; then
+                find /usr/local/lscp/cyberpanel/snappymail/data -type f \( -name "*.ini" -o -name "*.json" -o -name "*.php" -o -name "*.cfg" \) -exec grep -l "rainloop" {} \; 2>/dev/null | while read -r f; do
+                    sed -i 's|/usr/local/lscp/cyberpanel/rainloop/data|/usr/local/lscp/cyberpanel/snappymail/data|g; s|/rainloop/|/snappymail/|g; s|rainloop/data|snappymail/data|g' "$f"
+                done
+                echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Replaced rainloop→snappymail links in SnappyMail data files" | tee -a /var/log/cyberpanel_upgrade_debug.log
+            fi
         else
             echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: Data migration completed with errors" | tee -a /var/log/cyberpanel_upgrade_debug.log
         fi
@@ -1992,6 +2013,20 @@ if id -u lscpd >/dev/null 2>&1; then
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Set SnappyMail ownership to lscpd:lscpd" | tee -a /var/log/cyberpanel_upgrade_debug.log
 else
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: lscpd user not found, skipping ownership change" | tee -a /var/log/cyberpanel_upgrade_debug.log
+fi
+
+# Ensure /rainloop→/snappymail redirect exists (even when no migration ran)
+HTACCESS="/usr/local/CyberCP/public/.htaccess"
+if [ -d "/usr/local/CyberCP/public" ] && { [ ! -f "$HTACCESS" ] || ! grep -q "Redirect old RainLoop URL to SnappyMail" "$HTACCESS" 2>/dev/null; }; then
+    {
+        echo ""
+        echo "# Redirect old RainLoop URL to SnappyMail (2.5.5 upgrade)"
+        echo "<IfModule mod_rewrite.c>"
+        echo "RewriteEngine On"
+        echo "RewriteRule ^rainloop/?(.*)\$ /snappymail/\$1 [R=301,L]"
+        echo "</IfModule>"
+    } >> "$HTACCESS"
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Added /rainloop→/snappymail redirect to .htaccess" | tee -a /var/log/cyberpanel_upgrade_debug.log
 fi
 
 # Set proper permissions for SnappyMail data directories (group writable)
