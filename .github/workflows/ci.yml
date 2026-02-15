@@ -56,7 +56,8 @@ jobs:
           for f in preUpgrade.sh cyberpanel_upgrade.sh plogical/upgrade.py install/install.py plogical/versionFetcher.py; do
             test -f "$f" || { echo "Missing: $f"; exit 1; }
           done
-          grep -q 'download_install_phpmyadmin\|Branch_Name' preUpgrade.sh || exit 1
+          grep -q 'BRANCH_NAME' preUpgrade.sh || exit 1
+          grep -q 'Branch_Name\|download_install_phpmyadmin\|Branch_Check' cyberpanel_upgrade.sh || exit 1
           echo "Key files OK"
 
   # Run validation inside a container per supported OS (AlmaLinux, CentOS, CloudLinux, Debian, RHEL, Rocky, Ubuntu).
@@ -143,6 +144,6 @@ jobs:
               for f in preUpgrade.sh cyberpanel_upgrade.sh plogical/upgrade.py install/install.py plogical/versionFetcher.py; do
                 test -f "$f" || { echo "Missing: $f"; exit 1; }
               done
-              grep -q "Branch_Name\|download_install_phpmyadmin\|cyberpanel" preUpgrade.sh || exit 1
+              grep -q "BRANCH_NAME" preUpgrade.sh && grep -q "Branch_Name\|download_install_phpmyadmin\|Branch_Check" cyberpanel_upgrade.sh || exit 1
               echo "Done."
             '
