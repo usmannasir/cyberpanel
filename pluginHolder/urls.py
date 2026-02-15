@@ -13,10 +13,17 @@ from django.urls import path, include
 import os
 import sys
 
+# Ensure plugin roots are on sys.path first so __import__(plugin_name + '.urls') can find packages
+_INSTALLED_PLUGINS_PATH = '/usr/local/CyberCP'
+_PLUGIN_SOURCE_PATHS = ['/home/cyberpanel/plugins', '/home/cyberpanel-plugins']
+for _p in [_INSTALLED_PLUGINS_PATH] + _PLUGIN_SOURCE_PATHS:
+    if _p and os.path.isdir(_p) and _p not in sys.path:
+        sys.path.insert(0, _p)
+
 from . import views
 
 # Installed plugins live under this path (must match pluginInstaller and pluginHolder.views)
-INSTALLED_PLUGINS_PATH = '/usr/local/CyberCP'
+INSTALLED_PLUGINS_PATH = _INSTALLED_PLUGINS_PATH
 
 # Source paths for plugins (same as pluginHolder.views PLUGIN_SOURCE_PATHS)
 # Checked when plugin is not under INSTALLED_PLUGINS_PATH so URLs still work
@@ -95,22 +102,29 @@ urlpatterns = [
     path('api/store/upgrade/<str:plugin_name>/', views.upgrade_plugin, name='upgrade_plugin'),
     path('api/backups/<str:plugin_name>/', views.get_plugin_backups, name='get_plugin_backups'),
     path('api/revert/<str:plugin_name>/', views.revert_plugin, name='revert_plugin'),
+    path('api/debug-plugins/', views.debug_loaded_plugins, name='debug_loaded_plugins'),
 ]
 
 # Include each installed plugin's URLs *before* the catch-all so /plugins/<name>/settings/ etc. match
+_loaded_plugins = []
+_failed_plugins = {}
 for _plugin_name, _path_parent in _get_installed_plugin_list():
     try:
         if _path_parent not in sys.path:
             sys.path.insert(0, _path_parent)
         __import__(_plugin_name + '.urls')
         urlpatterns.append(path(_plugin_name + '/', include(_plugin_name + '.urls')))
-    except (ImportError, AttributeError) as e:
+        _loaded_plugins.append(_plugin_name)
+    except Exception as e:
+        import traceback
+        _failed_plugins[_plugin_name] = str(e)
         try:
             from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as _logging
             _logging.writeToFile(
                 'pluginHolder.urls: Skipping plugin "%s" (urls not loadable): %s'
                 % (_plugin_name, e)
             )
+            _logging.writeToFile(traceback.format_exc())
         except Exception:
             pass
 

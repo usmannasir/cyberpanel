@@ -1854,6 +1854,24 @@ def install_from_store(request, plugin_name):
             'error': str(e)
         }, status=500)
 
+@csrf_exempt
+@require_http_methods(["GET"])
+def debug_loaded_plugins(request):
+    """Return which plugins have URL routes loaded and which failed (for diagnosing 404s)."""
+    try:
+        import pluginHolder.urls as urls_mod
+        loaded = list(getattr(urls_mod, '_loaded_plugins', []))
+        failed = dict(getattr(urls_mod, '_failed_plugins', {}))
+        return JsonResponse({
+            'success': True,
+            'loaded': loaded,
+            'failed': failed,
+            'loaded_count': len(loaded),
+            'failed_count': len(failed),
+        }, json_dumps_params={'indent': 2})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
 def plugin_help(request, plugin_name):
     """Plugin-specific help page - shows plugin information, version history, and help content"""
     mailUtilities.checkHome()
