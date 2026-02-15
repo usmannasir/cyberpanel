@@ -661,10 +661,10 @@ EOF
                    sqlite-devel libxml2-devel libxslt-devel curl-devel libedit-devel \
                    readline-devel pkgconfig cmake gcc-c++
     
-    # Install/upgrade MariaDB from configured repo (11.8, 10.11, or 12.1 per --mariadb-version)
-    dnf install -y MariaDB-server MariaDB-client MariaDB-devel 2>/dev/null || dnf install -y mariadb-server mariadb-devel mariadb-client
+    # Install/upgrade MariaDB server only (server + devel for Python/php; client not required for panel)
+    dnf install -y MariaDB-server MariaDB-devel 2>/dev/null || dnf install -y mariadb-server mariadb-devel
     # Upgrade to chosen version if already installed (e.g. 10.11 -> 11.8)
-    dnf upgrade -y MariaDB-server MariaDB-client MariaDB-devel 2>/dev/null || true
+    dnf upgrade -y MariaDB-server MariaDB-devel 2>/dev/null || true
     systemctl restart mariadb 2>/dev/null || true
 
     # Install additional required packages
