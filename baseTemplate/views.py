@@ -298,6 +298,8 @@ def versionManagment(request):
     latestVersion = '0'
     latestBuild = '0'
 
+    on_dev_branch = (currentVersion == '2.5.5' and currentBuild == 'dev')
+
     try:
         getVersion = requests.get('https://cyberpanel.net/version.txt', timeout=10)
         getVersion.raise_for_status()
@@ -306,10 +308,15 @@ def versionManagment(request):
         latestBuild = str(latest.get('build', '0'))
     except (requests.RequestException, ValueError, KeyError) as e:
         logging.CyberCPLogFileWriter.writeToFile('[versionManagment] cyberpanel.net/version.txt failed: %s' % str(e))
-        if currentVersion == '2.5.5' and currentBuild == 'dev':
-            notechk = False
+        if on_dev_branch:
+            latestVersion, latestBuild = '2.5.5', 'dev'
 
-    branch_ref = 'v%s.%s' % (latestVersion, latestBuild)
+    # Dev branch: compare against v2.5.5-dev, show dev version info
+    if on_dev_branch:
+        branch_ref = 'v2.5.5-dev'
+        latestVersion, latestBuild = '2.5.5', 'dev'
+    else:
+        branch_ref = 'v%s.%s' % (latestVersion, latestBuild)
 
     # Always fetch local HEAD for display
     head_cmd = 'git -C /usr/local/CyberCP rev-parse HEAD 2>/dev/null || true'
@@ -319,39 +326,38 @@ def versionManagment(request):
     remote_out = ProcessUtilities.outputExecutioner(remote_cmd)
     is_usmannasir = 'usmannasir/cyberpanel' in (remote_out or '')
 
-    if notechk and (currentVersion == '2.5.5' and currentBuild == 'dev'):
-        notechk = False
-    elif notechk and _version_compare(currentVersion, latestVersion) > 0:
+    # Stable: newer than cyberpanel.net = up to date; dev: compare commits
+    if not on_dev_branch and notechk and _version_compare(currentVersion, latestVersion) > 0:
         notechk = False
     elif notechk:
-        if is_usmannasir:
-            u = "https://api.github.com/repos/usmannasir/cyberpanel/commits?sha=%s" % branch_ref
+        # Dev branch: always use usmannasir v2.5.5-dev as canonical "latest"
+        # Forks: use usmannasir for Latest Commit so all dev users compare to same upstream
+        fetch_branch = branch_ref if (is_usmannasir or on_dev_branch) else None
+        if fetch_branch:
+            u = "https://api.github.com/repos/usmannasir/cyberpanel/commits?sha=%s" % fetch_branch
             logging.CyberCPLogFileWriter.writeToFile(u)
             try:
                 r = requests.get(u, timeout=10)
                 r.raise_for_status()
                 latestcomit = r.json()[0]['sha']
+                if Currentcomt and latestcomit and Currentcomt == latestcomit:
+                    notechk = False
             except (requests.RequestException, IndexError, KeyError) as e:
                 logging.CyberCPLogFileWriter.writeToFile('[versionManagment] GitHub API failed: %s' % str(e))
-            if latestcomit and Currentcomt == latestcomit:
-                notechk = False
-        else:
-            notechk = False
-
-    # For forks: fetch latest commit from the actual remote for display
-    if not latestcomit and remote_out:
-        m = re.search(r'github\.com[:/]([^/]+)/([^/]+?)(?:\.git)?$', remote_out.strip())
-        if m:
-            owner, repo = m.group(1), m.group(2).rstrip('.git')
-            branch_cmd = 'git -C /usr/local/CyberCP rev-parse --abbrev-ref HEAD 2>/dev/null || true'
-            local_branch = ProcessUtilities.outputExecutioner(branch_cmd).rstrip('\n') or 'v2.5.5-dev'
-            try:
-                u = "https://api.github.com/repos/%s/%s/commits?sha=%s" % (owner, repo, local_branch)
-                r = requests.get(u, timeout=10)
-                r.raise_for_status()
-                latestcomit = r.json()[0]['sha']
-            except (requests.RequestException, IndexError, KeyError):
-                pass
+        elif not on_dev_branch:
+            # Stable fork: fetch from fork's branch
+            m = re.search(r'github\.com[:/]([^/]+)/([^/]+?)(?:\.git)?$', (remote_out or '').strip())
+            if m:
+                owner, repo = m.group(1), m.group(2).rstrip('.git')
+                try:
+                    u = "https://api.github.com/repos/%s/%s/commits?sha=%s" % (owner, repo, branch_ref)
+                    r = requests.get(u, timeout=10)
+                    r.raise_for_status()
+                    latestcomit = r.json()[0]['sha']
+                    if Currentcomt and latestcomit and Currentcomt == latestcomit:
+                        notechk = False
+                except (requests.RequestException, IndexError, KeyError):
+                    pass
 
     template = 'baseTemplate/versionManagment.html'
     finalData = {'build': currentBuild, 'currentVersion': currentVersion, 'latestVersion': latestVersion,
