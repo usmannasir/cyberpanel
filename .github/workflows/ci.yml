@@ -105,6 +105,7 @@ jobs:
       - name: Validate on ${{ matrix.os }} (${{ matrix.image }})
         run: |
           docker run --rm \
+            -e IMAGE="${{ matrix.image }}" \
             -v "$PWD:/repo:ro" \
             -w /repo \
             "${{ matrix.image }}" \
@@ -116,6 +117,13 @@ jobs:
                 apt-get install -y -qq python3 python3-pip >/dev/null
                 pip3 install -q requests
               else
+                if [ "$IMAGE" = "centos:7" ]; then
+                  for r in /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-*.repo; do
+                    [ -f "$r" ] || continue
+                    sed -i "s|^mirrorlist=|#mirrorlist=|g" "$r"
+                    sed -i "s|^#*baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g" "$r"
+                  done
+                fi
                 if command -v dnf >/dev/null 2>&1; then
                   dnf install -y -q python3 python3-pip
                 else
