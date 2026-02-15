@@ -1626,77 +1626,24 @@
 
 <script>
 (function(){
-  var nav = document.getElementById('firewall-tab-nav');
-  if (!nav) return;
-
-  function loadTabViaAngularScope(tab) {
-    if (!window.angular) return false;
-    var container = document.querySelector('.modern-container[ng-controller="firewallController"]') || document.querySelector('.modern-container');
-    if (!container) return false;
-    try {
-      var scope = window.angular.element(container).scope();
-      if (!scope) return false;
-      scope.$evalAsync(function() {
-        scope.activeTab = tab;
-        if (tab === 'banned' && scope.populateBannedIPs) scope.populateBannedIPs();
-        else if (tab === 'rules' && scope.populateCurrentRecords) scope.populateCurrentRecords();
-      });
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  function loadTab(tab) {
-    if (!tab || (tab !== 'rules' && tab !== 'banned')) return;
-    var done = false;
-    if (window.__firewallLoadTab) {
-      try { window.__firewallLoadTab(tab); done = true; } catch (e) {}
-    }
-    if (!done) {
-      done = loadTabViaAngularScope(tab);
-    }
-    if (!done) {
-      setTimeout(function() {
-        if (window.__firewallLoadTab) try { window.__firewallLoadTab(tab); } catch (e) {};
-        else loadTabViaAngularScope(tab);
-      }, 50);
-      setTimeout(function() {
-        if (window.__firewallLoadTab) try { window.__firewallLoadTab(tab); } catch (e) {};
-        else loadTabViaAngularScope(tab);
-      }, 200);
-      setTimeout(function() {
-        if (window.__firewallLoadTab) try { window.__firewallLoadTab(tab); } catch (e) {};
-        else loadTabViaAngularScope(tab);
-      }, 500);
-    }
-  }
-
-  function onTabButtonActivate(btn) {
-    var tab = btn && btn.getAttribute('data-tab');
-    if (!tab) return;
-    window.location.hash = (tab === 'banned') ? '#banned-ips' : '#rules';
-    loadTab(tab);
-  }
-  nav.addEventListener('click', function(e) {
-    var btn = (e.target && e.target.closest) ? e.target.closest('.tab-button[data-tab]') : null;
-    if (btn && nav.contains(btn)) onTabButtonActivate(btn);
-  }, false);
-  nav.addEventListener('mousedown', function(e) {
-    var btn = (e.target && e.target.closest) ? e.target.closest('.tab-button[data-tab]') : null;
-    if (btn && nav.contains(btn)) onTabButtonActivate(btn);
-  }, false);
-
+  // Sync tab from hash on load and hashchange (back/forward). Tab clicks are handled by ng-click only.
   function loadTabFromHash() {
     var h = (window.location.hash || '').replace(/^#/, '');
     var tab = (h === 'banned-ips') ? 'banned' : 'rules';
-    loadTab(tab);
+    if (window.__firewallLoadTab) {
+      try { window.__firewallLoadTab(tab); } catch (e) {}
+    }
   }
-  var h = (window.location.hash || '').replace(/^#/, '');
-  if (h === 'banned-ips') loadTabFromHash();
   window.addEventListener('hashchange', loadTabFromHash);
-  setTimeout(loadTabFromHash, 150);
-  setTimeout(loadTabFromHash, 500);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(loadTabFromHash, 100);
+      setTimeout(loadTabFromHash, 400);
+    });
+  } else {
+    setTimeout(loadTabFromHash, 100);
+    setTimeout(loadTabFromHash, 400);
+  }
 })();
 </script>
 
