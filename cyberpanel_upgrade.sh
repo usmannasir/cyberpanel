@@ -449,6 +449,7 @@ if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "AlmaLinux9" ]] ; then
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Fixing AlmaLinux 9 repos (appstream/baseos) for reliable mirror access" | tee -a /var/log/cyberpanel_upgrade_debug.log
     ALMA_VER="${Server_OS_Version:-9}"
     ARCH="x86_64"
+    ALMA_BASE="https://repo.almalinux.org/almalinux/${ALMA_VER}"
     for repo in /etc/yum.repos.d/almalinux*.repo /etc/yum.repos.d/AlmaLinux*.repo; do
       [[ ! -f "$repo" ]] && continue
       if grep -q '^mirrorlist=' "$repo" 2>/dev/null; then
@@ -457,37 +458,69 @@ if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "AlmaLinux9" ]] ; then
         sed -i 's|^#baseurl=\(.*repo\.almalinux\.org.*\)|baseurl=\1|' "$repo"
       fi
     done
-    # Ensure appstream/baseos have explicit baseurl (avoids "Cannot find valid baseurl"); process any .repo that has these sections
+    # Ensure appstream/baseos have explicit baseurl; support [appstream], [almalinux-appstream], etc.
     for repofile in /etc/yum.repos.d/almalinux.repo /etc/yum.repos.d/almalinux*.repo /etc/yum.repos.d/AlmaLinux*.repo; do
       [[ ! -f "$repofile" ]] && continue
-      if grep -q '^\[appstream\]' "$repofile" 2>/dev/null; then
-        sed -i "/^\[appstream\]/,/^\[/ { s|^#\?baseurl=.*|baseurl=https://repo.almalinux.org/almalinux/${ALMA_VER}/AppStream/${ARCH}/os/|; s|^mirrorlist=.*|#mirrorlist=disabled| }" "$repofile"
-        # Add baseurl if section had only mirrorlist (no baseurl line)
-        if ! sed -n '/^\[appstream\]/,/^\[/p' "$repofile" | grep -q '^baseurl='; then
-          sed -i "/^\[appstream\]/a baseurl=https://repo.almalinux.org/almalinux/${ALMA_VER}/AppStream/${ARCH}/os/" "$repofile"
+      for section in appstream almalinux-appstream AppStream; do
+        if grep -q "^\[${section}\]" "$repofile" 2>/dev/null; then
+          sed -i "/^\[${section}\]/,/^\[/ { s|^#\?baseurl=.*|baseurl=${ALMA_BASE}/AppStream/${ARCH}/os/|; s|^mirrorlist=.*|#mirrorlist=disabled| }" "$repofile"
+          if ! sed -n "/^\[${section}\]/,/^\[/p" "$repofile" | grep -q '^baseurl='; then
+            sed -i "/^\[${section}\]/a baseurl=${ALMA_BASE}/AppStream/${ARCH}/os/" "$repofile"
+          fi
         fi
-      fi
-      if grep -q '^\[baseos\]' "$repofile" 2>/dev/null; then
-        sed -i "/^\[baseos\]/,/^\[/ { s|^#\?baseurl=.*|baseurl=https://repo.almalinux.org/almalinux/${ALMA_VER}/BaseOS/${ARCH}/os/|; s|^mirrorlist=.*|#mirrorlist=disabled| }" "$repofile"
-        if ! sed -n '/^\[baseos\]/,/^\[/p' "$repofile" | grep -q '^baseurl='; then
-          sed -i "/^\[baseos\]/a baseurl=https://repo.almalinux.org/almalinux/${ALMA_VER}/BaseOS/${ARCH}/os/" "$repofile"
+      done
+      for section in baseos almalinux-baseos BaseOS; do
+        if grep -q "^\[${section}\]" "$repofile" 2>/dev/null; then
+          sed -i "/^\[${section}\]/,/^\[/ { s|^#\?baseurl=.*|baseurl=${ALMA_BASE}/BaseOS/${ARCH}/os/|; s|^mirrorlist=.*|#mirrorlist=disabled| }" "$repofile"
+          if ! sed -n "/^\[${section}\]/,/^\[/p" "$repofile" | grep -q '^baseurl='; then
+            sed -i "/^\[${section}\]/a baseurl=${ALMA_BASE}/BaseOS/${ARCH}/os/" "$repofile"
+          fi
         fi
-      fi
-      # CRB (CodeReady Builder) - avoids "Cannot find a valid baseurl for repo: crb"
-      if grep -q '^\[crb\]' "$repofile" 2>/dev/null; then
-        sed -i "/^\[crb\]/,/^\[/ { s|^#\?baseurl=.*|baseurl=https://repo.almalinux.org/almalinux/${ALMA_VER}/CRB/${ARCH}/os/|; s|^mirrorlist=.*|#mirrorlist=disabled| }" "$repofile"
-        if ! sed -n '/^\[crb\]/,/^\[/p' "$repofile" | grep -q '^baseurl='; then
-          sed -i "/^\[crb\]/a baseurl=https://repo.almalinux.org/almalinux/${ALMA_VER}/CRB/${ARCH}/os/" "$repofile"
+      done
+      for section in crb extras; do
+        if grep -q "^\[${section}\]" "$repofile" 2>/dev/null; then
+          [[ "$section" = "crb" ]] && path="CRB" || path="extras"
+          sed -i "/^\[${section}\]/,/^\[/ { s|^#\?baseurl=.*|baseurl=${ALMA_BASE}/${path}/${ARCH}/os/|; s|^mirrorlist=.*|#mirrorlist=disabled| }" "$repofile"
+          if ! sed -n "/^\[${section}\]/,/^\[/p" "$repofile" | grep -q '^baseurl='; then
+            sed -i "/^\[${section}\]/a baseurl=${ALMA_BASE}/${path}/${ARCH}/os/" "$repofile"
+          fi
         fi
-      fi
-      # Extras - avoids "Cannot find a valid baseurl for repo: extras"
-      if grep -q '^\[extras\]' "$repofile" 2>/dev/null; then
-        sed -i "/^\[extras\]/,/^\[/ { s|^#\?baseurl=.*|baseurl=https://repo.almalinux.org/almalinux/${ALMA_VER}/extras/${ARCH}/os/|; s|^mirrorlist=.*|#mirrorlist=disabled| }" "$repofile"
-        if ! sed -n '/^\[extras\]/,/^\[/p' "$repofile" | grep -q '^baseurl='; then
-          sed -i "/^\[extras\]/a baseurl=https://repo.almalinux.org/almalinux/${ALMA_VER}/extras/${ARCH}/os/" "$repofile"
-        fi
-      fi
+      done
     done
+    # Fallback: create override with same repo IDs (loads last via zz- prefix, overrides broken config)
+    if ! dnf makecache --quiet 2>/dev/null; then
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] dnf makecache failed, creating AlmaLinux repo override" | tee -a /var/log/cyberpanel_upgrade_debug.log
+      cat > /etc/yum.repos.d/zz-almalinux-cyberpanel-fix.repo << EOF
+[baseos]
+name=AlmaLinux ${ALMA_VER} - BaseOS
+baseurl=${ALMA_BASE}/BaseOS/${ARCH}/os/
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux-9
+
+[appstream]
+name=AlmaLinux ${ALMA_VER} - AppStream
+baseurl=${ALMA_BASE}/AppStream/${ARCH}/os/
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux-9
+
+[extras]
+name=AlmaLinux ${ALMA_VER} - Extras
+baseurl=${ALMA_BASE}/extras/${ARCH}/os/
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux-9
+
+[crb]
+name=AlmaLinux ${ALMA_VER} - CRB
+baseurl=${ALMA_BASE}/CRB/${ARCH}/os/
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux-9
+EOF
+      dnf makecache --quiet 2>/dev/null || true
+    fi
   fi
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Setting up repositories for $Server_OS..." | tee -a /var/log/cyberpanel_upgrade_debug.log
   rm -f /etc/yum.repos.d/CyberPanel.repo
@@ -1365,7 +1398,7 @@ if [[ -f Makefile ]]; then
     # Replace -O0 -g3 with -O2 -g to satisfy _FORTIFY_SOURCE
     sed -i 's/-O0 -g3/-O2 -g/g' Makefile
     # Ensure we have proper optimization flags
-    if grep -q "CFLAGS" Makefile && ! grep -q -e "-O2" Makefile; then
+    if grep -q "CFLAGS" Makefile && ! grep -qF '-O2' Makefile; then
         sed -i 's/CFLAGS =/CFLAGS = -O2/' Makefile
     fi
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Makefile optimized for proper compilation" | tee -a /var/log/cyberpanel_upgrade_debug.log
