@@ -1811,6 +1811,18 @@ usermod -a -G lscpd nobody 2>/dev/null || true
 chown -R lscpd:lscpd /usr/local/CyberCP/public/snappymail/data 2>/dev/null || true
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Added web server users to lscpd group and fixed SnappyMail ownership" | tee -a /var/log/cyberpanel_upgrade_debug.log
 
+# Force phpMyAdmin to use 127.0.0.1 (TCP) so it shows the same MariaDB version as CLI (main instance on 3306)
+if [ -f /usr/local/CyberCP/public/phpmyadmin/config.inc.php ]; then
+  if ! grep -q "\$cfg\['Servers'\]\[\$i\]\['host'\] = '127.0.0.1'" /usr/local/CyberCP/public/phpmyadmin/config.inc.php 2>/dev/null; then
+    sed -i "/SignonURL/a \$cfg['Servers'][\$i]['host'] = '127.0.0.1';\n\$cfg['Servers'][\$i]['port'] = '3306';" /usr/local/CyberCP/public/phpmyadmin/config.inc.php 2>/dev/null || true
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Set phpMyAdmin server host to 127.0.0.1" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  fi
+fi
+if [ -f /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php ]; then
+  sed -i "/trim.*\$_POST.*host.*localhost/s/'localhost'/'127.0.0.1'/g" /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php 2>/dev/null || true
+  grep -q "127.0.0.1" /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php && echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] phpMyAdmin signon default host set to 127.0.0.1" | tee -a /var/log/cyberpanel_upgrade_debug.log
+fi
+
 systemctl restart lscpd
 
 }

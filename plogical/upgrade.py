@@ -1262,6 +1262,8 @@ $cfg['Servers'][$i]['auth_type'] = 'signon';
 $cfg['Servers'][$i]['SignonSession'] = 'SignonSession';
 $cfg['Servers'][$i]['SignonURL'] = 'phpmyadminsignin.php';
 $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
+$cfg['Servers'][$i]['host'] = '127.0.0.1';
+$cfg['Servers'][$i]['port'] = '3306';
 """
 
             for items in data:
@@ -1295,8 +1297,10 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
                 mysqluser = jsonData['mysqluser']
                 mysqlpassword = jsonData['mysqlpassword']
-                mysqlport = jsonData['mysqlport']
-                mysqlhost = jsonData['mysqlhost']
+                mysqlport = jsonData.get('mysqlport', 3306)
+                mysqlhost = jsonData.get('mysqlhost', '127.0.0.1') or '127.0.0.1'
+                if mysqlhost == 'localhost':
+                    mysqlhost = '127.0.0.1'
 
                 command = "sed -i 's|localhost|%s|g' /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php" % (
                     mysqlhost)
