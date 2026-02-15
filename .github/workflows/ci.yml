@@ -37,7 +37,6 @@ jobs:
   validate-python:
     name: Validate Python (version fetcher)
     runs-on: ubuntu-22.04
-    if: hashFiles('plogical/versionFetcher.py') != ''
     timeout-minutes: 2
     steps:
       - uses: actions/checkout@v4
@@ -48,6 +47,10 @@ jobs:
         run: pip install requests
       - name: Run version fetcher (phpMyAdmin / SnappyMail)
         run: |
+          if [ ! -f plogical/versionFetcher.py ]; then
+            echo "Skipping (plogical/versionFetcher.py not present on this branch)"
+            exit 0
+          fi
           PYTHONPATH=. python3 -c "
           from plogical.versionFetcher import get_latest_phpmyadmin_version, get_latest_snappymail_version
           pma = get_latest_phpmyadmin_version()
