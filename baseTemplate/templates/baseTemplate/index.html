@@ -1696,22 +1696,22 @@
                 </a>
                 {% endif %}
                 {% if admin or deleteZone %}
-                <a href="{% url 'deleteDNSZone' %}" class="menu-item">
+                <a href="{% url 'deleteDNSZone' %}" class="menu-item deleteZone">
                     <span>Delete Zone</span>
                 </a>
                 {% endif %}
                 {% if admin or addDeleteRecords %}
-                <a href="{% url 'addDeleteDNSRecords' %}" class="menu-item">
+                <a href="{% url 'addDeleteDNSRecords' %}" class="menu-item addDeleteRecords">
                     <span>Add/Delete Records</span>
                 </a>
                 {% endif %}
                 {% if admin or addDeleteRecords %}
-                <a href="{% url 'addDeleteDNSRecordsCloudFlare' %}" class="menu-item">
+                <a href="{% url 'addDeleteDNSRecordsCloudFlare' %}" class="menu-item addDeleteRecords">
                     <span>CloudFlare</span>
                 </a>
                 {% endif %}
                 {% if admin or addDeleteRecords %}
-                <a href="{% url 'ResetDNSConfigurations' %}" class="menu-item">
+                <a href="{% url 'ResetDNSConfigurations' %}" class="menu-item addDeleteRecords">
                     <span>Reset DNS Configurations</span>
                 </a>
                 {% endif %}

@@ -282,11 +282,11 @@ app.controller('adminController', function ($scope, $http, $timeout) {
             }
 
             if (!Boolean(response.data.deleteZone)) {
-                $('.addDeleteRecords').hide();
+                $('.deleteZone').hide();
             }
 
             if (!Boolean(response.data.addDeleteRecords)) {
-                $('.deleteDatabase').hide();
+                $('.addDeleteRecords').hide();
             }
 
             // Email Management
