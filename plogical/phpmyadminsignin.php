@@ -47,7 +47,8 @@ try {
 
         $username = htmlspecialchars($_POST['username'], ENT_QUOTES, 'UTF-8');
         $password = $_POST['password'];
-        $host = isset($_POST['host']) ? trim($_POST['host']) : 'localhost';
+        $host = isset($_POST['host']) ? trim($_POST['host']) : '127.0.0.1';
+        if ($host === 'localhost') { $host = '127.0.0.1'; }
 
         $_SESSION['PMA_single_signon_user'] = $username;
         $_SESSION['PMA_single_signon_password'] = $password;

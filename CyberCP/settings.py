@@ -209,6 +209,9 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 
 STATIC_URL = '/static/'
 
+# Panel public directory (SnappyMail, phpMyAdmin, etc.) – served so /snappymail/ and /phpmyadmin/ work when panel is behind Django
+PUBLIC_ROOT = os.path.join(BASE_DIR, 'public')
+
 LOCALE_PATHS = (
     os.path.join(BASE_DIR, 'locale'),
 )
@@ -248,3 +251,24 @@ LOGIN_REDIRECT_URL = '/'
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Sync INSTALLED_APPS with plugins on disk so /plugins/<name>/ and /plugins/<name>/settings/ work.
+# Plugins installed under /usr/local/CyberCP/ (or BASE_DIR) are added here if they have meta.xml + urls.py.
+_cybercp_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if os.path.isdir(_cybercp_root):
+    try:
+        _existing_apps = set(INSTALLED_APPS)
+        for _name in os.listdir(_cybercp_root):
+            if _name.startswith('.'):
+                continue
+            _plugin_dir = os.path.join(_cybercp_root, _name)
+            if not os.path.isdir(_plugin_dir):
+                continue
+            if _name in _existing_apps:
+                continue
+            if (os.path.exists(os.path.join(_plugin_dir, 'meta.xml')) and
+                    os.path.exists(os.path.join(_plugin_dir, 'urls.py'))):
+                INSTALLED_APPS.append(_name)
+                _existing_apps.add(_name)
+    except (OSError, IOError):
+        pass
