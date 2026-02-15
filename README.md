@@ -118,20 +118,20 @@ Upgrade to v2.5.5-dev without branch or MariaDB prompts:
 
 ```bash
 # Upgrade to v2.5.5-dev without prompts
-sh <(curl -s https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev
+sh <(curl -s https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev
 
 # With MariaDB 10.11 (non-interactive)
-sh <(curl -s https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev --mariadb
+sh <(curl -s https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev --mariadb
 
 # Or use --mariadb-version for other versions
-sh <(curl -s https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev --mariadb-version 10.11
-sh <(curl -s https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev --mariadb-version 11.8
+sh <(curl -s https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev --mariadb-version 10.11
+sh <(curl -s https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev --mariadb-version 11.8
 ```
 
 **Full non-interactive command** (v2.5.5-dev + MariaDB 10.11):
 
 ```bash
-sh <(curl -s https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev --mariadb
+sh <(curl -s https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev --mariadb
 ```
 
 ---
