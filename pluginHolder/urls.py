@@ -95,12 +95,9 @@ urlpatterns = [
     path('api/store/upgrade/<str:plugin_name>/', views.upgrade_plugin, name='upgrade_plugin'),
     path('api/backups/<str:plugin_name>/', views.get_plugin_backups, name='get_plugin_backups'),
     path('api/revert/<str:plugin_name>/', views.revert_plugin, name='revert_plugin'),
-    path('<str:plugin_name>/help/', views.plugin_help, name='plugin_help'),
 ]
 
-# Dynamically include each installed plugin's URLs so /plugins/<plugin_name>/settings/ etc. work.
-# Include every plugin found on disk (INSTALLED_PLUGINS_PATH or PLUGIN_SOURCE_PATHS) so plugin
-# pages work even if the app was not added to INSTALLED_APPS (e.g. after git pull overwrote settings).
+# Include each installed plugin's URLs *before* the catch-all so /plugins/<name>/settings/ etc. match
 for _plugin_name, _path_parent in _get_installed_plugin_list():
     try:
         if _path_parent not in sys.path:
@@ -116,3 +113,5 @@ for _plugin_name, _path_parent in _get_installed_plugin_list():
             )
         except Exception:
             pass
+
+urlpatterns.append(path('<str:plugin_name>/help/', views.plugin_help, name='plugin_help'))
