@@ -36,6 +36,7 @@ jobs:
   validate-python:
     name: Validate Python (version fetcher)
     runs-on: ubuntu-latest
+    if: hashFiles('plogical/versionFetcher.py') != ''
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -61,9 +62,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Check key install/upgrade files exist
         run: |
-          for f in preUpgrade.sh cyberpanel_upgrade.sh plogical/upgrade.py install/install.py plogical/versionFetcher.py; do
+          for f in preUpgrade.sh cyberpanel_upgrade.sh plogical/upgrade.py install/install.py; do
             test -f "$f" || { echo "Missing: $f"; exit 1; }
           done
+          test -f plogical/versionFetcher.py && echo "versionFetcher.py present" || echo "versionFetcher.py optional (not on all branches)"
           grep -q 'BRANCH_NAME' preUpgrade.sh || exit 1
           if [ -d upgrade_modules ]; then
             for n in 00_common 01_variables 02_checks 03_mariadb 04_git_url 05_repository 06_components 07_branch_input 08_main_upgrade 09_sync 10_post_tweak 11_display_final; do
@@ -134,7 +136,7 @@ jobs:
               done
               test -f preUpgrade.sh && test -f cyberpanel_upgrade.sh || { echo "Missing required scripts"; exit 1; }
               echo "=== Key files ==="
-              for f in preUpgrade.sh cyberpanel_upgrade.sh plogical/upgrade.py install/install.py plogical/versionFetcher.py; do
+              for f in preUpgrade.sh cyberpanel_upgrade.sh plogical/upgrade.py install/install.py; do
                 test -f "$f" || { echo "Missing: $f"; exit 1; }
               done
               grep -q "BRANCH_NAME" preUpgrade.sh || exit 1
