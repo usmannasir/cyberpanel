@@ -199,9 +199,9 @@
             word-break: break-all;
         }
         
-        /* Progress log */
+        /* Progress log - dark background for terminal-style visibility */
         .log-container {
-            background: var(--text-primary, #1e1e1e);
+            background: #1e1e1e;
             border-radius: 8px;
             padding: 20px;
             margin-top: 20px;
@@ -215,11 +215,12 @@
             min-height: 300px;
             background: transparent;
             border: none;
-            color: var(--bg-secondary, #f0f0f0);
+            color: #e8e8e8;
             font-family: 'SF Mono', Monaco, monospace;
             font-size: 13px;
             line-height: 1.6;
             resize: vertical;
+            caret-color: #e8e8e8;
         }
         
         .log-textarea:focus {
@@ -337,30 +338,51 @@
     </div>
 
     <script>
-        // Function to populate the branch dropdown
-        function populateBranches(branches) {
-            var branchSelect = document.getElementById("branchSelect");
-            for (let i = branches.length - 1; i >= 0; i--) {
-                const branch = branches[i];
-                var option = document.createElement("option");
-                option.value = branch;
-                option.text = branch;
-                if (branch.startsWith("v") && branch.indexOf("dev") === -1 && branch.indexOf("version-counter") === -1) {
-                    branchSelect.appendChild(option);
-                }
-            }
+        // Sort key for version branches: v2.5.5-dev > v2.5.5 > v2.4.4
+        function versionSortKey(name) {
+            var m = name.match(/^v(\d+)\.(\d+)(?:\.(\d+))?(?:-(.+))?$/);
+            if (!m) return [0, 0, 0, 0];
+            var major = parseInt(m[1], 10) || 0;
+            var minor = parseInt(m[2], 10) || 0;
+            var patch = parseInt(m[3], 10) || 0;
+            var suffix = (m[4] === 'dev') ? 1 : 0;
+            return [major, minor, patch, suffix];
+        }
 
+        function compareBranches(a, b) {
+            var ka = versionSortKey(a), kb = versionSortKey(b);
+            for (var i = 0; i < 4; i++) {
+                if (ka[i] !== kb[i]) return kb[i] - ka[i];
+            }
+            return 0;
+        }
+
+        // Function to populate the branch dropdown (latest 10 only)
+        function populateBranches(branches) {
+            var filtered = branches.filter(function(b) {
+                return b.startsWith("v") && b.indexOf("version-counter") === -1;
+            });
+            filtered.sort(compareBranches);
+            var latest = filtered.slice(0, 10);
+
+            var branchSelect = document.getElementById("branchSelect");
+            for (var i = 0; i < latest.length; i++) {
+                var option = document.createElement("option");
+                option.value = latest[i];
+                option.text = latest[i];
+                branchSelect.appendChild(option);
+            }
         }
 
         function getBranches(url, branches, page) {
             if (!page) page = 1;
-            fetch(url + '?page=' + page)
+            fetch(url + '?per_page=100&page=' + page)
                 .then((response) => response.json())
                 .then((data) => {
                     if (data.length === 0) {
                         populateBranches(branches);
                     } else {
-                        const branchNames = data.map(branch => branch.name);
+                        var branchNames = data.map(function(b) { return b.name; });
                         branches = branches.concat(branchNames);
                         getBranches(url, branches, page + 1);
                     }
