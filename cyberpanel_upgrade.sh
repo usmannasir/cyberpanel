@@ -370,6 +370,16 @@ if [[ "$*" = *"--no-system-update"* ]]; then
   Skip_System_Update="yes"
   echo -e "\nUsing --no-system-update: skipping full system package update.\n"
 fi
+# Parse --backup-db / --no-backup-db: pre-upgrade MariaDB backup. Default when neither set: ask user (may take a while).
+# --backup-db = always backup; --no-backup-db = never backup; omit both = prompt [y/N]
+Backup_DB_Before_Upgrade=""
+if [[ "$*" = *"--backup-db"* ]]; then
+  Backup_DB_Before_Upgrade="yes"
+  echo -e "\nUsing --backup-db: will create a full MariaDB backup before upgrade.\n"
+elif [[ "$*" = *"--no-backup-db"* ]]; then
+  Backup_DB_Before_Upgrade="no"
+  echo -e "\nUsing --no-backup-db: skipping MariaDB pre-upgrade backup.\n"
+fi
 # Parse --migrate-to-utf8: after upgrading to MariaDB 11.x/12.x, convert DBs/tables from latin1 to utf8mb4 (only if your apps support UTF-8)
 if [[ "$*" = *"--migrate-to-utf8"* ]]; then
   Migrate_MariaDB_To_UTF8_Requested="yes"
@@ -435,6 +445,26 @@ fi
 
 # Prefer mariadb CLI to avoid "mysql: Deprecated program name" warning
 mariadb -uroot -p"$MySQL_Password" -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '$MySQL_Password';flush privileges" 2>/dev/null || mysql -uroot -p"$MySQL_Password" -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '$MySQL_Password';flush privileges"
+}
+
+# Ask user if they want pre-upgrade backup (when Backup_DB_Before_Upgrade is ""), then run backup if yes. One-liner: use --backup-db or --no-backup-db.
+Maybe_Backup_MariaDB_Before_Upgrade() {
+  if [[ "$Backup_DB_Before_Upgrade" = "no" ]]; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB pre-upgrade backup: skipped (--no-backup-db)." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    return 0
+  fi
+  if [[ "$Backup_DB_Before_Upgrade" = "" ]]; then
+    echo -e "\nDo you want to backup all databases before MariaDB upgrade? (may take a while) [y/N]: "
+    read -r -t 60 Tmp_Backup_Choice 2>/dev/null || Tmp_Backup_Choice=""
+    if [[ "$Tmp_Backup_Choice" =~ ^[yY] ]] || [[ "$Tmp_Backup_Choice" =~ ^[yY][eE][sS] ]]; then
+      Backup_DB_Before_Upgrade="yes"
+    else
+      Backup_DB_Before_Upgrade="no"
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB pre-upgrade backup: skipped (user chose no or timeout)." | tee -a /var/log/cyberpanel_upgrade_debug.log
+      return 0
+    fi
+  fi
+  Backup_MariaDB_Before_Upgrade
 }
 
 # Backup all MariaDB/MySQL databases before upgrade. Uses /etc/cyberpanel/mysqlPassword. Skips on failure (logs warning).
@@ -718,7 +748,7 @@ EOF
   # MariaDB repo for EL8/EL9: any version (repo path uses major.minor: 10.11, 11.8, 12.1, 12.2, 12.3, etc.)
   if [[ "$Server_OS_Version" = "8" ]] || [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]; then
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Configuring MariaDB $MARIADB_VER_REPO repository and upgrading MariaDB..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-    Backup_MariaDB_Before_Upgrade
+    Maybe_Backup_MariaDB_Before_Upgrade
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Writing MariaDB $MARIADB_VER_REPO repo and installing/upgrading packages..." | tee -a /var/log/cyberpanel_upgrade_debug.log
     if [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]; then
       MARIADB_REPO="rhel9-amd64"
@@ -746,9 +776,12 @@ EOF
       sed -i 's|https://yum.mariadb.org/RPM-GPG-KEY-MariaDB|https://cyberpanel.sh/yum.mariadb.org/RPM-GPG-KEY-MariaDB|g' /etc/yum.repos.d/MariaDB.repo
     fi
     dnf clean metadata --disablerepo='*' --enablerepo=mariadb 2>/dev/null || true
-    # MariaDB 10 -> 11 or 11 -> 12: RPM may block in-place upgrade; do manual stop, remove old server, install target, start, mariadb-upgrade
+    # MariaDB 10 -> 11 or 11 -> 12: RPM scriptlet blocks in-place upgrade; do manual stop, remove old server, install target, start, mariadb-upgrade
     MARIADB_OLD_10=$(rpm -qa 'MariaDB-server-10*' 2>/dev/null | head -1)
     MARIADB_OLD_11=$(rpm -qa 'MariaDB-server-11*' 2>/dev/null | head -1)
+    # Also detect 11.x by package version (e.g. MariaDB-server-11.8.6-1.el9)
+    [[ -z "$MARIADB_OLD_11" ]] && MARIADB_OLD_11=$(rpm -qa 'MariaDB-server*' 2>/dev/null | grep -E 'MariaDB-server-11\.' | head -1)
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB detected: MARIADB_OLD_10=$MARIADB_OLD_10 MARIADB_OLD_11=$MARIADB_OLD_11 target=$MARIADB_VER_REPO" | tee -a /var/log/cyberpanel_upgrade_debug.log
     if [[ -n "$MARIADB_OLD_10" ]] && { [[ "$MARIADB_VER_REPO" =~ ^11\. ]] || [[ "$MARIADB_VER_REPO" =~ ^12\. ]]; }; then
       echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB 10.x detected; performing manual upgrade to $MARIADB_VER_REPO (stop, remove, install, start, mariadb-upgrade)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
       systemctl stop mariadb 2>/dev/null || true
@@ -782,6 +815,26 @@ EOF
       dnf install -y --enablerepo=mariadb MariaDB-server MariaDB-client MariaDB-devel 2>/dev/null || true
       dnf upgrade -y --enablerepo=mariadb MariaDB-server MariaDB-client MariaDB-devel 2>/dev/null || true
       systemctl restart mariadb 2>/dev/null || true
+      # Fallback: if we wanted 12.x but server is still 11.x (RPM scriptlet blocked in-place upgrade), do manual 11->12
+      if [[ "$MARIADB_VER_REPO" =~ ^12\. ]]; then
+        STILL_11=$(rpm -qa 'MariaDB-server-11*' 2>/dev/null | head -1)
+        [[ -z "$STILL_11" ]] && STILL_11=$(rpm -qa 'MariaDB-server*' 2>/dev/null | grep -E 'MariaDB-server-11\.' | head -1)
+        if [[ -n "$STILL_11" ]]; then
+          echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB server still 11.x after dnf upgrade; performing manual 11->12 upgrade..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+          systemctl stop mariadb 2>/dev/null || true
+          sleep 2
+          [[ -f /etc/my.cnf ]] && cp -a /etc/my.cnf /etc/my.cnf.bak.cyberpanel 2>/dev/null || true
+          [[ -d /etc/my.cnf.d ]] && cp -a /etc/my.cnf.d /etc/my.cnf.d.bak.cyberpanel 2>/dev/null || true
+          rpm -e "$STILL_11" --nodeps 2>/dev/null || true
+          dnf install -y --enablerepo=mariadb MariaDB-server MariaDB-client MariaDB-devel 2>/dev/null || true
+          mkdir -p /etc/my.cnf.d
+          printf "[client]\nskip-ssl = true\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
+          systemctl start mariadb 2>/dev/null || true
+          sleep 2
+          mariadb-upgrade -u root 2>/dev/null || true
+          echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB manual 11->12 fallback completed." | tee -a /var/log/cyberpanel_upgrade_debug.log
+        fi
+      fi
     fi
     # Allow local client to connect without SSL (11.x client defaults to SSL; 10.x server may not have it)
     mkdir -p /etc/my.cnf.d
@@ -811,6 +864,7 @@ EOF
     # Install/upgrade MariaDB from our repo (any version: 10.11, 11.8, 12.x). Manual path for 10->11 and 11->12.
     MARIADB_OLD_10_AL9=$(rpm -qa 'MariaDB-server-10*' 2>/dev/null | head -1)
     MARIADB_OLD_11_AL9=$(rpm -qa 'MariaDB-server-11*' 2>/dev/null | head -1)
+    [[ -z "$MARIADB_OLD_11_AL9" ]] && MARIADB_OLD_11_AL9=$(rpm -qa 'MariaDB-server*' 2>/dev/null | grep -E 'MariaDB-server-11\.' | head -1)
     if [[ -n "$MARIADB_OLD_10_AL9" ]] && { [[ "$MARIADB_VER_REPO" =~ ^11\. ]] || [[ "$MARIADB_VER_REPO" =~ ^12\. ]]; }; then
       echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB 10.x detected (AlmaLinux 9); manual upgrade to $MARIADB_VER_REPO..." | tee -a /var/log/cyberpanel_upgrade_debug.log
       systemctl stop mariadb 2>/dev/null || true
@@ -875,7 +929,7 @@ elif [[ "$Server_OS" = "Ubuntu" ]] ; then
 
   # MariaDB: add official repo and install/upgrade to chosen version on Ubuntu/Debian (any version)
   if [[ -n "$MARIADB_VER_REPO" ]]; then
-    Backup_MariaDB_Before_Upgrade
+    Maybe_Backup_MariaDB_Before_Upgrade
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Configuring MariaDB $MARIADB_VER_REPO repo for Ubuntu/Debian (version $MARIADB_VER)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
     curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version="$MARIADB_VER_REPO" 2>/dev/null || true
     # Must run apt-get update after adding repo so 11.8 packages are visible (otherwise apt keeps 10.11)
@@ -2079,7 +2133,7 @@ echo -e "   3. Configure your domains and websites"
 echo -e "   4. Check system status in the dashboard"
 echo -e "   5. Check DB version with: mariadb -V  (use mariadb, not mysql, to avoid deprecation warning)"
 echo -e "   6. Pre-upgrade DB backup (if created): /root/cyberpanel_mariadb_backups/"
-echo -e "   7. To migrate DBs to UTF-8 (utf8mb4) after upgrade, re-run with: --migrate-to-utf8  (only if your apps support UTF-8)"
+echo -e "   7. One-liner: --backup-db (always backup DB), --no-backup-db (skip); omit = prompt. --migrate-to-utf8 for UTF-8 (only if your apps support it)"
 echo -e "   8. If you downgrade to MariaDB 10.11.16, server charset stays latin1 for backward compatibility."
 
 echo -e "\n🧹 Cleaning up temporary files..."
