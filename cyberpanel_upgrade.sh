@@ -637,8 +637,8 @@ EOF
 
   dnf install epel-release -y
 
-  dnf install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-connector-c-devel curl-devel git platform-python-devel tar socat bind-utils
-  dnf install gpgme-devel -y
+  dnf install -y wget strace htop net-tools telnet which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-connector-c-devel curl-devel git platform-python-devel tar socat bind-utils 2>/dev/null || dnf install -y --allowerasing wget strace htop net-tools telnet which bc htop libevent-devel gcc libattr-devel xz-devel mariadb-connector-c-devel curl-devel git platform-python-devel tar socat bind-utils
+  dnf install gpgme-devel -y 2>/dev/null || true
   dnf install python3 -y
 
   elif [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]] ; then
@@ -680,8 +680,9 @@ EOF
       sed -i 's|https://yum.mariadb.org/RPM-GPG-KEY-MariaDB|https://cyberpanel.sh/yum.mariadb.org/RPM-GPG-KEY-MariaDB|g' /etc/yum.repos.d/MariaDB.repo
     fi
     dnf clean metadata --disablerepo='*' --enablerepo=mariadb 2>/dev/null || true
-    dnf install -y MariaDB-server MariaDB-client MariaDB-devel 2>/dev/null || true
-    dnf upgrade -y MariaDB-server MariaDB-client MariaDB-devel 2>/dev/null || true
+    # Force install/upgrade from MariaDB repo so 11.8 is used, not distro 10.11
+    dnf install -y --enablerepo=mariadb MariaDB-server MariaDB-client MariaDB-devel 2>/dev/null || true
+    dnf upgrade -y --enablerepo=mariadb MariaDB-server MariaDB-client MariaDB-devel 2>/dev/null || true
     systemctl restart mariadb 2>/dev/null || true
   fi
 
@@ -700,18 +701,18 @@ EOF
                    sqlite-devel libxml2-devel libxslt-devel curl-devel libedit-devel \
                    readline-devel pkgconfig cmake gcc-c++
     
-    # Install/upgrade MariaDB server only (server + devel for Python/php; client not required for panel)
-    dnf install -y MariaDB-server MariaDB-devel 2>/dev/null || dnf install -y mariadb-server mariadb-devel
-    # Upgrade to chosen version if already installed (e.g. 10.11 -> 11.8)
-    dnf upgrade -y MariaDB-server MariaDB-devel 2>/dev/null || true
+    # Install/upgrade MariaDB from our repo (chosen version 11.8 / 10.11 / 12.1)
+    dnf install -y --enablerepo=mariadb MariaDB-server MariaDB-devel 2>/dev/null || dnf install -y mariadb-server mariadb-devel
+    dnf upgrade -y --enablerepo=mariadb MariaDB-server MariaDB-devel 2>/dev/null || true
     systemctl restart mariadb 2>/dev/null || true
 
-    # Install additional required packages
-    dnf install -y wget curl unzip zip rsync firewalld psmisc git python3 python3-pip python3-devel
+    # Install additional required packages (omit curl - AlmaLinux 9 has curl-minimal, avoid conflict)
+    dnf install -y wget unzip zip rsync firewalld psmisc git python3 python3-pip python3-devel 2>/dev/null || dnf install -y --allowerasing wget unzip zip rsync firewalld psmisc git python3 python3-pip python3-devel
   fi
 
-  dnf install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-connector-c-devel curl-devel git platform-python-devel tar socat bind-utils
-  dnf install gpgme-devel -y
+  # Omit curl to avoid conflict with curl-minimal on AlmaLinux 9; curl-devel for build is separate
+  dnf install -y wget strace htop net-tools telnet which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-connector-c-devel curl-devel git platform-python-devel tar socat bind-utils 2>/dev/null || dnf install -y --allowerasing wget strace htop net-tools telnet which bc htop libevent-devel gcc libattr-devel xz-devel mariadb-connector-c-devel curl-devel git platform-python-devel tar socat bind-utils
+  dnf install gpgme-devel -y 2>/dev/null || true
   dnf install python3 -y
   fi
 elif [[ "$Server_OS" = "Ubuntu" ]] ; then
@@ -734,6 +735,8 @@ elif [[ "$Server_OS" = "Ubuntu" ]] ; then
   if [[ -n "$MARIADB_VER" ]] && { [[ "$MARIADB_VER" = "10.11" ]] || [[ "$MARIADB_VER" = "11.8" ]] || [[ "$MARIADB_VER" = "12.1" ]]; }; then
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Configuring MariaDB $MARIADB_VER repo for Ubuntu/Debian..." | tee -a /var/log/cyberpanel_upgrade_debug.log
     curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version="$MARIADB_VER" 2>/dev/null || true
+    # Must run apt-get update after adding repo so 11.8 packages are visible (otherwise apt keeps 10.11)
+    apt-get update -qq 2>/dev/null || apt-get update
     export DEBIAN_FRONTEND=noninteractive
     apt-get install -y mariadb-server mariadb-client 2>/dev/null || true
     apt-get install -y -o Dpkg::Options::="--force-confold" mariadb-server mariadb-client 2>/dev/null || true
@@ -812,10 +815,10 @@ for i in {1..50};
   do
   if [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] || [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]; then
    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Downloading requirements.txt for OS version $Server_OS_Version" | tee -a /var/log/cyberpanel_upgrade_debug.log
-   wget -O /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}/requirments.txt" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+   if command -v wget >/dev/null 2>&1; then wget -O /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}/requirments.txt" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log; else curl -sL -o /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}/requirments.txt" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log; fi
   else
    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Downloading requirements-old.txt for OS version $Server_OS_Version" | tee -a /var/log/cyberpanel_upgrade_debug.log
-   wget -O /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}/requirments-old.txt" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+   if command -v wget >/dev/null 2>&1; then wget -O /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}/requirments-old.txt" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log; else curl -sL -o /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}/requirments-old.txt" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log; fi
   fi
   if grep -q "Django==" /usr/local/requirments.txt ; then
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Requirements file downloaded successfully" | tee -a /var/log/cyberpanel_upgrade_debug.log
