@@ -553,6 +553,7 @@ app.controller('versionManagment', function ($scope, $http, $timeout) {
     $scope.updateFinish = true;
     $scope.couldNotConnect = true;
 
+    var upgradeStatusTimer = null;
 
     $scope.upgrade = function () {
 
@@ -623,7 +624,8 @@ app.controller('versionManagment', function ($scope, $http, $timeout) {
             if (response.data.upgradeStatus === 1) {
 
                 if (response.data.finished === 1) {
-                    $timeout.cancel();
+                    if (upgradeStatusTimer) $timeout.cancel(upgradeStatusTimer);
+                    upgradeStatusTimer = null;
                     $scope.upgradelogBox = false;
                     $scope.upgradeLog = response.data.upgradeLog;
                     $scope.upgradeLoading = true;
@@ -635,7 +637,7 @@ app.controller('versionManagment', function ($scope, $http, $timeout) {
                 } else {
                     $scope.upgradelogBox = false;
                     $scope.upgradeLog = response.data.upgradeLog;
-                    $timeout(getUpgradeStatus, 2000);
+                    upgradeStatusTimer = $timeout(getUpgradeStatus, 2000);
                 }
             }
 
