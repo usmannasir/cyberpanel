@@ -477,6 +477,13 @@ if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "AlmaLinux9" ]] ; then
           sed -i "/^\[crb\]/a baseurl=https://repo.almalinux.org/almalinux/${ALMA_VER}/CRB/${ARCH}/os/" "$repofile"
         fi
       fi
+      # Extras - avoids "Cannot find a valid baseurl for repo: extras"
+      if grep -q '^\[extras\]' "$repofile" 2>/dev/null; then
+        sed -i "/^\[extras\]/,/^\[/ { s|^#\?baseurl=.*|baseurl=https://repo.almalinux.org/almalinux/${ALMA_VER}/extras/${ARCH}/os/|; s|^mirrorlist=.*|#mirrorlist=disabled| }" "$repofile"
+        if ! sed -n '/^\[extras\]/,/^\[/p' "$repofile" | grep -q '^baseurl='; then
+          sed -i "/^\[extras\]/a baseurl=https://repo.almalinux.org/almalinux/${ALMA_VER}/extras/${ARCH}/os/" "$repofile"
+        fi
+      fi
     done
   fi
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Setting up repositories for $Server_OS..." | tee -a /var/log/cyberpanel_upgrade_debug.log
