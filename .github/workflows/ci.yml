@@ -17,9 +17,12 @@ jobs:
       - uses: actions/checkout@v4
       - name: Syntax check shell scripts
         run: |
-          for f in cyberpanel_upgrade.sh preUpgrade.sh fix-phpmyadmin.sh cyberpanel.sh cyberpanel_utility.sh 2>/dev/null; do
-            [ -f "$f" ] && bash -n "$f" && echo "OK $f" || { echo "FAIL $f"; exit 1; }
+          for f in cyberpanel_upgrade.sh preUpgrade.sh fix-phpmyadmin.sh cyberpanel.sh cyberpanel_utility.sh; do
+            [ ! -f "$f" ] && continue
+            bash -n "$f" || { echo "FAIL (syntax): $f"; exit 1; }
+            echo "OK $f"
           done
+          test -f preUpgrade.sh && test -f cyberpanel_upgrade.sh || { echo "Missing required scripts"; exit 1; }
           echo "All shell scripts passed syntax check"
 
   validate-python:
@@ -109,21 +112,24 @@ jobs:
               echo "=== Installing deps (apt or yum/dnf) ==="
               if command -v apt-get >/dev/null 2>&1; then
                 apt-get update -qq
-                apt-get install -y -qq python3 python3-pip curl >/dev/null
+                apt-get install -y -qq python3 python3-pip >/dev/null
                 pip3 install -q requests
               else
                 if command -v dnf >/dev/null 2>&1; then
-                  dnf install -y -q python3 python3-pip curl
+                  dnf install -y -q python3 python3-pip
                 else
                   yum install -y -q epel-release 2>/dev/null || true
-                  yum install -y -q python3 python3-pip curl 2>/dev/null || yum install -y -q python3 curl
+                  yum install -y -q python3 python3-pip 2>/dev/null || yum install -y -q python3
                 fi
                 pip3 install -q requests 2>/dev/null || python3 -m pip install -q requests 2>/dev/null || ( python3 -m ensurepip --user 2>/dev/null; python3 -m pip install -q requests )
               fi
               echo "=== Shell syntax check ==="
               for f in cyberpanel_upgrade.sh preUpgrade.sh fix-phpmyadmin.sh cyberpanel.sh cyberpanel_utility.sh; do
-                [ -f "$f" ] && bash -n "$f" && echo "OK $f" || { echo "FAIL $f"; exit 1; }
+                [ ! -f "$f" ] && continue
+                bash -n "$f" || { echo "FAIL (syntax): $f"; exit 1; }
+                echo "OK $f"
               done
+              test -f preUpgrade.sh && test -f cyberpanel_upgrade.sh || { echo "Missing required scripts"; exit 1; }
               echo "=== Python version fetcher ==="
               PYTHONPATH=. python3 -c "
               from plogical.versionFetcher import get_latest_phpmyadmin_version, get_latest_snappymail_version
