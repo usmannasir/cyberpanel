@@ -680,6 +680,9 @@ EOF
       sed -i 's|https://yum.mariadb.org/RPM-GPG-KEY-MariaDB|https://cyberpanel.sh/yum.mariadb.org/RPM-GPG-KEY-MariaDB|g' /etc/yum.repos.d/MariaDB.repo
     fi
     dnf clean metadata --disablerepo='*' --enablerepo=mariadb 2>/dev/null || true
+    dnf install -y MariaDB-server MariaDB-client MariaDB-devel 2>/dev/null || true
+    dnf upgrade -y MariaDB-server MariaDB-client MariaDB-devel 2>/dev/null || true
+    systemctl restart mariadb 2>/dev/null || true
   fi
 
   # AlmaLinux 9 specific package installation
@@ -724,7 +727,17 @@ elif [[ "$Server_OS" = "Ubuntu" ]] ; then
   if [[ -z "$Skip_System_Update" ]]; then
     export DEBIAN_FRONTEND=noninteractive ; apt-get -o Dpkg::Options::="--force-confold" upgrade -y
   else
-    echo -e "[$(date +"%Y-%m-%d %H:%M-%S")] Skipping apt upgrade (--no-system-update)" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Skipping apt upgrade (--no-system-update)" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  fi
+
+  # MariaDB: add official repo and install/upgrade to chosen version on Ubuntu/Debian
+  if [[ -n "$MARIADB_VER" ]] && { [[ "$MARIADB_VER" = "10.11" ]] || [[ "$MARIADB_VER" = "11.8" ]] || [[ "$MARIADB_VER" = "12.1" ]]; }; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Configuring MariaDB $MARIADB_VER repo for Ubuntu/Debian..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version="$MARIADB_VER" 2>/dev/null || true
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get install -y mariadb-server mariadb-client 2>/dev/null || true
+    apt-get install -y -o Dpkg::Options::="--force-confold" mariadb-server mariadb-client 2>/dev/null || true
+    systemctl restart mariadb 2>/dev/null || systemctl restart mysql 2>/dev/null || true
   fi
 
   if [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] ; then
@@ -1795,11 +1808,12 @@ systemctl restart lscpd
 
 Post_Install_Display_Final_Info() {
 echo -e "\n"
-# Fixed box width (109 chars) so right border (║) aligns in all boxes
+# Fixed box width (109 chars). ASCII-only borders (| - +) so right edge renders solid in all terminals.
 BOX_W=109
-_br() { echo "╔═════════════════════════════════════════════════════════════════════════════════════════════════════════════╗"; }
-_bl() { echo "╚═════════════════════════════════════════════════════════════════════════════════════════════════════════════╝"; }
-_b()  { printf '║%-*s║\n' "$BOX_W" "$1"; }
+# 109 dashes for top/bottom border (no Unicode = so line is consistently filled)
+_br() { echo "+-------------------------------------------------------------------------------------------------------------+"; }
+_bl() { echo "+-------------------------------------------------------------------------------------------------------------+"; }
+_b()  { local s="$1"; [[ ${#s} -gt $BOX_W ]] && s="${s:0:BOX_W}"; printf '|%-*s|\n' "$BOX_W" "$s"; }
 _br
 _b ""
 _b "    █████████             █████                        ███████████                                ████"
@@ -1836,6 +1850,14 @@ if [[ -z "$SERVER_IP" ]]; then
   SERVER_IP="YOUR_SERVER_IP"
 fi
 
+# Actual MariaDB server version (what phpMyAdmin will show)
+MARIADB_ACTUAL_VER=""
+if command -v mariadb >/dev/null 2>&1; then
+  MARIADB_ACTUAL_VER=$(mariadb -e "SELECT @@version;" -sN 2>/dev/null | head -1)
+fi
+[[ -z "$MARIADB_ACTUAL_VER" ]] && command -v mysql >/dev/null 2>&1 && MARIADB_ACTUAL_VER=$(mysql -e "SELECT @@version;" -sN 2>/dev/null | head -1)
+[[ -z "$MARIADB_ACTUAL_VER" ]] && MARIADB_ACTUAL_VER="${MARIADB_VER:-unknown}"
+
 # Test if CyberPanel is accessible
 echo -e "\n🔍 Testing CyberPanel accessibility..."
 
@@ -1866,7 +1888,7 @@ if systemctl is-active --quiet lscpd 2>/dev/null; then
   _b "  [OK] Web interface is accessible"
   _b ""
   _b "  CyberPanel: ${Branch_Name:-unknown}"
-  _b "  Database (MariaDB): ${MARIADB_VER:-unknown}"
+  _b "  Database (MariaDB): ${MARIADB_ACTUAL_VER}"
   _b ""
   _b "  *** UPGRADE COMPLETED SUCCESSFULLY! ***"
   _b ""
