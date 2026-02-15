@@ -15,7 +15,7 @@
 if [[ $(id -u) -ne 0 ]] 2>/dev/null; then
     echo ""
     echo "This script must be run as root."
-    echo "Run: sudo bash <(curl -sL https://raw.githubusercontent.com/master3395/cyberpanel/stable/cyberpanel_upgrade.sh) -b v2.5.5-dev"
+    echo "Run: sudo bash <(curl -sL https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel_upgrade.sh) -b v2.5.5-dev"
     echo "Or:   sudo su -   then run the same command without sudo"
     echo ""
     exit 1

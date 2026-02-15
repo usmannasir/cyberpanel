@@ -841,29 +841,27 @@ except:
         fi
     fi
     
-    # Download the working CyberPanel installation files
-    # Use master3395 fork which has our fixes
-    # Try to download the actual installer script (install/install.py) from the repository
-    echo "Downloading from: https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/cyberpanel.sh"
+    # Download the working CyberPanel installation files from upstream (usmannasir/cyberpanel)
+    echo "Downloading from: https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/cyberpanel.sh"
     
     # First, try to download the repository archive to get the correct installer
     # GitHub: branch archives use refs/heads/BRANCH; GitHub returns 302 redirect to codeload, so we must use -L
     local archive_url=""
-    local installer_url="https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/cyberpanel.sh"
-    if curl -s -L --head "https://github.com/master3395/cyberpanel/archive/refs/heads/v2.5.5-dev.tar.gz" | grep -q "200 OK"; then
-        archive_url="https://github.com/master3395/cyberpanel/archive/refs/heads/v2.5.5-dev.tar.gz"
-        echo "    Using development branch (v2.5.5-dev) from master3395/cyberpanel"
-    elif curl -s -L --head "https://github.com/master3395/cyberpanel/archive/v2.5.5-dev.tar.gz" | grep -q "200 OK"; then
-        archive_url="https://github.com/master3395/cyberpanel/archive/v2.5.5-dev.tar.gz"
-        echo "    Using development branch (v2.5.5-dev) from master3395/cyberpanel"
+    local installer_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/cyberpanel.sh"
+    if curl -s -L --head "https://github.com/usmannasir/cyberpanel/archive/refs/heads/v2.5.5-dev.tar.gz" | grep -q "200 OK"; then
+        archive_url="https://github.com/usmannasir/cyberpanel/archive/refs/heads/v2.5.5-dev.tar.gz"
+        echo "    Using development branch (v2.5.5-dev) from usmannasir/cyberpanel"
+    elif curl -s -L --head "https://github.com/usmannasir/cyberpanel/archive/v2.5.5-dev.tar.gz" | grep -q "200 OK"; then
+        archive_url="https://github.com/usmannasir/cyberpanel/archive/v2.5.5-dev.tar.gz"
+        echo "    Using development branch (v2.5.5-dev) from usmannasir/cyberpanel"
     else
         echo "    Development branch archive not available, trying installer script directly..."
         if ! curl -s -L --head "$installer_url" | grep -q "200 OK"; then
             echo "    Development branch not available, falling back to stable"
-            installer_url="https://raw.githubusercontent.com/master3395/cyberpanel/stable/cyberpanel.sh"
-            archive_url="https://github.com/master3395/cyberpanel/archive/stable.tar.gz"
+            installer_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel.sh"
+            archive_url="https://github.com/usmannasir/cyberpanel/archive/stable.tar.gz"
         else
-            archive_url="https://github.com/master3395/cyberpanel/archive/refs/heads/v2.5.5-dev.tar.gz"
+            archive_url="https://github.com/usmannasir/cyberpanel/archive/refs/heads/v2.5.5-dev.tar.gz"
         fi
     fi
     
@@ -884,8 +882,8 @@ except:
     
     # Download the install directory (use archive_url set above; may be branch or stable)
     echo "Downloading installation files..."
-    if [ -z "$archive_url" ] || [ "$installer_url" = "https://raw.githubusercontent.com/master3395/cyberpanel/stable/cyberpanel.sh" ]; then
-        archive_url="https://github.com/master3395/cyberpanel/archive/stable.tar.gz"
+    if [ -z "$archive_url" ] || [ "$installer_url" = "https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel.sh" ]; then
+        archive_url="https://github.com/usmannasir/cyberpanel/archive/stable.tar.gz"
     fi
     # Append cache-bust so CDNs/proxies don't serve old installer (GitHub ignores query params)
     archive_url="${archive_url}?nocache=$(date +%s 2>/dev/null || echo 0)"
@@ -904,7 +902,7 @@ except:
     fi
     
     # Copy install directory to current location
-    if [ "$installer_url" = "https://raw.githubusercontent.com/master3395/cyberpanel/stable/cyberpanel.sh" ]; then
+    if [ "$installer_url" = "https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel.sh" ]; then
         if [ -d "cyberpanel-stable" ]; then
             cp -r cyberpanel-stable/install . 2>/dev/null || true
             cp -r cyberpanel-stable/install.sh . 2>/dev/null || true
