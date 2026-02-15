@@ -450,7 +450,7 @@ if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "AlmaLinux9" ]] ; then
     ALMA_VER="${Server_OS_Version:-9}"
     ARCH="x86_64"
     ALMA_BASE="https://repo.almalinux.org/almalinux/${ALMA_VER}"
-    for repo in /etc/yum.repos.d/almalinux*.repo /etc/yum.repos.d/AlmaLinux*.repo 2>/dev/null; do
+    for repo in /etc/yum.repos.d/almalinux*.repo /etc/yum.repos.d/AlmaLinux*.repo; do
       [[ ! -f "$repo" ]] && continue
       if grep -q '^mirrorlist=' "$repo" 2>/dev/null; then
         sed -i 's|^mirrorlist=|#mirrorlist=|g' "$repo"
@@ -459,7 +459,7 @@ if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "AlmaLinux9" ]] ; then
       fi
     done
     # Ensure appstream/baseos have explicit baseurl; support [appstream], [almalinux-appstream], etc.
-    for repofile in /etc/yum.repos.d/almalinux.repo /etc/yum.repos.d/almalinux*.repo /etc/yum.repos.d/AlmaLinux*.repo 2>/dev/null; do
+    for repofile in /etc/yum.repos.d/almalinux.repo /etc/yum.repos.d/almalinux*.repo /etc/yum.repos.d/AlmaLinux*.repo; do
       [[ ! -f "$repofile" ]] && continue
       for section in appstream almalinux-appstream AppStream; do
         if grep -q "^\[${section}\]" "$repofile" 2>/dev/null; then
