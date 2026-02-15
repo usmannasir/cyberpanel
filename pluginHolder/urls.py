@@ -98,16 +98,11 @@ urlpatterns = [
     path('<str:plugin_name>/help/', views.plugin_help, name='plugin_help'),
 ]
 
-# Dynamically include each installed plugin's URLs so /plugins/<plugin_name>/settings/ etc. work
-# Only include plugins that are in INSTALLED_APPS so Django can load their models.
-from django.conf import settings
-_installed_apps = getattr(settings, 'INSTALLED_APPS', ())
-
+# Dynamically include each installed plugin's URLs so /plugins/<plugin_name>/settings/ etc. work.
+# Include every plugin found on disk (INSTALLED_PLUGINS_PATH or PLUGIN_SOURCE_PATHS) so plugin
+# pages work even if the app was not added to INSTALLED_APPS (e.g. after git pull overwrote settings).
 for _plugin_name, _path_parent in _get_installed_plugin_list():
-    if _plugin_name not in _installed_apps:
-        continue
     try:
-        # If plugin is from a source path, ensure it is on sys.path so import works
         if _path_parent not in sys.path:
             sys.path.insert(0, _path_parent)
         __import__(_plugin_name + '.urls')
