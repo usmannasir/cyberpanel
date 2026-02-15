@@ -5,7 +5,8 @@
 if [[ $(id -u) -ne 0 ]] 2>/dev/null; then
   echo ""
   echo "This script must be run as root."
-  echo "Run: sudo bash <(curl -sL https://raw.githubusercontent.com/master3395/cyberpanel/stable/cyberpanel_upgrade.sh) -b v2.5.5-dev"
+  echo "Run: sudo bash <(curl -sL https://raw.githubusercontent.com/master3395/cyberpanel/stable/cyberpanel_upgrade.sh)"
+  echo "     or for dev:  .../cyberpanel_upgrade.sh) -b v2.5.5-dev"
   echo "Or:   sudo su -   then run the same command without sudo"
   echo ""
   exit 1
@@ -13,8 +14,8 @@ fi
 
 Sudo_Test=$(set)
 
-# Parse -b/--branch for module download (when not running from repo)
-BRANCH_FOR_MODULES="v2.5.5-dev"
+# Parse -b/--branch for module download (when not running from repo). Default stable so one-liner works for both branches.
+BRANCH_FOR_MODULES="stable"
 next=""
 for arg in "$@"; do
   if [[ "$arg" = "-b" ]] || [[ "$arg" = "--branch" ]]; then
