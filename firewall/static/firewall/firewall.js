@@ -98,6 +98,59 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
     $scope.banIP = '';
     $scope.banReason = '';
     $scope.banDuration = '24h';
+    $scope.bannedIPSearch = '';
+
+    // Modify banned IP modal
+    $scope.showModifyModal = false;
+    $scope.modifyBannedIPData = { ip: '', reason: '', duration: '24h', id: null };
+
+    // Search filter for banned IPs (by IP, reason, or status)
+    $scope.searchBannedIPFilter = function(item) {
+        var q = ($scope.bannedIPSearch || '').toLowerCase().trim();
+        if (!q) return true;
+        var ip = (item.ip || '').toLowerCase();
+        var reason = (item.reason || '').toLowerCase();
+        var status = item.active ? 'active' : 'expired';
+        return ip.indexOf(q) !== -1 || reason.indexOf(q) !== -1 || status.indexOf(q) !== -1;
+    };
+
+    // Modify banned IP modal functions
+    $scope.openModifyModal = function(bannedIP) {
+        if (!bannedIP) return;
+        $scope.modifyBannedIPData = {
+            id: bannedIP.id,
+            ip: bannedIP.ip,
+            reason: bannedIP.reason || '',
+            duration: bannedIP.duration || '24h'
+        };
+        $scope.showModifyModal = true;
+    };
+    $scope.closeModifyModal = function() { $scope.showModifyModal = false; };
+    $scope.saveModifyBannedIP = function() {
+        if (!$scope.modifyBannedIPData || !$scope.modifyBannedIPData.id) return;
+        $scope.bannedIPsLoading = true;
+        $http.post('/firewall/modifyBannedIP', {
+            id: $scope.modifyBannedIPData.id,
+            reason: $scope.modifyBannedIPData.reason,
+            duration: $scope.modifyBannedIPData.duration
+        }, { headers: { 'X-CSRFToken': getCookie('csrftoken') } }).then(
+            function(response) {
+                $scope.bannedIPsLoading = false;
+                if (response.data && response.data.status === 1) {
+                    $scope.bannedIPActionSuccess = false;
+                    $scope.closeModifyModal();
+                    populateBannedIPs();
+                } else {
+                    $scope.bannedIPActionFailed = false;
+                    $scope.bannedIPErrorMessage = (response.data && response.data.error_message) || 'Unknown error';
+                }
+            },
+            function() {
+                $scope.bannedIPsLoading = false;
+                $scope.bannedIPCouldNotConnect = false;
+            }
+        );
+    };
 
     firewallStatus();
 
@@ -920,6 +973,58 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
             $scope.bannedIPsLoading = false;
             $scope.bannedIPCouldNotConnect = false;
         });
+    };
+
+    // Export banned IPs (triggers file download)
+    $scope.exportBannedIPs = function() {
+        var url = '/firewall/exportBannedIPs';
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = url;
+        form.style.display = 'none';
+        var csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = getCookie('csrftoken');
+        form.appendChild(csrfInput);
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+    };
+
+    // Import banned IPs (file picker -> POST)
+    $scope.importBannedIPs = function() {
+        var input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.style.display = 'none';
+        input.onchange = function(ev) {
+            var file = ev.target && ev.target.files[0];
+            if (!file) return;
+            var formData = new FormData();
+            formData.append('import_file', file);
+            formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+            $scope.bannedIPsLoading = false;
+            $http.post('/firewall/importBannedIPs', formData, {
+                headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': undefined },
+                transformRequest: angular.identity
+            }).then(function(response) {
+                $scope.bannedIPsLoading = true;
+                if (response.data && response.data.importStatus === 1) {
+                    $scope.bannedIPActionSuccess = false;
+                    populateBannedIPs();
+                } else {
+                    $scope.bannedIPActionFailed = false;
+                    $scope.bannedIPErrorMessage = (response.data && response.data.error_message) || 'Import failed';
+                }
+            }, function() {
+                $scope.bannedIPsLoading = true;
+                $scope.bannedIPCouldNotConnect = false;
+            });
+        };
+        document.body.appendChild(input);
+        input.click();
+        document.body.removeChild(input);
     };
 
     // Export/Import Firewall Rules Functions

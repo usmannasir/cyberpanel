@@ -2440,12 +2440,13 @@
         // .htaccess Feature Notification Functions
         function checkHtaccessStatus() {
             // Check if user has dismissed the notification permanently (localStorage for longer persistence)
-            if (localStorage.getItem('htaccessNotificationDismissed') === 'true') {
-                return;
-            }
+            try {
+                if (localStorage.getItem('htaccessNotificationDismissed') === 'true') return;
+            } catch (e) { return; }
 
             // Check if notification has been shown today
-            const lastShown = localStorage.getItem('htaccessNotificationLastShown');
+            var lastShown;
+            try { lastShown = localStorage.getItem('htaccessNotificationLastShown'); } catch (e) { return; }
             const today = new Date().toDateString();
 
             if (lastShown === today) {
@@ -2454,7 +2455,7 @@
 
             // Show the notification
             showHtaccessNotification();
-            localStorage.setItem('htaccessNotificationLastShown', today);
+            try { localStorage.setItem('htaccessNotificationLastShown', today); } catch (e) {}
         }
 
         function showHtaccessNotification() {
@@ -2470,7 +2471,7 @@
             banner.classList.remove('show');
             body.classList.remove('htaccess-shown');
             // Remember dismissal permanently
-            localStorage.setItem('htaccessNotificationDismissed', 'true');
+            try { localStorage.setItem('htaccessNotificationDismissed', 'true'); } catch (e) {}
         }
         
         function isNotificationDismissed(notificationKey) {
@@ -2481,7 +2482,7 @@
                 return {% if ai_scanner_notification_dismissed %}true{% else %}false{% endif %};
             }
             if (notificationKey === 'htaccess-notification') {
-                return localStorage.getItem('htaccessNotificationDismissed') === 'true';
+                try { return localStorage.getItem('htaccessNotificationDismissed') === 'true'; } catch (e) { return false; }
             }
             return false;
         }
@@ -2604,10 +2605,12 @@
     
     <!-- Dark Mode Toggle Script -->
     <script>
-        // Theme switching functionality
+        // Theme switching functionality (wrapped in try-catch for Tracking Prevention / private browsing)
         (function() {
-            // Get saved theme from localStorage or default to light
-            const savedTheme = localStorage.getItem('cyberPanelTheme') || 'light';
+            var savedTheme = 'light';
+            try {
+                savedTheme = localStorage.getItem('cyberPanelTheme') || 'light';
+            } catch (e) { /* Tracking Prevention or storage disabled */ }
             document.documentElement.setAttribute('data-theme', savedTheme);
             
             // Update icon based on current theme
@@ -2630,7 +2633,7 @@
                     
                     // Update theme
                     document.documentElement.setAttribute('data-theme', newTheme);
-                    localStorage.setItem('cyberPanelTheme', newTheme);
+                    try { localStorage.setItem('cyberPanelTheme', newTheme); } catch (e) { /* Tracking Prevention */ }
                     
                     // Update icon
                     updateThemeIcon(newTheme);
