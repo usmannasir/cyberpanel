@@ -487,12 +487,9 @@ if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "AlmaLinux9" ]] ; then
         fi
       done
     done
-    # Fallback: create override with same repo IDs to replace broken config (loads last via zz- prefix)
+    # Fallback: create override with same repo IDs (loads last via zz- prefix, overrides broken config)
     if ! dnf makecache --quiet 2>/dev/null; then
       echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] dnf makecache failed, creating AlmaLinux repo override" | tee -a /var/log/cyberpanel_upgrade_debug.log
-      for f in /etc/yum.repos.d/almalinux*.repo /etc/yum.repos.d/AlmaLinux*.repo 2>/dev/null; do
-        [[ -f "$f" ]] && sed -i 's/^enabled=1/enabled=0/' "$f" 2>/dev/null
-      done
       cat > /etc/yum.repos.d/zz-almalinux-cyberpanel-fix.repo << EOF
 [baseos]
 name=AlmaLinux ${ALMA_VER} - BaseOS
