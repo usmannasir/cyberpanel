@@ -15,6 +15,8 @@ MARIADB_VER=""
 DEBUG_MODE=false
 AUTO_INSTALL=false
 INSTALLATION_TYPE=""
+# Prefer mariadb CLI (mysql is deprecated)
+MDB_CLI="mariadb"; command -v mariadb >/dev/null 2>&1 || MDB_CLI="mysql"
 
 # Logging function
 log_message() {
@@ -221,7 +223,7 @@ fix_post_install_issues() {
     # Wait for MariaDB to be ready
     local retry_count=0
     while [ $retry_count -lt 10 ]; do
-        if mysql -e "SELECT 1;" >/dev/null 2>&1; then
+        if $MDB_CLI -e "SELECT 1;" >/dev/null 2>&1; then
             break
         fi
         echo "      Waiting for MariaDB to be ready... ($((retry_count + 1))/10)"
@@ -231,34 +233,34 @@ fix_post_install_issues() {
     
     # Create database user with proper permissions
     echo "      Dropping existing cyberpanel user..."
-    mysql -e "DROP USER IF EXISTS 'cyberpanel'@'localhost';" 2>/dev/null || true
-    mysql -e "DROP USER IF EXISTS 'cyberpanel'@'%';" 2>/dev/null || true
+    $MDB_CLI -e "DROP USER IF EXISTS 'cyberpanel'@'localhost';" 2>/dev/null || true
+    $MDB_CLI -e "DROP USER IF EXISTS 'cyberpanel'@'%';" 2>/dev/null || true
     
     echo "      Creating cyberpanel user with correct password..."
-    mysql -e "CREATE USER 'cyberpanel'@'localhost' IDENTIFIED BY 'cyberpanel';" 2>/dev/null || true
-    mysql -e "CREATE USER 'cyberpanel'@'%' IDENTIFIED BY 'cyberpanel';" 2>/dev/null || true
+    $MDB_CLI -e "CREATE USER 'cyberpanel'@'localhost' IDENTIFIED BY 'cyberpanel';" 2>/dev/null || true
+    $MDB_CLI -e "CREATE USER 'cyberpanel'@'%' IDENTIFIED BY 'cyberpanel';" 2>/dev/null || true
     
     echo "      Granting privileges..."
-    mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'cyberpanel'@'localhost' WITH GRANT OPTION;" 2>/dev/null || true
-    mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'cyberpanel'@'%' WITH GRANT OPTION;" 2>/dev/null || true
-    mysql -e "FLUSH PRIVILEGES;" 2>/dev/null || true
+    $MDB_CLI -e "GRANT ALL PRIVILEGES ON *.* TO 'cyberpanel'@'localhost' WITH GRANT OPTION;" 2>/dev/null || true
+    $MDB_CLI -e "GRANT ALL PRIVILEGES ON *.* TO 'cyberpanel'@'%' WITH GRANT OPTION;" 2>/dev/null || true
+    $MDB_CLI -e "FLUSH PRIVILEGES;" 2>/dev/null || true
     
     # Verify the user was created correctly
     echo "      Verifying database user..."
-    if mysql -u cyberpanel -pcyberpanel -e "SELECT 1;" >/dev/null 2>&1; then
+    if $MDB_CLI -u cyberpanel -pcyberpanel -e "SELECT 1;" >/dev/null 2>&1; then
         echo "      ✅ Database user verification successful"
     else
         echo "      ⚠️  Database user verification failed, trying alternative approach..."
         # Alternative: use root to create the user
-        mysql -e "CREATE OR REPLACE USER 'cyberpanel'@'localhost' IDENTIFIED BY 'cyberpanel';" 2>/dev/null || true
-        mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'cyberpanel'@'localhost' WITH GRANT OPTION;" 2>/dev/null || true
-        mysql -e "FLUSH PRIVILEGES;" 2>/dev/null || true
+        $MDB_CLI -e "CREATE OR REPLACE USER 'cyberpanel'@'localhost' IDENTIFIED BY 'cyberpanel';" 2>/dev/null || true
+        $MDB_CLI -e "GRANT ALL PRIVILEGES ON *.* TO 'cyberpanel'@'localhost' WITH GRANT OPTION;" 2>/dev/null || true
+        $MDB_CLI -e "FLUSH PRIVILEGES;" 2>/dev/null || true
     fi
     
     # Create CyberPanel database if it doesn't exist
-    mysql -e "CREATE DATABASE IF NOT EXISTS cyberpanel;" 2>/dev/null || true
-    mysql -e "GRANT ALL PRIVILEGES ON cyberpanel.* TO 'cyberpanel'@'localhost';" 2>/dev/null || true
-    mysql -e "FLUSH PRIVILEGES;" 2>/dev/null || true
+    $MDB_CLI -e "CREATE DATABASE IF NOT EXISTS cyberpanel;" 2>/dev/null || true
+    $MDB_CLI -e "GRANT ALL PRIVILEGES ON cyberpanel.* TO 'cyberpanel'@'localhost';" 2>/dev/null || true
+    $MDB_CLI -e "FLUSH PRIVILEGES;" 2>/dev/null || true
     
     # Get or set unified password for both CyberPanel and OpenLiteSpeed
     local unified_password=""
@@ -278,8 +280,8 @@ fix_post_install_issues() {
     echo "    Password: $unified_password"
     
     # First, ensure the cyberpanel user exists and has correct password
-    mysql -e "ALTER USER 'cyberpanel'@'localhost' IDENTIFIED BY 'cyberpanel';" 2>/dev/null || true
-    mysql -e "FLUSH PRIVILEGES;" 2>/dev/null || true
+    $MDB_CLI -e "ALTER USER 'cyberpanel'@'localhost' IDENTIFIED BY 'cyberpanel';" 2>/dev/null || true
+    $MDB_CLI -e "FLUSH PRIVILEGES;" 2>/dev/null || true
     
     # Wait a moment for the database to be ready
     sleep 2
@@ -289,7 +291,7 @@ fix_post_install_issues() {
     /usr/local/CyberCP/bin/python3 /usr/local/CyberCP/plogical/adminPass.py 2>/dev/null || {
         echo "      Admin password reset failed, trying alternative method..."
         # Alternative method: directly update the database
-        mysql -u cyberpanel -pcyberpanel cyberpanel -e "UPDATE Administrator SET password = '$unified_password' WHERE id = 1;" 2>/dev/null || true
+        $MDB_CLI -u cyberpanel -pcyberpanel cyberpanel -e "UPDATE Administrator SET password = '$unified_password' WHERE id = 1;" 2>/dev/null || true
     }
     
     # Set OpenLiteSpeed admin password
@@ -441,7 +443,7 @@ verify_installation() {
     fi
     
     # Check database connection
-    if mysql -e "SELECT 1;" >/dev/null 2>&1; then
+    if $MDB_CLI -e "SELECT 1;" >/dev/null 2>&1; then
         echo "    ✅ Database connection is working"
     else
         echo "    ❌ Database connection failed"
@@ -582,8 +584,8 @@ cleanup_existing_cyberpanel() {
     rm -f /etc/systemd/system/lsws.service 2>/dev/null || true
     
     # Clean up databases
-    mysql -e "DROP DATABASE IF EXISTS cyberpanel;" 2>/dev/null || true
-    mysql -e "DROP USER IF EXISTS 'cyberpanel'@'localhost';" 2>/dev/null || true
+    $MDB_CLI -e "DROP DATABASE IF EXISTS cyberpanel;" 2>/dev/null || true
+    $MDB_CLI -e "DROP USER IF EXISTS 'cyberpanel'@'localhost';" 2>/dev/null || true
     
     echo "  ✅ Cleanup completed"
 }

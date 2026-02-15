@@ -263,7 +263,7 @@ except ImportError:
             except Exception as e:
                 print("Failed to reset cyberpanel database user: %s" % str(e))
                 print("Manual intervention required. Please run:")
-                print("  mysql -u root -p")
+                print("  mariadb -u root -p")
                 print("  CREATE DATABASE IF NOT EXISTS cyberpanel;")
                 print("  GRANT ALL PRIVILEGES ON cyberpanel.* TO 'cyberpanel'@'localhost' IDENTIFIED BY 'your_password';")
                 print("  FLUSH PRIVILEGES;")
@@ -4803,16 +4803,17 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                     pass
                 time.sleep(2)
             
-            # Ensure cyberpanel database exists
+            # Ensure cyberpanel database exists (prefer mariadb CLI; mysql is deprecated)
             try:
-                result = subprocess.run(['mysql', '-e', 'USE cyberpanel;'], capture_output=True)
+                _mdb = shutil.which('mariadb') or 'mysql'
+                result = subprocess.run([_mdb, '-e', 'USE cyberpanel;'], capture_output=True)
                 if result.returncode != 0:
                     Upgrade.stdOut("Creating cyberpanel database...", 1)
                     commands = [
-                        'mysql -e "CREATE DATABASE IF NOT EXISTS cyberpanel;"',
-                        'mysql -e "CREATE USER IF NOT EXISTS \'cyberpanel\'@\'localhost\' IDENTIFIED BY \'cyberpanel\';"',
-                        'mysql -e "GRANT ALL PRIVILEGES ON cyberpanel.* TO \'cyberpanel\'@\'localhost\';"',
-                        'mysql -e "FLUSH PRIVILEGES;"'
+                        _mdb + ' -e "CREATE DATABASE IF NOT EXISTS cyberpanel;"',
+                        _mdb + ' -e "CREATE USER IF NOT EXISTS \'cyberpanel\'@\'localhost\' IDENTIFIED BY \'cyberpanel\';"',
+                        _mdb + ' -e "GRANT ALL PRIVILEGES ON cyberpanel.* TO \'cyberpanel\'@\'localhost\';"',
+                        _mdb + ' -e "FLUSH PRIVILEGES;"'
                     ]
                     for cmd in commands:
                         Upgrade.executioner(cmd, 'Setup cyberpanel database', 0)
