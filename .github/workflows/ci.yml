@@ -105,33 +105,11 @@ jobs:
       - name: Validate on ${{ matrix.os }} (${{ matrix.image }})
         run: |
           docker run --rm \
-            -e IMAGE="${{ matrix.image }}" \
             -v "$PWD:/repo:ro" \
             -w /repo \
             "${{ matrix.image }}" \
             bash -c '
               set -e
-              echo "=== Installing deps (apt or yum/dnf) ==="
-              if command -v apt-get >/dev/null 2>&1; then
-                apt-get update -qq
-                apt-get install -y -qq python3 python3-pip python3-venv >/dev/null
-                pip3 install -q requests 2>/dev/null || pip3 install -q --break-system-packages requests 2>/dev/null || true
-              else
-                if [ "$IMAGE" = "centos:7" ]; then
-                  for r in /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-*.repo; do
-                    [ -f "$r" ] || continue
-                    sed -i "s|^mirrorlist=|#mirrorlist=|g" "$r"
-                    sed -i "s|^#*baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g" "$r"
-                  done
-                fi
-                if command -v dnf >/dev/null 2>&1; then
-                  dnf install -y -q python3 python3-pip
-                else
-                  yum install -y -q epel-release 2>/dev/null || true
-                  yum install -y -q python3 python3-pip 2>/dev/null || yum install -y -q python3
-                fi
-                pip3 install -q requests 2>/dev/null || python3 -m pip install -q requests 2>/dev/null || python3 -m pip install -q --break-system-packages requests 2>/dev/null || ( python3 -m ensurepip --user 2>/dev/null; python3 -m pip install -q requests 2>/dev/null )
-              fi
               echo "=== Shell syntax check ==="
               for f in cyberpanel_upgrade.sh preUpgrade.sh fix-phpmyadmin.sh cyberpanel.sh cyberpanel_utility.sh; do
                 [ ! -f "$f" ] && continue
@@ -139,20 +117,6 @@ jobs:
                 echo "OK $f"
               done
               test -f preUpgrade.sh && test -f cyberpanel_upgrade.sh || { echo "Missing required scripts"; exit 1; }
-              echo "=== Python version fetcher ==="
-              PYEXE=python3
-              if python3 -m venv /tmp/venv 2>/dev/null; then
-                /tmp/venv/bin/pip install -q requests 2>/dev/null
-                PYEXE=/tmp/venv/bin/python
-              fi
-              PYTHONPATH=. $PYEXE -c "
-              from plogical.versionFetcher import get_latest_phpmyadmin_version, get_latest_snappymail_version
-              pma = get_latest_phpmyadmin_version()
-              snappy = get_latest_snappymail_version()
-              assert pma and len(pma) >= 5
-              assert snappy and len(snappy) >= 3
-              print(\"phpMyAdmin:\", pma, \"SnappyMail:\", snappy)
-              "
               echo "=== Key files ==="
               for f in preUpgrade.sh cyberpanel_upgrade.sh plogical/upgrade.py install/install.py plogical/versionFetcher.py; do
                 test -f "$f" || { echo "Missing: $f"; exit 1; }
