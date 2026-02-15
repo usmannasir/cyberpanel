@@ -1,0 +1,142 @@
+# Lightweight CI for v2.5.5-dev (free for public repos).
+# Validates shell syntax, Python version fetcher, and key files on all supported OSes via Docker.
+# CloudLinux and RHEL use Rocky/Alma images as proxies (same family, no official Docker images).
+name: CI
+
+on:
+  push:
+    branches: [v2.5.5-dev, stable, master]
+  pull_request:
+    branches: [v2.5.5-dev, stable, master]
+
+jobs:
+  validate-shell:
+    name: Validate shell scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax check shell scripts
+        run: |
+          for f in cyberpanel_upgrade.sh preUpgrade.sh fix-phpmyadmin.sh cyberpanel.sh cyberpanel_utility.sh 2>/dev/null; do
+            [ -f "$f" ] && bash -n "$f" && echo "OK $f" || { echo "FAIL $f"; exit 1; }
+          done
+          echo "All shell scripts passed syntax check"
+
+  validate-python:
+    name: Validate Python (version fetcher)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install requests
+        run: pip install requests
+      - name: Run version fetcher (phpMyAdmin / SnappyMail)
+        run: |
+          PYTHONPATH=. python3 -c "
+          from plogical.versionFetcher import get_latest_phpmyadmin_version, get_latest_snappymail_version
+          pma = get_latest_phpmyadmin_version()
+          snappy = get_latest_snappymail_version()
+          assert pma and len(pma) >= 5, 'phpMyAdmin version invalid'
+          assert snappy and len(snappy) >= 3, 'SnappyMail version invalid'
+          print('phpMyAdmin:', pma, 'SnappyMail:', snappy)
+          "
+
+  smoke-key-files:
+    name: Key files present
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check key install/upgrade files exist
+        run: |
+          for f in preUpgrade.sh cyberpanel_upgrade.sh plogical/upgrade.py install/install.py plogical/versionFetcher.py; do
+            test -f "$f" || { echo "Missing: $f"; exit 1; }
+          done
+          grep -q 'download_install_phpmyadmin\|Branch_Name' preUpgrade.sh || exit 1
+          echo "Key files OK"
+
+  # Run validation inside a container per supported OS (AlmaLinux, CentOS, CloudLinux, Debian, RHEL, Rocky, Ubuntu).
+  validate-on-os:
+    name: Validate on ${{ matrix.os }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: AlmaLinux 8
+            image: almalinux:8
+          - os: AlmaLinux 9
+            image: almalinux:9
+          - os: AlmaLinux 10
+            image: almalinux:10
+          - os: CentOS 7
+            image: centos:7
+          - os: CloudLinux 8
+            image: rockylinux:8
+          - os: CloudLinux 9
+            image: rockylinux:9
+          - os: Debian 11
+            image: debian:11
+          - os: Debian 12
+            image: debian:12
+          - os: Debian 13
+            image: debian:13
+          - os: RHEL 8
+            image: almalinux:8
+          - os: RHEL 9
+            image: almalinux:9
+          - os: RockyLinux 8
+            image: rockylinux:8
+          - os: RockyLinux 9
+            image: rockylinux:9
+          - os: Ubuntu 20.04
+            image: ubuntu:20.04
+          - os: Ubuntu 22.04
+            image: ubuntu:22.04
+          - os: Ubuntu 24.04
+            image: ubuntu:24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate on ${{ matrix.os }} (${{ matrix.image }})
+        run: |
+          docker run --rm \
+            -v "$PWD:/repo:ro" \
+            -w /repo \
+            "${{ matrix.image }}" \
+            bash -c '
+              set -e
+              echo "=== Installing deps (apt or yum/dnf) ==="
+              if command -v apt-get >/dev/null 2>&1; then
+                apt-get update -qq
+                apt-get install -y -qq python3 python3-pip curl >/dev/null
+                pip3 install -q requests
+              else
+                if command -v dnf >/dev/null 2>&1; then
+                  dnf install -y -q python3 python3-pip curl
+                else
+                  yum install -y -q epel-release 2>/dev/null || true
+                  yum install -y -q python3 python3-pip curl 2>/dev/null || yum install -y -q python3 curl
+                fi
+                pip3 install -q requests 2>/dev/null || python3 -m pip install -q requests 2>/dev/null || ( python3 -m ensurepip --user 2>/dev/null; python3 -m pip install -q requests )
+              fi
+              echo "=== Shell syntax check ==="
+              for f in cyberpanel_upgrade.sh preUpgrade.sh fix-phpmyadmin.sh cyberpanel.sh cyberpanel_utility.sh; do
+                [ -f "$f" ] && bash -n "$f" && echo "OK $f" || { echo "FAIL $f"; exit 1; }
+              done
+              echo "=== Python version fetcher ==="
+              PYTHONPATH=. python3 -c "
+              from plogical.versionFetcher import get_latest_phpmyadmin_version, get_latest_snappymail_version
+              pma = get_latest_phpmyadmin_version()
+              snappy = get_latest_snappymail_version()
+              assert pma and len(pma) >= 5
+              assert snappy and len(snappy) >= 3
+              print(\"phpMyAdmin:\", pma, \"SnappyMail:\", snappy)
+              "
+              echo "=== Key files ==="
+              for f in preUpgrade.sh cyberpanel_upgrade.sh plogical/upgrade.py install/install.py plogical/versionFetcher.py; do
+                test -f "$f" || { echo "Missing: $f"; exit 1; }
+              done
+              grep -q "Branch_Name\|download_install_phpmyadmin\|cyberpanel" preUpgrade.sh || exit 1
+              echo "Done."
+            '
