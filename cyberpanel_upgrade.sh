@@ -1673,22 +1673,27 @@ systemctl restart lscpd
 
 Post_Install_Display_Final_Info() {
 echo -e "\n"
-echo "╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╗"
-echo "║                                                                                                               ║"
-echo "║     █████████             █████                        ███████████                                ████        ║"
-echo "║    ███▒▒▒▒▒███           ▒▒███                        ▒▒███▒▒▒▒▒███                              ▒▒███        ║"
-echo "║   ███     ▒▒▒  █████ ████ ▒███████   ██████  ████████  ▒███    ▒███  ██████   ████████    ██████  ▒███        ║"
-echo "║   ▒███         ▒▒███ ▒███  ▒███▒▒███ ███▒▒███▒▒███▒▒███ ▒██████████  ▒▒▒▒▒███ ▒▒███▒▒███  ███▒▒███ ▒███       ║"
-echo "║   ▒███          ▒███ ▒███  ▒███ ▒███▒███████  ▒███ ▒▒▒  ▒███▒▒▒▒▒▒    ███████  ▒███ ▒███ ▒███████  ▒███       ║"
-echo "║   ▒▒███     ███ ▒███ ▒███  ▒███ ▒███▒███▒▒▒   ▒███      ▒███         ███▒▒███  ▒███ ▒███ ▒███▒▒▒   ▒███       ║"
-echo "║   ▒▒█████████  ▒▒███████  ████████ ▒▒██████  █████     █████       ▒▒████████ ████ █████▒▒██████  █████       ║"
-echo "║   ▒▒▒▒▒▒▒▒▒    ▒▒▒▒▒███ ▒▒▒▒▒▒▒▒   ▒▒▒▒▒▒  ▒▒▒▒▒     ▒▒▒▒▒         ▒▒▒▒▒▒▒▒ ▒▒▒▒ ▒▒▒▒▒  ▒▒▒▒▒▒  ▒▒▒▒▒         ║"
-echo "║               ███ ▒███                                                                                        ║"
-echo "║              ▒▒██████                                                                                         ║"
-echo "║               ▒▒▒▒▒▒                                                                                          ║"
-echo "║                                🚀 UPGRADE COMPLETED SUCCESSFULLY! 🚀                                         ║"
-echo "║                                                                                                               ║"
-echo "╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╝"
+# Fixed box width (109 chars) so right border (║) aligns in all boxes
+BOX_W=109
+_br() { echo "╔═════════════════════════════════════════════════════════════════════════════════════════════════════════════╗"; }
+_bl() { echo "╚═════════════════════════════════════════════════════════════════════════════════════════════════════════════╝"; }
+_b()  { printf '║%-*s║\n' "$BOX_W" "$1"; }
+_br
+_b ""
+_b "    █████████             █████                        ███████████                                ████"
+_b "   ███▒▒▒▒▒███           ▒▒███                        ▒▒███▒▒▒▒▒███                              ▒▒███"
+_b "  ███     ▒▒▒  █████ ████ ▒███████   ██████  ████████  ▒███    ▒███  ██████   ████████    ██████  ▒███"
+_b "  ▒███         ▒▒███ ▒███  ▒███▒▒███ ███▒▒███▒▒███▒▒███ ▒██████████  ▒▒▒▒▒███ ▒▒███▒▒███  ███▒▒███ ▒███"
+_b "  ▒███          ▒███ ▒███  ▒███ ▒███▒███████  ▒███ ▒▒▒  ▒███▒▒▒▒▒▒    ███████  ▒███ ▒███ ▒███████  ▒███"
+_b "  ▒▒███     ███ ▒███ ▒███  ▒███ ▒███▒███▒▒▒   ▒███      ▒███         ███▒▒███  ▒███ ▒███ ▒███▒▒▒   ▒███"
+_b "  ▒▒█████████  ▒▒███████  ████████ ▒▒██████  █████     █████       ▒▒████████ ████ █████▒▒██████  █████"
+_b "  ▒▒▒▒▒▒▒▒▒    ▒▒▒▒▒███ ▒▒▒▒▒▒▒▒   ▒▒▒▒▒▒  ▒▒▒▒▒     ▒▒▒▒▒         ▒▒▒▒▒▒▒▒ ▒▒▒▒ ▒▒▒▒▒  ▒▒▒▒▒▒  ▒▒▒▒▒"
+_b "              ███ ▒███"
+_b "             ▒▒██████"
+_b "              ▒▒▒▒▒▒"
+_b "                             🚀 UPGRADE COMPLETED SUCCESSFULLY! 🚀"
+_b ""
+_bl
 
 Panel_Port=$(cat /usr/local/lscp/conf/bind.conf)
 if [[ $Panel_Port = "" ]] ; then
@@ -1714,48 +1719,51 @@ echo -e "\n🔍 Testing CyberPanel accessibility..."
 
 # Check if lscpd service is running
 if systemctl is-active --quiet lscpd 2>/dev/null; then
-  echo "╔═════════════════════════════════════════════════════════════════════════════════════════════════════════════╗"
-  echo "║                                                                                         ║"
-  echo "║  🌐 ACCESS YOUR CYBERPANEL:                                                         ║"
-  echo "║                                                                                      ║"
-  echo "║  • Local:  https://127.0.0.1:${Panel_Port#*:}                                                      ║"
-  echo "║  • Remote: https://${SERVER_IP}:${Panel_Port#*:}                                                      ║"
-  echo "║                                                                                      ║"
-  echo "║  🔐 Default Login: admin / 1234567890                                               ║"
-  echo "║  ⚠️  Please change the default password immediately!                                ║"
-  echo "║                                                                                      ║"
-echo "╚═════════════════════════════════════════════════════════════════════════════════════════════════════════════╝"
-  
-  # Binary confirmation
+  _br
+  _b ""
+  _b "  🌐 ACCESS YOUR CYBERPANEL:"
+  _b ""
+  _b "  • Local:  https://127.0.0.1:${Panel_Port#*:}"
+  _b "  • Remote: https://${SERVER_IP}:${Panel_Port#*:}"
+  _b ""
+  _b "  🔐 Default Login: admin / 1234567890"
+  _b "  ⚠️  Please change the default password immediately!"
+  _b ""
+  _bl
+
+  # Binary confirmation + versions
   echo -e "\n"
-  echo "╔═════════════════════════════════════════════════════════════════════════════════════════════════════════════╗"
-  echo "║                                                                                      ║"
-  echo "║  🎯 UPGRADE STATUS: [████████████████████████████████████████████████████████] 100% ║"
-  echo "║                                                                                      ║"
-  echo "║  ✅ All components installed successfully                                            ║"
-  echo "║  ✅ Python dependencies resolved                                                     ║"
-  echo "║  ✅ WSGI-LSAPI compiled with optimizations                                          ║"
-  echo "║  ✅ CyberPanel service is running                                                   ║"
-  echo "║  ✅ Web interface is accessible                                                     ║"
-  echo "║                                                                                      ║"
-  echo "║  🎉 UPGRADE COMPLETED SUCCESSFULLY! 🎉                                             ║"
-  echo "║                                                                                      ║"
-echo "╚═════════════════════════════════════════════════════════════════════════════════════════════════════════════╝"
-  
+  _br
+  _b ""
+  _b "  🎯 UPGRADE STATUS: [████████████████████████████████████████████████████████] 100%"
+  _b ""
+  _b "  ✅ All components installed successfully"
+  _b "  ✅ Python dependencies resolved"
+  _b "  ✅ WSGI-LSAPI compiled with optimizations"
+  _b "  ✅ CyberPanel service is running"
+  _b "  ✅ Web interface is accessible"
+  _b ""
+  _b "  📦 CyberPanel: ${Branch_Name:-unknown}"
+  _b "  📦 Database (MariaDB): ${MARIADB_VER:-unknown}"
+  _b ""
+  _b "  🎉 UPGRADE COMPLETED SUCCESSFULLY! 🎉"
+  _b ""
+  _bl
+
 else
   echo -e "❌ CyberPanel may not be running properly. Please check the logs."
   echo -e "\n"
-  echo "╔═════════════════════════════════════════════════════════════════════════════════════════════════════════════╗"
-  echo "║                                                                                      ║"
-  echo "║  ⚠️  UPGRADE COMPLETED WITH WARNINGS                                                ║"
-  echo "║                                                                                      ║"
-  echo "║  • CyberPanel files have been updated                                               ║"
-  echo "║  • Some services may need manual restart                                            ║"
-  echo "║  • Please check logs at /var/log/cyberpanel_upgrade_debug.log                      ║"
-  echo "║                                                                                      ║"
-  echo "║  🔧 Try running: systemctl restart lscpd                                            ║"
-  echo "║                                                                                      ║"
-echo "╚═════════════════════════════════════════════════════════════════════════════════════════════════════════════╝"
+  _br
+  _b ""
+  _b "  ⚠️  UPGRADE COMPLETED WITH WARNINGS"
+  _b ""
+  _b "  • CyberPanel files have been updated"
+  _b "  • Some services may need manual restart"
+  _b "  • Please check logs at /var/log/cyberpanel_upgrade_debug.log"
+  _b ""
+  _b "  🔧 Try running: systemctl restart lscpd"
+  _b ""
+  _bl
 fi
 
 echo -e "\n📋 Next Steps:"
