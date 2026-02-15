@@ -78,13 +78,13 @@ class mailUtilities:
     
     @staticmethod
     def AfterEffects(domain):
-        path = "/usr/local/CyberCP/install/rainloop/cyberpanel.net.ini"
+        path = "/usr/local/CyberCP/install/snappymail/cyberpanel.net.ini"
 
-        if not os.path.exists("/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/"):
-            os.makedirs("/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/")
+        if not os.path.exists("/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/domains/"):
+            os.makedirs("/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/domains/")
 
-        finalPath = "/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/" + domain + ".ini"
-        finalPathJson = "/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/domains/" + domain + ".json"
+        finalPath = "/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/domains/" + domain + ".ini"
+        finalPathJson = "/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/domains/" + domain + ".json"
 
         if not os.path.exists(finalPath):
             shutil.copy(path, finalPath)
@@ -181,31 +181,31 @@ class mailUtilities:
         WriteToFile.write(contentJSON)
         WriteToFile.close()
 
-        command = 'chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/'
+        command = 'chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data/'
         ProcessUtilities.normalExecutioner(command)
 
     @staticmethod
     def InstallMailBoxFoldersPlugin():
         ### now download and install actual plugin
 
-        labsPath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
+        labsPath = '/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/application.ini'
 
-        command = f'mkdir /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
+        command = f'mkdir /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/plugins/mailbox-detect'
         ProcessUtilities.executioner(command)
 
-        command = f'chmod 700 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
+        command = f'chmod 700 /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/plugins/mailbox-detect'
         ProcessUtilities.executioner(command)
 
-        command = f'chown lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
+        command = f'chown lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/plugins/mailbox-detect'
         ProcessUtilities.executioner(command)
 
-        command = f'wget -O /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php https://raw.githubusercontent.com/the-djmaze/snappymail/master/plugins/mailbox-detect/index.php'
+        command = f'wget -O /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/plugins/mailbox-detect/index.php https://raw.githubusercontent.com/the-djmaze/snappymail/master/plugins/mailbox-detect/index.php'
         ProcessUtilities.executioner(command)
 
-        command = f'chmod 644 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
+        command = f'chmod 644 /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/plugins/mailbox-detect/index.php'
         ProcessUtilities.executioner(command)
 
-        command = f'chown lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
+        command = f'chown lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/plugins/mailbox-detect/index.php'
         ProcessUtilities.executioner(command)
 
         ### Enable plugins and enable mailbox creation plugin
@@ -230,7 +230,7 @@ class mailUtilities:
         WriteToFile.close()
 
         ## enable auto create in the enabled plugin
-        PluginsFilePath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/plugin-mailbox-detect.json'
+        PluginsFilePath = '/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/plugin-mailbox-detect.json'
 
         WriteToFile = open(PluginsFilePath, 'w')
         WriteToFile.write("""{
@@ -392,7 +392,7 @@ class mailUtilities:
             command = f"chown -R vmail:vmail '{maildir_base}'"
             ProcessUtilities.executioner(command, 'root')
 
-            #if not os.path.exists('/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'):
+            #if not os.path.exists('/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/plugins/mailbox-detect'):
             #    mailUtilities.InstallMailBoxFoldersPlugin()
 
             print("1,None")
@@ -2459,7 +2459,7 @@ class MailServerManagerUtils(multi.Thread):
         command = "chown -R root:root /usr/local/lscp"
         ProcessUtilities.executioner(command)
 
-        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
+        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
         ProcessUtilities.executioner(command)
 
         command = "chmod 700 /usr/local/CyberCP/cli/cyberPanel.py"

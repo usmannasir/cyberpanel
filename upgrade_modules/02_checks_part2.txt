@@ -1,0 +1,53 @@
+Migrate_MariaDB_To_UTF8_Requested=""
+# MariaDB version: any X.Y or X.Y.Z supported; highlighted: 10.11.16, 11.8 LTS, 12.x (default 11.8)
+MARIADB_VER="11.8"
+MARIADB_VER_REPO="11.8"
+
+Check_Argument() {
+# Parse --branch / -b (extract first word after -b or --branch)
+if [[ "$*" = *"--branch "* ]]; then
+  Branch_Name=$(echo "$*" | sed -n 's/.*--branch \([^ ]*\).*/\1/p' | head -1)
+  [[ -n "$Branch_Name" ]] && Branch_Check "$Branch_Name"
+elif [[ "$*" = *"-b "* ]]; then
+  Branch_Name=$(echo "$*" | sed -n 's/.*-b \([^ ]*\).*/\1/p' | head -1)
+  [[ -n "$Branch_Name" ]] && Branch_Check "$Branch_Name"
+fi
+# Parse --repo / -r to use any GitHub user (same URL structure as usmannasir/cyberpanel)
+if [[ "$*" = *"--repo "* ]]; then
+  Git_User_Override=$(echo "$*" | sed -n 's/.*--repo \([^ ]*\).*/\1/p' | head -1)
+fi
+if [[ "$*" = *"-r "* ]] && [[ -z "$Git_User_Override" ]]; then
+  Git_User_Override=$(echo "$*" | sed -n 's/.*-r \([^ ]*\).*/\1/p' | head -1)
+fi
+# Parse --no-system-update to skip yum/dnf update -y (faster upgrade when system is already updated)
+if [[ "$*" = *"--no-system-update"* ]]; then
+  Skip_System_Update="yes"
+  echo -e "\nUsing --no-system-update: skipping full system package update.\n"
+fi
+# Parse --backup-db / --no-backup-db: pre-upgrade MariaDB backup. Default when neither set: ask user (may take a while).
+# --backup-db = always backup; --no-backup-db = never backup; omit both = prompt [y/N]
+Backup_DB_Before_Upgrade=""
+if [[ "$*" = *"--backup-db"* ]]; then
+  Backup_DB_Before_Upgrade="yes"
+  echo -e "\nUsing --backup-db: will create a full MariaDB backup before upgrade.\n"
+elif [[ "$*" = *"--no-backup-db"* ]]; then
+  Backup_DB_Before_Upgrade="no"
+  echo -e "\nUsing --no-backup-db: skipping MariaDB pre-upgrade backup.\n"
+fi
+# Parse --migrate-to-utf8: after upgrading to MariaDB 11.x/12.x, convert DBs/tables from latin1 to utf8mb4 (only if your apps support UTF-8)
+if [[ "$*" = *"--migrate-to-utf8"* ]]; then
+  Migrate_MariaDB_To_UTF8_Requested="yes"
+  echo -e "\nUsing --migrate-to-utf8: will convert databases to UTF-8 (utf8mb4) after MariaDB upgrade.\n"
+fi
+# Parse --mariadb-version (any version: 10.6, 10.11, 10.11.16, 11.8, 12.1, 12.2, 12.3, etc.). Default 11.8.
+# --mariadb is shorthand for --mariadb-version 10.11
+if [[ "$*" = *"--mariadb"* ]] && [[ "$*" != *"--mariadb-version "* ]]; then
+  MARIADB_VER="10.11"
+  echo -e "\nUsing --mariadb: MariaDB 10.11 selected (non-interactive).\n"
+elif [[ "$*" = *"--mariadb-version "* ]]; then
+  MARIADB_VER=$(echo "$*" | sed -n 's/.*--mariadb-version \([^ ]*\).*/\1/p' | head -1)
+  MARIADB_VER="${MARIADB_VER:-11.8}"
+fi
+# Allow any version; repo paths use major.minor (normalized later)
+}
+

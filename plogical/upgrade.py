@@ -3371,6 +3371,62 @@ class Migration(migrations.Migration):
                 except:
                     pass
                 
+                # Replace ALL rainloop path/URL references in migrated SnappyMail data (configs, domains, plugins)
+                try:
+                    data_extensions = ('.ini', '.json', '.php', '.cfg')
+                    replace_count = 0
+                    for root, _dirs, files in os.walk(new_data_path):
+                        for name in files:
+                            if name.endswith(data_extensions):
+                                path = os.path.join(root, name)
+                                try:
+                                    with open(path, 'r', encoding='utf-8', errors='replace') as f:
+                                        content = f.read()
+                                    new_content = content.replace(
+                                        '/usr/local/lscp/cyberpanel/rainloop/data',
+                                        '/usr/local/lscp/cyberpanel/snappymail/data'
+                                    ).replace(
+                                        '/rainloop/',
+                                        '/snappymail/'
+                                    ).replace(
+                                        'rainloop/data',
+                                        'snappymail/data'
+                                    )
+                                    if new_content != content:
+                                        with open(path, 'w', encoding='utf-8') as f:
+                                            f.write(new_content)
+                                        replace_count += 1
+                                except (IOError, OSError):
+                                    pass
+                    if replace_count > 0:
+                        Upgrade.stdOut(f"Updated rainloop→snappymail links in {replace_count} config file(s).", 0)
+                except Exception as e:
+                    Upgrade.stdOut(f"Warning: Could not replace rainloop links in data files: {str(e)}", 0)
+                
+                # Redirect /rainloop to /snappymail so old bookmarks and links keep working
+                try:
+                    htaccess_path = '/usr/local/CyberCP/public/.htaccess'
+                    redirect_block = (
+                        '\n# Redirect old RainLoop URL to SnappyMail (2.5.5 upgrade)\n'
+                        '<IfModule mod_rewrite.c>\n'
+                        'RewriteEngine On\n'
+                        'RewriteRule ^rainloop/?(.*)$ /snappymail/$1 [R=301,L]\n'
+                        '</IfModule>\n'
+                    )
+                    if os.path.exists(htaccess_path):
+                        with open(htaccess_path, 'r', encoding='utf-8', errors='replace') as f:
+                            existing = f.read()
+                        if 'Redirect old RainLoop URL to SnappyMail' not in existing:
+                            with open(htaccess_path, 'a', encoding='utf-8') as f:
+                                f.write(redirect_block)
+                            Upgrade.stdOut("Added /rainloop→/snappymail redirect to .htaccess.", 0)
+                    else:
+                        with open(htaccess_path, 'w', encoding='utf-8') as f:
+                            f.write(redirect_block)
+                        Upgrade.stdOut("Created .htaccess with /rainloop→/snappymail redirect.", 0)
+                except Exception as e:
+                    Upgrade.stdOut(f"Warning: Could not add rainloop redirect to .htaccess: {str(e)}", 0)
+                
                 return 1
             else:
                 Upgrade.stdOut("Warning: Data migration completed with errors. Please verify manually.", 0)
@@ -3735,7 +3791,7 @@ class Migration(migrations.Migration):
         custom_configs = [
             '/usr/local/CyberCP/baseTemplate/static/baseTemplate/custom/',
             '/usr/local/CyberCP/public/phpmyadmin/config.inc.php',
-            '/usr/local/CyberCP/rainloop/data/_data_/',
+            '/usr/local/lscp/cyberpanel/snappymail/data/_data_/',
         ]
         
         # Backup Imunify360 directories and configuration
@@ -4142,7 +4198,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = "chown -R root:root /usr/local/lscp"
             Upgrade.executioner(command, 'chown core code', 0)
 
-            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop"
+            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail"
             Upgrade.executioner(command, 'chown core code', 0)
 
             command = "chmod 700 /usr/local/CyberCP/cli/cyberPanel.py"
