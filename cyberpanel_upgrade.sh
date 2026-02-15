@@ -74,7 +74,8 @@ Git_User=""
 Git_Content_URL=""
 Git_Clone_URL=""
 
-MySQL_Version=$(mysql -V | grep -P '\d+.\d+.\d+' -o)
+# Prefer mariadb CLI (mysql is deprecated and prints a warning)
+MySQL_Version=$(mariadb -V 2>/dev/null | grep -P '\d+.\d+.\d+' -o || mysql -V 2>/dev/null | grep -P '\d+.\d+.\d+' -o)
 MySQL_Password=$(cat /etc/cyberpanel/mysqlPassword)
 
 
@@ -418,14 +419,16 @@ if [[ "$MySQL_Version" = "10.1" ]]; then
   rm -rf /etc/my.cnf.d/
   mv /etc/cnfbackup/my.cnf.d /etc/
 
-  systemctl enable mysql
-  systemctl start mysql
+  # Prefer mariadb service name (mysql is deprecated)
+  systemctl enable mariadb 2>/dev/null || systemctl enable mysql
+  systemctl start mariadb 2>/dev/null || systemctl start mysql
 
-  mysql_upgrade -uroot -p"$MySQL_Password"
+  mariadb-upgrade -uroot -p"$MySQL_Password" 2>/dev/null || mysql_upgrade -uroot -p"$MySQL_Password"
 
 fi
 
-mysql -uroot -p"$MySQL_Password" -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '$MySQL_Password';flush privileges"
+# Prefer mariadb CLI to avoid "mysql: Deprecated program name" warning
+mariadb -uroot -p"$MySQL_Password" -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '$MySQL_Password';flush privileges" 2>/dev/null || mysql -uroot -p"$MySQL_Password" -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '$MySQL_Password';flush privileges"
 }
 
 Pre_Upgrade_Setup_Repository() {
