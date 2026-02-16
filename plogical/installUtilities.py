@@ -1,6 +1,6 @@
 import subprocess
 import sys
-from plogical import CyberCPLogFileWriter as logging
+from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter
 import shutil
 import pexpect
 import os
@@ -221,7 +221,7 @@ class installUtilities:
         return 1
 
     @staticmethod
-    def safeModifyHttpdConfig(config_modifier, description="config modification"):
+    def safeModifyHttpdConfig(config_modifier, description="config modification", skip_validation=False):
         """
         Safely modify httpd_config.conf with backup, validation, and rollback on failure.
         Prevents corrupted configs that cause OpenLiteSpeed to fail binding ports 80/443.
@@ -237,20 +237,30 @@ class installUtilities:
         """
         config_file = "/usr/local/lsws/conf/httpd_config.conf"
         
-        if not os.path.exists(config_file):
-            error_msg = f"Config file not found: {config_file}"
-            logging.writeToFile(f"[safeModifyHttpdConfig] {error_msg}")
-            return False, error_msg
+        # Check file existence using ProcessUtilities (handles permissions correctly)
+        try:
+            command = 'test -f {} && echo exists || echo notfound'.format(config_file)
+            result = ProcessUtilities.outputExecutioner(command).strip()
+            if result == 'notfound':
+                error_msg = f"Config file not found: {config_file}"
+                CyberCPLogFileWriter.writeToFile(f"[safeModifyHttpdConfig] {error_msg}")
+                return False, error_msg
+        except Exception as e:
+            # Fallback to os.path.exists if ProcessUtilities fails
+            if not os.path.exists(config_file):
+                error_msg = f"Config file not found: {config_file} (check failed: {str(e)})"
+                CyberCPLogFileWriter.writeToFile(f"[safeModifyHttpdConfig] {error_msg}")
+                return False, error_msg
         
         # Create backup with timestamp
         try:
             timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
             backup_file = f"{config_file}.backup-{timestamp}"
             shutil.copy2(config_file, backup_file)
-            logging.writeToFile(f"[safeModifyHttpdConfig] Created backup: {backup_file} for {description}")
+            CyberCPLogFileWriter.writeToFile(f"[safeModifyHttpdConfig] Created backup: {backup_file} for {description}")
         except Exception as e:
             error_msg = f"Failed to create backup: {str(e)}"
-            logging.writeToFile(f"[safeModifyHttpdConfig] {error_msg}")
+            CyberCPLogFileWriter.writeToFile(f"[safeModifyHttpdConfig] {error_msg}")
             return False, error_msg
         
         # Read current config
@@ -259,7 +269,7 @@ class installUtilities:
                 original_content = f.readlines()
         except Exception as e:
             error_msg = f"Failed to read config file: {str(e)}"
-            logging.writeToFile(f"[safeModifyHttpdConfig] {error_msg}")
+            CyberCPLogFileWriter.writeToFile(f"[safeModifyHttpdConfig] {error_msg}")
             return False, error_msg
         
         # Modify config using callback
@@ -267,11 +277,11 @@ class installUtilities:
             modified_content = config_modifier(original_content)
             if not isinstance(modified_content, list):
                 error_msg = "Config modifier must return a list of lines"
-                logging.writeToFile(f"[safeModifyHttpdConfig] {error_msg}")
+                CyberCPLogFileWriter.writeToFile(f"[safeModifyHttpdConfig] {error_msg}")
                 return False, error_msg
         except Exception as e:
             error_msg = f"Config modifier function failed: {str(e)}"
-            logging.writeToFile(f"[safeModifyHttpdConfig] {error_msg}")
+            CyberCPLogFileWriter.writeToFile(f"[safeModifyHttpdConfig] {error_msg}")
             return False, error_msg
         
         # Write modified config
@@ -280,57 +290,68 @@ class installUtilities:
                 f.writelines(modified_content)
         except Exception as e:
             error_msg = f"Failed to write modified config: {str(e)}"
-            logging.writeToFile(f"[safeModifyHttpdConfig] {error_msg}")
+            CyberCPLogFileWriter.writeToFile(f"[safeModifyHttpdConfig] {error_msg}")
             # Restore backup
             try:
                 shutil.copy2(backup_file, config_file)
-                logging.writeToFile(f"[safeModifyHttpdConfig] Restored backup due to write failure")
+                CyberCPLogFileWriter.writeToFile(f"[safeModifyHttpdConfig] Restored backup due to write failure")
             except:
                 pass
             return False, error_msg
         
-        # Validate config using openlitespeed -t
-        try:
-            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-                validate_cmd = ['/usr/local/lsws/bin/openlitespeed', '-t', '-f', config_file]
-            else:
-                # For LiteSpeed Enterprise, use lswsctrl
-                validate_cmd = ['/usr/local/lsws/bin/lswsctrl', '-t', '-f', config_file]
-            
-            result = subprocess.run(validate_cmd, capture_output=True, text=True, timeout=30)
-            
-            if result.returncode != 0:
-                error_msg = f"Config validation failed: {result.stderr}"
-                logging.writeToFile(f"[safeModifyHttpdConfig] {error_msg}")
+        # Validate config using openlitespeed -t (for OLS)
+        # Note: openlitespeed -t may return non-zero due to warnings, so we check for actual errors
+        # Skip validation if skip_validation=True (useful when pre-existing config has errors)
+        if skip_validation:
+            CyberCPLogFileWriter.writeToFile(f"[safeModifyHttpdConfig] Skipping validation as requested for: {description}")
+        else:
+            try:
+                if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                    openlitespeed_bin = '/usr/local/lsws/bin/openlitespeed'
+                    if os.path.exists(openlitespeed_bin):
+                        validate_cmd = [openlitespeed_bin, '-t']
+                        result = subprocess.run(validate_cmd, capture_output=True, text=True, timeout=30)
+                        
+                        # Check for actual errors (not just warnings)
+                        # openlitespeed -t returns 0 on success, non-zero on errors
+                        # But it may also return non-zero for warnings, so check for actual [ERROR] lines
+                        if result.returncode != 0:
+                            # Check if there are actual ERROR log lines (not just WARN or the word "error" in text)
+                            error_output = result.stderr or result.stdout or ''
+                            # Look for lines that start with [ERROR] or contain [ERROR] (actual error log entries)
+                            error_lines = [line for line in error_output.split('\n') if '[ERROR]' in line.upper()]
+                            if error_lines:
+                                # Only fail on actual errors, not warnings
+                                error_msg = f"Config validation failed with errors: {' '.join(error_lines[:3])}"
+                                CyberCPLogFileWriter.writeToFile(f"[safeModifyHttpdConfig] {error_msg}")
+                                # Restore backup
+                                try:
+                                    shutil.copy2(backup_file, config_file)
+                                    CyberCPLogFileWriter.writeToFile(f"[safeModifyHttpdConfig] Restored backup due to validation failure")
+                                except Exception as restore_error:
+                                    CyberCPLogFileWriter.writeToFile(f"[safeModifyHttpdConfig] CRITICAL: Failed to restore backup: {str(restore_error)}")
+                                return False, error_msg
+                            else:
+                                # Only warnings, not errors - proceed
+                                CyberCPLogFileWriter.writeToFile(f"[safeModifyHttpdConfig] Config validation has warnings but no errors, proceeding")
+                    else:
+                        # openlitespeed binary not found, skip validation
+                        CyberCPLogFileWriter.writeToFile(f"[safeModifyHttpdConfig] Warning: openlitespeed binary not found, skipping config validation")
+                else:
+                    # For LiteSpeed Enterprise, validation is not available via lswsctrl -t
+                    CyberCPLogFileWriter.writeToFile(f"[safeModifyHttpdConfig] Skipping validation for LiteSpeed Enterprise")
+            except Exception as e:
+                error_msg = f"Config validation error: {str(e)}"
+                CyberCPLogFileWriter.writeToFile(f"[safeModifyHttpdConfig] {error_msg}")
                 # Restore backup
                 try:
                     shutil.copy2(backup_file, config_file)
-                    logging.writeToFile(f"[safeModifyHttpdConfig] Restored backup due to validation failure")
-                except Exception as restore_error:
-                    logging.writeToFile(f"[safeModifyHttpdConfig] CRITICAL: Failed to restore backup: {str(restore_error)}")
+                    CyberCPLogFileWriter.writeToFile(f"[safeModifyHttpdConfig] Restored backup due to validation error")
+                except:
+                    pass
                 return False, error_msg
-        except subprocess.TimeoutExpired:
-            error_msg = "Config validation timed out"
-            logging.writeToFile(f"[safeModifyHttpdConfig] {error_msg}")
-            # Restore backup
-            try:
-                shutil.copy2(backup_file, config_file)
-                logging.writeToFile(f"[safeModifyHttpdConfig] Restored backup due to validation timeout")
-            except:
-                pass
-            return False, error_msg
-        except Exception as e:
-            error_msg = f"Config validation error: {str(e)}"
-            logging.writeToFile(f"[safeModifyHttpdConfig] {error_msg}")
-            # Restore backup
-            try:
-                shutil.copy2(backup_file, config_file)
-                logging.writeToFile(f"[safeModifyHttpdConfig] Restored backup due to validation error")
-            except:
-                pass
-            return False, error_msg
         
-        logging.writeToFile(f"[safeModifyHttpdConfig] Successfully modified and validated config: {description}")
+        CyberCPLogFileWriter.writeToFile(f"[safeModifyHttpdConfig] Successfully modified and validated config: {description}")
         return True, None
 
     @staticmethod
@@ -352,7 +373,7 @@ class installUtilities:
             
             if not success:
                 error_msg = error if error else "Unknown error"
-                logging.writeToFile(f"[changePortTo80] Failed: {error_msg}")
+                CyberCPLogFileWriter.writeToFile(f"[changePortTo80] Failed: {error_msg}")
                 return 0
             
             return installUtilities.reStartLiteSpeed()

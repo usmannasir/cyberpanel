@@ -10742,40 +10742,20 @@ $("#websiteSuccessfullyModified").hide();
 $("#modifyWebsiteLoading").hide();
 $("#modifyWebsiteButton").hide();
 
-app.controller('modifyWebsitesController', function ($scope, $http) {
-    
-    // Initialize home directory variables
-    $scope.homeDirectories = [];
-    $scope.selectedHomeDirectory = '';
-    $scope.selectedHomeDirectoryInfo = null;
-    $scope.currentHomeDirectory = '';
+/** Angular filter: format bytes as human-readable size (used by modifyWebsite.html) */
+app.filter('filesize', [function () {
+    return function (bytes) {
+        if (bytes == null || isNaN(bytes)) return '-';
+        var n = Number(bytes);
+        if (n === 0) return '0 B';
+        var k = 1024;
+        var sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+        var i = Math.floor(Math.log(n) / Math.log(k));
+        return (n / Math.pow(k, i)).toFixed(2) + ' ' + sizes[Math.min(i, sizes.length - 1)];
+    };
+}]);
 
-    // Load home directories on page load
-    $scope.loadHomeDirectories = function() {
-        $http.post('/userManagement/getUserHomeDirectories/', {})
-            .then(function(response) {
-                if (response.data.status === 1) {
-                    $scope.homeDirectories = response.data.directories;
-                }
-            })
-            .catch(function(error) {
-                console.error('Error loading home directories:', error);
-            });
-    };
-    
-    // Update home directory info when selection changes
-    $scope.updateHomeDirectoryInfo = function() {
-        if ($scope.selectedHomeDirectory) {
-            $scope.selectedHomeDirectoryInfo = $scope.homeDirectories.find(function(dir) {
-                return dir.id == $scope.selectedHomeDirectory;
-            });
-        } else {
-            $scope.selectedHomeDirectoryInfo = null;
-        }
-    };
-    
-    // Initialize home directories
-    $scope.loadHomeDirectories();
+app.controller('modifyWebsitesController', ['$scope', '$http', function ($scope, $http) {
 
     $scope.fetchWebsites = function () {
 
@@ -10820,7 +10800,6 @@ app.controller('modifyWebsitesController', function ($scope, $http) {
                 $scope.webpacks = JSON.parse(response.data.packages);
                 $scope.adminNames = JSON.parse(response.data.adminNames);
                 $scope.currentAdmin = response.data.currentAdmin;
-                $scope.currentHomeDirectory = response.data.currentHomeDirectory || 'Default';
 
                 $("#webSiteDetailsToBeModified").fadeIn();
                 $("#websiteModifySuccess").fadeIn();
@@ -10848,7 +10827,6 @@ app.controller('modifyWebsitesController', function ($scope, $http) {
         var email = $scope.adminEmail;
         var phpVersion = $scope.phpSelection;
         var admin = $scope.selectedAdmin;
-        var homeDirectory = $scope.selectedHomeDirectory;
 
 
         $("#websiteModifyFailure").hide();
@@ -10865,8 +10843,7 @@ app.controller('modifyWebsitesController', function ($scope, $http) {
             packForWeb: packForWeb,
             email: email,
             phpVersion: phpVersion,
-            admin: admin,
-            homeDirectory: homeDirectory
+            admin: admin
         };
 
         var config = {
@@ -10915,7 +10892,7 @@ app.controller('modifyWebsitesController', function ($scope, $http) {
 
     };
 
-});
+}]);
 
 /* Java script code to Modify Pacakge ends here */
 
@@ -13338,16 +13315,6 @@ app.controller('manageAliasController', function ($scope, $http, $timeout, $wind
     $scope.manageAliasLoading = true;
     $scope.operationSuccess = true;
 
-    // Initialize the page to show aliases list
-    $scope.showAliasesList = function() {
-        $scope.aliasTable = true;
-        $scope.addAliasButton = true;
-        $scope.domainAliasForm = false;
-    };
-
-    // Auto-show aliases list on page load
-    $scope.showAliasesList();
-
     $scope.createAliasEnter = function ($event) {
         var keyCode = $event.which || $event.keyCode;
         if (keyCode === 13) {
@@ -13593,64 +13560,6 @@ app.controller('manageAliasController', function ($scope, $http, $timeout, $wind
         }
 
 
-    };
-
-    $scope.issueAliasSSL = function (masterDomain, aliasDomain) {
-        $scope.manageAliasLoading = false;
-
-        url = "/websites/issueAliasSSL";
-
-        var data = {
-            masterDomain: masterDomain,
-            aliasDomain: aliasDomain
-        };
-
-        var config = {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        };
-
-        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
-
-        function ListInitialDatas(response) {
-            if (response.data.issueAliasSSL === 1) {
-                $scope.aliasTable = false;
-                $scope.addAliasButton = true;
-                $scope.domainAliasForm = true;
-                $scope.aliasError = true;
-                $scope.couldNotConnect = true;
-                $scope.aliasCreated = true;
-                $scope.manageAliasLoading = true;
-                $scope.operationSuccess = false;
-
-                $timeout(function () {
-                    $window.location.reload();
-                }, 3000);
-            } else {
-                $scope.aliasTable = false;
-                $scope.addAliasButton = true;
-                $scope.domainAliasForm = true;
-                $scope.aliasError = false;
-                $scope.couldNotConnect = true;
-                $scope.aliasCreated = true;
-                $scope.manageAliasLoading = true;
-                $scope.operationSuccess = true;
-
-                $scope.errorMessage = response.data.error_message;
-            }
-        }
-
-        function cantLoadInitialDatas(response) {
-            $scope.aliasTable = false;
-            $scope.addAliasButton = true;
-            $scope.domainAliasForm = true;
-            $scope.aliasError = true;
-            $scope.couldNotConnect = false;
-            $scope.aliasCreated = true;
-            $scope.manageAliasLoading = true;
-            $scope.operationSuccess = true;
-        }
     };
 
 

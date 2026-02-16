@@ -49,6 +49,65 @@ from django.http import JsonResponse
 import ipaddress
 
 
+def _get_ssl_renewal_schedule():
+    """Get formatted SSL renewal schedule (e.g. 'Thursday 12:00 AM').
+    Reads from world-readable config file first (web server can't read root crontab).
+    Cron day_of_week: 0=Sun, 1=Mon, ..., 6=Sat. Python weekday: Mon=0, ..., Sun=6."""
+    try:
+        from datetime import datetime, timedelta
+        # Config file is world-readable; web server (lscpd) cannot read /var/spool/cron/root
+        config_path = '/usr/local/CyberCP/ssl_renewal_schedule.conf'
+        if os.path.exists(config_path):
+            try:
+                with open(config_path, 'r') as f:
+                    line = f.read().strip()
+                if line:
+                    return line
+            except (IOError, OSError):
+                pass
+        cron_paths = ['/var/spool/cron/root', '/var/spool/cron/crontabs/root']
+        cron_content = None
+        for path in cron_paths:
+            if os.path.exists(path):
+                try:
+                    with open(path, 'r') as f:
+                        cron_content = f.read()
+                except (IOError, OSError):
+                    continue
+                break
+        if not cron_content:
+            return None
+        renew_hour, renew_minute, renew_weekday_cron = 0, 0, 4  # default Thursday
+        for line in cron_content.splitlines():
+            line = line.strip()
+            if 'renew.py' in line and not line.startswith('#'):
+                parts = line.split()
+                if len(parts) >= 5:
+                    try:
+                        renew_minute = int(parts[0]) if parts[0].isdigit() else 0
+                        renew_hour = int(parts[1]) if parts[1].isdigit() else 0
+                        dow = parts[4]
+                        renew_weekday_cron = int(dow) if dow.isdigit() and 0 <= int(dow) <= 7 else 4
+                    except (ValueError, IndexError):
+                        pass
+                elif len(parts) >= 2:
+                    renew_minute = int(parts[0]) if parts[0].isdigit() else 0
+                    renew_hour = int(parts[1]) if parts[1].isdigit() else 0
+                break
+        now = datetime.now()
+        # Cron: 0/7=Sun, 1=Mon, ..., 6=Sat -> Python: Mon=0, Tue=1, ..., Sun=6
+        target_weekday = (renew_weekday_cron - 1) % 7 if renew_weekday_cron else 6
+        days_until = (target_weekday - now.weekday()) % 7
+        if days_until == 0 and (now.hour > renew_hour or (now.hour == renew_hour and now.minute >= renew_minute)):
+            days_until = 7
+        next_run = now.replace(hour=renew_hour, minute=renew_minute, second=0, microsecond=0)
+        next_run += timedelta(days=days_until)
+        return next_run.strftime('%B %d, %Y %I:%M %p')
+    except Exception as e:
+        logging.CyberCPLogFileWriter.writeToFile('_get_ssl_renewal_schedule: ' + str(e))
+        return None
+
+
 class WebsiteManager:
     apache = 1
     ols = 2
@@ -3533,10 +3592,14 @@ context /cyberpanel_suspension_page.html {
             currentPack = modifyWeb.package.packageName
             owner = modifyWeb.admin.userName
             
-            # Get current home directory information
-            from userManagment.homeDirectoryUtils import HomeDirectoryUtils
-            current_home = HomeDirectoryUtils.getUserHomeDirectoryObject(owner)
-            currentHomeDirectory = current_home.name if current_home else 'Default'
+            # Get current home directory information (optional: tables may not exist yet)
+            currentHomeDirectory = 'Default'
+            try:
+                from userManagment.homeDirectoryUtils import HomeDirectoryUtils
+                current_home = HomeDirectoryUtils.getUserHomeDirectoryObject(owner)
+                currentHomeDirectory = current_home.name if current_home else 'Default'
+            except Exception:
+                pass
 
             data_ret = {'status': 1, 'modifyStatus': 1, 'error_message': "None", "adminEmail": email,
                         "packages": json_data, "current_pack": currentPack, "adminNames": admin_data,
@@ -3782,6 +3845,8 @@ context /cyberpanel_suspension_page.html {
                 Data['viewSSL'] = 1
                 Data['days'] = str(diff.days)
                 Data['authority'] = x509.get_issuer().get_components()[1][1].decode('utf-8')
+                renewal_when = _get_ssl_renewal_schedule()
+                Data['renewal_when'] = renewal_when
 
                 if Data['authority'] == 'Denial':
                     Data['authority'] = '%s has SELF-SIGNED SSL.' % (self.domain)
@@ -3790,6 +3855,7 @@ context /cyberpanel_suspension_page.html {
 
             except BaseException as msg:
                 Data['viewSSL'] = 0
+                Data['renewal_when'] = None
                 logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
             servicePath = '/home/cyberpanel/pureftpd'
@@ -4009,6 +4075,7 @@ context /cyberpanel_suspension_page.html {
                 Data['viewSSL'] = 1
                 Data['days'] = str(diff.days)
                 Data['authority'] = x509.get_issuer().get_components()[1][1].decode('utf-8')
+                Data['renewal_when'] = _get_ssl_renewal_schedule()
 
                 if Data['authority'] == 'Denial':
                     Data['authority'] = '%s has SELF-SIGNED SSL.' % (self.childDomain)
@@ -4017,6 +4084,7 @@ context /cyberpanel_suspension_page.html {
 
             except BaseException as msg:
                 Data['viewSSL'] = 0
+                Data['renewal_when'] = None
                 logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
             proc = httpProc(request, 'websiteFunctions/launchChild.html', Data)
@@ -8735,9 +8803,53 @@ StrictHostKeyChecking no
             logging.CyberCPLogFileWriter.writeToFile(f'Error fixing subdomain logs for {domain_name}: {str(e)}')
             return False
 
+    def getFTPQuotaStatus(self, userID=None, data=None):
+        """
+        Return FTP quota status for the UI: ftp_running, quota_configured.
+        Used on page load to show the right message and button state.
+        """
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+            if not (currentACL.get('admin', 0) == 1):
+                return ACLManager.loadErrorJson('status', 0)
+            if os.path.exists('/etc/lsb-release'):
+                ftp_service = 'pure-ftpd-mysql'
+            else:
+                ftp_service = 'pure-ftpd'
+            conf_path = '/etc/pure-ftpd/pure-ftpd.conf'
+            ftp_running = False
+            quota_configured = False
+            try:
+                out = ProcessUtilities.outputExecutioner(
+                    "systemctl is-active %s 2>/dev/null || true" % ftp_service, 'root', True)
+                ftp_running = bool(out and out.strip() == 'active')
+            except Exception:
+                pass
+            if ftp_running and os.path.exists(conf_path):
+                try:
+                    quota_line = ProcessUtilities.outputExecutioner(
+                        "grep -E '^Quota[[:space:]]+[0-9]+:[0-9]+' %s 2>/dev/null || true" % conf_path, 'root', True)
+                    quota_configured = bool(quota_line and quota_line.strip())
+                except Exception:
+                    pass
+            data_ret = {
+                'status': 1,
+                'ftp_running': ftp_running,
+                'quota_configured': quota_configured,
+                'ftp_service': ftp_service,
+            }
+            return HttpResponse(json.dumps(data_ret), content_type='application/json')
+        except Exception as e:
+            data_ret = {'status': 0, 'message': str(e)}
+            return HttpResponse(json.dumps(data_ret), content_type='application/json')
+
     def enableFTPQuota(self, userID=None, data=None):
         """
-        Enable FTP quota system
+        Enable FTP quota: ensure Quota maxfiles:maxsize in config, start/restart Pure-FTPd if needed.
+        If Pure-FTPd is already running and config already has a valid Quota line, return success
+        without touching config or restarting (avoids breaking a working setup).
+        Uses correct service name (pure-ftpd-mysql on Debian/Ubuntu, pure-ftpd on RHEL/Alma).
         """
         try:
             currentACL = ACLManager.loadedACL(userID)
@@ -8747,60 +8859,157 @@ StrictHostKeyChecking no
             if not (currentACL.get('admin', 0) == 1):
                 return ACLManager.loadErrorJson('status', 0)
             
-            # Backup existing configurations
-            logging.CyberCPLogFileWriter.writeToFile("Backing up existing Pure-FTPd configurations...")
-            
-            import shutil
-            from datetime import datetime
-            
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            
-            # Backup pure-ftpd.conf
-            if os.path.exists('/etc/pure-ftpd/pure-ftpd.conf'):
-                shutil.copy('/etc/pure-ftpd/pure-ftpd.conf', f'/etc/pure-ftpd/pure-ftpd.conf.backup.{timestamp}')
-            
-            # Backup pureftpd-mysql.conf
-            if os.path.exists('/etc/pure-ftpd/pureftpd-mysql.conf'):
-                shutil.copy('/etc/pure-ftpd/pureftpd-mysql.conf', f'/etc/pure-ftpd/pureftpd-mysql.conf.backup.{timestamp}')
-            
-            # Apply new configurations
-            logging.CyberCPLogFileWriter.writeToFile("Applying FTP quota configurations...")
-            
-            # Copy updated configurations
-            if os.path.exists('/usr/local/CyberCP/install/pure-ftpd/pure-ftpd.conf'):
-                shutil.copy('/usr/local/CyberCP/install/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pure-ftpd.conf')
-            
-            if os.path.exists('/usr/local/CyberCP/install/pure-ftpd/pureftpd-mysql.conf'):
-                shutil.copy('/usr/local/CyberCP/install/pure-ftpd/pureftpd-mysql.conf', '/etc/pure-ftpd/pureftpd-mysql.conf')
-            
-            # Restart Pure-FTPd
-            logging.CyberCPLogFileWriter.writeToFile("Restarting Pure-FTPd service...")
-            ProcessUtilities.executioner('systemctl restart pure-ftpd')
-            
-            # Verify configuration
-            if ProcessUtilities.executioner('systemctl is-active --quiet pure-ftpd'):
-                logging.CyberCPLogFileWriter.writeToFile("FTP quota system enabled successfully")
-                
-                data_ret = {
-                    'status': 1,
-                    'message': 'FTP quota system enabled successfully'
-                }
+            # Resolve Pure-FTPd service name (Debian/Ubuntu use pure-ftpd-mysql)
+            if os.path.exists('/etc/lsb-release'):
+                ftp_service = 'pure-ftpd-mysql'
             else:
-                data_ret = {
-                    'status': 0,
-                    'message': 'Failed to restart Pure-FTPd service'
-                }
+                ftp_service = 'pure-ftpd'
             
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
+            conf_path = '/etc/pure-ftpd/pure-ftpd.conf'
+            
+            # Early success: if Pure-FTPd is already active and config has valid Quota line, do nothing
+            try:
+                out = ProcessUtilities.outputExecutioner(
+                    "systemctl is-active %s 2>/dev/null || true" % ftp_service, 'root', True)
+                if out and out.strip() == 'active':
+                    quota_line = ProcessUtilities.outputExecutioner(
+                        "grep -E '^Quota[[:space:]]+[0-9]+:[0-9]+' %s 2>/dev/null || true" % conf_path, 'root', True)
+                    if quota_line and quota_line.strip():
+                        logging.CyberCPLogFileWriter.writeToFile("FTP quota already enabled and Pure-FTPd running")
+                        data_ret = {'status': 1, 'message': 'FTP quota system is already enabled and Pure-FTPd is running.'}
+                        return HttpResponse(json.dumps(data_ret), content_type='application/json')
+            except Exception:
+                pass
+
+            # Require Pure-FTPd to be running before enabling quota (avoid confusing failures)
+            try:
+                out = ProcessUtilities.outputExecutioner(
+                    "systemctl is-active %s 2>/dev/null || true" % ftp_service, 'root', True)
+                if not (out and out.strip() == 'active'):
+                    msg = ('Pure-FTPd is not running. Please enable Pure-FTPd first '
+                           '(e.g. from Server Status → Services) before enabling the FTP Quota system.')
+                    data_ret = {'status': 0, 'message': msg}
+                    return HttpResponse(json.dumps(data_ret), content_type='application/json')
+            except Exception:
+                pass
+
+            # Only ensure Quota is enabled; do not overwrite existing config (preserves DB credentials, paths)
+            if os.path.exists(conf_path):
+                # Backup current config before we change anything (so we can restore if restart fails)
+                try:
+                    from datetime import datetime
+                    ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    ProcessUtilities.executioner(
+                        'cp %s /etc/pure-ftpd/pure-ftpd.conf.backup.%s' % (conf_path, ts), 'root', True)
+                    ProcessUtilities.executioner(
+                        'cp /etc/pure-ftpd/pureftpd-mysql.conf /etc/pure-ftpd/pureftpd-mysql.conf.backup.%s 2>/dev/null || true' % ts, 'root', True)
+                except Exception:
+                    pass
+                # If service is not running, try restoring latest backup (in case a previous run overwrote working config)
+                try:
+                    out = ProcessUtilities.outputExecutioner(
+                        "systemctl is-active %s 2>/dev/null || true" % ftp_service, 'root', True)
+                    if not (out and out.strip() == 'active'):
+                        # Restore latest backups if present
+                        ProcessUtilities.executioner(
+                            "ls -t /etc/pure-ftpd/pure-ftpd.conf.backup.* 2>/dev/null | head -1 | xargs -r -I {} cp {} /etc/pure-ftpd/pure-ftpd.conf",
+                            'root', True)
+                        ProcessUtilities.executioner(
+                            "ls -t /etc/pure-ftpd/pureftpd-mysql.conf.backup.* 2>/dev/null | head -1 | xargs -r -I {} cp {} /etc/pure-ftpd/pureftpd-mysql.conf",
+                            'root', True)
+                except Exception:
+                    pass
+                # Add or replace Quota line via root (Pure-FTPd expects maxfiles:maxsizeMB, not "yes")
+                ProcessUtilities.executioner(
+                    "grep -q '^Quota' %s && sed -i 's/^Quota.*/Quota 100000:100000/' %s || echo 'Quota 100000:100000' >> %s" % (conf_path, conf_path, conf_path),
+                    'root', True)
+                logging.CyberCPLogFileWriter.writeToFile("Set Quota 100000:100000 in existing pure-ftpd.conf")
+            else:
+                # First-time: copy from repo
+                from datetime import datetime
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                if os.path.exists('/usr/local/CyberCP/install/pure-ftpd/pure-ftpd.conf'):
+                    ProcessUtilities.executioner(
+                        'cp /usr/local/CyberCP/install/pure-ftpd/pure-ftpd.conf /etc/pure-ftpd/pure-ftpd.conf', 'root', True)
+                if os.path.exists('/usr/local/CyberCP/install/pure-ftpd/pureftpd-mysql.conf'):
+                    ProcessUtilities.executioner(
+                        'cp /usr/local/CyberCP/install/pure-ftpd/pureftpd-mysql.conf /etc/pure-ftpd/pureftpd-mysql.conf', 'root', True)
+
+            # Safety net: ensure Quota line is valid before restart (Pure-FTPd rejects "Quota yes")
+            try:
+                quota_check = ProcessUtilities.outputExecutioner(
+                    "grep -E '^Quota[[:space:]]+[0-9]+:[0-9]+' %s 2>/dev/null || true" % conf_path, 'root', True)
+                if not (quota_check and quota_check.strip()):
+                    ProcessUtilities.executioner(
+                        "grep -q '^Quota' %s && sed -i 's/^Quota.*/Quota 100000:100000/' %s || echo 'Quota 100000:100000' >> %s" % (conf_path, conf_path, conf_path),
+                        'root', True)
+                    logging.CyberCPLogFileWriter.writeToFile("Corrected invalid Quota line in pure-ftpd.conf before restart")
+            except Exception:
+                pass
+
+            # Final check: if Quota line still invalid (e.g. old panel code wrote "Quota yes"), restore backup and abort
+            try:
+                quota_final = ProcessUtilities.outputExecutioner(
+                    "grep '^Quota' %s 2>/dev/null || true" % conf_path, 'root', True)
+                if quota_final and 'yes' in quota_final.lower():
+                    # Invalid line still present - restore backup and do not restart
+                    ProcessUtilities.executioner(
+                        "ls -t /etc/pure-ftpd/pure-ftpd.conf.backup.* 2>/dev/null | head -1 | xargs -r -I {} cp {} /etc/pure-ftpd/pure-ftpd.conf",
+                        'root', True)
+                    logging.CyberCPLogFileWriter.writeToFile("Aborted: invalid Quota line (yes) still present; restored backup")
+                    msg = ('Pure-FTPd config was invalid (Quota line). Restored previous config. '
+                           'Please deploy the latest panel code from v2.5.5-dev and run the one-time fix on the server: '
+                           'sudo sed -i "s/^Quota.*/Quota 100000:100000/" /etc/pure-ftpd/pure-ftpd.conf && sudo systemctl start pure-ftpd')
+                    data_ret = {'status': 0, 'message': msg}
+                    return HttpResponse(json.dumps(data_ret), content_type='application/json')
+            except Exception:
+                pass
+
+            # Restart Pure-FTPd
+            logging.CyberCPLogFileWriter.writeToFile("Restarting Pure-FTPd service (%s)..." % ftp_service)
+            ProcessUtilities.executioner('systemctl restart %s' % ftp_service, 'root', True)
+            time.sleep(1)
+            
+            try:
+                output = ProcessUtilities.outputExecutioner('systemctl is-active %s' % ftp_service, 'root', True)
+                is_active = (output and output.strip() == 'active')
+            except Exception:
+                is_active = False
+            
+            if is_active:
+                logging.CyberCPLogFileWriter.writeToFile("FTP quota system enabled successfully")
+                data_ret = {'status': 1, 'message': 'FTP quota system enabled successfully'}
+            else:
+                # Restore backup so service can be started again from Services page
+                try:
+                    ProcessUtilities.executioner(
+                        "ls -t /etc/pure-ftpd/pure-ftpd.conf.backup.* 2>/dev/null | head -1 | xargs -r -I {} cp {} /etc/pure-ftpd/pure-ftpd.conf",
+                        'root', True)
+                    ProcessUtilities.executioner(
+                        "ls -t /etc/pure-ftpd/pureftpd-mysql.conf.backup.* 2>/dev/null | head -1 | xargs -r -I {} cp {} /etc/pure-ftpd/pureftpd-mysql.conf",
+                        'root', True)
+                    logging.CyberCPLogFileWriter.writeToFile("Restored pure-ftpd config backup after failed start")
+                except Exception:
+                    pass
+                # Capture failure reason for the user
+                try:
+                    status_out = ProcessUtilities.outputExecutioner(
+                        'systemctl status %s --no-pager -l 2>&1 | head -20' % ftp_service, 'root', True)
+                    status_preview = (status_out or '').strip().replace('\n', ' ')[:300]
+                except Exception:
+                    status_preview = ''
+                logging.CyberCPLogFileWriter.writeToFile("Pure-FTPd service not active after restart")
+                msg = 'Pure-FTPd did not start. Config was restored. Run: systemctl status %s' % ftp_service
+                if status_preview:
+                    msg += '. ' + status_preview
+                data_ret = {'status': 0, 'message': msg}
+            
+            return HttpResponse(json.dumps(data_ret), content_type='application/json')
             
         except Exception as e:
-            data_ret = {
-                'status': 0,
-                'message': f'Error enabling FTP quota: {str(e)}'
-            }
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
+            logging.CyberCPLogFileWriter.writeToFile("Error enabling FTP quota: %s" % str(e))
+            data_ret = {'status': 0, 'message': 'Error enabling FTP quota: %s' % str(e)}
+            return HttpResponse(json.dumps(data_ret), content_type='application/json')
 
     def getFTPQuotas(self, userID=None, data=None):
         """

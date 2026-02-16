@@ -10,6 +10,8 @@
 <span style="display: none" id="password">{{ password }}</span>
 <form style="display: none" name="loginform" id="loginform" action="/phpmyadmin/phpmyadminsignin.php" method="post">
     {% csrf_token %}
+    <input type="hidden" name="host" value="{{ host|default:'127.0.0.1' }}"/>
+    <input type="hidden" name="port" value="{{ port|default:'3306' }}"/>
     <p>
         <label for="user_login">Username or Email Address</label>
         <input type="text" name="username" id="user_login" class="input" value="" size="20" autocapitalize="off"/>

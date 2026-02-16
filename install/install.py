@@ -1,9 +1,17 @@
 import sys
+import os
+import re
+
+# Ensure install dir is on path for ols_binaries_config
+_install_dir = os.path.dirname(os.path.abspath(__file__))
+if _install_dir not in sys.path:
+    sys.path.insert(0, _install_dir)
+import ols_binaries_config
+
 import subprocess
 import shutil
 import installLog as logging
 import argparse
-import os
 import errno
 import shlex
 from firewallUtilities import FirewallUtilities
@@ -78,6 +86,47 @@ class preFlightsChecks:
     def is_debian_family(self):
         """Check if distro is Ubuntu or Debian 12"""
         return self.distro in [ubuntu, debian12]
+
+    def add_litespeed_repo(self):
+        """Add LiteSpeed repository so OpenLiteSpeed 1.8.5+ is available (repo.litespeed.sh)"""
+        try:
+            self.stdOut("Adding LiteSpeed repository for OpenLiteSpeed 1.8.5+...", 1)
+            cmd = 'wget -q -O - https://repo.litespeed.sh | bash'
+            ret = subprocess.run(cmd, shell=True, timeout=120, capture_output=True, universal_newlines=True)
+            if ret.returncode != 0 and ret.stderr:
+                self.stdOut(f"LiteSpeed repo script warning: {ret.stderr[:200]}", 1)
+            if ret.returncode == 0:
+                self.stdOut("LiteSpeed repository added", 1)
+                return True
+            # Non-fatal: distro openlitespeed may still be used
+            self.stdOut("Could not add LiteSpeed repo; using distro package", 1)
+            return False
+        except Exception as e:
+            self.stdOut(f"LiteSpeed repo add failed: {e}", 1)
+            return False
+
+    def get_installed_ols_version(self):
+        """Return installed OpenLiteSpeed version as (major, minor, patch) or None"""
+        try:
+            for binary in ('/usr/local/lsws/bin/lshttpd', '/usr/local/lsws/bin/openlitespeed'):
+                if not os.path.exists(binary):
+                    continue
+                result = subprocess.run(
+                    [binary, '-v'],
+                    capture_output=True,
+                    timeout=5,
+                    universal_newlines=True,
+                    env=dict(os.environ, PATH=os.environ.get('PATH', '/usr/bin:/bin'))
+                )
+                out = (result.stdout or '') + (result.stderr or '')
+                # e.g. "OpenLiteSpeed/1.8.5" or "1.8.5"
+                import re
+                m = re.search(r'(\d+)\.(\d+)\.(\d+)', out)
+                if m:
+                    return (int(m.group(1)), int(m.group(2)), int(m.group(3)))
+            return None
+        except Exception:
+            return None
     
     def detect_os_info(self):
         """Detect OS information for all supported platforms"""
@@ -364,48 +413,11 @@ class preFlightsChecks:
             except Exception as e:
                 self.stdOut("Warning: Could not remove compat packages: " + str(e), 0)
             
-            # Check if MariaDB is already installed before attempting installation
+            # Do NOT install MariaDB here with plain dnf (that would install distro default 10.11).
+            # installMySQL() runs later with the user's chosen version (--mariadb-version: 10.11, 11.8 or 12.1).
             is_installed, installed_version, major_minor = self.checkExistingMariaDB()
-            
             if is_installed:
-                self.stdOut(f"MariaDB/MySQL is already installed (version: {installed_version}), skipping installation", 1)
-                mariadb_installed = True
-            else:
-                # Install MariaDB with enhanced AlmaLinux 9.6 support
-                self.stdOut("Installing MariaDB for AlmaLinux 9.6...", 1)
-                
-                # Try multiple installation methods for maximum compatibility
-                mariadb_commands = [
-                    "dnf install -y mariadb-server mariadb-devel mariadb-client --skip-broken --nobest",
-                    "dnf install -y mariadb-server mariadb-devel mariadb-client --allowerasing",
-                    "dnf install -y mariadb-server mariadb-devel --skip-broken --nobest --allowerasing",
-                    "dnf install -y mariadb-server --skip-broken --nobest --allowerasing"
-                ]
-                
-                mariadb_installed = False
-                for cmd in mariadb_commands:
-                    try:
-                        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=300)
-                        if result.returncode == 0:
-                            mariadb_installed = True
-                            self.stdOut(f"MariaDB installed successfully with command: {cmd}", 1)
-                            break
-                    except subprocess.TimeoutExpired:
-                        self.stdOut(f"Timeout installing MariaDB with command: {cmd}", 0)
-                        continue
-                    except Exception as e:
-                        self.stdOut(f"Error installing MariaDB with command: {cmd} - {str(e)}", 0)
-                        continue
-                
-                if not mariadb_installed:
-                    self.stdOut("MariaDB installation failed, trying MySQL as fallback...", 0)
-                    try:
-                        command = "dnf install -y mysql-server mysql-devel --skip-broken --nobest --allowerasing"
-                        self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-                        self.stdOut("MySQL installed as fallback for MariaDB", 1)
-                        mariadb_installed = True
-                    except:
-                        self.stdOut("Both MariaDB and MySQL installation failed", 0)
+                self.stdOut(f"MariaDB/MySQL already installed (version: {installed_version}), skipping", 1)
             
             # Install additional required packages
             self.stdOut("Installing additional required packages...", 1)
@@ -474,7 +486,7 @@ class preFlightsChecks:
                 except Exception as e:
                     self.stdOut(f"Warning: Graphics library fixes failed: {str(e)}", 1)
             
-            # Install common dependencies
+            # Install common dependencies (conntrack-tools for firewall/SSH security connection termination)
             self.stdOut("Installing common RHEL dependencies...", 1)
             common_deps = [
                 'curl',
@@ -488,7 +500,8 @@ class preFlightsChecks:
                 'cmake',
                 'pcre2-devel',
                 'openssl-devel',
-                'zlib-devel'
+                'zlib-devel',
+                'conntrack-tools'
             ]
             
             for dep in common_deps:
@@ -694,7 +707,7 @@ class preFlightsChecks:
         try:
             self.stdOut("Applying Ubuntu-specific fixes...", 1)
             
-            # Install required dependencies
+            # Install required dependencies (conntrack for firewall/SSH security connection termination)
             self.stdOut("Installing Ubuntu dependencies...", 1)
             ubuntu_deps = [
                 'software-properties-common',
@@ -702,7 +715,8 @@ class preFlightsChecks:
                 'curl',
                 'wget',
                 'gnupg',
-                'lsb-release'
+                'lsb-release',
+                'conntrack'
             ]
             
             for dep in ubuntu_deps:
@@ -736,7 +750,7 @@ class preFlightsChecks:
         try:
             self.stdOut("Applying Debian-specific fixes...", 1)
             
-            # Install required dependencies
+            # Install required dependencies (conntrack for firewall/SSH security connection termination)
             self.stdOut("Installing Debian dependencies...", 1)
             debian_deps = [
                 'software-properties-common',
@@ -744,7 +758,8 @@ class preFlightsChecks:
                 'curl',
                 'wget',
                 'gnupg',
-                'lsb-release'
+                'lsb-release',
+                'conntrack'
             ]
             
             for dep in debian_deps:
@@ -1172,30 +1187,7 @@ class preFlightsChecks:
             platform = self.detectPlatform()
             self.stdOut(f"Detected platform: {platform}", 1)
 
-            # Platform-specific URLs and checksums (OpenLiteSpeed v1.8.4.1 - v2.0.5 Static Build)
-            # Module Build Date: December 28, 2025 - v2.2.0 Brute Force with Progressive Throttle
-            BINARY_CONFIGS = {
-                'rhel8': {
-                    'url': 'https://cyberpanel.net/openlitespeed-phpconfig-x86_64-rhel8-static',
-                    'sha256': '6ce688a237615102cc1603ee1999b3cede0ff3482d31e1f65705e92396d34b3a',
-                    'module_url': 'https://cyberpanel.net/binaries/rhel8/cyberpanel_ols.so',
-                    'module_sha256': '7c33d89c7fbcd3ed7b0422fee3f49b5e041713c2c2b7316a5774f6defa147572'
-                },
-                'rhel9': {
-                    'url': 'https://cyberpanel.net/openlitespeed-phpconfig-x86_64-rhel9-static',
-                    'sha256': '709093d99d5d3e789134c131893614968e17eefd9ade2200f811d9b076b2f02e',
-                    'module_url': 'https://cyberpanel.net/binaries/rhel9/cyberpanel_ols.so',
-                    'module_sha256': 'ae65337e2d13babc0c675bb4264d469daffa2efb7627c9bf39ac59e42e3ebede'
-                },
-                'ubuntu': {
-                    'url': 'https://cyberpanel.net/openlitespeed-phpconfig-x86_64-ubuntu-static',
-                    'sha256': '89aaf66474e78cb3c1666784e0e7a417550bd317e6ab148201bdc318d36710cb',
-                    'module_url': 'https://cyberpanel.net/binaries/ubuntu/cyberpanel_ols.so',
-                    'module_sha256': '62978ede1f174dd2885e5227a3d9cc463d0c27acd77cfc23743d7309ee0c54ea'
-                }
-            }
-
-            config = BINARY_CONFIGS.get(platform)
+            config = ols_binaries_config.BINARY_CONFIGS.get(platform)
             if not config:
                 self.stdOut(f"ERROR: No binaries available for platform {platform}", 1)
                 self.stdOut("Skipping custom binary installation", 1)
@@ -1325,6 +1317,24 @@ class preFlightsChecks:
                     self.stdOut("=" * 50, 1)
                     # Configure module after installation
                     self.configureCustomModule()
+                    # Enable Auto-SSL if not already configured
+                    conf_path = '/usr/local/lsws/conf/httpd_config.conf'
+                    try:
+                        if os.path.exists(conf_path):
+                            with open(conf_path, 'r') as f:
+                                content = f.read()
+                            if 'autoSSL' not in content:
+                                content = re.sub(
+                                    r'(adminEmails\s+\S+)',
+                                    r'\1\nautoSSL                   1\nacmeEmail                 admin@cyberpanel.net',
+                                    content,
+                                    count=1
+                                )
+                                with open(conf_path, 'w') as f:
+                                    f.write(content)
+                                self.stdOut("Auto-SSL enabled in httpd_config.conf", 1)
+                    except Exception as e:
+                        self.stdOut(f"WARNING: Could not enable Auto-SSL: {e}", 1)
                     return True
 
             self.stdOut("ERROR: Installation verification failed", 1)
@@ -1381,16 +1391,20 @@ module cyberpanel_ols {
             self.stdOut("Installing LiteSpeed Web Server...", 1)
             
             if ent == 0:
-                # Install OpenLiteSpeed
-                self.stdOut("Installing OpenLiteSpeed...", 1)
-                if self.distro == ubuntu:
+                # Install OpenLiteSpeed 1.8.5+ from LiteSpeed repo when possible
+                self.stdOut("Installing OpenLiteSpeed (target 1.8.5+)...", 1)
+                self.add_litespeed_repo()
+                if self.distro == ubuntu or self.distro == debian12:
                     self.install_package('openlitespeed')
                 else:
                     self.install_package('openlitespeed')
-                
-                # Install custom binaries with PHP config support
-                # This replaces the standard binary with enhanced version
-                self.installCustomOLSBinaries()
+                # Use official OLS 1.8.5+ when available; only overlay custom binary if older
+                ols_ver = self.get_installed_ols_version()
+                if ols_ver and ols_ver >= (1, 8, 5):
+                    self.stdOut("Using official OpenLiteSpeed 1.8.5+ (no custom binary overlay)", 1)
+                else:
+                    # Install custom binaries with PHP config support (for pre-1.8.5 or when repo not used)
+                    self.installCustomOLSBinaries()
                 
                 # Configure OpenLiteSpeed
                 self.fix_ols_configs()
@@ -1486,19 +1500,18 @@ module cyberpanel_ols {
             return False
 
     def disableMariaDB12RepositoryIfNeeded(self):
-        """Disable MariaDB 12.1 repository if MariaDB 10.x is already installed to prevent upgrade attempts"""
+        """Disable MariaDB 12.x repository if MariaDB 10.x is already installed so 11.8 LTS upgrade can be used"""
         try:
             is_installed, installed_version, major_minor = self.checkExistingMariaDB()
             
             if is_installed and major_minor and major_minor != "unknown":
                 try:
                     major_ver = float(major_minor)
-                    if major_ver < 12.0:
-                        # MariaDB 10.x is installed, disable 12.1 repository to prevent upgrade attempts
-                        self.stdOut(f"MariaDB {installed_version} detected, disabling MariaDB 12.1 repository to prevent upgrade conflicts", 1)
-                        logging.InstallLog.writeToFile(f"MariaDB {installed_version} detected, disabling MariaDB 12.1 repository")
+                    if major_ver < 11.0:
+                        # MariaDB 10.x is installed, disable 12.x repo so we use 11.8 LTS
+                        self.stdOut(f"MariaDB {installed_version} detected, disabling MariaDB 12.x repository", 1)
+                        logging.InstallLog.writeToFile(f"MariaDB {installed_version} detected, disabling MariaDB 12.x repository")
                         
-                        # Disable MariaDB 12.1 repository - check all possible repo file locations
                         repo_files = [
                             '/etc/yum.repos.d/mariadb-main.repo',
                             '/etc/yum.repos.d/mariadb.repo',
@@ -1655,7 +1668,7 @@ module cyberpanel_ols {
             return False, None, None
 
     def _attemptMariaDBUpgrade(self):
-        """Attempt to upgrade MariaDB to 12.1. Returns True if successful, False otherwise."""
+        """Attempt to upgrade MariaDB to 11.8 LTS. Returns True if successful, False otherwise."""
         try:
             if self.distro == ubuntu:
                 # Ubuntu MariaDB upgrade
@@ -1674,8 +1687,8 @@ module cyberpanel_ols {
                     logging.InstallLog.writeToFile(f"Failed to download MariaDB keyring: {result.stderr}")
                     return False
                 
-                # Setup MariaDB 12.1 repository
-                command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=12.1'
+                # Setup MariaDB 11.8 LTS repository
+                command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=11.8'
                 result = subprocess.run(command, shell=True, capture_output=True, universal_newlines=True)
                 if result.returncode != 0:
                     logging.InstallLog.writeToFile(f"Failed to setup MariaDB repository: {result.stderr}")
@@ -1702,15 +1715,14 @@ module cyberpanel_ols {
                 return True
             else:
                 # RHEL-based MariaDB upgrade
-                # Setup MariaDB 12.1 repository
-                command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=12.1'
+                # Setup MariaDB 11.8 LTS repository
+                command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=11.8'
                 result = subprocess.run(command, shell=True, capture_output=True, universal_newlines=True)
                 if result.returncode != 0:
                     logging.InstallLog.writeToFile(f"Failed to setup MariaDB repository: {result.stderr}")
                     return False
                 
-                # Attempt to install MariaDB 12.1
-                # Use --allowerasing to allow package replacements if needed
+                # Attempt to install MariaDB 11.8 LTS (repo already set above)
                 command = 'dnf install mariadb-server mariadb-devel mariadb-client-utils -y --allowerasing'
                 result = subprocess.run(command, shell=True, capture_output=True, universal_newlines=True)
                 if result.returncode != 0:
@@ -1742,26 +1754,26 @@ module cyberpanel_ols {
                 if major_minor and major_minor != "unknown":
                     try:
                         major_ver = float(major_minor)
-                        if major_ver < 12.0:
+                        if major_ver < 11.0:
                             should_try_upgrade = True
-                            self.stdOut(f"Existing MariaDB {major_minor} detected. Attempting to upgrade to MariaDB 12.1...", 1)
+                            self.stdOut(f"Existing MariaDB {major_minor} detected. Attempting to upgrade to MariaDB 11.8 LTS...", 1)
                             self.stdOut("If upgrade fails, we will use the existing MariaDB installation.", 1)
                     except (ValueError, TypeError):
                         pass
                 
-                # If MariaDB 10.x is installed, try to upgrade to 12.1 first
+                # If MariaDB 10.x is installed, try to upgrade to 11.8 LTS first
                 if should_try_upgrade:
                     try:
-                        self.stdOut("Attempting to install MariaDB 12.1...", 1)
+                        self.stdOut("Attempting to install MariaDB 11.8 LTS...", 1)
                         upgrade_success = self._attemptMariaDBUpgrade()
                         if upgrade_success:
-                            self.stdOut("✅ Successfully upgraded to MariaDB 12.1", 1)
+                            self.stdOut("✅ Successfully upgraded to MariaDB 11.8 LTS", 1)
                             self.startMariaDB()
                             self.changeMYSQLRootPassword()
                             self.fixMariaDB()
                             return True
                         else:
-                            self.stdOut("⚠️  MariaDB 12.1 upgrade failed, using existing MariaDB installation", 1)
+                            self.stdOut("⚠️  MariaDB 11.8 LTS upgrade failed, using existing MariaDB installation", 1)
                             self.startMariaDB()
                             return True
                     except Exception as upgrade_error:
@@ -1812,7 +1824,7 @@ module cyberpanel_ols {
             else:
                 # RHEL-based MariaDB installation
                 # CRITICAL: Remove conflicting MariaDB compat packages first
-                # These packages from MariaDB 12.1 can conflict with MariaDB 10.11
+                # These packages from MariaDB 12.x can conflict with 10.x/11.x
                 self.stdOut("Removing conflicting MariaDB compat packages...", 1)
                 try:
                     # Multiple aggressive removal attempts to ensure compat package is gone
@@ -1846,13 +1858,12 @@ module cyberpanel_ols {
                 
                 if is_installed:
                     self.stdOut(f"MariaDB/MySQL is already installed (version: {installed_version}), skipping installation", 1)
-                    # Don't set up 12.1 repository if 10.x is installed to avoid upgrade issues
+                    # Use existing if already on 10.x, 11.x or 12.x
                     if major_minor and major_minor != "unknown":
                         try:
                             major_ver = float(major_minor)
-                            if major_ver < 12.0:
-                                self.stdOut("Skipping MariaDB 12.1 repository setup to avoid upgrade conflicts", 1)
-                                self.stdOut("Using existing MariaDB installation", 1)
+                            if major_ver >= 10.0:
+                                self.stdOut("Using existing MariaDB installation (10.x/11.x/12.x)", 1)
                                 self.startMariaDB()
                                 self.changeMYSQLRootPassword()
                                 self.fixMariaDB()
@@ -1860,11 +1871,45 @@ module cyberpanel_ols {
                         except (ValueError, TypeError):
                             pass
                 
-                # Set up MariaDB 12.1 repository only if not already installed
-                command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version=12.1'
+                # Set up MariaDB repository only if not already installed (version from --mariadb-version: 10.11, 11.8 or 12.1)
+                mariadb_ver = getattr(preFlightsChecks, 'mariadb_version', '11.8')
+                command = f'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version={mariadb_ver}'
                 self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
-                
-                command = 'dnf install mariadb-server mariadb-devel mariadb-client-utils -y'
+                # Allow MariaDB-server to be installed: remove from dnf exclude if present (e.g. from previous run or cyberpanel.sh)
+                dnf_conf = '/etc/dnf/dnf.conf'
+                if os.path.exists(dnf_conf) and ('MariaDB-server' in open(dnf_conf).read()):
+                    try:
+                        with open(dnf_conf, 'r') as f:
+                            dnf_content = f.read()
+                        if 'MariaDB-server' in (dnf_content or '') and 'exclude=' in (dnf_content or ''):
+                            # Remove MariaDB-server and MariaDB-server* from exclude= line(s)
+                            def strip_mariadb_exclude(match):
+                                line = match.group(0)
+                                rest = re.sub(r'\bMariaDB-server\*?\s*', '', line).strip()
+                                if rest == 'exclude=' or rest == 'exclude':
+                                    return ''
+                                return rest.rstrip() + '\n'
+                            new_content = re.sub(r'exclude=[^\n]*', strip_mariadb_exclude, dnf_content)
+                            new_content = re.sub(r'\n\n+', '\n', new_content)
+                            if new_content != dnf_content:
+                                with open(dnf_conf, 'w') as f:
+                                    f.write(new_content)
+                                self.stdOut("Temporarily removed MariaDB-server from dnf exclude for installation", 1)
+                    except Exception as e:
+                        self.stdOut(f"Warning: Could not adjust dnf exclude: {e}", 1)
+                    # Fallback: use sed so exclude is cleared even if Python path failed
+                    if 'MariaDB-server' in open(dnf_conf).read():
+                        subprocess.run(
+                            "sed -i '/^exclude=/s/MariaDB-server\\*\\s*//g; /^exclude=/s/\\s*MariaDB-server\\*//g; /^exclude=\\s*$/d' " + dnf_conf,
+                            shell=True, timeout=5, capture_output=True
+                        )
+                        self.stdOut("Temporarily removed MariaDB-server from dnf exclude for installation (fallback)", 1)
+                # Install from official MariaDB repo (capitalized package names); --nobest for 10.11/11.8 on el9
+                mariadb_packages = 'MariaDB-server MariaDB-client MariaDB-backup MariaDB-devel'
+                if mariadb_ver in ('10.11', '11.8'):
+                    command = f'dnf install -y --nobest {mariadb_packages}'
+                else:
+                    command = f'dnf install -y {mariadb_packages}'
                 self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
             
             # Verify MariaDB was installed successfully before proceeding
@@ -2219,10 +2264,11 @@ module cyberpanel_ols {
                         if e.errno != errno.EEXIST:
                             raise
 
-            # Copy the PowerDNS configuration file
+            # Copy the PowerDNS configuration file (cwd may be temp dir with install/ subdir when run from cyberpanel.sh)
             source_file = os.path.join(self.cwd, "dns-one", "pdns.conf")
             if not os.path.exists(source_file):
-                # Try alternative location
+                source_file = os.path.join(self.cwd, "install", "dns-one", "pdns.conf")
+            if not os.path.exists(source_file):
                 source_file = os.path.join(self.cwd, "dns", "pdns.conf")
 
             if os.path.exists(source_file):
@@ -2763,6 +2809,13 @@ module cyberpanel_ols {
     # Using shared function from install_utils
     @staticmethod
     def call(command, distro, bracket, message, log=0, do_exit=0, code=os.EX_OK, shell=False):
+        # Fix missing /usr/local/CyberPanel/bin/python on install/upgrade (avoid FileNotFoundError)
+        if isinstance(command, str) and '/usr/local/CyberPanel/bin/python' in command:
+            if not os.path.isfile('/usr/local/CyberPanel/bin/python'):
+                fallback = '/usr/bin/python3' if os.path.isfile('/usr/bin/python3') else '/usr/local/bin/python3'
+                if os.path.isfile(fallback):
+                    command = command.replace('/usr/local/CyberPanel/bin/python', fallback, 1)
+                    shell = True
         return install_utils.call(command, distro, bracket, message, log, do_exit, code, shell)
 
     def checkIfSeLinuxDisabled(self):
@@ -3221,7 +3274,36 @@ password="%s"
 
         logging.InstallLog.writeToFile("settings.py updated!")
 
-        # self.setupVirtualEnv(self.distro)
+        # Create Python venv at /usr/local/CyberCP if missing (install.py run from temp dir does not run venvsetup.sh)
+        if not os.path.exists("/usr/local/CyberCP/bin/python"):
+            logging.InstallLog.writeToFile("Creating Python virtual environment at /usr/local/CyberCP...")
+            preFlightsChecks.stdOut("Creating Python virtual environment...")
+            try:
+                r = subprocess.run(
+                    [sys.executable or "python3", "-m", "venv", "/usr/local/CyberCP"],
+                    timeout=120, capture_output=True, text=True, cwd="/usr/local/CyberCP"
+                )
+                if r.returncode != 0:
+                    logging.InstallLog.writeToFile("venv create stderr: " + (r.stderr or "")[:500])
+                if r.returncode == 0 and os.path.exists("/usr/local/CyberCP/bin/pip"):
+                    req_file = "/usr/local/CyberCP/requirments.txt"
+                    if not os.path.exists(req_file):
+                        req_file = "/usr/local/CyberCP/requirements.txt"
+                    if os.path.exists(req_file):
+                        subprocess.run(
+                            ["/usr/local/CyberCP/bin/pip", "install", "-r", req_file, "--quiet"],
+                            timeout=600, cwd="/usr/local/CyberCP", capture_output=True
+                        )
+                    else:
+                        subprocess.run(
+                            ["/usr/local/CyberCP/bin/pip", "install", "Django", "PyMySQL", "requests", "cryptography", "psutil", "--quiet"],
+                            timeout=180, cwd="/usr/local/CyberCP", capture_output=True
+                        )
+                if os.path.exists("/usr/local/CyberCP/bin/python"):
+                    logging.InstallLog.writeToFile("Virtual environment created successfully")
+                    preFlightsChecks.stdOut("Virtual environment created", 1)
+            except Exception as e:
+                logging.InstallLog.writeToFile("Venv create warning: " + str(e))
 
         # Now run Django migrations since we're in /usr/local/CyberCP and database exists
         os.chdir("/usr/local/CyberCP")
@@ -3235,7 +3317,7 @@ password="%s"
         apps_with_migrations = [
             'loginSystem', 'packages', 'websiteFunctions', 'baseTemplate', 'userManagment',
             'dns', 'databases', 'ftp', 'filemanager', 'mailServer', 'emailPremium',
-            'emailMarketing', 'cloudAPI', 'containerization', 'IncBackups', 'CLManager',
+            'cloudAPI', 'containerization', 'IncBackups', 'CLManager',
             's3Backups', 'dockerManager', 'aiScanner', 'firewall', 'tuning', 'serverStatus',
             'serverLogs', 'backup', 'managePHP', 'manageSSL', 'api', 'manageServices',
             'pluginHolder', 'highAvailability', 'WebTerminal'
@@ -3257,46 +3339,70 @@ password="%s"
 
         logging.InstallLog.writeToFile("Migration cleanup completed")
 
-        # Ensure virtual environment is properly set up
-        logging.InstallLog.writeToFile("Ensuring virtual environment is properly set up...")
+        # Ensure virtual environment or system Python is available
+        logging.InstallLog.writeToFile("Ensuring Python is available for migrations...")
         if not self.ensureVirtualEnvironmentSetup():
-            logging.InstallLog.writeToFile("ERROR: Virtual environment setup failed!", 0)
-            preFlightsChecks.stdOut("ERROR: Virtual environment setup failed!", 0)
-            return False
+            logging.InstallLog.writeToFile("WARNING: No venv found; will try system Python", 1)
 
-        # Find the correct Python virtual environment path
+        # Find Python: use only system Python or CyberCP venv (never /usr/local/CyberPanel - often missing on fresh install)
         python_paths = [
-            "/usr/local/CyberPanel/bin/python",
-            "/usr/local/CyberCP/bin/python",
-            "/usr/local/CyberPanel-venv/bin/python"
+            "/usr/bin/python3",
+            "/usr/local/bin/python3",
         ]
-        
+        if sys.executable and sys.executable not in python_paths:
+            python_paths.append(sys.executable)
+        # Only add venv if it exists (avoid FileNotFoundError)
+        if os.path.isfile("/usr/local/CyberCP/bin/python"):
+            python_paths.append("/usr/local/CyberCP/bin/python")
+
         python_path = None
         for path in python_paths:
-            if os.path.exists(path):
-                python_path = path
-                logging.InstallLog.writeToFile(f"Found Python virtual environment at: {path}")
-                break
-        
+            if not path:
+                continue
+            try:
+                # Skip broken symlinks: resolve and require executable file
+                if os.path.lexists(path):
+                    resolved = os.path.realpath(path)
+                    if not os.path.isfile(resolved) or not os.access(resolved, os.X_OK):
+                        continue
+                elif not os.path.isfile(path) or not os.access(path, os.X_OK):
+                    continue
+            except OSError:
+                continue
+            try:
+                r = subprocess.run([path, "--version"], capture_output=True, text=True, timeout=5)
+                if r.returncode == 0:
+                    python_path = path
+                    logging.InstallLog.writeToFile(f"Using Python at: {path}")
+                    break
+            except (FileNotFoundError, OSError, subprocess.SubprocessError):
+                continue
+
         if not python_path:
-            logging.InstallLog.writeToFile("ERROR: No Python virtual environment found!", 0)
-            preFlightsChecks.stdOut("ERROR: No Python virtual environment found!", 0)
+            logging.InstallLog.writeToFile("ERROR: No working Python found for migrations!", 0)
+            preFlightsChecks.stdOut("ERROR: No working Python found!", 0)
+            return False
+
+        manage_py = "/usr/local/CyberCP/manage.py"
+        if not os.path.isfile(manage_py):
+            logging.InstallLog.writeToFile("ERROR: %s not found" % manage_py, 0)
+            preFlightsChecks.stdOut("ERROR: manage.py not found at %s" % manage_py, 0)
             return False
 
         # Create migrations in dependency order - loginSystem first since other apps depend on it
         logging.InstallLog.writeToFile("Creating migrations for loginSystem first...")
-        command = f"{python_path} manage.py makemigrations loginSystem --noinput"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+        command = f"{python_path} {manage_py} makemigrations loginSystem --noinput"
+        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
         # Now create migrations for all other apps
         logging.InstallLog.writeToFile("Creating migrations for all other apps...")
-        command = f"{python_path} manage.py makemigrations --noinput"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+        command = f"{python_path} {manage_py} makemigrations --noinput"
+        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
         # Apply all migrations
         logging.InstallLog.writeToFile("Applying all migrations...")
-        command = f"{python_path} manage.py migrate --noinput"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+        command = f"{python_path} {manage_py} migrate --noinput"
+        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
         logging.InstallLog.writeToFile("Django migrations completed successfully!")
         preFlightsChecks.stdOut("Django migrations completed successfully!")
@@ -3307,8 +3413,8 @@ password="%s"
         # Download CDN libraries before collectstatic runs
         self.downloadCDNLibraries()
 
-        command = f"{python_path} manage.py collectstatic --noinput --clear"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+        command = f"{python_path} {manage_py} collectstatic --noinput --clear"
+        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
         ## Moving static content to lscpd location
         command = 'mv static /usr/local/CyberCP/public/'
@@ -3492,7 +3598,7 @@ class Migration(migrations.Migration):
         command = "chown -R root:root /usr/local/lscp"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop"
+        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         command = "chmod 700 /usr/local/CyberCP/cli/cyberPanel.py"
@@ -3683,24 +3789,54 @@ class Migration(migrations.Migration):
 
     def download_install_phpmyadmin(self):
         try:
-
             if not os.path.exists("/usr/local/CyberCP/public"):
                 os.mkdir("/usr/local/CyberCP/public")
+            try:
+                shutil.rmtree("/usr/local/CyberCP/public/phpmyadmin")
+            except Exception:
+                pass
 
-            command = 'wget -O /usr/local/CyberCP/public/phpmyadmin.zip https://github.com/usmannasir/cyberpanel/raw/stable/phpmyadmin.zip'
+            # Resolve phpMyAdmin version (same as upgrade path)
+            phpmyadmin_version = '5.2.3'
+            try:
+                from plogical.versionFetcher import get_latest_phpmyadmin_version
+                latest_version = get_latest_phpmyadmin_version()
+                if latest_version and latest_version != phpmyadmin_version:
+                    self.stdOut(f"Using latest phpMyAdmin version: {latest_version}", 1)
+                    phpmyadmin_version = latest_version
+                else:
+                    self.stdOut(f"Using fallback phpMyAdmin version: {phpmyadmin_version}", 1)
+            except Exception as e:
+                self.stdOut(f"Failed to fetch latest phpMyAdmin version, using fallback: {e}", 1)
 
-            preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
+            self.stdOut("Installing phpMyAdmin...", 1)
+            tarball = '/usr/local/CyberCP/public/phpmyadmin.tar.gz'
+            command = (
+                f'wget -q -O {tarball} '
+                f'https://files.phpmyadmin.net/phpMyAdmin/{phpmyadmin_version}/phpMyAdmin-{phpmyadmin_version}-all-languages.tar.gz'
+            )
+            preFlightsChecks.call(command, self.distro, f'[download_install_phpmyadmin] {phpmyadmin_version}',
                                   command, 1, 0, os.EX_OSERR)
-
-            command = 'unzip /usr/local/CyberCP/public/phpmyadmin.zip -d /usr/local/CyberCP/public'
-            preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
+            if not os.path.isfile(tarball) or os.path.getsize(tarball) < 1000000:
+                raise RuntimeError('phpMyAdmin download failed or file too small')
+            command = 'tar -xzf /usr/local/CyberCP/public/phpmyadmin.tar.gz -C /usr/local/CyberCP/public/'
+            preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin] extract',
                                   command, 1, 0, os.EX_OSERR)
-
-            command = 'mv /usr/local/CyberCP/public/phpMyAdmin-*-all-languages /usr/local/CyberCP/public/phpmyadmin'
-            subprocess.call(command, shell=True)
-
-            command = 'rm -f /usr/local/CyberCP/public/phpmyadmin.zip'
-            preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
+            import glob
+            extracted = glob.glob('/usr/local/CyberCP/public/phpMyAdmin-*-all-languages')
+            if not extracted:
+                extracted = glob.glob('/usr/local/CyberCP/public/phpMyAdmin-*')
+            if extracted:
+                if os.path.exists('/usr/local/CyberCP/public/phpmyadmin'):
+                    shutil.rmtree('/usr/local/CyberCP/public/phpmyadmin')
+                os.rename(extracted[0], '/usr/local/CyberCP/public/phpmyadmin')
+            else:
+                command = 'mv /usr/local/CyberCP/public/phpMyAdmin-*-all-languages /usr/local/CyberCP/public/phpmyadmin'
+                subprocess.call(command, shell=True)
+            if not os.path.isdir('/usr/local/CyberCP/public/phpmyadmin'):
+                raise RuntimeError('phpMyAdmin directory was not created after extract/mv')
+            command = 'rm -f /usr/local/CyberCP/public/phpmyadmin.tar.gz'
+            preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin] cleanup',
                                   command, 1, 0, os.EX_OSERR)
 
             ## Write secret phrase
@@ -4450,15 +4586,15 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
             command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/snappymail/data || true"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            command = "mkdir -p /usr/local/lscp/cyberpanel/rainloop/data"
+            command = "mkdir -p /usr/local/lscp/cyberpanel/snappymail/data"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             ### Enable sub-folders
 
-            command = "mkdir -p /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/"
+            command = "mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-#             labsPath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
+#             labsPath = '/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/application.ini'
 #
 #             labsData = """[labs]
 # imap_folder_list_limit = 0
@@ -4479,7 +4615,7 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
 #             for items in data:
 #                 if items.find("$sCustomDataPath = '';") > -1:
 #                     writeToFile.writelines(
-#                         "			$sCustomDataPath = '/usr/local/lscp/cyberpanel/rainloop/data';\n")
+#                         "			$sCustomDataPath = '/usr/local/lscp/cyberpanel/snappymail/data';\n")
 #                 else:
 #                     writeToFile.writelines(items)
 #
@@ -4490,7 +4626,7 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
 #
 #             if os.path.exists(includeFileOldPath):
 #                 writeToFile = open(includeFileOldPath, 'a')
-#                 writeToFile.write("\ndefine('APP_DATA_FOLDER_PATH', '/usr/local/lscp/cyberpanel/rainloop/data/');\n")
+#                 writeToFile.write("\ndefine('APP_DATA_FOLDER_PATH', '/usr/local/lscp/cyberpanel/snappymail/data/');\n")
 #                 writeToFile.close()
 #
 #             command = 'mv %s %s' % (includeFileOldPath, includeFileNewPath)
@@ -4502,22 +4638,22 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
 #
 #             ### now download and install actual plugin
 #
-#             command = f'mkdir /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
+#             command = f'mkdir /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/plugins/mailbox-detect'
 #             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 #
-#             command = f'chmod 700 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
+#             command = f'chmod 700 /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/plugins/mailbox-detect'
 #             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 #
-#             command = f'chmod 700 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
+#             command = f'chmod 700 /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/plugins/mailbox-detect'
 #             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 #
-#             command = f'wget -O /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php https://raw.githubusercontent.com/the-djmaze/snappymail/master/plugins/mailbox-detect/index.php'
+#             command = f'wget -O /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/plugins/mailbox-detect/index.php https://raw.githubusercontent.com/the-djmaze/snappymail/master/plugins/mailbox-detect/index.php'
 #             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 #
-#             command = f'chmod 644 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
+#             command = f'chmod 644 /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/plugins/mailbox-detect/index.php'
 #             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 #
-#             command = f'chown lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
+#             command = f'chown lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/plugins/mailbox-detect/index.php'
 #             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 #
 #             ### Enable plugins and enable mailbox creation plugin
@@ -4541,7 +4677,7 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
 #             WriteToFile.close()
 #
 #             ## enable auto create in the enabled plugin
-#             PluginsFilePath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/plugin-mailbox-detect.json'
+#             PluginsFilePath = '/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/plugin-mailbox-detect.json'
 #
 #             WriteToFile = open(PluginsFilePath, 'w')
 #             WriteToFile.write("""{
@@ -4897,8 +5033,8 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
 
             # Determine the correct Python path
             python_paths = [
-                "/usr/local/CyberPanel/bin/python",
                 "/usr/local/CyberCP/bin/python",
+                "/usr/local/CyberPanel/bin/python",
                 "/usr/bin/python3",
                 "/usr/local/bin/python3"
             ]
@@ -4967,7 +5103,7 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
     def ensureVirtualEnvironmentSetup(self):
         """Ensure virtual environment is properly set up and accessible"""
         try:
-            # Check multiple possible virtual environment locations
+            # Check multiple possible virtual environment locations (prefer CyberCP - app path)
             venv_paths = [
                 '/usr/local/CyberCP/bin/python',
                 '/usr/local/CyberPanel/bin/python',
@@ -5018,8 +5154,8 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
             
             # Determine the correct Python path
             python_paths = [
-                "/usr/local/CyberPanel/bin/python",
                 "/usr/local/CyberCP/bin/python",
+                "/usr/local/CyberPanel/bin/python",
                 "/usr/bin/python3",
                 "/usr/local/bin/python3"
             ]
@@ -5169,17 +5305,20 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
 
             cronFile = open(cronPath, "w")
 
-            # Randomize acme.sh cron schedule to avoid traffic spikes to Let's Encrypt
-            # Generate random hour (0-23) and minute (0-59) for each installation
+            # Randomize acme.sh and renew.py cron schedules to avoid traffic spikes to Let's Encrypt
+            # Each installation gets a random day (0-6 Sun-Sat), hour, and minute to spread load
             acme_hour = random.randint(0, 23)
             acme_minute = random.randint(0, 59)
+            renew_weekday = random.randint(0, 6)  # 0=Sun, 1=Mon, ..., 6=Sat
+            renew_hour = random.randint(0, 23)
+            renew_minute = random.randint(0, 59)
 
             content = """
 0 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/findBWUsage.py >/dev/null 2>&1
 0 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py hourlyCleanup >/dev/null 2>&1
 0 0 1 * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py monthlyCleanup >/dev/null 2>&1
 0 2 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/upgradeCritical.py >/dev/null 2>&1
-0 0 * * 4 /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew.py >/dev/null 2>&1
+%d %d * * %d /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew.py >/dev/null 2>&1
 %d %d * * * "/root/.acme.sh"/acme.sh --cron --home "/root/.acme.sh" > /dev/null
 0 0 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Daily
 0 0 * * 0 /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Weekly
@@ -5193,7 +5332,7 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
 0 0 * * 0 /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py '1 Week'
 
 */3 * * * * if ! find /home/*/public_html/ -maxdepth 2 -type f -newer /usr/local/lsws/cgid -name '.htaccess' -exec false {} +; then /usr/local/lsws/bin/lswsctrl restart; fi
-""" % (acme_minute, acme_hour)
+""" % (renew_minute, renew_hour, renew_weekday, acme_minute, acme_hour)
 
             cronFile.write(content)
             cronFile.close()
@@ -5230,12 +5369,36 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
     def install_default_keys(self):
         try:
             path = "/root/.ssh"
+            key_path = "/root/.ssh/cyberpanel"
+            key_pub = "/root/.ssh/cyberpanel.pub"
 
             if not os.path.exists(path):
                 os.mkdir(path)
 
+            # Remove existing key files so ssh-keygen never prompts "Overwrite (y/n)?"
+            # Use shell rm -f so removal is reliable (avoids os.remove permission/state issues)
+            subprocess.run(
+                "rm -f /root/.ssh/cyberpanel /root/.ssh/cyberpanel.pub",
+                shell=True,
+                timeout=5,
+                capture_output=True,
+            )
+
+            # Run ssh-keygen with stdin=input so we never block on "Overwrite (y/n)?"
             command = "ssh-keygen -f /root/.ssh/cyberpanel -t rsa -N ''"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            preFlightsChecks.stdOut("Running: %s" % command, 1)
+            res = subprocess.run(
+                ["ssh-keygen", "-f", "/root/.ssh/cyberpanel", "-t", "rsa", "-N", ""],
+                stdin=subprocess.PIPE,
+                input=b"y\n",
+                timeout=30,
+                capture_output=True,
+            )
+            if res.returncode != 0:
+                err = (res.stderr or b"").decode("utf-8", errors="replace").strip()
+                preFlightsChecks.stdOut("[ERROR] ssh-keygen failed (return %s). %s" % (res.returncode, err), 1)
+                return 0
+            preFlightsChecks.stdOut("Successfully ran: %s." % command, 1)
 
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [install_default_keys]")
@@ -5625,11 +5788,22 @@ milter_default_action = accept
 
             os.chdir(self.cwd)
 
-            command = "chmod +x composer.sh"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            # Download composer.sh to a known path so chmod never fails with "cannot access 'composer.sh'"
+            composer_sh = "/tmp/composer.sh"
+            if not os.path.isfile(composer_sh):
+                command = "wget -q https://cyberpanel.sh/composer.sh -O " + composer_sh
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            if not os.path.isfile(composer_sh):
+                command = "curl -sSL https://cyberpanel.sh/composer.sh -o " + composer_sh
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            command = "./composer.sh"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            if os.path.isfile(composer_sh):
+                command = "chmod +x " + composer_sh
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                command = "bash " + composer_sh
+                preFlightsChecks.call(command, self.distro, "composer.sh", command, 1, 0, os.EX_OSERR, True)
+            else:
+                logging.InstallLog.writeToFile("composer.sh download failed, skipping [setupPHPAndComposer]", 0)
 
         except OSError as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [setupPHPAndComposer]")
@@ -6097,8 +6271,10 @@ vmail
                 dnsPath = "/etc/powerdns/pdns.conf"
                 os.makedirs("/etc/powerdns", exist_ok=True)
 
-            # Copy the PowerDNS configuration file
+            # Copy the PowerDNS configuration file (cwd may be temp dir with install/ subdir)
             source_file = os.path.join(self.cwd, "dns-one", "pdns.conf")
+            if not os.path.exists(source_file):
+                source_file = os.path.join(self.cwd, "install", "dns-one", "pdns.conf")
             if not os.path.exists(source_file):
                 source_file = os.path.join(self.cwd, "dns", "pdns.conf")
 
@@ -6412,8 +6588,14 @@ def main():
     parser.add_argument('--mysqluser', help='MySQL user if remote is chosen.')
     parser.add_argument('--mysqlpassword', help='MySQL password if remote is chosen.')
     parser.add_argument('--mysqlport', help='MySQL port if remote is chosen.')
+    parser.add_argument('--mariadb-version', default='11.8', help='MariaDB version: 10.11, 11.8 (LTS, default) or 12.1')
 
     args = parser.parse_args()
+    # Normalize and validate MariaDB version choice (default 11.8)
+    mariadb_ver = (getattr(args, 'mariadb_version', None) or '11.8').strip()
+    if mariadb_ver not in ('10.11', '11.8', '12.1'):
+        mariadb_ver = '11.8'
+    preFlightsChecks.mariadb_version = mariadb_ver
 
     logging.InstallLog.ServerIP = args.publicip
     logging.InstallLog.writeToFile("Starting CyberPanel installation..,10")

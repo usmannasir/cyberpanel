@@ -294,6 +294,11 @@ def fetchDetailsPHPMYAdmin(request):
                     data = {}
                     data['userName'] = mysqluser
                     data['password'] = password
+                    # Use 127.0.0.1 so phpMyAdmin connects via TCP (port 3306), same as main MariaDB
+                    data['host'] = jsonData.get('mysqlhost', '127.0.0.1') or '127.0.0.1'
+                    if data['host'] == 'localhost':
+                        data['host'] = '127.0.0.1'
+                    data['port'] = str(jsonData.get('mysqlport', 3306))
 
                     proc = httpProc(request, 'databases/AutoLogin.html',
                                     data, 'admin')
@@ -309,6 +314,8 @@ def fetchDetailsPHPMYAdmin(request):
                     data = {}
                     data['userName'] = 'root'
                     data['password'] = password
+                    data['host'] = '127.0.0.1'
+                    data['port'] = '3306'
                     # return redirect(returnURL)
 
                     proc = httpProc(request, 'databases/AutoLogin.html',
@@ -333,6 +340,8 @@ def fetchDetailsPHPMYAdmin(request):
             data = {}
             data['userName'] = admin.userName
             data['password'] = password.decode()
+            data['host'] = '127.0.0.1'
+            data['port'] = '3306'
             # return redirect(returnURL)
 
             proc = httpProc(request, 'databases/AutoLogin.html',
@@ -381,17 +390,18 @@ def UpgradeMySQL(request):
 def getMysqlstatus(request):
     try:
         userID = request.session['userID']
-        finalData = mysqlUtilities.showStatus()
-
         currentACL = ACLManager.loadedACL(userID)
 
-        if currentACL['admin'] == 1:
-            pass
-        else:
+        if currentACL['admin'] != 1:
             return ACLManager.loadErrorJson('FilemanagerAdmin', 0)
 
-        finalData = json.dumps(finalData)
-        return HttpResponse(finalData)
+        finalData = mysqlUtilities.showStatus()
+        if finalData == 0:
+            finalData = {'status': 0, 'error_message': 'Could not connect to MySQL or fetch status.'}
+        else:
+            finalData.setdefault('status', 1)
+        body = json.dumps(finalData)
+        return HttpResponse(body, content_type='application/json')
 
     except KeyError:
         return redirect(loadLoginPage)

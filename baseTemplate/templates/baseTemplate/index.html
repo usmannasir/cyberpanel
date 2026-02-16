@@ -1,6 +1,6 @@
 {% load i18n %}
 {% get_current_language as LANGUAGE_CODE %}
-{% with CP_VERSION="2.4.4.1" %}
+{% with CP_VERSION=CYBERPANEL_FULL_VERSION|default:"2.5.5.dev" %}
 <!DOCTYPE html>
 <html lang="en" ng-app="CyberCP">
 <head>
@@ -26,29 +26,25 @@
     <!-- Readability Fixes CSS -->
     <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/readability-fixes.css' %}?v={{ CP_VERSION }}">
     
-    <!-- Core Scripts (data-cfasync=false prevents Cloudflare Rocket Loader from breaking load order) -->
+    <!-- Core Scripts: Angular + system-status FIRST so dashboard works even when CDN/Tracking Prevention blocks jQuery/Bootstrap -->
     <script src="{% static 'baseTemplate/angularjs.1.6.5.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'baseTemplate/custom-js/system-status.js' %}?v={{ CP_VERSION }}&dashboard=3" data-cfasync="false"></script>
     <script src="https://code.jquery.com/jquery-2.2.4.min.js" data-cfasync="false"></script>
-    <!-- Bootstrap JavaScript -->
-
     <script src="{% static 'baseTemplate/assets/bootstrap/js/bootstrap.min.js' %}?v={{ CP_VERSION }}"></script>
     <script src="{% static 'baseTemplate/bootstrap-toggle.min.js' %}?v={{ CP_VERSION }}"></script>
     <script src="{% static 'baseTemplate/custom-js/qrious.min.js' %}?v={{ CP_VERSION }}"></script>
-    <script src="{% static 'baseTemplate/custom-js/system-status.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'baseTemplate/custom-js/chart.umd.min.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Chart.js -->
-    <script src="{% static 'baseTemplate/custom-js/chart.umd.min.js' %}?v={{ CP_VERSION }}"></script>
     
     <!-- PNotify (data-cfasync=false ensures it loads before controllers that use it) -->
     <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/custom-js/pnotify.custom.min.css' %}?v={{ CP_VERSION }}">
     <script src="{% static 'baseTemplate/custom-js/pnotify.custom.min.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     
-    <!-- Select2 (required by FTP create account; load after jQuery; exclude from Rocket Loader to preserve order) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.full.min.js" data-cfasync="false"></script>
+    <!-- Select2 (required by FTP create account; local copy avoids CDN Tracking Prevention blocking) -->
+    <link rel="stylesheet" href="{% static 'baseTemplate/vendor/select2/select2.min.css' %}?v={{ CP_VERSION }}">
+    <script src="{% static 'baseTemplate/vendor/select2/select2.full.min.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     
     <!-- Modern Design System -->
     <style>
@@ -297,38 +293,51 @@
             align-items: center;
             justify-content: center;
         }
+        /* Notification dropdown: always light panel with dark text so readable in both light and dark mode */
         .notification-center-dropdown {
             position: absolute;
             top: calc(100% + 10px);
             right: 0;
-            background: white;
-            border: 1px solid var(--border-color);
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
             border-radius: 16px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
             width: 520px;
             max-width: calc(100vw - 40px);
             max-height: 600px;
-            overflow-y: auto;
-            z-index: 10000;
             display: none;
+            flex-direction: column;
+            z-index: 10000;
+            overflow: hidden;
+            min-height: 0;
         }
-        .notification-center-dropdown.show { display: block; }
-        .notification-center-header {
+        .notification-center-dropdown.show { display: flex; }
+        .notification-center-dropdown .notification-center-header {
             padding: 1.25rem 1.5rem;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid #e5e7eb;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-shrink: 0;
         }
-        .notification-center-header h3 { margin: 0; font-size: 1.25rem; font-weight: 700; }
-        .notification-center-list { padding: 1rem; }
-        .notification-center-empty { color: var(--text-secondary); padding: 1rem; }
+        .notification-center-dropdown .notification-center-header h3 { margin: 0; font-size: 1.25rem; font-weight: 700; color: #111827; }
+        .notification-center-list {
+            padding: 1rem;
+            flex: 1 1 0;
+            min-height: 0;
+            max-height: 480px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+        #notification-center-dropdown .notification-center-empty { color: #4b5563; padding: 1rem; }
         .notification-center-item {
             padding: 1.5rem;
-            border: 1px solid var(--border-color);
+            border: 1px solid #e5e7eb;
             border-radius: 12px;
             margin-bottom: 1rem;
-            background: white;
+            background: #ffffff;
+            overflow: visible;
         }
         .notification-center-item.dismissed { opacity: 0.7; background: #f9fafb; }
         .notification-center-item-title {
@@ -337,36 +346,69 @@
             display: flex;
             align-items: center;
             gap: 0.75rem;
+            color: #111827;
         }
         .notification-center-item-title .dismissed-badge {
             font-size: 0.75rem;
-            color: #6b7280;
+            color: #374151;
             margin-left: auto;
             padding: 0.25rem 0.5rem;
-            background: #f3f4f6;
+            background: #e5e7eb;
             border-radius: 6px;
         }
-        .notification-center-item-text { color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1rem; line-height: 1.6; }
-        .notification-center-item-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
-        .notification-center-item-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: white;
-            background: linear-gradient(135deg, var(--accent-color) 0%, #6d6bd4 100%);
-            text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 600;
-            padding: 0.75rem 1.5rem;
-            border-radius: 10px;
+        #notification-center-dropdown .notification-center-item-text { color: #4b5563; font-size: 0.95rem; margin-bottom: 1rem; line-height: 1.6; }
+        #notification-center-dropdown .notification-center-item-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            align-items: flex-start;
+            margin-top: 0.75rem;
+            width: 100%;
         }
-        .notification-center-item-link-secondary {
+        #notification-center-dropdown .notification-center-item-actions .notification-center-item-link {
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
-            color: var(--accent-color);
+            justify-content: center;
+            gap: 0.4rem;
+            color: #ffffff !important;
+            background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%) !important;
             text-decoration: none;
-            font-size: 0.9rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            padding: 0.5rem 1.25rem;
+            border-radius: 8px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            min-width: 160px;
+            width: auto;
+            min-height: 2.25rem;
+            line-height: 1.3;
+            box-sizing: border-box;
+        }
+        #notification-center-dropdown .notification-center-item-actions .notification-center-item-link:hover {
+            filter: brightness(1.1);
+            color: #ffffff !important;
+        }
+        #notification-center-dropdown .notification-center-item-actions .notification-center-item-link-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: #4338ca !important;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            padding: 0.4rem 0.75rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+            min-width: 120px;
+            width: auto;
+            min-height: 1.75rem;
+            line-height: 1.3;
+            box-sizing: border-box;
+        }
+        #notification-center-dropdown .notification-center-item-actions .notification-center-item-link-secondary:hover {
+            text-decoration: underline;
+            color: #3730a3 !important;
         }
         
         /* Sidebar */
@@ -1547,9 +1589,6 @@
                 <a href="{% url 'listChildDomains' %}" class="menu-item">
                     <span>List Sub/Addon Domains</span>
                 </a>
-                <a href="{% url 'fixSubdomainLogs' %}" class="menu-item">
-                    <span>Fix Subdomain Logs</span>
-                </a>
                 {% if admin or modifyWebsite %}
                 <a href="{% url 'modifyWebsite' %}" class="menu-item">
                     <span>Modify Website</span>
@@ -1651,22 +1690,22 @@
                 </a>
                 {% endif %}
                 {% if admin or deleteZone %}
-                <a href="{% url 'deleteDNSZone' %}" class="menu-item">
+                <a href="{% url 'deleteDNSZone' %}" class="menu-item deleteZone">
                     <span>Delete Zone</span>
                 </a>
                 {% endif %}
                 {% if admin or addDeleteRecords %}
-                <a href="{% url 'addDeleteDNSRecords' %}" class="menu-item">
+                <a href="{% url 'addDeleteDNSRecords' %}" class="menu-item addDeleteRecords">
                     <span>Add/Delete Records</span>
                 </a>
                 {% endif %}
                 {% if admin or addDeleteRecords %}
-                <a href="{% url 'addDeleteDNSRecordsCloudFlare' %}" class="menu-item">
+                <a href="{% url 'addDeleteDNSRecordsCloudFlare' %}" class="menu-item addDeleteRecords">
                     <span>CloudFlare</span>
                 </a>
                 {% endif %}
                 {% if admin or addDeleteRecords %}
-                <a href="{% url 'ResetDNSConfigurations' %}" class="menu-item">
+                <a href="{% url 'ResetDNSConfigurations' %}" class="menu-item addDeleteRecords">
                     <span>Reset DNS Configurations</span>
                 </a>
                 {% endif %}
@@ -1835,9 +1874,7 @@
             <a href="{% url 'manageSSL' %}" class="menu-item">
                 <span>Manage SSL</span>
             </a>
-            <a href="{% url 'sslReconcile' %}" class="menu-item">
-                <span>SSL Reconciliation</span>
-            </a>
+            {% comment %}SSL Reconciliation - hidden; URL /manageSSL/sslReconcile still works if needed{% endcomment %}
             {% endif %}
             {% if admin or hostnameSSL %}
             <a href="{% url 'sslForHostName' %}" class="menu-item">
@@ -2186,14 +2223,14 @@
     <script src="{% static 'websiteFunctions/websiteFunctions.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'userManagment/userManagment.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'databases/databases.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
-    <script src="{% static 'dns/dns.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'dns/dns.js' %}?v={{ CP_VERSION }}&dns={{ DNS_STATIC_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'mailServer/mailServer.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'ftp/ftp.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'backup/backup.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'managePHP/managePHP.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'serverLogs/serverLogs.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'serverStatus/serverStatus.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
-    <script src="{% static 'firewall/firewall.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'firewall/firewall.js' %}?v={{ CP_VERSION }}&fw={{ FIREWALL_STATIC_VERSION|default:CP_VERSION }}&cb=4" data-cfasync="false"></script>
     <script src="{% static 'emailPremium/emailPremium.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'manageServices/manageServices.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'CLManager/CLManager.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
@@ -2305,10 +2342,7 @@
             
             // Check if user has backup configured (you'll need to implement this API)
             // For now, we'll show it by default unless they have a backup plan
-            // This should be replaced with an actual check
-            {% if not request.session.has_backup_configured %}
-                showBackupNotification();
-            {% endif %}
+            // Session check omitted - has_backup_configured may be absent in some views
             
             // For demonstration, let's show it if URL doesn't contain 'OneClickBackups'
             if (!window.location.href.includes('OneClickBackups')) {
@@ -2400,12 +2434,13 @@
         // .htaccess Feature Notification Functions
         function checkHtaccessStatus() {
             // Check if user has dismissed the notification permanently (localStorage for longer persistence)
-            if (localStorage.getItem('htaccessNotificationDismissed') === 'true') {
-                return;
-            }
+            try {
+                if (localStorage.getItem('htaccessNotificationDismissed') === 'true') return;
+            } catch (e) { return; }
 
             // Check if notification has been shown today
-            const lastShown = localStorage.getItem('htaccessNotificationLastShown');
+            var lastShown;
+            try { lastShown = localStorage.getItem('htaccessNotificationLastShown'); } catch (e) { return; }
             const today = new Date().toDateString();
 
             if (lastShown === today) {
@@ -2414,7 +2449,7 @@
 
             // Show the notification
             showHtaccessNotification();
-            localStorage.setItem('htaccessNotificationLastShown', today);
+            try { localStorage.setItem('htaccessNotificationLastShown', today); } catch (e) {}
         }
 
         function showHtaccessNotification() {
@@ -2430,7 +2465,7 @@
             banner.classList.remove('show');
             body.classList.remove('htaccess-shown');
             // Remember dismissal permanently
-            localStorage.setItem('htaccessNotificationDismissed', 'true');
+            try { localStorage.setItem('htaccessNotificationDismissed', 'true'); } catch (e) {}
         }
         
         function isNotificationDismissed(notificationKey) {
@@ -2441,7 +2476,7 @@
                 return {% if ai_scanner_notification_dismissed %}true{% else %}false{% endif %};
             }
             if (notificationKey === 'htaccess-notification') {
-                return localStorage.getItem('htaccessNotificationDismissed') === 'true';
+                try { return localStorage.getItem('htaccessNotificationDismissed') === 'true'; } catch (e) { return false; }
             }
             return false;
         }
@@ -2516,6 +2551,10 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadNotificationCenter();
             checkBackupStatus();
+            // Optional: open notification dropdown for testing (e.g. ?showNotifications=1)
+            if (window.location.search.indexOf('showNotifications=1') !== -1) {
+                setTimeout(function() { document.getElementById('notification-center-dropdown').classList.add('show'); }, 400);
+            }
             // Show AI Scanner notification with a slight delay for better UX
             setTimeout(checkAIScannerStatus, 1000);
             // Show .htaccess notification with additional delay for staggered effect
@@ -2560,10 +2599,12 @@
     
     <!-- Dark Mode Toggle Script -->
     <script>
-        // Theme switching functionality
+        // Theme switching functionality (wrapped in try-catch for Tracking Prevention / private browsing)
         (function() {
-            // Get saved theme from localStorage or default to light
-            const savedTheme = localStorage.getItem('cyberPanelTheme') || 'light';
+            var savedTheme = 'light';
+            try {
+                savedTheme = localStorage.getItem('cyberPanelTheme') || 'light';
+            } catch (e) { /* Tracking Prevention or storage disabled */ }
             document.documentElement.setAttribute('data-theme', savedTheme);
             
             // Update icon based on current theme
@@ -2586,7 +2627,7 @@
                     
                     // Update theme
                     document.documentElement.setAttribute('data-theme', newTheme);
-                    localStorage.setItem('cyberPanelTheme', newTheme);
+                    try { localStorage.setItem('cyberPanelTheme', newTheme); } catch (e) { /* Tracking Prevention */ }
                     
                     // Update icon
                     updateThemeIcon(newTheme);

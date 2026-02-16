@@ -27,6 +27,7 @@ urlpatterns = [
     re_path(r'^getCurrentRecordsForDomainCloudFlare$', views.getCurrentRecordsForDomainCloudFlare, name='getCurrentRecordsForDomainCloudFlare'),
     re_path(r'^deleteDNSRecordCloudFlare$', views.deleteDNSRecordCloudFlare, name='deleteDNSRecordCloudFlare'),
     re_path(r'^addDNSRecordCloudFlare$', views.addDNSRecordCloudFlare, name='addDNSRecordCloudFlare'),
+    re_path(r'^updateDNSRecordCloudFlare$', views.updateDNSRecordCloudFlare, name='updateDNSRecordCloudFlare'),
     re_path(r'^syncCF$', views.syncCF, name='syncCF'),
     re_path(r'^enableProxy$', views.enableProxy, name='enableProxy'),
 ]

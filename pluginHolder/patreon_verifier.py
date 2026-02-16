@@ -27,14 +27,14 @@ class PatreonVerifier:
             self.client_id = getattr(settings, 'PATREON_CLIENT_ID', os.environ.get('PATREON_CLIENT_ID', ''))
             self.client_secret = getattr(settings, 'PATREON_CLIENT_SECRET', os.environ.get('PATREON_CLIENT_SECRET', ''))
             self.creator_id = getattr(settings, 'PATREON_CREATOR_ID', os.environ.get('PATREON_CREATOR_ID', ''))
-            self.membership_tier_id = getattr(settings, 'PATREON_MEMBERSHIP_TIER_ID', os.environ.get('PATREON_MEMBERSHIP_TIER_ID', '27789984'))
+            self.membership_tier_id = getattr(settings, 'PATREON_MEMBERSHIP_TIER_ID', os.environ.get('PATREON_MEMBERSHIP_TIER_ID', ''))
             self.creator_access_token = getattr(settings, 'PATREON_CREATOR_ACCESS_TOKEN', os.environ.get('PATREON_CREATOR_ACCESS_TOKEN', ''))
         except:
             # Fallback to environment variables only
             self.client_id = os.environ.get('PATREON_CLIENT_ID', '')
             self.client_secret = os.environ.get('PATREON_CLIENT_SECRET', '')
             self.creator_id = os.environ.get('PATREON_CREATOR_ID', '')
-            self.membership_tier_id = os.environ.get('PATREON_MEMBERSHIP_TIER_ID', '27789984')
+            self.membership_tier_id = os.environ.get('PATREON_MEMBERSHIP_TIER_ID', '')
             self.creator_access_token = os.environ.get('PATREON_CREATOR_ACCESS_TOKEN', '')
         
         # Cache for membership checks (to avoid excessive API calls)

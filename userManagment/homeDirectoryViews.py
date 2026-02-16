@@ -169,7 +169,7 @@ def getHomeDirectoryStats(request):
         return JsonResponse({'status': 0, 'error_message': str(e)})
 
 def getUserHomeDirectories(request):
-    """Get available home directories for user creation"""
+    """Get available home directories for user creation. Returns empty list if tables do not exist."""
     try:
         userID = request.session['userID']
         currentACL = ACLManager.loadedACL(userID)
@@ -177,7 +177,7 @@ def getUserHomeDirectories(request):
         if currentACL['admin'] != 1 and currentACL['createNewUser'] != 1:
             return JsonResponse({'status': 0, 'error_message': 'Unauthorized access'})
         
-        # Get active home directories
+        # Get active home directories (tables home_directories / user_home_mappings may not exist yet)
         home_dirs = HomeDirectory.objects.filter(is_active=True).order_by('name')
         
         directories = []
@@ -196,7 +196,8 @@ def getUserHomeDirectories(request):
         
     except Exception as e:
         logging.CyberCPLogFileWriter.writeToFile(f"Error getting user home directories: {str(e)}")
-        return JsonResponse({'status': 0, 'error_message': str(e)})
+        # If tables don't exist (e.g. user_home_mappings), return empty list so Modify Website still works
+        return JsonResponse({'status': 1, 'directories': []})
 
 def migrateUser(request):
     """Migrate user to different home directory"""

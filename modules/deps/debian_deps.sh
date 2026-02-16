@@ -41,8 +41,8 @@ install_essential_packages() {
     
     print_status "$BLUE" "Installing essential packages..."
     
-    # Common essential packages for all Debian variants
-    local essential_packages="curl wget git unzip tar gzip bzip2"
+    # Common essential packages for all Debian variants (conntrack for firewall/SSH security connection termination)
+    local essential_packages="curl wget git unzip tar gzip bzip2 conntrack"
     
     apt install -y -qq $essential_packages 2>/dev/null || {
         print_status "$YELLOW" "Some essential packages failed to install, continuing..."

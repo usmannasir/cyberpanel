@@ -1,0 +1,99 @@
+# Lightweight CI for v2.5.5-dev (free for public repos).
+# Validates shell syntax, Python version fetcher, key files, and upgrade script.
+# Pinned to ubuntu-22.04. Multi-OS validation: run locally with
+#   for img in almalinux:8 centos:7 debian:12 ubuntu:24.04; do docker run --rm -v "$PWD:/repo:ro" -w /repo $img bash /repo/.github/scripts/ci-validate-upgrade.sh; done
+name: CI
+
+on:
+  push:
+    branches: [v2.5.5-dev, stable, master]
+  pull_request:
+    branches: [v2.5.5-dev, stable, master]
+
+jobs:
+  validate-shell:
+    name: Validate shell scripts
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax check shell scripts
+        run: |
+          for f in cyberpanel_upgrade.sh preUpgrade.sh fix-phpmyadmin.sh cyberpanel.sh cyberpanel_utility.sh; do
+            [ ! -f "$f" ] && continue
+            bash -n "$f" || { echo "FAIL (syntax): $f"; exit 1; }
+            echo "OK $f"
+          done
+          test -f preUpgrade.sh && test -f cyberpanel_upgrade.sh || { echo "Missing required scripts"; exit 1; }
+          if [ -d upgrade_modules ]; then
+            echo "=== Upgrade modules syntax ==="
+            for f in upgrade_modules/*.sh; do
+              [ -f "$f" ] || continue
+              bash -n "$f" || { echo "FAIL (syntax): $f"; exit 1; }
+              echo "OK $f"
+            done
+          fi
+          echo "All shell scripts passed syntax check"
+
+  validate-python:
+    name: Validate Python (version fetcher)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install requests
+        run: pip install requests
+      - name: Run version fetcher (phpMyAdmin / SnappyMail)
+        run: |
+          if [ ! -f plogical/versionFetcher.py ]; then
+            echo "Skipping (plogical/versionFetcher.py not present on this branch)"
+            exit 0
+          fi
+          PYTHONPATH=. python3 -c "
+          from plogical.versionFetcher import get_latest_phpmyadmin_version, get_latest_snappymail_version
+          pma = get_latest_phpmyadmin_version()
+          snappy = get_latest_snappymail_version()
+          assert pma and len(pma) >= 5, 'phpMyAdmin version invalid'
+          assert snappy and len(snappy) >= 3, 'SnappyMail version invalid'
+          print('phpMyAdmin:', pma, 'SnappyMail:', snappy)
+          "
+
+  smoke-key-files:
+    name: Key files present
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check key install/upgrade files exist
+        run: |
+          for f in preUpgrade.sh cyberpanel_upgrade.sh plogical/upgrade.py install/install.py; do
+            test -f "$f" || { echo "Missing: $f"; exit 1; }
+          done
+          test -f plogical/versionFetcher.py && echo "versionFetcher.py present" || echo "versionFetcher.py optional (not on all branches)"
+          grep -q 'BRANCH_NAME' preUpgrade.sh || exit 1
+          if [ -d upgrade_modules ]; then
+            for n in 00_common 01_variables 02_checks 03_mariadb 04_git_url 05_repository 06_components 07_branch_input 08_main_upgrade 09_sync 10_post_tweak 11_display_final; do
+              test -f "upgrade_modules/${n}.sh" || { echo "Missing: upgrade_modules/${n}.sh"; exit 1; }
+            done
+            grep -q 'Branch_Check\|Branch_Name' upgrade_modules/00_common.sh upgrade_modules/02_checks.sh || exit 1
+            grep -q 'upgrade_modules\|Pre_Upgrade_Branch_Input\|Set_Default_Variables' cyberpanel_upgrade.sh || exit 1
+          else
+            grep -q 'Branch_Name\|download_install_phpmyadmin\|Branch_Check' cyberpanel_upgrade.sh || exit 1
+          fi
+          echo "Key files OK"
+
+  # Run upgrade validation script (same checks as other jobs; no Docker to avoid runner issues).
+  validate-upgrade-script:
+    name: Validate upgrade script
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run ci-validate-upgrade.sh
+        run: |
+          set -e
+          if [ ! -f .github/scripts/ci-validate-upgrade.sh ]; then
+            echo "Missing .github/scripts/ci-validate-upgrade.sh"
+            exit 1
+          fi
+          bash .github/scripts/ci-validate-upgrade.sh

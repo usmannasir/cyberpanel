@@ -247,11 +247,11 @@ app.controller('adminController', function ($scope, $http, $timeout) {
             }
 
             if (!Boolean(response.data.deleteZone)) {
-                $('.addDeleteRecords').hide();
+                $('.deleteZone').hide();
             }
 
             if (!Boolean(response.data.addDeleteRecords)) {
-                $('.deleteDatabase').hide();
+                $('.addDeleteRecords').hide();
             }
 
             // Email Management
@@ -531,15 +531,18 @@ app.controller('homePageStatus', function ($scope, $http, $timeout) {
 ////////////
 
 function increment() {
-    $('.box').hide();
+    var boxes = document.querySelectorAll ? document.querySelectorAll('.box') : [];
+    for (var i = 0; i < boxes.length; i++) boxes[i].style.display = 'none';
     setTimeout(function () {
-        $('.box').show();
+        for (var j = 0; j < boxes.length; j++) boxes[j].style.display = '';
     }, 100);
-
-
 }
 
-increment();
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', increment);
+} else {
+    increment();
+}
 
 ////////////
 
@@ -553,6 +556,7 @@ app.controller('versionManagment', function ($scope, $http, $timeout) {
     $scope.updateFinish = true;
     $scope.couldNotConnect = true;
 
+    var upgradeStatusTimer = null;
 
     $scope.upgrade = function () {
 
@@ -623,7 +627,8 @@ app.controller('versionManagment', function ($scope, $http, $timeout) {
             if (response.data.upgradeStatus === 1) {
 
                 if (response.data.finished === 1) {
-                    $timeout.cancel();
+                    if (upgradeStatusTimer) $timeout.cancel(upgradeStatusTimer);
+                    upgradeStatusTimer = null;
                     $scope.upgradelogBox = false;
                     $scope.upgradeLog = response.data.upgradeLog;
                     $scope.upgradeLoading = true;
@@ -635,7 +640,7 @@ app.controller('versionManagment', function ($scope, $http, $timeout) {
                 } else {
                     $scope.upgradelogBox = false;
                     $scope.upgradeLog = response.data.upgradeLog;
-                    $timeout(getUpgradeStatus, 2000);
+                    upgradeStatusTimer = $timeout(getUpgradeStatus, 2000);
                 }
             }
 

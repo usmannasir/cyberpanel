@@ -330,28 +330,28 @@
                             </span>
                         </td>
                         <td>
-                            <a ng-show="record.state=='ACTIVE'"
-                               class="btn-action btn-suspend"
-                               ng-click="controlUserState(record.name, 'SUSPEND')"
-                               title="Suspend User">
-                               <i class="fa fa-pause"></i> {% trans "Suspend" %}
-                            </a>
-                            <a ng-show="record.state=='SUSPENDED'"
-                               class="btn-action btn-activate"
-                               ng-click="controlUserState(record.name, 'ACTIVATE')"
-                               title="Activate User">
-                               <i class="fa fa-play"></i> {% trans "Activate" %}
-                            </a>
-                            <a ng-click="editInitial(record.name)"
-                               class="btn-action btn-edit"
-                               title="Edit User">
-                               <i class="fa fa-edit"></i> {% trans "Edit" %}
-                            </a>
-                            <a ng-click="deleteUserInitial(record.name)"
-                               class="btn-action btn-delete"
-                               title="Delete User">
-                               <i class="fa fa-trash"></i> {% trans "Delete" %}
-                            </a>
+                            <button type="button" ng-show="record.state=='ACTIVE'"
+                                    class="btn-action btn-suspend"
+                                    ng-click="controlUserState(record.name, 'SUSPEND')"
+                                    title="Suspend User">
+                                <i class="fa fa-pause"></i> {% trans "Suspend" %}
+                            </button>
+                            <button type="button" ng-show="record.state=='SUSPENDED'"
+                                    class="btn-action btn-activate"
+                                    ng-click="controlUserState(record.name, 'ACTIVATE')"
+                                    title="Activate User">
+                                <i class="fa fa-play"></i> {% trans "Activate" %}
+                            </button>
+                            <button type="button" ng-click="editInitial(record.name)"
+                                    class="btn-action btn-edit"
+                                    title="Edit User">
+                                <i class="fa fa-edit"></i> {% trans "Edit" %}
+                            </button>
+                            <button type="button" ng-click="deleteUserInitial(record.name)"
+                                    class="btn-action btn-delete"
+                                    title="Delete User">
+                                <i class="fa fa-trash"></i> {% trans "Delete" %}
+                            </button>
                         </td>
                     </tr>
                 </tbody>

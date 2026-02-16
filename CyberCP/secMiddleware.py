@@ -267,7 +267,7 @@ class secMiddleware:
 
         response['X-XSS-Protection'] = "1; mode=block"
         response['X-Frame-Options'] = "sameorigin"
-        response['Content-Security-Policy'] = "script-src 'self' https://www.jsdelivr.com"
+        response['Content-Security-Policy'] = "script-src 'self' 'unsafe-inline' https://www.jsdelivr.com"
         response['Content-Security-Policy'] = "connect-src *;"
         response['Content-Security-Policy'] = "font-src 'self' 'unsafe-inline' https://www.jsdelivr.com https://fonts.googleapis.com"
         response[

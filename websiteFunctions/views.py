@@ -2209,29 +2209,17 @@ def fetchWPBackups(request):
 
 def fixSubdomainLogs(request):
     try:
-        userID = request.session['userID']
-
-
+        request.session['userID']
         wm = WebsiteManager()
-        coreResult = wm.fixSubdomainLogs(userID)
-
-
-        return coreResult
-
+        return wm.fixSubdomainLogs(request)
     except KeyError:
         return redirect(loadLoginPage)
 
 def fixSubdomainLogsAction(request):
     try:
-        userID = request.session['userID']
-
-
+        request.session['userID']
         wm = WebsiteManager()
-        coreResult = wm.fixSubdomainLogsAction(userID)
-
-
-        return coreResult
-
+        return wm.fixSubdomainLogsAction(request)
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -2260,6 +2248,14 @@ def securityManagementPage(request):
         userID = request.session['userID']
         proc = httpProc(request, 'websiteFunctions/securityManagement.html', {}, 'admin')
         return proc.render()
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def getFTPQuotaStatus(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.getFTPQuotaStatus(userID, request.POST)
     except KeyError:
         return redirect(loadLoginPage)
 
