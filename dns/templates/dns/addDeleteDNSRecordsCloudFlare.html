@@ -203,6 +203,27 @@
             background: var(--bg-secondary, #f8f9ff);
             border-color: #5b5fcf;
         }
+
+        .edit-record-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .edit-record-modal {
+            background: var(--bg-primary, white);
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 480px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
         
         .alert {
             padding: 1rem 1.5rem;
@@ -899,6 +920,10 @@
                                                                type="checkbox">
                                                     </td>
                                                     <td style="text-align: center;">
+                                                        <i class="fas fa-edit edit-icon" 
+                                                           style="color: #5b5fcf; cursor: pointer; margin-right: 10px;" 
+                                                           ng-click="openEditModal(record)"
+                                                           title="{% trans 'Edit Record' %}"></i>
                                                         <i class="fas fa-trash delete-icon" 
                                                            style="color: #ef4444; cursor: pointer;" 
                                                            ng-click="deleteRecord(record.id)"
@@ -936,6 +961,56 @@
                                     </div>
 
 
+                                </div>
+
+                                <!-- Edit DNS Record Modal -->
+                                <div class="edit-record-overlay" ng-show="showEditModal" ng-click="closeEditModal()">
+                                    <div class="edit-record-modal" ng-click="$event.stopPropagation()">
+                                        <h4 class="mb-4" style="color: var(--text-primary, #1e293b); font-weight: 600;">
+                                            <i class="fas fa-edit"></i> {% trans "Edit DNS Record" %}
+                                        </h4>
+                                        <div class="form-group">
+                                            <label class="form-label">{% trans "Name" %}</label>
+                                            <input type="text" class="form-control" ng-model="editRecord.name" placeholder="e.g. www or @">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">{% trans "Type" %}</label>
+                                            <select class="form-control" ng-model="editRecord.type">
+                                                <option value="A">A</option>
+                                                <option value="AAAA">AAAA</option>
+                                                <option value="CNAME">CNAME</option>
+                                                <option value="MX">MX</option>
+                                                <option value="TXT">TXT</option>
+                                                <option value="NS">NS</option>
+                                                <option value="SOA">SOA</option>
+                                                <option value="SRV">SRV</option>
+                                                <option value="CAA">CAA</option>
+                                                <option value="SPF">SPF</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">{% trans "TTL" %}</label>
+                                            <input type="text" class="form-control" ng-model="editRecord.ttl" placeholder="3600 or AUTO">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">{% trans "Value / Content" %}</label>
+                                            <input type="text" class="form-control" ng-model="editRecord.content" placeholder="Record value">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">{% trans "Priority" %}</label>
+                                            <input type="number" class="form-control" ng-model="editRecord.priority" placeholder="0">
+                                        </div>
+                                        <div class="form-group" ng-if="editRecord.proxiable">
+                                            <label class="form-label">{% trans "Proxy (orange cloud)" %}</label>
+                                            <input type="checkbox" ng-model="editRecord.proxy" style="margin-left: 8px;">
+                                        </div>
+                                        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 1.5rem;">
+                                            <button type="button" class="btn-secondary" ng-click="closeEditModal()">{% trans "Cancel" %}</button>
+                                            <button type="button" class="btn-primary" ng-click="saveEditRecord()">
+                                                <i class="fas fa-save"></i> {% trans "Save" %}
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                                 
                                 <!-- Alert Messages -->
