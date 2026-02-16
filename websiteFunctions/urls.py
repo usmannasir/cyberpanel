@@ -203,10 +203,6 @@ urlpatterns = [
 
     path('get_website_resources/', views.get_website_resources, name='get_website_resources'),
 
-    # Subdomain Log Fix
-    path('fixSubdomainLogs', views.fixSubdomainLogs, name='fixSubdomainLogs'),
-    path('fixSubdomainLogsAction', views.fixSubdomainLogsAction, name='fixSubdomainLogsAction'),
-
     # FTP Quota Management (API endpoints only; page is at /ftp/quotaManagement)
     path('getFTPQuotaStatus', views.getFTPQuotaStatus, name='getFTPQuotaStatus'),
     path('enableFTPQuota', views.enableFTPQuota, name='enableFTPQuota'),
