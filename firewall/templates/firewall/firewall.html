@@ -9,6 +9,10 @@
         margin: 0 auto;
         padding: 2rem;
     }
+
+    [ng-cloak], .ng-cloak {
+        display: none !important;
+    }
     
     .page-header {
         text-align: center;
@@ -203,6 +207,8 @@
 
     /* Rules Panel */
     .rules-panel {
+        position: relative;
+        z-index: 1;
         background: var(--bg-secondary, white);
         border-radius: 16px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 10px 40px rgba(0,0,0,0.08);
@@ -219,6 +225,34 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .panel-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .btn-panel {
+        background: rgba(255, 255, 255, 0.15);
+        color: var(--text-light, white);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        padding: 0.5rem 0.75rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.8rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        transition: all 0.2s ease;
+    }
+
+    .btn-panel:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-1px);
     }
 
     .panel-title {
@@ -282,6 +316,15 @@
         box-shadow: 0 0 0 3px var(--firewall-focus-shadow, rgba(239, 68, 68, 0.1));
     }
 
+    /* Search input: neutral blue focus (not red) so it doesn't look read-only/error */
+    .firewall-search-input {
+        border-color: var(--border-color, #e2e8f0);
+    }
+    .firewall-search-input:focus {
+        border-color: var(--accent-color, #5b5fcf);
+        box-shadow: 0 0 0 3px rgba(91, 95, 207, 0.15);
+    }
+
     .select-control {
         appearance: none;
         background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
@@ -326,6 +369,12 @@
         border: 1px solid var(--border-color, #e8e9ff);
     }
 
+    .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
     .rules-table thead {
         background: var(--bg-tertiary, #f8f9ff);
     }
@@ -341,6 +390,16 @@
         border-bottom: 1px solid var(--border-color, #e8e9ff);
     }
 
+    .rules-table th:last-child,
+    .banned-table th:last-child {
+        text-align: center;
+    }
+
+    .rules-table td:last-child,
+    .banned-table td:last-child {
+        text-align: center;
+    }
+
     .rules-table td {
         padding: 1rem;
         border-bottom: 1px solid var(--border-light, #f1f5f9);
@@ -354,6 +413,13 @@
 
     .rules-table tbody tr:hover {
         background: var(--bg-hover, #f8f9ff);
+    }
+
+    .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: center;
     }
 
     .rule-id {
@@ -521,6 +587,134 @@
         100% { transform: rotate(360deg); }
     }
 
+    /* Pagination */
+    .pagination-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+        padding: 1rem 2rem;
+        border-top: 1px solid var(--border-color, #e8e9ff);
+        background: var(--bg-tertiary, #f8f9ff);
+        font-size: 0.875rem;
+        color: var(--text-secondary, #64748b);
+    }
+    .pagination-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .pagination-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .pagination-controls button {
+        padding: 0.4rem 0.75rem;
+        border-radius: 6px;
+        border: 1px solid var(--border-color, #e2e8f0);
+        background: var(--bg-secondary, white);
+        color: var(--text-primary, #1e293b);
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .pagination-controls button:hover:not(:disabled) {
+        background: var(--firewall-accent, #ef4444);
+        color: white;
+        border-color: var(--firewall-accent, #ef4444);
+    }
+    .pagination-controls button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .pagination-controls .page-num {
+        min-width: 2rem;
+        text-align: center;
+        font-weight: 600;
+        color: var(--firewall-accent, #ef4444);
+    }
+    .pagination-size {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        margin-left: 1rem;
+    }
+    .pagination-size select,
+    .pagination-size-select {
+        min-width: 4.5rem;
+        padding: 0.35rem 0.5rem;
+        border: 1px solid var(--border-color, #e2e8f0);
+        border-radius: 4px;
+        font-size: 0.875rem;
+        background: var(--bg-secondary, white);
+        cursor: pointer;
+        appearance: menulist;
+        display: inline-block;
+    }
+    .banned-ips-per-page select.pagination-size-select {
+        appearance: menulist;
+        display: inline-block;
+    }
+    .pagination-size-btns {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        flex-wrap: wrap;
+    }
+    .pagination-size-btn {
+        min-width: 2rem;
+        padding: 0.35rem 0.5rem;
+        border: 1px solid var(--border-color, #e2e8f0);
+        border-radius: 4px;
+        background: var(--bg-secondary, white);
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+    }
+    .pagination-size-btn:hover {
+        border-color: var(--firewall-accent, #ef4444);
+        color: var(--firewall-accent, #ef4444);
+    }
+    .pagination-size-btn.active {
+        background: var(--firewall-accent, #ef4444);
+        color: white;
+        border-color: var(--firewall-accent, #ef4444);
+    }
+    .pagination-goto {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .pagination-goto-label {
+        font-size: 0.8rem;
+        color: var(--text-secondary, #64748b);
+        white-space: nowrap;
+    }
+    .pagination-goto-input {
+        width: 3.5rem;
+        padding: 0.35rem 0.5rem;
+        border: 1px solid var(--border-color, #e2e8f0);
+        border-radius: 4px;
+        font-size: 0.875rem;
+        text-align: center;
+    }
+    .pagination-goto-btn {
+        padding: 0.35rem 0.6rem;
+        border-radius: 4px;
+        border: 1px solid var(--border-color, #e2e8f0);
+        background: var(--bg-secondary, white);
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+    }
+    .pagination-goto-btn:hover {
+        background: var(--firewall-accent, #ef4444);
+        color: white;
+        border-color: var(--firewall-accent, #ef4444);
+    }
+
     /* Responsive */
     @media (max-width: 1024px) {
         .rule-form {
@@ -562,7 +756,7 @@
         }
     }
 
-    /* Tab Navigation Styles */
+    /* Tab Navigation – always on top, clearly clickable */
     .tab-navigation {
         display: flex;
         background: var(--bg-secondary, white);
@@ -571,6 +765,9 @@
         margin-bottom: 2rem;
         box-shadow: 0 2px 8px var(--shadow-light, rgba(0,0,0,0.1));
         border: 1px solid var(--border-color, #e8e9ff);
+        position: relative;
+        z-index: 100;
+        isolation: isolate;
     }
 
     .tab-button {
@@ -583,16 +780,26 @@
         font-weight: 500;
         font-size: 0.9rem;
         cursor: pointer;
-        transition: all 0.3s ease;
+        pointer-events: auto;
+        transition: all 0.2s ease;
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 0.5rem;
+        text-decoration: none;
+        font-family: inherit;
+        -webkit-appearance: none;
+        appearance: none;
     }
 
     .tab-button:hover {
         background: var(--bg-hover, #f8f9ff);
         color: var(--accent-color, #5b5fcf);
+    }
+
+    .tab-button:focus {
+        outline: 2px solid var(--accent-color, #5b5fcf);
+        outline-offset: 2px;
     }
 
     .tab-button.tab-active {
@@ -603,10 +810,13 @@
 
     .tab-button i {
         font-size: 1rem;
+        pointer-events: none;
     }
 
-    /* Banned IPs Panel Styles */
+    /* Banned IPs Panel – below tab bar (z-index) */
     .banned-ips-panel {
+        position: relative;
+        z-index: 1;
         background: var(--bg-secondary, white);
         border-radius: 16px;
         box-shadow: 0 4px 12px var(--shadow-medium, rgba(0,0,0,0.15));
@@ -646,6 +856,27 @@
         background: var(--danger-hover, #dc2626);
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+    }
+
+    .btn-search {
+        background: var(--accent-color, #5b5fcf);
+        color: var(--bg-secondary, white);
+        border: none;
+        padding: 0.75rem 1.25rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-search:hover {
+        background: var(--accent-hover, #4f46e5);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(91, 95, 207, 0.4);
     }
 
     .banned-list-section {
@@ -747,6 +978,7 @@
     .actions {
         display: flex;
         gap: 0.5rem;
+        justify-content: center;
     }
 
     .btn-unban {
@@ -791,8 +1023,147 @@
         box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
     }
 
+    .btn-modify {
+        background: var(--accent-color, #5b5fcf);
+        color: var(--bg-secondary, white);
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.8rem;
+    }
+
+    .btn-modify:hover {
+        background: var(--accent-hover, #4f46e5);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(91, 95, 207, 0.3);
+    }
+
+    .modify-modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modify-modal-overlay.show {
+        display: flex;
+    }
+
+    .modify-modal {
+        background: var(--bg-secondary, white);
+        border-radius: 12px;
+        padding: 2rem;
+        max-width: 480px;
+        width: 90%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .modify-modal h3 {
+        margin: 0 0 1.5rem 0;
+        font-size: 1.25rem;
+        color: var(--text-primary, #1e293b);
+    }
+
+    .modify-modal .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .modify-modal .form-label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        color: var(--text-secondary, #64748b);
+    }
+
+    .modify-modal .form-control {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--border-color, #e2e8f0);
+        border-radius: 6px;
+    }
+
+    .modify-modal-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 1.5rem;
+    }
+
+    .modify-modal-actions .btn-cancel {
+        background: #e2e8f0;
+        color: #64748b;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    .modify-modal-actions .btn-save {
+        background: var(--accent-color, #5b5fcf);
+        color: white;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+    }
+
     /* Responsive Design for Banned IPs */
     @media (max-width: 768px) {
+        .status-content {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .control-btn {
+            width: 100%;
+        }
+
+        .rule-form {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .rules-table-section {
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .rules-table {
+            min-width: 720px;
+        }
+
+        .banned-search-section input {
+            max-width: 100% !important;
+            width: 100%;
+        }
+
+        .panel-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .panel-actions {
+            width: 100%;
+        }
+
+        .btn-panel {
+            width: 100%;
+            justify-content: center;
+        }
+
         .banned-form {
             grid-template-columns: 1fr;
             gap: 1rem;
@@ -885,25 +1256,19 @@
         </div>
     </div>
 
-    <!-- Tab Navigation -->
-    <div class="tab-navigation">
-        <button type="button" 
-                ng-click="activeTab = 'rules'" 
-                ng-class="{'tab-active': activeTab === 'rules'}"
-                class="tab-button">
+    <!-- Tab Navigation: buttons with native fallback so clicks always work -->
+    <div class="tab-navigation" role="tablist" id="firewall-tab-nav">
+        <button type="button" class="tab-button" role="tab" data-tab="rules" title="{% trans 'Firewall Rules' %}" ng-class="{'tab-active': activeTab === 'rules'}" ng-click="setFirewallTab('rules')">
             <i class="fas fa-list-alt"></i>
             {% trans "Firewall Rules" %}
         </button>
-        <button type="button" 
-                ng-click="activeTab = 'banned'; populateBannedIPs();" 
-                ng-class="{'tab-active': activeTab === 'banned'}"
-                class="tab-button">
+        <button type="button" class="tab-button" role="tab" data-tab="banned" title="{% trans 'Banned IPs' %}" ng-class="{'tab-active': activeTab === 'banned'}" ng-click="setFirewallTab('banned')">
             <i class="fas fa-ban"></i>
             {% trans "Banned IPs" %}
         </button>
     </div>
 
-    <!-- Rules Panel -->
+    <!-- Rules Panel (ng-show so panel is always in DOM; visibility toggled by tab) -->
     <div class="rules-panel" ng-show="activeTab === 'rules'">
         <div class="panel-header">
             <div class="panel-title">
@@ -928,6 +1293,50 @@
                             ng-disabled="rulesLoading">
                         <i class="fas fa-upload"></i>
                         {% trans "Import Rules" %}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Rules Format Modal -->
+        <div class="modify-modal-overlay" ng-class="{'show': showExportFormatModal}" ng-click="closeExportFormatModal()">
+            <div class="modify-modal" ng-click="$event.stopPropagation()">
+                <h3>{% trans "Export Firewall Rules" %}</h3>
+                <p style="margin: 0 0 1rem 0; color: var(--text-secondary, #64748b);">{% trans "Choose export format:" %}</p>
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="radio" ng-model="exportRulesFormat" value="json"> {% trans "JSON" %}
+                    </label>
+                    <label class="form-label">
+                        <input type="radio" ng-model="exportRulesFormat" value="excel"> {% trans "Excel (CSV)" %}
+                    </label>
+                </div>
+                <div class="modify-modal-actions">
+                    <button type="button" class="btn-cancel" ng-click="closeExportFormatModal()">{% trans "Cancel" %}</button>
+                    <button type="button" class="btn-save" ng-click="confirmExportRules()">
+                        <i class="fas fa-download"></i> {% trans "Export" %}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Import Rules Format Modal -->
+        <div class="modify-modal-overlay" ng-class="{'show': showImportFormatModal}" ng-click="closeImportFormatModal()">
+            <div class="modify-modal" ng-click="$event.stopPropagation()">
+                <h3>{% trans "Import Firewall Rules" %}</h3>
+                <p style="margin: 0 0 1rem 0; color: var(--text-secondary, #64748b);">{% trans "Choose file format:" %}</p>
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="radio" ng-model="importRulesFormat" value="json"> {% trans "JSON" %}
+                    </label>
+                    <label class="form-label">
+                        <input type="radio" ng-model="importRulesFormat" value="excel"> {% trans "Excel (CSV)" %}
+                    </label>
+                </div>
+                <div class="modify-modal-actions">
+                    <button type="button" class="btn-cancel" ng-click="closeImportFormatModal()">{% trans "Cancel" %}</button>
+                    <button type="button" class="btn-save" ng-click="confirmImportRules()">
+                        <i class="fas fa-upload"></i> {% trans "Choose file" %}
                     </button>
                 </div>
             </div>
@@ -982,7 +1391,8 @@
         
         <!-- Rules Table -->
         <div ng-hide="rulesDetails" class="rules-table-section">
-            <table class="rules-table" ng-if="rules.length > 0">
+            <div class="table-responsive">
+                <table class="rules-table" ng-if="rules && rules.length > 0">
                 <thead>
                     <tr>
                         <th>{% trans "ID" %}</th>
@@ -1011,6 +1421,13 @@
                         </td>
                         <td>
                             <button type="button"
+                                    ng-click="$parent.openModifyRuleModal(rule); $event.stopPropagation()"
+                                    class="btn-modify"
+                                    title="{% trans 'Modify Rule' %}">
+                                <i class="fas fa-edit"></i>
+                                {% trans "Modify" %}
+                            </button>
+                            <button type="button"
                                     ng-click="deleteRule(rule.id, rule.proto, rule.port, rule.ipAddress)"
                                     class="btn-delete"
                                     title="{% trans 'Delete Rule' %}">
@@ -1019,10 +1436,70 @@
                         </td>
                     </tr>
                 </tbody>
-            </table>
+                </table>
+            </div>
+
+            <!-- Modify Firewall Rule Modal -->
+            <div class="modify-modal-overlay" ng-class="{'show': showModifyRuleModal}" ng-click="closeModifyRuleModal()">
+                <div class="modify-modal" ng-click="$event.stopPropagation()">
+                    <h3>{% trans "Modify Firewall Rule" %}</h3>
+                    <div class="form-group">
+                        <label class="form-label">{% trans "Rule Name" %}</label>
+                        <input type="text" class="form-control" ng-model="modifyRuleData.name" placeholder="{% trans 'e.g., Allow SSH' %}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">{% trans "Protocol" %}</label>
+                        <select ng-model="modifyRuleData.proto" class="form-control">
+                            <option value="tcp">TCP</option>
+                            <option value="udp">UDP</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">{% trans "IP Address" %}</label>
+                        <input type="text" class="form-control" ng-model="modifyRuleData.ruleIP" placeholder="0.0.0.0/0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">{% trans "Port" %}</label>
+                        <input type="text" class="form-control" ng-model="modifyRuleData.port" placeholder="e.g., 80">
+                    </div>
+                    <div class="modify-modal-actions">
+                        <button type="button" class="btn-cancel" ng-click="closeModifyRuleModal()">{% trans "Cancel" %}</button>
+                        <button type="button" class="btn-save" ng-click="saveModifyRule()">
+                            <i class="fas fa-save"></i> {% trans "Save" %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Firewall Rules Pagination (show when there are rules or a total count) -->
+            <div class="pagination-bar" ng-if="(rules && rules.length > 0) || (rulesTotalCount > 0)">
+                <div class="pagination-info">
+                    <span>{% trans "Showing" %} {$ rulesRangeStart() || 0 $} – {$ rulesRangeEnd() || 0 $} {% trans "of" %} {$ rulesTotalCount || rules.length || 0 $}</span>
+                    <span class="pagination-size">
+                        <label class="pagination-goto-label">{% trans "Per page:" %}</label>
+                        <select ng-model="rulesPageSize" ng-change="setRulesPageSize()" class="pagination-size-select" title="{% trans 'Items per page' %}">
+                            <option ng-repeat="n in rulesPageSizeOptions" ng-value="n">{$ n $}</option>
+                        </select>
+                    </span>
+                </div>
+                <div class="pagination-controls">
+                    <button type="button" ng-click="goToRulesPage(rulesPage - 1)" ng-disabled="rulesPage <= 1" title="{% trans 'Previous' %}">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span class="page-num">{$ rulesPage $} / {$ rulesTotalPages() $}</span>
+                    <button type="button" ng-click="goToRulesPage(rulesPage + 1)" ng-disabled="rulesPage >= rulesTotalPages()" title="{% trans 'Next' %}">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <span class="pagination-goto">
+                        <label class="pagination-goto-label">{% trans "Go to page" %}</label>
+                        <input type="number" min="1" ng-attr-max="rulesTotalPages()" ng-model="rulesPageInput" class="pagination-goto-input" placeholder="{$ rulesPage $}" ng-keypress="$event.keyCode === 13 && goToRulesPageByInput()">
+                        <button type="button" class="pagination-goto-btn" ng-click="goToRulesPageByInput()" title="{% trans 'Go' %}">{% trans "Go" %}</button>
+                    </span>
+                </div>
+            </div>
             
             <!-- Empty State -->
-            <div ng-if="rules.length == 0" class="empty-state">
+            <div ng-if="!rules || rules.length == 0" class="empty-state">
                 <i class="fas fa-shield-alt empty-icon"></i>
                 <h3 class="empty-title">{% trans "No Firewall Rules" %}</h3>
                 <p class="empty-text">{% trans "Add your first firewall rule to control network access to your server." %}</p>
@@ -1057,7 +1534,17 @@
                 </div>
                 {% trans "Banned IP Addresses" %}
             </div>
-            <div ng-show="bannedIPsLoading" class="loading-spinner"></div>
+            <div class="panel-actions">
+                <button type="button" class="btn-panel" ng-click="exportBannedIPs()">
+                    <i class="fas fa-file-export"></i>
+                    {% trans "Export Banned IPs" %}
+                </button>
+                <button type="button" class="btn-panel" ng-click="importBannedIPs()">
+                    <i class="fas fa-file-import"></i>
+                    {% trans "Import Banned IPs" %}
+                </button>
+                <div ng-show="bannedIPsLoading" class="loading-spinner"></div>
+            </div>
         </div>
         
         <!-- Add Banned IP Section -->
@@ -1101,9 +1588,30 @@
             </form>
         </div>
         
+        <!-- Search Banned IPs -->
+        <div class="banned-search-section" style="margin: 1rem 2rem 0;">
+            <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                <i class="fas fa-search"></i> {% trans "Search banned IPs" %}
+            </label>
+            <div style="display: inline-flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                <input type="text"
+                       class="form-control firewall-search-input"
+                       ng-model="bannedIPSearch"
+                       ng-change="onBannedSearchChange()"
+                       ng-keypress="$event.keyCode === 13 && runBannedSearch(); $event.preventDefault()"
+                       placeholder="{% trans 'Search by IP address, reason or status (Active/Expired)...' %}"
+                       autocomplete="off"
+                       style="max-width: 400px;">
+                <button type="button" class="btn-search" ng-click="runBannedSearch()" title="{% trans 'Run search' %}">
+                    <i class="fas fa-search"></i> {% trans "Search" %}
+                </button>
+            </div>
+        </div>
+        
         <!-- Banned IPs List -->
         <div class="banned-list-section" ng-init="activeTab === 'banned' && populateBannedIPs()">
-            <table class="banned-table" ng-if="bannedIPs && bannedIPs.length > 0">
+            <div class="table-responsive">
+                <table class="banned-table" ng-if="bannedIPs && bannedIPs.length > 0">
                 <thead>
                     <tr>
                         <th>{% trans "IP Address" %}</th>
@@ -1115,7 +1623,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr ng-repeat="bannedIP in bannedIPs">
+                    <tr ng-repeat="bannedIP in bannedIPs | filter:searchBannedIPFilter">
                         <td class="ip-address">
                             <i class="fas fa-globe"></i>
                             {$ bannedIP.ip $}
@@ -1141,7 +1649,15 @@
                         </td>
                         <td class="actions">
                             <button type="button"
-                                    ng-click="removeBannedIP(bannedIP.id, bannedIP.ip)"
+                                    ng-click="$parent.openModifyModal(bannedIP); $event.stopPropagation()"
+                                    class="btn-modify"
+                                    title="{% trans 'Modify Ban' %}"
+                                    ng-if="bannedIP.active">
+                                <i class="fas fa-edit"></i>
+                                {% trans "Modify" %}
+                            </button>
+                            <button type="button"
+                                    ng-click="$parent.removeBannedIP(bannedIP.id, bannedIP.ip); $event.stopPropagation()"
                                     class="btn-unban"
                                     title="{% trans 'Unban IP' %}"
                                     ng-if="bannedIP.active">
@@ -1149,7 +1665,7 @@
                                 {% trans "Unban" %}
                             </button>
                             <button type="button"
-                                    ng-click="deleteBannedIP(bannedIP.id, bannedIP.ip)"
+                                    ng-click="$parent.deleteBannedIP(bannedIP.id, bannedIP.ip); $event.stopPropagation()"
                                     class="btn-delete"
                                     title="{% trans 'Delete Record' %}">
                                 <i class="fas fa-trash"></i>
@@ -1157,34 +1673,177 @@
                         </td>
                     </tr>
                 </tbody>
-            </table>
+                </table>
+            </div>
             
-            <!-- Empty State -->
-            <div ng-if="!bannedIPs || bannedIPs.length == 0" class="empty-state">
+            <!-- Banned IPs Pagination (show when there are rows or a total count) -->
+            <div class="pagination-bar" ng-if="(bannedIPs && bannedIPs.length > 0) || (bannedTotalCount > 0)">
+                <div class="pagination-info">
+                    <span>{% trans "Showing" %} {$ bannedRangeStart() || 0 $} – {$ bannedRangeEnd() || 0 $} {% trans "of" %} {$ bannedTotalCount || bannedIPs.length || 0 $}</span>
+                    <span class="pagination-size banned-ips-per-page">
+                        <label class="pagination-goto-label">{% trans "Per page:" %}</label>
+                        <select ng-model="bannedPageSize" ng-change="setBannedPageSize()" class="pagination-size-select" title="{% trans 'Items per page' %}" aria-label="{% trans 'Items per page' %}">
+                            <option ng-repeat="n in bannedPageSizeOptions" ng-value="n">{$ n $}</option>
+                        </select>
+                    </span>
+                </div>
+                <div class="pagination-controls">
+                    <button type="button" ng-click="goToBannedPage(bannedPage - 1)" ng-disabled="bannedPage <= 1" title="{% trans 'Previous' %}">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span class="page-num">{$ bannedPage $} / {$ bannedTotalPages() $}</span>
+                    <button type="button" ng-click="goToBannedPage(bannedPage + 1)" ng-disabled="bannedPage >= bannedTotalPages()" title="{% trans 'Next' %}">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <span class="pagination-goto">
+                        <label class="pagination-goto-label">{% trans "Go to page" %}</label>
+                        <input type="number" min="1" ng-attr-max="bannedTotalPages()" ng-model="bannedPageInput" class="pagination-goto-input" placeholder="{$ bannedPage $}" ng-keypress="$event.keyCode === 13 && goToBannedPageByInput(); $event.preventDefault()" aria-label="{% trans 'Go to page' %}">
+                        <button type="button" class="pagination-goto-btn" ng-click="goToBannedPageByInput()" title="{% trans 'Go' %}">{% trans "Go" %}</button>
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Empty State: no banned IPs at all (only when not searching) -->
+            <div ng-if="(!bannedIPs || bannedIPs.length == 0) && (bannedIPSearch || '').length === 0" class="empty-state">
                 <i class="fas fa-shield-check empty-icon"></i>
                 <h3 class="empty-title">{% trans "No Banned IPs" %}</h3>
                 <p class="empty-text">{% trans "All IP addresses are currently allowed. Add banned IPs to block suspicious or malicious traffic." %}</p>
             </div>
+            <!-- Empty State: search returned no matches (server or client filter) -->
+            <div ng-if="(bannedIPSearch || '').length > 0 && ((!bannedIPs || bannedIPs.length == 0) || (bannedIPs | filter:searchBannedIPFilter).length === 0)" class="empty-state">
+                <i class="fas fa-search empty-icon"></i>
+                <h3 class="empty-title">{% trans "No matching banned IPs" %}</h3>
+                <p class="empty-text">{% trans "No banned IPs match your search. Try a different IP, reason or status (Active/Expired)." %}</p>
+            </div>
         </div>
         
-        <!-- Messages -->
-        <div style="padding: 0 2rem 2rem;">
-            <div ng-show="bannedIPActionFailed === false" class="alert alert-danger">
+        <!-- Messages: only one visible at a time; use ng-if so nothing shows until we have a message -->
+        <div style="padding: 0 2rem 2rem;" ng-if="bannedIPActionFailed === false || bannedIPActionSuccess === false || bannedIPCouldNotConnect === false">
+            <div ng-if="bannedIPActionFailed === false" class="alert alert-danger">
                 <i class="fas fa-exclamation-circle alert-icon"></i>
-                <span>{% trans "Action failed. Error message:" %} {$ bannedIPErrorMessage $}</span>
+                <span>{% trans "Action failed. Error message:" %} <span ng-bind="bannedIPErrorMessage"></span></span>
             </div>
-            
-            <div ng-show="bannedIPActionSuccess === false" class="alert alert-success">
+            <div ng-if="bannedIPActionFailed !== false && bannedIPActionSuccess === false" class="alert alert-success">
                 <i class="fas fa-check-circle alert-icon"></i>
                 <span>{% trans "Action completed successfully." %}</span>
             </div>
-            
-            <div ng-show="bannedIPCouldNotConnect === false" class="alert alert-danger">
+            <div ng-if="bannedIPActionFailed !== false && bannedIPCouldNotConnect === false" class="alert alert-danger">
                 <i class="fas fa-exclamation-circle alert-icon"></i>
                 <span>{% trans "Could not connect to server. Please refresh this page." %}</span>
             </div>
         </div>
+
+        <!-- Modify Banned IP Modal -->
+        <div id="modifyBannedIPModal" class="modify-modal-overlay" ng-class="{'show': showModifyModal}" ng-click="closeModifyModal()">
+            <div class="modify-modal" ng-click="$event.stopPropagation()">
+                <h3>{% trans "Modify Banned IP" %}</h3>
+                <p style="margin: 0 0 1rem 0; color: var(--text-secondary, #64748b);">
+                    <strong>{% trans "IP Address" %}:</strong> {$ modifyBannedIPData.ip $}
+                </p>
+                <div class="form-group">
+                    <label class="form-label">{% trans "Reason" %}</label>
+                    <input type="text" 
+                           class="form-control" 
+                           ng-model="modifyBannedIPData.reason" 
+                           placeholder="{% trans 'e.g., Suspicious activity' %}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{% trans "Duration" %}</label>
+                    <select ng-model="modifyBannedIPData.duration" class="form-control">
+                        <option value="1h">{% trans "1 Hour" %}</option>
+                        <option value="24h">{% trans "24 Hours" %}</option>
+                        <option value="7d">{% trans "7 Days" %}</option>
+                        <option value="30d">{% trans "30 Days" %}</option>
+                        <option value="permanent">{% trans "Permanent" %}</option>
+                    </select>
+                </div>
+                <div class="modify-modal-actions">
+                    <button type="button" class="btn-cancel" ng-click="closeModifyModal()">
+                        {% trans "Cancel" %}
+                    </button>
+                    <button type="button" class="btn-save" ng-click="saveModifyBannedIP()">
+                        <i class="fas fa-save"></i> {% trans "Save Changes" %}
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<script>
+(function(){
+  var nav = document.getElementById('firewall-tab-nav');
+  if (!nav) return;
+
+  function loadTabViaAngularScope(tab) {
+    if (!window.angular) return false;
+    var container = document.querySelector('.modern-container[ng-controller="firewallController"]') || document.querySelector('.modern-container');
+    if (!container) return false;
+    try {
+      var scope = window.angular.element(container).scope();
+      if (!scope) return false;
+      scope.$evalAsync(function() {
+        scope.activeTab = tab;
+        if (tab === 'banned' && scope.populateBannedIPs) scope.populateBannedIPs();
+        else if (tab === 'rules' && scope.populateCurrentRecords) scope.populateCurrentRecords();
+      });
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function loadTab(tab) {
+    if (!tab || (tab !== 'rules' && tab !== 'banned')) return;
+    var done = false;
+    if (window.__firewallLoadTab) {
+      try { window.__firewallLoadTab(tab); done = true; } catch (e) {}
+    }
+    if (!done) {
+      done = loadTabViaAngularScope(tab);
+    }
+    if (!done) {
+      setTimeout(function() {
+        if (window.__firewallLoadTab) { try { window.__firewallLoadTab(tab); } catch (e) {} }
+        else { loadTabViaAngularScope(tab); }
+      }, 50);
+      setTimeout(function() {
+        if (window.__firewallLoadTab) { try { window.__firewallLoadTab(tab); } catch (e) {} }
+        else { loadTabViaAngularScope(tab); }
+      }, 200);
+      setTimeout(function() {
+        if (window.__firewallLoadTab) { try { window.__firewallLoadTab(tab); } catch (e) {} }
+        else { loadTabViaAngularScope(tab); }
+      }, 500);
+    }
+  }
+
+  function onTabButtonClick(btn) {
+    var tab = btn && btn.getAttribute('data-tab');
+    if (!tab) return;
+    window.location.hash = (tab === 'banned') ? '#banned-ips' : '#rules';
+    loadTab(tab);
+  }
+  nav.addEventListener('click', function(e) {
+    var btn = (e.target && e.target.closest) ? e.target.closest('.tab-button[data-tab]') : null;
+    if (btn && nav.contains(btn)) onTabButtonClick(btn);
+  }, false);
+  nav.addEventListener('mousedown', function(e) {
+    var btn = (e.target && e.target.closest) ? e.target.closest('.tab-button[data-tab]') : null;
+    if (btn && nav.contains(btn)) onTabButtonClick(btn);
+  }, false);
+
+  function loadTabFromHash() {
+    var h = (window.location.hash || '').replace(/^#/, '');
+    var tab = (h === 'banned-ips') ? 'banned' : 'rules';
+    loadTab(tab);
+  }
+  var h = (window.location.hash || '').replace(/^#/, '');
+  if (h === 'banned-ips') loadTabFromHash();
+  window.addEventListener('hashchange', loadTabFromHash);
+  setTimeout(loadTabFromHash, 150);
+  setTimeout(loadTabFromHash, 500);
+})();
+</script>
 
 {% endblock %}

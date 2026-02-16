@@ -16,6 +16,51 @@ import OpenSSL
 from plogical.virtualHostUtilities import virtualHostUtilities
 from plogical.processUtilities import ProcessUtilities
 
+def _update_ssl_renewal_schedule_file():
+    """Write SSL renewal schedule to world-readable file for web UI (lscpd can't read root crontab)."""
+    try:
+        from datetime import datetime, timedelta
+        config_path = '/usr/local/CyberCP/ssl_renewal_schedule.conf'
+        cron_paths = ['/var/spool/cron/root', '/var/spool/cron/crontabs/root']
+        cron_content = None
+        for path in cron_paths:
+            if os.path.exists(path):
+                with open(path, 'r') as f:
+                    cron_content = f.read()
+                break
+        if not cron_content:
+            return
+        renew_hour, renew_minute, renew_weekday_cron = 0, 0, 4
+        for line in cron_content.splitlines():
+            line = line.strip()
+            if 'renew.py' in line and not line.startswith('#'):
+                parts = line.split()
+                if len(parts) >= 5:
+                    try:
+                        renew_minute = int(parts[0]) if parts[0].isdigit() else 0
+                        renew_hour = int(parts[1]) if parts[1].isdigit() else 0
+                        renew_weekday_cron = int(parts[4]) if parts[4].isdigit() and 0 <= int(parts[4]) <= 7 else 4
+                    except (ValueError, IndexError):
+                        pass
+                elif len(parts) >= 2:
+                    renew_minute = int(parts[0]) if parts[0].isdigit() else 0
+                    renew_hour = int(parts[1]) if parts[1].isdigit() else 0
+                break
+        now = datetime.now()
+        target_weekday = (renew_weekday_cron - 1) % 7 if renew_weekday_cron else 6
+        days_until = (target_weekday - now.weekday()) % 7
+        if days_until == 0 and (now.hour > renew_hour or (now.hour == renew_hour and now.minute >= renew_minute)):
+            days_until = 7
+        next_run = now.replace(hour=renew_hour, minute=renew_minute, second=0, microsecond=0)
+        next_run += timedelta(days=days_until)
+        schedule_str = next_run.strftime('%B %d, %Y %I:%M %p')
+        with open(config_path, 'w') as f:
+            f.write(schedule_str)
+        os.chmod(config_path, 0o644)
+    except Exception as e:
+        logging.writeToFile(f'_update_ssl_renewal_schedule_file: {str(e)}', 1)
+
+
 class Renew:
     def _check_and_renew_ssl(self, domain: str, path: str, admin_email: str, is_child: bool = False) -> None:
         """Helper method to check and renew SSL for a domain."""
@@ -114,6 +159,7 @@ class Renew:
 
     def SSLObtainer(self):
         try:
+            _update_ssl_renewal_schedule_file()
             logging.writeToFile('Running SSL Renew Utility')
 
             # Process main domains

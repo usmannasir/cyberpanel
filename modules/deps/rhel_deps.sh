@@ -133,8 +133,8 @@ install_additional_packages() {
     
     print_status "$BLUE" "Installing additional packages..."
     
-    # Additional packages that might be needed
-    local additional_packages="git wget curl unzip tar gzip bzip2"
+    # Additional packages that might be needed (conntrack-tools for firewall/SSH security connection termination)
+    local additional_packages="git wget curl unzip tar gzip bzip2 conntrack-tools"
     
     $package_manager install -y $additional_packages 2>/dev/null || {
         print_status "$YELLOW" "Some additional packages not available, continuing..."

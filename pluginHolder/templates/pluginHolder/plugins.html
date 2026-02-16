@@ -200,6 +200,32 @@
         border: 1px solid #c3e6cb;
     }
     
+    .freshness-badge-new, .freshness-badge-stable, .freshness-badge-stale {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-top: 4px;
+    }
+    .freshness-badge-new {
+        background: #fef08a;
+        color: #854d0e;
+    }
+    .freshness-badge-stable {
+        background: #bbf7d0;
+        color: #166534;
+    }
+    .freshness-badge-stale {
+        background: #fecaca;
+        color: #991b1b;
+    }
+    .freshness-badge-unstable {
+        background: #e5e7eb;
+        color: #4b5563;
+    }
+    
     .plugin-pricing-badge.paid {
         background: #fff3cd;
         color: #856404;
@@ -222,61 +248,6 @@
     
     .paid-badge i {
         margin-right: 4px;
-    }
-    
-    .subscription-warning {
-        background: #fff3cd;
-        border: 1px solid #ffc107;
-        border-radius: 8px;
-        padding: 12px;
-        margin-top: 10px;
-        font-size: 12px;
-        color: #856404;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-    
-    .subscription-warning-content {
-        display: flex;
-        align-items: center;
-        flex: 1;
-    }
-    
-    .subscription-warning i {
-        margin-right: 6px;
-        color: #ffc107;
-    }
-    
-    .subscription-warning-button {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 8px 16px;
-        background: linear-gradient(135deg, #f96854 0%, #f96854 100%);
-        color: white;
-        text-decoration: none;
-        border-radius: 6px;
-        font-size: 12px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        white-space: nowrap;
-        box-shadow: 0 2px 4px rgba(249, 104, 84, 0.3);
-    }
-    
-    .subscription-warning-button:hover {
-        background: linear-gradient(135deg, #e55a47 0%, #e55a47 100%);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(249, 104, 84, 0.4);
-        color: white;
-        text-decoration: none;
-    }
-    
-    .subscription-warning-button i {
-        margin-right: 0;
-        color: white;
     }
     
     .plugin-description {
@@ -443,11 +414,115 @@
         margin: 0 auto;
     }
     
-    /* View Toggle */
+    /* View Toggle and Bulk Actions */
+    .view-toggle-wrapper {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
     .view-toggle {
         display: flex;
         gap: 10px;
-        margin-bottom: 20px;
+    }
+    /* Sort/Filter bar for Grid and Table view */
+    .installed-sort-filter-bar {
+        flex-basis: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        margin-top: 12px;
+        padding: 12px 0;
+        border-top: 1px solid var(--border-primary, #e2e8f0);
+    }
+    .installed-sort-filter-bar .installed-filter-row,
+    .installed-sort-filter-bar .installed-sort-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+    }
+    .installed-sort-filter-bar .sort-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary, #64748b);
+        margin-right: 4px;
+    }
+    .installed-sort-filter-bar .sort-btns {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .installed-sort-filter-bar .sort-btn {
+        padding: 6px 14px;
+        border: 1px solid var(--border-primary, #e8e9ff);
+        background: var(--bg-primary, white);
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: var(--text-secondary, #64748b);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .installed-sort-filter-bar .sort-btn:hover {
+        background: var(--bg-hover, #f0f1ff);
+        border-color: #5856d6;
+        color: #5856d6;
+    }
+    .installed-sort-filter-bar .sort-btn.active {
+        background: #5856d6;
+        color: white;
+        border-color: #5856d6;
+    }
+    .bulk-actions-header {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    .bulk-actions-header .btn-bulk {
+        margin: 0;
+        flex-shrink: 0;
+    }
+    .btn-bulk {
+        padding: 8px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .btn-activate-all {
+        background: #28a745;
+        color: white;
+        border-color: #218838;
+    }
+    .btn-activate-all:hover:not(:disabled) {
+        background: #218838;
+    }
+    .btn-activate-all:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    .btn-deactivate-all {
+        background: #ffc107;
+        color: #212529;
+        border-color: #e0a800;
+    }
+    .btn-deactivate-all:hover:not(:disabled) {
+        background: #e0a800;
+    }
+    .btn-deactivate-all:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
     }
     
     .view-btn {
@@ -592,14 +667,239 @@
         100% { transform: rotate(360deg); }
     }
     
+    .category-filter {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 15px;
+        padding: 15px;
+        background: var(--bg-secondary, #f8f9ff);
+        border-radius: 8px;
+    }
+    
+    .category-btn {
+        padding: 8px 16px;
+        border: 1px solid var(--border-primary, #e8e9ff);
+        background: var(--bg-primary, white);
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: var(--text-secondary, #64748b);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .category-btn:hover {
+        background: var(--bg-hover, #f0f1ff);
+        border-color: #5856d6;
+        color: #5856d6;
+    }
+    
+    .category-btn.active {
+        background: #5856d6;
+        color: white;
+        border-color: #5856d6;
+    }
+    
+    .category-btn i {
+        font-size: 14px;
+    }
+    
+    .store-search-bar {
+        position: relative;
+        margin-bottom: 15px;
+        max-width: 480px;
+    }
+    
+    /* Search bar in page header (same row as Activate/Deactivate All) */
+    .header-search-bar {
+        margin-bottom: 0;
+        min-width: 220px;
+        max-width: 320px;
+        margin-left: 8px;
+        padding-left: 16px;
+        border-left: 2px solid #e2e8f0;
+    }
+    
+    .store-search-icon {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #64748b;
+        font-size: 16px;
+        pointer-events: none;
+        z-index: 1;
+        width: 20px;
+        text-align: center;
+    }
+    
+    .store-search-input {
+        width: 100%;
+        padding-left: 46px;
+        padding-right: 40px;
+        padding-top: 12px;
+        padding-bottom: 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        font-size: 14px;
+        background: #f8fafc;
+        color: #1e293b;
+        transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+    
+    .store-search-input:focus {
+        outline: none;
+        border-color: #5856d6;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(88, 86, 214, 0.15);
+    }
+    
+    .store-search-input::placeholder {
+        color: #64748b;
+    }
+    
+    .store-search-clear {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: var(--text-muted, #94a3b8);
+        cursor: pointer;
+        padding: 6px;
+        border-radius: 4px;
+        font-size: 14px;
+        transition: color 0.2s, background 0.2s;
+    }
+    
+    .store-search-clear:hover {
+        color: #5856d6;
+        background: var(--bg-secondary, #f8f9ff);
+    }
+    
+    .alphabet-filter-wrapper {
+        margin-bottom: 20px;
+    }
+    
+    .alphabet-toggle-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border: 1px solid var(--border-primary, #e8e9ff);
+        background: var(--bg-primary, white);
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary, #64748b);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .alphabet-toggle-btn:hover {
+        background: var(--bg-hover, #f8f9ff);
+        border-color: #5856d6;
+        color: #5856d6;
+    }
+    
+    .alphabet-toggle-btn[aria-expanded="true"] .alphabet-chevron {
+        transform: rotate(180deg);
+    }
+    
+    .alphabet-chevron {
+        font-size: 10px;
+        transition: transform 0.2s;
+    }
+    
     .alphabet-filter {
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
-        margin-bottom: 20px;
+        margin-top: 12px;
         padding: 15px;
         background: var(--bg-secondary, #f8f9ff);
         border-radius: 8px;
+    }
+    
+    /* Collapsible Category Filter for Grid/Table (installed view) - same style as A-Å filter */
+    .installed-category-filter-wrapper {
+        margin-top: 12px;
+        margin-bottom: 0;
+    }
+    .installed-category-toggle-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border: 1px solid var(--border-primary, #e8e9ff);
+        background: var(--bg-primary, white);
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary, #64748b);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .installed-category-toggle-btn:hover {
+        background: var(--bg-hover, #f8f9ff);
+        border-color: #5856d6;
+        color: #5856d6;
+    }
+    .installed-category-toggle-btn[aria-expanded="true"] .installed-category-chevron {
+        transform: rotate(180deg);
+    }
+    .installed-category-chevron {
+        font-size: 10px;
+        transition: transform 0.2s;
+    }
+    .installed-category-filter {
+        display: block;
+        margin-top: 12px;
+        padding: 15px;
+        background: var(--bg-secondary, #f8f9ff);
+        border-radius: 8px;
+    }
+    .installed-category-filter .installed-filter-row,
+    .installed-category-filter .installed-sort-row {
+        margin-bottom: 12px;
+    }
+    .installed-category-filter .installed-sort-row:last-of-type {
+        margin-bottom: 0;
+    }
+    .installed-category-filter-btns {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+    }
+    .installed-category-btn {
+        padding: 6px 12px;
+        border: 1px solid var(--border-primary, #e8e9ff);
+        background: var(--bg-primary, white);
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: var(--text-secondary, #64748b);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .installed-category-btn:hover {
+        background: var(--bg-hover, #f0f1ff);
+        border-color: #5856d6;
+        color: #5856d6;
+    }
+    .installed-category-btn.active {
+        background: #5856d6;
+        color: white;
+        border-color: #5856d6;
     }
     
     .alpha-btn {
@@ -930,6 +1230,7 @@
 {% endblock %}
 
 {% block content %}
+<!-- plugins-v2026-02-02-no-patreon-front -->
 {% load static %}
 {% get_current_language as LANGUAGE_CODE %}
 
@@ -937,7 +1238,7 @@
     <div class="plugins-container">
         <!-- Page Header -->
         <div class="page-header">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%; flex-wrap: wrap; gap: 16px;">
                 <div>
                     <h1>
                         <div class="icon">
@@ -947,7 +1248,7 @@
                     </h1>
                     <p>{% trans "List of installed plugins on your CyberPanel" %}</p>
                 </div>
-                <div style="display: flex; gap: 20px; align-items: center; margin-top: 10px;">
+                <div style="display: flex; gap: 20px; align-items: center; margin-top: 10px; flex-wrap: wrap;">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <i class="fas fa-check-circle" style="color: #28a745; font-size: 18px;"></i>
                         <span style="font-weight: 600; color: var(--text-primary, #2f3640);">
@@ -960,6 +1261,23 @@
                             {% trans "Active:" %} {{ active_count|default:0 }}
                         </span>
                     </div>
+                    {% if plugins %}
+                    <div id="installedPluginsSearchWrapper" class="header-search-bar store-search-bar">
+                        <i class="fas fa-search store-search-icon"></i>
+                        <input type="text" id="installedPluginSearchInput" class="store-search-input" placeholder="{% trans 'Search plugins by name or description...' %}" aria-label="{% trans 'Search installed plugins' %}">
+                        <button type="button" class="store-search-clear" id="installedPluginSearchClear" onclick="clearInstalledPluginSearch()" style="display: none;" aria-label="{% trans 'Clear search' %}">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="bulk-actions-header" style="display: flex; gap: 10px; margin-left: 8px; padding-left: 16px; border-left: 2px solid #e2e8f0;">
+                        <button type="button" class="btn-bulk btn-activate-all" onclick="activateAllPlugins()" title="{% trans 'Activate all installed plugins' %}">
+                            <i class="fas fa-toggle-on"></i> {% trans "Activate All Plugins" %}
+                        </button>
+                        <button type="button" class="btn-bulk btn-deactivate-all" onclick="deactivateAllPlugins()" title="{% trans 'Deactivate all installed plugins' %}">
+                            <i class="fas fa-toggle-off"></i> {% trans "Deactivate All Plugins" %}
+                        </button>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -970,46 +1288,115 @@
             
             {% if plugins %}
             <!-- View Toggle -->
-            <div class="view-toggle">
-                <button class="view-btn active" onclick="toggleView('grid')">
-                    <i class="fas fa-th-large"></i>
-                    {% trans "Grid View" %}
-                </button>
-                <button class="view-btn" onclick="toggleView('table')">
-                    <i class="fas fa-list"></i>
-                    {% trans "Table View" %}
-                </button>
-                <button class="view-btn" onclick="toggleView('store')">
-                    <i class="fas fa-store"></i>
-                    {% trans "CyberPanel Plugin Store" %}
-                </button>
-                <a href="/plugins/help/" class="view-btn" style="text-decoration: none;">
-                    <i class="fas fa-book"></i>
-                    {% trans "Plugin Development Guide" %}
-                </a>
+            <div class="view-toggle-wrapper">
+                <div class="view-toggle">
+                    <button class="view-btn active" onclick="toggleView('grid', true)">
+                        <i class="fas fa-th-large"></i>
+                        {% trans "Grid View" %}
+                    </button>
+                    <button class="view-btn" onclick="toggleView('table', true)">
+                        <i class="fas fa-list"></i>
+                        {% trans "Table View" %}
+                    </button>
+                    <button class="view-btn" onclick="toggleView('store', true)">
+                        <i class="fas fa-store"></i>
+                        {% trans "CyberPanel Plugin Store" %}
+                    </button>
+                    <a href="/plugins/help/" class="view-btn" style="text-decoration: none;">
+                        <i class="fas fa-book"></i>
+                        {% trans "Plugin Development Guide" %}
+                    </a>
+                </div>
+                <!-- Filter + Sort bar for Grid and Table view (visible when grid or table is active). All controls in collapsible "Filter". -->
+                <div id="installedSortFilterBar" class="installed-sort-filter-bar" style="display: none;"
+                     data-trans-name-asc="{% trans 'Name A-Å' %}" data-trans-name-desc="{% trans 'Name Å-A' %}"
+                     data-trans-date-newest="{% trans 'Date (newest)' %}" data-trans-date-oldest="{% trans 'Date (oldest)' }}">
+                    <div class="installed-category-filter-wrapper">
+                        <button type="button" class="installed-category-toggle-btn" id="installedCategoryToggleBtn" onclick="toggleInstalledCategoryFilter()" aria-expanded="false">
+                            <i class="fas fa-filter"></i>
+                            <span>{% trans "Filter" %}</span>
+                            <i class="fas fa-chevron-down installed-category-chevron"></i>
+                        </button>
+                        <div class="installed-category-filter" id="installedCategoryFilter" aria-hidden="true" style="display: none;">
+                            <div class="installed-filter-row">
+                                <span class="sort-label">{% trans "Show:" %}</span>
+                                <div class="filter-btns sort-btns">
+                                    <button type="button" class="sort-btn filter-btn active" data-filter="all" id="installedFilterBtnAll" onclick="setInstalledFilter('all')" title="{% trans 'Show all plugins' %}">
+                                        <i class="fas fa-th-list"></i> <span class="filter-btn-label">{% trans "All" %}</span>
+                                    </button>
+                                    <button type="button" class="sort-btn filter-btn" data-filter="installed" id="installedFilterBtnInstalled" onclick="setInstalledFilter('installed')" title="{% trans 'Show only installed plugins' %}">
+                                        <i class="fas fa-check-circle"></i> <span class="filter-btn-label">{% trans "Installed only" %}</span>
+                                    </button>
+                                    <button type="button" class="sort-btn filter-btn" data-filter="active" id="installedFilterBtnActive" onclick="setInstalledFilter('active')" title="{% trans 'Show only active (enabled) plugins' %}">
+                                        <i class="fas fa-power-off"></i> <span class="filter-btn-label">{% trans "Active only" %}</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="installed-sort-row">
+                                <span class="sort-label">{% trans "Sort by:" %}</span>
+                                <div class="sort-btns">
+                                    <button type="button" class="sort-btn active" data-sort-field="name" id="installedSortBtnName" onclick="toggleInstalledSort('name')" title="{% trans 'Click to toggle A-Å / Å-A' %}">
+                                        <i class="fas fa-sort-alpha-down"></i> <span class="sort-btn-label">{% trans "Name A-Å" %}</span>
+                                    </button>
+                                    <button type="button" class="sort-btn" data-sort-field="type" id="installedSortBtnType" onclick="toggleInstalledSort('type')" title="{% trans 'By category/type' %}">
+                                        <i class="fas fa-tag"></i> <span class="sort-btn-label">{% trans "Type" %}</span>
+                                    </button>
+                                    <button type="button" class="sort-btn" data-sort-field="date" id="installedSortBtnDate" onclick="toggleInstalledSort('date')" title="{% trans 'Click to toggle newest / oldest' %}">
+                                        <i class="fas fa-calendar-alt"></i> <span class="sort-btn-label">{% trans "Date (newest)" %}</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="installed-category-filter-btns">
+                                <button type="button" class="installed-category-btn active" data-category="all" onclick="filterByCategoryInstalled('all', event)">{% trans "All" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Utility" onclick="filterByCategoryInstalled('Utility', event)"><i class="fas fa-tools"></i> {% trans "Utility" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Security" onclick="filterByCategoryInstalled('Security', event)"><i class="fas fa-shield-alt"></i> {% trans "Security" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Backup" onclick="filterByCategoryInstalled('Backup', event)"><i class="fas fa-save"></i> {% trans "Backup" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Performance" onclick="filterByCategoryInstalled('Performance', event)"><i class="fas fa-rocket"></i> {% trans "Performance" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Monitoring" onclick="filterByCategoryInstalled('Monitoring', event)"><i class="fas fa-heartbeat"></i> {% trans "Monitoring" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Integration" onclick="filterByCategoryInstalled('Integration', event)"><i class="fas fa-plug"></i> {% trans "Integration" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Email" onclick="filterByCategoryInstalled('Email', event)"><i class="fas fa-envelope"></i> {% trans "Email" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Development" onclick="filterByCategoryInstalled('Development', event)"><i class="fas fa-code"></i> {% trans "Development" %}</button>
+                                <button type="button" class="installed-category-btn" data-category="Analytics" onclick="filterByCategoryInstalled('Analytics', event)"><i class="fas fa-chart-bar"></i> {% trans "Analytics" %}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <!-- Grid View -->
             <div id="gridView" class="plugins-grid">
                 {% for plugin in plugins %}
-                <div class="plugin-card">
+                <div class="plugin-card" data-plugin-name="{{ plugin.name }}" data-plugin-desc="{{ plugin.desc }}" data-plugin-type="{{ plugin.type }}" data-modify-date="{{ plugin.modify_date|default:'0000-00-00 00:00:00' }}" data-installed="{{ plugin.installed|yesno:'true,false' }}" data-enabled="{{ plugin.enabled|yesno:'true,false' }}">
                     <div class="plugin-header">
                         <div class="plugin-icon">
-                            {% if plugin.type == "Security" %}
+                            {% if plugin.type|lower == "security" %}
                                 <i class="fas fa-shield-alt"></i>
-                            {% elif plugin.type == "Performance" %}
+                            {% elif plugin.type|lower == "performance" %}
                                 <i class="fas fa-rocket"></i>
-                            {% elif plugin.type == "Utility" %}
+                            {% elif plugin.type|lower == "utility" %}
                                 <i class="fas fa-tools"></i>
-                            {% elif plugin.type == "Backup" %}
+                            {% elif plugin.type|lower == "backup" %}
                                 <i class="fas fa-save"></i>
+                            {% elif plugin.type|lower == "monitoring" %}
+                                <i class="fas fa-heartbeat"></i>
+                            {% elif plugin.type|lower == "integration" %}
+                                <i class="fas fa-plug"></i>
+                            {% elif plugin.type|lower == "email" %}
+                                <i class="fas fa-envelope"></i>
+                            {% elif plugin.type|lower == "development" %}
+                                <i class="fas fa-code"></i>
+                            {% elif plugin.type|lower == "analytics" %}
+                                <i class="fas fa-chart-bar"></i>
                             {% else %}
                                 <i class="fas fa-puzzle-piece"></i>
                             {% endif %}
                         </div>
                         <div class="plugin-info">
-                            <h3 class="plugin-name">{{ plugin.name }}{% if plugin.is_paid|default:False|default_if_none:False %} <span class="paid-badge" title="{% trans 'Paid Plugin - Patreon Subscription Required' %}"><i class="fas fa-crown"></i> {% trans "Premium" %}</span>{% endif %}</h3>
+                            <h3 class="plugin-name">{{ plugin.name }}{% if plugin.is_paid|default:False|default_if_none:False %} <span class="paid-badge" title="{% trans 'Premium plugin - activate in Settings' %}"><i class="fas fa-crown"></i> {% trans "Premium" %}</span>{% endif %}</h3>
                             <div class="plugin-meta">
+                            {% if plugin.freshness_badge %}
+                            <span class="{{ plugin.freshness_badge.class }}" title="{{ plugin.freshness_badge.title }}">{{ plugin.freshness_badge.badge }}</span>
+                            {% endif %}
                             <span class="plugin-type">{{ plugin.type }}</span>
                                 <span class="plugin-version-number">v{{ plugin.version }}</span>
                                 {% if plugin.is_paid|default:False|default_if_none:False %}
@@ -1023,20 +1410,6 @@
                     
                     <div class="plugin-description">
                         {{ plugin.desc }}
-                        {% if plugin.is_paid|default:False|default_if_none:False %}
-                        <div class="subscription-warning">
-                            <div class="subscription-warning-content">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                <strong>{% trans "Paid Plugin:" %}</strong> {% trans "Requires Patreon subscription to" %} "{{ plugin.patreon_tier|default:'CyberPanel Paid Plugin' }}"
-                            </div>
-                            {% if plugin.patreon_url %}
-                            <a href="{{ plugin.patreon_url }}" target="_blank" rel="noopener noreferrer" class="subscription-warning-button">
-                                <i class="fab fa-patreon"></i>
-                                {% trans "Subscribe on Patreon" %}
-                            </a>
-                            {% endif %}
-                        </div>
-                        {% endif %}
                     </div>
                     
                     <div class="plugin-status-section">
@@ -1064,18 +1437,25 @@
                     
                     <div class="plugin-footer">
                         <div class="plugin-actions">
-                            {% if plugin.installed %}
+                            {% if plugin.builtin %}
+                                <span class="status-installed-small" style="margin-right: 8px;">{% trans "Built-in" %}</span>
+                                {% if plugin.manage_url %}
+                                    <a href="{{ plugin.manage_url }}" class="btn-action btn-settings btn-small" title="{% trans 'Settings' %}">
+                                        <i class="fas fa-cog"></i> {% trans "Settings" %}
+                                    </a>
+                                {% endif %}
+                            {% elif plugin.installed %}
                                 {% if plugin.manage_url %}
                                     <a href="{{ plugin.manage_url }}" class="btn-action btn-settings btn-small" title="{% trans 'Plugin Settings' %}">
                                         <i class="fas fa-cog"></i> {% trans "Settings" %}
                                     </a>
                                 {% endif %}
                                 {% if plugin.enabled %}
-                                    <button class="btn-action btn-deactivate btn-small" onclick="deactivatePlugin('{{ plugin.plugin_dir }}')">
+                                    <button class="btn-action btn-deactivate btn-small" data-plugin-dir="{{ plugin.plugin_dir }}" onclick="deactivatePlugin('{{ plugin.plugin_dir }}')">
                                         <i class="fas fa-toggle-on"></i> {% trans "Deactivate" %}
                                     </button>
                                 {% else %}
-                                    <button class="btn-action btn-activate btn-small" onclick="activatePlugin('{{ plugin.plugin_dir }}')">
+                                    <button class="btn-action btn-activate btn-small" data-plugin-dir="{{ plugin.plugin_dir }}" onclick="activatePlugin('{{ plugin.plugin_dir }}')">
                                         <i class="fas fa-toggle-off"></i> {% trans "Activate" %}
                                     </button>
                                 {% endif %}
@@ -1091,6 +1471,7 @@
                                 </button>
                             {% endif %}
                         </div>
+                        {% if not plugin.builtin %}
                         <div class="plugin-links">
                             <a href="/plugins/{{ plugin.plugin_dir }}/help/" class="btn-link btn-link-small" title="{% trans 'Plugin Help' %}">
                                 <i class="fas fa-question-circle"></i> {% trans "Help" %}
@@ -1099,9 +1480,14 @@
                                 <i class="fas fa-info-circle"></i> {% trans "About" %}
                             </a>
                         </div>
+                        {% endif %}
                     </div>
                 </div>
                 {% endfor %}
+                <div id="installedPluginsNoResultsGrid" class="installed-no-results" style="display: none; grid-column: 1 / -1; text-align: center; padding: 24px; color: var(--text-secondary, #64748b);">
+                    <i class="fas fa-search" style="font-size: 32px; margin-bottom: 8px; opacity: 0.6;"></i>
+                    <p style="margin: 0;">{% trans "No plugins match your search." %}</p>
+                </div>
             </div>
             
             <!-- Table View -->
@@ -1122,9 +1508,12 @@
                         </thead>
                         <tbody>
                             {% for plugin in plugins %}
-                            <tr>
+                            <tr data-plugin-name="{{ plugin.name }}" data-plugin-desc="{{ plugin.desc }}" data-plugin-type="{{ plugin.type }}" data-modify-date="{{ plugin.modify_date|default:'0000-00-00 00:00:00' }}" data-installed="{{ plugin.installed|yesno:'true,false' }}" data-enabled="{{ plugin.enabled|yesno:'true,false' }}">
                                 <td>
                                     <strong>{{ plugin.name }}</strong>
+                                    {% if plugin.freshness_badge %}
+                                    <br><span class="{{ plugin.freshness_badge.class }}" title="{{ plugin.freshness_badge.title }}">{{ plugin.freshness_badge.badge }}</span>
+                                    {% endif %}
                                 </td>
                                 <td>
                                     <span class="plugin-version-number">{{ plugin.version }}</span>
@@ -1155,11 +1544,11 @@
                                                 </a>
                                             {% endif %}
                                             {% if plugin.enabled %}
-                                                <button class="btn-action btn-deactivate" onclick="deactivatePlugin('{{ plugin.plugin_dir }}')">
+                                                <button class="btn-action btn-deactivate" data-plugin-dir="{{ plugin.plugin_dir }}" onclick="deactivatePlugin('{{ plugin.plugin_dir }}')">
                                                     <i class="fas fa-toggle-on"></i> {% trans "Deactivate" %}
                                                 </button>
                                             {% else %}
-                                                <button class="btn-action btn-activate" onclick="activatePlugin('{{ plugin.plugin_dir }}')">
+                                                <button class="btn-action btn-activate" data-plugin-dir="{{ plugin.plugin_dir }}" onclick="activatePlugin('{{ plugin.plugin_dir }}')">
                                                     <i class="fas fa-toggle-off"></i> {% trans "Activate" %}
                                                 </button>
                                             {% endif %}
@@ -1177,7 +1566,7 @@
                                     </div>
                                 </td>
                                 <td class="active-column">
-                                    {% if plugin.installed %}
+                                    {% if plugin.builtin or plugin.installed %}
                                         {% if plugin.enabled %}
                                             <span class="active-status active-yes"><i class="fas fa-check-circle"></i></span>
                                         {% else %}
@@ -1199,6 +1588,12 @@
                                 </td>
                             </tr>
                             {% endfor %}
+                            <tr id="installedPluginsNoResultsTable" style="display: none;">
+                                <td colspan="8" style="text-align: center; padding: 24px; color: var(--text-secondary, #64748b);">
+                                    <i class="fas fa-search" style="font-size: 24px; margin-bottom: 8px; opacity: 0.6;"></i>
+                                    <p style="margin: 0;">{% trans "No plugins match your search." %}</p>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -1216,15 +1611,15 @@
             
             <!-- View Toggle (only shown when no plugins installed) -->
             <div class="view-toggle" style="margin-top: 25px;">
-                <button class="view-btn" onclick="toggleView('grid')">
+                <button class="view-btn" onclick="toggleView('grid', true)">
                     <i class="fas fa-th-large"></i>
                     {% trans "Grid View" %}
                 </button>
-                <button class="view-btn" onclick="toggleView('table')">
+                <button class="view-btn" onclick="toggleView('table', true)">
                     <i class="fas fa-list"></i>
                     {% trans "Table View" %}
                 </button>
-                <button class="view-btn active" onclick="toggleView('store')">
+                <button class="view-btn active" onclick="toggleView('store', true)">
                     <i class="fas fa-store"></i>
                     {% trans "CyberPanel Plugin Store" %}
                 </button>
@@ -1274,35 +1669,86 @@
                     </div>
                 </div>
                 
-                <!-- Store Loading Indicator -->
-                <div id="storeLoading" class="store-loading" style="display: none;">
-                    <div class="loading-spinner"></div>
-                    <p>{% trans "Loading plugins from store..." %}</p>
+                <!-- Search Bar (always visible in store view) -->
+                <div class="store-search-bar">
+                    <i class="fas fa-search store-search-icon"></i>
+                    <input type="text" id="pluginSearchInput" class="store-search-input" placeholder="{% trans 'Search plugins by name or description...' %}" aria-label="{% trans 'Search plugins' %}">
+                    <button type="button" class="store-search-clear" id="pluginSearchClear" onclick="clearPluginSearch()" style="display: none;" aria-label="{% trans 'Clear search' %}">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
                 
-                <!-- Store Error -->
-                <div id="storeError" class="alert alert-danger" style="display: none;">
-                    <i class="fas fa-exclamation-circle alert-icon"></i>
-                    <span id="storeErrorText"></span>
-                </div>
-                
-                <!-- Store Content -->
-                <div id="storeContent" style="display: none;">
-                    <!-- Alphabetical Filter -->
-                    <div class="alphabet-filter">
-                        {% for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" %}
-                            <button class="alpha-btn" onclick="filterByLetter('{{ letter }}')">{{ letter }}</button>
-                        {% endfor %}
-                        <button class="alpha-btn active" onclick="filterByLetter('all')">{% trans "All" %}</button>
+                <!-- Category Filter (always visible in store view) - v2026-02-01 no Plugin category -->
+                <div class="category-filter">
+                    <button class="category-btn active" onclick="filterByCategory('all', event)" data-category="all">
+                        <i class="fas fa-th"></i>
+                        {% trans "All Categories" %}
+                    </button>
+                    <button class="category-btn" onclick="filterByCategory('Utility', event)" data-category="Utility">
+                        <i class="fas fa-wrench"></i>
+                        {% trans "Utility" %}
+                    </button>
+                    <button class="category-btn" onclick="filterByCategory('Security', event)" data-category="Security">
+                        <i class="fas fa-shield-alt"></i>
+                        {% trans "Security" %}
+                    </button>
+                    <button class="category-btn" onclick="filterByCategory('Backup', event)" data-category="Backup">
+                        <i class="fas fa-archive"></i>
+                        {% trans "Backup" %}
+                    </button>
+                        <button class="category-btn" onclick="filterByCategory('Performance', event)" data-category="Performance">
+                            <i class="fas fa-rocket"></i>
+                            {% trans "Performance" %}
+                        </button>
+                        <button class="category-btn" onclick="filterByCategory('Monitoring', event)" data-category="Monitoring">
+                            <i class="fas fa-heartbeat"></i>
+                            {% trans "Monitoring" %}
+                        </button>
+                        <button class="category-btn" onclick="filterByCategory('Integration', event)" data-category="Integration">
+                            <i class="fas fa-plug"></i>
+                            {% trans "Integration" %}
+                        </button>
+                        <button class="category-btn" onclick="filterByCategory('Email', event)" data-category="Email">
+                            <i class="fas fa-envelope"></i>
+                            {% trans "Email" %}
+                        </button>
+                        <button class="category-btn" onclick="filterByCategory('Development', event)" data-category="Development">
+                            <i class="fas fa-code"></i>
+                            {% trans "Development" %}
+                        </button>
+                        <button class="category-btn" onclick="filterByCategory('Analytics', event)" data-category="Analytics">
+                            <i class="fas fa-chart-bar"></i>
+                            {% trans "Analytics" %}
+                        </button>
                     </div>
-                    
-                    <!-- Store Table -->
+                
+                <!-- Letter filter (A-Å, collapsible, hidden by default) -->
+                <div class="alphabet-filter-wrapper">
+                    <button type="button" class="alphabet-toggle-btn" id="alphabetToggleBtn" onclick="toggleAlphabetFilter()" aria-expanded="false">
+                        <i class="fas fa-sort-alpha-down alphabet-toggle-icon"></i>
+                        <span>A-Å {% trans "Filter" %}</span>
+                        <i class="fas fa-chevron-down alphabet-chevron"></i>
+                    </button>
+                    <div class="alphabet-filter" id="alphabetFilter" aria-hidden="true" style="display: none;">
+                        {% for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" %}
+                            <button class="alpha-btn" onclick="filterByLetter('{{ letter }}', event)">{{ letter }}</button>
+                        {% endfor %}
+                        <button class="alpha-btn" onclick="filterByLetter('Æ', event)">Æ</button>
+                        <button class="alpha-btn" onclick="filterByLetter('Ø', event)">Ø</button>
+                        <button class="alpha-btn" onclick="filterByLetter('Å', event)">Å</button>
+                        <button class="alpha-btn active" onclick="filterByLetter('all', event)">{% trans "All" %}</button>
+                    </div>
+                </div>
+                
+                <!-- Store Content (table area) -->
+                <div id="storeContent" style="display: block;">
                     <div class="store-table-wrapper">
                         <table class="store-table">
                             <thead>
                                 <tr>
                                     <th>{% trans "Icon" %}</th>
                                     <th>{% trans "Plugin Name" %}</th>
+                                    <th>{% trans "Category" %}</th>
                                     <th>{% trans "Version" %}</th>
                                     <th>{% trans "Pricing" %}</th>
                                     <th>{% trans "Modify Date" %}</th>
@@ -1319,19 +1765,21 @@
                 </div>
             </div>
             
-            <div ng-controller="listWebsites" id="listFail" class="alert alert-danger" style="display: none;">
-                <i class="fas fa-exclamation-circle alert-icon"></i>
-                <span>{% trans "Cannot list plugins. Error message:" %} {$ errorMessage $}</span>
-            </div>
+            <!-- Plugin store errors shown in storeError div; listWebsites controller removed - not applicable to plugins page -->
         </div>
     </div>
 </div>
 
 <script>
-// Cache-busting version: 2026-01-25-v4 - Fixed is_paid normalization and ensured consistent rendering
-// Force browser to reload this script by changing version number
+// Cache-busting version: 2026-02-15-v1 - Grid/Table: collapsible Category Filter (like A-Å in store)
 let storePlugins = [];
 let currentFilter = 'all';
+let currentCategory = 'all';
+let currentSearchQuery = '';
+let isSettingHash = false; // Flag to prevent infinite loops
+let currentInstalledSort = 'name-asc'; // name-asc, name-desc, type, date-desc, date-asc
+let currentInstalledFilter = 'all';    // all, installed, active
+let currentInstalledCategory = 'all';  // all, Utility, Security, ...
 
 // Get CSRF cookie helper function
 function getCookie(name) {
@@ -1349,7 +1797,7 @@ function getCookie(name) {
     return cookieValue;
 }
 
-function toggleView(view) {
+function toggleView(view, updateHash = true) {
     const gridView = document.getElementById('gridView');
     const tableView = document.getElementById('tableView');
     const storeView = document.getElementById('storeView');
@@ -1357,21 +1805,59 @@ function toggleView(view) {
     
     viewBtns.forEach(btn => btn.classList.remove('active'));
     
+    // Update URL hash only if explicitly requested (user clicked a button, not initial load)
+    if (updateHash) {
+        isSettingHash = true;
+        const hash = '#' + view;
+        // Use replaceState to update URL - this updates the hash without triggering hashchange event
+        if (window.history && window.history.replaceState) {
+            // Get current pathname and preserve it, just update the hash
+            const newUrl = window.location.pathname + window.location.search + hash;
+            window.history.replaceState(null, null, newUrl);
+        } else {
+            // Fallback for older browsers - this will trigger hashchange but we have the flag
+            window.location.hash = hash;
+        }
+        // Reset flag after a short delay
+        setTimeout(() => { isSettingHash = false; }, 100);
+    }
+    
+    const installedSearchWrapper = document.getElementById('installedPluginsSearchWrapper');
+    const installedSortFilterBar = document.getElementById('installedSortFilterBar');
+    
+    // Add null checks to prevent errors if elements don't exist
+    if (!gridView || !tableView || !storeView) {
+        console.warn('toggleView: One or more view elements not found');
+        return;
+    }
+    
     if (view === 'grid') {
         gridView.style.display = 'grid';
         tableView.style.display = 'none';
         storeView.style.display = 'none';
-        viewBtns[0].classList.add('active');
+        if (viewBtns[0]) viewBtns[0].classList.add('active');
+        if (installedSearchWrapper) installedSearchWrapper.style.display = 'block';
+        if (installedSortFilterBar) installedSortFilterBar.style.display = 'flex';
+        if (typeof updateInstalledSortButtons === 'function') updateInstalledSortButtons();
+        if (typeof doApplyInstalledSort === 'function') doApplyInstalledSort();
+        filterInstalledPlugins();
     } else if (view === 'table') {
         gridView.style.display = 'none';
         tableView.style.display = 'block';
         storeView.style.display = 'none';
-        viewBtns[1].classList.add('active');
+        if (viewBtns[1]) viewBtns[1].classList.add('active');
+        if (installedSearchWrapper) installedSearchWrapper.style.display = 'block';
+        if (installedSortFilterBar) installedSortFilterBar.style.display = 'flex';
+        if (typeof updateInstalledSortButtons === 'function') updateInstalledSortButtons();
+        if (typeof doApplyInstalledSort === 'function') doApplyInstalledSort();
+        filterInstalledPlugins();
     } else if (view === 'store') {
+        if (installedSearchWrapper) installedSearchWrapper.style.display = 'none';
+        if (installedSortFilterBar) installedSortFilterBar.style.display = 'none';
         gridView.style.display = 'none';
         tableView.style.display = 'none';
         storeView.style.display = 'block';
-        viewBtns[2].classList.add('active');
+        if (viewBtns[2]) viewBtns[2].classList.add('active');
         
         // Load plugins from store if not already loaded
         if (storePlugins.length === 0) {
@@ -1387,18 +1873,34 @@ function loadPluginStore() {
     const storeError = document.getElementById('storeError');
     const storeErrorText = document.getElementById('storeErrorText');
     const storeContent = document.getElementById('storeContent');
+    const storeTableBody = document.getElementById('storeTableBody');
+    if (!storeLoading || !storeError || !storeErrorText || !storeContent) return;
     
     storeLoading.style.display = 'block';
     storeError.style.display = 'none';
-    storeContent.style.display = 'none';
+    storeContent.style.display = 'block';
     
     fetch('/plugins/api/store/plugins/', {
         method: 'GET',
+        credentials: 'same-origin',
         headers: {
-            'X-CSRFToken': getCookie('csrftoken')
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Accept': 'application/json'
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            if (response.status === 401 || response.status === 403) {
+                throw new Error('Session expired or access denied. Please refresh the page and log in again.');
+            }
+            if (response.redirected || response.status >= 400) {
+                throw new Error('Could not load plugin store. Your session may have expired. Please refresh the page and log in again.');
+            }
+            throw new Error('Server returned invalid response. Please refresh the page and try again.');
+        }
+        return response.json();
+    })
     .then(data => {
         storeLoading.style.display = 'none';
         
@@ -1413,8 +1915,12 @@ function loadPluginStore() {
     })
     .catch(error => {
         storeLoading.style.display = 'none';
-        storeErrorText.textContent = 'Error loading plugin store: ' + error.message;
+        storeErrorText.textContent = error.message || 'Error loading plugin store. Please refresh the page and try again.';
         storeError.style.display = 'block';
+        storeContent.style.display = 'block';
+        if (storeTableBody && storeTableBody.innerHTML === '') {
+            storeTableBody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 20px; color: var(--text-secondary, #64748b);">Unable to load plugins. Please check your connection and try again.</td></tr>';
+        }
     });
 }
 
@@ -1425,9 +1931,34 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+function getFreshnessBadgeHtml(freshnessFromApi, modifyDate) {
+    // Use API data if available
+    if (freshnessFromApi && freshnessFromApi.badge && freshnessFromApi.class) {
+        return `<br><span class="${escapeHtml(freshnessFromApi.class)}" title="${escapeHtml(freshnessFromApi.title || '')}">${escapeHtml(freshnessFromApi.badge)}</span>`;
+    }
+    // Compute from modify_date (for cached data without freshness_badge)
+    if (!modifyDate || modifyDate === 'N/A') return '';
+    try {
+        const m = modifyDate.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/);
+        if (!m) return '';
+        const d = new Date(parseInt(m[1]), parseInt(m[2]) - 1, parseInt(m[3]), parseInt(m[4]), parseInt(m[5]), parseInt(m[6]));
+        const daysAgo = Math.floor((Date.now() - d.getTime()) / (24 * 60 * 60 * 1000));
+        if (daysAgo <= 90) {
+            return '<br><span class="freshness-badge-new" title="This plugin was released/updated within the last 3 months">NEW</span>';
+        } else if (daysAgo <= 365) {
+            return '<br><span class="freshness-badge-stable" title="This plugin was updated within the last year">Stable</span>';
+        } else if (daysAgo < 730) {
+            return '<br><span class="freshness-badge-unstable" title="This plugin has not been updated in over 1 year">Unstable</span>';
+        } else {
+            return '<br><span class="freshness-badge-stale" title="This plugin has not been updated in over 2 years">STALE</span>';
+        }
+    } catch (e) {}
+    return '';
+}
+
 function displayStorePlugins() {
-    // Version: 2026-01-25-v4 - Store view: Removed Status column, always show Free/Paid badges
-    // CRITICAL: This function MUST create exactly 7 columns (no Status, no Deactivate/Uninstall)
+    // Version: 2026-01-27-v1 - Added category filtering support
+    // CRITICAL: This function MUST create exactly 8 columns (Icon, Plugin Name, Version, Pricing, Modify Date, Action, Help, About)
     const tbody = document.getElementById('storeTableBody');
     if (!tbody) {
         console.error('storeTableBody not found!');
@@ -1436,23 +1967,50 @@ function displayStorePlugins() {
     tbody.innerHTML = '';
     
     if (!storePlugins || storePlugins.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px; color: var(--text-secondary, #64748b);">No plugins available in store</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 20px; color: var(--text-secondary, #64748b);">No plugins available in store</td></tr>';
         return;
     }
     
     let filteredPlugins = storePlugins;
     
+    // Apply category filter (case-insensitive); plugins without category are excluded
+    if (currentCategory !== 'all') {
+        const categoryLower = currentCategory.toLowerCase();
+        filteredPlugins = filteredPlugins.filter(plugin => {
+            const pluginType = ((plugin.type || '') + '').trim().toLowerCase();
+            return pluginType && pluginType === categoryLower;
+        });
+    }
+    
+    // Apply search filter (name + description)
+    if ((currentSearchQuery || '').trim()) {
+        const searchLower = (currentSearchQuery || '').trim().toLowerCase();
+        const searchTerms = searchLower.split(/\s+/).filter(t => t.length > 0);
+        filteredPlugins = filteredPlugins.filter(plugin => {
+            const name = (plugin.name || '').toLowerCase();
+            const desc = (plugin.description || '').toLowerCase();
+            const combined = name + ' ' + desc + ' ' + (plugin.plugin_dir || '');
+            return searchTerms.every(term => combined.includes(term));
+        });
+    }
+    
+    // Apply alphabetical filter
     if (currentFilter !== 'all') {
-        filteredPlugins = storePlugins.filter(plugin => 
-            plugin.name.charAt(0).toUpperCase() === currentFilter
+        filteredPlugins = filteredPlugins.filter(plugin => 
+            (plugin.name || '').charAt(0).toUpperCase() === currentFilter
         );
     }
     
-        filteredPlugins.forEach(plugin => {
+    if (filteredPlugins.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 20px; color: var(--text-secondary, #64748b);">No plugins match your filters. Try adjusting the category, search, or letter filter.</td></tr>';
+        return;
+    }
+    
+    filteredPlugins.forEach(plugin => {
         const row = document.createElement('tr');
         
         // Plugin icon - based on plugin type (same logic as Grid/Table views)
-        const pluginType = (plugin.type || 'Plugin').toLowerCase();
+        const pluginType = ((plugin.type || '') + '').trim().toLowerCase() || 'utility';
         let iconClass = 'fas fa-puzzle-piece'; // Default icon
         if (pluginType.includes('security')) {
             iconClass = 'fas fa-shield-alt';
@@ -1462,6 +2020,16 @@ function displayStorePlugins() {
             iconClass = 'fas fa-tools';
         } else if (pluginType.includes('backup')) {
             iconClass = 'fas fa-save';
+        } else if (pluginType.includes('monitoring')) {
+            iconClass = 'fas fa-heartbeat';
+        } else if (pluginType.includes('integration')) {
+            iconClass = 'fas fa-plug';
+        } else if (pluginType.includes('email')) {
+            iconClass = 'fas fa-envelope';
+        } else if (pluginType.includes('development')) {
+            iconClass = 'fas fa-code';
+        } else if (pluginType.includes('analytics')) {
+            iconClass = 'fas fa-chart-bar';
         }
         const iconHtml = `<div class="plugin-icon" style="width: 40px; height: 40px; background: var(--bg-secondary, #f8f9ff); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #5856d6; margin: 0 auto;">
             <i class="${iconClass}"></i>
@@ -1503,6 +2071,9 @@ function displayStorePlugins() {
         // Modify Date column - show N/A for store plugins (they're from GitHub, not local)
         const modifyDateHtml = plugin.modify_date ? `<small style="color: var(--text-secondary, #64748b);">${escapeHtml(plugin.modify_date)}</small>` : '<small style="color: var(--text-secondary, #64748b);">N/A</small>';
         
+        // Freshness badge (NEW/Stable/STALE) - use API data or compute from modify_date
+        const freshnessBadgeHtml = getFreshnessBadgeHtml(plugin.freshness_badge || null, plugin.modify_date);
+        
         // Pricing badge - ALWAYS show a badge (default to Free if is_paid is missing/undefined/null)
         // Version: 2026-01-25-v4 - Normalize is_paid to handle all possible values
         let isPaid = false;
@@ -1516,12 +2087,17 @@ function displayStorePlugins() {
             ? '<span class="plugin-pricing-badge paid">Paid</span>'
             : '<span class="plugin-pricing-badge free">Free</span>';
         
-        // Version: 2026-01-25-v5 - Added plugin icons to Store view (8 columns: Icon, Plugin Name, Version, Pricing, Modify Date, Action, Help, About)
+        // Version: 2026-01-27-v1 - Added Category column; category is required, no default
+        const pluginCategory = ((plugin.type || '') + '').trim() || '—';
+        const categoryBadge = `<span class="plugin-type">${escapeHtml(pluginCategory.toUpperCase())}</span>`;
+        
         row.innerHTML = `
             <td style="text-align: center;">${iconHtml}</td>
             <td>
                 <strong>${escapeHtml(plugin.name)}</strong>
+                ${freshnessBadgeHtml}
             </td>
+            <td>${categoryBadge}</td>
             <td><span class="plugin-version-number">${escapeHtml(plugin.version)}</span></td>
             <td>${pricingBadge}</td>
             <td>${modifyDateHtml}</td>
@@ -1534,21 +2110,256 @@ function displayStorePlugins() {
     });
 }
 
-function filterByLetter(letter) {
-    currentFilter = letter;
-    const alphaBtns = document.querySelectorAll('.alpha-btn');
-    alphaBtns.forEach(btn => btn.classList.remove('active'));
-    if (event && event.target) {
-        event.target.classList.add('active');
+function filterByCategory(category, evt) {
+    currentCategory = category;
+    const categoryBtns = document.querySelectorAll('.category-btn');
+    categoryBtns.forEach(btn => btn.classList.remove('active'));
+    const clickedBtn = evt && (evt.currentTarget || (evt.target && evt.target.closest('.category-btn')));
+    if (clickedBtn) {
+        clickedBtn.classList.add('active');
     } else {
-        // Find and activate the clicked button
-        alphaBtns.forEach(btn => {
-            if (btn.textContent.trim() === letter || (letter === 'all' && btn.textContent.trim() === 'All')) {
+        categoryBtns.forEach(btn => {
+            if (btn.getAttribute('data-category') === category) {
                 btn.classList.add('active');
             }
         });
     }
     displayStorePlugins();
+}
+
+function filterByLetter(letter, evt) {
+    currentFilter = letter;
+    const alphaBtns = document.querySelectorAll('.alpha-btn');
+    alphaBtns.forEach(btn => btn.classList.remove('active'));
+    const clickedBtn = evt && (evt.currentTarget || (evt.target && evt.target.closest('.alpha-btn')));
+    if (clickedBtn) {
+        clickedBtn.classList.add('active');
+    } else {
+        const label = letter === 'all' ? 'All' : letter;
+        alphaBtns.forEach(btn => {
+            if (btn.textContent.trim() === label) {
+                btn.classList.add('active');
+            }
+        });
+    }
+    displayStorePlugins();
+}
+
+function clearPluginSearch() {
+    const input = document.getElementById('pluginSearchInput');
+    const clearBtn = document.getElementById('pluginSearchClear');
+    if (input) {
+        input.value = '';
+        currentSearchQuery = '';
+        if (clearBtn) clearBtn.style.display = 'none';
+        displayStorePlugins();
+        input.focus();
+    }
+}
+
+function setInstalledFilter(filter) {
+    currentInstalledFilter = filter;
+    var bar = document.getElementById('installedSortFilterBar');
+    if (bar) {
+        try {
+            bar.querySelectorAll('.filter-btn').forEach(function(btn) {
+                btn.classList.toggle('active', (btn.getAttribute('data-filter') || '') === filter);
+            });
+        } catch (e) { console.warn('setInstalledFilter: filter buttons', e); }
+    }
+    try {
+        filterInstalledPlugins();
+    } catch (e) { console.warn('setInstalledFilter: filterInstalledPlugins', e); }
+}
+
+function filterInstalledPlugins() {
+    const query = (document.getElementById('installedPluginSearchInput') && document.getElementById('installedPluginSearchInput').value) || '';
+    const terms = query.trim().toLowerCase().split(/\s+/).filter(function(t) { return t.length > 0; });
+    const filter = currentInstalledFilter || 'all';
+    const gridView = document.getElementById('gridView');
+    const tableView = document.getElementById('tableView');
+    const noResultsGrid = document.getElementById('installedPluginsNoResultsGrid');
+    const noResultsTable = document.getElementById('installedPluginsNoResultsTable');
+    if (!gridView && !tableView) return;
+    var visibleCount = 0;
+    function matchesFilter(installed, enabled) {
+        if (filter === 'all') return true;
+        if (filter === 'installed') return installed === 'true';
+        if (filter === 'active') return installed === 'true' && enabled === 'true';
+        return true;
+    }
+    var cat = (typeof currentInstalledCategory !== 'undefined' ? currentInstalledCategory : 'all');
+    function matchesCategory(typeAttr) {
+        if (cat === 'all') return true;
+        var t = (typeAttr || '').trim().toLowerCase();
+        return t === (cat || '').trim().toLowerCase();
+    }
+    if (gridView) {
+        var cards = gridView.querySelectorAll('.plugin-card');
+        cards.forEach(function(card) {
+            var name = (card.getAttribute('data-plugin-name') || '').toLowerCase();
+            var desc = (card.getAttribute('data-plugin-desc') || '').toLowerCase();
+            var type = (card.getAttribute('data-plugin-type') || '').toLowerCase();
+            var combined = name + ' ' + desc + ' ' + type;
+            var searchMatch = terms.length === 0 || terms.every(function(term) { return combined.indexOf(term) !== -1; });
+            var installed = card.getAttribute('data-installed') || 'false';
+            var enabled = card.getAttribute('data-enabled') || 'false';
+            var filterMatch = matchesFilter(installed, enabled);
+            var categoryMatch = matchesCategory(card.getAttribute('data-plugin-type'));
+            var show = searchMatch && filterMatch && categoryMatch;
+            card.style.display = show ? '' : 'none';
+            if (show) visibleCount++;
+        });
+    }
+    if (tableView) {
+        var tbody = tableView.querySelector('.plugins-table-wrapper tbody');
+        if (tbody) {
+            var rows = tbody.querySelectorAll('tr');
+            rows.forEach(function(row) {
+                if (row.id === 'installedPluginsNoResultsTable') return;
+                var name = (row.getAttribute('data-plugin-name') || '').toLowerCase();
+                var desc = (row.getAttribute('data-plugin-desc') || '').toLowerCase();
+                var type = (row.getAttribute('data-plugin-type') || '').toLowerCase();
+                var combined = name + ' ' + desc + ' ' + type;
+                var searchMatch = terms.length === 0 || terms.every(function(term) { return combined.indexOf(term) !== -1; });
+                var installed = row.getAttribute('data-installed') || 'false';
+                var enabled = row.getAttribute('data-enabled') || 'false';
+                var filterMatch = matchesFilter(installed, enabled);
+                var categoryMatch = matchesCategory(row.getAttribute('data-plugin-type'));
+                var show = searchMatch && filterMatch && categoryMatch;
+                row.style.display = show ? '' : 'none';
+                if (show) visibleCount++;
+            });
+        }
+    }
+    var hasFilterOrSearch = terms.length > 0 || (filter !== 'all') || (cat !== 'all');
+    if (noResultsGrid) {
+        noResultsGrid.style.display = (hasFilterOrSearch && visibleCount === 0) ? 'block' : 'none';
+    }
+    if (noResultsTable) {
+        noResultsTable.style.display = (hasFilterOrSearch && visibleCount === 0) ? 'table-row' : 'none';
+    }
+}
+
+function clearInstalledPluginSearch() {
+    var input = document.getElementById('installedPluginSearchInput');
+    var clearBtn = document.getElementById('installedPluginSearchClear');
+    if (input) {
+        input.value = '';
+        if (clearBtn) clearBtn.style.display = 'none';
+        filterInstalledPlugins();
+        input.focus();
+    }
+}
+
+function toggleInstalledSort(field) {
+    if (field === 'name') {
+        currentInstalledSort = currentInstalledSort === 'name-asc' ? 'name-desc' : 'name-asc';
+    } else if (field === 'date') {
+        currentInstalledSort = currentInstalledSort === 'date-desc' ? 'date-asc' : 'date-desc';
+    } else {
+        currentInstalledSort = 'type';
+    }
+    updateInstalledSortButtons();
+    doApplyInstalledSort();
+}
+
+function updateInstalledSortButtons() {
+    var bar = document.getElementById('installedSortFilterBar');
+    var transNameAsc = bar && bar.getAttribute('data-trans-name-asc') || 'Name A-Å';
+    var transNameDesc = bar && bar.getAttribute('data-trans-name-desc') || 'Name Å-A';
+    var transDateNewest = bar && bar.getAttribute('data-trans-date-newest') || 'Date (newest)';
+    var transDateOldest = bar && bar.getAttribute('data-trans-date-oldest') || 'Date (oldest)';
+    var nameBtn = document.getElementById('installedSortBtnName');
+    var typeBtn = document.getElementById('installedSortBtnType');
+    var dateBtn = document.getElementById('installedSortBtnDate');
+    if (nameBtn) {
+        nameBtn.classList.toggle('active', currentInstalledSort === 'name-asc' || currentInstalledSort === 'name-desc');
+        var nameLabel = nameBtn.querySelector('.sort-btn-label');
+        var nameIcon = nameBtn.querySelector('i');
+        if (nameLabel) nameLabel.textContent = currentInstalledSort === 'name-desc' ? transNameDesc : transNameAsc;
+        if (nameIcon) nameIcon.className = currentInstalledSort === 'name-desc' ? 'fas fa-sort-alpha-down-alt' : 'fas fa-sort-alpha-down';
+    }
+    if (typeBtn) typeBtn.classList.toggle('active', currentInstalledSort === 'type');
+    if (dateBtn) {
+        dateBtn.classList.toggle('active', currentInstalledSort === 'date-asc' || currentInstalledSort === 'date-desc');
+        var dateLabel = dateBtn.querySelector('.sort-btn-label');
+        var dateIcon = dateBtn.querySelector('i');
+        if (dateLabel) dateLabel.textContent = currentInstalledSort === 'date-asc' ? transDateOldest : transDateNewest;
+        if (dateIcon) dateIcon.className = currentInstalledSort === 'date-asc' ? 'fas fa-calendar' : 'fas fa-calendar-alt';
+    }
+}
+
+function doApplyInstalledSort() {
+    var sortKey = currentInstalledSort;
+    var gridView = document.getElementById('gridView');
+    var tableView = document.getElementById('tableView');
+    var noResultsGrid = document.getElementById('installedPluginsNoResultsGrid');
+    var noResultsTable = document.getElementById('installedPluginsNoResultsTable');
+    function compareCards(a, b) {
+        var nameA = (a.getAttribute('data-plugin-name') || '').toLowerCase();
+        var nameB = (b.getAttribute('data-plugin-name') || '').toLowerCase();
+        var typeA = (a.getAttribute('data-plugin-type') || '').toLowerCase();
+        var typeB = (b.getAttribute('data-plugin-type') || '').toLowerCase();
+        var dateA = a.getAttribute('data-modify-date') || '0000-00-00 00:00:00';
+        var dateB = b.getAttribute('data-modify-date') || '0000-00-00 00:00:00';
+        if (sortKey === 'name-asc') return nameA.localeCompare(nameB);
+        if (sortKey === 'name-desc') return nameB.localeCompare(nameA);
+        if (sortKey === 'type') { var c = typeA.localeCompare(typeB); return c !== 0 ? c : nameA.localeCompare(nameB); }
+        if (sortKey === 'date-desc') return dateB.localeCompare(dateA);
+        if (sortKey === 'date-asc') return dateA.localeCompare(dateB);
+        return 0;
+    }
+    if (gridView) {
+        var cards = Array.prototype.slice.call(gridView.querySelectorAll('.plugin-card'));
+        cards.sort(compareCards);
+        cards.forEach(function(card) { gridView.appendChild(card); });
+        if (noResultsGrid) gridView.appendChild(noResultsGrid);
+    }
+    if (tableView) {
+        var tbody = tableView.querySelector('.plugins-table-wrapper tbody');
+        if (tbody) {
+            var rows = Array.prototype.slice.call(tbody.querySelectorAll('tr'));
+            var dataRows = rows.filter(function(r) { return r.id !== 'installedPluginsNoResultsTable'; });
+            dataRows.sort(compareCards);
+            dataRows.forEach(function(row) { tbody.appendChild(row); });
+            if (noResultsTable) tbody.appendChild(noResultsTable);
+        }
+    }
+}
+
+function toggleAlphabetFilter() {
+    const filter = document.getElementById('alphabetFilter');
+    const toggleBtn = document.getElementById('alphabetToggleBtn');
+    if (!filter || !toggleBtn) return;
+    const isExpanded = toggleBtn.getAttribute('aria-expanded') === 'true';
+    filter.style.display = isExpanded ? 'none' : 'flex';
+    filter.setAttribute('aria-hidden', isExpanded ? 'true' : 'false');
+    toggleBtn.setAttribute('aria-expanded', isExpanded ? 'false' : 'true');
+}
+
+function toggleInstalledCategoryFilter() {
+    const filter = document.getElementById('installedCategoryFilter');
+    const toggleBtn = document.getElementById('installedCategoryToggleBtn');
+    if (!filter || !toggleBtn) return;
+    const isExpanded = toggleBtn.getAttribute('aria-expanded') === 'true';
+    filter.style.display = isExpanded ? 'none' : 'block';
+    filter.setAttribute('aria-hidden', isExpanded ? 'true' : 'false');
+    toggleBtn.setAttribute('aria-expanded', isExpanded ? 'false' : 'true');
+}
+
+function filterByCategoryInstalled(category, evt) {
+    currentInstalledCategory = category;
+    const btns = document.querySelectorAll('.installed-category-btn');
+    btns.forEach(function(btn) { btn.classList.remove('active'); });
+    const clickedBtn = evt && (evt.currentTarget || (evt.target && evt.target.closest('.installed-category-btn')));
+    if (clickedBtn) clickedBtn.classList.add('active');
+    else {
+        btns.forEach(function(btn) {
+            if ((btn.getAttribute('data-category') || '') === category) btn.classList.add('active');
+        });
+    }
+    try { filterInstalledPlugins(); } catch (e) { console.warn('filterByCategoryInstalled', e); }
 }
 
 function upgradePlugin(pluginName, currentVersion, newVersion) {
@@ -1761,43 +2572,54 @@ function installPlugin(pluginName) {
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Installing...';
     
-    fetch(`/plugins/api/install/${pluginName}/`, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': getCookie('csrftoken'),
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        } else {
-            if (typeof PNotify !== 'undefined') {
-                new PNotify({
-                    title: 'Installation Failed!',
-                    text: data.error || 'Failed to install plugin',
-                    type: 'error'
-                });
-            } else {
-                alert('Error: ' + (data.error || 'Failed to install plugin'));
-            }
-            btn.disabled = false;
-            btn.innerHTML = originalText;
-        }
-    })
-    .catch(error => {
+    const headers = {
+        'X-CSRFToken': getCookie('csrftoken'),
+        'Content-Type': 'application/json'
+    };
+    
+    function showError(msg) {
         if (typeof PNotify !== 'undefined') {
-            new PNotify({
-                title: 'Error!',
-                text: 'Failed to install plugin: ' + error.message,
-                type: 'error'
-            });
+            new PNotify({ title: 'Installation Failed!', text: msg || 'Failed to install plugin', type: 'error' });
         } else {
-            alert('Error: Failed to install plugin - ' + error.message);
+            alert('Error: ' + (msg || 'Failed to install plugin'));
         }
         btn.disabled = false;
         btn.innerHTML = originalText;
+    }
+    
+    function tryLocalInstall() {
+        return fetch(`/plugins/api/install/${pluginName}/`, { method: 'POST', headers: headers })
+            .then(function(r) { return r.json().then(function(data) { return { response: r, data: data }; }); });
+    }
+    
+    function tryStoreInstall() {
+        return fetch(`/plugins/api/store/install/${pluginName}/`, { method: 'POST', headers: headers })
+            .then(function(r) { return r.json().then(function(data) { return { response: r, data: data }; }); });
+    }
+    
+    tryLocalInstall()
+    .then(function(result) {
+        if (result.data.success) {
+            location.reload();
+            return;
+        }
+        var err = result.data.error || '';
+        if (result.response.status === 404 || (err && err.indexOf('Plugin source not found') !== -1)) {
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Installing from store...';
+            return tryStoreInstall();
+        }
+        showError(err);
+    })
+    .then(function(result) {
+        if (!result || !result.data) return;
+        if (result.data.success) {
+            location.reload();
+        } else {
+            showError(result.data.error || 'Failed to install plugin');
+        }
+    })
+    .catch(function(error) {
+        showError(error && error.message ? error.message : 'Failed to install plugin');
     });
 }
 
@@ -2126,6 +2948,91 @@ function deactivatePlugin(pluginName) {
     });
 }
 
+function activateAllPlugins() {
+    const btns = document.querySelectorAll('#gridView .btn-activate[data-plugin-dir], #tableView .btn-activate[data-plugin-dir]');
+    const plugins = Array.from(btns).map(b => b.getAttribute('data-plugin-dir')).filter(Boolean);
+    if (plugins.length === 0) {
+        if (typeof PNotify !== 'undefined') {
+            new PNotify({ title: 'Info', text: 'No inactive plugins to activate.', type: 'info' });
+        } else {
+            alert('No inactive plugins to activate.');
+        }
+        return;
+    }
+    const activateAllBtn = document.querySelector('.btn-activate-all');
+    if (activateAllBtn) activateAllBtn.disabled = true;
+    let done = 0;
+    const run = () => {
+        if (done >= plugins.length) {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({ title: 'Success!', text: `Activated ${plugins.length} plugin(s).`, type: 'success' });
+            } else {
+                alert(`Activated ${plugins.length} plugin(s).`);
+            }
+            setTimeout(() => location.reload(), 800);
+            return;
+        }
+        const name = plugins[done];
+        fetch(`/plugins/api/enable/${name}/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success && typeof PNotify !== 'undefined') {
+                new PNotify({ title: 'Warning', text: `${name}: ${data.error || 'failed'}`, type: 'error' });
+            }
+            done++;
+            run();
+        })
+        .catch(() => { done++; run(); });
+    };
+    run();
+}
+
+function deactivateAllPlugins() {
+    const btns = document.querySelectorAll('#gridView .btn-deactivate[data-plugin-dir], #tableView .btn-deactivate[data-plugin-dir]');
+    const plugins = Array.from(btns).map(b => b.getAttribute('data-plugin-dir')).filter(Boolean);
+    if (plugins.length === 0) {
+        if (typeof PNotify !== 'undefined') {
+            new PNotify({ title: 'Info', text: 'No active plugins to deactivate.', type: 'info' });
+        } else {
+            alert('No active plugins to deactivate.');
+        }
+        return;
+    }
+    if (!confirm(`Deactivate ${plugins.length} plugin(s)? They will be disabled but remain installed.`)) return;
+    const deactivateAllBtn = document.querySelector('.btn-deactivate-all');
+    if (deactivateAllBtn) deactivateAllBtn.disabled = true;
+    let done = 0;
+    const run = () => {
+        if (done >= plugins.length) {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({ title: 'Success!', text: `Deactivated ${plugins.length} plugin(s).`, type: 'success' });
+            } else {
+                alert(`Deactivated ${plugins.length} plugin(s).`);
+            }
+            setTimeout(() => location.reload(), 800);
+            return;
+        }
+        const name = plugins[done];
+        fetch(`/plugins/api/disable/${name}/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success && typeof PNotify !== 'undefined') {
+                new PNotify({ title: 'Warning', text: `${name}: ${data.error || 'failed'}`, type: 'error' });
+            }
+            done++;
+            run();
+        })
+        .catch(() => { done++; run(); });
+    };
+    run();
+}
+
 function dismissNotice() {
     const notice = document.getElementById('pluginStoreNotice');
     if (notice) {
@@ -2212,13 +3119,78 @@ document.addEventListener('DOMContentLoaded', function() {
     if (requestedView === 'store') {
         toggleView('store');
     } else {
-        // Default to grid view if plugins exist, otherwise show store
+        // Search input listener (debounced)
+        const searchInput = document.getElementById('pluginSearchInput');
+        const searchClearBtn = document.getElementById('pluginSearchClear');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                currentSearchQuery = this.value;
+                if (searchClearBtn) {
+                    searchClearBtn.style.display = currentSearchQuery.trim() ? 'block' : 'none';
+                }
+                displayStorePlugins();
+            });
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    clearPluginSearch();
+                    e.preventDefault();
+                }
+            });
+        }
+        
+        // Installed plugins search (Grid View and Table View)
+        const installedSearchInput = document.getElementById('installedPluginSearchInput');
+        const installedSearchClearBtn = document.getElementById('installedPluginSearchClear');
+        if (installedSearchInput) {
+            installedSearchInput.addEventListener('input', function() {
+                if (installedSearchClearBtn) {
+                    installedSearchClearBtn.style.display = this.value.trim() ? 'block' : 'none';
+                }
+                filterInstalledPlugins();
+            });
+            installedSearchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    clearInstalledPluginSearch();
+                    e.preventDefault();
+                }
+            });
+        }
+        
+        // Check URL hash for view preference
+        const hash = window.location.hash.substring(1); // Remove #
+        const validViews = ['grid', 'table', 'store'];
+        
+        // Check if view elements exist before calling toggleView
         const gridView = document.getElementById('gridView');
+        const tableView = document.getElementById('tableView');
         const storeView = document.getElementById('storeView');
-        if (gridView && gridView.children.length > 0) {
-            toggleView('grid');
-        } else if (storeView) {
-            toggleView('store');
+        
+        // Only proceed if all view elements exist (plugins are installed)
+        if (gridView && tableView && storeView) {
+            let initialView = 'grid'; // Default
+            if (validViews.includes(hash)) {
+                initialView = hash;
+            } else {
+                if (gridView.children.length > 0) {
+                    initialView = 'grid';
+                } else {
+                    initialView = 'store';
+                }
+            }
+            
+            const hadHash = hash.length > 0;
+            try {
+                toggleView(initialView, hadHash);
+            } catch (e) {
+                console.warn('plugins: toggleView on load failed', e);
+                if (storeView) storeView.style.display = 'block';
+                if (gridView) gridView.style.display = 'none';
+                if (tableView) tableView.style.display = 'none';
+            }
+        } else {
+            if (storeView) {
+                storeView.style.display = 'block';
+            }
         }
     }
     
@@ -2229,6 +3201,22 @@ document.addEventListener('DOMContentLoaded', function() {
             loadPluginStore();
         }
     }, 100); // Small delay to ensure DOM is ready
+});
+
+// Handle hash changes (back/forward browser buttons)
+window.addEventListener('hashchange', function() {
+    // Prevent infinite loops when we programmatically set the hash
+    if (isSettingHash) {
+        return;
+    }
+    
+    const hash = window.location.hash.substring(1);
+    const validViews = ['grid', 'table', 'store'];
+    
+    if (validViews.includes(hash)) {
+        // Don't update hash again since it's already set (user navigated via browser)
+        toggleView(hash, false);
+    }
 });
 </script>
 {% endblock %}

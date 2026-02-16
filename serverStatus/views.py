@@ -319,18 +319,36 @@ def servicesAction(request):
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
 
-                else:
-                    if service == 'pure-ftpd':
-                        if os.path.exists("/etc/lsb-release"):
-                            service = 'pure-ftpd-mysql'
-                        else:
-                            service = 'pure-ftpd'
+                if service == 'pure-ftpd':
+                    if os.path.exists("/etc/lsb-release"):
+                        service = 'pure-ftpd-mysql'
+                    else:
+                        service = 'pure-ftpd'
 
-                    command = 'sudo systemctl %s %s' % (action, service)
-                    ProcessUtilities.executioner(command)
-                    final_dic = {'serviceAction': 1, "error_message": 0}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
+                # Run as root with shell so systemctl has permission (panel may run as lscpd)
+                command = 'systemctl %s %s' % (action, service)
+                ProcessUtilities.executioner(command, 'root', True)
+                time.sleep(1)
+
+                # For start action, verify service actually came up; return error if not
+                if action == 'start':
+                    try:
+                        out = ProcessUtilities.outputExecutioner('systemctl is-active %s' % service, 'root', True)
+                        if not (out and out.strip() == 'active'):
+                            status_out = ProcessUtilities.outputExecutioner(
+                                'systemctl status %s --no-pager -l 2>&1 | head -15' % service, 'root', True)
+                            err_msg = (status_out or '').strip().replace('\n', ' ')[:400]
+                            final_dic = {'serviceAction': 0, 'error_message': 'Service did not start. ' + err_msg}
+                            final_json = json.dumps(final_dic)
+                            return HttpResponse(final_json)
+                    except Exception as e:
+                        final_dic = {'serviceAction': 0, 'error_message': 'Service did not start: %s' % str(e)}
+                        final_json = json.dumps(final_dic)
+                        return HttpResponse(final_json)
+
+                final_dic = {'serviceAction': 1, "error_message": 0}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
 
 
         except BaseException as msg:
@@ -866,9 +884,23 @@ def fetchPackages(request):
             locked = ProcessUtilities.outputExecutioner(command).split('\n')
 
             if type == 'CyberPanel':
-
-                command = 'cat /usr/local/CyberCP/AllCPUbuntu.json'
-                packages = json.loads(ProcessUtilities.outputExecutioner(command))
+                # Prefer live data for Ubuntu 22/24, fall back to static JSON
+                packages = None
+                try:
+                    cmd_out = ProcessUtilities.outputExecutioner('apt list --installed 2>/dev/null')
+                    lines = [l for l in cmd_out.split('\n') if l and '/' in l][4:]  # Skip header
+                    packages = []
+                    for line in lines:
+                        parts = line.split(None, 2)
+                        if len(parts) >= 2:
+                            packages.append({'Package': parts[0], 'Version': parts[1]})
+                except Exception:
+                    pass
+                if not packages and os.path.exists('/usr/local/CyberCP/AllCPUbuntu.json'):
+                    command = 'cat /usr/local/CyberCP/AllCPUbuntu.json'
+                    packages = json.loads(ProcessUtilities.outputExecutioner(command))
+                if not packages:
+                    packages = []
 
             else:
                 command = 'apt list --installed'
@@ -888,11 +920,16 @@ def fetchPackages(request):
         elif ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
 
             ### Check Package Lock status
-
-            if os.path.exists('/etc/yum.conf'):
+            # Prefer dnf.conf when dnf is present (AlmaLinux 9/10, RHEL 9, Rocky 9)
+            yum_dnf = 'dnf' if os.path.exists('/usr/bin/dnf') else 'yum'
+            if yum_dnf == 'dnf' and os.path.exists('/etc/dnf/dnf.conf'):
+                yumConf = '/etc/dnf/dnf.conf'
+            elif os.path.exists('/etc/yum.conf'):
                 yumConf = '/etc/yum.conf'
             elif os.path.exists('/etc/yum/yum.conf'):
                 yumConf = '/etc/yum/yum.conf'
+            else:
+                yumConf = '/etc/dnf/dnf.conf' if os.path.exists('/etc/dnf/dnf.conf') else '/etc/yum.conf'
 
             yumConfData = open(yumConf, 'r').read()
             locked = []
@@ -912,7 +949,7 @@ def fetchPackages(request):
 
                 startForUpdate = 1
 
-                command = 'yum check-update'
+                command = '%s check-update 2>/dev/null || true' % yum_dnf
                 updates = ProcessUtilities.outputExecutioner(command).split('\n')
 
                 for items in updates:
@@ -930,7 +967,7 @@ def fetchPackages(request):
 
                 ###
 
-                command = 'yum list installed'
+                command = '%s list installed' % yum_dnf
                 packages = ProcessUtilities.outputExecutioner(command).split('\n')
 
                 startFrom = 1
@@ -946,7 +983,7 @@ def fetchPackages(request):
 
                 startForUpdate = 1
 
-                command = 'yum check-update'
+                command = '%s check-update 2>/dev/null || true' % yum_dnf
                 packages = ProcessUtilities.outputExecutioner(command).split('\n')
 
                 for items in packages:
@@ -956,8 +993,26 @@ def fetchPackages(request):
                     else:
                         startForUpdate = startForUpdate + 1
             elif type == 'CyberPanel':
-                command = 'cat /usr/local/CyberCP/CPCent7repo.json'
-                packages = json.loads(ProcessUtilities.outputExecutioner(command))
+                # Prefer live data for AlmaLinux 8/9/10, RHEL, Rocky; fall back to static JSON
+                packages = None
+                try:
+                    dnf_cmd = 'dnf list installed' if os.path.exists('/usr/bin/dnf') else 'yum list installed'
+                    cmd_out = ProcessUtilities.outputExecutioner(dnf_cmd)
+                    lines = [l.strip() for l in cmd_out.split('\n') if l.strip()]
+                    idx = next((i for i, l in enumerate(lines) if 'Installed Packages' in l or 'Installed' in l), 0)
+                    lines = lines[idx + 1:] if idx < len(lines) else lines
+                    packages = []
+                    for line in lines:
+                        parts = line.split()
+                        if len(parts) >= 2:
+                            packages.append({'Package': parts[0], 'Version': parts[1]})
+                except Exception:
+                    pass
+                if not packages and os.path.exists('/usr/local/CyberCP/CPCent7repo.json'):
+                    command = 'cat /usr/local/CyberCP/CPCent7repo.json'
+                    packages = json.loads(ProcessUtilities.outputExecutioner(command))
+                if not packages:
+                    packages = []
 
         ## make list of packages that need update
 
@@ -1113,7 +1168,8 @@ def fetchPackageDetails(request):
             command = 'apt-cache show %s' % (package)
             packageDetails = ProcessUtilities.outputExecutioner(command)
         elif ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-            command = 'yum info %s' % (package)
+            pkg_cmd = 'dnf info' if os.path.exists('/usr/bin/dnf') else 'yum info'
+            command = '%s %s' % (pkg_cmd, package)
             packageDetails = ProcessUtilities.outputExecutioner(command)
 
         data_ret = {'status': 1, 'packageDetails': packageDetails}

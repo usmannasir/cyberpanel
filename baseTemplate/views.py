@@ -16,6 +16,7 @@ from plogical.acl import ACLManager
 from manageServices.models import PDNSStatus
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from plogical.processUtilities import ProcessUtilities
+from plogical.firewallUtilities import FirewallUtilities
 from plogical.httpProc import httpProc
 from websiteFunctions.models import Websites, WPSites
 from databases.models import Databases
@@ -25,11 +26,33 @@ from loginSystem.models import Administrator
 from packages.models import Package
 from django.views.decorators.http import require_GET, require_POST
 import pwd
+import re
 
 # Create your views here.
 
 VERSION = '2.5.5'
 BUILD = 'dev'
+
+
+def _version_compare(a, b):
+    """Return 1 if a > b, -1 if a < b, 0 if equal."""
+    def parse(v):
+        parts = []
+        for p in str(v).split('.'):
+            try:
+                parts.append(int(p))
+            except ValueError:
+                parts.append(0)
+        return parts
+    pa, pb = parse(a), parse(b)
+    for i in range(max(len(pa), len(pb))):
+        va = pa[i] if i < len(pa) else 0
+        vb = pb[i] if i < len(pb) else 0
+        if va > vb:
+            return 1
+        if va < vb:
+            return -1
+    return 0
 
 
 @ensure_csrf_cookie
@@ -44,27 +67,41 @@ def renderBase(request):
 
 @ensure_csrf_cookie
 def versionManagement(request):
+    currentVersion = VERSION
+    currentBuild = str(BUILD)
+
     getVersion = requests.get('https://cyberpanel.net/version.txt')
     latest = getVersion.json()
     latestVersion = latest['version']
     latestBuild = latest['build']
+    branch_ref = 'v%s.%s' % (latestVersion, latestBuild)
 
-    currentVersion = VERSION
-    currentBuild = str(BUILD)
-
-    u = "https://api.github.com/repos/usmannasir/cyberpanel/commits?sha=v%s.%s" % (latestVersion, latestBuild)
-    logging.writeToFile(u)
-    r = requests.get(u)
-    latestcomit = r.json()[0]['sha']
-
-    command = "git -C /usr/local/CyberCP/ rev-parse HEAD"
-    output = ProcessUtilities.outputExecutioner(command)
-
-    Currentcomt = output.rstrip("\n")
     notechk = True
+    Currentcomt = ''
+    latestcomit = ''
 
-    if Currentcomt == latestcomit:
+    if _version_compare(currentVersion, latestVersion) > 0:
         notechk = False
+    else:
+        remote_cmd = 'git -C /usr/local/CyberCP remote get-url origin 2>/dev/null || true'
+        remote_out = ProcessUtilities.outputExecutioner(remote_cmd)
+        is_usmannasir = 'usmannasir/cyberpanel' in (remote_out or '')
+
+        if is_usmannasir:
+            u = "https://api.github.com/repos/usmannasir/cyberpanel/commits?sha=%s" % branch_ref
+            logging.CyberCPLogFileWriter.writeToFile(u)
+            try:
+                r = requests.get(u, timeout=10)
+                r.raise_for_status()
+                latestcomit = r.json()[0]['sha']
+            except (requests.RequestException, IndexError, KeyError) as e:
+                logging.CyberCPLogFileWriter.writeToFile('[versionManagement] GitHub API failed: %s' % str(e))
+            head_cmd = 'git -C /usr/local/CyberCP rev-parse HEAD 2>/dev/null || true'
+            Currentcomt = ProcessUtilities.outputExecutioner(head_cmd).rstrip('\n')
+            if latestcomit and Currentcomt == latestcomit:
+                notechk = False
+        else:
+            notechk = False
 
     template = 'baseTemplate/versionManagment.html'
     finalData = {'build': currentBuild, 'currentVersion': currentVersion, 'latestVersion': latestVersion,
@@ -129,6 +166,11 @@ def getAdminStatus(request):
 
 
 def getSystemStatus(request):
+    default_fallback = {
+        'cpuUsage': 0, 'ramUsage': 0, 'diskUsage': 0,
+        'cpuCores': 2, 'ramTotalMB': 4096, 'diskTotalGB': 100,
+        'diskFreeGB': 100, 'uptime': 'N/A'
+    }
     try:
         val = request.session['userID']
         currentACL = ACLManager.loadedACL(val)
@@ -215,31 +257,13 @@ def getSystemStatus(request):
             
     except KeyError as e:
         logging.CyberCPLogFileWriter.writeToFile(f'[getSystemStatus] KeyError - No session userID: {str(e)}')
-        # Return default values on error
-        default_data = {
-            'cpuUsage': 0,
-            'ramUsage': 0,
-            'diskUsage': 0,
-            'cpuCores': 2,
-            'ramTotalMB': 4096,
-            'diskTotalGB': 100,
-            'diskFreeGB': 100,
-            'uptime': 'N/A'
-        }
-        return HttpResponse(json.dumps(default_data))
+        return HttpResponse(json.dumps(default_fallback))
     except Exception as e:
-        # Return default values on error
-        default_data = {
-            'cpuUsage': 0,
-            'ramUsage': 0,
-            'diskUsage': 0,
-            'cpuCores': 2,
-            'ramTotalMB': 4096,
-            'diskTotalGB': 100,
-            'diskFreeGB': 100,
-            'uptime': 'N/A'
-        }
-        return HttpResponse(json.dumps(default_data))
+        logging.CyberCPLogFileWriter.writeToFile(f'[getSystemStatus] Exception: {str(e)}')
+        try:
+            return HttpResponse(json.dumps(default_fallback))
+        except Exception:
+            return HttpResponse('{"cpuUsage":0,"ramUsage":0,"diskUsage":0,"cpuCores":2,"ramTotalMB":4096,"diskTotalGB":100,"diskFreeGB":100,"uptime":"N/A"}', content_type='application/json')
 
 
 def getLoadAverage(request):
@@ -265,31 +289,75 @@ def getLoadAverage(request):
 
 @ensure_csrf_cookie
 def versionManagment(request):
-    ## Get latest version
-
-    getVersion = requests.get('https://cyberpanel.net/version.txt')
-    latest = getVersion.json()
-    latestVersion = latest['version']
-    latestBuild = latest['build']
-
-    ## Get local version
-
     currentVersion = VERSION
     currentBuild = str(BUILD)
 
-    u = "https://api.github.com/repos/usmannasir/cyberpanel/commits?sha=v%s.%s" % (latestVersion, latestBuild)
-    logging.CyberCPLogFileWriter.writeToFile(u)
-    r = requests.get(u)
-    latestcomit = r.json()[0]['sha']
-
-    command = "git -C /usr/local/CyberCP/ rev-parse HEAD"
-    output = ProcessUtilities.outputExecutioner(command)
-
-    Currentcomt = output.rstrip("\n")
     notechk = True
+    Currentcomt = ''
+    latestcomit = ''
+    latestVersion = '0'
+    latestBuild = '0'
 
-    if (Currentcomt == latestcomit):
+    on_dev_branch = (currentVersion == '2.5.5' and currentBuild == 'dev')
+
+    try:
+        getVersion = requests.get('https://cyberpanel.net/version.txt', timeout=10)
+        getVersion.raise_for_status()
+        latest = getVersion.json()
+        latestVersion = str(latest.get('version', '0'))
+        latestBuild = str(latest.get('build', '0'))
+    except (requests.RequestException, ValueError, KeyError) as e:
+        logging.CyberCPLogFileWriter.writeToFile('[versionManagment] cyberpanel.net/version.txt failed: %s' % str(e))
+        if on_dev_branch:
+            latestVersion, latestBuild = '2.5.5', 'dev'
+
+    # Dev branch: compare against v2.5.5-dev, show dev version info
+    if on_dev_branch:
+        branch_ref = 'v2.5.5-dev'
+        latestVersion, latestBuild = '2.5.5', 'dev'
+    else:
+        branch_ref = 'v%s.%s' % (latestVersion, latestBuild)
+
+    # Always fetch local HEAD for display
+    head_cmd = 'git -C /usr/local/CyberCP rev-parse HEAD 2>/dev/null || true'
+    Currentcomt = (ProcessUtilities.outputExecutioner(head_cmd) or '').rstrip('\n')
+
+    remote_cmd = 'git -C /usr/local/CyberCP remote get-url origin 2>/dev/null || true'
+    remote_out = ProcessUtilities.outputExecutioner(remote_cmd)
+    is_usmannasir = 'usmannasir/cyberpanel' in (remote_out or '')
+
+    # Stable: newer than cyberpanel.net = up to date; dev: compare commits
+    if not on_dev_branch and notechk and _version_compare(currentVersion, latestVersion) > 0:
         notechk = False
+    elif notechk:
+        # Dev branch: always use usmannasir v2.5.5-dev as canonical "latest"
+        # Forks: use usmannasir for Latest Commit so all dev users compare to same upstream
+        fetch_branch = branch_ref if (is_usmannasir or on_dev_branch) else None
+        if fetch_branch:
+            u = "https://api.github.com/repos/usmannasir/cyberpanel/commits?sha=%s" % fetch_branch
+            logging.CyberCPLogFileWriter.writeToFile(u)
+            try:
+                r = requests.get(u, timeout=10)
+                r.raise_for_status()
+                latestcomit = r.json()[0]['sha']
+                if Currentcomt and latestcomit and Currentcomt == latestcomit:
+                    notechk = False
+            except (requests.RequestException, IndexError, KeyError) as e:
+                logging.CyberCPLogFileWriter.writeToFile('[versionManagment] GitHub API failed: %s' % str(e))
+        elif not on_dev_branch:
+            # Stable fork: fetch from fork's branch
+            m = re.search(r'github\.com[:/]([^/]+)/([^/]+?)(?:\.git)?$', (remote_out or '').strip())
+            if m:
+                owner, repo = m.group(1), m.group(2).rstrip('.git')
+                try:
+                    u = "https://api.github.com/repos/%s/%s/commits?sha=%s" % (owner, repo, branch_ref)
+                    r = requests.get(u, timeout=10)
+                    r.raise_for_status()
+                    latestcomit = r.json()[0]['sha']
+                    if Currentcomt and latestcomit and Currentcomt == latestcomit:
+                        notechk = False
+                except (requests.RequestException, IndexError, KeyError):
+                    pass
 
     template = 'baseTemplate/versionManagment.html'
     finalData = {'build': currentBuild, 'currentVersion': currentVersion, 'latestVersion': latestVersion,
@@ -729,9 +797,19 @@ def getRecentSSHLogins(request):
         import re, time
         from collections import OrderedDict
 
-        # Run 'last -n 20' to get recent SSH logins
+        # Pagination params
         try:
-            output = ProcessUtilities.outputExecutioner('last -n 20')
+            page = max(1, int(request.GET.get('page', 1)))
+        except (ValueError, TypeError):
+            page = 1
+        try:
+            per_page = min(100, max(5, int(request.GET.get('per_page', 20))))
+        except (ValueError, TypeError):
+            per_page = 20
+
+        # Run 'last -n 500' to get enough entries for pagination
+        try:
+            output = ProcessUtilities.outputExecutioner('last -n 500')
         except Exception as e:
             return HttpResponse(json.dumps({'error': 'Failed to run last: %s' % str(e)}), content_type='application/json', status=500)
 
@@ -815,7 +893,19 @@ def getRecentSSHLogins(request):
                 'is_active': is_active,
                 'raw': line
             })
-        return HttpResponse(json.dumps({'logins': logins}), content_type='application/json')
+        total = len(logins)
+        total_pages = (total + per_page - 1) // per_page if total > 0 else 1
+        page = min(page, total_pages) if total_pages > 0 else 1
+        start = (page - 1) * per_page
+        end = start + per_page
+        paginated_logins = logins[start:end]
+        return HttpResponse(json.dumps({
+            'logins': paginated_logins,
+            'total': total,
+            'page': page,
+            'per_page': per_page,
+            'total_pages': total_pages
+        }), content_type='application/json')
     except Exception as e:
         return HttpResponse(json.dumps({'error': str(e)}), content_type='application/json', status=500)
 
@@ -829,6 +919,17 @@ def getRecentSSHLogs(request):
         currentACL = ACLManager.loadedACL(user_id)
         if not currentACL.get('admin', 0):
             return HttpResponse(json.dumps({'error': 'Admin only'}), content_type='application/json', status=403)
+
+        # Pagination params
+        try:
+            page = max(1, int(request.GET.get('page', 1)))
+        except (ValueError, TypeError):
+            page = 1
+        try:
+            per_page = min(100, max(5, int(request.GET.get('per_page', 25))))
+        except (ValueError, TypeError):
+            per_page = 25
+
         from plogical.processUtilities import ProcessUtilities
         import re
         distro = ProcessUtilities.decideDistro()
@@ -837,7 +938,7 @@ def getRecentSSHLogs(request):
         else:
             log_path = '/var/log/secure'
         try:
-            output = ProcessUtilities.outputExecutioner(f'tail -n 100 {log_path}')
+            output = ProcessUtilities.outputExecutioner(f'tail -n 500 {log_path}')
         except Exception as e:
             return HttpResponse(json.dumps({'error': f'Failed to read log: {str(e)}'}), content_type='application/json', status=500)
         lines = output.split('\n')
@@ -875,7 +976,21 @@ def getRecentSSHLogs(request):
                 'raw': line,
                 'ip_address': ip_address
             })
-        return HttpResponse(json.dumps({'logs': logs}), content_type='application/json')
+        # Reverse so newest logs appear first (page 1 = most recent)
+        logs.reverse()
+        total = len(logs)
+        total_pages = (total + per_page - 1) // per_page if total > 0 else 1
+        page = min(page, total_pages) if total_pages > 0 else 1
+        start = (page - 1) * per_page
+        end = start + per_page
+        paginated_logs = logs[start:end]
+        return HttpResponse(json.dumps({
+            'logs': paginated_logs,
+            'total': total,
+            'page': page,
+            'per_page': per_page,
+            'total_pages': total_pages
+        }), content_type='application/json')
     except Exception as e:
         return HttpResponse(json.dumps({'error': str(e)}), content_type='application/json', status=500)
 
@@ -1284,61 +1399,23 @@ def blockIPAddress(request):
                 'error': 'Invalid IP address'
             }), content_type='application/json', status=400)
         
-        # Use firewalld (CSF has been discontinued)
+        # Use FirewallUtilities so firewall-cmd runs with proper privileges (root/lscpd)
         firewall_cmd = 'firewalld'
+        reason = data.get('reason', 'Security alert detected from dashboard')
         try:
-            # Verify firewalld is active using subprocess for better security
-            import subprocess
-            firewalld_check = subprocess.run(['systemctl', 'is-active', 'firewalld'], 
-                                           capture_output=True, text=True, timeout=10)
-            if not (firewalld_check.returncode == 0 and 'active' in firewalld_check.stdout):
-                return HttpResponse(json.dumps({
-                    'status': 0,
-                    'error': 'Firewalld is not active. Please enable firewalld service.'
-                }), content_type='application/json', status=500)
-        except subprocess.TimeoutExpired:
-            return HttpResponse(json.dumps({
-                'status': 0,
-                'error': 'Timeout checking firewalld status'
-            }), content_type='application/json', status=500)
+            success, msg = FirewallUtilities.blockIP(ip_address, reason)
         except Exception as e:
-            return HttpResponse(json.dumps({
-                'status': 0,
-                'error': f'Cannot check firewalld status: {str(e)}'
-            }), content_type='application/json', status=500)
-        
-        # Block the IP address using firewalld with subprocess for better security
-        success = False
-        error_message = ''
-        
-        try:
-            # Use subprocess with explicit argument lists to prevent injection
-            rich_rule = f'rule family=ipv4 source address={ip_address} drop'
-            add_rule_cmd = ['firewall-cmd', '--permanent', '--add-rich-rule', rich_rule]
-            
-            # Execute the add rule command
-            result = subprocess.run(add_rule_cmd, capture_output=True, text=True, timeout=30)
-            if result.returncode == 0:
-                # Reload firewall rules
-                reload_cmd = ['firewall-cmd', '--reload']
-                reload_result = subprocess.run(reload_cmd, capture_output=True, text=True, timeout=30)
-                if reload_result.returncode == 0:
-                    success = True
-                else:
-                    error_message = f'Failed to reload firewall rules: {reload_result.stderr}'
-            else:
-                error_message = f'Failed to add firewall rule: {result.stderr}'
-        except subprocess.TimeoutExpired:
-            error_message = 'Firewall command timed out'
-        except Exception as e:
-            error_message = f'Firewall command failed: {str(e)}'
+            success = False
+            msg = str(e)
         
         if success:
             # Add to banned IPs JSON file for consistency with firewall page
             try:
                 import os
                 import time
-                banned_ips_file = '/etc/cyberpanel/banned_ips.json'
+                primary_file = '/usr/local/CyberCP/data/banned_ips.json'
+                legacy_file = '/etc/cyberpanel/banned_ips.json'
+                banned_ips_file = primary_file if os.path.exists(primary_file) else legacy_file if os.path.exists(legacy_file) else primary_file
                 banned_ips = []
                 
                 if os.path.exists(banned_ips_file):
@@ -1372,10 +1449,10 @@ def blockIPAddress(request):
                     banned_ips.append(new_banned_ip)
                     
                     # Ensure directory exists
-                    os.makedirs(os.path.dirname(banned_ips_file), exist_ok=True)
+                    os.makedirs(os.path.dirname(primary_file), exist_ok=True)
                     
                     # Save to file
-                    with open(banned_ips_file, 'w') as f:
+                    with open(primary_file, 'w') as f:
                         json.dump(banned_ips, f, indent=2)
             except Exception as e:
                 # Log but don't fail the request if JSON update fails
@@ -1394,7 +1471,7 @@ def blockIPAddress(request):
         else:
             return HttpResponse(json.dumps({
                 'status': 0,
-                'error': error_message or 'Failed to block IP address'
+                'error': msg or 'Failed to block IP address'
             }), content_type='application/json', status=500)
         
     except json.JSONDecodeError as e:

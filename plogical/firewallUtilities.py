@@ -118,22 +118,23 @@ class FirewallUtilities:
             
             logging.CyberCPLogFileWriter.writeToFile(f"Blocking IP address: {ip_address} - Reason: {reason}")
             
+            # executioner returns 1 on success, 0 on failure
             result = ProcessUtilities.executioner(command)
-            if result == 0:
+            if result == 1:
                 logging.CyberCPLogFileWriter.writeToFile(f"Successfully blocked IP: {ip_address}")
-                
-                # Reload firewall to apply changes
                 ProcessUtilities.executioner('firewall-cmd --reload')
-                
-                # Log the block in a dedicated file
-                block_log_path = "/usr/local/lscp/logs/blocked_ips.log"
-                with open(block_log_path, "a") as f:
-                    from datetime import datetime
-                    f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {ip_address} - {reason}\n")
-                
+                block_log_path = "/usr/local/CyberCP/data/blocked_ips.log"
+                try:
+                    import os
+                    os.makedirs(os.path.dirname(block_log_path), exist_ok=True)
+                    with open(block_log_path, "a") as f:
+                        from datetime import datetime
+                        f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {ip_address} - {reason}\n")
+                except Exception as log_err:
+                    logging.CyberCPLogFileWriter.writeToFile(f"Warning: could not write blocked_ips.log: {log_err}")
                 return True, f"IP {ip_address} blocked successfully"
             else:
-                logging.CyberCPLogFileWriter.writeToFile(f"Failed to block IP: {ip_address}")
+                logging.CyberCPLogFileWriter.writeToFile(f"Failed to block IP: {ip_address} (executioner returned %s)" % result)
                 return False, f"Failed to block IP: {ip_address}"
                 
         except Exception as e:
@@ -154,16 +155,14 @@ class FirewallUtilities:
             
             logging.CyberCPLogFileWriter.writeToFile(f"Unblocking IP address: {ip_address}")
             
+            # executioner returns 1 on success, 0 on failure
             result = ProcessUtilities.executioner(command)
-            if result == 0:
+            if result == 1:
                 logging.CyberCPLogFileWriter.writeToFile(f"Successfully unblocked IP: {ip_address}")
-                
-                # Reload firewall to apply changes
                 ProcessUtilities.executioner('firewall-cmd --reload')
-                
                 return True, f"IP {ip_address} unblocked successfully"
             else:
-                logging.CyberCPLogFileWriter.writeToFile(f"Failed to unblock IP: {ip_address}")
+                logging.CyberCPLogFileWriter.writeToFile(f"Failed to unblock IP: {ip_address} (executioner returned %s)" % result)
                 return False, f"Failed to unblock IP: {ip_address}"
                 
         except Exception as e:
@@ -182,6 +181,25 @@ class FirewallUtilities:
         except Exception as e:
             logging.CyberCPLogFileWriter.writeToFile(f"Error checking if IP {ip_address} is blocked: {str(e)}")
             return False
+
+    @staticmethod
+    def closeConnectionsFromIP(ip_address):
+        """
+        Try to close/drop existing connections from the given IP so the remote host
+        cannot keep trying (e.g. when IP is already banned and admin clicks Ban again).
+        Uses conntrack when available; safe to call even if no connections exist.
+        """
+        try:
+            # conntrack -D -s IP deletes connection tracking entries from this source IP,
+            # which drops existing TCP connections from that IP (kernel sends RST or they time out).
+            command = "conntrack -D -s %s 2>/dev/null" % ip_address
+            result = ProcessUtilities.executioner(command)
+            logging.CyberCPLogFileWriter.writeToFile("closeConnectionsFromIP %s: conntrack returned %s" % (ip_address, result))
+            # executioner returns 1 on success; conntrack may also return 0 when no entries found (still ok)
+            return True, "Connections from %s have been closed" % ip_address
+        except Exception as e:
+            logging.CyberCPLogFileWriter.writeToFile("closeConnectionsFromIP error for %s: %s" % (ip_address, str(e)))
+            return False, str(e)
 
     @staticmethod
     def getBlockedIPs():
@@ -228,7 +246,7 @@ class FirewallUtilities:
                 else:
                     rootLogin = "PermitRootLogin no\n"
 
-                sshPort = "Port " + sshPort + "\n"
+                sshPortLine = "Port " + sshPort + "\n"
 
                 pathToSSH = "/etc/ssh/sshd_config"
 
@@ -236,16 +254,36 @@ class FirewallUtilities:
 
                 writeToFile = open(pathToSSH, "w")
 
+                # Only one Port line must be written (sshd binds once per Port directive;
+                # duplicates cause "Address already in use"). Only match actual "Port N"
+                # directive, not GatewayPorts or other lines containing "Port".
+                port_line_written = False
+
+                def is_ssh_port_directive(line):
+                    stripped = line.strip()
+                    if 'GatewayPorts' in line or not stripped.startswith('Port '):
+                        return False
+                    parts = stripped.split()
+                    return len(parts) >= 2 and parts[0] == 'Port' and parts[1].isdigit()
+
                 for items in data:
                     if items.find("PermitRootLogin") > -1:
                         if items.find("Yes") > -1 or items.find("yes"):
                             writeToFile.writelines(rootLogin)
                             continue
-                    elif items.find("Port") > -1:
-                        writeToFile.writelines(sshPort)
+                    elif is_ssh_port_directive(items):
+                        if not port_line_written:
+                            writeToFile.writelines(sshPortLine)
+                            port_line_written = True
+                        # skip duplicate Port lines (do not write again)
                     else:
                         writeToFile.writelines(items)
                 writeToFile.close()
+
+                # If no Port line was present in config, append one (sshd defaults to 22 otherwise)
+                if not port_line_written:
+                    with open(pathToSSH, 'a') as appendFile:
+                        appendFile.write(sshPortLine)
 
                 command = 'systemctl restart sshd'
                 ProcessUtilities.normalExecutioner(command)

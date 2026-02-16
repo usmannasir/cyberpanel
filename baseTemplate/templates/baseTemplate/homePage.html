@@ -876,6 +876,29 @@
             </table>
             </div>
             
+            <!-- SSH Logins Pagination -->
+            <div ng-if="!loadingSSHLogins && sshLogins.length > 0" class="pagination-controls" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 16px; padding: 12px 0; border-top: 1px solid #e8e9ff;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="color: #64748b; font-size: 13px;">Show</span>
+                    <select ng-model="sshLoginsPerPage" ng-change="sshLoginsChangePerPage()" style="padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: white;">
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    <span style="color: #64748b; font-size: 13px;">per page</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="color: #64748b; font-size: 13px;">{$ (sshLoginsPage - 1) * sshLoginsPerPage + 1 $}-{$ (sshLoginsPage * sshLoginsPerPage > sshLoginsTotal ? sshLoginsTotal : sshLoginsPage * sshLoginsPerPage) $} of {$ sshLoginsTotal $}</span>
+                    <button ng-click="sshLoginsGoToPage(sshLoginsPage - 1)" ng-disabled="sshLoginsPage <= 1" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="Previous">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button ng-click="sshLoginsGoToPage(sshLoginsPage + 1)" ng-disabled="sshLoginsPage >= sshLoginsTotalPages" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="Next">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+            
             <!-- Dummy data for demonstration -->
             <table class="activity-table records-table" ng-if="loadingSSHLogins">
                 <thead>
@@ -1065,6 +1088,29 @@
                     </tr>
                 </tbody>
             </table>
+            
+            <!-- SSH Logs Pagination -->
+            <div ng-if="!loadingSSHLogs && sshLogs.length > 0" class="pagination-controls" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 16px; padding: 12px 0; border-top: 1px solid #e8e9ff;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="color: #64748b; font-size: 13px;">Show</span>
+                    <select ng-model="sshLogsPerPage" ng-change="sshLogsChangePerPage()" style="padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: white;">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    <span style="color: #64748b; font-size: 13px;">per page</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="color: #64748b; font-size: 13px;">{$ (sshLogsPage - 1) * sshLogsPerPage + 1 $}-{$ (sshLogsPage * sshLogsPerPage > sshLogsTotal ? sshLogsTotal : sshLogsPage * sshLogsPerPage) $} of {$ sshLogsTotal $}</span>
+                    <button ng-click="sshLogsGoToPage(sshLogsPage - 1)" ng-disabled="sshLogsPage <= 1" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="Previous">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button ng-click="sshLogsGoToPage(sshLogsPage + 1)" ng-disabled="sshLogsPage >= sshLogsTotalPages" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="Next">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
         </div>
         
         <!-- Top Process Tab -->
@@ -1311,11 +1357,25 @@
         // Add active class to clicked tab
         tabButton.classList.add('active');
         
-        // Trigger chart resize if switching to chart tabs
+        // Chart tabs: ensure charts exist (lazy init on first click), then resize/update
         if (tabId === 'traffic' || tabId === 'diskio' || tabId === 'cpu-usage') {
+            if (typeof window.cyberPanelSetupChartsIfNeeded === 'function') {
+                window.cyberPanelSetupChartsIfNeeded();
+            }
             setTimeout(() => {
+                var ch;
+                if (tabId === 'traffic' && (ch = window.trafficChart) && typeof ch.resize === 'function') {
+                    ch.resize();
+                    if (typeof ch.update === 'function') ch.update();
+                } else if (tabId === 'diskio' && (ch = window.diskIOChart) && typeof ch.resize === 'function') {
+                    ch.resize();
+                    if (typeof ch.update === 'function') ch.update();
+                } else if (tabId === 'cpu-usage' && (ch = window.cpuChart) && typeof ch.resize === 'function') {
+                    ch.resize();
+                    if (typeof ch.update === 'function') ch.update();
+                }
                 window.dispatchEvent(new Event('resize'));
-            }, 100);
+            }, 200);
         }
     }
 
@@ -1334,56 +1394,38 @@
         }
         
         $.ajax({
-            url: '/base/blockIPAddress',
+            url: '/firewall/addBannedIP',
             type: 'POST',
             contentType: 'application/json',
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
             },
             data: JSON.stringify({
-                'ip_address': ipAddress,
-                'reason': 'Security alert detected from dashboard'
+                'ip': ipAddress,
+                'reason': 'Brute force attack detected from SSH Security Analysis',
+                'duration': 'permanent'
             }),
             success: function(data) {
                 // Handle both success and error responses
-                if (data.status === 1) {
-                    showNotification('success', data.message || 'IP address blocked successfully');
+                if (data && data.status === 1) {
+                    showNotification('success', data.message || 'IP address blocked successfully. Manage in Firewall > Banned IPs.');
                     // Refresh the page to update the blocked IPs list
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1000);
+                    setTimeout(function() { location.reload(); }, 1000);
                 } else {
-                    // Handle error response - check for both 'error' and 'error_message' fields
-                    var errorMsg = data.error || data.error_message || data.message || 'Failed to block IP address';
+                    var errorMsg = (data && (data.error_message || data.error || data.message)) || 'Failed to block IP address';
                     showNotification('error', errorMsg);
                 }
             },
             error: function(xhr, status, error) {
-                // Handle network errors and parse JSON errors
-                console.error('Ban IP error:', xhr, status, error);
+                console.error('Ban IP error:', xhr.status, xhr.responseText);
                 var errorMsg = 'Failed to block IP address. Please try again.';
-                
-                // Log full response for debugging
-                console.log('Response status:', xhr.status);
-                console.log('Response text:', xhr.responseText);
-                
-                if (xhr.responseJSON) {
-                    errorMsg = xhr.responseJSON.error || xhr.responseJSON.error_message || xhr.responseJSON.message || errorMsg;
-                    console.log('Parsed error from JSON:', errorMsg);
-                } else if (xhr.responseText) {
-                    try {
-                        var errorData = JSON.parse(xhr.responseText);
-                        errorMsg = errorData.error || errorData.error_message || errorData.message || errorMsg;
-                        console.log('Parsed error from text:', errorMsg);
-                    } catch(e) {
-                        console.error('Failed to parse error response:', e);
-                        // If parsing fails, try to extract error from response text
-                        if (xhr.responseText.includes('error')) {
-                            errorMsg = xhr.responseText.substring(0, 200);
-                        }
-                    }
+                var data = xhr.responseJSON;
+                if (!data && xhr.responseText) {
+                    try { data = JSON.parse(xhr.responseText); } catch(e) {}
                 }
-                
+                if (data && (data.error_message || data.error || data.message)) {
+                    errorMsg = data.error_message || data.error || data.message;
+                }
                 showNotification('error', errorMsg);
             },
             complete: function() {

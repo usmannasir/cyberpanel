@@ -8,6 +8,11 @@ class CyberCPLogFileWriter:
     fileName = "/home/cyberpanel/error-logs.txt"
 
     @staticmethod
+    def get_current_timestamp():
+        """Return current timestamp in same format used for log lines (for errorSanitizer etc)."""
+        return time.strftime("%m.%d.%Y_%H-%M-%S")
+
+    @staticmethod
     def AddFromHeader(sender, message):
         try:
             import re

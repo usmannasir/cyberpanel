@@ -10742,7 +10742,20 @@ $("#websiteSuccessfullyModified").hide();
 $("#modifyWebsiteLoading").hide();
 $("#modifyWebsiteButton").hide();
 
-app.controller('modifyWebsitesController', function ($scope, $http) {
+/** Angular filter: format bytes as human-readable size (used by modifyWebsite.html) */
+app.filter('filesize', [function () {
+    return function (bytes) {
+        if (bytes == null || isNaN(bytes)) return '-';
+        var n = Number(bytes);
+        if (n === 0) return '0 B';
+        var k = 1024;
+        var sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+        var i = Math.floor(Math.log(n) / Math.log(k));
+        return (n / Math.pow(k, i)).toFixed(2) + ' ' + sizes[Math.min(i, sizes.length - 1)];
+    };
+}]);
+
+app.controller('modifyWebsitesController', ['$scope', '$http', function ($scope, $http) {
     
     // Initialize home directory variables
     $scope.homeDirectories = [];
@@ -10752,7 +10765,7 @@ app.controller('modifyWebsitesController', function ($scope, $http) {
 
     // Load home directories on page load
     $scope.loadHomeDirectories = function() {
-        $http.post('/userManagement/getUserHomeDirectories/', {})
+        $http.post('/users/getUserHomeDirectories', {})
             .then(function(response) {
                 if (response.data.status === 1) {
                     $scope.homeDirectories = response.data.directories;
@@ -10915,7 +10928,7 @@ app.controller('modifyWebsitesController', function ($scope, $http) {
 
     };
 
-});
+}]);
 
 /* Java script code to Modify Pacakge ends here */
 

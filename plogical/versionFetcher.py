@@ -61,6 +61,8 @@ class VersionFetcher:
             
             # Clean version string (remove 'v' prefix if present)
             version = re.sub(r'^v', '', version)
+            # Normalize component-specific tag formats (e.g. phpMyAdmin uses RELEASE_5_2_3)
+            version = VersionFetcher._normalize_version(component, version)
             
             if version and VersionFetcher._is_valid_version(version):
                 logging.info(f"Successfully fetched {component} version: {version}")
@@ -89,6 +91,21 @@ class VersionFetcher:
             versions[component] = VersionFetcher.get_latest_version(component)
         return versions
     
+    @staticmethod
+    def _normalize_version(component: str, version: str) -> str:
+        """
+        Normalize tag to x.y.z format. phpMyAdmin uses RELEASE_5_2_3 or 5_2_3.
+        """
+        if not version:
+            return version
+        # RELEASE_5_2_3 or 5_2_3 -> 5.2.3
+        if 'RELEASE_' in version.upper() or (component == 'phpmyadmin' and '_' in version and '.' not in version):
+            normalized = re.sub(r'^RELEASE_', '', version, flags=re.IGNORECASE)
+            normalized = normalized.replace('_', '.')
+            if re.match(r'^\d+\.\d+\.\d+', normalized):
+                return normalized
+        return version
+
     @staticmethod
     def _is_valid_version(version: str) -> bool:
         """

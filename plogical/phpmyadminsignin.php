@@ -32,11 +32,14 @@ try {
         echo '<script>document.getElementById("redirectForm").submit();</script>';
 
     } else if (isset($_POST['logout']) || isset($_GET['logout'])) {
+        session_name(PMA_SIGNON_SESSIONNAME);
+        @session_start();
+        $_SESSION = array();
         $params = session_get_cookie_params();
         setcookie(session_name(), '', time() - 86400, $params["path"], $params["domain"], $params["secure"], $params["httponly"]);
         session_destroy();
         header('Location: /base/');
-        return;
+        exit;
     } else if (isset($_POST['password'])) {
 
         session_name(PMA_SIGNON_SESSIONNAME);
@@ -44,10 +47,12 @@ try {
 
         $username = htmlspecialchars($_POST['username'], ENT_QUOTES, 'UTF-8');
         $password = $_POST['password'];
+        $host = isset($_POST['host']) ? trim($_POST['host']) : '127.0.0.1';
+        if ($host === 'localhost') { $host = '127.0.0.1'; }
 
         $_SESSION['PMA_single_signon_user'] = $username;
         $_SESSION['PMA_single_signon_password'] = $password;
-        $_SESSION['PMA_single_signon_host'] = 'localhost';
+        $_SESSION['PMA_single_signon_host'] = $host;
 
         @session_write_close();
 

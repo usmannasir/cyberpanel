@@ -5,6 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from plogical.mailUtilities import mailUtilities
 import os
+import shutil
 import subprocess
 import shlex
 import json
@@ -35,6 +36,57 @@ GITHUB_COMMITS_API = 'https://api.github.com/repos/master3395/cyberpanel-plugins
 # Plugin backup configuration
 PLUGIN_BACKUP_DIR = '/home/cyberpanel/plugin_backups'
 
+# Plugin source paths (checked in order; first match wins for install)
+PLUGIN_SOURCE_PATHS = ['/home/cyberpanel/plugins', '/home/cyberpanel-plugins']
+
+# Builtin/core plugins that are part of CyberPanel (not user-installable plugins)
+# These plugins show "Built-in" badge and only Settings button (no Deactivate/Uninstall)
+BUILTIN_PLUGINS = frozenset(['emailMarketing', 'emailPremium'])
+
+# Core CyberPanel app dirs under /usr/local/CyberCP that must not be counted as "installed plugins"
+# (matches pluginHolder.urls so Installed count = store/plugin dirs only, not core apps)
+RESERVED_PLUGIN_DIRS = frozenset([
+    'api', 'backup', 'baseTemplate', 'cloudAPI', 'CLManager', 'containerization', 'CyberCP',
+    'databases', 'dns', 'dockerManager', 'emailMarketing', 'emailPremium', 'filemanager',
+    'firewall', 'ftp', 'highAvailability', 'IncBackups', 'loginSystem', 'mailServer',
+    'managePHP', 'manageSSL', 'manageServices', 'packages', 'pluginHolder', 'plogical',
+    'pluginInstaller', 'serverLogs', 'serverStatus', 's3Backups', 'tuning', 'userManagment',
+    'websiteFunctions', 'aiScanner', 'dns', 'help', 'installed',
+])
+
+def _get_plugin_source_path(plugin_name):
+    """Return the full path to a plugin's source directory, or None if not found."""
+    for base in PLUGIN_SOURCE_PATHS:
+        path = os.path.join(base, plugin_name)
+        meta_path = os.path.join(path, 'meta.xml')
+        if os.path.isdir(path) and os.path.exists(meta_path):
+            return path
+    return None
+
+def _ensure_plugin_meta_xml(plugin_name):
+    """
+    If plugin is installed (directory exists) but meta.xml is missing,
+    restore it from source or from GitHub so the grid and version checks work.
+    """
+    installed_dir = os.path.join('/usr/local/CyberCP', plugin_name)
+    installed_meta = os.path.join(installed_dir, 'meta.xml')
+    if not os.path.isdir(installed_dir) or os.path.exists(installed_meta):
+        return
+    source_path = _get_plugin_source_path(plugin_name)
+    if source_path:
+        source_meta = os.path.join(source_path, 'meta.xml')
+        if os.path.exists(source_meta):
+            try:
+                shutil.copy2(source_meta, installed_meta)
+                logging.writeToFile(f"Restored meta.xml for {plugin_name} from source")
+            except Exception as e:
+                logging.writeToFile(f"Could not restore meta.xml for {plugin_name}: {e}")
+            return
+    try:
+        _sync_meta_xml_from_github(plugin_name)
+    except Exception:
+        pass
+
 def _get_plugin_state_file(plugin_name):
     """Get the path to the plugin state file"""
     if not os.path.exists(PLUGIN_STATE_DIR):
@@ -52,6 +104,33 @@ def _is_plugin_enabled(plugin_name):
         except:
             return True  # Default to enabled if file read fails
     return True  # Default to enabled if state file doesn't exist
+
+
+def _get_freshness_badge(modify_date):
+    """
+    Return freshness badge (NEW/Stable/STALE) based on modify_date.
+    modify_date format: 'YYYY-MM-DD HH:MM:SS' or 'N/A'
+    - 0-90 days: NEW (yellow)
+    - 90-365 days: Stable (green)
+    - 730+ days: STALE (red)
+    - 365-730 days: no badge
+    """
+    if not modify_date or modify_date == 'N/A' or not isinstance(modify_date, str):
+        return None
+    try:
+        dt = datetime.strptime(modify_date[:19], '%Y-%m-%d %H:%M:%S')
+        days_ago = (datetime.now() - dt).days
+        if days_ago <= 90:
+            return {'badge': 'NEW', 'class': 'freshness-badge-new', 'title': 'This plugin was released/updated within the last 3 months'}
+        elif days_ago <= 365:
+            return {'badge': 'Stable', 'class': 'freshness-badge-stable', 'title': 'This plugin was updated within the last year'}
+        elif days_ago < 730:
+            return {'badge': 'Unstable', 'class': 'freshness-badge-unstable', 'title': 'This plugin has not been updated in over 1 year'}
+        else:
+            return {'badge': 'STALE', 'class': 'freshness-badge-stale', 'title': 'This plugin has not been updated in over 2 years'}
+    except (ValueError, TypeError):
+        pass
+    return None
 
 def _set_plugin_state(plugin_name, enabled):
     """Set plugin enabled/disabled state"""
@@ -73,23 +152,47 @@ def help_page(request):
 
 def installed(request):
     mailUtilities.checkHome()
-    pluginPath = '/home/cyberpanel/plugins'
     installedPath = '/usr/local/CyberCP'
     pluginList = []
     errorPlugins = []
     processed_plugins = set()  # Track which plugins we've already processed
 
-    # First, process plugins from source directory
-    if os.path.exists(pluginPath):
+    # Repair pass: ensure every installed plugin dir has meta.xml (from source or GitHub) so counts and grid are correct
+    if os.path.exists(installedPath):
+        for plugin in os.listdir(installedPath):
+            if plugin.startswith('.') or plugin in RESERVED_PLUGIN_DIRS:
+                continue
+            plugin_dir = os.path.join(installedPath, plugin)
+            if os.path.isdir(plugin_dir):
+                _ensure_plugin_meta_xml(plugin)
+
+    # First, process plugins from source directories (multiple paths: /home/cyberpanel/plugins, /home/cyberpanel-plugins)
+    # BUT: Skip plugins that are already installed - we'll process those from the installed location instead
+    for pluginPath in PLUGIN_SOURCE_PATHS:
+        if not os.path.exists(pluginPath):
+            continue
+        try:
+            dirs_in_path = [p for p in os.listdir(pluginPath) if os.path.isdir(os.path.join(pluginPath, p))]
+            logging.writeToFile(f"Plugin source path {pluginPath}: directories {sorted(dirs_in_path)}")
+        except Exception as e:
+            logging.writeToFile(f"Plugin source path {pluginPath}: listdir error {e}")
         for plugin in os.listdir(pluginPath):
+            if plugin in processed_plugins:
+                continue
             # Skip files (like .zip files) - only process directories
             pluginDir = os.path.join(pluginPath, plugin)
             if not os.path.isdir(pluginDir):
                 continue
             
+            # Use same "installed" criterion as install endpoint: plugin directory in /usr/local/CyberCP/
+            installed_dir = os.path.join(installedPath, plugin)
+            completePath = os.path.join(installedPath, plugin, 'meta.xml')
+            if os.path.exists(completePath):
+                # Plugin is fully installed (dir + meta.xml), skip - second loop will add it
+                continue
+            
             data = {}
             # Try installed location first, then fallback to source location
-            completePath = installedPath + '/' + plugin + '/meta.xml'
             sourcePath = os.path.join(pluginDir, 'meta.xml')
             
             # Determine which meta.xml to use
@@ -103,7 +206,8 @@ def installed(request):
             # Add error handling to prevent 500 errors
             try:
                 if metaXmlPath is None:
-                    # No meta.xml found in either location - skip silently
+                    # No meta.xml found in either location - skip (log for diagnostics)
+                    logging.writeToFile(f"Plugin {plugin}: skipped (no meta.xml in source or installed)")
                     continue
                 
                 pluginMetaData = ElementTree.parse(metaXmlPath)
@@ -115,26 +219,35 @@ def installed(request):
                 desc_elem = root.find('description')
                 version_elem = root.find('version')
                 
-                # Type field is optional (testPlugin doesn't have it)
-                if name_elem is None or desc_elem is None or version_elem is None:
-                    errorPlugins.append({'name': plugin, 'error': 'Missing required metadata fields (name, description, or version)'})
+                # All fields required including type (category) - no default
+                if name_elem is None or type_elem is None or desc_elem is None or version_elem is None:
+                    errorPlugins.append({'name': plugin, 'error': 'Missing required metadata fields (name, type/category, description, or version)'})
                     logging.writeToFile(f"Plugin {plugin}: Missing required metadata fields in meta.xml")
                     continue
                 
-                # Check if text is None (empty elements)
-                if name_elem.text is None or desc_elem.text is None or version_elem.text is None:
-                    errorPlugins.append({'name': plugin, 'error': 'Empty metadata fields'})
+                # Check if text is None or empty (all required)
+                type_text = type_elem.text.strip() if type_elem.text else ''
+                if name_elem.text is None or desc_elem.text is None or version_elem.text is None or not type_text:
+                    errorPlugins.append({'name': plugin, 'error': 'Empty metadata fields (name, type/category, description, or version required)'})
                     logging.writeToFile(f"Plugin {plugin}: Empty metadata fields in meta.xml")
                     continue
                 
+                # Valid categories only: Utility, Security, Backup, Performance (Plugin category removed)
+                if type_text.lower() not in ('utility', 'security', 'backup', 'performance', 'monitoring', 'integration', 'email', 'development', 'analytics'):
+                    errorPlugins.append({'name': plugin, 'error': f'Invalid category "{type_text}". Use: Utility, Security, Backup, or Performance.'})
+                    logging.writeToFile(f"Plugin {plugin}: Invalid category '{type_text}'")
+                    continue
+                
                 data['name'] = name_elem.text
-                data['type'] = type_elem.text if type_elem is not None and type_elem.text is not None else 'Plugin'
+                data['type'] = type_text
                 data['desc'] = desc_elem.text
                 data['version'] = version_elem.text
                 data['plugin_dir'] = plugin  # Plugin directory name
-                # Check if plugin is installed (only if it exists in /usr/local/CyberCP/)
-                # Source directory presence doesn't mean installed - it just means the source files are available
-                data['installed'] = os.path.exists(completePath)
+                # Set builtin flag (core CyberPanel plugins vs user-installable plugins)
+                data['builtin'] = plugin in BUILTIN_PLUGINS
+                # Installed = plugin directory exists (must match install endpoint which uses directory existence)
+                # Fixes grid showing "Not Installed" when directory exists but meta.xml is missing
+                data['installed'] = os.path.isdir(installed_dir)
                 
                 # Get plugin enabled state (only for installed plugins)
                 if data['installed']:
@@ -158,6 +271,7 @@ def installed(request):
                     modify_date = 'N/A'
                 
                 data['modify_date'] = modify_date
+                data['freshness_badge'] = _get_freshness_badge(modify_date)
                 
                 # Extract settings URL or main URL for "Manage" button
                 settings_url_elem = root.find('settings_url')
@@ -178,11 +292,9 @@ def installed(request):
                     # Special handling for emailMarketing
                     if plugin == 'emailMarketing':
                         data['manage_url'] = '/emailMarketing/'
-                    elif os.path.exists(completePath):
-                        # Check if settings route exists, otherwise use main plugin URL
-                        settings_route = f'/plugins/{plugin}/settings/'
+                    elif data['installed']:
+                        # Plugin directory exists; use main plugin URL
                         main_route = f'/plugins/{plugin}/'
-                        # Default to main route - most plugins have a main route even if no settings
                         data['manage_url'] = main_route
                     else:
                         data['manage_url'] = None
@@ -213,20 +325,14 @@ def installed(request):
                 errorPlugins.append({'name': plugin, 'error': f'XML parse error: {str(e)}'})
                 logging.writeToFile(f"Plugin {plugin}: XML parse error - {str(e)}")
                 # Don't mark as processed if it failed - let installed check handle it
-                # This ensures plugins that exist in /usr/local/CyberCP/ but have bad source meta.xml still get counted
-                if not os.path.exists(completePath):
-                    # Only skip if it's not actually installed
+                if not os.path.isdir(installed_dir):
                     continue
-                # If it exists in installed location, don't mark as processed so it gets checked there
                 continue
             except Exception as e:
                 errorPlugins.append({'name': plugin, 'error': f'Error loading plugin: {str(e)}'})
                 logging.writeToFile(f"Plugin {plugin}: Error loading - {str(e)}")
-                # Don't mark as processed if it failed - let installed check handle it
-                if not os.path.exists(completePath):
-                    # Only skip if it's not actually installed
+                if not os.path.isdir(installed_dir):
                     continue
-                # If it exists in installed location, don't mark as processed so it gets checked there
                 continue
     
     # Also check for installed plugins that don't have source directories
@@ -242,6 +348,7 @@ def installed(request):
             if not os.path.isdir(pluginInstalledDir):
                 continue
             
+            _ensure_plugin_meta_xml(plugin)
             metaXmlPath = os.path.join(pluginInstalledDir, 'meta.xml')
             if not os.path.exists(metaXmlPath):
                 continue
@@ -252,23 +359,33 @@ def installed(request):
                 pluginMetaData = ElementTree.parse(metaXmlPath)
                 root = pluginMetaData.getroot()
                 
-                # Validate required fields
+                # Validate required fields (including type/category - no default)
                 name_elem = root.find('name')
                 type_elem = root.find('type')
                 desc_elem = root.find('description')
                 version_elem = root.find('version')
                 
-                if name_elem is None or desc_elem is None or version_elem is None:
+                if name_elem is None or type_elem is None or desc_elem is None or version_elem is None:
+                    errorPlugins.append({'name': plugin, 'error': 'Missing required metadata (name, type/category, description, or version)'})
                     continue
                 
-                if name_elem.text is None or desc_elem.text is None or version_elem.text is None:
+                type_text = type_elem.text.strip() if type_elem.text else ''
+                if name_elem.text is None or desc_elem.text is None or version_elem.text is None or not type_text:
+                    errorPlugins.append({'name': plugin, 'error': 'Empty metadata (type/category required)'})
+                    continue
+                
+                # Valid categories only: Utility, Security, Backup, Performance (Plugin category removed)
+                if type_text.lower() not in ('utility', 'security', 'backup', 'performance', 'monitoring', 'integration', 'email', 'development', 'analytics'):
+                    errorPlugins.append({'name': plugin, 'error': f'Invalid category "{type_text}". Use: Utility, Security, Backup, or Performance.'})
                     continue
                 
                 data['name'] = name_elem.text
-                data['type'] = type_elem.text if type_elem is not None and type_elem.text is not None else 'Plugin'
+                data['type'] = type_text
                 data['desc'] = desc_elem.text
                 data['version'] = version_elem.text
                 data['plugin_dir'] = plugin
+                # Set builtin flag (core CyberPanel plugins vs user-installable plugins)
+                data['builtin'] = plugin in BUILTIN_PLUGINS
                 data['installed'] = True  # This is an installed plugin
                 data['enabled'] = _is_plugin_enabled(plugin)
                 
@@ -287,6 +404,7 @@ def installed(request):
                     modify_date = 'N/A'
                 
                 data['modify_date'] = modify_date
+                data['freshness_badge'] = _get_freshness_badge(modify_date)
                 
                 # Extract settings URL or main URL
                 settings_url_elem = root.find('settings_url')
@@ -329,6 +447,7 @@ def installed(request):
                 # else: is_paid already False from initialization above
 
                 pluginList.append(data)
+                processed_plugins.add(plugin)  # Mark as processed to prevent duplicates
                 
             except ElementTree.ParseError as e:
                 errorPlugins.append({'name': plugin, 'error': f'XML parse error: {str(e)}'})
@@ -339,29 +458,85 @@ def installed(request):
                 logging.writeToFile(f"Installed plugin {plugin}: Error loading - {str(e)}")
                 continue
 
-    # Calculate installed and active counts
-    # Double-check by also counting plugins that actually exist in /usr/local/CyberCP/
+    # Ensure redisManager and memcacheManager load when present (fallback if missed by listdir)
+    for plugin_name in ('redisManager', 'memcacheManager'):
+        if plugin_name in processed_plugins:
+            continue
+        source_path = _get_plugin_source_path(plugin_name)
+        installed_meta = os.path.join(installedPath, plugin_name, 'meta.xml')
+        meta_xml_path = installed_meta if os.path.exists(installed_meta) else (os.path.join(source_path, 'meta.xml') if source_path else None)
+        if not meta_xml_path or not os.path.exists(meta_xml_path):
+            continue
+        try:
+            root = ElementTree.parse(meta_xml_path).getroot()
+            name_elem = root.find('name')
+            type_elem = root.find('type')
+            desc_elem = root.find('description')
+            version_elem = root.find('version')
+            if name_elem is None or type_elem is None or desc_elem is None or version_elem is None:
+                continue
+            type_text = (type_elem.text or '').strip()
+            if not type_text or name_elem.text is None or desc_elem.text is None or version_elem.text is None:
+                continue
+            if type_text.lower() not in ('utility', 'security', 'backup', 'performance', 'monitoring', 'integration', 'email', 'development', 'analytics'):
+                continue
+            complete_path = os.path.join(installedPath, plugin_name, 'meta.xml')
+            data = {
+                'name': name_elem.text,
+                'type': type_text,
+                'desc': desc_elem.text,
+                'version': version_elem.text,
+                'plugin_dir': plugin_name,
+                'builtin': plugin_name in BUILTIN_PLUGINS,  # Set builtin flag
+                'installed': os.path.exists(complete_path),
+                'enabled': _is_plugin_enabled(plugin_name) if os.path.exists(complete_path) else False,
+                'is_paid': False,
+                'patreon_tier': None,
+                'patreon_url': None,
+                'manage_url': f'/plugins/{plugin_name}/',
+                'author': root.find('author').text if root.find('author') is not None and root.find('author').text else 'Unknown',
+            }
+            try:
+                modify_time = os.path.getmtime(meta_xml_path)
+                data['modify_date'] = datetime.fromtimestamp(modify_time).strftime('%Y-%m-%d %H:%M:%S')
+            except Exception:
+                data['modify_date'] = 'N/A'
+            data['freshness_badge'] = _get_freshness_badge(data['modify_date'])
+            paid_elem = root.find('paid')
+            if paid_elem is not None and paid_elem.text and paid_elem.text.lower() == 'true':
+                data['is_paid'] = True
+                data['patreon_tier'] = 'CyberPanel Paid Plugin'
+                data['patreon_url'] = root.find('patreon_url').text if root.find('patreon_url') is not None else 'https://www.patreon.com/membership/27789984'
+            pluginList.append(data)
+            processed_plugins.add(plugin_name)
+            logging.writeToFile(f"Plugin {plugin_name}: added via fallback (source or installed)")
+        except Exception as e:
+            logging.writeToFile(f"Plugin {plugin_name} fallback load error: {str(e)}")
+
+    # Calculate installed and active counts: only count real plugins (have meta.xml, not core apps)
     installed_plugins_in_filesystem = set()
     if os.path.exists(installedPath):
         for plugin in os.listdir(installedPath):
+            if plugin.startswith('.') or plugin in RESERVED_PLUGIN_DIRS:
+                continue
             pluginInstalledDir = os.path.join(installedPath, plugin)
-            if os.path.isdir(pluginInstalledDir):
-                metaXmlPath = os.path.join(pluginInstalledDir, 'meta.xml')
-                if os.path.exists(metaXmlPath):
-                    installed_plugins_in_filesystem.add(plugin)
+            if not os.path.isdir(pluginInstalledDir):
+                continue
+            if not os.path.exists(os.path.join(pluginInstalledDir, 'meta.xml')):
+                continue
+            installed_plugins_in_filesystem.add(plugin)
     
-    # Count installed plugins from the list
     installed_count = len([p for p in pluginList if p.get('installed', False)])
     active_count = len([p for p in pluginList if p.get('installed', False) and p.get('enabled', False)])
     
-    # If there's a discrepancy, use the filesystem count as the source of truth
+    # Use the larger of list count and filesystem count so header never shows less than grid
     filesystem_installed_count = len(installed_plugins_in_filesystem)
-    if filesystem_installed_count != installed_count:
-        logging.writeToFile(f"WARNING: Plugin count mismatch! List says {installed_count}, filesystem has {filesystem_installed_count}")
-        logging.writeToFile(f"Plugins in filesystem: {sorted(installed_plugins_in_filesystem)}")
-        logging.writeToFile(f"Plugins in list with installed=True: {[p.get('plugin_dir') for p in pluginList if p.get('installed', False)]}")
-        # Use filesystem count as source of truth
-        installed_count = filesystem_installed_count
+    list_installed_count = len([p for p in pluginList if p.get('installed', False)])
+    if filesystem_installed_count != list_installed_count:
+        logging.writeToFile(f"Plugin count: list installed={list_installed_count}, filesystem with meta.xml={filesystem_installed_count}")
+    installed_count = max(list_installed_count, filesystem_installed_count)
+    if active_count > installed_count:
+        active_count = installed_count
     
     # Debug logging to help identify discrepancies
     logging.writeToFile(f"Plugin count: Total={len(pluginList)}, Installed={installed_count}, Active={active_count}")
@@ -370,6 +545,9 @@ def installed(request):
 
     # Get cache expiry timestamp for display (will be converted to local time in browser)
     cache_expiry_timestamp, _ = _get_cache_expiry_time()
+    
+    # Sort plugins A-Å by name (case-insensitive) for Grid and Table view
+    pluginList.sort(key=lambda p: (p.get('name') or '').lower())
     
     proc = httpProc(request, 'pluginHolder/plugins.html',
                     {'plugins': pluginList, 'error_plugins': errorPlugins, 
@@ -382,12 +560,12 @@ def installed(request):
 def install_plugin(request, plugin_name):
     """Install a plugin"""
     try:
-        # Check if plugin source exists
-        pluginSource = '/home/cyberpanel/plugins/' + plugin_name
-        if not os.path.exists(pluginSource):
+        # Check if plugin source exists (in any configured source path)
+        pluginSource = _get_plugin_source_path(plugin_name)
+        if not pluginSource:
             return JsonResponse({
                 'success': False,
-                'error': f'Plugin source not found: {plugin_name}'
+                'error': f'Plugin source not found: {plugin_name} (checked: {", ".join(PLUGIN_SOURCE_PATHS)})'
             }, status=404)
         
         # Check if already installed
@@ -470,6 +648,8 @@ def install_plugin(request, plugin_name):
             # Set plugin to enabled by default after installation
             _set_plugin_state(plugin_name, True)
             
+            _ensure_plugin_meta_xml(plugin_name)
+            logging.writeToFile(f"Plugin {plugin_name} installed successfully (upload)")
             return JsonResponse({
                 'success': True,
                 'message': f'Plugin {plugin_name} installed successfully'
@@ -764,6 +944,27 @@ def _get_installed_version(plugin_dir, plugin_install_dir):
     
     return None
 
+def _sync_meta_xml_from_github(plugin_name, plugin_install_dir='/usr/local/CyberCP'):
+    """
+    Fetch meta.xml from GitHub raw (main) and overwrite installed meta.xml.
+    Ensures installed version matches store even when archive ZIP is cached/stale.
+    Returns True if synced, False on non-fatal failure (logged).
+    """
+    meta_url = f'{GITHUB_RAW_BASE}/{plugin_name}/meta.xml'
+    meta_path = os.path.join(plugin_install_dir, plugin_name, 'meta.xml')
+    try:
+        req = urllib.request.Request(meta_url, headers={'User-Agent': 'CyberPanel-Plugin-Store/1.0'})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            content = resp.read()
+        if content:
+            with open(meta_path, 'wb') as f:
+                f.write(content)
+            logging.writeToFile(f"Synced meta.xml for {plugin_name} from GitHub raw")
+            return True
+    except Exception as e:
+        logging.writeToFile(f"Could not sync meta.xml for {plugin_name} from GitHub: {str(e)}")
+    return False
+
 def _create_plugin_backup(plugin_name, plugin_install_dir='/usr/local/CyberCP'):
     """
     Create a backup of a plugin before upgrade
@@ -943,6 +1144,7 @@ def _enrich_store_plugins(plugins):
         elif 'is_paid' not in plugin or plugin.get('is_paid') is None:
             # Try to check from local meta.xml if available
             meta_path = None
+            source_path = os.path.join(plugin_source_dir, plugin_dir)
             if os.path.exists(installed_path):
                 meta_path = os.path.join(installed_path, 'meta.xml')
             elif os.path.exists(source_path):
@@ -1050,10 +1252,21 @@ def _fetch_plugins_from_github():
                     patreon_url_elem = root.find('patreon_url')
                     patreon_url = patreon_url_elem.text if patreon_url_elem is not None else 'https://www.patreon.com/c/newstargeted/membership'
                 
+                # Category (type) is required - valid: Utility, Security, Backup, Performance (Plugin removed)
+                type_elem = root.find('type')
+                if type_elem is None or not type_elem.text or not type_elem.text.strip():
+                    logging.writeToFile(f"Plugin {plugin_name}: Missing required type/category in meta.xml, skipping")
+                    continue
+                type_text = type_elem.text.strip().lower()
+                if type_text not in ('utility', 'security', 'backup', 'performance', 'monitoring', 'integration', 'email', 'development', 'analytics'):
+                    logging.writeToFile(f"Plugin {plugin_name}: Invalid category '{type_elem.text}', skipping (use Utility, Security, Backup, or Performance)")
+                    continue
+                
+                freshness = _get_freshness_badge(modify_date)
                 plugin_data = {
                     'plugin_dir': plugin_name,
                     'name': root.find('name').text if root.find('name') is not None else plugin_name,
-                    'type': root.find('type').text if root.find('type') is not None else 'Plugin',
+                    'type': type_elem.text.strip(),
                     'description': root.find('description').text if root.find('description') is not None else '',
                     'version': root.find('version').text if root.find('version') is not None else '1.0.0',
                     'url': root.find('url').text if root.find('url') is not None else f'/plugins/{plugin_name}/',
@@ -1062,6 +1275,7 @@ def _fetch_plugins_from_github():
                     'github_url': f'https://github.com/master3395/cyberpanel-plugins/tree/main/{plugin_name}',
                     'about_url': f'https://github.com/master3395/cyberpanel-plugins/tree/main/{plugin_name}',
                     'modify_date': modify_date,
+                    'freshness_badge': freshness,
                     'is_paid': is_paid,
                     'patreon_tier': patreon_tier,
                     'patreon_url': patreon_url
@@ -1110,21 +1324,29 @@ def _fetch_plugins_from_github():
 @require_http_methods(["GET"])
 def fetch_plugin_store(request):
     """Fetch plugins from the plugin store with caching"""
-    mailUtilities.checkHome()
-    
-    # Try to get from cache first
-    cached_plugins = _get_cached_plugins()
-    if cached_plugins is not None:
-        # Enrich cached plugins with installed/enabled status
-        enriched_plugins = _enrich_store_plugins(cached_plugins)
-        return JsonResponse({
-            'success': True,
-            'plugins': enriched_plugins,
-            'cached': True
-        })
-    
-    # Cache miss or expired - fetch from GitHub
     try:
+        mailUtilities.checkHome()
+    except Exception as e:
+        logging.writeToFile(f"fetch_plugin_store: checkHome failed: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': 'Authentication required. Please log in again.',
+            'plugins': []
+        }, status=401)
+    
+    try:
+        # Try to get from cache first
+        cached_plugins = _get_cached_plugins()
+        if cached_plugins is not None:
+            # Enrich cached plugins with installed/enabled status
+            enriched_plugins = _enrich_store_plugins(cached_plugins)
+            return JsonResponse({
+                'success': True,
+                'plugins': enriched_plugins,
+                'cached': True
+            })
+        
+        # Cache miss or expired - fetch from GitHub
         plugins = _fetch_plugins_from_github()
         
         # Enrich plugins with installed/enabled status
@@ -1139,7 +1361,7 @@ def fetch_plugin_store(request):
             'plugins': enriched_plugins,
             'cached': False
         })
-    
+        
     except Exception as e:
         error_message = str(e)
         
@@ -1218,22 +1440,48 @@ def upgrade_plugin(request, plugin_name):
             
             # Extract plugin directory from repository ZIP
             repo_zip = zipfile.ZipFile(io.BytesIO(repo_zip_data))
+            namelist = repo_zip.namelist()
             
-            # Find plugin directory in ZIP
-            plugin_prefix = f'cyberpanel-plugins-main/{plugin_name}/'
-            plugin_files = [f for f in repo_zip.namelist() if f.startswith(plugin_prefix)]
+            # Discover top-level folder (GitHub uses repo-name-branch, e.g. cyberpanel-plugins-main)
+            top_level = None
+            for name in namelist:
+                if '/' in name:
+                    top_level = name.split('/')[0]
+                    break
+                elif name and not name.endswith('/'):
+                    top_level = name
+                    break
+            if not top_level:
+                raise Exception('GitHub archive has no recognizable structure')
             
+            # Find plugin folder in ZIP (case-insensitive: repo may have RedisManager vs redisManager)
+            plugin_prefix = None
+            plugin_name_lower = plugin_name.lower()
+            for name in namelist:
+                if '/' not in name:
+                    continue
+                parts = name.split('/')
+                if len(parts) >= 2 and parts[0] == top_level and parts[1].lower() == plugin_name_lower:
+                    # Use the actual casing from the ZIP for reading
+                    plugin_prefix = f'{top_level}/{parts[1]}/'
+                    break
+            if not plugin_prefix:
+                sample = namelist[:15] if len(namelist) > 15 else namelist
+                logging.writeToFile(f"Plugin {plugin_name} not in archive. Top-level={top_level}, sample paths: {sample}")
+                raise Exception(f'Plugin {plugin_name} not found in GitHub repository (checked under {top_level}/)')
+            
+            plugin_files = [f for f in namelist if f.startswith(plugin_prefix)]
             if not plugin_files:
+                logging.writeToFile(f"Plugin {plugin_name}: no files under prefix {plugin_prefix}")
                 raise Exception(f'Plugin {plugin_name} not found in GitHub repository')
             
-            logging.writeToFile(f"Found {len(plugin_files)} files for plugin {plugin_name} in GitHub")
+            logging.writeToFile(f"Found {len(plugin_files)} files for plugin {plugin_name} in GitHub (prefix {plugin_prefix})")
             
-            # Create plugin ZIP file from GitHub with correct structure
+            # Create plugin ZIP with correct structure: plugin_name/... for install to /usr/local/CyberCP/plugin_name/
             plugin_zip = zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED)
-            
             for file_path in plugin_files:
                 relative_path = file_path[len(plugin_prefix):]
-                if relative_path:  # Skip directories
+                if relative_path:  # Skip directory-only entries
                     file_data = repo_zip.read(file_path)
                     arcname = os.path.join(plugin_name, relative_path)
                     plugin_zip.writestr(arcname, file_data)
@@ -1276,7 +1524,10 @@ def upgrade_plugin(request, plugin_name):
                 if not os.path.exists(pluginInstalled):
                     raise Exception(f'Plugin upgrade failed: {pluginInstalled} does not exist after upgrade')
                 
-                # Get new version
+                # Sync meta.xml from GitHub raw so version matches store (archive ZIP can be cached/stale)
+                _sync_meta_xml_from_github(plugin_name, '/usr/local/CyberCP')
+                
+                # Get new version (now reflects meta.xml from main)
                 new_version = _get_installed_version(plugin_name, '/usr/local/CyberCP')
                 
                 logging.writeToFile(f"Plugin {plugin_name} upgraded successfully from {installed_version} to {new_version}")
@@ -1449,41 +1700,55 @@ def install_from_store(request, plugin_name):
                 
                 # Extract plugin directory from repository ZIP
                 repo_zip = zipfile.ZipFile(io.BytesIO(repo_zip_data))
+                namelist = repo_zip.namelist()
                 
-                # Find plugin directory in ZIP
-                plugin_prefix = f'cyberpanel-plugins-main/{plugin_name}/'
-                plugin_files = [f for f in repo_zip.namelist() if f.startswith(plugin_prefix)]
-                
-                if not plugin_files:
+                # Discover top-level folder and find plugin (case-insensitive)
+                top_level = None
+                for name in namelist:
+                    if '/' in name:
+                        top_level = name.split('/')[0]
+                        break
+                if not top_level:
+                    raise Exception('GitHub archive has no recognizable structure')
+                plugin_prefix = None
+                plugin_name_lower = plugin_name.lower()
+                for name in namelist:
+                    if '/' not in name:
+                        continue
+                    parts = name.split('/')
+                    if len(parts) >= 2 and parts[0] == top_level and parts[1].lower() == plugin_name_lower:
+                        plugin_prefix = f'{top_level}/{parts[1]}/'
+                        break
+                if not plugin_prefix:
+                    repo_zip.close()
                     logging.writeToFile(f"Plugin {plugin_name} not found in GitHub repository, trying local source")
                     use_local_fallback = True
                 else:
-                    logging.writeToFile(f"Found {len(plugin_files)} files for plugin {plugin_name} in GitHub")
-                    
-                    # Create plugin ZIP file from GitHub with correct structure
-                    # The ZIP must contain plugin_name/ directory structure for proper extraction
-                    plugin_zip = zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED)
-                    
-                    for file_path in plugin_files:
-                        # Remove the repository root prefix
-                        relative_path = file_path[len(plugin_prefix):]
-                        if relative_path:  # Skip directories
-                            file_data = repo_zip.read(file_path)
-                            # Add plugin_name prefix to maintain directory structure
-                            arcname = os.path.join(plugin_name, relative_path)
-                            plugin_zip.writestr(arcname, file_data)
-                    
-                    plugin_zip.close()
-                    repo_zip.close()
+                    plugin_files = [f for f in namelist if f.startswith(plugin_prefix)]
+                    if not plugin_files:
+                        repo_zip.close()
+                        logging.writeToFile(f"Plugin {plugin_name} not found in GitHub repository, trying local source")
+                        use_local_fallback = True
+                    else:
+                        logging.writeToFile(f"Found {len(plugin_files)} files for plugin {plugin_name} in GitHub")
+                        plugin_zip = zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED)
+                        for file_path in plugin_files:
+                            relative_path = file_path[len(plugin_prefix):]
+                            if relative_path:
+                                file_data = repo_zip.read(file_path)
+                                arcname = os.path.join(plugin_name, relative_path)
+                                plugin_zip.writestr(arcname, file_data)
+                        plugin_zip.close()
+                        repo_zip.close()
             except Exception as github_error:
                 logging.writeToFile(f"GitHub download failed for {plugin_name}: {str(github_error)}, trying local source")
                 use_local_fallback = True
             
             # Fallback to local source if GitHub download failed
             if use_local_fallback:
-                pluginSource = '/home/cyberpanel/plugins/' + plugin_name
-                if not os.path.exists(pluginSource):
-                    raise Exception(f'Plugin {plugin_name} not found in GitHub repository and local source not found at {pluginSource}')
+                pluginSource = _get_plugin_source_path(plugin_name)
+                if not pluginSource:
+                    raise Exception(f'Plugin {plugin_name} not found in GitHub repository and local source not found (checked: {", ".join(PLUGIN_SOURCE_PATHS)})')
                 
                 logging.writeToFile(f"Using local source for {plugin_name} from {pluginSource}")
                 
@@ -1550,11 +1815,15 @@ def install_from_store(request, plugin_name):
                         raise Exception(f'Plugin installation failed: Files extracted to wrong location. Found {found_root_files} in /usr/local/CyberCP/ root instead of {pluginInstalled}/')
                     raise Exception(f'Plugin installation failed: {pluginInstalled} does not exist after installation')
                 
+                # Sync meta.xml from GitHub raw so version matches store
+                _sync_meta_xml_from_github(plugin_name, '/usr/local/CyberCP')
+                
                 logging.writeToFile(f"Plugin {plugin_name} installed successfully")
                 
                 # Set plugin to enabled by default after installation
                 _set_plugin_state(plugin_name, True)
                 
+                _ensure_plugin_meta_xml(plugin_name)
                 return JsonResponse({
                     'success': True,
                     'message': f'Plugin {plugin_name} installed successfully from store'
@@ -1584,6 +1853,24 @@ def install_from_store(request, plugin_name):
             'success': False,
             'error': str(e)
         }, status=500)
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def debug_loaded_plugins(request):
+    """Return which plugins have URL routes loaded and which failed (for diagnosing 404s)."""
+    try:
+        import pluginHolder.urls as urls_mod
+        loaded = list(getattr(urls_mod, '_loaded_plugins', []))
+        failed = dict(getattr(urls_mod, '_failed_plugins', {}))
+        return JsonResponse({
+            'success': True,
+            'loaded': loaded,
+            'failed': failed,
+            'loaded_count': len(loaded),
+            'failed_count': len(failed),
+        }, json_dumps_params={'indent': 2})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 def plugin_help(request, plugin_name):
     """Plugin-specific help page - shows plugin information, version history, and help content"""

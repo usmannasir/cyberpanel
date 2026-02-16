@@ -644,8 +644,8 @@
                             </td>
                             <td>
                                 <span class="info-text" 
-                                      ng-bind="process.info || 'No query'"
-                                      ng-attr-title="{$ process.info $}"></span>
+                                      ng-bind="(process.info && process.info !== 'NULL') ? process.info : 'No query'"
+                                      ng-attr-title="{$ (process.info && process.info !== 'NULL') ? process.info : 'No query' $}"></span>
                             </td>
                             <td>
                                 <div class="progress-bar">
@@ -666,24 +666,5 @@
         </div>
     </div>
 </div>
-
-<script>
-    // Add refresh functionality if not already present
-    if (typeof app !== 'undefined') {
-        app.controller('Mysqlmanager', function($scope, $http, $interval) {
-            // Existing controller code...
-            
-            $scope.refreshProcesses = function() {
-                // Trigger a refresh of the processes
-                var icon = document.querySelector('.refresh-btn i');
-                icon.style.animation = 'spin 1s linear';
-                setTimeout(function() {
-                    icon.style.animation = '';
-                }, 1000);
-                // The actual refresh logic should be implemented in the controller
-            };
-        });
-    }
-</script>
 
 {% endblock %}

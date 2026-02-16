@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+import os
+import time
+
 from .views import VERSION, BUILD
 
 def version_context(request):
@@ -49,4 +52,54 @@ def notification_preferences_context(request):
     return {
         'backup_notification_dismissed': False,
         'ai_scanner_notification_dismissed': False
+    }
+
+def firewall_static_context(request):
+    """Expose a cache-busting token for firewall static assets (bumps when firewall.js changes)."""
+    try:
+        from django.conf import settings
+        base = settings.BASE_DIR
+        # Check both app static and repo static so version updates when either is updated
+        paths = [
+            os.path.join(base, 'firewall', 'static', 'firewall', 'firewall.js'),
+            os.path.join(base, 'static', 'firewall', 'firewall.js'),
+            os.path.join(base, 'public', 'static', 'firewall', 'firewall.js'),
+        ]
+        version = 0
+        for p in paths:
+            try:
+                version = max(version, int(os.path.getmtime(p)))
+            except (OSError, TypeError):
+                pass
+        if version <= 0:
+            version = int(time.time())
+    except (OSError, AttributeError):
+        version = int(time.time())
+    return {
+        'FIREWALL_STATIC_VERSION': version
+    }
+
+
+def dns_static_context(request):
+    """Cache-busting for DNS static assets (bumps when dns.js changes). Avoids stale JS/layout."""
+    try:
+        from django.conf import settings
+        base = settings.BASE_DIR
+        paths = [
+            os.path.join(base, 'dns', 'static', 'dns', 'dns.js'),
+            os.path.join(base, 'static', 'dns', 'dns.js'),
+            os.path.join(base, 'public', 'static', 'dns', 'dns.js'),
+        ]
+        version = 0
+        for p in paths:
+            try:
+                version = max(version, int(os.path.getmtime(p)))
+            except (OSError, TypeError):
+                pass
+        if version <= 0:
+            version = int(time.time())
+    except (OSError, AttributeError):
+        version = int(time.time())
+    return {
+        'DNS_STATIC_VERSION': version
     }

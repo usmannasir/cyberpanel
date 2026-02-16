@@ -7,7 +7,7 @@
 **Web Hosting Control Panel powered by OpenLiteSpeed**
 Fast • Secure • Scalable — Simplify hosting management with style.
 
-**Version**: 2.5.5-dev • **Updated**: November 15, 2025
+**Version**: 2.5.5-dev • **Updated**: January 15, 2026
 
 [![GitHub](https://img.shields.io/badge/GitHub-Repo-000?style=flat-square\&logo=github)](https://github.com/usmannasir/cyberpanel)
 [![Docs](https://img.shields.io/badge/Docs-Read-green?style=flat-square\&logo=gitbook)](https://cyberpanel.net/KnowledgeBase/)
@@ -70,25 +70,25 @@ Fast • Secure • Scalable — Simplify hosting management with style.
 
 | OS family                  | Recommended / Supported |
 | -------------------------- | ----------------------: |
-| Ubuntu 24.04, 22.04, 20.04 |          ✅ Recommended |
-| Debian 13, 12, 11          |            ✅ Supported |
-| AlmaLinux 10, 9, 8         |            ✅ Supported |
-| RockyLinux 9, 8            |            ✅ Supported |
-| RHEL 9, 8                  |            ✅ Supported |
-| CloudLinux 9, 8            |            ✅ Supported |
+| AlmaLinux 10, 9, 8         |          ✅ Recommended |
 | CentOS 7                   |      ⚠️ Legacy — EOL |
+| CloudLinux 9, 8            |            ✅ Supported |
+| Debian 13, 12, 11          |            ✅ Supported |
+| RHEL 9, 8                  |            ✅ Supported |
+| RockyLinux 9, 8            |            ✅ Supported |
+| Ubuntu 24.04, 22.04, 20.04 |          ✅ Recommended |
 
-> CyberPanel targets x86\_64 only. Test the unsupported OS in staging first.
+> **Architectures:** x86_64 (primary), aarch64/ARM64 (supported). AlmaLinux is the recommended RHEL-compatible distribution. Test unsupported OS in staging first.
 
 ---
 
 ## PHP support (short)
 
-* ✅ **Recommended**: PHP 8.5 (beta), 8.4, 8.3, 8.2, 8.1
-* ⚠️ **Legacy**: PHP 8.0, PHP 7.4 (security-only)
-* ❌ **Deprecated**: PHP 7.1, 7.2, 7.3 (no longer installed)
+* ✅ **Recommended**: PHP 8.5, 8.4
+* ⚠️ **Security fixes only**: PHP 8.3, 8.2, 8.1
+* ❌ **EOL / Deprecated**: PHP 8.0, 7.4, 7.1, 7.2, 7.3 (no longer supported)
 
-Third-party repositories (Remi, Ondrej) may provide older or niche versions; verify compatibility before use.
+Third-party repositories may provide older or niche versions; verify compatibility before use. RHEL/Alma/Rocky: [Remi RPM](https://rpms.remirepo.net/). Ubuntu/Debian: [Ondrej PPA](https://launchpad.net/~ondrej/+archive/ubuntu/php). See [php.net/supported-versions](https://www.php.net/supported-versions.php).
 
 ---
 
@@ -109,6 +109,34 @@ sh <(curl -s https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preU
 ```
 
 **Post-upgrade checklist:** verify email, DNS, SSL, and run a smoke test on key sites.
+
+---
+
+## Upgrade to v2.5.5-dev (non-interactive)
+
+Upgrade to v2.5.5-dev without branch or MariaDB prompts.
+
+**MariaDB version options:** `10.11`, `11.8` (LTS default), `12.1` (latest). Use `--mariadb` for 10.11, or `--mariadb-version X` to choose explicitly. If you want to **default to 11.8** and skip the prompt, use `--mariadb-version 11.8`.
+
+```bash
+# Upgrade to v2.5.5-dev without prompts (script will prompt for MariaDB unless you pass a flag)
+sh <(curl -s https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev
+
+# Default to MariaDB 11.8 (LTS) — recommended, non-interactive
+sh <(curl -s https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev --mariadb-version 11.8
+
+# MariaDB 10.11 (non-interactive)
+sh <(curl -s https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev --mariadb
+
+# MariaDB 12.1 (latest)
+sh <(curl -s https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev --mariadb-version 12.1
+```
+
+**Full non-interactive (v2.5.5-dev + MariaDB 11.8):**
+
+```bash
+sh <(curl -s https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/preUpgrade.sh) -b v2.5.5-dev --mariadb-version 11.8
+```
 
 ---
 
@@ -144,7 +172,24 @@ journalctl -u lscpd -f
 
 ## Recent fixes
 
+* **02.02.2026** — Plugin updates: premiumPlugin & paypalPremiumPlugin unified verification (Plugin Grants, activation key, Patreon, PayPal, AES-256-CBC encryption). Installed Plugins UI: bulk activate/deactivate, freshness badges, removed Patreon messaging from front.
 * **15.11.2025** — Hardened MySQL password rotation: `mysqlUtilities.changePassword` now auto-resolves the backing MySQL account (user + host) even when `DBUsers` metadata is missing, preventing the historical `[mysqlUtilities.changePassword] can only concatenate str (not "int")` error. Regression tests live under `Test/mysqlUtilities/`, and you should restart `lscpd` after deploying the patch so the helper reloads.
+
+---
+
+## Testing
+
+### OLS Feature Test Suite
+
+The OpenLiteSpeed feature test suite (128 tests) validates binary integrity, CyberPanel module, Auto-SSL config, SSL listener auto-mapping, .htaccess processing, ReadApacheConf directives, and more.
+
+```bash
+# Run from CyberPanel repo root
+./tests/ols_test_setup.sh   # One-time setup
+./tests/ols_feature_tests.sh
+```
+
+Requires a live CyberPanel + OLS installation.
 
 ---
 

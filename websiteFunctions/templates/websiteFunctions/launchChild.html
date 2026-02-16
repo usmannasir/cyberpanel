@@ -653,7 +653,7 @@
                                             <i class="fas fa-lock" style="font-size: 20px;"></i>
                                             <div>
                                                 <h4 style="margin: 0 0 5px 0; font-size: 16px;">{{ authority }}</h4>
-                                                <p style="margin: 0;">{% trans "Your SSL will expire in" %} {{ days }} {% trans "days" %}</p>
+                                                <p style="margin: 0;">{% trans "Your SSL will expire in" %} {{ days }} {% trans "days" %}{% if renewal_when %} • {% trans "Renews" %} {{ renewal_when }}{% endif %}</p>
                                             </div>
                                         </div>
                                     {% endif %}
