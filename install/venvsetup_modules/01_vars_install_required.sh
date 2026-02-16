@@ -384,7 +384,7 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 	yum clean all
 	yum update -y
 	yum install epel-release -y
-	yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc python-devel libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel python-pip git
+	yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc python-devel libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel python-pip git conntrack-tools
 	if [[ $DEV == "ON" ]] ; then
 		yum -y install yum-utils
 		yum -y groupinstall development
@@ -402,17 +402,17 @@ if [[ $SERVER_OS == "Ubuntu" ]] ; then
 		DEBIAN_VERSION=$(cat /etc/debian_version | cut -d'.' -f1)
 		if [[ $DEBIAN_VERSION -ge 13 ]]; then
 			# Debian 13 (Trixie) package mappings
-			DEBIAN_FRONTEND=noninteractive apt install -y htop telnet python3-mysqldb python3-dev libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadb-dev-compat libmariadb-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcom-err2 libldap2-dev python3-gpg python3 python3-setuptools virtualenv python3-dev python3-pip git
+			DEBIAN_FRONTEND=noninteractive apt install -y htop telnet python3-mysqldb python3-dev libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadb-dev-compat libmariadb-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcom-err2 libldap2-dev python3-gpg python3 python3-setuptools virtualenv python3-dev python3-pip git conntrack
 		elif [[ $DEBIAN_VERSION -ge 12 ]]; then
 			# Debian 12 (Bookworm) package mappings
-			DEBIAN_FRONTEND=noninteractive apt install -y htop telnet python3-mysqldb python3-dev libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadb-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcom-err2 libldap2-dev python3-gpg python3 python3-setuptools virtualenv python3-dev python3-pip git
+			DEBIAN_FRONTEND=noninteractive apt install -y htop telnet python3-mysqldb python3-dev libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadb-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcom-err2 libldap2-dev python3-gpg python3 python3-setuptools virtualenv python3-dev python3-pip git conntrack
 		else
 			# Older Debian versions
-			DEBIAN_FRONTEND=noninteractive apt install -y htop telnet python-mysqldb python-dev libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadb-dev-compat libmariadb-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcom-err2 libldap2-dev python-gpg python python-minimal python-setuptools virtualenv python-dev python-pip git
+			DEBIAN_FRONTEND=noninteractive apt install -y htop telnet python-mysqldb python-dev libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadb-dev-compat libmariadb-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcom-err2 libldap2-dev python-gpg python python-minimal python-setuptools virtualenv python-dev python-pip git conntrack
 		fi
 	else
 		# Ubuntu or older Debian with compatible package names
-		DEBIAN_FRONTEND=noninteractive apt install -y htop telnet python-mysqldb python-dev libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadb-dev-compat libmariadb-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcom-err2 libldap2-dev python-gpg python python-minimal python-setuptools virtualenv python-dev python-pip git
+		DEBIAN_FRONTEND=noninteractive apt install -y htop telnet python-mysqldb python-dev libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadb-dev-compat libmariadb-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcom-err2 libldap2-dev python-gpg python python-minimal python-setuptools virtualenv python-dev python-pip git conntrack
 	fi
 	if [[ $DEV == "ON" ]] ; then
 		DEBIAN_FRONTEND=noninteractive apt install -y python3-pip

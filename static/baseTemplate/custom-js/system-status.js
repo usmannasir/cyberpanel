@@ -1162,19 +1162,8 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             return; // Already processing this IP
         }
         
-        // Check if already blocked
-        if ($scope.blockedIPs && $scope.blockedIPs[ipAddress]) {
-            console.log('IP already blocked:', ipAddress);
-            if (typeof PNotify !== 'undefined') {
-                new PNotify({
-                    title: 'Info',
-                    text: `IP address ${ipAddress} is already banned`,
-                    type: 'info',
-                    delay: 3000
-                });
-            }
-            return;
-        }
+        // Do not early-return when IP is already in blockedIPs: still call the API so the
+        // backend can close any active connections from this IP (already-banned path).
         
         // Set blocking flag to prevent duplicate requests
         $scope.blockingIP = ipAddress;
@@ -1241,11 +1230,12 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                     }
                     $scope.blockedIPs[ipAddress] = true;
                     
-                    // Show success notification
+                    // Show success notification (use server message when present, e.g. already-banned + connections closed)
                     if (typeof PNotify !== 'undefined') {
+                        var successText = (responseData.message && responseData.message.length) ? responseData.message : `IP address ${ipAddress} has been permanently banned and added to the firewall. You can manage it in the Firewall > Banned IPs section.`;
                         new PNotify({
                             title: 'IP Address Banned',
-                            text: `IP address ${ipAddress} has been permanently banned and added to the firewall. You can manage it in the Firewall > Banned IPs section.`,
+                            text: successText,
                             type: 'success',
                             delay: 5000
                         });
@@ -1361,14 +1351,9 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             return; // Already processing
         }
         
-        if ($scope.blockedIPs[ipAddress]) {
-            new PNotify({
-                title: 'Info',
-                text: `IP address ${ipAddress} is already banned`,
-                type: 'info',
-                delay: 3000
-            });
-            return;
+        // Still call API when already in blockedIPs so backend can close active connections
+        if (!$scope.blockedIPs) {
+            $scope.blockedIPs = {};
         }
         
         $scope.blockingIP = ipAddress;
@@ -1454,14 +1439,9 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             return; // Already processing
         }
         
-        if ($scope.blockedIPs[ipAddress]) {
-            new PNotify({
-                title: 'Info',
-                text: `IP address ${ipAddress} is already banned`,
-                type: 'info',
-                delay: 3000
-            });
-            return;
+        // Still call API when already in blockedIPs so backend can close active connections
+        if (!$scope.blockedIPs) {
+            $scope.blockedIPs = {};
         }
         
         $scope.blockingIP = ipAddress;

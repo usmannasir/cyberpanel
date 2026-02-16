@@ -486,7 +486,7 @@ class preFlightsChecks:
                 except Exception as e:
                     self.stdOut(f"Warning: Graphics library fixes failed: {str(e)}", 1)
             
-            # Install common dependencies
+            # Install common dependencies (conntrack-tools for firewall/SSH security connection termination)
             self.stdOut("Installing common RHEL dependencies...", 1)
             common_deps = [
                 'curl',
@@ -500,7 +500,8 @@ class preFlightsChecks:
                 'cmake',
                 'pcre2-devel',
                 'openssl-devel',
-                'zlib-devel'
+                'zlib-devel',
+                'conntrack-tools'
             ]
             
             for dep in common_deps:
@@ -706,7 +707,7 @@ class preFlightsChecks:
         try:
             self.stdOut("Applying Ubuntu-specific fixes...", 1)
             
-            # Install required dependencies
+            # Install required dependencies (conntrack for firewall/SSH security connection termination)
             self.stdOut("Installing Ubuntu dependencies...", 1)
             ubuntu_deps = [
                 'software-properties-common',
@@ -714,7 +715,8 @@ class preFlightsChecks:
                 'curl',
                 'wget',
                 'gnupg',
-                'lsb-release'
+                'lsb-release',
+                'conntrack'
             ]
             
             for dep in ubuntu_deps:
@@ -748,7 +750,7 @@ class preFlightsChecks:
         try:
             self.stdOut("Applying Debian-specific fixes...", 1)
             
-            # Install required dependencies
+            # Install required dependencies (conntrack for firewall/SSH security connection termination)
             self.stdOut("Installing Debian dependencies...", 1)
             debian_deps = [
                 'software-properties-common',
@@ -756,7 +758,8 @@ class preFlightsChecks:
                 'curl',
                 'wget',
                 'gnupg',
-                'lsb-release'
+                'lsb-release',
+                'conntrack'
             ]
             
             for dep in debian_deps:
