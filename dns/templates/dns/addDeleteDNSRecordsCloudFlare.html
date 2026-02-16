@@ -961,8 +961,8 @@
                                         
                                         <div class="dns-search-wrap mb-3" ng-if="!loadingRecords && records.length > 0">
                                             <span class="dns-search-icon-left"><i class="fas fa-search"></i></span>
-                                            <input type="text" class="form-control dns-search-input" ng-model="dnsSearchFilter" placeholder="{% trans 'Search name, type, value...' %}" title="{% trans 'Search through all records' %}">
-                                            <span class="dns-search-clear" ng-if="dnsSearchFilter" ng-click="dnsSearchFilter = ''" title="{% trans 'Clear search' %}"><i class="fas fa-times"></i></span>
+                                            <input type="text" class="form-control dns-search-input" ng-model="dnsSearch.filter" placeholder="{% trans 'Search name, type, value...' %}" title="{% trans 'Search through all records' %}">
+                                            <span class="dns-search-clear" ng-if="dnsSearch.filter" ng-click="dnsSearch.filter = ''" title="{% trans 'Clear search' %}"><i class="fas fa-times"></i></span>
                                         </div>
                                         
                                         <div ng-if="loadingRecords" style="text-align: center; padding: 20px; color: #8893a7;">
@@ -973,7 +973,7 @@
                                             No DNS records found.
                                         </div>
                                         
-                                        <div ng-if="!loadingRecords && records.length > 0 && dnsSearchFilter && (records | dnsRecordSearch:dnsSearchFilter).length === 0" class="alert alert-info" style="margin-bottom: 1rem;">
+                                        <div ng-if="!loadingRecords && records.length > 0 && dnsSearch.filter && (records | dnsRecordSearch:dnsSearch.filter).length === 0" class="alert alert-info" style="margin-bottom: 1rem;">
                                             <i class="fas fa-info-circle"></i> {% trans "No records match your search." %}
                                         </div>
                                         
@@ -1003,7 +1003,7 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <tr ng-repeat="record in records | dnsRecordSearch:dnsSearchFilter | orderBy:sortColumn:sortReverse track by record.id">
+                                                <tr ng-repeat="record in records | dnsRecordSearch:dnsSearch.filter | orderBy:sortColumn:sortReverse track by record.id">
                                                     <td class="editable-cell">
                                                         <span ng-hide="isEditing(record, 'name')" ng-click="startEdit(record, 'name')" class="cell-click" title="{% trans 'Click to edit' %}"><strong ng-bind="record.name"></strong></span>
                                                         <input ng-show="isEditing(record, 'name')" type="text" class="inline-input" ng-model="record.name" ng-blur="saveInlineField(record, 'name')" ng-keypress="$event.keyCode === 13 && saveInlineField(record, 'name')">
