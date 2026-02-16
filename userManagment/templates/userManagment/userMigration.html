@@ -95,7 +95,7 @@ function loadUsers() {
 
 function loadHomeDirectories() {
     $.ajax({
-        url: '/userManagement/getUserHomeDirectories/',
+        url: '/users/getUserHomeDirectories',
         type: 'POST',
         data: JSON.stringify({}),
         contentType: 'application/json',

@@ -3592,10 +3592,14 @@ context /cyberpanel_suspension_page.html {
             currentPack = modifyWeb.package.packageName
             owner = modifyWeb.admin.userName
             
-            # Get current home directory information
-            from userManagment.homeDirectoryUtils import HomeDirectoryUtils
-            current_home = HomeDirectoryUtils.getUserHomeDirectoryObject(owner)
-            currentHomeDirectory = current_home.name if current_home else 'Default'
+            # Get current home directory information (optional: tables may not exist yet)
+            currentHomeDirectory = 'Default'
+            try:
+                from userManagment.homeDirectoryUtils import HomeDirectoryUtils
+                current_home = HomeDirectoryUtils.getUserHomeDirectoryObject(owner)
+                currentHomeDirectory = current_home.name if current_home else 'Default'
+            except Exception:
+                pass
 
             data_ret = {'status': 1, 'modifyStatus': 1, 'error_message': "None", "adminEmail": email,
                         "packages": json_data, "current_pack": currentPack, "adminNames": admin_data,

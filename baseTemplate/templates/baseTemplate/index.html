@@ -26,17 +26,14 @@
     <!-- Readability Fixes CSS -->
     <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/readability-fixes.css' %}?v={{ CP_VERSION }}">
     
-    <!-- Core Scripts (data-cfasync=false prevents Cloudflare Rocket Loader from breaking load order) -->
+    <!-- Core Scripts: Angular + system-status FIRST so dashboard works even when CDN/Tracking Prevention blocks jQuery/Bootstrap -->
     <script src="{% static 'baseTemplate/angularjs.1.6.5.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'baseTemplate/custom-js/system-status.js' %}?v={{ CP_VERSION }}&dashboard=3" data-cfasync="false"></script>
     <script src="https://code.jquery.com/jquery-2.2.4.min.js" data-cfasync="false"></script>
-    <!-- Bootstrap JavaScript -->
-
     <script src="{% static 'baseTemplate/assets/bootstrap/js/bootstrap.min.js' %}?v={{ CP_VERSION }}"></script>
     <script src="{% static 'baseTemplate/bootstrap-toggle.min.js' %}?v={{ CP_VERSION }}"></script>
     <script src="{% static 'baseTemplate/custom-js/qrious.min.js' %}?v={{ CP_VERSION }}"></script>
-    <!-- Chart.js must load before system-status.js (dashboard charts depend on it) -->
     <script src="{% static 'baseTemplate/custom-js/chart.umd.min.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
-    <script src="{% static 'baseTemplate/custom-js/system-status.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -45,9 +42,9 @@
     <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/custom-js/pnotify.custom.min.css' %}?v={{ CP_VERSION }}">
     <script src="{% static 'baseTemplate/custom-js/pnotify.custom.min.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     
-    <!-- Select2 (required by FTP create account; load after jQuery; exclude from Rocket Loader to preserve order) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.full.min.js" data-cfasync="false"></script>
+    <!-- Select2 (required by FTP create account; local copy avoids CDN Tracking Prevention blocking) -->
+    <link rel="stylesheet" href="{% static 'baseTemplate/vendor/select2/select2.min.css' %}?v={{ CP_VERSION }}">
+    <script src="{% static 'baseTemplate/vendor/select2/select2.full.min.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     
     <!-- Modern Design System -->
     <style>
@@ -1592,9 +1589,6 @@
                 <a href="{% url 'listChildDomains' %}" class="menu-item">
                     <span>List Sub/Addon Domains</span>
                 </a>
-                <a href="{% url 'fixSubdomainLogs' %}" class="menu-item">
-                    <span>Fix Subdomain Logs</span>
-                </a>
                 {% if admin or modifyWebsite %}
                 <a href="{% url 'modifyWebsite' %}" class="menu-item">
                     <span>Modify Website</span>
@@ -2226,14 +2220,14 @@
     <script src="{% static 'websiteFunctions/websiteFunctions.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'userManagment/userManagment.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'databases/databases.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
-    <script src="{% static 'dns/dns.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'dns/dns.js' %}?v={{ CP_VERSION }}&dns={{ DNS_STATIC_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'mailServer/mailServer.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'ftp/ftp.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'backup/backup.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'managePHP/managePHP.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'serverLogs/serverLogs.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'serverStatus/serverStatus.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
-    <script src="{% static 'firewall/firewall.js' %}?v={{ CP_VERSION }}&fw={{ FIREWALL_STATIC_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'firewall/firewall.js' %}?v={{ CP_VERSION }}&fw={{ FIREWALL_STATIC_VERSION|default:CP_VERSION }}&cb=4" data-cfasync="false"></script>
     <script src="{% static 'emailPremium/emailPremium.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'manageServices/manageServices.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'CLManager/CLManager.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
@@ -2345,10 +2339,7 @@
             
             // Check if user has backup configured (you'll need to implement this API)
             // For now, we'll show it by default unless they have a backup plan
-            // This should be replaced with an actual check
-            {% if not request.session.has_backup_configured %}
-                showBackupNotification();
-            {% endif %}
+            // Session check omitted - has_backup_configured may be absent in some views
             
             // For demonstration, let's show it if URL doesn't contain 'OneClickBackups'
             if (!window.location.href.includes('OneClickBackups')) {
@@ -2440,12 +2431,13 @@
         // .htaccess Feature Notification Functions
         function checkHtaccessStatus() {
             // Check if user has dismissed the notification permanently (localStorage for longer persistence)
-            if (localStorage.getItem('htaccessNotificationDismissed') === 'true') {
-                return;
-            }
+            try {
+                if (localStorage.getItem('htaccessNotificationDismissed') === 'true') return;
+            } catch (e) { return; }
 
             // Check if notification has been shown today
-            const lastShown = localStorage.getItem('htaccessNotificationLastShown');
+            var lastShown;
+            try { lastShown = localStorage.getItem('htaccessNotificationLastShown'); } catch (e) { return; }
             const today = new Date().toDateString();
 
             if (lastShown === today) {
@@ -2454,7 +2446,7 @@
 
             // Show the notification
             showHtaccessNotification();
-            localStorage.setItem('htaccessNotificationLastShown', today);
+            try { localStorage.setItem('htaccessNotificationLastShown', today); } catch (e) {}
         }
 
         function showHtaccessNotification() {
@@ -2470,7 +2462,7 @@
             banner.classList.remove('show');
             body.classList.remove('htaccess-shown');
             // Remember dismissal permanently
-            localStorage.setItem('htaccessNotificationDismissed', 'true');
+            try { localStorage.setItem('htaccessNotificationDismissed', 'true'); } catch (e) {}
         }
         
         function isNotificationDismissed(notificationKey) {
@@ -2481,7 +2473,7 @@
                 return {% if ai_scanner_notification_dismissed %}true{% else %}false{% endif %};
             }
             if (notificationKey === 'htaccess-notification') {
-                return localStorage.getItem('htaccessNotificationDismissed') === 'true';
+                try { return localStorage.getItem('htaccessNotificationDismissed') === 'true'; } catch (e) { return false; }
             }
             return false;
         }
@@ -2604,10 +2596,12 @@
     
     <!-- Dark Mode Toggle Script -->
     <script>
-        // Theme switching functionality
+        // Theme switching functionality (wrapped in try-catch for Tracking Prevention / private browsing)
         (function() {
-            // Get saved theme from localStorage or default to light
-            const savedTheme = localStorage.getItem('cyberPanelTheme') || 'light';
+            var savedTheme = 'light';
+            try {
+                savedTheme = localStorage.getItem('cyberPanelTheme') || 'light';
+            } catch (e) { /* Tracking Prevention or storage disabled */ }
             document.documentElement.setAttribute('data-theme', savedTheme);
             
             // Update icon based on current theme
@@ -2630,7 +2624,7 @@
                     
                     // Update theme
                     document.documentElement.setAttribute('data-theme', newTheme);
-                    localStorage.setItem('cyberPanelTheme', newTheme);
+                    try { localStorage.setItem('cyberPanelTheme', newTheme); } catch (e) { /* Tracking Prevention */ }
                     
                     // Update icon
                     updateThemeIcon(newTheme);
