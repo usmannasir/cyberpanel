@@ -217,6 +217,59 @@ class FirewallManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
+    def modifyRule(self, userID=None, data=None):
+        """
+        Update an existing firewall rule: remove old rule from firewalld and DB, add new rule.
+        data: id, name, proto, port, ruleIP (or ipAddress).
+        """
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            if currentACL['admin'] != 1:
+                return ACLManager.loadErrorJson('status', 0)
+
+            rule_id = data.get('id')
+            new_name = (data.get('name') or data.get('ruleName') or '').strip()
+            new_proto = (data.get('proto') or data.get('ruleProtocol') or 'tcp').strip().lower()
+            new_port = (data.get('port') or data.get('rulePort') or '').strip()
+            new_ip = (data.get('ruleIP') or data.get('ipAddress') or '0.0.0.0/0').strip()
+
+            if not rule_id:
+                final_dic = {'status': 0, 'error_message': 'Rule ID is required'}
+                return HttpResponse(json.dumps(final_dic), content_type='application/json')
+            if not new_name:
+                final_dic = {'status': 0, 'error_message': 'Rule name is required'}
+                return HttpResponse(json.dumps(final_dic), content_type='application/json')
+            if new_proto not in ('tcp', 'udp'):
+                final_dic = {'status': 0, 'error_message': 'Protocol must be tcp or udp'}
+                return HttpResponse(json.dumps(final_dic), content_type='application/json')
+            if not new_port:
+                final_dic = {'status': 0, 'error_message': 'Port is required'}
+                return HttpResponse(json.dumps(final_dic), content_type='application/json')
+
+            existing = FirewallRules.objects.get(id=rule_id)
+            old_proto = existing.proto
+            old_port = existing.port
+            old_ip = existing.ipAddress
+
+            FirewallUtilities.deleteRule(old_proto, old_port, old_ip)
+            FirewallUtilities.addRule(new_proto, new_port, new_ip)
+
+            existing.name = new_name
+            existing.proto = new_proto
+            existing.port = new_port
+            existing.ipAddress = new_ip
+            existing.save()
+
+            final_dic = {'status': 1, 'modify_status': 1, 'error_message': 'None'}
+            return HttpResponse(json.dumps(final_dic), content_type='application/json')
+
+        except FirewallRules.DoesNotExist:
+            final_dic = {'status': 0, 'error_message': 'Rule not found'}
+            return HttpResponse(json.dumps(final_dic), content_type='application/json')
+        except BaseException as msg:
+            final_dic = {'status': 0, 'error_message': str(msg)}
+            return HttpResponse(json.dumps(final_dic), content_type='application/json')
+
     def reloadFirewall(self, userID = None, data = None):
         try:
 
@@ -1866,15 +1919,16 @@ class FirewallManager:
         try:
             admin = Administrator.objects.get(pk=userID)
             if admin.acl.adminStatus != 1:
-                return ACLManager.loadError()
+                return ACLManager.loadErrorJson('status', 0)
 
             active_banned_ips = []
+            db_ips = set()  # IPs already added from DB (for merge with JSON)
+            current_time = int(time.time())
 
             try:
                 from firewall.models import BannedIP
                 from django.db.models import Q
 
-                current_time = int(time.time())
                 banned_ips_queryset = BannedIP.objects.filter(
                     active=True
                 ).filter(
@@ -1882,56 +1936,116 @@ class FirewallManager:
                 ).order_by('-banned_on')
 
                 for banned_ip in banned_ips_queryset:
-                    ip_data = {
-                        'id': banned_ip.id,
-                        'ip': banned_ip.ip_address,
-                        'reason': banned_ip.reason,
-                        'duration': banned_ip.duration,
-                        'banned_on': banned_ip.get_banned_on_display(),
-                        'expires': banned_ip.get_expires_display(),
-                        'active': not banned_ip.is_expired() and banned_ip.active
-                    }
-                    if ip_data['active']:
-                        active_banned_ips.append(ip_data)
-            except (ImportError, AttributeError) as e:
+                    try:
+                        ip_data = {
+                            'id': banned_ip.id,
+                            'ip': banned_ip.ip_address,
+                            'reason': banned_ip.reason,
+                            'duration': banned_ip.duration,
+                            'banned_on': banned_ip.get_banned_on_display(),
+                            'expires': banned_ip.get_expires_display(),
+                            'active': not banned_ip.is_expired() and banned_ip.active
+                        }
+                        if ip_data['active']:
+                            active_banned_ips.append(ip_data)
+                            db_ips.add(banned_ip.ip_address)
+                    except Exception as row_e:
+                        import plogical.CyberCPLogFileWriter as _log
+                        _log.CyberCPLogFileWriter.writeToFile('getBannedIPs: skip row %s: %s' % (getattr(banned_ip, 'ip_address', '?'), str(row_e)))
+            except Exception as e:
                 import plogical.CyberCPLogFileWriter as _log
-                _log.CyberCPLogFileWriter.writeToFile('getBannedIPs: using JSON fallback (%s)' % str(e))
-                active_banned_ips = []
+                _log.CyberCPLogFileWriter.writeToFile('getBannedIPs: DB read failed, merging with JSON (%s)' % str(e))
 
+            # If ORM returned nothing but we have the table, try raw SQL as fallback
             if not active_banned_ips:
-                banned_ips, _ = self._load_banned_ips_store()
-                for b in banned_ips:
-                    if not b.get('active', True):
-                        continue
-                    exp = b.get('expires')
-                    if exp == 'Never' or exp is None:
+                try:
+                    from django.db import connection
+                    with connection.cursor() as cursor:
+                        cursor.execute(
+                            """SELECT id, ip_address, reason, duration, banned_on, expires
+                               FROM firewall_bannedips WHERE active = 1
+                               AND (expires IS NULL OR expires > %s)
+                               ORDER BY banned_on DESC""",
+                            [current_time]
+                        )
+                        for row in cursor.fetchall():
+                            bid, ip_addr, reason_val, duration_val, banned_on_val, expires_val = row
+                            if ip_addr in db_ips:
+                                continue
+                            from datetime import datetime
+                            if banned_on_val:
+                                banned_on_str = banned_on_val.strftime('%Y-%m-%d %H:%M:%S') if hasattr(banned_on_val, 'strftime') else str(banned_on_val)
+                            else:
+                                banned_on_str = 'N/A'
+                            if expires_val is None:
+                                expires_str = 'Never'
+                            else:
+                                try:
+                                    expires_str = datetime.fromtimestamp(expires_val).strftime('%Y-%m-%d %H:%M:%S')
+                                except Exception:
+                                    expires_str = 'Never'
+                            active_banned_ips.append({
+                                'id': bid,
+                                'ip': ip_addr or '',
+                                'reason': reason_val or '',
+                                'duration': duration_val or 'permanent',
+                                'banned_on': banned_on_str,
+                                'expires': expires_str,
+                                'active': True
+                            })
+                            db_ips.add(ip_addr)
+                except Exception as raw_e:
+                    import plogical.CyberCPLogFileWriter as _log
+                    _log.CyberCPLogFileWriter.writeToFile('getBannedIPs: raw fallback failed: %s' % str(raw_e))
+
+            # Always load JSON store and merge: show bans from both DB and JSON (e.g. bans from base/SSH logs)
+            banned_ips, _ = self._load_banned_ips_store()
+            for b in banned_ips:
+                if not b.get('active', True):
+                    continue
+                ip_val = (b.get('ip') or '').strip()
+                if ip_val in db_ips:
+                    continue
+                exp = b.get('expires')
+                if exp == 'Never' or exp is None:
+                    expires_display = 'Never'
+                elif isinstance(exp, (int, float)):
+                    from datetime import datetime
+                    try:
+                        expires_display = datetime.fromtimestamp(exp).strftime('%Y-%m-%d %H:%M:%S')
+                    except Exception:
                         expires_display = 'Never'
-                    elif isinstance(exp, (int, float)):
-                        from datetime import datetime
-                        try:
-                            expires_display = datetime.fromtimestamp(exp).strftime('%Y-%m-%d %H:%M:%S')
-                        except Exception:
-                            expires_display = 'Never'
-                    else:
-                        expires_display = str(exp)
-                    banned_on = b.get('banned_on')
-                    if isinstance(banned_on, (int, float)):
-                        from datetime import datetime
-                        try:
-                            banned_on = datetime.fromtimestamp(banned_on).strftime('%Y-%m-%d %H:%M:%S')
-                        except Exception:
-                            banned_on = 'N/A'
-                    else:
-                        banned_on = str(banned_on) if banned_on else 'N/A'
-                    active_banned_ips.append({
-                        'id': b.get('id'),
-                        'ip': b.get('ip', ''),
-                        'reason': b.get('reason', ''),
-                        'duration': b.get('duration', 'permanent'),
-                        'banned_on': banned_on,
-                        'expires': expires_display,
-                        'active': True
-                    })
+                else:
+                    expires_display = str(exp)
+                banned_on = b.get('banned_on')
+                if isinstance(banned_on, (int, float)):
+                    from datetime import datetime
+                    try:
+                        banned_on = datetime.fromtimestamp(banned_on).strftime('%Y-%m-%d %H:%M:%S')
+                    except Exception:
+                        banned_on = 'N/A'
+                else:
+                    banned_on = str(banned_on) if banned_on else 'N/A'
+                active_banned_ips.append({
+                    'id': b.get('id'),
+                    'ip': ip_val,
+                    'reason': b.get('reason', ''),
+                    'duration': b.get('duration', 'permanent'),
+                    'banned_on': banned_on,
+                    'expires': expires_display,
+                    'active': True
+                })
+
+            # Optional server-side search: filter by IP or reason (case-insensitive substring)
+            # Normalize: strip query and compare against stripped IP/reason so "1.2.3.4" matches stored "  1.2.3.4  "
+            search_q = (data.get('search') or data.get('q') or '').strip() if data else ''
+            if search_q:
+                search_lower = search_q.lower()
+                def matches(b):
+                    ip = (b.get('ip') or '').strip().lower()
+                    reason = (b.get('reason') or '').strip().lower()
+                    return search_lower in ip or search_lower in reason
+                active_banned_ips = [b for b in active_banned_ips if matches(b)]
 
             total_count = len(active_banned_ips)
             page = 1
@@ -2404,7 +2518,8 @@ class FirewallManager:
 
     def exportFirewallRules(self, userID=None):
         """
-        Export all custom firewall rules to a JSON file, excluding default CyberPanel rules
+        Export all custom firewall rules. Format from POST body: { "format": "json" | "excel" }.
+        JSON: application/json file. Excel: text/csv (opens in Excel).
         """
         try:
             currentACL = ACLManager.loadedACL(userID)
@@ -2414,13 +2529,23 @@ class FirewallManager:
             else:
                 return ACLManager.loadErrorJson('exportStatus', 0)
 
+            # Optional format from request body
+            export_format = 'json'
+            if getattr(self, 'request', None) and self.request.method == 'POST' and self.request.body:
+                try:
+                    body = self.request.body
+                    if isinstance(body, bytes):
+                        body = body.decode('utf-8')
+                    data = json.loads(body) if body.strip() else {}
+                    export_format = (data.get('format') or 'json').strip().lower()
+                    if export_format not in ('json', 'excel'):
+                        export_format = 'json'
+                except Exception:
+                    pass
+
             # Get all firewall rules
             rules = FirewallRules.objects.all()
-            
-            # Default CyberPanel rules to exclude
             default_rules = ['CyberPanel Admin', 'SSHCustom']
-            
-            # Filter out default rules
             custom_rules = []
             for rule in rules:
                 if rule.name not in default_rules:
@@ -2430,24 +2555,31 @@ class FirewallManager:
                         'port': rule.port,
                         'ipAddress': rule.ipAddress
                     })
-            
-            # Create export data with metadata
+
+            logging.CyberCPLogFileWriter.writeToFile(f"Firewall rules exported successfully. Total rules: {len(custom_rules)}")
+
+            if export_format == 'excel':
+                import csv
+                import io
+                buf = io.StringIO()
+                writer = csv.writer(buf)
+                writer.writerow(['name', 'proto', 'port', 'ipAddress'])
+                for r in custom_rules:
+                    writer.writerow([r.get('name', ''), r.get('proto', ''), r.get('port', ''), r.get('ipAddress', '')])
+                content = buf.getvalue()
+                response = HttpResponse(content, content_type='text/csv; charset=utf-8')
+                response['Content-Disposition'] = f'attachment; filename="firewall_rules_export_{int(time.time())}.csv"'
+                return response
+
             export_data = {
                 'version': '1.0',
                 'exported_at': time.strftime('%Y-%m-%d %H:%M:%S'),
                 'total_rules': len(custom_rules),
                 'rules': custom_rules
             }
-            
-            # Create JSON response with file download
             json_content = json.dumps(export_data, indent=2)
-            
-            logging.CyberCPLogFileWriter.writeToFile(f"Firewall rules exported successfully. Total rules: {len(custom_rules)}")
-            
-            # Return file as download
             response = HttpResponse(json_content, content_type='application/json')
             response['Content-Disposition'] = f'attachment; filename="firewall_rules_export_{int(time.time())}.json"'
-            
             return response
 
         except BaseException as msg:
@@ -2470,9 +2602,23 @@ class FirewallManager:
             # Handle file upload
             if hasattr(self.request, 'FILES') and 'import_file' in self.request.FILES:
                 import_file = self.request.FILES['import_file']
-                
-                # Read file content
-                import_data = json.loads(import_file.read().decode('utf-8'))
+                raw = import_file.read().decode('utf-8')
+                name = (import_file.name or '').lower()
+                if name.endswith('.csv'):
+                    import csv
+                    import io
+                    reader = csv.DictReader(io.StringIO(raw))
+                    rules_list = []
+                    for row in reader:
+                        rules_list.append({
+                            'name': str(row.get('name', '')).strip(),
+                            'proto': str(row.get('proto', 'tcp')).strip().lower() or 'tcp',
+                            'port': str(row.get('port', '')).strip(),
+                            'ipAddress': str(row.get('ipAddress', '0.0.0.0/0')).strip() or '0.0.0.0/0'
+                        })
+                    import_data = {'rules': rules_list}
+                else:
+                    import_data = json.loads(raw)
             else:
                 # Fallback to file path method
                 import_file_path = data.get('import_file_path', '')
@@ -2582,13 +2728,13 @@ class FirewallManager:
                 try:
                     for banned_ip in BannedIP.objects.all().order_by('-banned_on'):
                         banned_records.append({
-                            'id': banned_ip.id,
-                            'ip': banned_ip.ip_address,
-                            'reason': banned_ip.reason,
-                            'duration': banned_ip.duration,
-                            'banned_on': banned_ip.get_banned_on_display(),
-                            'expires': banned_ip.get_expires_display(),
-                            'active': banned_ip.active and not banned_ip.is_expired()
+                            'id': int(banned_ip.id),
+                            'ip': str(banned_ip.ip_address or ''),
+                            'reason': str(banned_ip.reason or ''),
+                            'duration': str(banned_ip.duration or 'permanent'),
+                            'banned_on': str(banned_ip.get_banned_on_display() or 'N/A'),
+                            'expires': str(banned_ip.get_expires_display() or 'Never'),
+                            'active': bool(banned_ip.active and not banned_ip.is_expired())
                         })
                 except Exception as e:
                     logging.CyberCPLogFileWriter.writeToFile(f'Error exporting banned IPs from DB: {str(e)}')
@@ -2600,12 +2746,12 @@ class FirewallManager:
                 for b in banned_ips:
                     banned_records.append({
                         'id': b.get('id'),
-                        'ip': b.get('ip', ''),
-                        'reason': b.get('reason', ''),
-                        'duration': b.get('duration', 'permanent'),
-                        'banned_on': b.get('banned_on', 'N/A'),
-                        'expires': b.get('expires', 'Never'),
-                        'active': b.get('active', True)
+                        'ip': str(b.get('ip') or ''),
+                        'reason': str(b.get('reason') or ''),
+                        'duration': str(b.get('duration') or 'permanent'),
+                        'banned_on': str(b.get('banned_on') if b.get('banned_on') is not None else 'N/A'),
+                        'expires': str(b.get('expires') if b.get('expires') is not None else 'Never'),
+                        'active': bool(b.get('active', True))
                     })
 
             export_data = {

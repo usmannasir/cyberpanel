@@ -25,6 +25,12 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
     $scope.rulesLoading = true;
     $scope.actionFailed = true;
     $scope.actionSuccess = true;
+    $scope.showExportFormatModal = false;
+    $scope.showImportFormatModal = false;
+    $scope.exportRulesFormat = 'json';
+    $scope.importRulesFormat = 'json';
+    $scope.showModifyRuleModal = false;
+    $scope.modifyRuleData = { id: null, name: '', proto: 'tcp', port: '', ruleIP: '0.0.0.0/0' };
 
     $scope.canNotAddRule = true;
     $scope.ruleAdded = true;
@@ -88,6 +94,10 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
     $scope.bannedPageSize = 10;
     $scope.bannedPageSizeOptions = [5, 10, 20, 30, 50, 100];
     $scope.bannedTotalCount = 0;
+
+    // Modify Banned IP modal state
+    $scope.showModifyModal = false;
+    $scope.modifyBannedIPData = { ip: '', id: null, reason: '', duration: '24h' };
     
     // Initialize banned IPs array - start as null so template shows empty state
     // Will be set to array after API call
@@ -99,12 +109,6 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
     $scope.banReason = '';
     $scope.banDuration = '24h';
     $scope.bannedIPSearch = '';
-
-    // Modify banned IP modal
-    $scope.showModifyModal = false;
-    $scope.modifyBannedIPData = { ip: '', reason: '', duration: '24h', id: null };
-
-    // Search filter for banned IPs (by IP, reason, or status)
     $scope.searchBannedIPFilter = function(item) {
         var q = ($scope.bannedIPSearch || '').toLowerCase().trim();
         if (!q) return true;
@@ -114,42 +118,17 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
         return ip.indexOf(q) !== -1 || reason.indexOf(q) !== -1 || status.indexOf(q) !== -1;
     };
 
-    // Modify banned IP modal functions
-    $scope.openModifyModal = function(bannedIP) {
-        if (!bannedIP) return;
-        $scope.modifyBannedIPData = {
-            id: bannedIP.id,
-            ip: bannedIP.ip,
-            reason: bannedIP.reason || '',
-            duration: bannedIP.duration || '24h'
-        };
-        $scope.showModifyModal = true;
+    $scope.onBannedSearchChange = function() {
+        if ($scope.bannedSearchTimeout) $timeout.cancel($scope.bannedSearchTimeout);
+        $scope.bannedSearchTimeout = $timeout(function() {
+            $scope.bannedPage = 1;
+            if (typeof populateBannedIPs === 'function') populateBannedIPs();
+        }, 350);
     };
-    $scope.closeModifyModal = function() { $scope.showModifyModal = false; };
-    $scope.saveModifyBannedIP = function() {
-        if (!$scope.modifyBannedIPData || !$scope.modifyBannedIPData.id) return;
-        $scope.bannedIPsLoading = true;
-        $http.post('/firewall/modifyBannedIP', {
-            id: $scope.modifyBannedIPData.id,
-            reason: $scope.modifyBannedIPData.reason,
-            duration: $scope.modifyBannedIPData.duration
-        }, { headers: { 'X-CSRFToken': getCookie('csrftoken') } }).then(
-            function(response) {
-                $scope.bannedIPsLoading = false;
-                if (response.data && response.data.status === 1) {
-                    $scope.bannedIPActionSuccess = false;
-                    $scope.closeModifyModal();
-                    populateBannedIPs();
-                } else {
-                    $scope.bannedIPActionFailed = false;
-                    $scope.bannedIPErrorMessage = (response.data && response.data.error_message) || 'Unknown error';
-                }
-            },
-            function() {
-                $scope.bannedIPsLoading = false;
-                $scope.bannedIPCouldNotConnect = false;
-            }
-        );
+
+    $scope.runBannedSearch = function() {
+        $scope.bannedPage = 1;
+        if (typeof populateBannedIPs === 'function') populateBannedIPs();
     };
 
     firewallStatus();
@@ -189,10 +168,11 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
         };
 
         var postData = {
-            page: $scope.bannedPage || 1,
-            page_size: $scope.bannedPageSize || 10
+            page: Math.max(1, parseInt($scope.bannedPage, 10) || 1),
+            page_size: Math.max(5, Math.min(100, parseInt($scope.bannedPageSize, 10) || 10)),
+            search: ($scope.bannedIPSearch || '').trim()
         };
-        console.log('Making request to:', url, 'page:', postData.page, 'page_size:', postData.page_size);
+        console.log('Making request to:', url, 'page:', postData.page, 'page_size:', postData.page_size, 'search:', postData.search);
         console.log('CSRF Token:', csrfToken ? 'Found (' + csrfToken.substring(0, 10) + '...)' : 'MISSING!');
         
         $http.post(url, postData, config).then(
@@ -226,6 +206,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
                     $scope.bannedTotalCount = res.total_count != null ? res.total_count : bannedIPsArray.length;
                     $scope.bannedPage = Math.max(1, res.page != null ? res.page : 1);
                     $scope.bannedPageSize = res.page_size != null ? res.page_size : 10;
+                    $scope.bannedPageInput = $scope.bannedPage;
                     console.log('After assignment - scope.bannedIPs:', $scope.bannedIPs);
                     console.log('After assignment - scope.bannedIPs.length:', $scope.bannedIPs ? $scope.bannedIPs.length : 'undefined');
                     console.log('After assignment - activeTab:', $scope.activeTab);
@@ -273,18 +254,23 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
     };
 
     $scope.goToBannedPage = function(page) {
-        var totalP = $scope.bannedTotalPages();
-        if (page < 1 || page > totalP) return;
-        $scope.bannedPage = page;
+        var totalP = Math.max(1, $scope.bannedTotalPages());
+        var p = parseInt(page, 10);
+        if (isNaN(p) || p < 1 || p > totalP) return;
+        $scope.bannedPage = p;
         populateBannedIPs();
     };
     $scope.goToBannedPageByInput = function() {
-        var n = parseInt($scope.bannedPageInput, 10);
-        if (isNaN(n) || n < 1) n = 1;
-        var maxP = $scope.bannedTotalPages();
-        if (n > maxP) n = maxP;
-        $scope.bannedPageInput = n;
-        $scope.goToBannedPage(n);
+        var self = $scope;
+        $timeout(function() {
+            var n = parseInt(self.bannedPageInput, 10);
+            if (isNaN(n) || n < 1) n = self.bannedPage || 1;
+            var maxP = Math.max(1, self.bannedTotalPages());
+            n = Math.min(Math.max(1, n), maxP);
+            self.bannedPageInput = n;
+            self.bannedPage = n;
+            populateBannedIPs();
+        }, 0);
     };
     $scope.bannedTotalPages = function() {
         var size = $scope.bannedPageSize || 10;
@@ -305,6 +291,8 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
         return total === 0 ? 0 : Math.min(start + size - 1, total);
     };
     $scope.setBannedPageSize = function() {
+        var size = parseInt($scope.bannedPageSize, 10);
+        $scope.bannedPageSize = (size >= 5 && size <= 100) ? size : 10;
         $scope.bannedPage = 1;
         populateBannedIPs();
     };
@@ -426,8 +414,8 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
 
         url = "/firewall/getCurrentRules";
         var data = {
-            page: $scope.rulesPage || 1,
-            page_size: $scope.rulesPageSize || 10
+            page: Math.max(1, parseInt($scope.rulesPage, 10) || 1),
+            page_size: Math.max(5, Math.min(100, parseInt($scope.rulesPageSize, 10) || 10))
         };
         var config = {
             headers: {
@@ -458,18 +446,22 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
     }
 
     $scope.goToRulesPage = function(page) {
-        var totalP = $scope.rulesTotalPages();
-        if (page < 1 || page > totalP) return;
-        $scope.rulesPage = page;
+        var totalP = Math.max(1, $scope.rulesTotalPages());
+        var p = parseInt(page, 10);
+        if (isNaN(p) || p < 1 || p > totalP) return;
+        $scope.rulesPage = p;
         populateCurrentRecords();
     };
     $scope.goToRulesPageByInput = function() {
-        var n = parseInt($scope.rulesPageInput, 10);
-        if (isNaN(n) || n < 1) n = 1;
-        var maxP = $scope.rulesTotalPages();
-        if (n > maxP) n = maxP;
-        $scope.rulesPageInput = n;
-        $scope.goToRulesPage(n);
+        $timeout(function() {
+            var n = parseInt($scope.rulesPageInput, 10);
+            if (isNaN(n) || n < 1) n = $scope.rulesPage || 1;
+            var maxP = Math.max(1, $scope.rulesTotalPages());
+            n = Math.min(Math.max(1, n), maxP);
+            $scope.rulesPageInput = n;
+            $scope.rulesPage = n;
+            populateCurrentRecords();
+        }, 0);
     };
     $scope.rulesTotalPages = function() {
         var size = $scope.rulesPageSize || 10;
@@ -490,8 +482,71 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
         return total === 0 ? 0 : Math.min(start + size - 1, total);
     };
     $scope.setRulesPageSize = function() {
+        var size = parseInt($scope.rulesPageSize, 10);
+        $scope.rulesPageSize = (size >= 5 && size <= 100) ? size : 10;
         $scope.rulesPage = 1;
         populateCurrentRecords();
+    };
+
+    $scope.openModifyRuleModal = function(rule) {
+        if (!rule) return;
+        $scope.modifyRuleData = {
+            id: rule.id,
+            name: rule.name || '',
+            proto: rule.proto || 'tcp',
+            port: String(rule.port || ''),
+            ruleIP: rule.ipAddress || rule.ruleIP || '0.0.0.0/0'
+        };
+        $scope.showModifyRuleModal = true;
+    };
+
+    $scope.closeModifyRuleModal = function() {
+        $scope.showModifyRuleModal = false;
+        $scope.modifyRuleData = { id: null, name: '', proto: 'tcp', port: '', ruleIP: '0.0.0.0/0' };
+    };
+
+    $scope.saveModifyRule = function() {
+        var d = $scope.modifyRuleData;
+        if (!d.name || !d.name.trim()) {
+            $scope.actionFailed = false;
+            $scope.actionSuccess = true;
+            $scope.errorMessage = 'Rule name is required';
+            return;
+        }
+        if (!d.port || !String(d.port).trim()) {
+            $scope.actionFailed = false;
+            $scope.actionSuccess = true;
+            $scope.errorMessage = 'Port is required';
+            return;
+        }
+        $scope.rulesLoading = false;
+        var url = '/firewall/modifyRule';
+        var data = {
+            id: d.id,
+            name: d.name.trim(),
+            proto: d.proto || 'tcp',
+            port: String(d.port).trim(),
+            ruleIP: (d.ruleIP || '0.0.0.0/0').trim()
+        };
+        var config = { headers: { 'X-CSRFToken': getCookie('csrftoken') } };
+        $http.post(url, data, config).then(function(response) {
+            $scope.rulesLoading = true;
+            if (response.data && response.data.status === 1) {
+                $scope.closeModifyRuleModal();
+                $scope.actionFailed = true;
+                $scope.actionSuccess = false;
+                populateCurrentRecords();
+            } else {
+                $scope.actionFailed = false;
+                $scope.actionSuccess = true;
+                $scope.errorMessage = (response.data && response.data.error_message) || 'Modify failed';
+            }
+        }, function() {
+            $scope.rulesLoading = true;
+            $scope.actionFailed = false;
+            $scope.actionSuccess = true;
+            $scope.errorMessage = 'Could not connect to server. Please refresh this page.';
+        });
     };
 
     $scope.deleteRule = function (id, proto, port, ruleIP) {
@@ -975,40 +1030,102 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
         });
     };
 
-    // Export banned IPs (triggers file download)
-    $scope.exportBannedIPs = function() {
-        var url = '/firewall/exportBannedIPs';
-        var form = document.createElement('form');
-        form.method = 'POST';
-        form.action = url;
-        form.style.display = 'none';
-        var csrfInput = document.createElement('input');
-        csrfInput.type = 'hidden';
-        csrfInput.name = 'csrfmiddlewaretoken';
-        csrfInput.value = getCookie('csrftoken');
-        form.appendChild(csrfInput);
-        document.body.appendChild(form);
-        form.submit();
-        document.body.removeChild(form);
+    $scope.openModifyModal = function(bannedIP) {
+        if (!bannedIP) return;
+        $scope.modifyBannedIPData = {
+            id: bannedIP.id,
+            ip: bannedIP.ip || bannedIP.ip_address || '',
+            reason: bannedIP.reason || '',
+            duration: bannedIP.duration || '24h'
+        };
+        $scope.showModifyModal = true;
     };
 
-    // Import banned IPs (file picker -> POST)
+    $scope.closeModifyModal = function() {
+        $scope.showModifyModal = false;
+        $scope.modifyBannedIPData = { ip: '', id: null, reason: '', duration: '24h' };
+    };
+
+    $scope.saveModifyBannedIP = function() {
+        var d = $scope.modifyBannedIPData;
+        if (!d.reason || !d.reason.trim()) {
+            $scope.bannedIPActionFailed = false;
+            $scope.bannedIPErrorMessage = 'Reason is required';
+            return;
+        }
+        $scope.bannedIPsLoading = true;
+        $scope.bannedIPActionFailed = true;
+        $scope.bannedIPActionSuccess = true;
+        $scope.bannedIPCouldNotConnect = true;
+        var data = {
+            id: d.id,
+            ip: d.ip,
+            reason: d.reason.trim(),
+            duration: d.duration || '24h'
+        };
+        var url = '/firewall/modifyBannedIP';
+        var config = { headers: { 'X-CSRFToken': getCookie('csrftoken') } };
+        $http.post(url, data, config).then(function(response) {
+            $scope.bannedIPsLoading = false;
+            if (response.data && response.data.status === 1) {
+                $scope.bannedIPActionSuccess = false;
+                $scope.closeModifyModal();
+                populateBannedIPs();
+            } else {
+                $scope.bannedIPActionFailed = false;
+                $scope.bannedIPErrorMessage = (response.data && response.data.error_message) || 'Modify failed';
+            }
+        }, function(error) {
+            $scope.bannedIPsLoading = false;
+            $scope.bannedIPCouldNotConnect = false;
+        });
+    };
+
+    $scope.exportBannedIPs = function() {
+        $scope.bannedIPsLoading = false;
+        var url = "/firewall/exportBannedIPs";
+        var config = { headers: { 'X-CSRFToken': getCookie('csrftoken') }, responseType: 'text' };
+        $http.post(url, {}, config).then(function(response) {
+            $scope.bannedIPsLoading = true;
+            var raw = response.data;
+            try {
+                var data = typeof raw === 'string' ? JSON.parse(raw) : raw;
+                if (data && data.exportStatus === 0) {
+                    $scope.bannedIPActionFailed = false;
+                    $scope.bannedIPErrorMessage = data.error_message || 'Export failed';
+                    return;
+                }
+            } catch (e) {}
+            var content = typeof raw === 'string' ? raw : JSON.stringify(raw, null, 2);
+            var blob = new Blob([content], { type: 'application/json' });
+            var a = document.createElement('a');
+            a.href = window.URL.createObjectURL(blob);
+            a.download = 'banned_ips_export_' + (Date.now() / 1000 | 0) + '.json';
+            a.click();
+            window.URL.revokeObjectURL(a.href);
+            $scope.bannedIPActionSuccess = false;
+        }, function() {
+            $scope.bannedIPsLoading = true;
+            $scope.bannedIPCouldNotConnect = false;
+        });
+    };
+
     $scope.importBannedIPs = function() {
         var input = document.createElement('input');
         input.type = 'file';
         input.accept = '.json';
         input.style.display = 'none';
-        input.onchange = function(ev) {
-            var file = ev.target && ev.target.files[0];
+        input.onchange = function(event) {
+            var file = event.target.files[0];
             if (!file) return;
+            $scope.bannedIPsLoading = false;
             var formData = new FormData();
             formData.append('import_file', file);
-            formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
-            $scope.bannedIPsLoading = false;
-            $http.post('/firewall/importBannedIPs', formData, {
+            var config = {
                 headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': undefined },
                 transformRequest: angular.identity
-            }).then(function(response) {
+            };
+            $http.post("/firewall/importBannedIPs", formData, config).then(function(response) {
                 $scope.bannedIPsLoading = true;
                 if (response.data && response.data.importStatus === 1) {
                     $scope.bannedIPActionSuccess = false;
@@ -1027,101 +1144,125 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
         document.body.removeChild(input);
     };
 
-    // Export/Import Firewall Rules Functions
+    // Export/Import Firewall Rules: format modals and actions
     $scope.exportRules = function () {
-        $scope.rulesLoading = false;
+        $scope.showExportFormatModal = true;
+        $scope.exportRulesFormat = $scope.exportRulesFormat || 'json';
+    };
+
+    $scope.closeExportFormatModal = function () {
+        $scope.showExportFormatModal = false;
+    };
+
+    $scope.confirmExportRules = function () {
+        $scope.showExportFormatModal = false;
+        var format = $scope.exportRulesFormat || 'json';
+        doExportRules(format);
+    };
+
+    function doExportRules(format) {
+        $scope.rulesLoading = true;
         $scope.actionFailed = true;
         $scope.actionSuccess = true;
 
-        url = "/firewall/exportFirewallRules";
-
-        var data = {};
-
+        var url = "/firewall/exportFirewallRules";
+        var data = { format: format };
         var config = {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            responseType: 'text'
         };
 
         $http.post(url, data, config).then(exportSuccess, exportError);
 
         function exportSuccess(response) {
-            $scope.rulesLoading = true;
-            
-            // Check if response is JSON (error) or file download
-            if (typeof response.data === 'string' && response.data.includes('{')) {
+            $scope.rulesLoading = false;
+            var raw = response.data;
+            if (typeof raw === 'string' && raw.indexOf('{') === 0) {
                 try {
-                    var errorData = JSON.parse(response.data);
-                    if (errorData.exportStatus === 0) {
+                    var parsed = JSON.parse(raw);
+                    if (parsed.exportStatus === 0) {
                         $scope.actionFailed = false;
                         $scope.actionSuccess = true;
-                        $scope.errorMessage = errorData.error_message;
+                        $scope.errorMessage = parsed.error_message || 'Export failed';
                         return;
                     }
-                } catch (e) {
-                    // If not JSON, assume it's the file content
-                }
+                } catch (e) {}
             }
-            
-            // If we get here, it's a successful file download
+            var contentType = format === 'excel' ? 'text/csv' : 'application/json';
+            var ext = format === 'excel' ? 'csv' : 'json';
+            var blob = new Blob([typeof raw === 'string' ? raw : JSON.stringify(raw)], { type: contentType });
+            var a = document.createElement('a');
+            a.href = window.URL.createObjectURL(blob);
+            a.download = 'firewall_rules_export_' + (Date.now() / 1000 | 0) + '.' + ext;
+            a.click();
+            window.URL.revokeObjectURL(a.href);
             $scope.actionFailed = true;
             $scope.actionSuccess = false;
         }
 
-        function exportError(response) {
-            $scope.rulesLoading = true;
+        function exportError() {
+            $scope.rulesLoading = false;
             $scope.actionFailed = false;
             $scope.actionSuccess = true;
             $scope.errorMessage = "Could not connect to server. Please refresh this page.";
         }
-    };
+    }
 
     $scope.importRules = function () {
-        // Create file input element
+        $scope.showImportFormatModal = true;
+        $scope.importRulesFormat = $scope.importRulesFormat || 'json';
+    };
+
+    $scope.closeImportFormatModal = function () {
+        $scope.showImportFormatModal = false;
+    };
+
+    $scope.confirmImportRules = function () {
+        $scope.showImportFormatModal = false;
+        var format = $scope.importRulesFormat || 'json';
+        var accept = format === 'excel' ? '.csv' : '.json';
         var input = document.createElement('input');
         input.type = 'file';
-        input.accept = '.json';
+        input.accept = accept;
         input.style.display = 'none';
-        
         input.onchange = function(event) {
             var file = event.target.files[0];
             if (file) {
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    try {
-                        var importData = JSON.parse(e.target.result);
-                        
-                        // Validate file format
-                        if (!importData.rules || !Array.isArray(importData.rules)) {
+                if (format === 'json') {
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            var importData = JSON.parse(e.target.result);
+                            if (!importData.rules || !Array.isArray(importData.rules)) {
+                                $scope.$apply(function() {
+                                    $scope.actionFailed = false;
+                                    $scope.actionSuccess = true;
+                                    $scope.errorMessage = "Invalid import file format. Please select a valid firewall rules export file.";
+                                });
+                                return;
+                            }
+                            uploadImportFile(file);
+                        } catch (err) {
                             $scope.$apply(function() {
                                 $scope.actionFailed = false;
                                 $scope.actionSuccess = true;
-                                $scope.errorMessage = "Invalid import file format. Please select a valid firewall rules export file.";
+                                $scope.errorMessage = "Invalid JSON file. Please select a valid firewall rules export file.";
                             });
-                            return;
                         }
-                        
-                        // Upload file to server
-                        uploadImportFile(file);
-                    } catch (error) {
-                        $scope.$apply(function() {
-                            $scope.actionFailed = false;
-                            $scope.actionSuccess = true;
-                            $scope.errorMessage = "Invalid JSON file. Please select a valid firewall rules export file.";
-                        });
-                    }
-                };
-                reader.readAsText(file);
+                    };
+                    reader.readAsText(file);
+                } else {
+                    uploadImportFile(file);
+                }
             }
         };
-        
         document.body.appendChild(input);
         input.click();
         document.body.removeChild(input);
     };
 
     function uploadImportFile(file) {
-        $scope.rulesLoading = false;
+        $scope.rulesLoading = true;
         $scope.actionFailed = true;
         $scope.actionSuccess = true;
 
@@ -1139,35 +1280,29 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
         $http.post("/firewall/importFirewallRules", formData, config).then(importSuccess, importError);
 
         function importSuccess(response) {
-            $scope.rulesLoading = true;
-            
-            if (response.data.importStatus === 1) {
+            $scope.rulesLoading = false;
+            var res = response.data;
+            if (typeof res === 'string') {
+                try { res = JSON.parse(res); } catch (e) { res = {}; }
+            }
+            if (res && res.importStatus === 1) {
                 $scope.actionFailed = true;
                 $scope.actionSuccess = false;
-                
-                // Refresh rules list
                 populateCurrentRecords();
-                
-                // Show import summary
-                var summary = `Import completed successfully!\n` +
-                             `Imported: ${response.data.imported_count} rules\n` +
-                             `Skipped: ${response.data.skipped_count} rules\n` +
-                             `Errors: ${response.data.error_count} rules`;
-                
-                if (response.data.errors && response.data.errors.length > 0) {
-                    summary += `\n\nErrors:\n${response.data.errors.join('\n')}`;
+                var summary = "Import completed successfully!\nImported: " + (res.imported_count || 0) + " rules\nSkipped: " + (res.skipped_count || 0) + " rules\nErrors: " + (res.error_count || 0) + " rules";
+                if (res.errors && res.errors.length > 0) {
+                    summary += "\n\nErrors:\n" + res.errors.join("\n");
                 }
-                
                 alert(summary);
             } else {
                 $scope.actionFailed = false;
                 $scope.actionSuccess = true;
-                $scope.errorMessage = response.data.error_message;
+                $scope.errorMessage = (res && res.error_message) ? res.error_message : "Import failed.";
             }
         }
 
-        function importError(response) {
-            $scope.rulesLoading = true;
+        function importError() {
+            $scope.rulesLoading = false;
             $scope.actionFailed = false;
             $scope.actionSuccess = true;
             $scope.errorMessage = "Could not connect to server. Please refresh this page.";

@@ -26,17 +26,14 @@
     <!-- Readability Fixes CSS -->
     <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/readability-fixes.css' %}?v={{ CP_VERSION }}">
     
-    <!-- Core Scripts (data-cfasync=false prevents Cloudflare Rocket Loader from breaking load order) -->
+    <!-- Core Scripts: Angular + system-status FIRST so dashboard works even when CDN/Tracking Prevention blocks jQuery/Bootstrap -->
     <script src="{% static 'baseTemplate/angularjs.1.6.5.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'baseTemplate/custom-js/system-status.js' %}?v={{ CP_VERSION }}&dashboard=3" data-cfasync="false"></script>
     <script src="https://code.jquery.com/jquery-2.2.4.min.js" data-cfasync="false"></script>
-    <!-- Bootstrap JavaScript -->
-
     <script src="{% static 'baseTemplate/assets/bootstrap/js/bootstrap.min.js' %}?v={{ CP_VERSION }}"></script>
     <script src="{% static 'baseTemplate/bootstrap-toggle.min.js' %}?v={{ CP_VERSION }}"></script>
     <script src="{% static 'baseTemplate/custom-js/qrious.min.js' %}?v={{ CP_VERSION }}"></script>
-    <!-- Chart.js must load before system-status.js (dashboard charts depend on it) -->
     <script src="{% static 'baseTemplate/custom-js/chart.umd.min.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
-    <script src="{% static 'baseTemplate/custom-js/system-status.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -45,9 +42,9 @@
     <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/custom-js/pnotify.custom.min.css' %}?v={{ CP_VERSION }}">
     <script src="{% static 'baseTemplate/custom-js/pnotify.custom.min.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     
-    <!-- Select2 (required by FTP create account; load after jQuery; exclude from Rocket Loader to preserve order) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.full.min.js" data-cfasync="false"></script>
+    <!-- Select2 (required by FTP create account; local copy avoids CDN Tracking Prevention blocking) -->
+    <link rel="stylesheet" href="{% static 'baseTemplate/vendor/select2/select2.min.css' %}?v={{ CP_VERSION }}">
+    <script src="{% static 'baseTemplate/vendor/select2/select2.full.min.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     
     <!-- Modern Design System -->
     <style>
@@ -2233,7 +2230,7 @@
     <script src="{% static 'managePHP/managePHP.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'serverLogs/serverLogs.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'serverStatus/serverStatus.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
-    <script src="{% static 'firewall/firewall.js' %}?v={{ CP_VERSION }}&fw={{ FIREWALL_STATIC_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'firewall/firewall.js' %}?v={{ CP_VERSION }}&fw={{ FIREWALL_STATIC_VERSION|default:CP_VERSION }}&cb=4" data-cfasync="false"></script>
     <script src="{% static 'emailPremium/emailPremium.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'manageServices/manageServices.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'CLManager/CLManager.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
@@ -2345,10 +2342,7 @@
             
             // Check if user has backup configured (you'll need to implement this API)
             // For now, we'll show it by default unless they have a backup plan
-            // This should be replaced with an actual check
-            {% if not request.session.has_backup_configured %}
-                showBackupNotification();
-            {% endif %}
+            // Session check omitted - has_backup_configured may be absent in some views
             
             // For demonstration, let's show it if URL doesn't contain 'OneClickBackups'
             if (!window.location.href.includes('OneClickBackups')) {
