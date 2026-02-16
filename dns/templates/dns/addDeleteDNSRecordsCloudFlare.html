@@ -574,6 +574,58 @@
         .dns-search-wrap:focus-within .dns-search-icon-left { background: var(--bg-primary, #fff); color: #5b5fcf; }
         .dns-search-clear { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #94a3b8; padding: 4px; }
         .dns-search-clear:hover { color: #64748b; }
+        
+        .dns-table-wrap { width: 100%; }
+        
+        @media (max-width: 768px) {
+            .modern-container { padding: 1rem; }
+            .page-header { margin-bottom: 1.5rem; }
+            .page-title { font-size: 1.5rem; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
+            .page-title .docs-link { font-size: 0.8rem; padding: 0.4rem 0.75rem; }
+            .page-subtitle { font-size: 0.95rem; }
+            .card-header { padding: 1rem 1.25rem; }
+            .card-title { font-size: 1.1rem; }
+            .card-body { padding: 1.25rem; }
+            .modern-tabs { flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.25rem; }
+            .modern-tab { padding: 0.75rem 1rem; font-size: 0.9rem; min-height: 44px; }
+            .form-section { margin-bottom: 1.5rem; }
+            .form-section .row.mb-4 .col-md-8 { margin-bottom: 0.75rem; }
+            .form-section .row.mb-4 .col-md-4 { margin-top: 0 !important; }
+            .form-section .row.mb-4 .col-md-4 .btn-primary { margin-top: 0; min-height: 44px; }
+            .record-tabs { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; padding: 0.5rem; margin-bottom: 1rem; scrollbar-width: thin; }
+            .record-tabs::-webkit-scrollbar { height: 6px; }
+            .record-tab { flex: 0 0 auto; min-width: 44px; min-height: 44px; padding: 0.5rem 0.75rem; font-size: 0.8rem; }
+            .record-form.active { flex-direction: column; align-items: stretch; }
+            .record-form .form-group { min-width: 0; margin-bottom: 1rem; }
+            .record-form .btn-primary { width: 100%; min-height: 44px; justify-content: center; }
+            .dns-search-wrap { max-width: 100%; }
+            .dns-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -1.25rem; padding: 0 1.25rem; touch-action: pan-x; }
+            .records-table { margin-top: 1rem; font-size: 12px; }
+            .records-table th, .records-table td { padding: 10px 8px; }
+            .records-table th { font-size: 10px; }
+            .records-table td:nth-child(1) { min-width: 140px; max-width: 200px; }
+            .records-table td:nth-child(4) { min-width: 120px; max-width: 220px; }
+            .records-table td:nth-child(6) { min-width: 56px; }
+            .records-table td:nth-child(7) { min-width: 48px; min-height: 44px; }
+            .delete-icon { min-width: 32px; min-height: 32px; padding: 6px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; }
+            .inline-select { min-width: 70px; }
+            .inline-number { width: 56px; max-width: 64px; }
+            .sortable-th { padding: 10px 8px; min-height: 44px; }
+            .btn-primary { min-height: 44px; padding: 0.75rem 1.25rem; }
+            .edit-record-modal { margin: 1rem; padding: 1.25rem; width: 95%; max-width: none; }
+            .disabled-notice { padding: 1.5rem; }
+        }
+        
+        @media (max-width: 576px) {
+            .modern-container { padding: 0.75rem; }
+            .page-title { font-size: 1.25rem; }
+            .card-body { padding: 1rem; }
+            .dns-table-wrap { margin: 0 -1rem; padding: 0 1rem; }
+            .records-table th, .records-table td { padding: 8px 6px; font-size: 11px; }
+            .records-table th { font-size: 9px; }
+            .cell-value { max-width: 120px; }
+            .value-cell { max-width: 140px; }
+        }
     </style>
 
     <div class="modern-container" ng-controller="addModifyDNSRecordsCloudFlare">
@@ -921,10 +973,11 @@
                                             No DNS records found.
                                         </div>
                                         
-                                        <div ng-if="!loadingRecords && records.length > 0 && dnsSearchFilter && (records | filter:matchDnsSearch).length === 0" class="alert alert-info" style="margin-bottom: 1rem;">
+                                        <div ng-if="!loadingRecords && records.length > 0 && dnsSearchFilter && (records | dnsRecordSearch:dnsSearchFilter).length === 0" class="alert alert-info" style="margin-bottom: 1rem;">
                                             <i class="fas fa-info-circle"></i> {% trans "No records match your search." %}
                                         </div>
                                         
+                                        <div class="dns-table-wrap">
                                         <table class="records-table activity-table" ng-if="!loadingRecords && records.length > 0">
                                             <thead>
                                                 <tr>
@@ -950,7 +1003,7 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <tr ng-repeat="record in records | filter:matchDnsSearch | orderBy:sortColumn:sortReverse track by record.id">
+                                                <tr ng-repeat="record in records | dnsRecordSearch:dnsSearchFilter | orderBy:sortColumn:sortReverse track by record.id">
                                                     <td class="editable-cell">
                                                         <span ng-hide="isEditing(record, 'name')" ng-click="startEdit(record, 'name')" class="cell-click" title="{% trans 'Click to edit' %}"><strong ng-bind="record.name"></strong></span>
                                                         <input ng-show="isEditing(record, 'name')" type="text" class="inline-input" ng-model="record.name" ng-blur="saveInlineField(record, 'name')" ng-keypress="$event.keyCode === 13 && saveInlineField(record, 'name')">
@@ -1019,6 +1072,7 @@
                                                 </tr>
                                             </tbody>
                                         </table>
+                                        </div>
                                     </div>
 
 

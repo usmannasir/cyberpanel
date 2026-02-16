@@ -364,10 +364,11 @@ def syncCF(request):
 def enableProxy(request):
     try:
         userID = request.session['userID']
-
+        body = json.loads(request.body or '{}')
         dm = DNSManager()
-        coreResult = dm.enableProxy(userID, json.loads(request.body))
-
+        coreResult = dm.enableProxy(userID, body)
         return coreResult
     except KeyError:
         return redirect(loadLoginPage)
+    except (ValueError, TypeError):
+        return HttpResponse(json.dumps({'status': 0, 'error_message': 'Invalid request'}), status=400, content_type='application/json')

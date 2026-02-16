@@ -732,6 +732,21 @@ app.controller('configureDefaultNameservers', function ($scope, $http) {
 
 /* Java script code for CloudFlare */
 
+app.filter('dnsRecordSearch', function () {
+    return function (records, searchText) {
+        if (!records || !Array.isArray(records)) return records;
+        var q = (searchText != null ? String(searchText) : '').toLowerCase().trim();
+        if (q === '') return records;
+        return records.filter(function (r) {
+            var name = (r.name != null ? String(r.name) : '').toLowerCase();
+            var type = (r.type != null ? String(r.type) : '').toLowerCase();
+            var content = (r.content != null ? String(r.content) : '').toLowerCase();
+            var priority = (r.priority != null ? String(r.priority) : '');
+            return name.indexOf(q) !== -1 || type.indexOf(q) !== -1 || content.indexOf(q) !== -1 || priority.indexOf(q) !== -1;
+        });
+    };
+});
+
 app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http, $window) {
 
     $scope.saveCFConfigs = function () {
