@@ -548,6 +548,23 @@
             outline: 2px solid rgba(91, 95, 207, 0.3) !important;
             outline-offset: 2px !important;
         }
+        
+        .editable-cell { vertical-align: middle; }
+        .cell-click { cursor: pointer; display: block; min-height: 1.5em; }
+        .cell-click:hover { background: var(--bg-hover, #f0f1ff); border-radius: 4px; }
+        .cell-value { max-width: 280px; display: inline-block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .value-cell { max-width: 300px; }
+        .inline-input, .inline-select, .inline-number {
+            width: 100%;
+            max-width: 100%;
+            padding: 0.25rem 0.5rem;
+            border: 1px solid var(--border-primary, #e2e8f0);
+            border-radius: 6px;
+            font-size: 0.875rem;
+            background: var(--bg-primary, #fff);
+        }
+        .inline-select { min-width: 90px; cursor: pointer; }
+        .inline-number { width: 70px; max-width: 80px; }
     </style>
 
     <div class="modern-container" ng-controller="addModifyDNSRecordsCloudFlare">
@@ -903,15 +920,32 @@
                                             </thead>
                                             <tbody>
                                                 <tr ng-repeat="record in records track by $index">
-                                                    <td><strong ng-bind="record.name"></strong></td>
-                                                    <td>
-                                                        <span style="padding: 0.25rem 0.75rem; background: var(--bg-hover, #f0f1ff); color: #5b5fcf; border-radius: 4px; font-weight: 500; font-size: 0.75rem;">
-                                                            {{ record.type }}
-                                                        </span>
+                                                    <td class="editable-cell">
+                                                        <span ng-hide="isEditing(record, 'name')" ng-click="startEdit(record, 'name')" class="cell-click" title="{% trans 'Click to edit' %}"><strong ng-bind="record.name"></strong></span>
+                                                        <input ng-show="isEditing(record, 'name')" type="text" class="inline-input" ng-model="record.name" ng-blur="saveInlineField(record, 'name')" ng-keypress="$event.keyCode === 13 && saveInlineField(record, 'name')">
                                                     </td>
-                                                    <td ng-bind="record.ttl"></td>
-                                                    <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" ng-bind="record.content" title="{{ record.content }}"></td>
-                                                    <td ng-bind="record.priority || '-'"></td>
+                                                    <td class="editable-cell">
+                                                        <select class="inline-select" ng-model="record.type" ng-options="t as t for t in getTypeOptions(record)" ng-change="saveInlineField(record, 'type')" title="{% trans 'Type' %}">
+                                                        </select>
+                                                    </td>
+                                                    <td class="editable-cell">
+                                                        <select class="inline-select" ng-model="record.ttlNum" ng-change="saveInlineField(record, 'ttl')" title="{% trans 'TTL' %}">
+                                                            <option value="1">AUTO</option>
+                                                            <option value="300">300</option>
+                                                            <option value="600">600</option>
+                                                            <option value="3600">3600</option>
+                                                            <option value="7200">7200</option>
+                                                            <option value="14400">14400</option>
+                                                            <option value="86400">86400</option>
+                                                        </select>
+                                                    </td>
+                                                    <td class="editable-cell value-cell">
+                                                        <span ng-hide="isEditing(record, 'content')" ng-click="startEdit(record, 'content')" class="cell-click" title="{% trans 'Click to edit' %}"><span class="cell-value" ng-bind="record.content" title="{{ record.content }}"></span></span>
+                                                        <input ng-show="isEditing(record, 'content')" type="text" class="inline-input" ng-model="record.content" ng-blur="saveInlineField(record, 'content')" ng-keypress="$event.keyCode === 13 && saveInlineField(record, 'content')">
+                                                    </td>
+                                                    <td class="editable-cell">
+                                                        <input type="number" class="inline-number" ng-model="record.priority" ng-blur="saveInlineField(record, 'priority')" ng-keypress="$event.keyCode === 13 && saveInlineField(record, 'priority')" min="0" step="1" title="{% trans 'Priority' %}">
+                                                    </td>
                                                     <td>
                                                         <input class="proxy-toggle" 
                                                                ng-click="enableProxy(record.name, record.proxy)" 
@@ -920,10 +954,6 @@
                                                                type="checkbox">
                                                     </td>
                                                     <td style="text-align: center;">
-                                                        <i class="fas fa-edit edit-icon" 
-                                                           style="color: #5b5fcf; cursor: pointer; margin-right: 10px;" 
-                                                           ng-click="openEditModal(record)"
-                                                           title="{% trans 'Edit Record' %}"></i>
                                                         <i class="fas fa-trash delete-icon" 
                                                            style="color: #ef4444; cursor: pointer;" 
                                                            ng-click="deleteRecord(record.id)"
