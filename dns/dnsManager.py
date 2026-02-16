@@ -1163,21 +1163,16 @@ class DNSManager:
             params = {'name': zoneDomain, 'per_page': 50}
             cf = CloudFlare.CloudFlare(email=self.email, token=self.key)
 
-            ## Get zone
-
             zones = cf.zones.get(params=params)
+            if not zones:
+                final_dic = {'status': 0, 'delete_status': 0, 'error_message': 'Zone not found'}
+                return HttpResponse(json.dumps(final_dic), status=400)
 
             zone = zones[0]
-
-            ##
-
             zone_id = zone['id']
 
             params = {'name': name}
             dns_records = cf.zones.dns_records.get(zone_id, params=params)
-
-            ##
-
 
             if value == True:
                 new_r_proxied_flag = False
@@ -1192,11 +1187,9 @@ class DNSManager:
                 r_proxied = dns_record['proxied']
 
                 if r_proxied == new_r_proxied_flag:
-                    # Nothing to do
                     continue
 
                 dns_record_id = dns_record['id']
-
                 new_dns_record = {
                     'type': r_type,
                     'name': r_name,
@@ -1204,12 +1197,13 @@ class DNSManager:
                     'ttl': r_ttl,
                     'proxied': new_r_proxied_flag
                 }
-
                 cf.zones.dns_records.put(zone_id, dns_record_id, data=new_dns_record)
 
                 final_dic = {'status': 1, 'delete_status': 1, 'error_message': "None"}
-                final_json = json.dumps(final_dic)
-                return HttpResponse(final_json)
+                return HttpResponse(json.dumps(final_dic))
+
+            final_dic = {'status': 1, 'delete_status': 1, 'error_message': "None"}
+            return HttpResponse(json.dumps(final_dic))
 
         except BaseException as msg:
             final_dic = {'status': 0, 'delete_status': 0, 'error_message': str(msg)}
