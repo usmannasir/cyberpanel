@@ -92,6 +92,7 @@ install_dependencies() {
                 # AlmaLinux 8 / CentOS 8 / Rocky Linux 8
                 $PACKAGE_MANAGER install -y ImageMagick gd libicu oniguruma aspell libc-client-devel python3 python3-pip python3-devel 2>/dev/null || true
             fi
+            $PACKAGE_MANAGER install -y conntrack-tools 2>/dev/null || print_status "WARNING: conntrack-tools not available, skipping..."
             echo "  ✓ Core packages installed"
             echo ""
             
@@ -118,6 +119,7 @@ install_dependencies() {
             apt install -y -qq imagemagick php-gd libicu-dev libonig-dev 2>/dev/null || true
             apt install -y -qq aspell 2>/dev/null || print_status "WARNING: aspell not available, skipping..."
             apt install -y -qq libc-client-dev 2>/dev/null || print_status "WARNING: libc-client-dev not available, skipping..."
+            apt install -y -qq conntrack 2>/dev/null || print_status "WARNING: conntrack not available, skipping..."
             echo "  ✓ Core packages installed"
             ;;
     esac
