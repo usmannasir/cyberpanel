@@ -3974,9 +3974,10 @@ class Migration(migrations.Migration):
                     Upgrade.restoreCriticalFiles(backup_dir, backed_up_files)
                     return 0, 'Failed to remove old CyberCP directory'
 
-            # Clone the new repository directly to CyberCP
+            # Clone the new repository directly to CyberCP (use CYBERPANEL_GIT_USER from upgrade script, default master3395)
+            git_user = os.environ.get('CYBERPANEL_GIT_USER', 'usmannasir')
             Upgrade.stdOut("Cloning fresh CyberPanel repository...")
-            command = 'git clone https://github.com/usmannasir/cyberpanel CyberCP'
+            command = 'git clone https://github.com/%s/cyberpanel CyberCP' % git_user
             if not Upgrade.executioner(command, command, 1):
                 # Try to restore backup if clone fails
                 Upgrade.stdOut("Clone failed, attempting to restore backup...")
