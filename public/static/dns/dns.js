@@ -1173,9 +1173,9 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http, $window
         }
         return list;
     };
-    $scope.dnsSearchFilter = '';
+    $scope.dnsSearch = { filter: '' };
     $scope.matchDnsSearch = function (record) {
-        var q = ($scope.dnsSearchFilter || '').toLowerCase().trim();
+        var q = (($scope.dnsSearch && $scope.dnsSearch.filter) != null ? String($scope.dnsSearch.filter) : '').toLowerCase().trim();
         if (!q) return true;
         var name = (record.name || '').toLowerCase();
         var type = (record.type || '').toLowerCase();
