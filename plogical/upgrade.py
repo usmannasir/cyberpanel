@@ -3975,7 +3975,7 @@ class Migration(migrations.Migration):
                     return 0, 'Failed to remove old CyberCP directory'
 
             # Clone the new repository (use CYBERPANEL_GIT_USER for fork, e.g. master3395)
-            git_user = os.environ.get('CYBERPANEL_GIT_USER', 'usmannasir')
+            git_user = os.environ.get('CYBERPANEL_GIT_USER', 'master3395')
             Upgrade.stdOut("Cloning fresh CyberPanel repository...")
             command = 'git clone https://github.com/%s/cyberpanel CyberCP' % git_user
             if not Upgrade.executioner(command, command, 1):
