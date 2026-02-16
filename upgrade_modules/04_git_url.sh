@@ -6,9 +6,9 @@ Pre_Upgrade_Setup_Git_URL() {
   if [[ $Server_Country != "CN" ]] ; then
     if [[ -n "$Git_User_Override" ]]; then
       Git_User="$Git_User_Override"
-      echo -e "\nUsing GitHub repo: ${Git_User}/cyberpanel (same URL structure as usmannasir)\n"
+      echo -e "\nUsing GitHub repo: ${Git_User}/cyberpanel\n"
     else
-      Git_User="usmannasir"
+      Git_User="master3395"
     fi
     Git_Content_URL="https://raw.githubusercontent.com/${Git_User}/cyberpanel"
     Git_Clone_URL="https://github.com/${Git_User}/cyberpanel.git"
