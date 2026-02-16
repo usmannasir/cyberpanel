@@ -10742,7 +10742,7 @@ $("#websiteSuccessfullyModified").hide();
 $("#modifyWebsiteLoading").hide();
 $("#modifyWebsiteButton").hide();
 
-app.controller('modifyWebsitesController', function ($scope, $http) {
+app.controller('modifyWebsitesController', ['$scope', '$http', function ($scope, $http) {
     
     // Initialize home directory variables
     $scope.homeDirectories = [];
@@ -10915,7 +10915,7 @@ app.controller('modifyWebsitesController', function ($scope, $http) {
 
     };
 
-});
+}]);
 
 /* Java script code to Modify Pacakge ends here */
 

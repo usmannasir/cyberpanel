@@ -10742,7 +10742,7 @@ $("#websiteSuccessfullyModified").hide();
 $("#modifyWebsiteLoading").hide();
 $("#modifyWebsiteButton").hide();
 
-app.controller('modifyWebsitesController', function ($scope, $http) {
+app.controller('modifyWebsitesController', ['$scope', '$http', function ($scope, $http) {
 
     $scope.fetchWebsites = function () {
 
@@ -10879,7 +10879,7 @@ app.controller('modifyWebsitesController', function ($scope, $http) {
 
     };
 
-});
+}]);
 
 /* Java script code to Modify Pacakge ends here */
 
