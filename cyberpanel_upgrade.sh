@@ -60,6 +60,9 @@ Panel_Build=${Temp_Value:25:1}
 Branch_Name="v${Panel_Version}.${Panel_Build}"
 Base_Number="1.9.3"
 
+# Optional: set by --mariadb-version (e.g. 12.3, 12.1, 11.8, 10.11)
+MARIADB_VERSION_REQUESTED=""
+
 Git_User=""
 Git_Content_URL=""
 Git_Clone_URL=""
@@ -219,24 +222,34 @@ fi
 }
 
 Branch_Check() {
-if [[ "$1" = *.*.* ]]; then
-  #check input if it's valid format as X.Y.Z
-  Output=$(awk -v num1="$Base_Number" -v num2="${1//[[:space:]]/}" '
+  local raw_branch="${1//[[:space:]]/}"
+  # Accept branch/tag format: vX.Y.Z or vX.Y.Z-suffix (e.g. v2.5.5-dev)
+  if [[ "$raw_branch" = v*.*.* ]]; then
+    Branch_Name="$raw_branch"
+    echo -e "\nSet branch name to $Branch_Name...\n"
+    return
+  fi
+  if [[ "$1" = *.*.* ]]; then
+    # Numeric comparison for X.Y.Z format
+    local num2="${1//[[:space:]]/}"
+    num2="${num2#v}"
+    num2="${num2%-*}"
+    Output=$(awk -v num1="$Base_Number" -v num2="$num2" '
   BEGIN {
     print "num1", (num1 < num2 ? "<" : ">="), "num2"
   }
   ')
-  if [[ $Output = *">="* ]]; then
-    echo -e "\nYou must use version number higher than 2.3.4"
-    exit
+    if [[ $Output = *">="* ]]; then
+      echo -e "\nYou must use version number higher than 2.3.4"
+      exit
+    else
+      Branch_Name="v${1//[[:space:]]/}"
+      echo -e "\nSet branch name to $Branch_Name...\n"
+    fi
   else
-    Branch_Name="v${1//[[:space:]]/}"
-    echo -e "\nSet branch name to $Branch_Name...\n"
+    echo -e "\nPlease input a valid format version number (e.g. 2.5.4 or v2.5.5-dev)."
+    exit
   fi
-else
-  echo -e "\nPlease input a valid format version number."
-  exit
-fi
 }
 
 Check_Return() {
@@ -317,15 +330,31 @@ done
 }
 
 Check_Argument() {
-if [[ "$*" = *"--branch "* ]] || [[ "$*" = *"-b "* ]]; then
-  Branch_Name=$(echo "$*" | sed -e "s/--branch //" -e "s/--mirror//" -e "s/-b //")
-  Branch_Check "$Branch_Name"
-fi
+  # Parse -b/--branch and --mariadb-version so branch name is not mangled (e.g. by "v2.5.5-dev --mariadb-version 12.3")
+  local saw_branch=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      -b|--branch)
+        [ -n "${2:-}" ] && Branch_Name="$2" && saw_branch=1 && shift 2 || shift
+        ;;
+      --mariadb-version)
+        [ -n "${2:-}" ] && MARIADB_VERSION_REQUESTED="$2" && shift 2 || shift
+        ;;
+      --mariadb)
+        MARIADB_VERSION_REQUESTED="10.11"
+        shift
+        ;;
+      *)
+        shift
+        ;;
+    esac
+  done
+  [ -n "$saw_branch" ] && Branch_Check "$Branch_Name"
 }
 
 Pre_Upgrade_Setup_Git_URL() {
   if [[ $Server_Country != "CN" ]] ; then
-    Git_User="usmannasir"
+    Git_User="master3395"
     Git_Content_URL="https://raw.githubusercontent.com/${Git_User}/cyberpanel"
     Git_Clone_URL="https://github.com/${Git_User}/cyberpanel.git"
   else
@@ -420,13 +449,13 @@ if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "AlmaLinux9" ]] ; then
     else
         MARIADB_REPO="centos7-amd64"
     fi
-    
+    MARIADB_VER="${MARIADB_VERSION_REQUESTED:-12.1}"
     cat << EOF > /etc/yum.repos.d/MariaDB.repo
-# MariaDB 12.1 repository list - updated 2025-09-25
+# MariaDB $MARIADB_VER repository list
 # https://downloads.mariadb.org/mariadb/repositories/
 [mariadb]
 name = MariaDB
-baseurl = https://mirror.mariadb.org/yum/12.1/$MARIADB_REPO
+baseurl = https://mirror.mariadb.org/yum/$MARIADB_VER/$MARIADB_REPO
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1
 EOF
@@ -492,6 +521,56 @@ EOF
 
   dnf install epel-release -y
   
+  # MariaDB version: use --mariadb-version if set (e.g. 12.3, 12.1, 11.8), else distro default
+  if [[ -n "$MARIADB_VERSION_REQUESTED" ]] ; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Adding MariaDB $MARIADB_VERSION_REQUESTED repository for AlmaLinux/RHEL 9/10..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    rm -f /etc/yum.repos.d/MariaDB.repo
+    cat << EOF > /etc/yum.repos.d/MariaDB.repo
+[mariadb]
+name = MariaDB
+baseurl = https://mirror.mariadb.org/yum/$MARIADB_VERSION_REQUESTED/rhel9-amd64
+gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+gpgcheck=1
+EOF
+    if [[ "$Server_Country" = "CN" ]] ; then
+      sed -i 's|https://mirror.mariadb.org|https://cyberpanel.sh/mirror.mariadb.org|g' /etc/yum.repos.d/MariaDB.repo
+      sed -i 's|https://yum.mariadb.org|https://cyberpanel.sh/yum.mariadb.org|g' /etc/yum.repos.d/MariaDB.repo
+    fi
+    # If MariaDB is already installed with a different major version, do a proper upgrade (stop -> remove -> install -> start -> mariadb-upgrade)
+    CURRENT_MARIADB_VER=""
+    if command -v mysql &>/dev/null; then
+      CURRENT_MARIADB_VER=$(mysql -V 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+    fi
+    REQUESTED_MAJOR="${MARIADB_VERSION_REQUESTED%%.*}"
+    CURRENT_MAJOR=""
+    [[ -n "$CURRENT_MARIADB_VER" ]] && CURRENT_MAJOR="${CURRENT_MARIADB_VER%%.*}"
+    if [[ -n "$CURRENT_MAJOR" ]] && [[ "$CURRENT_MAJOR" != "$REQUESTED_MAJOR" ]]; then
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Upgrading MariaDB $CURRENT_MARIADB_VER -> $MARIADB_VERSION_REQUESTED (stop, remove, install, start, upgrade)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+      systemctl stop mariadb 2>/dev/null || systemctl stop mysql 2>/dev/null || true
+      dnf remove -y MariaDB-server MariaDB-client MariaDB-devel MariaDB-shared MariaDB-common 2>/dev/null || true
+      dnf remove -y mariadb-server mariadb-client mariadb-devel mariadb 2>/dev/null || true
+      dnf install -y MariaDB-server MariaDB-client MariaDB-devel 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+      systemctl enable mariadb 2>/dev/null || systemctl enable mysql 2>/dev/null || true
+      systemctl start mariadb 2>/dev/null || systemctl start mysql 2>/dev/null || true
+      sleep 3
+      if [[ -n "$MySQL_Password" ]] && [[ -f /etc/cyberpanel/mysqlPassword ]]; then
+        mariadb-upgrade -u root -p"$MySQL_Password" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log || mariadb-upgrade -u root 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+      else
+        mariadb-upgrade -u root 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+      fi
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB upgrade to $MARIADB_VERSION_REQUESTED completed." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    else
+      # Same major or not installed: install or upgrade in place
+      dnf install -y MariaDB-server MariaDB-client MariaDB-devel --allowerasing 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+      systemctl enable mariadb 2>/dev/null || systemctl enable mysql 2>/dev/null || true
+      systemctl start mariadb 2>/dev/null || systemctl start mysql 2>/dev/null || true
+      if [[ -n "$CURRENT_MARIADB_VER" ]]; then
+        sleep 2
+        mariadb-upgrade -u root 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log || true
+      fi
+    fi
+  fi
+  
   # AlmaLinux 9 specific package installation
   if [[ "$Server_OS" = "AlmaLinux9" ]] ; then
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing AlmaLinux 9 specific packages..." | tee -a /var/log/cyberpanel_upgrade_debug.log
@@ -507,8 +586,10 @@ EOF
                    sqlite-devel libxml2-devel libxslt-devel curl-devel libedit-devel \
                    readline-devel pkgconfig cmake gcc-c++
     
-    # Install MariaDB
-    dnf install -y mariadb-server mariadb-devel mariadb-client
+    # Install MariaDB (only if not already installed from MARIADB_VERSION_REQUESTED above)
+    if [[ -z "$MARIADB_VERSION_REQUESTED" ]] ; then
+      dnf install -y mariadb-server mariadb-devel mariadb-client
+    fi
     
     # Install additional required packages
     dnf install -y wget curl unzip zip rsync firewalld psmisc git python3 python3-pip python3-devel
@@ -663,7 +744,7 @@ if [ $CYBERCP_MISSING -eq 1 ]; then
     cd /usr/local
     rm -rf CyberCP_recovery_tmp
     
-    if git clone https://github.com/usmannasir/cyberpanel CyberCP_recovery_tmp; then
+    if git clone "${Git_Clone_URL:-https://github.com/master3395/cyberpanel.git}" CyberCP_recovery_tmp; then
         echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Repository cloned successfully for recovery" | tee -a /var/log/cyberpanel_upgrade_debug.log
         
         # Checkout the appropriate branch
@@ -862,7 +943,7 @@ fi
 
 Pre_Upgrade_Setup_Git_URL() {
 if [[ $Server_Country != "CN" ]] ; then
-  Git_User="usmannasir"
+  Git_User="master3395"
   Git_Content_URL="https://raw.githubusercontent.com/${Git_User}/cyberpanel"
   Git_Clone_URL="https://github.com/${Git_User}/cyberpanel.git"
 else
@@ -891,10 +972,12 @@ Pre_Upgrade_Branch_Input() {
 
 Main_Upgrade() {
 echo -e "\n[$(date +"%Y-%m-%d %H:%M:%S")] Starting Main_Upgrade function..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+# Export Git user so plogical/upgrade.py clones from this fork (master3395), not usmannasir
+export CYBERPANEL_GIT_USER="${Git_User:-master3395}"
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running: /usr/local/CyberPanel/bin/python upgrade.py $Branch_Name" | tee -a /var/log/cyberpanel_upgrade_debug.log
 
-# Run upgrade.py and capture output
-upgrade_output=$(/usr/local/CyberPanel/bin/python upgrade.py "$Branch_Name" 2>&1)
+# Run upgrade.py and capture output (from /root/cyberpanel_upgrade_tmp)
+upgrade_output=$(cd /root/cyberpanel_upgrade_tmp && /usr/local/CyberPanel/bin/python upgrade.py "$Branch_Name" 2>&1)
 RETURN_CODE=$?
 echo "$upgrade_output" | tee -a /var/log/cyberpanel_upgrade_debug.log
 

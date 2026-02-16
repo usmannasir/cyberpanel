@@ -2105,7 +2105,10 @@
                 <a href="{% url 'installed' %}" class="menu-item">
                     <span>Installed</span>
                 </a>
-        </div>
+                <a href="{% url 'installed' %}?view=store" class="menu-item">
+                    <span>{% trans "Plugin Store" %}</span>
+                </a>
+            </div>
         {% endif %}
     </div>
     
