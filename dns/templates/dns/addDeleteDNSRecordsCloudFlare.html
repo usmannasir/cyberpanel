@@ -565,6 +565,14 @@
         }
         .inline-select { min-width: 90px; cursor: pointer; }
         .inline-number { width: 70px; max-width: 80px; }
+        .sortable-th { cursor: pointer; user-select: none; white-space: nowrap; }
+        .sortable-th:hover { background: var(--bg-hover, #f0f1ff); }
+        .sort-icon { margin-left: 4px; opacity: 0.7; font-size: 0.75rem; }
+        .dns-search-wrap { position: relative; max-width: 400px; }
+        .dns-search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; }
+        .dns-search-input { padding-left: 36px; padding-right: 36px; border-radius: 8px; border: 1px solid var(--border-primary, #e2e8f0); }
+        .dns-search-clear { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #94a3b8; padding: 4px; }
+        .dns-search-clear:hover { color: #64748b; }
     </style>
 
     <div class="modern-container" ng-controller="addModifyDNSRecordsCloudFlare">
@@ -898,6 +906,12 @@
                                             {% trans "DNS Records" %}
                                         </h4>
                                         
+                                        <div class="dns-search-wrap mb-3" ng-if="!loadingRecords && records.length > 0">
+                                            <i class="fas fa-search dns-search-icon"></i>
+                                            <input type="text" class="form-control dns-search-input" ng-model="dnsSearchFilter" placeholder="{% trans 'Search name, type, value...' %}" title="{% trans 'Search through all records' %}">
+                                            <span class="dns-search-clear" ng-if="dnsSearchFilter" ng-click="dnsSearchFilter = ''" title="{% trans 'Clear search' %}"><i class="fas fa-times"></i></span>
+                                        </div>
+                                        
                                         <div ng-if="loadingRecords" style="text-align: center; padding: 20px; color: #8893a7;">
                                             Loading DNS records...
                                         </div>
@@ -906,20 +920,36 @@
                                             No DNS records found.
                                         </div>
                                         
+                                        <div ng-if="!loadingRecords && records.length > 0 && dnsSearchFilter && (records | filter:dnsSearchFilter).length === 0" class="alert alert-info" style="margin-bottom: 1rem;">
+                                            <i class="fas fa-info-circle"></i> {% trans "No records match your search." %}
+                                        </div>
+                                        
                                         <table class="records-table activity-table" ng-if="!loadingRecords && records.length > 0">
                                             <thead>
                                                 <tr>
-                                                    <th>{% trans "Name" %}</th>
-                                                    <th>{% trans "Type" %}</th>
-                                                    <th>{% trans "TTL" %}</th>
-                                                    <th>{% trans "Value" %}</th>
-                                                    <th>{% trans "Priority" %}</th>
-                                                    <th>{% trans "Proxy" %}</th>
+                                                    <th class="sortable-th" ng-click="setSort('name')" title="{% trans 'Click to sort' %}">
+                                                        {% trans "Name" %} <i class="fas sort-icon" ng-class="{'fa-sort-up': sortColumn === 'name' && !sortReverse, 'fa-sort-down': sortColumn === 'name' && sortReverse, 'fa-sort': sortColumn !== 'name'}"></i>
+                                                    </th>
+                                                    <th class="sortable-th" ng-click="setSort('type')" title="{% trans 'Click to sort' %}">
+                                                        {% trans "Type" %} <i class="fas sort-icon" ng-class="{'fa-sort-up': sortColumn === 'type' && !sortReverse, 'fa-sort-down': sortColumn === 'type' && sortReverse, 'fa-sort': sortColumn !== 'type'}"></i>
+                                                    </th>
+                                                    <th class="sortable-th" ng-click="setSort('ttlNum')" title="{% trans 'Click to sort' %}">
+                                                        {% trans "TTL" %} <i class="fas sort-icon" ng-class="{'fa-sort-up': sortColumn === 'ttlNum' && !sortReverse, 'fa-sort-down': sortColumn === 'ttlNum' && sortReverse, 'fa-sort': sortColumn !== 'ttlNum'}"></i>
+                                                    </th>
+                                                    <th class="sortable-th" ng-click="setSort('content')" title="{% trans 'Click to sort' %}">
+                                                        {% trans "Value" %} <i class="fas sort-icon" ng-class="{'fa-sort-up': sortColumn === 'content' && !sortReverse, 'fa-sort-down': sortColumn === 'content' && sortReverse, 'fa-sort': sortColumn !== 'content'}"></i>
+                                                    </th>
+                                                    <th class="sortable-th" ng-click="setSort('priority')" title="{% trans 'Click to sort' %}">
+                                                        {% trans "Priority" %} <i class="fas sort-icon" ng-class="{'fa-sort-up': sortColumn === 'priority' && !sortReverse, 'fa-sort-down': sortColumn === 'priority' && sortReverse, 'fa-sort': sortColumn !== 'priority'}"></i>
+                                                    </th>
+                                                    <th class="sortable-th" ng-click="setSort('proxy')" title="{% trans 'Click to sort' %}">
+                                                        {% trans "Proxy" %} <i class="fas sort-icon" ng-class="{'fa-sort-up': sortColumn === 'proxy' && !sortReverse, 'fa-sort-down': sortColumn === 'proxy' && sortReverse, 'fa-sort': sortColumn !== 'proxy'}"></i>
+                                                    </th>
                                                     <th style="text-align: center;">{% trans "Actions" %}</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <tr ng-repeat="record in records track by $index">
+                                                <tr ng-repeat="record in records | filter:dnsSearchFilter | orderBy:sortColumn:sortReverse track by record.id">
                                                     <td class="editable-cell">
                                                         <span ng-hide="isEditing(record, 'name')" ng-click="startEdit(record, 'name')" class="cell-click" title="{% trans 'Click to edit' %}"><strong ng-bind="record.name"></strong></span>
                                                         <input ng-show="isEditing(record, 'name')" type="text" class="inline-input" ng-model="record.name" ng-blur="saveInlineField(record, 'name')" ng-keypress="$event.keyCode === 13 && saveInlineField(record, 'name')">
