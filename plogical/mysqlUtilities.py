@@ -531,47 +531,63 @@ password=%s
             data['status'] = 1
 
             for items in result:
-                if items[0] == 'Uptime':
-                    data['uptime'] = mysqlUtilities.GetTime(items[1])
-                elif items[0] == 'Connections':
-                    data['connections'] = items[1]
-                elif items[0] == 'Slow_queries':
-                    data['Slow_queries'] = items[1]
+                if not items or len(items) < 2:
+                    continue
+                key = (items[0] or '').strip()
+                val = items[1]
+                if key == 'Uptime':
+                    try:
+                        data['uptime'] = mysqlUtilities.GetTime(val)
+                    except (TypeError, ValueError):
+                        data['uptime'] = str(val) if val is not None else '0'
+                elif key == 'Connections':
+                    data['connections'] = val
+                elif key == 'Slow_queries':
+                    data['Slow_queries'] = val
 
-            ## Process List
-
-            cursor.execute("show processlist")
+            ## Process List (column-name based so it works with any MySQL/MariaDB version)
+            cursor.execute("SHOW FULL PROCESSLIST")
+            if cursor.description:
+                col_names = [col[0].lower() if col[0] else '' for col in cursor.description]
+            else:
+                col_names = []
             result = cursor.fetchall()
 
             json_data = "["
             checker = 0
 
-            for items in result:
-                # SHOW PROCESSLIST: Id, User, Host, db, Command, Time, State, Info [, Progress]
-                if items[3] is None or len(str(items[3])) == 0:
+            for row in result:
+                if col_names:
+                    row_dict = dict(zip(col_names, row)) if len(col_names) == len(row) else {}
+                else:
+                    row_dict = {}
+                # Support both MySQL and MariaDB column names (Id/id, User/user, db/DB, etc.)
+                def get_col(*keys, default=None):
+                    for k in keys:
+                        v = row_dict.get(k) if row_dict else None
+                        if v is not None and (not isinstance(v, str) or len(str(v).strip()) > 0):
+                            return v
+                    return default
+
+                database = get_col('db', 'database', default='NULL')
+                if database is None or (isinstance(database, str) and len(database.strip()) == 0):
                     database = 'NULL'
-                else:
-                    database = items[3]
-
-                if len(items) > 6 and items[6] is not None and len(str(items[6])) > 0:
-                    state = items[6]
-                else:
+                state = get_col('state', default='NULL')
+                if state is None or (isinstance(state, str) and len(str(state).strip()) == 0):
                     state = 'NULL'
-
-                if len(items) > 7 and items[7] is not None and len(str(items[7])) > 0:
-                    info = items[7]
-                else:
-                    info = 'NULL'
+                info = get_col('info', default=None)
+                if info is None or (isinstance(info, str) and len(str(info).strip()) == 0):
+                    info = 'No query'
 
                 dic = {
-                    'id': items[0],
-                    'user': items[1],
+                    'id': get_col('id', default=0),
+                    'user': get_col('user', default=''),
                     'database': database,
-                    'command': items[4] if len(items) > 4 else '',
-                    'time': items[5] if len(items) > 5 else 0,
+                    'command': get_col('command', default=''),
+                    'time': get_col('time', 'time_ms', default=0),
                     'state': state,
                     'info': info,
-                    'progress': items[8] if len(items) > 8 else 0,
+                    'progress': get_col('progress', default=0),
                 }
 
                 if checker == 0:

@@ -79,6 +79,7 @@ class UpgradeCyberPanel:
         Upgrade.CLMigrations()
         Upgrade.IncBackupMigrations()
         Upgrade.applyLoginSystemMigrations()
+        Upgrade.homeDirectoryMigrations()
         Upgrade.s3BackupMigrations()
         Upgrade.containerMigrations()
         Upgrade.manageServiceMigrations()

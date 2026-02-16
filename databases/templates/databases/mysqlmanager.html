@@ -644,8 +644,8 @@
                             </td>
                             <td>
                                 <span class="info-text" 
-                                      ng-bind="process.info || 'No query'"
-                                      ng-attr-title="{$ process.info $}"></span>
+                                      ng-bind="(process.info && process.info !== 'NULL') ? process.info : 'No query'"
+                                      ng-attr-title="{$ (process.info && process.info !== 'NULL') ? process.info : 'No query' $}"></span>
                             </td>
                             <td>
                                 <div class="progress-bar">
