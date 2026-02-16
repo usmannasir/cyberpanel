@@ -1174,6 +1174,39 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http, $window
         return list;
     };
     $scope.dnsSearch = { filter: '' };
+    $scope.filteredRecords = [];
+    function applySearchAndSort() {
+        if (!$scope.records || !Array.isArray($scope.records)) {
+            $scope.filteredRecords = [];
+            return;
+        }
+        var q = ($scope.dnsSearch && $scope.dnsSearch.filter != null ? String($scope.dnsSearch.filter) : '').toLowerCase().trim();
+        var list = q === '' ? $scope.records : $scope.records.filter(function (r) {
+            var name = (r.name != null ? String(r.name) : '').toLowerCase();
+            var type = (r.type != null ? String(r.type) : '').toLowerCase();
+            var content = (r.content != null ? String(r.content) : '').toLowerCase();
+            var priority = (r.priority != null ? String(r.priority) : '');
+            return name.indexOf(q) !== -1 || type.indexOf(q) !== -1 || content.indexOf(q) !== -1 || priority.indexOf(q) !== -1;
+        });
+        var col = $scope.sortColumn || 'name';
+        var rev = $scope.sortReverse;
+        list = list.slice().sort(function (a, b) {
+            var va = a[col];
+            var vb = b[col];
+            if (va === vb) return 0;
+            if (va == null) return rev ? -1 : 1;
+            if (vb == null) return rev ? 1 : -1;
+            if (typeof va === 'number' && typeof vb === 'number') return rev ? vb - va : va - vb;
+            va = String(va).toLowerCase();
+            vb = String(vb).toLowerCase();
+            return rev ? (vb < va ? 1 : -1) : (va < vb ? -1 : 1);
+        });
+        $scope.filteredRecords = list;
+    }
+    $scope.$watchCollection('records', function () { applySearchAndSort(); });
+    $scope.$watch('dnsSearch.filter', function () { applySearchAndSort(); }, true);
+    $scope.$watch('sortColumn', function () { applySearchAndSort(); });
+    $scope.$watch('sortReverse', function () { applySearchAndSort(); });
     $scope.matchDnsSearch = function (record) {
         var q = (($scope.dnsSearch && $scope.dnsSearch.filter) != null ? String($scope.dnsSearch.filter) : '').toLowerCase().trim();
         if (!q) return true;
