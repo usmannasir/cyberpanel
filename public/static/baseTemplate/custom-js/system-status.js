@@ -531,15 +531,18 @@ app.controller('homePageStatus', function ($scope, $http, $timeout) {
 ////////////
 
 function increment() {
-    $('.box').hide();
+    var boxes = document.querySelectorAll ? document.querySelectorAll('.box') : [];
+    for (var i = 0; i < boxes.length; i++) boxes[i].style.display = 'none';
     setTimeout(function () {
-        $('.box').show();
+        for (var j = 0; j < boxes.length; j++) boxes[j].style.display = '';
     }, 100);
-
-
 }
 
-increment();
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', increment);
+} else {
+    increment();
+}
 
 ////////////
 

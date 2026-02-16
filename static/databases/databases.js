@@ -2,6 +2,8 @@
  * Created by usman on 8/6/17.
  */
 
+/* Ensure we register controllers on the CyberCP app (avoids ctrlreg if load order differs) */
+var app = (typeof window.app !== 'undefined' && window.app) ? window.app : angular.module('CyberCP');
 
 /* Java script code to create database */
 app.controller('createDatabase', function ($scope, $http) {
@@ -683,14 +685,18 @@ app.controller('phpMyAdmin', function ($scope, $http, $window) {
 
 app.controller('Mysqlmanager', function ($scope, $http, $compile, $window, $timeout) {
     $scope.cyberPanelLoading = false;
-    $scope.mysql_status = 'test'
+    $scope.mysql_status = 'test';
+    $scope.uptime = '—';
+    $scope.connections = '—';
+    $scope.Slow_queries = '—';
+    $scope.processes = [];
 
 
     $scope.getstatus = function () {
 
         $scope.cyberPanelLoading = true;
 
-        url = "/dataBases/getMysqlstatus";
+        url = "/dataBases/getMysqlstatus?t=" + (Date.now ? Date.now() : new Date().getTime());
 
         var data = {};
 
@@ -706,12 +712,29 @@ app.controller('Mysqlmanager', function ($scope, $http, $compile, $window, $time
 
         function ListInitialDatas(response) {
             $scope.cyberPanelLoading = false;
-            if (response.data.status === 1) {
-                $scope.uptime = response.data.uptime;
-                $scope.connections = response.data.connections;
-                $scope.Slow_queries = response.data.Slow_queries;
-                $scope.processes = JSON.parse(response.data.processes);
-                $timeout($scope.showStatus, 3000);
+            var data = response.data;
+            if (typeof data === 'string') {
+                try {
+                    data = JSON.parse(data);
+                } catch (e) {
+                    $scope.uptime = $scope.connections = $scope.Slow_queries = '—';
+                    $scope.processes = [];
+                    new PNotify({ title: 'Error!', text: 'Invalid response from server.', type: 'error' });
+                    return;
+                }
+            }
+            if (data && data.status === 1) {
+                $scope.uptime = data.uptime || '—';
+                $scope.connections = data.connections != null ? data.connections : '—';
+                $scope.Slow_queries = data.Slow_queries != null ? data.Slow_queries : '—';
+                try {
+                    $scope.processes = typeof data.processes === 'string' ? JSON.parse(data.processes || '[]') : (data.processes || []);
+                } catch (e) {
+                    $scope.processes = [];
+                }
+                if (typeof $scope.showStatus === 'function') {
+                    $timeout($scope.showStatus, 3000);
+                }
 
                 new PNotify({
                     title: 'Success',
@@ -721,7 +744,7 @@ app.controller('Mysqlmanager', function ($scope, $http, $compile, $window, $time
             } else {
                 new PNotify({
                     title: 'Error!',
-                    text: response.data.error_message,
+                    text: (data && data.error_message) || 'Could not load MySQL status.',
                     type: 'error'
                 });
             }
@@ -730,14 +753,38 @@ app.controller('Mysqlmanager', function ($scope, $http, $compile, $window, $time
 
         function cantLoadInitialDatas(response) {
             $scope.cyberPanelLoading = false;
+            $scope.uptime = '—';
+            $scope.connections = '—';
+            $scope.Slow_queries = '—';
+            $scope.processes = [];
+            var msg = 'Cannot load MySQL status.';
+            if (response && response.status) {
+                msg = 'Request failed: ' + response.status + (response.statusText ? ' ' + response.statusText : '');
+            }
+            if (response && response.data) {
+                if (typeof response.data === 'string' && response.data.length < 200) {
+                    msg = response.data;
+                } else if (response.data.error_message) {
+                    msg = response.data.error_message;
+                }
+            }
             new PNotify({
                 title: 'Error!',
-                text: "cannot load",
+                text: msg,
                 type: 'error'
             });
         }
 
     }
+
+    $scope.refreshProcesses = function () {
+        var icon = document.querySelector('.refresh-btn i');
+        if (icon) {
+            icon.style.animation = 'spin 1s linear';
+            setTimeout(function () { icon.style.animation = ''; }, 1000);
+        }
+        $scope.getstatus();
+    };
 
     $scope.getstatus();
 });

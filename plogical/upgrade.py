@@ -2383,6 +2383,50 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
             Upgrade.stdOut(str(msg) + " [applyLoginSystemMigrations]")
 
     @staticmethod
+    def homeDirectoryMigrations():
+        """Create home_directories and user_home_mappings tables if missing (Modify Website home directory feature)."""
+        try:
+            connection, cursor = Upgrade.setupConnection('cyberpanel')
+            try:
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS `home_directories` (
+                        `id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY,
+                        `name` varchar(50) NOT NULL UNIQUE,
+                        `path` varchar(255) NOT NULL UNIQUE,
+                        `is_active` tinyint(1) NOT NULL DEFAULT 1,
+                        `is_default` tinyint(1) NOT NULL DEFAULT 0,
+                        `max_users` integer NOT NULL DEFAULT 0,
+                        `description` longtext,
+                        `created_at` datetime(6) NOT NULL,
+                        `updated_at` datetime(6) NOT NULL
+                    )
+                """)
+            except Exception:
+                pass
+            try:
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS `user_home_mappings` (
+                        `id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY,
+                        `user_id` integer NOT NULL UNIQUE,
+                        `home_directory_id` integer NOT NULL,
+                        `created_at` datetime(6) NOT NULL,
+                        `updated_at` datetime(6) NOT NULL,
+                        CONSTRAINT `user_home_mappings_user_id_fk` FOREIGN KEY (`user_id`)
+                            REFERENCES `loginSystem_administrator` (`id`) ON DELETE CASCADE,
+                        CONSTRAINT `user_home_mappings_home_directory_id_fk` FOREIGN KEY (`home_directory_id`)
+                            REFERENCES `home_directories` (`id`) ON DELETE CASCADE
+                    )
+                """)
+            except Exception:
+                pass
+            try:
+                connection.close()
+            except Exception:
+                pass
+        except Exception:
+            pass
+
+    @staticmethod
     def s3BackupMigrations():
         try:
 
@@ -5851,6 +5895,7 @@ slowlog = /var/log/php{version}-fpm-slow.log
         ##
 
         Upgrade.applyLoginSystemMigrations()
+        Upgrade.homeDirectoryMigrations()
 
         ## Put function here to update custom ACLs
 

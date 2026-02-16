@@ -199,7 +199,12 @@ def addDeleteDNSRecordsCloudFlare(request):
     try:
         userID = request.session['userID']
         dm = DNSManager()
-        return dm.addDeleteDNSRecordsCloudFlare(request, userID)
+        response = dm.addDeleteDNSRecordsCloudFlare(request, userID)
+        if hasattr(response, 'headers'):
+            response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+            response['Pragma'] = 'no-cache'
+            response['Expires'] = '0'
+        return response
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -339,6 +344,15 @@ def addDNSRecordCloudFlare(request):
         return redirect(loadLoginPage)
 
 
+def updateDNSRecordCloudFlare(request):
+    try:
+        userID = request.session['userID']
+        dm = DNSManager()
+        return dm.updateDNSRecordCloudFlare(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 def syncCF(request):
     try:
         userID = request.session['userID']
@@ -355,10 +369,11 @@ def syncCF(request):
 def enableProxy(request):
     try:
         userID = request.session['userID']
-
+        body = json.loads(request.body or '{}')
         dm = DNSManager()
-        coreResult = dm.enableProxy(userID, json.loads(request.body))
-
+        coreResult = dm.enableProxy(userID, body)
         return coreResult
     except KeyError:
         return redirect(loadLoginPage)
+    except (ValueError, TypeError):
+        return HttpResponse(json.dumps({'status': 0, 'error_message': 'Invalid request'}), status=400, content_type='application/json')

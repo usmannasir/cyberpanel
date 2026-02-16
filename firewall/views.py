@@ -1,4 +1,5 @@
 from django.shortcuts import redirect
+from django.http import HttpResponse
 import json
 from loginSystem.views import loadLoginPage
 from plogical.processUtilities import ProcessUtilities
@@ -680,16 +681,22 @@ def getBannedIPs(request):
     try:
         userID = request.session['userID']
         fm = FirewallManager()
-        try:
-            body = request.body
-            if isinstance(body, bytes):
-                body = body.decode('utf-8')
-            data = json.loads(body) if body and body.strip() else {}
-        except (json.JSONDecodeError, Exception):
-            data = {}
-        return fm.getBannedIPs(userID, data)
+        data = {}
+        if request.method == 'POST':
+            try:
+                body = request.body
+                if isinstance(body, bytes):
+                    body = body.decode('utf-8')
+                data = json.loads(body) if body and body.strip() else {}
+            except (json.JSONDecodeError, Exception):
+                pass
+        # GET also supported (no body); pagination uses defaults
+        result = fm.getBannedIPs(userID, data)
+        # Ensure we return JSON (FirewallManager may return HttpResponse)
+        return result
     except KeyError:
-        return redirect(loadLoginPage)
+        final_dic = {'status': 0, 'error_message': 'Session expired. Please log in again.', 'bannedIPs': [], 'total_count': 0}
+        return HttpResponse(json.dumps(final_dic), content_type='application/json', status=403)
 
 def addBannedIP(request):
     try:
@@ -804,7 +811,7 @@ def deleteBannedIP(request):
 def exportFirewallRules(request):
     try:
         userID = request.session['userID']
-        fm = FirewallManager()
+        fm = FirewallManager(request)
         return fm.exportFirewallRules(userID)
     except KeyError:
         return redirect(loadLoginPage)
