@@ -1162,6 +1162,17 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http, $window
         }
         return list;
     };
+    $scope.dnsSearchFilter = '';
+    $scope.sortColumn = 'name';
+    $scope.sortReverse = false;
+    $scope.setSort = function (col) {
+        if ($scope.sortColumn === col) {
+            $scope.sortReverse = !$scope.sortReverse;
+        } else {
+            $scope.sortColumn = col;
+            $scope.sortReverse = false;
+        }
+    };
     $scope.editingRecordId = null;
     $scope.editingField = null;
     $scope.isEditing = function (record, field) {
