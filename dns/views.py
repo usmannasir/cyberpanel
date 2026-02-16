@@ -199,7 +199,12 @@ def addDeleteDNSRecordsCloudFlare(request):
     try:
         userID = request.session['userID']
         dm = DNSManager()
-        return dm.addDeleteDNSRecordsCloudFlare(request, userID)
+        response = dm.addDeleteDNSRecordsCloudFlare(request, userID)
+        if hasattr(response, 'headers'):
+            response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+            response['Pragma'] = 'no-cache'
+            response['Expires'] = '0'
+        return response
     except KeyError:
         return redirect(loadLoginPage)
 
