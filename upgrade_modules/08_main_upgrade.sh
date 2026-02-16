@@ -31,6 +31,14 @@ echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running: $CP_PYTHON upgrade.py $Branch_N
 # Export Git user so upgrade.py clones from the same repo (master3395 or --repo override)
 export CYBERPANEL_GIT_USER="${Git_User:-master3395}"
 
+# Run from directory that contains upgrade.py (downloaded by Pre_Upgrade_Required_Components)
+for d in /root/cyberpanel_upgrade_tmp /usr/local/CyberCP; do
+  if [[ -f "$d/upgrade.py" ]]; then
+    cd "$d" || true
+    break
+  fi
+done
+
 # Run upgrade.py and capture output
 upgrade_output=$("$CP_PYTHON" upgrade.py "$Branch_Name" 2>&1)
 RETURN_CODE=$?
