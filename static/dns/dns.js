@@ -1163,6 +1163,15 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http, $window
         return list;
     };
     $scope.dnsSearchFilter = '';
+    $scope.matchDnsSearch = function (record) {
+        var q = ($scope.dnsSearchFilter || '').toLowerCase().trim();
+        if (!q) return true;
+        var name = (record.name || '').toLowerCase();
+        var type = (record.type || '').toLowerCase();
+        var content = (record.content || '').toLowerCase();
+        var priority = String(record.priority != null ? record.priority : '');
+        return name.indexOf(q) !== -1 || type.indexOf(q) !== -1 || content.indexOf(q) !== -1 || priority.indexOf(q) !== -1;
+    };
     $scope.sortColumn = 'name';
     $scope.sortReverse = false;
     $scope.setSort = function (col) {
