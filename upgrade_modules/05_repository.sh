@@ -496,5 +496,8 @@ if [[ "$Server_OS" = "openEuler" ]] ; then
   dnf install python3 -y
 fi
 #all pre-upgrade operation for openEuler
+
+  # Ensure MariaDB client no-SSL on every upgrade path (install and upgrade; avoids ERROR 2026)
+  Ensure_MariaDB_Client_No_SSL
 }
 

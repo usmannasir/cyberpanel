@@ -1029,6 +1029,17 @@ if [[ "$Server_OS" = "openEuler" ]] ; then
   dnf install python3 -y
 fi
 #all pre-upgrade operation for openEuler
+
+  # Ensure MariaDB client no-SSL on every upgrade path (avoids ERROR 2026 when server has have_ssl=DISABLED)
+  mkdir -p /etc/my.cnf.d
+  printf "[client]\nssl=0\nskip-ssl\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
+  if [[ -f /etc/my.cnf ]] && ! grep -q '^\[client\]' /etc/my.cnf 2>/dev/null; then
+    echo -e "\n[client]\nssl=0\nskip-ssl" >> /etc/my.cnf
+  fi
+  if [[ -d /etc/mysql/mariadb.conf.d ]]; then
+    printf "[client]\nssl=0\nskip-ssl\n" > /etc/mysql/mariadb.conf.d/99-cyberpanel-client.cnf 2>/dev/null || true
+  fi
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB client no-SSL config ensured." | tee -a /var/log/cyberpanel_upgrade_debug.log
 }
 
 Download_Requirement() {
