@@ -2206,14 +2206,20 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update cache expiry time to local timezone
     updateCacheExpiryTime();
     
-    // Default to grid view if plugins exist, otherwise show store
-    const gridView = document.getElementById('gridView');
-    const storeView = document.getElementById('storeView');
-    if (gridView && gridView.children.length > 0) {
-        toggleView('grid');
-    } else if (storeView) {
-        // No plugins installed, show store by default
+    // Respect ?view=store in URL (e.g. from sidebar "Plugin Store" link)
+    const urlParams = new URLSearchParams(window.location.search);
+    const requestedView = urlParams.get('view');
+    if (requestedView === 'store') {
         toggleView('store');
+    } else {
+        // Default to grid view if plugins exist, otherwise show store
+        const gridView = document.getElementById('gridView');
+        const storeView = document.getElementById('storeView');
+        if (gridView && gridView.children.length > 0) {
+            toggleView('grid');
+        } else if (storeView) {
+            toggleView('store');
+        }
     }
     
     // Load store plugins if store view is visible (either from toggleView or already displayed)
