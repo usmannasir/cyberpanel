@@ -10,7 +10,7 @@ function getCookie(name) {
     if (document.cookie && document.cookie !== '') {
         var cookies = document.cookie.split(';');
         for (var i = 0; i < cookies.length; i++) {
-            var cookie = jQuery.trim(cookies[i]);
+            var cookie = (cookies[i] || '').replace(/^\s+|\s+$/g, '');
             // Does this cookie string begin with the name we want?
             if (cookie.substring(0, name.length + 1) === (name + '=')) {
                 cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
@@ -38,6 +38,77 @@ function randomPassword(length) {
 // Create global app reference for CyberCP module so other scripts can access it
 window.app = angular.module('CyberCP', []);
 var app = window.app; // Local reference for this file
+
+// MUST be first: register dashboard controller before any other setup (avoids ctrlreg when CDN/Tracking Prevention blocks scripts)
+app.controller('dashboardStatsController', ['$scope', '$http', '$timeout', function ($scope, $http, $timeout) {
+    $scope.cpuUsage = 0; $scope.ramUsage = 0; $scope.diskUsage = 0; $scope.cpuCores = 0;
+    $scope.ramTotalMB = 0; $scope.diskTotalGB = 0; $scope.diskFreeGB = 0;
+    $scope.totalUsers = 0; $scope.totalSites = 0; $scope.totalWPSites = 0;
+    $scope.totalDBs = 0; $scope.totalEmails = 0; $scope.totalFTPUsers = 0;
+    $scope.topProcesses = []; $scope.sshLogins = []; $scope.sshLogs = [];
+    $scope.loadingTopProcesses = true; $scope.loadingSSHLogins = true; $scope.loadingSSHLogs = true;
+    $scope.blockedIPs = {}; $scope.blockingIP = null; $scope.securityAlerts = [];
+    var opts = { headers: { 'X-CSRFToken': (typeof getCookie === 'function') ? getCookie('csrftoken') : '' } };
+    try {
+        $http.get('/base/getSystemStatus', opts).then(function (r) {
+            if (r && r.data && r.data.status === 1) {
+                $scope.cpuUsage = r.data.cpuUsage || 0; $scope.ramUsage = r.data.ramUsage || 0;
+                $scope.diskUsage = r.data.diskUsage || 0; $scope.cpuCores = r.data.cpuCores || 0;
+                $scope.ramTotalMB = r.data.ramTotalMB || 0; $scope.diskTotalGB = r.data.diskTotalGB || 0;
+                $scope.diskFreeGB = r.data.diskFreeGB || 0;
+            }
+        });
+        $http.get('/base/getDashboardStats', opts).then(function (r) {
+            if (r && r.data && r.data.status === 1) {
+                $scope.totalUsers = r.data.total_users || 0; $scope.totalSites = r.data.total_sites || 0;
+                $scope.totalWPSites = r.data.total_wp_sites || 0; $scope.totalDBs = r.data.total_dbs || 0;
+                $scope.totalEmails = r.data.total_emails || 0; $scope.totalFTPUsers = r.data.total_ftp_users || 0;
+            }
+        });
+        $http.get('/base/getRecentSSHLogins', opts).then(function (r) {
+            $scope.loadingSSHLogins = false;
+            $scope.sshLogins = (r && r.data && r.data.logins) ? r.data.logins : [];
+        }, function () { $scope.loadingSSHLogins = false; $scope.sshLogins = []; });
+        $http.get('/base/getRecentSSHLogs', opts).then(function (r) {
+            $scope.loadingSSHLogs = false;
+            $scope.sshLogs = (r && r.data && r.data.logs) ? r.data.logs : [];
+        }, function () { $scope.loadingSSHLogs = false; $scope.sshLogs = []; });
+        $http.get('/base/getTopProcesses', opts).then(function (r) {
+            $scope.loadingTopProcesses = false;
+            $scope.topProcesses = (r && r.data && r.data.status === 1 && r.data.processes) ? r.data.processes : [];
+        }, function () { $scope.loadingTopProcesses = false; $scope.topProcesses = []; });
+        if (typeof $timeout === 'function') { $timeout(function() { /* refresh */ }, 10000); }
+    } catch (e) { /* ignore */ }
+}]);
+
+// Overview CPU/RAM/Disk cards use systemStatusInfo – register early so data loads even if later script fails
+app.controller('systemStatusInfo', ['$scope', '$http', '$timeout', function ($scope, $http, $timeout) {
+    $scope.uptimeLoaded = false;
+    $scope.uptime = 'Loading...';
+    $scope.cpuUsage = 0; $scope.ramUsage = 0; $scope.diskUsage = 0;
+    $scope.cpuCores = 0; $scope.ramTotalMB = 0; $scope.diskTotalGB = 0; $scope.diskFreeGB = 0;
+    $scope.getSystemStatus = function() { fetchStatus(); };
+    function fetchStatus() {
+        try {
+            var csrf = (typeof getCookie === 'function') ? getCookie('csrftoken') : '';
+            $http.get('/base/getSystemStatus', { headers: { 'X-CSRFToken': csrf } }).then(function (r) {
+                if (r && r.data && r.data.status === 1) {
+                    $scope.cpuUsage = r.data.cpuUsage != null ? r.data.cpuUsage : 0;
+                    $scope.ramUsage = r.data.ramUsage != null ? r.data.ramUsage : 0;
+                    $scope.diskUsage = r.data.diskUsage != null ? r.data.diskUsage : 0;
+                    $scope.cpuCores = r.data.cpuCores != null ? r.data.cpuCores : 0;
+                    $scope.ramTotalMB = r.data.ramTotalMB != null ? r.data.ramTotalMB : 0;
+                    $scope.diskTotalGB = r.data.diskTotalGB != null ? r.data.diskTotalGB : 0;
+                    $scope.diskFreeGB = r.data.diskFreeGB != null ? r.data.diskFreeGB : 0;
+                    $scope.uptime = r.data.uptime || 'N/A';
+                }
+                $scope.uptimeLoaded = true;
+            }, function() { $scope.uptime = 'Unavailable'; $scope.uptimeLoaded = true; });
+            if (typeof $timeout === 'function') { $timeout(fetchStatus, 60000); }
+        } catch (e) { $scope.uptimeLoaded = true; }
+    }
+    fetchStatus();
+}]);
 
 var globalScope;
 
@@ -122,9 +193,17 @@ app.controller('systemStatusInfo', function ($scope, $http, $timeout) {
 
     $scope.uptimeLoaded = false;
     $scope.uptime = 'Loading...';
-    
+    // Defaults so template never shows undefined (avoids raw {$ cpuUsage $} when API is slow or fails)
+    $scope.cpuUsage = 0;
+    $scope.ramUsage = 0;
+    $scope.diskUsage = 0;
+    $scope.cpuCores = 0;
+    $scope.ramTotalMB = 0;
+    $scope.diskTotalGB = 0;
+    $scope.diskFreeGB = 0;
+
     getStuff();
-    
+
     $scope.getSystemStatus = function() {
         getStuff();
     };
@@ -138,17 +217,15 @@ app.controller('systemStatusInfo', function ($scope, $http, $timeout) {
 
         function ListInitialData(response) {
 
-            $scope.cpuUsage = response.data.cpuUsage;
-            $scope.ramUsage = response.data.ramUsage;
-            $scope.diskUsage = response.data.diskUsage;
-            
-            // Total system information
-            $scope.cpuCores = response.data.cpuCores;
-            $scope.ramTotalMB = response.data.ramTotalMB;
-            $scope.diskTotalGB = response.data.diskTotalGB;
-            $scope.diskFreeGB = response.data.diskFreeGB;
-            
-            // Get uptime if available
+            $scope.cpuUsage = response.data.cpuUsage != null ? response.data.cpuUsage : 0;
+            $scope.ramUsage = response.data.ramUsage != null ? response.data.ramUsage : 0;
+            $scope.diskUsage = response.data.diskUsage != null ? response.data.diskUsage : 0;
+
+            $scope.cpuCores = response.data.cpuCores != null ? response.data.cpuCores : 0;
+            $scope.ramTotalMB = response.data.ramTotalMB != null ? response.data.ramTotalMB : 0;
+            $scope.diskTotalGB = response.data.diskTotalGB != null ? response.data.diskTotalGB : 0;
+            $scope.diskFreeGB = response.data.diskFreeGB != null ? response.data.diskFreeGB : 0;
+
             if (response.data.uptime) {
                 $scope.uptime = response.data.uptime;
                 $scope.uptimeLoaded = true;
@@ -162,6 +239,9 @@ app.controller('systemStatusInfo', function ($scope, $http, $timeout) {
         function cantLoadInitialData(response) {
             $scope.uptime = 'Unavailable';
             $scope.uptimeLoaded = true;
+            $scope.cpuUsage = 0;
+            $scope.ramUsage = 0;
+            $scope.diskUsage = 0;
         }
 
         $timeout(getStuff, 60000); // Update every minute
@@ -273,11 +353,11 @@ app.controller('adminController', function ($scope, $http, $timeout) {
             }
 
             if (!Boolean(response.data.deleteZone)) {
-                $('.addDeleteRecords').hide();
+                $('.deleteZone').hide();
             }
 
             if (!Boolean(response.data.addDeleteRecords)) {
-                $('.deleteDatabase').hide();
+                $('.addDeleteRecords').hide();
             }
 
             // Email Management
@@ -557,15 +637,18 @@ app.controller('homePageStatus', function ($scope, $http, $timeout) {
 ////////////
 
 function increment() {
-    $('.box').hide();
+    var boxes = document.querySelectorAll ? document.querySelectorAll('.box') : [];
+    for (var i = 0; i < boxes.length; i++) boxes[i].style.display = 'none';
     setTimeout(function () {
-        $('.box').show();
+        for (var j = 0; j < boxes.length; j++) boxes[j].style.display = '';
     }, 100);
-
-
 }
 
-increment();
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', increment);
+} else {
+    increment();
+}
 
 ////////////
 
@@ -902,7 +985,8 @@ app.controller('OnboardingCP', function ($scope, $http, $timeout, $window) {
 
 });
 
-app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
+// Single implementation registered under both names for compatibility (some templates/caches use newDashboardStat)
+var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
     console.log('dashboardStatsController initialized');
     
     // Card values
@@ -922,7 +1006,8 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     $scope.errorTopProcesses = '';
     $scope.refreshTopProcesses = function() {
         $scope.loadingTopProcesses = true;
-        $http.get('/base/getTopProcesses').then(function (response) {
+        var h = { headers: { 'X-CSRFToken': (typeof getCookie === 'function') ? getCookie('csrftoken') : '' } };
+        $http.get('/base/getTopProcesses', h).then(function (response) {
             $scope.loadingTopProcesses = false;
             if (response.data && response.data.status === 1 && response.data.processes) {
                 $scope.topProcesses = response.data.processes;
@@ -941,7 +1026,8 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     $scope.errorSSHLogins = '';
     $scope.refreshSSHLogins = function() {
         $scope.loadingSSHLogins = true;
-        $http.get('/base/getRecentSSHLogins').then(function (response) {
+        var h = { headers: { 'X-CSRFToken': (typeof getCookie === 'function') ? getCookie('csrftoken') : '' } };
+        $http.get('/base/getRecentSSHLogins', h).then(function (response) {
             $scope.loadingSSHLogins = false;
             if (response.data && response.data.logins) {
                 $scope.sshLogins = response.data.logins;
@@ -969,7 +1055,8 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     $scope.loadingSecurityAnalysis = false;
     $scope.refreshSSHLogs = function() {
         $scope.loadingSSHLogs = true;
-        $http.get('/base/getRecentSSHLogs').then(function (response) {
+        var h = { headers: { 'X-CSRFToken': (typeof getCookie === 'function') ? getCookie('csrftoken') : '' } };
+        $http.get('/base/getRecentSSHLogs', h).then(function (response) {
             $scope.loadingSSHLogs = false;
             if (response.data && response.data.logs) {
                 $scope.sshLogs = response.data.logs;
@@ -1461,6 +1548,12 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     var pollInterval = 2000; // ms
     var maxPoints = 30;
 
+    // Expose so switchTab can create charts on first tab click if they weren't created at load
+    window.cyberPanelSetupChartsIfNeeded = function() {
+        if (window.trafficChart && window.diskIOChart && window.cpuChart) return;
+        try { setupCharts(); } catch (e) { console.error('cyberPanelSetupChartsIfNeeded:', e); }
+    };
+
     function pollDashboardStats() {
         console.log('[dashboardStatsController] pollDashboardStats() called');
         console.log('[dashboardStatsController] Fetching dashboard stats from /base/getDashboardStats');
@@ -1519,8 +1612,8 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     }
 
     function pollTraffic() {
-        console.log('pollTraffic called');
         $http.get('/base/getTrafficStats').then(function(response) {
+            if (!response || !response.data) return;
             if (response.data.admin_only) {
                 // Hide chart for non-admin users
                 $scope.hideSystemCharts = true;
@@ -1568,13 +1661,16 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                 }
                 lastRx = rx; lastTx = tx;
             } else {
-                console.log('pollTraffic error or no data:', response);
+                console.warn('pollTraffic: no data or status', response.data);
             }
+        }).catch(function(err) {
+            console.warn('pollTraffic failed:', err);
         });
     }
 
     function pollDiskIO() {
         $http.get('/base/getDiskIOStats').then(function(response) {
+            if (!response || !response.data) return;
             if (response.data.admin_only) {
                 // Hide chart for non-admin users
                 $scope.hideSystemCharts = true;
@@ -1613,11 +1709,14 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                 }
                 lastDiskRead = read; lastDiskWrite = write;
             }
+        }).catch(function(err) {
+            console.warn('pollDiskIO failed:', err);
         });
     }
 
     function pollCPU() {
         $http.get('/base/getCPULoadGraph').then(function(response) {
+            if (!response || !response.data) return;
             if (response.data.admin_only) {
                 // Hide chart for non-admin users
                 $scope.hideSystemCharts = true;
@@ -1656,13 +1755,34 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                 }
                 lastCPUTimes = cpuTimes;
             }
+        }).catch(function(err) {
+            console.warn('pollCPU failed:', err);
         });
     }
 
-    function setupCharts() {
-        console.log('setupCharts called, initializing charts...');
-        var trafficCtx = document.getElementById('trafficChart').getContext('2d');
-        trafficChart = new Chart(trafficCtx, {
+    function setupCharts(retryCount) {
+        retryCount = retryCount || 0;
+        if (typeof Chart === 'undefined') {
+            if (retryCount < 3) {
+                $timeout(function() { setupCharts(retryCount + 1); }, 400);
+            }
+            return;
+        }
+        var trafficEl = document.getElementById('trafficChart');
+        if (!trafficEl) {
+            if (retryCount < 5) {
+                $timeout(function() { setupCharts(retryCount + 1); }, 300);
+            }
+            return;
+        }
+        try {
+            var trafficCtx = trafficEl.getContext('2d');
+        } catch (e) {
+            console.error('trafficChart getContext failed:', e);
+            return;
+        }
+        try {
+            trafficChart = new Chart(trafficCtx, {
             type: 'line',
             data: {
                 labels: [],
@@ -1754,7 +1874,9 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                 console.log('trafficChart resized and updated after setup.');
             }
         }, 500);
-        var diskCtx = document.getElementById('diskIOChart').getContext('2d');
+        var diskEl = document.getElementById('diskIOChart');
+        if (!diskEl) { console.warn('diskIOChart canvas not found'); return; }
+        var diskCtx = diskEl.getContext('2d');
         diskIOChart = new Chart(diskCtx, {
             type: 'line',
             data: {
@@ -1839,7 +1961,10 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                 layout: { padding: { top: 10, bottom: 10, left: 10, right: 10 } }
             }
         });
-        var cpuCtx = document.getElementById('cpuChart').getContext('2d');
+        window.diskIOChart = diskIOChart;
+        var cpuEl = document.getElementById('cpuChart');
+        if (!cpuEl) { console.warn('cpuChart canvas not found'); return; }
+        var cpuCtx = cpuEl.getContext('2d');
         cpuChart = new Chart(cpuCtx, {
             type: 'line',
             data: {
@@ -1912,6 +2037,10 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
                 layout: { padding: { top: 10, bottom: 10, left: 10, right: 10 } }
             }
         });
+        window.cpuChart = cpuChart;
+        } catch (e) {
+            console.error('setupCharts error:', e);
+        }
 
         // Redraw charts on tab shown
         $("a[data-toggle='tab']").on('shown.bs.tab', function (e) {
@@ -1944,19 +2073,20 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
     $scope.refreshSSHLogs();
     
     $timeout(function() {
-        // Check if user is admin before setting up charts
+        // Always create charts so Traffic/Disk IO/CPU tabs have something to show; admin check only affects hideSystemCharts
+        setupCharts();
         $http.get('/base/getAdminStatus').then(function(response) {
-            if (response.data && response.data.admin === 1) {
-                setupCharts();
+            if (response.data && (response.data.admin === 1 || response.data.admin === true)) {
+                $scope.hideSystemCharts = false;
             } else {
                 $scope.hideSystemCharts = true;
             }
-        }).catch(function() {
-            // If error, assume non-admin and hide charts
+        }).catch(function(err) {
+            console.warn('getAdminStatus failed:', err);
             $scope.hideSystemCharts = true;
         });
         
-        // Start polling for all stats
+        // Start polling for all stats (data feeds charts)
         function pollAll() {
             pollDashboardStats();
             pollTraffic();
@@ -1966,7 +2096,7 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
             $timeout(pollAll, pollInterval);
         }
         pollAll();
-    }, 500);
+    }, 800);
 
     // SSH User Activity Modal
     $scope.showSSHActivityModal = false;
@@ -2412,4 +2542,6 @@ app.controller('dashboardStatsController', function ($scope, $http, $timeout) {
             $scope.closeSSHActivityModal();
         }
     };
-});
+};
+app.controller('dashboardStatsController', dashboardStatsControllerFn);
+app.controller('newDashboardStat', dashboardStatsControllerFn);

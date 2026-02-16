@@ -34,6 +34,12 @@ Sync_CyberCP_To_Latest() {
     cp -r /usr/local/CyberCP/baseTemplate/static/baseTemplate/* /usr/local/CyberCP/public/static/baseTemplate/ 2>/dev/null || true
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Synced baseTemplate static to public/static" | tee -a /var/log/cyberpanel_upgrade_debug.log
   fi
+  # Firewall UI (firewall.js) – so Firewall Rules and Banned IPs load correct layout and Modify buttons
+  if [[ -d /usr/local/CyberCP/public/static ]] && [[ -f /usr/local/CyberCP/firewall/static/firewall/firewall.js ]]; then
+    mkdir -p /usr/local/CyberCP/public/static/firewall
+    cp -f /usr/local/CyberCP/firewall/static/firewall/firewall.js /usr/local/CyberCP/public/static/firewall/ 2>/dev/null && \
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Synced firewall static to public/static" | tee -a /var/log/cyberpanel_upgrade_debug.log || true
+  fi
   if [[ $sync_code -eq 0 ]]; then
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Sync completed. Current HEAD: $(git -C /usr/local/CyberCP rev-parse HEAD 2>/dev/null || echo 'unknown')" | tee -a /var/log/cyberpanel_upgrade_debug.log
   else
