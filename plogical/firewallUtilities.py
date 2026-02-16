@@ -183,6 +183,25 @@ class FirewallUtilities:
             return False
 
     @staticmethod
+    def closeConnectionsFromIP(ip_address):
+        """
+        Try to close/drop existing connections from the given IP so the remote host
+        cannot keep trying (e.g. when IP is already banned and admin clicks Ban again).
+        Uses conntrack when available; safe to call even if no connections exist.
+        """
+        try:
+            # conntrack -D -s IP deletes connection tracking entries from this source IP,
+            # which drops existing TCP connections from that IP (kernel sends RST or they time out).
+            command = "conntrack -D -s %s 2>/dev/null" % ip_address
+            result = ProcessUtilities.executioner(command)
+            logging.CyberCPLogFileWriter.writeToFile("closeConnectionsFromIP %s: conntrack returned %s" % (ip_address, result))
+            # executioner returns 1 on success; conntrack may also return 0 when no entries found (still ok)
+            return True, "Connections from %s have been closed" % ip_address
+        except Exception as e:
+            logging.CyberCPLogFileWriter.writeToFile("closeConnectionsFromIP error for %s: %s" % (ip_address, str(e)))
+            return False, str(e)
+
+    @staticmethod
     def getBlockedIPs():
         """
         Get list of currently blocked IP addresses

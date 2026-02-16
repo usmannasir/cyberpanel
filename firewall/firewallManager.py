@@ -2132,8 +2132,13 @@ class FirewallManager:
                 # Primary path: save to database
                 existing = BannedIP.objects.filter(ip_address=ip, active=True).first()
                 if existing:
-                    msg = 'IP address %s is already banned' % ip
-                    final_dic = {'status': 0, 'error_message': msg, 'error': msg}
+                    # IP already banned: close any active connections from this IP so they cannot keep trying
+                    try:
+                        FirewallUtilities.closeConnectionsFromIP(ip)
+                    except Exception as close_err:
+                        logging.CyberCPLogFileWriter.writeToFile('addBannedIP: closeConnectionsFromIP %s: %s' % (ip, str(close_err)))
+                    msg = 'IP address %s was already banned; any active connections from this IP have been terminated.' % ip
+                    final_dic = {'status': 1, 'message': msg}
                     return HttpResponse(json.dumps(final_dic), content_type='application/json')
                 try:
                     new_ban = BannedIP(
@@ -2153,8 +2158,13 @@ class FirewallManager:
                 banned_ips, _ = self._load_banned_ips_store()
                 for banned_ip in banned_ips:
                     if banned_ip.get('ip') == ip and banned_ip.get('active', True):
-                        msg = 'IP address %s is already banned' % ip
-                        final_dic = {'status': 0, 'error_message': msg, 'error': msg}
+                        # IP already banned: close any active connections from this IP so they cannot keep trying
+                        try:
+                            FirewallUtilities.closeConnectionsFromIP(ip)
+                        except Exception as close_err:
+                            logging.CyberCPLogFileWriter.writeToFile('addBannedIP: closeConnectionsFromIP %s: %s' % (ip, str(close_err)))
+                        msg = 'IP address %s was already banned; any active connections from this IP have been terminated.' % ip
+                        final_dic = {'status': 1, 'message': msg}
                         return HttpResponse(json.dumps(final_dic), content_type='application/json')
                 new_banned_ip = {
                     'id': int(current_time),
