@@ -28,6 +28,9 @@ fi
 
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running: $CP_PYTHON upgrade.py $Branch_Name" | tee -a /var/log/cyberpanel_upgrade_debug.log
 
+# Export Git user so upgrade.py clones from the same repo (master3395 or --repo override)
+export CYBERPANEL_GIT_USER="${Git_User:-master3395}"
+
 # Run upgrade.py and capture output
 upgrade_output=$("$CP_PYTHON" upgrade.py "$Branch_Name" 2>&1)
 RETURN_CODE=$?
@@ -94,6 +97,7 @@ elif [[ "$Server_OS" = "openEuler" ]] ; then
 fi
 
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running fallback: /usr/local/CyberPanelTemp/bin/python upgrade.py $Branch_Name" | tee -a /var/log/cyberpanel_upgrade_debug.log
+export CYBERPANEL_GIT_USER="${Git_User:-master3395}"
 /usr/local/CyberPanelTemp/bin/python upgrade.py "$Branch_Name" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
 FALLBACK_CODE=$?
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Fallback upgrade returned code: $FALLBACK_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log

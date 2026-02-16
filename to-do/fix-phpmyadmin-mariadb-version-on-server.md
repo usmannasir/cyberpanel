@@ -5,9 +5,11 @@
 Run as root on the server:
 
 ```bash
-# Allow mariadb client to connect without SSL (11.x client requires SSL by default)
+# Allow mariadb client to connect without SSL (avoids ERROR 2026 when server has have_ssl=DISABLED)
 mkdir -p /etc/my.cnf.d
-printf '[client]\nskip-ssl = true\n' > /etc/my.cnf.d/cyberpanel-client.cnf
+printf '[client]\nssl=0\nskip-ssl\n' > /etc/my.cnf.d/cyberpanel-client.cnf
+# If client still requires SSL, add [client] to main my.cnf (only if not already present)
+grep -q '^\[client\]' /etc/my.cnf 2>/dev/null || echo -e "\n[client]\nssl=0\nskip-ssl" >> /etc/my.cnf
 
 # Now this should work and show the *actual* server version on 3306
 mariadb -e "SELECT @@version;"

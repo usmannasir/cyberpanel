@@ -296,8 +296,8 @@ except ImportError:
     settings = MinimalSettings()
     print("Recovery complete. Continuing with upgrade...")
 
-VERSION = '2.4'
-BUILD = 4
+VERSION = '2.5.5'
+BUILD = 5
 
 CENTOS7 = 0
 CENTOS8 = 1
@@ -3974,9 +3974,10 @@ class Migration(migrations.Migration):
                     Upgrade.restoreCriticalFiles(backup_dir, backed_up_files)
                     return 0, 'Failed to remove old CyberCP directory'
 
-            # Clone the new repository directly to CyberCP
+            # Clone the new repository (use CYBERPANEL_GIT_USER for fork, e.g. master3395)
+            git_user = os.environ.get('CYBERPANEL_GIT_USER', 'master3395')
             Upgrade.stdOut("Cloning fresh CyberPanel repository...")
-            command = 'git clone https://github.com/usmannasir/cyberpanel CyberCP'
+            command = 'git clone https://github.com/%s/cyberpanel CyberCP' % git_user
             if not Upgrade.executioner(command, command, 1):
                 # Try to restore backup if clone fails
                 Upgrade.stdOut("Clone failed, attempting to restore backup...")

@@ -350,58 +350,74 @@ MARIADB_VER="11.8"
 MARIADB_VER_REPO="11.8"
 
 Check_Argument() {
-# Parse --branch / -b (extract first word after -b or --branch)
-if [[ "$*" = *"--branch "* ]]; then
-  Branch_Name=$(echo "$*" | sed -n 's/.*--branch \([^ ]*\).*/\1/p' | head -1)
-  [[ -n "$Branch_Name" ]] && Branch_Check "$Branch_Name"
-elif [[ "$*" = *"-b "* ]]; then
-  Branch_Name=$(echo "$*" | sed -n 's/.*-b \([^ ]*\).*/\1/p' | head -1)
-  [[ -n "$Branch_Name" ]] && Branch_Check "$Branch_Name"
-fi
-# Parse --repo / -r to use any GitHub user (same URL structure as usmannasir/cyberpanel)
-if [[ "$*" = *"--repo "* ]]; then
-  Git_User_Override=$(echo "$*" | sed -n 's/.*--repo \([^ ]*\).*/\1/p' | head -1)
-fi
-if [[ "$*" = *"-r "* ]] && [[ -z "$Git_User_Override" ]]; then
-  Git_User_Override=$(echo "$*" | sed -n 's/.*-r \([^ ]*\).*/\1/p' | head -1)
-fi
-# Parse --no-system-update to skip yum/dnf update -y (faster upgrade when system is already updated)
-if [[ "$*" = *"--no-system-update"* ]]; then
-  Skip_System_Update="yes"
-  echo -e "\nUsing --no-system-update: skipping full system package update.\n"
-fi
-# Parse --backup-db / --no-backup-db: pre-upgrade MariaDB backup. Default when neither set: ask user (may take a while).
-# --backup-db = always backup; --no-backup-db = never backup; omit both = prompt [y/N]
-Backup_DB_Before_Upgrade=""
-if [[ "$*" = *"--backup-db"* ]]; then
-  Backup_DB_Before_Upgrade="yes"
-  echo -e "\nUsing --backup-db: will create a full MariaDB backup before upgrade.\n"
-elif [[ "$*" = *"--no-backup-db"* ]]; then
-  Backup_DB_Before_Upgrade="no"
-  echo -e "\nUsing --no-backup-db: skipping MariaDB pre-upgrade backup.\n"
-fi
-# Parse --migrate-to-utf8: after upgrading to MariaDB 11.x/12.x, convert DBs/tables from latin1 to utf8mb4 (only if your apps support UTF-8)
-if [[ "$*" = *"--migrate-to-utf8"* ]]; then
-  Migrate_MariaDB_To_UTF8_Requested="yes"
-  echo -e "\nUsing --migrate-to-utf8: will convert databases to UTF-8 (utf8mb4) after MariaDB upgrade.\n"
-fi
-# Parse --mariadb-version (any version: 10.6, 10.11, 10.11.16, 11.8, 12.1, 12.2, 12.3, etc.). Default 11.8.
-# --mariadb is shorthand for --mariadb-version 10.11
-if [[ "$*" = *"--mariadb"* ]] && [[ "$*" != *"--mariadb-version "* ]]; then
-  MARIADB_VER="10.11"
-  echo -e "\nUsing --mariadb: MariaDB 10.11 selected (non-interactive).\n"
-elif [[ "$*" = *"--mariadb-version "* ]]; then
-  MARIADB_VER=$(echo "$*" | sed -n 's/.*--mariadb-version \([^ ]*\).*/\1/p' | head -1)
-  MARIADB_VER="${MARIADB_VER:-11.8}"
-fi
-# Allow any version; repo paths use major.minor (normalized later)
+# Parse arguments with exact next-token so -b v2.5.5-dev --mariadb-version 12.3 does not mangle Branch_Name
+set -- $*
+while [[ $# -ge 1 ]]; do
+  case "$1" in
+    -b|--branch)
+      if [[ -n "${2:-}" ]] && [[ "$2" != -* ]]; then
+        Branch_Name="$2"
+        Branch_Check "$Branch_Name"
+        shift 2
+        continue
+      fi
+      shift
+      ;;
+    --mariadb-version)
+      if [[ -n "${2:-}" ]] && [[ "$2" != -* ]]; then
+        MARIADB_VER="$2"
+        echo -e "\nUsing --mariadb-version: MariaDB $MARIADB_VER selected.\n"
+        shift 2
+        continue
+      fi
+      shift
+      ;;
+    -r|--repo)
+      if [[ -n "${2:-}" ]] && [[ "$2" != -* ]]; then
+        Git_User_Override="$2"
+        echo -e "\nUsing --repo: GitHub user $Git_User_Override for cyberpanel.\n"
+        shift 2
+        continue
+      fi
+      shift
+      ;;
+    --no-system-update)
+      Skip_System_Update="yes"
+      echo -e "\nUsing --no-system-update: skipping full system package update.\n"
+      shift
+      ;;
+    --backup-db)
+      Backup_DB_Before_Upgrade="yes"
+      echo -e "\nUsing --backup-db: will create a full MariaDB backup before upgrade.\n"
+      shift
+      ;;
+    --no-backup-db)
+      Backup_DB_Before_Upgrade="no"
+      echo -e "\nUsing --no-backup-db: skipping MariaDB pre-upgrade backup.\n"
+      shift
+      ;;
+    --migrate-to-utf8)
+      Migrate_MariaDB_To_UTF8_Requested="yes"
+      echo -e "\nUsing --migrate-to-utf8: will convert databases to UTF-8 (utf8mb4) after MariaDB upgrade.\n"
+      shift
+      ;;
+    --mariadb)
+      MARIADB_VER="10.11"
+      echo -e "\nUsing --mariadb: MariaDB 10.11 selected (non-interactive).\n"
+      shift
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
 }
 
 Pre_Upgrade_Setup_Git_URL() {
   if [[ $Server_Country != "CN" ]] ; then
     if [[ -n "$Git_User_Override" ]]; then
       Git_User="$Git_User_Override"
-      echo -e "\nUsing GitHub repo: ${Git_User}/cyberpanel (same URL structure as usmannasir)\n"
+      echo -e "\nUsing GitHub repo: ${Git_User}/cyberpanel\n"
     else
       Git_User="usmannasir"
     fi
@@ -778,6 +794,7 @@ EOF
     dnf clean metadata --disablerepo='*' --enablerepo=mariadb 2>/dev/null || true
     # MariaDB 10 -> 11 or 11 -> 12: RPM scriptlet blocks in-place upgrade; do manual stop, remove old server, install target, start, mariadb-upgrade
     MARIADB_OLD_10=$(rpm -qa 'MariaDB-server-10*' 2>/dev/null | head -1)
+    [[ -z "$MARIADB_OLD_10" ]] && MARIADB_OLD_10=$(rpm -qa 2>/dev/null | grep -E '^MariaDB-server-10\.' | head -1)
     MARIADB_OLD_11=$(rpm -qa 'MariaDB-server-11*' 2>/dev/null | head -1)
     # Also detect 11.x by package version (e.g. MariaDB-server-11.8.6-1.el9)
     [[ -z "$MARIADB_OLD_11" ]] && MARIADB_OLD_11=$(rpm -qa 'MariaDB-server*' 2>/dev/null | grep -E 'MariaDB-server-11\.' | head -1)
@@ -791,7 +808,7 @@ EOF
       rpm -e "$MARIADB_OLD_10" --nodeps 2>/dev/null || true
       dnf install -y --enablerepo=mariadb MariaDB-server MariaDB-client MariaDB-devel 2>/dev/null || true
       mkdir -p /etc/my.cnf.d
-      printf "[client]\nskip-ssl = true\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
+      printf "[client]\nssl=0\nskip-ssl\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
       systemctl start mariadb 2>/dev/null || true
       sleep 2
       mariadb-upgrade -u root 2>/dev/null || true
@@ -805,7 +822,7 @@ EOF
       rpm -e "$MARIADB_OLD_11" --nodeps 2>/dev/null || true
       dnf install -y --enablerepo=mariadb MariaDB-server MariaDB-client MariaDB-devel 2>/dev/null || true
       mkdir -p /etc/my.cnf.d
-      printf "[client]\nskip-ssl = true\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
+      printf "[client]\nssl=0\nskip-ssl\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
       systemctl start mariadb 2>/dev/null || true
       sleep 2
       mariadb-upgrade -u root 2>/dev/null || true
@@ -828,7 +845,7 @@ EOF
           rpm -e "$STILL_11" --nodeps 2>/dev/null || true
           dnf install -y --enablerepo=mariadb MariaDB-server MariaDB-client MariaDB-devel 2>/dev/null || true
           mkdir -p /etc/my.cnf.d
-          printf "[client]\nskip-ssl = true\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
+          printf "[client]\nssl=0\nskip-ssl\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
           systemctl start mariadb 2>/dev/null || true
           sleep 2
           mariadb-upgrade -u root 2>/dev/null || true
@@ -838,7 +855,11 @@ EOF
     fi
     # Allow local client to connect without SSL (11.x client defaults to SSL; 10.x server may not have it)
     mkdir -p /etc/my.cnf.d
-    printf "[client]\nskip-ssl = true\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
+    printf "[client]\nssl=0\nskip-ssl\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
+    # Ensure main my.cnf has [client] without SSL when server has SSL disabled (ERROR 2026 fix)
+    if [[ -f /etc/my.cnf ]] && ! grep -q '^\[client\]' /etc/my.cnf 2>/dev/null; then
+      echo -e "\n[client]\nssl=0\nskip-ssl" >> /etc/my.cnf
+    fi
     # Optional: migrate from latin1 to UTF-8 (utf8mb4) when --migrate-to-utf8 and 11.x/12.x
     if [[ "$Migrate_MariaDB_To_UTF8_Requested" = "yes" ]] && { [[ "$MARIADB_VER_REPO" =~ ^11\. ]] || [[ "$MARIADB_VER_REPO" =~ ^12\. ]]; }; then
       Migrate_MariaDB_To_UTF8
@@ -863,6 +884,7 @@ EOF
     
     # Install/upgrade MariaDB from our repo (any version: 10.11, 11.8, 12.x). Manual path for 10->11 and 11->12.
     MARIADB_OLD_10_AL9=$(rpm -qa 'MariaDB-server-10*' 2>/dev/null | head -1)
+    [[ -z "$MARIADB_OLD_10_AL9" ]] && MARIADB_OLD_10_AL9=$(rpm -qa 2>/dev/null | grep -E '^MariaDB-server-10\.' | head -1)
     MARIADB_OLD_11_AL9=$(rpm -qa 'MariaDB-server-11*' 2>/dev/null | head -1)
     [[ -z "$MARIADB_OLD_11_AL9" ]] && MARIADB_OLD_11_AL9=$(rpm -qa 'MariaDB-server*' 2>/dev/null | grep -E 'MariaDB-server-11\.' | head -1)
     if [[ -n "$MARIADB_OLD_10_AL9" ]] && { [[ "$MARIADB_VER_REPO" =~ ^11\. ]] || [[ "$MARIADB_VER_REPO" =~ ^12\. ]]; }; then
@@ -874,7 +896,7 @@ EOF
       rpm -e "$MARIADB_OLD_10_AL9" --nodeps 2>/dev/null || true
       dnf install -y --enablerepo=mariadb MariaDB-server MariaDB-devel 2>/dev/null || dnf install -y mariadb-server mariadb-devel
       mkdir -p /etc/my.cnf.d
-      printf "[client]\nskip-ssl = true\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
+      printf "[client]\nssl=0\nskip-ssl\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
       systemctl start mariadb 2>/dev/null || true
       sleep 2
       mariadb-upgrade -u root 2>/dev/null || true
@@ -888,7 +910,7 @@ EOF
       rpm -e "$MARIADB_OLD_11_AL9" --nodeps 2>/dev/null || true
       dnf install -y --enablerepo=mariadb MariaDB-server MariaDB-devel 2>/dev/null || dnf install -y mariadb-server mariadb-devel
       mkdir -p /etc/my.cnf.d
-      printf "[client]\nskip-ssl = true\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
+      printf "[client]\nssl=0\nskip-ssl\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
       systemctl start mariadb 2>/dev/null || true
       sleep 2
       mariadb-upgrade -u root 2>/dev/null || true
@@ -900,7 +922,7 @@ EOF
     fi
     # Allow local client to connect without SSL
     mkdir -p /etc/my.cnf.d
-    printf "[client]\nskip-ssl = true\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
+    printf "[client]\nssl=0\nskip-ssl\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
 
     # Install additional required packages (omit curl - AlmaLinux 9 has curl-minimal, avoid conflict)
     dnf install -y wget unzip zip rsync firewalld psmisc git python3 python3-pip python3-devel 2>/dev/null || dnf install -y --allowerasing wget unzip zip rsync firewalld psmisc git python3 python3-pip python3-devel
@@ -1007,6 +1029,17 @@ if [[ "$Server_OS" = "openEuler" ]] ; then
   dnf install python3 -y
 fi
 #all pre-upgrade operation for openEuler
+
+  # Ensure MariaDB client no-SSL on every upgrade path (avoids ERROR 2026 when server has have_ssl=DISABLED)
+  mkdir -p /etc/my.cnf.d
+  printf "[client]\nssl=0\nskip-ssl\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
+  if [[ -f /etc/my.cnf ]] && ! grep -q '^\[client\]' /etc/my.cnf 2>/dev/null; then
+    echo -e "\n[client]\nssl=0\nskip-ssl" >> /etc/my.cnf
+  fi
+  if [[ -d /etc/mysql/mariadb.conf.d ]]; then
+    printf "[client]\nssl=0\nskip-ssl\n" > /etc/mysql/mariadb.conf.d/99-cyberpanel-client.cnf 2>/dev/null || true
+  fi
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB client no-SSL config ensured." | tee -a /var/log/cyberpanel_upgrade_debug.log
 }
 
 Download_Requirement() {
@@ -1336,6 +1369,16 @@ fi
 
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running: $CP_PYTHON upgrade.py $Branch_Name" | tee -a /var/log/cyberpanel_upgrade_debug.log
 
+# Export Git user so upgrade.py clones from the same repo (master3395 or --repo override)
+export CYBERPANEL_GIT_USER="${Git_User:-usmannasir}"
+# So upgrade.py can import plogical (it runs from /root/cyberpanel_upgrade_tmp)
+export PYTHONPATH="/usr/local/CyberCP${PYTHONPATH:+:$PYTHONPATH}"
+
+# Run from dir that contains upgrade.py
+for d in /root/cyberpanel_upgrade_tmp /usr/local/CyberCP; do
+  if [[ -f "$d/upgrade.py" ]]; then cd "$d" || true; break; fi
+done
+
 # Run upgrade.py and capture output
 upgrade_output=$("$CP_PYTHON" upgrade.py "$Branch_Name" 2>&1)
 RETURN_CODE=$?
@@ -1402,6 +1445,8 @@ elif [[ "$Server_OS" = "openEuler" ]] ; then
 fi
 
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running fallback: /usr/local/CyberPanelTemp/bin/python upgrade.py $Branch_Name" | tee -a /var/log/cyberpanel_upgrade_debug.log
+export CYBERPANEL_GIT_USER="${Git_User:-usmannasir}"
+export PYTHONPATH="/usr/local/CyberCP${PYTHONPATH:+:$PYTHONPATH}"
 /usr/local/CyberPanelTemp/bin/python upgrade.py "$Branch_Name" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
 FALLBACK_CODE=$?
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Fallback upgrade returned code: $FALLBACK_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log
@@ -1662,7 +1707,8 @@ Sync_CyberCP_To_Latest() {
     cd /usr/local/CyberCP
     git fetch origin 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
     if git show-ref -q "refs/remotes/origin/$Branch_Name"; then
-      git checkout -B "$Branch_Name" "origin/$Branch_Name" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+      # Force tree to match remote so local changes/untracked files do not block (settings.py restored below)
+      git reset --hard "origin/$Branch_Name" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
     else
       git checkout "$Branch_Name" 2>/dev/null || true
       git pull --ff-only origin "$Branch_Name" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log || true

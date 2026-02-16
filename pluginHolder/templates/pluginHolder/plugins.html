@@ -3113,80 +3113,84 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update cache expiry time to local timezone
     updateCacheExpiryTime();
     
-    // Search input listener (debounced)
-    const searchInput = document.getElementById('pluginSearchInput');
-    const searchClearBtn = document.getElementById('pluginSearchClear');
-    if (searchInput) {
-        searchInput.addEventListener('input', function() {
-            currentSearchQuery = this.value;
-            if (searchClearBtn) {
-                searchClearBtn.style.display = currentSearchQuery.trim() ? 'block' : 'none';
-            }
-            displayStorePlugins();
-        });
-        searchInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                clearPluginSearch();
-                e.preventDefault();
-            }
-        });
-    }
-    
-    // Installed plugins search (Grid View and Table View)
-    const installedSearchInput = document.getElementById('installedPluginSearchInput');
-    const installedSearchClearBtn = document.getElementById('installedPluginSearchClear');
-    if (installedSearchInput) {
-        installedSearchInput.addEventListener('input', function() {
-            if (installedSearchClearBtn) {
-                installedSearchClearBtn.style.display = this.value.trim() ? 'block' : 'none';
-            }
-            filterInstalledPlugins();
-        });
-        installedSearchInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                clearInstalledPluginSearch();
-                e.preventDefault();
-            }
-        });
-    }
-    
-    // Check URL hash for view preference
-    const hash = window.location.hash.substring(1); // Remove #
-    const validViews = ['grid', 'table', 'store'];
-    
-    // Check if view elements exist before calling toggleView
-    const gridView = document.getElementById('gridView');
-    const tableView = document.getElementById('tableView');
-    const storeView = document.getElementById('storeView');
-    
-    // Only proceed if all view elements exist (plugins are installed)
-    if (gridView && tableView && storeView) {
-        let initialView = 'grid'; // Default
-        if (validViews.includes(hash)) {
-            initialView = hash;
-        } else {
-            // Default to grid view if plugins exist, otherwise show store
-            if (gridView.children.length > 0) {
-                initialView = 'grid';
-            } else {
-                initialView = 'store';
-            }
+    // Respect ?view=store in URL (e.g. from sidebar "Plugin Store" link)
+    const urlParams = new URLSearchParams(window.location.search);
+    const requestedView = urlParams.get('view');
+    if (requestedView === 'store') {
+        toggleView('store');
+    } else {
+        // Search input listener (debounced)
+        const searchInput = document.getElementById('pluginSearchInput');
+        const searchClearBtn = document.getElementById('pluginSearchClear');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                currentSearchQuery = this.value;
+                if (searchClearBtn) {
+                    searchClearBtn.style.display = currentSearchQuery.trim() ? 'block' : 'none';
+                }
+                displayStorePlugins();
+            });
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    clearPluginSearch();
+                    e.preventDefault();
+                }
+            });
         }
         
-        // Set initial view without updating hash (only update hash if there was already one)
-        const hadHash = hash.length > 0;
-        try {
-            toggleView(initialView, hadHash);
-        } catch (e) {
-            console.warn('plugins: toggleView on load failed', e);
-            if (storeView) storeView.style.display = 'block';
-            if (gridView) gridView.style.display = 'none';
-            if (tableView) tableView.style.display = 'none';
+        // Installed plugins search (Grid View and Table View)
+        const installedSearchInput = document.getElementById('installedPluginSearchInput');
+        const installedSearchClearBtn = document.getElementById('installedPluginSearchClear');
+        if (installedSearchInput) {
+            installedSearchInput.addEventListener('input', function() {
+                if (installedSearchClearBtn) {
+                    installedSearchClearBtn.style.display = this.value.trim() ? 'block' : 'none';
+                }
+                filterInstalledPlugins();
+            });
+            installedSearchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    clearInstalledPluginSearch();
+                    e.preventDefault();
+                }
+            });
         }
-    } else {
-        // Elements don't exist (no plugins installed), just show store view directly
-        if (storeView) {
-            storeView.style.display = 'block';
+        
+        // Check URL hash for view preference
+        const hash = window.location.hash.substring(1); // Remove #
+        const validViews = ['grid', 'table', 'store'];
+        
+        // Check if view elements exist before calling toggleView
+        const gridView = document.getElementById('gridView');
+        const tableView = document.getElementById('tableView');
+        const storeView = document.getElementById('storeView');
+        
+        // Only proceed if all view elements exist (plugins are installed)
+        if (gridView && tableView && storeView) {
+            let initialView = 'grid'; // Default
+            if (validViews.includes(hash)) {
+                initialView = hash;
+            } else {
+                if (gridView.children.length > 0) {
+                    initialView = 'grid';
+                } else {
+                    initialView = 'store';
+                }
+            }
+            
+            const hadHash = hash.length > 0;
+            try {
+                toggleView(initialView, hadHash);
+            } catch (e) {
+                console.warn('plugins: toggleView on load failed', e);
+                if (storeView) storeView.style.display = 'block';
+                if (gridView) gridView.style.display = 'none';
+                if (tableView) tableView.style.display = 'none';
+            }
+        } else {
+            if (storeView) {
+                storeView.style.display = 'block';
+            }
         }
     }
     
