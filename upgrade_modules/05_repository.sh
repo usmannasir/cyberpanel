@@ -261,6 +261,7 @@ EOF
     dnf clean metadata --disablerepo='*' --enablerepo=mariadb 2>/dev/null || true
     # MariaDB 10 -> 11 or 11 -> 12: RPM scriptlet blocks in-place upgrade; do manual stop, remove old server, install target, start, mariadb-upgrade
     MARIADB_OLD_10=$(rpm -qa 'MariaDB-server-10*' 2>/dev/null | head -1)
+    [[ -z "$MARIADB_OLD_10" ]] && MARIADB_OLD_10=$(rpm -qa 2>/dev/null | grep -E '^MariaDB-server-10\.' | head -1)
     MARIADB_OLD_11=$(rpm -qa 'MariaDB-server-11*' 2>/dev/null | head -1)
     # Also detect 11.x by package version (e.g. MariaDB-server-11.8.6-1.el9)
     [[ -z "$MARIADB_OLD_11" ]] && MARIADB_OLD_11=$(rpm -qa 'MariaDB-server*' 2>/dev/null | grep -E 'MariaDB-server-11\.' | head -1)
@@ -274,7 +275,7 @@ EOF
       rpm -e "$MARIADB_OLD_10" --nodeps 2>/dev/null || true
       dnf install -y --enablerepo=mariadb MariaDB-server MariaDB-client MariaDB-devel 2>/dev/null || true
       mkdir -p /etc/my.cnf.d
-      printf "[client]\nskip-ssl = true\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
+      printf "[client]\nssl=0\nskip-ssl\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
       systemctl start mariadb 2>/dev/null || true
       sleep 2
       mariadb-upgrade -u root 2>/dev/null || true
@@ -288,7 +289,7 @@ EOF
       rpm -e "$MARIADB_OLD_11" --nodeps 2>/dev/null || true
       dnf install -y --enablerepo=mariadb MariaDB-server MariaDB-client MariaDB-devel 2>/dev/null || true
       mkdir -p /etc/my.cnf.d
-      printf "[client]\nskip-ssl = true\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
+      printf "[client]\nssl=0\nskip-ssl\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
       systemctl start mariadb 2>/dev/null || true
       sleep 2
       mariadb-upgrade -u root 2>/dev/null || true
@@ -311,7 +312,7 @@ EOF
           rpm -e "$STILL_11" --nodeps 2>/dev/null || true
           dnf install -y --enablerepo=mariadb MariaDB-server MariaDB-client MariaDB-devel 2>/dev/null || true
           mkdir -p /etc/my.cnf.d
-          printf "[client]\nskip-ssl = true\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
+          printf "[client]\nssl=0\nskip-ssl\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
           systemctl start mariadb 2>/dev/null || true
           sleep 2
           mariadb-upgrade -u root 2>/dev/null || true
@@ -321,7 +322,11 @@ EOF
     fi
     # Allow local client to connect without SSL (11.x client defaults to SSL; 10.x server may not have it)
     mkdir -p /etc/my.cnf.d
-    printf "[client]\nskip-ssl = true\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
+    printf "[client]\nssl=0\nskip-ssl\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
+    # Ensure main my.cnf has [client] without SSL when server has SSL disabled (ERROR 2026 fix)
+    if [[ -f /etc/my.cnf ]] && ! grep -q '^\[client\]' /etc/my.cnf 2>/dev/null; then
+      echo -e "\n[client]\nssl=0\nskip-ssl" >> /etc/my.cnf
+    fi
     # Optional: migrate from latin1 to UTF-8 (utf8mb4) when --migrate-to-utf8 and 11.x/12.x
     if [[ "$Migrate_MariaDB_To_UTF8_Requested" = "yes" ]] && { [[ "$MARIADB_VER_REPO" =~ ^11\. ]] || [[ "$MARIADB_VER_REPO" =~ ^12\. ]]; }; then
       Migrate_MariaDB_To_UTF8
@@ -346,6 +351,7 @@ EOF
     
     # Install/upgrade MariaDB from our repo (any version: 10.11, 11.8, 12.x). Manual path for 10->11 and 11->12.
     MARIADB_OLD_10_AL9=$(rpm -qa 'MariaDB-server-10*' 2>/dev/null | head -1)
+    [[ -z "$MARIADB_OLD_10_AL9" ]] && MARIADB_OLD_10_AL9=$(rpm -qa 2>/dev/null | grep -E '^MariaDB-server-10\.' | head -1)
     MARIADB_OLD_11_AL9=$(rpm -qa 'MariaDB-server-11*' 2>/dev/null | head -1)
     [[ -z "$MARIADB_OLD_11_AL9" ]] && MARIADB_OLD_11_AL9=$(rpm -qa 'MariaDB-server*' 2>/dev/null | grep -E 'MariaDB-server-11\.' | head -1)
     if [[ -n "$MARIADB_OLD_10_AL9" ]] && { [[ "$MARIADB_VER_REPO" =~ ^11\. ]] || [[ "$MARIADB_VER_REPO" =~ ^12\. ]]; }; then
@@ -357,7 +363,7 @@ EOF
       rpm -e "$MARIADB_OLD_10_AL9" --nodeps 2>/dev/null || true
       dnf install -y --enablerepo=mariadb MariaDB-server MariaDB-devel 2>/dev/null || dnf install -y mariadb-server mariadb-devel
       mkdir -p /etc/my.cnf.d
-      printf "[client]\nskip-ssl = true\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
+      printf "[client]\nssl=0\nskip-ssl\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
       systemctl start mariadb 2>/dev/null || true
       sleep 2
       mariadb-upgrade -u root 2>/dev/null || true
@@ -371,7 +377,7 @@ EOF
       rpm -e "$MARIADB_OLD_11_AL9" --nodeps 2>/dev/null || true
       dnf install -y --enablerepo=mariadb MariaDB-server MariaDB-devel 2>/dev/null || dnf install -y mariadb-server mariadb-devel
       mkdir -p /etc/my.cnf.d
-      printf "[client]\nskip-ssl = true\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
+      printf "[client]\nssl=0\nskip-ssl\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
       systemctl start mariadb 2>/dev/null || true
       sleep 2
       mariadb-upgrade -u root 2>/dev/null || true
@@ -383,7 +389,7 @@ EOF
     fi
     # Allow local client to connect without SSL
     mkdir -p /etc/my.cnf.d
-    printf "[client]\nskip-ssl = true\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
+    printf "[client]\nssl=0\nskip-ssl\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
 
     # Install additional required packages (omit curl - AlmaLinux 9 has curl-minimal, avoid conflict)
     dnf install -y wget unzip zip rsync firewalld psmisc git python3 python3-pip python3-devel 2>/dev/null || dnf install -y --allowerasing wget unzip zip rsync firewalld psmisc git python3 python3-pip python3-devel

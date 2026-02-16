@@ -2149,6 +2149,27 @@ module cyberpanel_ols {
             logging.InstallLog.writeToFile(error_msg)
             raise Exception(error_msg)
 
+    def _ensure_mariadb_client_no_ssl(self):
+        """Ensure MariaDB client connects without SSL (avoids ERROR 2026 when server has have_ssl=DISABLED)."""
+        client_cnf = "[client]\nssl=0\nskip-ssl\n"
+        try:
+            # RHEL/AlmaLinux: /etc/my.cnf.d/cyberpanel-client.cnf
+            if not os.path.exists('/etc/my.cnf.d'):
+                os.makedirs('/etc/my.cnf.d', mode=0o755, exist_ok=True)
+            with open('/etc/my.cnf.d/cyberpanel-client.cnf', 'w') as f:
+                f.write(client_cnf)
+            logging.InstallLog.writeToFile("Created /etc/my.cnf.d/cyberpanel-client.cnf (client SSL disabled)")
+        except Exception as e:
+            logging.InstallLog.writeToFile("_ensure_mariadb_client_no_ssl: /etc/my.cnf.d: %s" % str(e))
+        try:
+            # Debian/Ubuntu: /etc/mysql/mariadb.conf.d/99-cyberpanel-client.cnf
+            if os.path.exists('/etc/mysql/mariadb.conf.d'):
+                with open('/etc/mysql/mariadb.conf.d/99-cyberpanel-client.cnf', 'w') as f:
+                    f.write(client_cnf)
+                logging.InstallLog.writeToFile("Created /etc/mysql/mariadb.conf.d/99-cyberpanel-client.cnf (client SSL disabled)")
+        except Exception as e:
+            logging.InstallLog.writeToFile("_ensure_mariadb_client_no_ssl: mariadb.conf.d: %s" % str(e))
+
     def command_exists(self, command):
         """Check if a command exists in PATH"""
         try:
@@ -3225,10 +3246,13 @@ module cyberpanel_ols {
         # all the other control panels allow
         # reference: https://oracle-base.com/articles/mysql/mysql-password-less-logins-using-option-files
         mysql_my_root_cnf = '/root/.my.cnf'
+        # Include skip-ssl/ssl=0 so client does not require SSL (avoids ERROR 2026 when server has have_ssl=DISABLED)
         mysql_root_cnf_content = """
 [client]
 user=root
 password="%s"
+ssl=0
+skip-ssl
 """ % password
 
         with open(mysql_my_root_cnf, 'w') as f:
@@ -3238,6 +3262,10 @@ password="%s"
         subprocess.call(shlex.split(command))
 
         logging.InstallLog.writeToFile("Updating /root/.my.cnf!")
+
+        # Ensure system-wide MariaDB client uses no SSL (all installs: avoids ERROR 2026 on servers with SSL disabled)
+        if self.remotemysql == 'OFF':
+            self._ensure_mariadb_client_no_ssl()
 
         logging.InstallLog.writeToFile("Generating secure environment configuration!")
 
