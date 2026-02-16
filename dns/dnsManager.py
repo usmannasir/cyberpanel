@@ -775,11 +775,14 @@ class DNSManager:
                     else:
                         ttl = dns_record['ttl']
 
+                    prio = dns_record.get('priority', 0)
+                    if prio is None:
+                        prio = 0
                     dic = {'id': dns_record['id'],
                            'type': dns_record['type'],
                            'name': dns_record['name'],
                            'content': dns_record['content'],
-                           'priority': '1400',
+                           'priority': str(prio),
                            'ttl': ttl,
                            'proxy': dns_record['proxied'],
                            'proxiable': dns_record['proxiable']
@@ -844,6 +847,67 @@ class DNSManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
+    def updateDNSRecordCloudFlare(self, userID=None, data=None):
+        """Update an existing CloudFlare DNS record (name, type, ttl, content, priority, proxied)."""
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            if ACLManager.currentContextPermission(currentACL, 'addDeleteRecords') == 0:
+                return ACLManager.loadErrorJson('update_status', 0)
+
+            zone_domain = data['selectedZone']
+            record_id = data['id']
+            name = (data.get('name') or '').strip()
+            record_type = (data.get('recordType') or data.get('type') or '').strip()
+            content = (data.get('content') or '').strip()
+            ttl_val = data.get('ttl')
+            priority = data.get('priority', 0)
+            proxied = data.get('proxied', False)
+
+            if not name or not record_type or not content:
+                final_json = json.dumps({'status': 0, 'update_status': 0, 'error_message': 'Name, type and content are required.'})
+                return HttpResponse(final_json)
+
+            try:
+                ttl_int = int(ttl_val) if ttl_val not in (None, '', 'AUTO') else 1
+            except (ValueError, TypeError):
+                ttl_int = 1
+            if ttl_int < 0:
+                ttl_int = 1
+            elif ttl_int > 86400 and ttl_int != 1:
+                ttl_int = 86400
+
+            try:
+                priority_int = int(priority) if priority not in (None, '') else 0
+            except (ValueError, TypeError):
+                priority_int = 0
+
+            admin = Administrator.objects.get(pk=userID)
+            self.admin = admin
+            if ACLManager.checkOwnershipZone(zone_domain, admin, currentACL) != 1:
+                return ACLManager.loadErrorJson()
+
+            self.loadCFKeys()
+            params = {'name': zone_domain, 'per_page': 50}
+            cf = CloudFlare.CloudFlare(email=self.email, token=self.key)
+            zones = cf.zones.get(params=params)
+            zone_list = sorted(zones, key=lambda v: v['name'])
+            if not zone_list:
+                final_json = json.dumps({'status': 0, 'update_status': 0, 'error_message': 'Zone not found.'})
+                return HttpResponse(final_json)
+            zone_id = zone_list[0]['id']
+
+            update_data = {'name': name, 'type': record_type, 'content': content, 'ttl': ttl_int, 'priority': priority_int}
+            if record_type in ['A', 'CNAME']:
+                update_data['proxied'] = bool(proxied)
+
+            cf.zones.dns_records.put(zone_id, record_id, data=update_data)
+            final_dic = {'status': 1, 'update_status': 1, 'error_message': 'None'}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+        except BaseException as msg:
+            final_dic = {'status': 0, 'update_status': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
 
     def addDNSRecordCloudFlare(self, userID = None, data = None):
         try:

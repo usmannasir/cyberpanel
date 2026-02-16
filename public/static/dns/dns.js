@@ -811,6 +811,9 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http, $window
     $scope.couldNotDeleteRecords = true;
     $scope.couldNotAddRecord = true;
     $scope.recordValueDefault = false;
+    $scope.records = [];
+    $scope.showEditModal = false;
+    $scope.editRecord = {};
 
     // Hide records boxes
     $(".aaaaRecord").hide();
@@ -1133,6 +1136,51 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http, $window
         }
 
 
+    };
+
+    $scope.openEditModal = function (record) {
+        $scope.editRecord = {
+            id: record.id,
+            name: record.name,
+            type: record.type,
+            ttl: record.ttl,
+            content: record.content,
+            priority: record.priority || 0,
+            proxy: record.proxy,
+            proxiable: record.proxiable
+        };
+        $scope.showEditModal = true;
+    };
+
+    $scope.closeEditModal = function () {
+        $scope.showEditModal = false;
+    };
+
+    $scope.saveEditRecord = function () {
+        var url = "/dns/updateDNSRecordCloudFlare";
+        var data = {
+            selectedZone: $scope.selectedZone,
+            id: $scope.editRecord.id,
+            name: $scope.editRecord.name,
+            recordType: $scope.editRecord.type,
+            content: $scope.editRecord.content,
+            ttl: $scope.editRecord.ttl === 'AUTO' || $scope.editRecord.ttl === 1 ? 1 : parseInt($scope.editRecord.ttl, 10) || 3600,
+            priority: parseInt($scope.editRecord.priority, 10) || 0,
+            proxied: $scope.editRecord.proxy
+        };
+        var config = { headers: { 'X-CSRFToken': getCookie('csrftoken') } };
+        $http.post(url, data, config).then(function (response) {
+            if (response.data.update_status === 1) {
+                $scope.closeEditModal();
+                populateCurrentRecords();
+                new PNotify({ title: 'Success', text: 'Record updated.', type: 'success' });
+            } else {
+                $scope.errorMessage = response.data.error_message || 'Update failed';
+                new PNotify({ title: 'Error', text: $scope.errorMessage, type: 'error' });
+            }
+        }, function () {
+            new PNotify({ title: 'Error', text: 'Could not connect to server.', type: 'error' });
+        });
     };
 
     $scope.syncCF = function () {

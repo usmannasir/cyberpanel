@@ -339,6 +339,15 @@ def addDNSRecordCloudFlare(request):
         return redirect(loadLoginPage)
 
 
+def updateDNSRecordCloudFlare(request):
+    try:
+        userID = request.session['userID']
+        dm = DNSManager()
+        return dm.updateDNSRecordCloudFlare(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 def syncCF(request):
     try:
         userID = request.session['userID']
