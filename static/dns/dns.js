@@ -1005,11 +1005,22 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http, $window
         $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
+        function normalizeRecordForInline(record) {
+            record.ttlNum = record.ttl === 'AUTO' || record.ttl === 1 ? 1 : (parseInt(record.ttl, 10) || 3600);
+            record.priority = parseInt(record.priority, 10) || 0;
+            if (record.type != null && typeof record.type === 'string') {
+                record.type = record.type.toUpperCase().trim();
+            } else if (record.type == null || record.type === '') {
+                record.type = 'A';
+            }
+        }
+
         function ListInitialDatas(response) {
             $scope.loadingRecords = false;
             if (response.data.fetchStatus === 1) {
 
                 $scope.records = JSON.parse(response.data.data);
+                $scope.records.forEach(normalizeRecordForInline);
 
                 $scope.currentRecords = false;
                 $scope.canNotFetchRecords = true;
@@ -1140,6 +1151,52 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http, $window
         }
 
 
+    };
+
+    $scope.dnsTypeList = ['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'NS', 'SOA', 'SRV', 'CAA', 'SPF', 'DNSKEY', 'CDNSKEY', 'HTTPS', 'SVCB', 'URI', 'LOC', 'NAPTR', 'SMIMEA', 'SSHFP', 'TLSA', 'PTR'];
+    $scope.getTypeOptions = function (record) {
+        var list = angular.copy($scope.dnsTypeList);
+        var t = record && record.type ? String(record.type).toUpperCase().trim() : '';
+        if (t && list.indexOf(t) === -1) {
+            list.unshift(t);
+        }
+        return list;
+    };
+    $scope.editingRecordId = null;
+    $scope.editingField = null;
+    $scope.isEditing = function (record, field) {
+        return $scope.editingRecordId === record.id && $scope.editingField === field;
+    };
+    $scope.startEdit = function (record, field) {
+        $scope.editingRecordId = record.id;
+        $scope.editingField = field;
+    };
+    $scope.saveInlineField = function (record, field) {
+        $scope.editingRecordId = null;
+        $scope.editingField = null;
+        var ttl = record.ttlNum !== undefined ? record.ttlNum : (record.ttl === 'AUTO' || record.ttl === 1 ? 1 : parseInt(record.ttl, 10) || 3600);
+        var url = "/dns/updateDNSRecordCloudFlare";
+        var data = {
+            selectedZone: $scope.selectedZone,
+            id: record.id,
+            name: record.name,
+            recordType: record.type,
+            content: record.content,
+            ttl: ttl,
+            priority: parseInt(record.priority, 10) || 0,
+            proxied: record.proxy
+        };
+        var config = { headers: { 'X-CSRFToken': getCookie('csrftoken') } };
+        $http.post(url, data, config).then(function (response) {
+            if (response.data.update_status === 1) {
+                new PNotify({ title: 'Success', text: 'Record updated.', type: 'success' });
+                populateCurrentRecords();
+            } else {
+                new PNotify({ title: 'Error', text: response.data.error_message || 'Update failed', type: 'error' });
+            }
+        }, function () {
+            new PNotify({ title: 'Error', text: 'Could not connect to server.', type: 'error' });
+        });
     };
 
     $scope.openEditModal = function (record) {
