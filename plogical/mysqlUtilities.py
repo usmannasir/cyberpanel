@@ -547,30 +547,31 @@ password=%s
             checker = 0
 
             for items in result:
-                if len(str(items[1])) == 0:
+                # SHOW PROCESSLIST: Id, User, Host, db, Command, Time, State, Info [, Progress]
+                if items[3] is None or len(str(items[3])) == 0:
                     database = 'NULL'
                 else:
-                    database = items[1]
+                    database = items[3]
 
-                if len(str(items[6])) == 0:
-                    state = 'NULL'
-                else:
+                if len(items) > 6 and items[6] is not None and len(str(items[6])) > 0:
                     state = items[6]
-
-                if len(str(items[7])) == '':
-                    info = 'NULL'
                 else:
+                    state = 'NULL'
+
+                if len(items) > 7 and items[7] is not None and len(str(items[7])) > 0:
                     info = items[7]
+                else:
+                    info = 'NULL'
 
                 dic = {
                     'id': items[0],
                     'user': items[1],
                     'database': database,
-                    'command': items[4],
-                    'time': items[5],
+                    'command': items[4] if len(items) > 4 else '',
+                    'time': items[5] if len(items) > 5 else 0,
                     'state': state,
                     'info': info,
-                    'progress': items[8],
+                    'progress': items[8] if len(items) > 8 else 0,
                 }
 
                 if checker == 0:
