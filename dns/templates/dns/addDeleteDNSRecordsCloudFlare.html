@@ -930,13 +930,13 @@
                                                     </td>
                                                     <td class="editable-cell">
                                                         <select class="inline-select" ng-model="record.ttlNum" ng-change="saveInlineField(record, 'ttl')" title="{% trans 'TTL' %}">
-                                                            <option value="1">AUTO</option>
-                                                            <option value="300">300</option>
-                                                            <option value="600">600</option>
-                                                            <option value="3600">3600</option>
-                                                            <option value="7200">7200</option>
-                                                            <option value="14400">14400</option>
-                                                            <option value="86400">86400</option>
+                                                            <option ng-value="1">AUTO</option>
+                                                            <option ng-value="300">300</option>
+                                                            <option ng-value="600">600</option>
+                                                            <option ng-value="3600">3600</option>
+                                                            <option ng-value="7200">7200</option>
+                                                            <option ng-value="14400">14400</option>
+                                                            <option ng-value="86400">86400</option>
                                                         </select>
                                                     </td>
                                                     <td class="editable-cell value-cell">
