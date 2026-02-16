@@ -17,6 +17,7 @@ Pre_Upgrade_CentOS7_MySQL() {
     mariadb-upgrade -uroot -p"$MySQL_Password" 2>/dev/null || mysql_upgrade -uroot -p"$MySQL_Password"
   fi
   mariadb -uroot -p"$MySQL_Password" -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '$MySQL_Password';flush privileges" 2>/dev/null || mysql -uroot -p"$MySQL_Password" -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '$MySQL_Password';flush privileges"
+  Ensure_MariaDB_Client_No_SSL
 }
 
 Maybe_Backup_MariaDB_Before_Upgrade() {
@@ -85,4 +86,18 @@ Migrate_MariaDB_To_UTF8() {
     done
   done
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB UTF-8 (utf8mb4) migration completed." | tee -a /var/log/cyberpanel_upgrade_debug.log
+}
+
+# Ensure MariaDB client connects without SSL (avoids ERROR 2026 when server has have_ssl=DISABLED).
+# Call after any MariaDB install/upgrade so install and upgrade paths both get the fix.
+Ensure_MariaDB_Client_No_SSL() {
+  mkdir -p /etc/my.cnf.d
+  printf "[client]\nssl=0\nskip-ssl\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
+  if [[ -f /etc/my.cnf ]] && ! grep -q '^\[client\]' /etc/my.cnf 2>/dev/null; then
+    echo -e "\n[client]\nssl=0\nskip-ssl" >> /etc/my.cnf
+  fi
+  if [[ -d /etc/mysql/mariadb.conf.d ]]; then
+    printf "[client]\nssl=0\nskip-ssl\n" > /etc/mysql/mariadb.conf.d/99-cyberpanel-client.cnf 2>/dev/null || true
+  fi
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB client no-SSL config ensured (cyberpanel-client.cnf, optional my.cnf [client])." | tee -a /var/log/cyberpanel_upgrade_debug.log
 }
