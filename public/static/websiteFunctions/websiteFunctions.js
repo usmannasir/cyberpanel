@@ -10765,7 +10765,7 @@ app.controller('modifyWebsitesController', ['$scope', '$http', function ($scope,
 
     // Load home directories on page load
     $scope.loadHomeDirectories = function() {
-        $http.post('/userManagement/getUserHomeDirectories/', {})
+        $http.post('/users/getUserHomeDirectories', {})
             .then(function(response) {
                 if (response.data.status === 1) {
                     $scope.homeDirectories = response.data.directories;

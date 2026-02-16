@@ -2,6 +2,8 @@
  * Created by usman on 8/6/17.
  */
 
+/* Ensure we register controllers on the CyberCP app (avoids ctrlreg if load order differs) */
+var app = (typeof window.app !== 'undefined' && window.app) ? window.app : angular.module('CyberCP');
 
 /* Java script code to create database */
 app.controller('createDatabase', function ($scope, $http) {
@@ -694,7 +696,7 @@ app.controller('Mysqlmanager', function ($scope, $http, $compile, $window, $time
 
         $scope.cyberPanelLoading = true;
 
-        url = "/dataBases/getMysqlstatus";
+        url = "/dataBases/getMysqlstatus?t=" + (Date.now ? Date.now() : new Date().getTime());
 
         var data = {};
 
@@ -715,6 +717,8 @@ app.controller('Mysqlmanager', function ($scope, $http, $compile, $window, $time
                 try {
                     data = JSON.parse(data);
                 } catch (e) {
+                    $scope.uptime = $scope.connections = $scope.Slow_queries = '—';
+                    $scope.processes = [];
                     new PNotify({ title: 'Error!', text: 'Invalid response from server.', type: 'error' });
                     return;
                 }
@@ -749,7 +753,21 @@ app.controller('Mysqlmanager', function ($scope, $http, $compile, $window, $time
 
         function cantLoadInitialDatas(response) {
             $scope.cyberPanelLoading = false;
-            var msg = (response.data && response.data.error_message) || (response.statusText || 'Cannot load MySQL status.');
+            $scope.uptime = '—';
+            $scope.connections = '—';
+            $scope.Slow_queries = '—';
+            $scope.processes = [];
+            var msg = 'Cannot load MySQL status.';
+            if (response && response.status) {
+                msg = 'Request failed: ' + response.status + (response.statusText ? ' ' + response.statusText : '');
+            }
+            if (response && response.data) {
+                if (typeof response.data === 'string' && response.data.length < 200) {
+                    msg = response.data;
+                } else if (response.data.error_message) {
+                    msg = response.data.error_message;
+                }
+            }
             new PNotify({
                 title: 'Error!',
                 text: msg,
