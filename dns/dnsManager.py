@@ -35,10 +35,18 @@ class DNSManager:
         self.extraArgs = extraArgs
 
     def loadCFKeys(self):
-        cfFile = '%s%s' % (DNS.CFPath, self.admin.userName)
-        data = open(cfFile, 'r').readlines()
-        self.email = data[0].rstrip('\n')
-        self.key = data[1].rstrip('\n')
+        self.email = ''
+        self.key = ''
+        try:
+            cfFile = '%s%s' % (DNS.CFPath, self.admin.userName)
+            with open(cfFile, 'r') as f:
+                data = f.readlines()
+            if len(data) >= 1:
+                self.email = (data[0] or '').rstrip('\n')
+            if len(data) >= 2:
+                self.key = (data[1] or '').rstrip('\n')
+        except (IOError, OSError, IndexError) as e:
+            logging.CyberCPLogFileWriter.writeToFile('loadCFKeys: %s' % str(e))
 
     def loadDNSHome(self, request = None, userID = None):
         admin = Administrator.objects.get(pk=userID)
@@ -638,33 +646,47 @@ class DNSManager:
             return HttpResponse(final_json)
 
     def addDeleteDNSRecordsCloudFlare(self, request = None, userID = None):
-        currentACL = ACLManager.loadedACL(userID)
-        if not os.path.exists('/home/cyberpanel/powerdns'):
-            status = 0
-        else:
-            status = 1
-        admin = Administrator.objects.get(pk=userID)
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            if not os.path.exists('/home/cyberpanel/powerdns'):
+                status = 0
+            else:
+                status = 1
+            admin = Administrator.objects.get(pk=userID)
 
-        CloudFlare = 0
+            CloudFlare = 0
+            domainsList = []
+            cfEmail = ''
+            cfToken = ''
+            cfPath = '%s%s' % (DNS.CFPath, admin.userName)
 
-        cfPath = '%s%s' % (DNS.CFPath, admin.userName)
+            if os.path.exists(cfPath):
+                self.admin = admin
+                self.loadCFKeys()
+                cfEmail = getattr(self, 'email', '') or ''
+                cfToken = getattr(self, 'key', '') or ''
+                if cfEmail or cfToken:
+                    CloudFlare = 1
+                    try:
+                        allDomains = ACLManager.findAllDomains(currentACL, userID)
+                        domainsList = [domain for domain in allDomains if domain.count('.') == 1]
+                    except Exception as e:
+                        logging.CyberCPLogFileWriter.writeToFile('addDeleteDNSRecordsCloudFlare findAllDomains: %s' % str(e))
+                        domainsList = []
 
-        if os.path.exists(cfPath):
-            CloudFlare = 1
-            allDomains = ACLManager.findAllDomains(currentACL, userID)
-            # Filter to only show main domains (domains with exactly one dot, e.g., "example.com")
-            # Sub-domains have two or more dots (e.g., "subdomain.example.com")
-            domainsList = [domain for domain in allDomains if domain.count('.') == 1]
-            self.admin = admin
-            self.loadCFKeys()
-            data = {"domainsList": domainsList, "status": status, 'CloudFlare': CloudFlare, 'cfEmail': self.email,
-                    'cfToken': self.key}
-        else:
-            data = {"status": status, 'CloudFlare': CloudFlare}
-
-        template = 'dns/addDeleteDNSRecordsCloudFlare.html'
-        proc = httpProc(request, template, data, 'addDeleteRecords')
-        return proc.render()
+            data = {
+                "domainsList": domainsList,
+                "status": status,
+                'CloudFlare': CloudFlare,
+                'cfEmail': cfEmail,
+                'cfToken': cfToken,
+            }
+            template = 'dns/addDeleteDNSRecordsCloudFlare.html'
+            proc = httpProc(request, template, data, 'addDeleteRecords')
+            return proc.render()
+        except Exception as e:
+            logging.CyberCPLogFileWriter.writeToFile('addDeleteDNSRecordsCloudFlare: %s' % str(e))
+            raise
 
     def saveCFConfigs(self, userID = None, data = None):
         try:
@@ -1334,7 +1356,7 @@ class DNSManager:
             zone_id = zone_list[0]['id']
 
             update_data = {'name': name, 'type': record_type, 'content': content, 'ttl': ttl_int, 'priority': priority_int}
-            if record_type in ['A', 'CNAME']:
+            if record_type in ['A', 'AAAA', 'CNAME']:
                 update_data['proxied'] = bool(proxied)
 
             cf.zones.dns_records.put(zone_id, record_id, data=update_data)
