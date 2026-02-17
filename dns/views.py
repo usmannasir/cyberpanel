@@ -422,3 +422,12 @@ def removeStaleDNSRecordsCloudFlare(request):
         return dm.removeStaleDNSRecordsCloudFlare(userID, json.loads(request.body or '{}'))
     except KeyError:
         return redirect(loadLoginPage)
+
+
+def fixDNSRecordsCloudFlare(request):
+    try:
+        userID = request.session['userID']
+        dm = DNSManager()
+        return dm.fixDNSRecordsCloudFlare(userID, json.loads(request.body or '{}'))
+    except KeyError:
+        return redirect(loadLoginPage)

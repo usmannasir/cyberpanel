@@ -35,4 +35,5 @@ urlpatterns = [
     re_path(r'^importDNSRecordsCloudFlare$', views.importDNSRecordsCloudFlare, name='importDNSRecordsCloudFlare'),
     re_path(r'^getStaleDNSRecordsCloudFlare$', views.getStaleDNSRecordsCloudFlare, name='getStaleDNSRecordsCloudFlare'),
     re_path(r'^removeStaleDNSRecordsCloudFlare$', views.removeStaleDNSRecordsCloudFlare, name='removeStaleDNSRecordsCloudFlare'),
+    re_path(r'^fixDNSRecordsCloudFlare$', views.fixDNSRecordsCloudFlare, name='fixDNSRecordsCloudFlare'),
 ]

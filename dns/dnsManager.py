@@ -1199,6 +1199,91 @@ class DNSManager:
             final_json = json.dumps({'status': 0, 'delete_status': 0, 'error_message': str(msg), 'deleted_records': []})
             return HttpResponse(final_json)
 
+    def fixDNSRecordsCloudFlare(self, userID=None, data=None):
+        """Ensure all panel domains/subdomains for the zone have A (and AAAA if available) in CloudFlare. No duplicates."""
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            if ACLManager.currentContextPermission(currentACL, 'addDeleteRecords') == 0:
+                return ACLManager.loadErrorJson('fix_status', 0)
+            zone_domain = data.get('selectedZone', '').strip()
+            if not zone_domain:
+                final_json = json.dumps({'status': 0, 'fix_status': 0, 'error_message': 'Zone is required.', 'added': 0, 'skipped': 0})
+                return HttpResponse(final_json)
+            admin = Administrator.objects.get(pk=userID)
+            self.admin = admin
+            if ACLManager.checkOwnershipZone(zone_domain, admin, currentACL) != 1:
+                return ACLManager.loadErrorJson()
+            valid_hostnames = self._get_valid_hostnames_for_zone(zone_domain)
+            if not valid_hostnames:
+                final_json = json.dumps({'status': 1, 'fix_status': 1, 'error_message': '', 'added': 0, 'skipped': 0})
+                return HttpResponse(final_json)
+            self.loadCFKeys()
+            params = {'name': zone_domain, 'per_page': 50}
+            cf = CloudFlare.CloudFlare(email=self.email, token=self.key)
+            zones = cf.zones.get(params=params)
+            if not zones:
+                final_json = json.dumps({'status': 0, 'fix_status': 0, 'error_message': 'Zone not found.', 'added': 0, 'skipped': 0})
+                return HttpResponse(final_json)
+            zone_id = sorted(zones, key=lambda v: v['name'])[0]['id']
+            existing = set()
+            page = 1
+            per_page = 100
+            while True:
+                try:
+                    dns_records = cf.zones.dns_records.get(zone_id, params={'per_page': per_page, 'page': page})
+                except BaseException as e:
+                    final_json = json.dumps({'status': 0, 'fix_status': 0, 'error_message': str(e), 'added': 0, 'skipped': 0})
+                    return HttpResponse(final_json)
+                if not dns_records:
+                    break
+                for rec in dns_records:
+                    n = (rec.get('name') or '').lower().rstrip('.')
+                    t = (rec.get('type') or '').strip().upper()
+                    if n and t in ('A', 'AAAA', 'CNAME'):
+                        existing.add((n, t))
+                if len(dns_records) < per_page:
+                    break
+                page += 1
+            server_ip = None
+            try:
+                server_ip = ACLManager.GetServerIP()
+            except Exception:
+                pass
+            server_ipv6 = None
+            try:
+                server_ipv6 = ACLManager.GetServerIPv6()
+            except Exception:
+                pass
+            ttl = 3600
+            added = 0
+            skipped = 0
+            for hostname in valid_hostnames:
+                name_lower = hostname.lower().rstrip('.')
+                if (name_lower, 'A') not in existing and server_ip:
+                    try:
+                        DNS.createDNSRecordCloudFlare(cf, zone_id, hostname, 'A', server_ip, 0, ttl)
+                        existing.add((name_lower, 'A'))
+                        added += 1
+                    except BaseException as e:
+                        final_json = json.dumps({'status': 0, 'fix_status': 0, 'error_message': str(e), 'added': added, 'skipped': skipped})
+                        return HttpResponse(final_json)
+                elif (name_lower, 'A') in existing:
+                    skipped += 1
+                if server_ipv6 and (name_lower, 'AAAA') not in existing:
+                    try:
+                        DNS.createDNSRecordCloudFlare(cf, zone_id, hostname, 'AAAA', server_ipv6, 0, ttl)
+                        existing.add((name_lower, 'AAAA'))
+                        added += 1
+                    except BaseException as e:
+                        pass
+                elif (name_lower, 'AAAA') in existing:
+                    skipped += 1
+            final_json = json.dumps({'status': 1, 'fix_status': 1, 'error_message': '', 'added': added, 'skipped': skipped}, default=str)
+            return HttpResponse(final_json)
+        except BaseException as msg:
+            final_json = json.dumps({'status': 0, 'fix_status': 0, 'error_message': str(msg), 'added': 0, 'skipped': 0})
+            return HttpResponse(final_json)
+
     def updateDNSRecordCloudFlare(self, userID=None, data=None):
         """Update an existing CloudFlare DNS record (name, type, ttl, content, priority, proxied)."""
         try:
