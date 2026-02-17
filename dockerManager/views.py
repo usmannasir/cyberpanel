@@ -186,6 +186,7 @@ def listContainersPage(request):
     """
     try:
         userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
         cm = ContainerManager()
         resp = cm.listContainers(request, userID)
         if hasattr(resp, '__setitem__'):
