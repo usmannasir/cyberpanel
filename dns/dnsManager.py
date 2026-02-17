@@ -1222,7 +1222,7 @@ class DNSManager:
             return HttpResponse(final_json)
 
     def fixDNSRecordsCloudFlare(self, userID=None, data=None):
-        """Ensure all panel domains/subdomains for the zone have A (and AAAA if available) in CloudFlare. No duplicates."""
+        """Ensure panel domains/subdomains have A/AAAA while checking all existing record types to avoid conflicts."""
         try:
             currentACL = ACLManager.loadedACL(userID)
             if ACLManager.currentContextPermission(currentACL, 'addDeleteRecords') == 0:
@@ -1248,6 +1248,7 @@ class DNSManager:
                 return HttpResponse(final_json)
             zone_id = sorted(zones, key=lambda v: v['name'])[0]['id']
             existing = set()
+            existing_types_by_name = {}
             page = 1
             per_page = 100
             while True:
@@ -1261,7 +1262,10 @@ class DNSManager:
                 for rec in dns_records:
                     n = (rec.get('name') or '').lower().rstrip('.')
                     t = (rec.get('type') or '').strip().upper()
-                    if n and t in ('A', 'AAAA', 'CNAME'):
+                    if not n or not t:
+                        continue
+                    existing_types_by_name.setdefault(n, set()).add(t)
+                    if t in ('A', 'AAAA', 'CNAME'):
                         existing.add((n, t))
                 if len(dns_records) < per_page:
                     break
@@ -1281,10 +1285,19 @@ class DNSManager:
             skipped = 0
             for hostname in valid_hostnames:
                 name_lower = hostname.lower().rstrip('.')
+                host_types = existing_types_by_name.get(name_lower, set())
+                has_cname = 'CNAME' in host_types
+
+                # A/AAAA cannot coexist with CNAME on same hostname.
+                if has_cname:
+                    skipped += 2 if server_ipv6 else 1
+                    continue
+
                 if (name_lower, 'A') not in existing and server_ip:
                     try:
                         DNS.createDNSRecordCloudFlare(cf, zone_id, hostname, 'A', server_ip, 0, ttl)
                         existing.add((name_lower, 'A'))
+                        existing_types_by_name.setdefault(name_lower, set()).add('A')
                         added += 1
                     except BaseException as e:
                         final_json = json.dumps({'status': 0, 'fix_status': 0, 'error_message': str(e), 'added': added, 'skipped': skipped})
@@ -1295,6 +1308,7 @@ class DNSManager:
                     try:
                         DNS.createDNSRecordCloudFlare(cf, zone_id, hostname, 'AAAA', server_ipv6, 0, ttl)
                         existing.add((name_lower, 'AAAA'))
+                        existing_types_by_name.setdefault(name_lower, set()).add('AAAA')
                         added += 1
                     except BaseException as e:
                         pass

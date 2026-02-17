@@ -731,7 +731,7 @@ class DNS:
             else:
                 dns_record = {'name': name, 'type': type, 'content': value, 'priority': priority}
             
-            # Only add proxied parameter for A, AAAA and CNAME records
+            # Only add proxied parameter for proxy-capable record types.
             if type in ['A', 'AAAA', 'CNAME']:
                 dns_record['proxied'] = proxied
 
