@@ -14,7 +14,7 @@ Pre_Upgrade_CentOS7_MySQL() {
     mv /etc/cnfbackup/my.cnf.d /etc/
     systemctl enable mariadb 2>/dev/null || systemctl enable mysql
     systemctl start mariadb 2>/dev/null || systemctl start mysql
-    mariadb-upgrade -uroot -p"$MySQL_Password" 2>/dev/null || mysql_upgrade -uroot -p"$MySQL_Password"
+    mariadb-upgrade --force -uroot -p"$MySQL_Password" 2>/dev/null || mysql_upgrade --force -uroot -p"$MySQL_Password" 2>/dev/null || true
   fi
   mariadb -uroot -p"$MySQL_Password" -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '$MySQL_Password';flush privileges" 2>/dev/null || mysql -uroot -p"$MySQL_Password" -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '$MySQL_Password';flush privileges"
   Ensure_MariaDB_Client_No_SSL
@@ -41,6 +41,8 @@ Maybe_Backup_MariaDB_Before_Upgrade() {
 
 Backup_MariaDB_Before_Upgrade() {
   local pass="" backup_dir="/root/cyberpanel_mariadb_backups" backup_file=""
+  local std_backup_base="/root/db-upgrade-backups"
+  local std_backup_dir="${std_backup_base}/$(date +%Y-%m-%d_%H%M%S)"
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Starting MariaDB pre-upgrade backup... (this may take a few minutes)" | tee -a /var/log/cyberpanel_upgrade_debug.log
   [[ -f /etc/cyberpanel/mysqlPassword ]] || { echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB pre-upgrade backup: skipped (no password file)." | tee -a /var/log/cyberpanel_upgrade_debug.log; return 0; }
   if grep -q '"mysqlpassword"' /etc/cyberpanel/mysqlPassword 2>/dev/null; then
@@ -55,6 +57,8 @@ Backup_MariaDB_Before_Upgrade() {
     (mariadb-dump --skip-ssl -u root -p"$pass" --all-databases --single-transaction --routines --triggers --events 2>/dev/null || mysqldump --skip-ssl -u root -p"$pass" --all-databases --single-transaction --routines --triggers --events 2>/dev/null) | gzip > "$backup_file" 2>/dev/null
     if [[ -s "$backup_file" ]]; then
       echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB backup created: $backup_file" | tee -a /var/log/cyberpanel_upgrade_debug.log
+      mkdir -p "$std_backup_dir"
+      cp -a "$backup_file" "$std_backup_dir/all_databases.sql.gz" 2>/dev/null && echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB backup also saved to: $std_backup_dir/all_databases.sql.gz" | tee -a /var/log/cyberpanel_upgrade_debug.log || true
       echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB pre-upgrade backup: done." | tee -a /var/log/cyberpanel_upgrade_debug.log
     else
       echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: MariaDB backup file empty or failed." | tee -a /var/log/cyberpanel_upgrade_debug.log

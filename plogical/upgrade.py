@@ -1194,27 +1194,58 @@ module cyberpanel_ols {
     def download_install_phpmyadmin():
         try:
             cwd = os.getcwd()
+            pma_dir = '/usr/local/CyberCP/public/phpmyadmin'
+            tmp_config = '/tmp/cyberpanel_pma_config.inc.php'
+            tmp_signon = '/tmp/cyberpanel_pma_phpmyadminsignin.php'
 
             if not os.path.exists("/usr/local/CyberCP/public"):
                 os.mkdir("/usr/local/CyberCP/public")
 
+            # Preserve existing config and signon before removing phpmyadmin (for up/downgrade)
+            saved_config = False
+            saved_signon = False
+            if os.path.isdir(pma_dir):
+                if os.path.isfile(os.path.join(pma_dir, 'config.inc.php')):
+                    try:
+                        shutil.copy2(os.path.join(pma_dir, 'config.inc.php'), tmp_config)
+                        saved_config = True
+                    except Exception:
+                        pass
+                if os.path.isfile(os.path.join(pma_dir, 'phpmyadminsignin.php')):
+                    try:
+                        shutil.copy2(os.path.join(pma_dir, 'phpmyadminsignin.php'), tmp_signon)
+                        saved_signon = True
+                    except Exception:
+                        pass
+
             try:
-                shutil.rmtree("/usr/local/CyberCP/public/phpmyadmin")
-            except:
+                shutil.rmtree(pma_dir)
+            except Exception:
                 pass
 
-            # Try to fetch latest phpMyAdmin version from GitHub
-            phpmyadmin_version = '5.2.3'  # Fallback version
-            try:
-                from plogical.versionFetcher import get_latest_phpmyadmin_version
-                latest_version = get_latest_phpmyadmin_version()
-                if latest_version and latest_version != phpmyadmin_version:
-                    Upgrade.stdOut(f"Using latest phpMyAdmin version: {latest_version}", 0)
-                    phpmyadmin_version = latest_version
-                else:
-                    Upgrade.stdOut(f"Using fallback phpMyAdmin version: {phpmyadmin_version}", 0)
-            except Exception as e:
-                Upgrade.stdOut(f"Failed to fetch latest phpMyAdmin version, using fallback: {e}", 0)
+            # Version: /etc/cyberpanel/phpmyadmin_version, then latest from API, then fallback
+            phpmyadmin_version = '5.2.3'
+            version_file = '/etc/cyberpanel/phpmyadmin_version'
+            if os.path.isfile(version_file):
+                try:
+                    with open(version_file, 'r') as f:
+                        raw = (f.read() or '').strip()
+                    if raw and len(raw) < 20 and all(c.isdigit() or c == '.' for c in raw):
+                        phpmyadmin_version = raw
+                        Upgrade.stdOut(f"Using phpMyAdmin version from {version_file}: {phpmyadmin_version}", 0)
+                except Exception:
+                    pass
+            if phpmyadmin_version == '5.2.3':
+                try:
+                    from plogical.versionFetcher import get_latest_phpmyadmin_version
+                    latest_version = get_latest_phpmyadmin_version()
+                    if latest_version and latest_version != phpmyadmin_version:
+                        Upgrade.stdOut(f"Using latest phpMyAdmin version: {latest_version}", 0)
+                        phpmyadmin_version = latest_version
+                    else:
+                        Upgrade.stdOut(f"Using fallback phpMyAdmin version: {phpmyadmin_version}", 0)
+                except Exception as e:
+                    Upgrade.stdOut(f"Failed to fetch latest phpMyAdmin version, using fallback: {e}", 0)
 
             Upgrade.stdOut("Installing phpMyAdmin...", 0)
 
@@ -1227,36 +1258,46 @@ module cyberpanel_ols {
             command = 'tar -xzf /usr/local/CyberCP/public/phpmyadmin.tar.gz -C /usr/local/CyberCP/public/'
             Upgrade.executioner_silent(command, 'Extract phpMyAdmin')
 
-            # Move extracted dir to phpmyadmin (support phpMyAdmin-X.Y.Z-all-languages or similar)
             import glob
             extracted = glob.glob('/usr/local/CyberCP/public/phpMyAdmin-*-all-languages')
             if not extracted:
                 extracted = glob.glob('/usr/local/CyberCP/public/phpMyAdmin-*')
             if extracted:
-                if os.path.exists('/usr/local/CyberCP/public/phpmyadmin'):
-                    shutil.rmtree('/usr/local/CyberCP/public/phpmyadmin')
-                os.rename(extracted[0], '/usr/local/CyberCP/public/phpmyadmin')
+                if os.path.exists(pma_dir):
+                    shutil.rmtree(pma_dir)
+                os.rename(extracted[0], pma_dir)
             else:
                 Upgrade.executioner('mv /usr/local/CyberCP/public/phpMyAdmin-*-all-languages /usr/local/CyberCP/public/phpmyadmin', 0)
 
             command = 'rm -f /usr/local/CyberCP/public/phpmyadmin.tar.gz'
             Upgrade.executioner_silent(command, 'Cleanup phpMyAdmin tar.gz')
 
-            if not os.path.isdir('/usr/local/CyberCP/public/phpmyadmin'):
+            if not os.path.isdir(pma_dir):
                 raise RuntimeError('phpMyAdmin directory was not created after extract/mv')
             Upgrade.stdOut("phpMyAdmin installation completed.", 0)
 
-            ## Write secret phrase
-
-            rString = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(32)])
-
-            data = open('/usr/local/CyberCP/public/phpmyadmin/config.sample.inc.php', 'r').readlines()
-
-            writeToFile = open('/usr/local/CyberCP/public/phpmyadmin/config.inc.php', 'w')
-
-            writeE = 1
-
-            phpMyAdminContent = """
+            # Restore preserved config/signon and apply minimal overrides, or create new config
+            if saved_config and os.path.isfile(tmp_config):
+                shutil.copy2(tmp_config, os.path.join(pma_dir, 'config.inc.php'))
+                try:
+                    os.remove(tmp_config)
+                except Exception:
+                    pass
+                # Ensure TempDir and host/port present (append if missing)
+                with open(os.path.join(pma_dir, 'config.inc.php'), 'r') as f:
+                    cfg_content = f.read()
+                if "TempDir" not in cfg_content:
+                    with open(os.path.join(pma_dir, 'config.inc.php'), 'a') as f:
+                        f.write("\n$cfg['TempDir'] = '/usr/local/CyberCP/public/phpmyadmin/tmp';\n")
+                if "'host'" not in cfg_content and 'host' not in cfg_content:
+                    with open(os.path.join(pma_dir, 'config.inc.php'), 'a') as f:
+                        f.write("$cfg['Servers'][$i]['host'] = '127.0.0.1';\n$cfg['Servers'][$i]['port'] = '3306';\n")
+            else:
+                rString = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(32)])
+                data = open(os.path.join(pma_dir, 'config.sample.inc.php'), 'r').readlines()
+                writeToFile = open(os.path.join(pma_dir, 'config.inc.php'), 'w')
+                writeE = 1
+                phpMyAdminContent = """
 $cfg['Servers'][$i]['AllowNoPassword'] = false;
 $cfg['Servers'][$i]['auth_type'] = 'signon';
 $cfg['Servers'][$i]['SignonSession'] = 'SignonSession';
@@ -1265,48 +1306,44 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 $cfg['Servers'][$i]['host'] = '127.0.0.1';
 $cfg['Servers'][$i]['port'] = '3306';
 """
-
-            for items in data:
-                if items.find('blowfish_secret') > -1:
-                    writeToFile.writelines(
-                        "$cfg['blowfish_secret'] = '" + rString + "'; /* YOU MUST FILL IN THIS FOR COOKIE AUTH! */\n")
-                elif items.find('/* Authentication type */') > -1:
-                    writeToFile.writelines(items)
-                    writeToFile.write(phpMyAdminContent)
-                    writeE = 0
-                elif items.find("$cfg['Servers'][$i]['AllowNoPassword']") > -1:
-                    writeE = 1
-                else:
-                    if writeE:
+                for items in data:
+                    if items.find('blowfish_secret') > -1:
+                        writeToFile.writelines(
+                            "$cfg['blowfish_secret'] = '" + rString + "'; /* YOU MUST FILL IN THIS FOR COOKIE AUTH! */\n")
+                    elif items.find('/* Authentication type */') > -1:
                         writeToFile.writelines(items)
-
-            writeToFile.writelines("$cfg['TempDir'] = '/usr/local/CyberCP/public/phpmyadmin/tmp';\n")
-
-            writeToFile.close()
+                        writeToFile.write(phpMyAdminContent)
+                        writeE = 0
+                    elif items.find("$cfg['Servers'][$i]['AllowNoPassword']") > -1:
+                        writeE = 1
+                    else:
+                        if writeE:
+                            writeToFile.writelines(items)
+                writeToFile.writelines("$cfg['TempDir'] = '/usr/local/CyberCP/public/phpmyadmin/tmp';\n")
+                writeToFile.close()
 
             os.mkdir('/usr/local/CyberCP/public/phpmyadmin/tmp')
 
-            command = 'cp /usr/local/CyberCP/plogical/phpmyadminsignin.php /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php'
-            Upgrade.executioner(command, 0)
+            if saved_signon and os.path.isfile(tmp_signon):
+                shutil.copy2(tmp_signon, os.path.join(pma_dir, 'phpmyadminsignin.php'))
+                try:
+                    os.remove(tmp_signon)
+                except Exception:
+                    pass
+            else:
+                command = 'cp /usr/local/CyberCP/plogical/phpmyadminsignin.php /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php'
+                Upgrade.executioner(command, 0)
 
             passFile = "/etc/cyberpanel/mysqlPassword"
-
             try:
                 import json
                 jsonData = json.loads(open(passFile, 'r').read())
-
-                mysqluser = jsonData['mysqluser']
-                mysqlpassword = jsonData['mysqlpassword']
-                mysqlport = jsonData.get('mysqlport', 3306)
                 mysqlhost = jsonData.get('mysqlhost', '127.0.0.1') or '127.0.0.1'
                 if mysqlhost == 'localhost':
                     mysqlhost = '127.0.0.1'
-
-                command = "sed -i 's|localhost|%s|g' /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php" % (
-                    mysqlhost)
+                command = "sed -i 's|localhost|%s|g' /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php" % (mysqlhost)
                 Upgrade.executioner(command, 0)
-
-            except:
+            except Exception:
                 pass
 
             command = 'chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin'
@@ -1346,52 +1383,36 @@ $cfg['Servers'][$i]['port'] = '3306';
     @staticmethod
     def downoad_and_install_raindloop():
         try:
-            #######
-
-            # if os.path.exists("/usr/local/CyberCP/public/rainloop"):
-            #
-            #     if os.path.exists("/usr/local/lscp/cyberpanel/rainloop/data"):
-            #         pass
-            #     else:
-            #         command = "mv /usr/local/CyberCP/public/rainloop/data /usr/local/lscp/cyberpanel/rainloop/data"
-            #         Upgrade.executioner(command, 0)
-            #
-            #         command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
-            #         Upgrade.executioner(command, 0)
-            #
-            #     iPath = os.listdir('/usr/local/CyberCP/public/rainloop/rainloop/v/')
-            #
-            #     path = "/usr/local/CyberCP/public/snappymail/snappymail/v/%s/include.php" % (iPath[0])
-            #
-            #     data = open(path, 'r').readlines()
-            #     writeToFile = open(path, 'w')
-            #
-            #     for items in data:
-            #         if items.find("$sCustomDataPath = '';") > -1:
-            #             writeToFile.writelines(
-            #                 "			$sCustomDataPath = '/usr/local/lscp/cyberpanel/rainloop/data';\n")
-            #         else:
-            #             writeToFile.writelines(items)
-            #
-            #     writeToFile.close()
-            #     return 0
-
+            # Data preservation: only /usr/local/CyberCP/public/snappymail (app files) is replaced.
+            # Data under /usr/local/lscp/cyberpanel/snappymail/data and public/snappymail/data is never deleted.
             cwd = os.getcwd()
 
             if not os.path.exists("/usr/local/CyberCP/public"):
                 os.mkdir("/usr/local/CyberCP/public")
 
-            # Try to fetch latest SnappyMail version from GitHub
-            try:
-                from plogical.versionFetcher import get_latest_snappymail_version
-                latest_version = get_latest_snappymail_version()
-                if latest_version and latest_version != Upgrade.SnappyVersion:
-                    Upgrade.stdOut(f"Using latest SnappyMail version: {latest_version}", 0)
-                    Upgrade.SnappyVersion = latest_version
-                else:
-                    Upgrade.stdOut(f"Using fallback SnappyMail version: {Upgrade.SnappyVersion}", 0)
-            except Exception as e:
-                Upgrade.stdOut(f"Failed to fetch latest SnappyMail version, using fallback: {e}", 0)
+            # Version: /etc/cyberpanel/snappymail_version, then latest from API, then fallback
+            snappy_version = Upgrade.SnappyVersion
+            version_file = '/etc/cyberpanel/snappymail_version'
+            if os.path.isfile(version_file):
+                try:
+                    with open(version_file, 'r') as f:
+                        raw = (f.read() or '').strip()
+                    if raw and len(raw) < 20 and all(c.isdigit() or c == '.' for c in raw):
+                        snappy_version = raw
+                        Upgrade.stdOut(f"Using SnappyMail version from {version_file}: {snappy_version}", 0)
+                except Exception:
+                    pass
+            if snappy_version == Upgrade.SnappyVersion:
+                try:
+                    from plogical.versionFetcher import get_latest_snappymail_version
+                    latest_version = get_latest_snappymail_version()
+                    if latest_version and latest_version != Upgrade.SnappyVersion:
+                        Upgrade.stdOut(f"Using latest SnappyMail version: {latest_version}", 0)
+                        snappy_version = latest_version
+                    else:
+                        Upgrade.stdOut(f"Using fallback SnappyMail version: {Upgrade.SnappyVersion}", 0)
+                except Exception as e:
+                    Upgrade.stdOut(f"Failed to fetch latest SnappyMail version, using fallback: {e}", 0)
 
             os.chdir("/usr/local/CyberCP/public")
 
@@ -1401,7 +1422,7 @@ $cfg['Servers'][$i]['port'] = '3306';
             
             while (1):
                 command = 'wget -q https://github.com/the-djmaze/snappymail/releases/download/v%s/snappymail-%s.zip' % (
-                    Upgrade.SnappyVersion, Upgrade.SnappyVersion)
+                    snappy_version, snappy_version)
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 if res != 0:
@@ -1415,11 +1436,12 @@ $cfg['Servers'][$i]['port'] = '3306';
 
             count = 0
 
+            # Replace only app tree; data dirs (/usr/local/lscp/cyberpanel/snappymail/data, etc.) are preserved
             if os.path.exists('/usr/local/CyberCP/public/snappymail'):
                 shutil.rmtree('/usr/local/CyberCP/public/snappymail')
 
             while (1):
-                command = 'unzip -q snappymail-%s.zip -d /usr/local/CyberCP/public/snappymail' % (Upgrade.SnappyVersion)
+                command = 'unzip -q snappymail-%s.zip -d /usr/local/CyberCP/public/snappymail' % (snappy_version,)
 
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -1430,7 +1452,7 @@ $cfg['Servers'][$i]['port'] = '3306';
                 else:
                     break
             try:
-                os.remove("snappymail-%s.zip" % (Upgrade.SnappyVersion))
+                os.remove("snappymail-%s.zip" % (snappy_version,))
             except:
                 pass
 
@@ -4510,14 +4532,20 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             subprocess.run(command, shell=True, capture_output=True)
             
             # Install MariaDB from official repository (version from /etc/cyberpanel/mariadb_version or default 11.8)
+            # Accept any major.minor supported by mariadb_repo_setup (10.3-10.11, 11.0-11.8, 12.0-12.x); safe regex to avoid injection
             mariadb_ver = "11.8"
             try:
                 mariadb_version_file = "/etc/cyberpanel/mariadb_version"
                 if os.path.isfile(mariadb_version_file):
                     with open(mariadb_version_file, "r") as f:
-                        raw = f.read().strip()
-                        if raw in ("11.8", "12.1"):
-                            mariadb_ver = raw
+                        raw = (f.read() or "").strip()
+                    if raw:
+                        import re
+                        m = re.match(r'^(\d+)\.(\d+)(?:\.\d+)*$', raw)
+                        if m:
+                            major, minor = int(m.group(1)), int(m.group(2))
+                            if (major == 10 and 3 <= minor <= 11) or (major == 11 and 0 <= minor <= 8) or (major == 12 and 0 <= minor <= 99):
+                                mariadb_ver = "%d.%d" % (major, minor)
             except Exception:
                 pass
             Upgrade.stdOut("Setting up official MariaDB %s repository..." % mariadb_ver, 1)
