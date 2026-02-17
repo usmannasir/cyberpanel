@@ -716,14 +716,14 @@ class DNS:
                 value = value.replace('\n\t', '')
                 value = value.replace('"', '')
 
-            # Only A and CNAME records can be proxied in CloudFlare
-            # Determine if proxy should be enabled (default: True for A/CNAME, except for mail domains)
-            if proxied is None and type in ['A', 'CNAME']:
+            # A, AAAA and CNAME records can be proxied in CloudFlare.
+            # Determine if proxy should be enabled (default: True, except for mail domains).
+            if proxied is None and type in ['A', 'AAAA', 'CNAME']:
                 # Check if this is a mail domain (starts with 'mail.' or contains 'mail.')
                 is_mail_domain = name.lower().startswith('mail.') or '.mail.' in name.lower()
                 proxied = not is_mail_domain
-            elif type not in ['A', 'CNAME']:
-                # AAAA, MX, TXT, etc. cannot be proxied
+            elif type not in ['A', 'AAAA', 'CNAME']:
+                # MX, TXT, etc. cannot be proxied
                 proxied = False
 
             if ttl > 0:
@@ -731,8 +731,8 @@ class DNS:
             else:
                 dns_record = {'name': name, 'type': type, 'content': value, 'priority': priority}
             
-            # Only add proxied parameter for A and CNAME records
-            if type in ['A', 'CNAME']:
+            # Only add proxied parameter for A, AAAA and CNAME records
+            if type in ['A', 'AAAA', 'CNAME']:
                 dns_record['proxied'] = proxied
 
             cf.zones.dns_records.post(zone, data=dns_record)
