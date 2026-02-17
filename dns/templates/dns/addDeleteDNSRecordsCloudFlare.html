@@ -959,6 +959,25 @@
                                             {% trans "DNS Records" %}
                                         </h4>
                                         
+                                        <div class="mb-3" ng-if="selectedZone" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+                                            <button type="button" ng-click="exportRecords()" class="btn-secondary" ng-disabled="exportLoading">
+                                                <i class="fas fa-download"></i> {% trans "Export" %}
+                                            </button>
+                                            <label class="btn-secondary" style="margin-bottom: 0; cursor: pointer;">
+                                                <i class="fas fa-upload"></i> {% trans "Import" %}
+                                                <input type="file" accept=".json,application/json" style="display: none;" cf-import-file>
+                                            </label>
+                                            <button type="button" ng-click="confirmClearAll()" class="btn-secondary" style="border-color: #ef4444; color: #ef4444;" ng-disabled="clearAllLoading">
+                                                <i class="fas fa-trash-alt"></i> {% trans "Clear all DNS records" %}
+                                            </button>
+                                            <button type="button" ng-click="restoreFromBackup()" class="btn-primary" ng-show="hasBackupForZone()" ng-disabled="restoreLoading">
+                                                <i class="fas fa-undo"></i> {% trans "Restore" %}
+                                            </button>
+                                            <button type="button" ng-click="checkStaleRecords()" class="btn-secondary" ng-disabled="staleLoading" title="{% trans 'Find DNS records for subdomains that no longer exist in the panel' %}">
+                                                <i class="fas fa-broom"></i> {% trans "Check orphan DNS" %}
+                                            </button>
+                                        </div>
+                                        
                                         <div class="dns-search-wrap mb-3" ng-if="!loadingRecords && records.length > 0">
                                             <span class="dns-search-icon-left"><i class="fas fa-search"></i></span>
                                             <input type="text" class="form-control dns-search-input" ng-model="dnsSearch.filter" placeholder="{% trans 'Search name, type, value...' %}" title="{% trans 'Search through all records' %}">
@@ -1040,7 +1059,7 @@
                                                     <td style="text-align: center;">
                                                         <i class="fas fa-trash delete-icon" 
                                                            style="color: #ef4444; cursor: pointer;" 
-                                                           ng-click="deleteRecord(record.id)"
+                                                           ng-click="confirmDeleteRecord(record)"
                                                            title="{% trans 'Delete Record' %}"></i>
                                                     </td>
                                                 </tr>
@@ -1124,6 +1143,46 @@
                                             <button type="button" class="btn-primary" ng-click="saveEditRecord()">
                                                 <i class="fas fa-save"></i> {% trans "Save" %}
                                             </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Stale / Orphan DNS Records Modal -->
+                                <div class="edit-record-overlay" ng-show="staleModalVisible" ng-click="closeStaleModal()">
+                                    <div class="edit-record-modal" ng-click="$event.stopPropagation()" style="max-width: 600px;">
+                                        <h4 class="mb-4" style="color: var(--text-primary, #1e293b); font-weight: 600;">
+                                            <i class="fas fa-broom"></i> {% trans "Orphan / Stale DNS Records" %}
+                                        </h4>
+                                        <p class="text-muted small mb-3">{% trans "Records below point to subdomains or hostnames that no longer exist in the panel. You can remove them to clean up CloudFlare." %}</p>
+                                        <div ng-if="staleRecords.length === 0" class="alert alert-success">
+                                            <i class="fas fa-check-circle"></i> {% trans "No orphan records found." %}
+                                        </div>
+                                        <div ng-if="staleRecords.length > 0">
+                                            <table class="records-table activity-table" style="margin-bottom: 1rem;">
+                                                <thead>
+                                                    <tr>
+                                                        <th>{% trans "Name" %}</th>
+                                                        <th>{% trans "Type" %}</th>
+                                                        <th>{% trans "Value" %}</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr ng-repeat="r in staleRecords">
+                                                        <td><strong ng-bind="r.name"></strong></td>
+                                                        <td ng-bind="r.type"></td>
+                                                        <td class="cell-value" ng-bind="r.content" title="{{ r.content }}"></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 1rem;">
+                                                <button type="button" class="btn-secondary" ng-click="closeStaleModal()">{% trans "Close" %}</button>
+                                                <button type="button" class="btn-primary" style="border-color: #ef4444; color: #ef4444;" ng-click="removeStaleRecords()">
+                                                    <i class="fas fa-trash-alt"></i> {% trans "Remove all orphan records" %}
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div ng-if="staleRecords.length === 0" style="margin-top: 1rem;">
+                                            <button type="button" class="btn-secondary" ng-click="closeStaleModal()">{% trans "Close" %}</button>
                                         </div>
                                     </div>
                                 </div>
