@@ -850,6 +850,7 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http, $window
     $scope.staleRecords = [];
     $scope.staleModalVisible = false;
     $scope.staleLoading = false;
+    $scope.fixDNSLoading = false;
     $scope.showEditModal = false;
     $scope.editRecord = {};
 
@@ -1376,6 +1377,29 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http, $window
     $scope.closeStaleModal = function () {
         $scope.staleModalVisible = false;
         $scope.staleRecords = [];
+    };
+
+    $scope.fixDNS = function () {
+        var zone = $scope.selectedZone;
+        if (!zone) return;
+        $scope.fixDNSLoading = true;
+        url = '/dns/fixDNSRecordsCloudFlare';
+        var data = { selectedZone: zone };
+        var config = { headers: { 'X-CSRFToken': getCookie('csrftoken') } };
+        $http.post(url, data, config).then(function (response) {
+            $scope.fixDNSLoading = false;
+            if (response.data.fix_status === 1) {
+                populateCurrentRecords();
+                var msg = response.data.added + ' record(s) added.';
+                if (response.data.skipped) msg += ' ' + response.data.skipped + ' already present.';
+                new PNotify({ title: 'Fix DNS done', text: msg, type: 'success' });
+            } else {
+                new PNotify({ title: 'Error', text: response.data.error_message || 'Fix DNS failed', type: 'error' });
+            }
+        }, function () {
+            $scope.fixDNSLoading = false;
+            new PNotify({ title: 'Error', text: 'Could not connect to server.', type: 'error' });
+        });
     };
 
     $scope.removeStaleRecords = function () {

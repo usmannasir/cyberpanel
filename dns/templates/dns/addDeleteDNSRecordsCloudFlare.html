@@ -976,6 +976,9 @@
                                             <button type="button" ng-click="checkStaleRecords()" class="btn-secondary" ng-disabled="staleLoading" title="{% trans 'Find DNS records for subdomains that no longer exist in the panel' %}">
                                                 <i class="fas fa-broom"></i> {% trans "Check orphan DNS" %}
                                             </button>
+                                            <button type="button" ng-click="fixDNS()" class="btn-primary" ng-disabled="fixDNSLoading" title="{% trans 'Add A/AAAA records for all domains and subdomains in the panel; skip if already present' %}">
+                                                <i class="fas fa-wrench"></i> {% trans "Fix DNS" %}
+                                            </button>
                                         </div>
                                         
                                         <div class="dns-search-wrap mb-3" ng-if="!loadingRecords && records.length > 0">
