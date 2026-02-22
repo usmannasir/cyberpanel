@@ -717,10 +717,14 @@ class DNS:
                 value = value.replace('"', '')
 
             # A, AAAA and CNAME records can be proxied in CloudFlare.
-            # Determine if proxy should be enabled (default: True, except for mail domains).
+            # Auto-enable proxy when Cloudflare is used, except for mail-related domains.
             if proxied is None and type in ['A', 'AAAA', 'CNAME']:
-                # Check if this is a mail domain (starts with 'mail.' or contains 'mail.')
-                is_mail_domain = name.lower().startswith('mail.') or '.mail.' in name.lower()
+                name_lower = name.lower()
+                mail_prefixes = ('mail.', 'smtp.', 'imap.', 'pop3.', 'pop.', 'autodiscover.', 'webmail.')
+                is_mail_domain = (
+                    any(name_lower.startswith(p) for p in mail_prefixes) or
+                    any(f'.{p.rstrip(".")}.' in name_lower for p in mail_prefixes)
+                )
                 proxied = not is_mail_domain
             elif type not in ['A', 'AAAA', 'CNAME']:
                 # MX, TXT, etc. cannot be proxied
