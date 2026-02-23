@@ -44,9 +44,8 @@
                         <input type="password" class="v2-input" x-model="formData.ftpPassword" placeholder="Strong password">
                     </div>
                 </div>
-                <input type="hidden" x-model="formData.ftpDomain" value="{{ website.domain }}">
                 <div style="display:flex; gap:8px; margin-top:8px;">
-                    <button class="v2-btn v2-btn-primary" @click="formData.ftpDomain = '{{ website.domain }}'; create(formData)">Create</button>
+                    <button class="v2-btn v2-btn-primary" @click="create(formData)">Create</button>
                     <button class="v2-btn v2-btn-outline" @click="showForm = false">Cancel</button>
                 </div>
             </div>

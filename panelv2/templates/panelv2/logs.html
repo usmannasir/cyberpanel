@@ -33,6 +33,11 @@
         </div>
     </div>
 
+    <!-- Alerts -->
+    <template x-if="error">
+        <div class="v2-alert v2-alert-danger"><i class="fas fa-exclamation-circle"></i> <span x-text="error"></span></div>
+    </template>
+
     <!-- Log viewer -->
     <div class="v2-card">
         <div class="v2-card-header">

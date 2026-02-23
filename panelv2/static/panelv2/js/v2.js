@@ -34,6 +34,9 @@ async function v2Fetch(url, options = {}) {
         config.body = JSON.stringify(options.body);
     }
     const resp = await fetch(url, config);
+    if (!resp.ok) {
+        return { status: 0, error_message: 'Server error (' + resp.status + ')' };
+    }
     return resp.json();
 }
 
@@ -187,16 +190,20 @@ function logViewerComponent(apiUrl) {
         logType: 'access',
         lines: 100,
         loading: false,
+        error: '',
 
         async load() {
             this.loading = true;
+            this.error = '';
             try {
                 const data = await v2Fetch(apiUrl + '?type=' + this.logType + '&lines=' + this.lines);
                 if (data.status === 1) {
                     this.logs = data.logs || [];
+                } else {
+                    this.error = data.error_message || 'Failed to load logs';
                 }
             } catch (e) {
-                // silent
+                this.error = 'Failed to load logs';
             }
             this.loading = false;
         },

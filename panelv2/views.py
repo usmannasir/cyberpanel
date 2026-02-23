@@ -1,4 +1,6 @@
 import json
+import os
+import socket
 from django.shortcuts import redirect, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from plogical.httpProc import httpProc
@@ -58,6 +60,17 @@ def _json(status, message, **extra):
     return HttpResponse(json.dumps(data), content_type='application/json')
 
 
+def _get_server_ip():
+    """Get the server's public IP address."""
+    try:
+        return ACLManager.GetServerIP()
+    except:
+        try:
+            return socket.gethostbyname(socket.gethostname())
+        except:
+            return 'N/A'
+
+
 # ---------------------------------------------------------------------------
 # Page views
 # ---------------------------------------------------------------------------
@@ -69,9 +82,11 @@ def site_list(request):
         return _login_redirect()
 
     websites = ACLManager.findWebsiteObjects(currentACL, userID)
+    createWebsite = ACLManager.currentContextPermission(currentACL, 'createWebsite')
     data = {
         'site_context': None,
         'websites': websites,
+        'createWebsite': createWebsite,
     }
     proc = httpProc(request, 'panelv2/site_list.html', data, 'listWebsites')
     return proc.render()
@@ -343,6 +358,7 @@ def site_security(request, site_id):
     data = {
         'site_context': _site_context(website),
         'website': website,
+        'ipAddress': _get_server_ip(),
     }
     proc = httpProc(request, 'panelv2/security.html', data, 'listWebsites')
     return proc.render()
@@ -387,12 +403,13 @@ def api_databases(request, site_id):
     elif request.method == 'POST':
         try:
             data = json.loads(request.body)
-            data['databaseWebsite'] = website.domain
             from plogical.mysqlUtilities import mysqlUtilities
-            mysqlUtilities.createDatabase(data['dbName'], data['dbUser'], data['dbPassword'])
-            newDB = Databases(website=website, dbName=data['dbName'], dbUser=data['dbUser'])
-            newDB.save()
-            return _json(1, 'None')
+            result = mysqlUtilities.submitDBCreation(
+                data['dbName'], data['dbUser'], data['dbPassword'], website.domain
+            )
+            if result[0] == 1:
+                return _json(1, 'None')
+            return _json(0, result[1])
         except BaseException as msg:
             return _json(0, str(msg))
 
@@ -401,9 +418,10 @@ def api_databases(request, site_id):
             data = json.loads(request.body)
             db = Databases.objects.get(pk=data['id'], website=website)
             from plogical.mysqlUtilities import mysqlUtilities
-            mysqlUtilities.deleteDatabase(db.dbName, db.dbUser)
-            db.delete()
-            return _json(1, 'None')
+            result = mysqlUtilities.submitDBDeletion(db.dbName)
+            if result[0] == 1:
+                return _json(1, 'None')
+            return _json(0, result[1])
         except BaseException as msg:
             return _json(0, str(msg))
 
@@ -431,8 +449,10 @@ def api_email(request, site_id):
         try:
             data = json.loads(request.body)
             from plogical.mailUtilities import mailUtilities
-            mailUtilities.createEmailAccount(data['domain'], data['username'], data['password'])
-            return _json(1, 'None')
+            result = mailUtilities.createEmailAccount(data['domain'], data['username'], data['password'])
+            if result[0] == 1:
+                return _json(1, 'None')
+            return _json(0, result[1])
         except BaseException as msg:
             return _json(0, str(msg))
 
@@ -440,8 +460,10 @@ def api_email(request, site_id):
         try:
             data = json.loads(request.body)
             from plogical.mailUtilities import mailUtilities
-            mailUtilities.deleteEmailAccount(data['email'])
-            return _json(1, 'None')
+            result = mailUtilities.deleteEmailAccount(data['email'])
+            if result[0] == 1:
+                return _json(1, 'None')
+            return _json(0, result[1])
         except BaseException as msg:
             return _json(0, str(msg))
 
@@ -531,9 +553,12 @@ def api_dns(request, site_id):
     elif request.method == 'DELETE':
         try:
             data = json.loads(request.body)
-            record = DNSRecords.objects.get(pk=data['id'])
+            dns_domain = DNSDomains.objects.get(name=website.domain)
+            record = DNSRecords.objects.get(pk=data['id'], domainOwner=dns_domain)
             record.delete()
             return _json(1, 'None')
+        except DNSDomains.DoesNotExist:
+            return _json(0, 'DNS zone not found for this domain')
         except BaseException as msg:
             return _json(0, str(msg))
 
@@ -592,12 +617,15 @@ def api_backup(request, site_id):
     elif request.method == 'POST':
         try:
             import time
+            from multiprocessing import Process
             from plogical.backupUtilities import submitBackupCreation
             backupDomain = website.domain
             backupName = 'backup-%s-%s' % (backupDomain, time.strftime('%m.%d.%Y_%H-%M-%S'))
             backupPath = '/home/%s/backup' % backupDomain
             tempStoragePath = '%s/%s' % (backupPath, backupName)
-            submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain)
+            p = Process(target=submitBackupCreation,
+                        args=(tempStoragePath, backupName, backupPath, backupDomain))
+            p.start()
             return _json(1, 'None')
         except BaseException as msg:
             return _json(0, str(msg))
@@ -606,7 +634,6 @@ def api_backup(request, site_id):
         try:
             data = json.loads(request.body)
             backup = Backups.objects.get(pk=data['id'], website=website)
-            import os
             backup_file = '/home/%s/backup/%s' % (website.domain, backup.fileName)
             if os.path.exists(backup_file):
                 os.remove(backup_file)
@@ -630,13 +657,14 @@ def api_logs(request, site_id):
         return _json(0, 'Unauthorized or site not found')
 
     if request.method == 'GET':
-        import os
         log_type = request.GET.get('type', 'access')
         if log_type not in ('access', 'error'):
             log_type = 'access'
         try:
             lines = int(request.GET.get('lines', 50))
         except (ValueError, TypeError):
+            lines = 50
+        if lines < 1:
             lines = 50
         if lines > 1000:
             lines = 1000
@@ -650,8 +678,11 @@ def api_logs(request, site_id):
         if os.path.exists(log_path):
             try:
                 from plogical.processUtilities import ProcessUtilities
-                result = ProcessUtilities.outputExecutioner('tail -n %d %s' % (lines, log_path))
-                log_lines = result.strip().split('\n') if result.strip() else []
+                result = ProcessUtilities.outputExecutioner(
+                    'tail -n %d %s' % (lines, log_path)
+                )
+                if result and result.strip():
+                    log_lines = result.strip().split('\n')
             except:
                 pass
 
@@ -673,10 +704,11 @@ def api_config(request, site_id):
 
     if request.method == 'GET':
         config_type = request.GET.get('type', 'vhost')
-        import os
+        if config_type not in ('vhost', 'rewrite'):
+            config_type = 'vhost'
         content = ''
         if config_type == 'vhost':
-            vhost_path = '/usr/local/lsws/conf/vhosts/%s/vhconf.conf' % website.domain
+            vhost_path = '/usr/local/lsws/conf/vhosts/%s/vhost.conf' % website.domain
             if os.path.exists(vhost_path):
                 with open(vhost_path, 'r') as f:
                     content = f.read()
@@ -700,10 +732,12 @@ def api_config(request, site_id):
             elif config_type == 'php':
                 from plogical.vhost import vhost
                 vhFile = '/usr/local/lsws/conf/vhosts/%s/vhost.conf' % website.domain
-                vhost.changePHP(vhFile, data['phpVersion'])
-                website.phpSelection = data['phpVersion']
-                website.save()
-                return _json(1, 'None')
+                result = vhost.changePHP(vhFile, data['phpVersion'])
+                if result[0] == 1:
+                    website.phpSelection = data['phpVersion']
+                    website.save()
+                    return _json(1, 'None')
+                return _json(0, str(result[1]))
             return _json(0, 'Unknown config type')
         except BaseException as msg:
             return _json(0, str(msg))
@@ -737,8 +771,8 @@ def api_domains(request, site_id):
                 'domainName': data['domain'],
                 'path': data.get('path', ''),
                 'phpSelection': data.get('php', website.phpSelection),
-                'ssl': data.get('ssl', 0),
-                'alias': data.get('isAlias', 0),
+                'ssl': int(data.get('ssl', 0)),
+                'alias': int(data.get('isAlias', 0)),
                 'openBasedir': 1,
             }
             result = wm.submitDomainCreation(userID, create_data)
@@ -756,7 +790,7 @@ def api_domains(request, site_id):
             child = ChildDomains.objects.get(pk=data['id'], master=website)
             from websiteFunctions.website import WebsiteManager
             wm = WebsiteManager()
-            delete_data = {'websiteName': child.domain}
+            delete_data = {'websiteName': child.domain, 'DeleteDocRoot': 0}
             result = wm.submitDomainDeletion(userID, delete_data)
             result_data = json.loads(result.content)
             if result_data.get('status') == 1:
@@ -780,11 +814,18 @@ def api_security(request, site_id):
         return _json(0, 'Unauthorized or site not found')
 
     if request.method == 'GET':
-        try:
-            config = json.loads(website.config) if website.config else {}
-        except:
-            config = {}
-        open_basedir = config.get('openBasedir', 1)
+        # Check open_basedir by reading the vhost config file
+        open_basedir = 1  # default to enabled
+        vhost_path = '/usr/local/lsws/conf/vhosts/%s/vhost.conf' % website.domain
+        if os.path.exists(vhost_path):
+            try:
+                with open(vhost_path, 'r') as f:
+                    vhost_content = f.read()
+                # If no php_admin_value open_basedir line exists, it's disabled
+                if 'open_basedir' not in vhost_content:
+                    open_basedir = 0
+            except:
+                pass
         return _json(1, 'None', openBasedir=open_basedir)
 
     elif request.method == 'POST':
