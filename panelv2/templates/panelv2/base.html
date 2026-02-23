@@ -47,6 +47,9 @@
 </head>
 <body class="v2-app" x-data x-init="$store.theme.init()">
 
+<!-- CSRF token – ensures cookie is set for AJAX calls -->
+{% csrf_token %}
+
 <!-- Sidebar -->
 <aside class="v2-sidebar" :class="{ 'open': $store.sidebar.open }">
     <div class="v2-sidebar-brand">
@@ -138,9 +141,9 @@
 <!-- Overlay for mobile sidebar -->
 <div x-show="$store.sidebar.open" @click="$store.sidebar.close()" style="position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:150;display:none;" x-transition.opacity :style="$store.sidebar.open && 'display:block'"></div>
 
-<!-- Alpine.js (CDN) -->
-<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<!-- v2.js MUST load before Alpine so alpine:init listeners are registered -->
 <script src="{% static 'panelv2/js/v2.js' %}"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 {% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -1,5 +1,6 @@
 import json
 from django.shortcuts import redirect, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 from plogical.httpProc import httpProc
 from plogical.acl import ACLManager
 from loginSystem.models import Administrator
@@ -367,6 +368,7 @@ def server_management(request):
 # API endpoints (AJAX)
 # ---------------------------------------------------------------------------
 
+@csrf_exempt
 def api_databases(request, site_id):
     try:
         userID, admin, currentACL = _auth(request)
@@ -408,6 +410,7 @@ def api_databases(request, site_id):
     return _json(0, 'Invalid method')
 
 
+@csrf_exempt
 def api_email(request, site_id):
     try:
         userID, admin, currentACL = _auth(request)
@@ -445,6 +448,7 @@ def api_email(request, site_id):
     return _json(0, 'Invalid method')
 
 
+@csrf_exempt
 def api_ftp(request, site_id):
     try:
         userID, admin, currentACL = _auth(request)
@@ -492,6 +496,7 @@ def api_ftp(request, site_id):
     return _json(0, 'Invalid method')
 
 
+@csrf_exempt
 def api_dns(request, site_id):
     try:
         userID, admin, currentACL = _auth(request)
@@ -535,6 +540,7 @@ def api_dns(request, site_id):
     return _json(0, 'Invalid method')
 
 
+@csrf_exempt
 def api_ssl(request, site_id):
     try:
         userID, admin, currentACL = _auth(request)
@@ -567,6 +573,7 @@ def api_ssl(request, site_id):
     return _json(0, 'Invalid method')
 
 
+@csrf_exempt
 def api_backup(request, site_id):
     try:
         userID, admin, currentACL = _auth(request)
@@ -611,6 +618,7 @@ def api_backup(request, site_id):
     return _json(0, 'Invalid method')
 
 
+@csrf_exempt
 def api_logs(request, site_id):
     try:
         userID, admin, currentACL = _auth(request)
@@ -624,7 +632,12 @@ def api_logs(request, site_id):
     if request.method == 'GET':
         import os
         log_type = request.GET.get('type', 'access')
-        lines = int(request.GET.get('lines', 50))
+        if log_type not in ('access', 'error'):
+            log_type = 'access'
+        try:
+            lines = int(request.GET.get('lines', 50))
+        except (ValueError, TypeError):
+            lines = 50
         if lines > 1000:
             lines = 1000
 
@@ -647,6 +660,7 @@ def api_logs(request, site_id):
     return _json(0, 'Invalid method')
 
 
+@csrf_exempt
 def api_config(request, site_id):
     try:
         userID, admin, currentACL = _auth(request)
@@ -697,6 +711,7 @@ def api_config(request, site_id):
     return _json(0, 'Invalid method')
 
 
+@csrf_exempt
 def api_domains(request, site_id):
     try:
         userID, admin, currentACL = _auth(request)
@@ -727,7 +742,11 @@ def api_domains(request, site_id):
                 'openBasedir': 1,
             }
             result = wm.submitDomainCreation(userID, create_data)
-            return result
+            # WebsiteManager returns HttpResponse — parse and normalize
+            result_data = json.loads(result.content)
+            if result_data.get('status') == 1:
+                return _json(1, 'None')
+            return _json(0, result_data.get('error_message', 'Failed to create domain'))
         except BaseException as msg:
             return _json(0, str(msg))
 
@@ -739,13 +758,17 @@ def api_domains(request, site_id):
             wm = WebsiteManager()
             delete_data = {'websiteName': child.domain}
             result = wm.submitDomainDeletion(userID, delete_data)
-            return result
+            result_data = json.loads(result.content)
+            if result_data.get('status') == 1:
+                return _json(1, 'None')
+            return _json(0, result_data.get('error_message', 'Failed to delete domain'))
         except BaseException as msg:
             return _json(0, str(msg))
 
     return _json(0, 'Invalid method')
 
 
+@csrf_exempt
 def api_security(request, site_id):
     try:
         userID, admin, currentACL = _auth(request)
