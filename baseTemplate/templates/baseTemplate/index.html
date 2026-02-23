@@ -1107,6 +1107,123 @@
             }
         }
         
+        /* v2 Panel Banner */
+        .v2-panel-banner {
+            position: fixed;
+            top: 80px;
+            left: 260px;
+            right: 0;
+            background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 50%, #8b5cf6 100%);
+            border-bottom: 2px solid #4338ca;
+            padding: 12px 30px;
+            z-index: 997;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.25);
+            animation: slideDown 0.4s ease-out;
+            display: none;
+        }
+
+        .v2-panel-banner.show {
+            display: block;
+        }
+
+        .v2-panel-content {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .v2-panel-icon {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .v2-panel-icon i {
+            font-size: 1.3rem;
+            color: white;
+        }
+
+        .v2-panel-text {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .v2-panel-main-text {
+            display: block;
+            color: white;
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .v2-panel-sub-text {
+            display: block;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.8rem;
+            margin-top: 2px;
+        }
+
+        .v2-panel-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            color: #4f46e5;
+            padding: 9px 20px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .v2-panel-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            color: #4f46e5;
+            text-decoration: none;
+        }
+
+        .v2-panel-close {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            padding: 6px;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .v2-panel-close:hover {
+            color: white;
+        }
+
+        .v2-shown .v2-panel-banner {
+            /* positioning adjusted by JS based on other banners */
+        }
+
+        @media (max-width: 768px) {
+            .v2-panel-banner {
+                left: 0;
+                padding: 10px 16px;
+            }
+
+            .v2-panel-content {
+                gap: 0.8rem;
+                flex-wrap: wrap;
+            }
+
+            .v2-panel-sub-text {
+                display: none;
+            }
+        }
+
         /* Scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
@@ -2043,6 +2160,28 @@
         </div>
     </div>
 
+    <!-- v2 Panel Announcement -->
+    <div id="v2-notification" class="v2-panel-banner">
+        <div class="v2-panel-content">
+            <div class="v2-panel-icon">
+                <i class="fas fa-rocket"></i>
+            </div>
+            <div class="v2-panel-text">
+                <span class="v2-panel-main-text">New site-centric panel is here</span>
+                <span class="v2-panel-sub-text">Manage all your sites from one place — select a site, access everything.</span>
+            </div>
+            <div class="v2-panel-actions">
+                <a href="/v2/" class="v2-panel-btn">
+                    <i class="fas fa-arrow-right"></i>
+                    Try CyberPanel v2
+                </a>
+            </div>
+            <button class="v2-panel-close" onclick="dismissV2Notification()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
     <!-- Main Content -->
     <div id="main-content">
         {% block content %}{% endblock %}
@@ -2222,6 +2361,32 @@
             localStorage.setItem('htaccessNotificationDismissed', 'true');
         }
 
+        // v2 Panel Notification Functions
+        function checkV2Status() {
+            if (localStorage.getItem('v2NotificationDismissed') === 'true') {
+                return;
+            }
+            if (window.location.pathname.startsWith('/v2')) {
+                return;
+            }
+            showV2Notification();
+        }
+
+        function showV2Notification() {
+            var banner = document.getElementById('v2-notification');
+            if (banner) {
+                banner.classList.add('show');
+            }
+        }
+
+        function dismissV2Notification() {
+            var banner = document.getElementById('v2-notification');
+            if (banner) {
+                banner.classList.remove('show');
+            }
+            localStorage.setItem('v2NotificationDismissed', 'true');
+        }
+
         // Check all notification statuses when page loads
         document.addEventListener('DOMContentLoaded', function() {
             checkBackupStatus();
@@ -2229,6 +2394,8 @@
             setTimeout(checkAIScannerStatus, 1000);
             // Show .htaccess notification with additional delay for staggered effect
             setTimeout(checkHtaccessStatus, 1500);
+            // Show v2 panel notification
+            setTimeout(checkV2Status, 2000);
 
             // Set active menu state based on current URL
             setActiveMenuState();
