@@ -463,9 +463,17 @@ def api_ftp(request, site_id):
     elif request.method == 'POST':
         try:
             data = json.loads(request.body)
-            from plogical.ftpUtilities import ftpUtilities
-            ftpUtilities.createFTPAccount(data['ftpDomain'], data['ftpUser'], data['ftpPassword'])
-            return _json(1, 'None')
+            from plogical.ftpUtilities import FTPUtilities
+            result = FTPUtilities.submitFTPCreation(
+                website.domain,
+                data['ftpUser'],
+                data['ftpPassword'],
+                data.get('path', ''),
+                admin.userName
+            )
+            if result[0] == 1:
+                return _json(1, 'None')
+            return _json(0, result[1])
         except BaseException as msg:
             return _json(0, str(msg))
 
@@ -473,10 +481,11 @@ def api_ftp(request, site_id):
         try:
             data = json.loads(request.body)
             ftp_user = FTPUsers.objects.get(pk=data['id'], domain=website)
-            from plogical.ftpUtilities import ftpUtilities
-            ftpUtilities.deleteFTPAccount(ftp_user.user)
-            ftp_user.delete()
-            return _json(1, 'None')
+            from plogical.ftpUtilities import FTPUtilities
+            result = FTPUtilities.submitFTPDeletion(ftp_user.user)
+            if result[0] == 1:
+                return _json(1, 'None')
+            return _json(0, result[1])
         except BaseException as msg:
             return _json(0, str(msg))
 
@@ -505,9 +514,12 @@ def api_dns(request, site_id):
     elif request.method == 'POST':
         try:
             data = json.loads(request.body)
-            from plogical.dnsUtilities import dnsUtilities
-            dnsUtilities.createDNSRecord(website.domain, data['name'], data['type'], data['content'], data.get('prio', 0), data.get('ttl', 3600))
+            dns_domain = DNSDomains.objects.get(name=website.domain)
+            from plogical.dnsUtilities import DNS
+            DNS.createDNSRecord(dns_domain, data['name'], data['type'], data['content'], data.get('prio', 0), data.get('ttl', 3600))
             return _json(1, 'None')
+        except DNSDomains.DoesNotExist:
+            return _json(0, 'DNS zone not found for this domain')
         except BaseException as msg:
             return _json(0, str(msg))
 
@@ -538,9 +550,14 @@ def api_ssl(request, site_id):
             data = json.loads(request.body)
             action = data.get('action', 'issue')
             if action == 'issue':
-                from plogical.sslUtilities import sslUtilities
-                sslUtilities.issueSSL(website.domain)
-                return _json(1, 'None')
+                from plogical.virtualHostUtilities import virtualHostUtilities
+                path = '/home/%s' % website.domain
+                result = virtualHostUtilities.issueSSL(website.domain, path, website.adminEmail)
+                if result[0] == 1:
+                    website.ssl = 1
+                    website.save()
+                    return _json(1, 'None')
+                return _json(0, result[1])
             elif action == 'upload':
                 return _json(0, 'Upload SSL not yet implemented in v2 API')
             return _json(0, 'Unknown action')
@@ -567,8 +584,13 @@ def api_backup(request, site_id):
 
     elif request.method == 'POST':
         try:
-            from plogical.backupUtilities import backupUtilities
-            backupUtilities.createBackup(website.domain)
+            import time
+            from plogical.backupUtilities import submitBackupCreation
+            backupDomain = website.domain
+            backupName = 'backup-%s-%s' % (backupDomain, time.strftime('%m.%d.%Y_%H-%M-%S'))
+            backupPath = '/home/%s/backup' % backupDomain
+            tempStoragePath = '%s/%s' % (backupPath, backupName)
+            submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain)
             return _json(1, 'None')
         except BaseException as msg:
             return _json(0, str(msg))
@@ -577,8 +599,10 @@ def api_backup(request, site_id):
         try:
             data = json.loads(request.body)
             backup = Backups.objects.get(pk=data['id'], website=website)
-            from plogical.backupUtilities import backupUtilities
-            backupUtilities.deleteBackup(backup.fileName)
+            import os
+            backup_file = '/home/%s/backup/%s' % (website.domain, backup.fileName)
+            if os.path.exists(backup_file):
+                os.remove(backup_file)
             backup.delete()
             return _json(1, 'None')
         except BaseException as msg:
@@ -660,8 +684,9 @@ def api_config(request, site_id):
                     f.write(content)
                 return _json(1, 'None')
             elif config_type == 'php':
-                from plogical.virtualHostUtilities import virtualHostUtilities
-                virtualHostUtilities.changePHP(website.domain, data['phpVersion'])
+                from plogical.vhost import vhost
+                vhFile = '/usr/local/lsws/conf/vhosts/%s/vhost.conf' % website.domain
+                vhost.changePHP(vhFile, data['phpVersion'])
                 website.phpSelection = data['phpVersion']
                 website.save()
                 return _json(1, 'None')
@@ -690,9 +715,19 @@ def api_domains(request, site_id):
     elif request.method == 'POST':
         try:
             data = json.loads(request.body)
-            from plogical.childDomain import childDomain
-            childDomain.createChildDomain(website.domain, data['domain'], data.get('path', ''), data.get('php', website.phpSelection), data.get('ssl', 0), data.get('isAlias', 0))
-            return _json(1, 'None')
+            from websiteFunctions.website import WebsiteManager
+            wm = WebsiteManager()
+            create_data = {
+                'masterDomain': website.domain,
+                'domainName': data['domain'],
+                'path': data.get('path', ''),
+                'phpSelection': data.get('php', website.phpSelection),
+                'ssl': data.get('ssl', 0),
+                'alias': data.get('isAlias', 0),
+                'openBasedir': 1,
+            }
+            result = wm.submitDomainCreation(userID, create_data)
+            return result
         except BaseException as msg:
             return _json(0, str(msg))
 
@@ -700,9 +735,11 @@ def api_domains(request, site_id):
         try:
             data = json.loads(request.body)
             child = ChildDomains.objects.get(pk=data['id'], master=website)
-            from plogical.childDomain import childDomain
-            childDomain.deleteChildDomain(child.domain)
-            return _json(1, 'None')
+            from websiteFunctions.website import WebsiteManager
+            wm = WebsiteManager()
+            delete_data = {'websiteName': child.domain}
+            result = wm.submitDomainDeletion(userID, delete_data)
+            return result
         except BaseException as msg:
             return _json(0, str(msg))
 
@@ -733,7 +770,12 @@ def api_security(request, site_id):
             action = data.get('action', '')
             if action == 'toggleOpenBasedir':
                 from plogical.virtualHostUtilities import virtualHostUtilities
-                virtualHostUtilities.changeOpenBasedir(website.domain, data.get('value', 1))
+                value = data.get('value', 1)
+                if value == 0:
+                    openBasedirValue = 'Disable'
+                else:
+                    openBasedirValue = '/home/%s:/tmp:/var/tmp' % website.domain
+                virtualHostUtilities.changeOpenBasedir(website.domain, openBasedirValue)
                 return _json(1, 'None')
             return _json(0, 'Unknown action')
         except BaseException as msg:
