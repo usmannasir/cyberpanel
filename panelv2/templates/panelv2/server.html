@@ -1,0 +1,84 @@
+{% extends "panelv2/base.html" %}
+
+{% block title %}Server Management - CyberPanel v2{% endblock %}
+{% block nav_server %}active{% endblock %}
+
+{% block breadcrumb %}
+<a href="/v2/">Sites</a>
+<span class="sep">/</span>
+<span>Server Management</span>
+{% endblock %}
+
+{% block content %}
+<div>
+    <!-- Header -->
+    <div style="margin-bottom:24px;">
+        <h1 style="font-size:22px; font-weight:700; color:var(--text-heading); margin:0 0 4px 0;">Server Management</h1>
+        <p style="font-size:13px; color:var(--text-secondary); margin:0;">Quick access to server-level management tools</p>
+    </div>
+
+    <!-- Server tools grid -->
+    <div class="v2-feature-grid" style="grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));">
+        <a href="/tuning/" class="v2-feature-card">
+            <i class="fas fa-sliders-h"></i>
+            <div class="feature-name">Tuning</div>
+            <div class="feature-meta">Server performance tuning</div>
+        </a>
+        <a href="/serverstatus/" class="v2-feature-card">
+            <i class="fas fa-heartbeat"></i>
+            <div class="feature-name">Server Status</div>
+            <div class="feature-meta">Resource usage & monitoring</div>
+        </a>
+        <a href="/managephp/" class="v2-feature-card">
+            <i class="fab fa-php"></i>
+            <div class="feature-name">PHP</div>
+            <div class="feature-meta">PHP versions & extensions</div>
+        </a>
+        <a href="/serverlogs/" class="v2-feature-card">
+            <i class="fas fa-file-alt"></i>
+            <div class="feature-name">Server Logs</div>
+            <div class="feature-meta">System & access logs</div>
+        </a>
+        <a href="/firewall/" class="v2-feature-card">
+            <i class="fas fa-shield-alt"></i>
+            <div class="feature-name">Firewall</div>
+            <div class="feature-meta">Firewall rules & security</div>
+        </a>
+        <a href="/email/" class="v2-feature-card">
+            <i class="fas fa-envelope"></i>
+            <div class="feature-name">Mail Settings</div>
+            <div class="feature-meta">Email server configuration</div>
+        </a>
+        <a href="/manageservices/" class="v2-feature-card">
+            <i class="fas fa-cogs"></i>
+            <div class="feature-name">Services</div>
+            <div class="feature-meta">Manage server services</div>
+        </a>
+        <a href="/docker/" class="v2-feature-card">
+            <i class="fab fa-docker"></i>
+            <div class="feature-name">Docker</div>
+            <div class="feature-meta">Docker container manager</div>
+        </a>
+        <a href="/packages/" class="v2-feature-card">
+            <i class="fas fa-box"></i>
+            <div class="feature-name">Packages</div>
+            <div class="feature-meta">Hosting packages</div>
+        </a>
+        <a href="/users/" class="v2-feature-card">
+            <i class="fas fa-users"></i>
+            <div class="feature-name">Users</div>
+            <div class="feature-meta">User management</div>
+        </a>
+        <a href="/backup/" class="v2-feature-card">
+            <i class="fas fa-archive"></i>
+            <div class="feature-name">Backups</div>
+            <div class="feature-meta">Server-level backups</div>
+        </a>
+        <a href="/CloudLinux/" class="v2-feature-card">
+            <i class="fas fa-cloud"></i>
+            <div class="feature-name">CloudLinux</div>
+            <div class="feature-meta">CloudLinux manager</div>
+        </a>
+    </div>
+</div>
+{% endblock %}

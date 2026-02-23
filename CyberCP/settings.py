@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     'CLManager',
     'IncBackups',
     'aiScanner',
+    'panelv2',
     #    'WebTerminal'
 ]
 

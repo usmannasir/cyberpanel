@@ -1,0 +1,173 @@
+{% extends "panelv2/base.html" %}
+
+{% block title %}{{ site_context.domain }} - CyberPanel v2{% endblock %}
+{% block nav_overview %}active{% endblock %}
+
+{% block breadcrumb %}
+<a href="/v2/">Sites</a>
+<span class="sep">/</span>
+<span>{{ site_context.domain }}</span>
+{% endblock %}
+
+{% block content %}
+<div>
+    <!-- Page header -->
+    <div style="margin-bottom:24px;">
+        <h1 style="font-size:22px; font-weight:700; color:var(--text-heading); margin:0 0 4px 0;">{{ site_context.domain }}</h1>
+        <p style="font-size:13px; color:var(--text-secondary); margin:0;">Site overview and quick navigation</p>
+    </div>
+
+    <!-- Resource stats -->
+    <div class="v2-stats-grid">
+        <div class="v2-stat-card">
+            <div class="v2-stat-icon purple"><i class="fas fa-database"></i></div>
+            <div class="v2-stat-info">
+                <div class="label">Databases</div>
+                <div class="value">{{ databases_count }}</div>
+            </div>
+        </div>
+        <div class="v2-stat-card">
+            <div class="v2-stat-icon green"><i class="fas fa-envelope"></i></div>
+            <div class="v2-stat-info">
+                <div class="label">Email Accounts</div>
+                <div class="value">{{ email_count }}</div>
+            </div>
+        </div>
+        <div class="v2-stat-card">
+            <div class="v2-stat-icon blue"><i class="fas fa-upload"></i></div>
+            <div class="v2-stat-info">
+                <div class="label">FTP Accounts</div>
+                <div class="value">{{ ftp_count }}</div>
+            </div>
+        </div>
+        <div class="v2-stat-card">
+            <div class="v2-stat-icon orange"><i class="fas fa-sitemap"></i></div>
+            <div class="v2-stat-info">
+                <div class="label">Child Domains</div>
+                <div class="value">{{ child_count }}</div>
+            </div>
+        </div>
+        <div class="v2-stat-card">
+            <div class="v2-stat-icon {% if website.ssl == 1 %}green{% else %}red{% endif %}">
+                <i class="fas fa-lock"></i>
+            </div>
+            <div class="v2-stat-info">
+                <div class="label">SSL</div>
+                <div class="value">{% if website.ssl == 1 %}Active{% else %}None{% endif %}</div>
+            </div>
+        </div>
+        <div class="v2-stat-card">
+            <div class="v2-stat-icon purple"><i class="fab fa-wordpress"></i></div>
+            <div class="v2-stat-info">
+                <div class="label">WordPress Sites</div>
+                <div class="value">{{ wp_count }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Site info card -->
+    <div class="v2-card" style="margin-bottom:24px;">
+        <div class="v2-card-header">
+            <h2>Site Details</h2>
+            <span class="v2-badge {% if website.state == 1 %}v2-badge-success{% else %}v2-badge-danger{% endif %}">
+                {% if website.state == 1 %}Active{% else %}Suspended{% endif %}
+            </span>
+        </div>
+        <div class="v2-card-body">
+            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:16px;">
+                <div>
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-secondary); margin-bottom:4px;">PHP Version</div>
+                    <div style="font-weight:600;">{{ website.phpSelection }}</div>
+                </div>
+                <div>
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-secondary); margin-bottom:4px;">Admin Email</div>
+                    <div style="font-weight:600;">{{ website.adminEmail }}</div>
+                </div>
+                <div>
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-secondary); margin-bottom:4px;">Backups</div>
+                    <div style="font-weight:600;">{{ backup_count }}</div>
+                </div>
+                <div>
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-secondary); margin-bottom:4px;">Document Root</div>
+                    <div style="font-weight:600; word-break:break-all;">/home/{{ website.domain }}/public_html</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick actions -->
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:24px;">
+        <a href="/filemanager/{{ website.domain }}" class="v2-btn v2-btn-outline" target="_blank">
+            <i class="fas fa-folder-open"></i> File Manager
+        </a>
+        <a href="https://{{ website.domain }}" class="v2-btn v2-btn-outline" target="_blank" rel="noopener">
+            <i class="fas fa-external-link-alt"></i> Visit Site
+        </a>
+    </div>
+
+    <!-- Feature navigation grid -->
+    <h2 style="font-size:16px; font-weight:600; color:var(--text-heading); margin-bottom:16px;">Manage</h2>
+    <div class="v2-feature-grid">
+        <a href="/v2/sites/{{ site_context.id }}/domains" class="v2-feature-card">
+            <i class="fas fa-sitemap"></i>
+            <div class="feature-name">Domains</div>
+            <div class="feature-meta">{{ child_count }} child domain{{ child_count|pluralize }}</div>
+        </a>
+        <a href="/v2/sites/{{ site_context.id }}/databases" class="v2-feature-card">
+            <i class="fas fa-database"></i>
+            <div class="feature-name">Databases</div>
+            <div class="feature-meta">{{ databases_count }} database{{ databases_count|pluralize }}</div>
+        </a>
+        <a href="/v2/sites/{{ site_context.id }}/email" class="v2-feature-card">
+            <i class="fas fa-envelope"></i>
+            <div class="feature-name">Email</div>
+            <div class="feature-meta">{{ email_count }} account{{ email_count|pluralize }}</div>
+        </a>
+        <a href="/v2/sites/{{ site_context.id }}/ftp" class="v2-feature-card">
+            <i class="fas fa-upload"></i>
+            <div class="feature-name">FTP</div>
+            <div class="feature-meta">{{ ftp_count }} account{{ ftp_count|pluralize }}</div>
+        </a>
+        <a href="/v2/sites/{{ site_context.id }}/dns" class="v2-feature-card">
+            <i class="fas fa-globe"></i>
+            <div class="feature-name">DNS</div>
+            <div class="feature-meta">Manage records</div>
+        </a>
+        <a href="/v2/sites/{{ site_context.id }}/ssl" class="v2-feature-card">
+            <i class="fas fa-lock"></i>
+            <div class="feature-name">SSL</div>
+            <div class="feature-meta">{% if website.ssl == 1 %}Active{% else %}Not configured{% endif %}</div>
+        </a>
+        <a href="/v2/sites/{{ site_context.id }}/backup" class="v2-feature-card">
+            <i class="fas fa-archive"></i>
+            <div class="feature-name">Backup</div>
+            <div class="feature-meta">{{ backup_count }} backup{{ backup_count|pluralize }}</div>
+        </a>
+        <a href="/v2/sites/{{ site_context.id }}/files" class="v2-feature-card">
+            <i class="fas fa-folder-open"></i>
+            <div class="feature-name">Files</div>
+            <div class="feature-meta">File manager</div>
+        </a>
+        <a href="/v2/sites/{{ site_context.id }}/logs" class="v2-feature-card">
+            <i class="fas fa-file-alt"></i>
+            <div class="feature-name">Logs</div>
+            <div class="feature-meta">Access & error logs</div>
+        </a>
+        <a href="/v2/sites/{{ site_context.id }}/config" class="v2-feature-card">
+            <i class="fas fa-cog"></i>
+            <div class="feature-name">Config</div>
+            <div class="feature-meta">vHost, PHP, rewrites</div>
+        </a>
+        <a href="/v2/sites/{{ site_context.id }}/apps" class="v2-feature-card">
+            <i class="fas fa-th-large"></i>
+            <div class="feature-name">Apps</div>
+            <div class="feature-meta">{{ wp_count }} WP site{{ wp_count|pluralize }}</div>
+        </a>
+        <a href="/v2/sites/{{ site_context.id }}/security" class="v2-feature-card">
+            <i class="fas fa-shield-alt"></i>
+            <div class="feature-name">Security</div>
+            <div class="feature-meta">open_basedir, SSH</div>
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "panelv2/base.html" %}
+
+{% block title %}Logs - {{ site_context.domain }} - CyberPanel v2{% endblock %}
+{% block nav_logs %}active{% endblock %}
+
+{% block breadcrumb %}
+<a href="/v2/">Sites</a>
+<span class="sep">/</span>
+<a href="/v2/sites/{{ site_context.id }}/">{{ site_context.domain }}</a>
+<span class="sep">/</span>
+<span>Logs</span>
+{% endblock %}
+
+{% block content %}
+<div x-data="logViewerComponent('/v2/api/sites/{{ site_context.id }}/logs')">
+    <!-- Header -->
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+        <h1 style="font-size:22px; font-weight:700; color:var(--text-heading); margin:0;">Site Logs</h1>
+        <div style="display:flex; gap:8px; align-items:center;">
+            <select class="v2-select" style="width:auto;" x-model="logType" @change="load()">
+                <option value="access">Access Log</option>
+                <option value="error">Error Log</option>
+            </select>
+            <select class="v2-select" style="width:auto;" x-model="lines" @change="load()">
+                <option value="50">50 lines</option>
+                <option value="100">100 lines</option>
+                <option value="500">500 lines</option>
+                <option value="1000">1000 lines</option>
+            </select>
+            <button class="v2-btn v2-btn-outline" @click="load()" :disabled="loading">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+        </div>
+    </div>
+
+    <!-- Log viewer -->
+    <div class="v2-card">
+        <div class="v2-card-header">
+            <h2 x-text="logType === 'access' ? 'Access Log' : 'Error Log'"></h2>
+            <span style="font-size:12px; color:var(--text-secondary);" x-text="logs.length + ' lines'"></span>
+        </div>
+        <div class="v2-card-body no-pad">
+            <template x-if="loading">
+                <div style="padding:32px; text-align:center;"><div class="v2-spinner"></div></div>
+            </template>
+            <template x-if="!loading && logs.length > 0">
+                <pre style="margin:0; padding:16px; overflow-x:auto; font-size:12px; line-height:1.6; max-height:600px; overflow-y:auto; background:var(--bg-primary); color:var(--text-primary); font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;"><template x-for="(line, i) in logs" :key="i"><span x-text="line + '\n'"></span></template></pre>
+            </template>
+            <template x-if="!loading && logs.length === 0">
+                <div class="v2-empty">
+                    <i class="fas fa-file-alt"></i>
+                    <p>No log entries found.</p>
+                </div>
+            </template>
+        </div>
+    </div>
+</div>
+{% endblock %}

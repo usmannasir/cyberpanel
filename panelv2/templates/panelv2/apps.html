@@ -1,0 +1,90 @@
+{% extends "panelv2/base.html" %}
+
+{% block title %}Apps - {{ site_context.domain }} - CyberPanel v2{% endblock %}
+{% block nav_apps %}active{% endblock %}
+
+{% block breadcrumb %}
+<a href="/v2/">Sites</a>
+<span class="sep">/</span>
+<a href="/v2/sites/{{ site_context.id }}/">{{ site_context.domain }}</a>
+<span class="sep">/</span>
+<span>Apps</span>
+{% endblock %}
+
+{% block content %}
+<div>
+    <!-- Header -->
+    <div style="margin-bottom:20px;">
+        <h1 style="font-size:22px; font-weight:700; color:var(--text-heading); margin:0;">Applications</h1>
+    </div>
+
+    <!-- WordPress Sites -->
+    <div class="v2-card" style="margin-bottom:20px;">
+        <div class="v2-card-header">
+            <h2><i class="fab fa-wordpress" style="margin-right:8px; color:var(--accent-color);"></i> WordPress Sites</h2>
+        </div>
+        <div class="v2-card-body no-pad">
+            {% if wp_sites %}
+            <div class="v2-table-wrap">
+                <table class="v2-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>URL</th>
+                            <th>Path</th>
+                            <th>Auto Updates</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for wp in wp_sites %}
+                        <tr>
+                            <td><span style="font-weight:600;">{{ wp.title }}</span></td>
+                            <td>
+                                <a href="{{ wp.FinalURL }}" target="_blank" rel="noopener" style="color:var(--accent-color); text-decoration:none;">
+                                    {{ wp.FinalURL }} <i class="fas fa-external-link-alt" style="font-size:10px;"></i>
+                                </a>
+                            </td>
+                            <td style="font-size:12px;">{{ wp.path }}</td>
+                            <td>
+                                <span class="v2-badge {% if wp.AutoUpdates == 'Enabled' %}v2-badge-success{% else %}v2-badge-warning{% endif %}">
+                                    {{ wp.AutoUpdates }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="v2-empty">
+                <i class="fab fa-wordpress"></i>
+                <p>No WordPress installations found for this site.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- App Installers (links to existing v1 pages) -->
+    <div class="v2-card">
+        <div class="v2-card-header">
+            <h2>Install Applications</h2>
+        </div>
+        <div class="v2-card-body">
+            <div class="v2-feature-grid" style="grid-template-columns:repeat(auto-fill, minmax(160px, 1fr));">
+                <a href="/websites/{{ website.domain }}/wordpress" class="v2-feature-card" style="padding:20px 14px;">
+                    <i class="fab fa-wordpress" style="font-size:28px; color:#21759b;"></i>
+                    <div class="feature-name">WordPress</div>
+                </a>
+                <a href="/websites/{{ website.domain }}/joomla" class="v2-feature-card" style="padding:20px 14px;">
+                    <i class="fab fa-joomla" style="font-size:28px; color:#5091cd;"></i>
+                    <div class="feature-name">Joomla</div>
+                </a>
+                <a href="/websites/{{ website.domain }}/git" class="v2-feature-card" style="padding:20px 14px;">
+                    <i class="fab fa-git-alt" style="font-size:28px; color:#f05032;"></i>
+                    <div class="feature-name">Git</div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

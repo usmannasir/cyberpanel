@@ -1,0 +1,93 @@
+{% extends "panelv2/base.html" %}
+{% load v2_tags %}
+
+{% block title %}Sites - CyberPanel v2{% endblock %}
+{% block nav_site_list %}active{% endblock %}
+
+{% block breadcrumb %}
+<a href="/v2/">Sites</a>
+{% endblock %}
+
+{% block content %}
+<div x-data="siteListComponent()">
+    <!-- Page header -->
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+        <h1 style="font-size:22px; font-weight:700; color:var(--text-heading); margin:0;">Websites</h1>
+        {% if createWebsite %}
+        <a href="/websites/createWebsite" class="v2-btn v2-btn-primary">
+            <i class="fas fa-plus"></i> Create Website
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Search bar -->
+    <div class="v2-search-bar">
+        <input type="text" class="v2-input" placeholder="Search sites..." x-model="search" @input="page = 1" style="max-width:320px;">
+        <span style="font-size:13px; color:var(--text-secondary);" x-text="filtered.length + ' site(s)'"></span>
+    </div>
+
+    <!-- Sites table -->
+    <div class="v2-card">
+        <div class="v2-card-body no-pad">
+            <div class="v2-table-wrap">
+                <table class="v2-table">
+                    <thead>
+                        <tr>
+                            <th>Domain</th>
+                            <th>PHP</th>
+                            <th>SSL</th>
+                            <th>State</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-for="site in paged" :key="site.id">
+                            <tr class="clickable-row" @click="goToSite(site.id)" style="cursor:pointer;">
+                                <td>
+                                    <div style="display:flex; align-items:center; gap:10px;">
+                                        <div style="width:32px;height:32px;border-radius:6px;background:rgba(88,86,214,0.1);display:flex;align-items:center;justify-content:center;">
+                                            <i class="fas fa-globe" style="color:var(--accent-color); font-size:14px;"></i>
+                                        </div>
+                                        <span style="font-weight:600;" x-text="site.domain"></span>
+                                    </div>
+                                </td>
+                                <td><span class="v2-badge v2-badge-info" x-text="site.php"></span></td>
+                                <td>
+                                    <span class="v2-badge" :class="site.ssl == 1 ? 'v2-badge-success' : 'v2-badge-warning'" x-text="site.ssl == 1 ? 'Active' : 'None'"></span>
+                                </td>
+                                <td>
+                                    <span class="v2-badge" :class="site.state == 1 ? 'v2-badge-success' : 'v2-badge-danger'" x-text="site.state == 1 ? 'Active' : 'Suspended'"></span>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty state -->
+            <template x-if="filtered.length === 0">
+                <div class="v2-empty">
+                    <i class="fas fa-globe"></i>
+                    <p x-text="search ? 'No sites match your search.' : 'No websites found.'"></p>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <template x-if="totalPages > 1">
+        <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-top:16px;">
+            <button class="v2-btn v2-btn-outline v2-btn-sm" @click="page = Math.max(1, page - 1)" :disabled="page <= 1">Prev</button>
+            <span style="font-size:13px; color:var(--text-secondary);" x-text="'Page ' + page + ' of ' + totalPages"></span>
+            <button class="v2-btn v2-btn-outline v2-btn-sm" @click="page = Math.min(totalPages, page + 1)" :disabled="page >= totalPages">Next</button>
+        </div>
+    </template>
+</div>
+
+<script>
+window.__v2_sites = [
+    {% for site in websites %}
+    { id: {{ site.pk }}, domain: "{{ site.domain|escapejs }}", php: "{{ site.phpSelection|escapejs }}", ssl: {{ site.ssl }}, state: {{ site.state }} }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+</script>
+{% endblock %}

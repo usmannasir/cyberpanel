@@ -1,0 +1,103 @@
+{% extends "panelv2/base.html" %}
+
+{% block title %}FTP - {{ site_context.domain }} - CyberPanel v2{% endblock %}
+{% block nav_ftp %}active{% endblock %}
+
+{% block breadcrumb %}
+<a href="/v2/">Sites</a>
+<span class="sep">/</span>
+<a href="/v2/sites/{{ site_context.id }}/">{{ site_context.domain }}</a>
+<span class="sep">/</span>
+<span>FTP</span>
+{% endblock %}
+
+{% block content %}
+<div x-data="crudComponent('/v2/api/sites/{{ site_context.id }}/ftp', 'ftp_accounts')">
+    <!-- Header -->
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+        <h1 style="font-size:22px; font-weight:700; color:var(--text-heading); margin:0;">FTP Accounts</h1>
+        <button class="v2-btn v2-btn-primary" @click="showForm = !showForm; clearMessages()">
+            <i class="fas fa-plus"></i> Create Account
+        </button>
+    </div>
+
+    <!-- Alerts -->
+    <template x-if="error">
+        <div class="v2-alert v2-alert-danger"><i class="fas fa-exclamation-circle"></i> <span x-text="error"></span></div>
+    </template>
+    <template x-if="success">
+        <div class="v2-alert v2-alert-success"><i class="fas fa-check-circle"></i> <span x-text="success"></span></div>
+    </template>
+
+    <!-- Create form -->
+    <template x-if="showForm">
+        <div class="v2-card" style="margin-bottom:20px;">
+            <div class="v2-card-header"><h2>New FTP Account</h2></div>
+            <div class="v2-card-body">
+                <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:16px;">
+                    <div class="v2-form-group">
+                        <label>FTP Username</label>
+                        <input type="text" class="v2-input" x-model="formData.ftpUser" placeholder="ftpuser">
+                    </div>
+                    <div class="v2-form-group">
+                        <label>Password</label>
+                        <input type="password" class="v2-input" x-model="formData.ftpPassword" placeholder="Strong password">
+                    </div>
+                </div>
+                <input type="hidden" x-model="formData.ftpDomain" value="{{ website.domain }}">
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                    <button class="v2-btn v2-btn-primary" @click="formData.ftpDomain = '{{ website.domain }}'; create(formData)">Create</button>
+                    <button class="v2-btn v2-btn-outline" @click="showForm = false">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Table -->
+    <div class="v2-card">
+        <div class="v2-card-body no-pad">
+            <template x-if="loading">
+                <div style="padding:32px; text-align:center;"><div class="v2-spinner"></div></div>
+            </template>
+            <template x-if="!loading && items.length > 0">
+                <div class="v2-table-wrap">
+                    <table class="v2-table">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Directory</th>
+                                <th>Quota</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="acc in items" :key="acc.id">
+                                <tr>
+                                    <td><span style="font-weight:600;" x-text="acc.user"></span></td>
+                                    <td style="font-size:12px; word-break:break-all;" x-text="acc.dir"></td>
+                                    <td x-text="acc.quota + ' MB'"></td>
+                                    <td>
+                                        <span class="v2-badge" :class="acc.status === 'y' ? 'v2-badge-success' : 'v2-badge-danger'" x-text="acc.status === 'y' ? 'Active' : 'Inactive'"></span>
+                                    </td>
+                                    <td>
+                                        <button class="v2-btn v2-btn-danger v2-btn-sm" @click="remove({id: acc.id})">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </template>
+            <template x-if="!loading && items.length === 0">
+                <div class="v2-empty">
+                    <i class="fas fa-upload"></i>
+                    <p>No FTP accounts yet. Create one to get started.</p>
+                </div>
+            </template>
+        </div>
+    </div>
+</div>
+{% endblock %}

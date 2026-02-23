@@ -1,0 +1,49 @@
+{% extends "panelv2/base.html" %}
+
+{% block title %}Files - {{ site_context.domain }} - CyberPanel v2{% endblock %}
+{% block nav_files %}active{% endblock %}
+
+{% block breadcrumb %}
+<a href="/v2/">Sites</a>
+<span class="sep">/</span>
+<a href="/v2/sites/{{ site_context.id }}/">{{ site_context.domain }}</a>
+<span class="sep">/</span>
+<span>Files</span>
+{% endblock %}
+
+{% block content %}
+<div>
+    <!-- Header -->
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+        <h1 style="font-size:22px; font-weight:700; color:var(--text-heading); margin:0;">File Manager</h1>
+        <a href="/filemanager/{{ website.domain }}" class="v2-btn v2-btn-primary" target="_blank">
+            <i class="fas fa-external-link-alt"></i> Open File Manager
+        </a>
+    </div>
+
+    <!-- Info card -->
+    <div class="v2-card">
+        <div class="v2-card-body">
+            <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                <div style="width:60px; height:60px; border-radius:12px; background:rgba(88,86,214,0.1); display:flex; align-items:center; justify-content:center;">
+                    <i class="fas fa-folder-open" style="font-size:24px; color:var(--accent-color);"></i>
+                </div>
+                <div>
+                    <div style="font-size:15px; font-weight:600; color:var(--text-heading); margin-bottom:4px;">{{ website.domain }}</div>
+                    <div style="font-size:13px; color:var(--text-secondary);">Document Root: <code>/home/{{ website.domain }}/public_html</code></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- File manager embed -->
+    <div class="v2-card" style="margin-top:20px;">
+        <div class="v2-card-header">
+            <h2>File Manager</h2>
+        </div>
+        <div class="v2-card-body no-pad">
+            <iframe src="/filemanager/{{ website.domain }}" style="width:100%; height:600px; border:none; border-radius:0 0 10px 10px;"></iframe>
+        </div>
+    </div>
+</div>
+{% endblock %}

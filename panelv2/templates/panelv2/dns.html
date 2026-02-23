@@ -1,0 +1,123 @@
+{% extends "panelv2/base.html" %}
+
+{% block title %}DNS - {{ site_context.domain }} - CyberPanel v2{% endblock %}
+{% block nav_dns %}active{% endblock %}
+
+{% block breadcrumb %}
+<a href="/v2/">Sites</a>
+<span class="sep">/</span>
+<a href="/v2/sites/{{ site_context.id }}/">{{ site_context.domain }}</a>
+<span class="sep">/</span>
+<span>DNS</span>
+{% endblock %}
+
+{% block content %}
+<div x-data="crudComponent('/v2/api/sites/{{ site_context.id }}/dns', 'records')">
+    <!-- Header -->
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+        <h1 style="font-size:22px; font-weight:700; color:var(--text-heading); margin:0;">DNS Records</h1>
+        <button class="v2-btn v2-btn-primary" @click="showForm = !showForm; clearMessages()">
+            <i class="fas fa-plus"></i> Add Record
+        </button>
+    </div>
+
+    <!-- Alerts -->
+    <template x-if="error">
+        <div class="v2-alert v2-alert-danger"><i class="fas fa-exclamation-circle"></i> <span x-text="error"></span></div>
+    </template>
+    <template x-if="success">
+        <div class="v2-alert v2-alert-success"><i class="fas fa-check-circle"></i> <span x-text="success"></span></div>
+    </template>
+
+    <!-- Create form -->
+    <template x-if="showForm">
+        <div class="v2-card" style="margin-bottom:20px;">
+            <div class="v2-card-header"><h2>Add DNS Record</h2></div>
+            <div class="v2-card-body">
+                <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:16px;">
+                    <div class="v2-form-group">
+                        <label>Name</label>
+                        <input type="text" class="v2-input" x-model="formData.name" placeholder="{{ site_context.domain }}">
+                    </div>
+                    <div class="v2-form-group">
+                        <label>Type</label>
+                        <select class="v2-select" x-model="formData.type">
+                            <option value="A">A</option>
+                            <option value="AAAA">AAAA</option>
+                            <option value="CNAME">CNAME</option>
+                            <option value="MX">MX</option>
+                            <option value="TXT">TXT</option>
+                            <option value="NS">NS</option>
+                            <option value="SRV">SRV</option>
+                            <option value="CAA">CAA</option>
+                        </select>
+                    </div>
+                    <div class="v2-form-group">
+                        <label>Content</label>
+                        <input type="text" class="v2-input" x-model="formData.content" placeholder="Value">
+                    </div>
+                    <div class="v2-form-group">
+                        <label>Priority</label>
+                        <input type="number" class="v2-input" x-model="formData.prio" placeholder="0">
+                    </div>
+                    <div class="v2-form-group">
+                        <label>TTL</label>
+                        <input type="number" class="v2-input" x-model="formData.ttl" placeholder="3600" value="3600">
+                    </div>
+                </div>
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                    <button class="v2-btn v2-btn-primary" @click="create(formData)">Add Record</button>
+                    <button class="v2-btn v2-btn-outline" @click="showForm = false">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Table -->
+    <div class="v2-card">
+        <div class="v2-card-body no-pad">
+            <template x-if="loading">
+                <div style="padding:32px; text-align:center;"><div class="v2-spinner"></div></div>
+            </template>
+            <template x-if="!loading && items.length > 0">
+                <div class="v2-table-wrap">
+                    <table class="v2-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Content</th>
+                                <th>TTL</th>
+                                <th>Priority</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="rec in items" :key="rec.id">
+                                <tr>
+                                    <td style="font-weight:600; word-break:break-all;" x-text="rec.name"></td>
+                                    <td><span class="v2-badge v2-badge-info" x-text="rec.type"></span></td>
+                                    <td style="max-width:300px; word-break:break-all;" x-text="rec.content"></td>
+                                    <td x-text="rec.ttl"></td>
+                                    <td x-text="rec.prio || '-'"></td>
+                                    <td>
+                                        <button class="v2-btn v2-btn-danger v2-btn-sm" @click="remove({id: rec.id})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </template>
+            <template x-if="!loading && items.length === 0">
+                <div class="v2-empty">
+                    <i class="fas fa-globe"></i>
+                    <p>No DNS records found for this domain.</p>
+                </div>
+            </template>
+        </div>
+    </div>
+</div>
+{% endblock %}

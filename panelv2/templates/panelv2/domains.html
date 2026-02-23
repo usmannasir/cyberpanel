@@ -1,0 +1,117 @@
+{% extends "panelv2/base.html" %}
+
+{% block title %}Domains - {{ site_context.domain }} - CyberPanel v2{% endblock %}
+{% block nav_domains %}active{% endblock %}
+
+{% block breadcrumb %}
+<a href="/v2/">Sites</a>
+<span class="sep">/</span>
+<a href="/v2/sites/{{ site_context.id }}/">{{ site_context.domain }}</a>
+<span class="sep">/</span>
+<span>Domains</span>
+{% endblock %}
+
+{% block content %}
+<div x-data="crudComponent('/v2/api/sites/{{ site_context.id }}/domains', 'domains')">
+    <!-- Header -->
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+        <h1 style="font-size:22px; font-weight:700; color:var(--text-heading); margin:0;">Child Domains & Aliases</h1>
+        <button class="v2-btn v2-btn-primary" @click="showForm = !showForm; clearMessages()">
+            <i class="fas fa-plus"></i> Add Domain
+        </button>
+    </div>
+
+    <!-- Alerts -->
+    <template x-if="error">
+        <div class="v2-alert v2-alert-danger"><i class="fas fa-exclamation-circle"></i> <span x-text="error"></span></div>
+    </template>
+    <template x-if="success">
+        <div class="v2-alert v2-alert-success"><i class="fas fa-check-circle"></i> <span x-text="success"></span></div>
+    </template>
+
+    <!-- Create form -->
+    <template x-if="showForm">
+        <div class="v2-card" style="margin-bottom:20px;">
+            <div class="v2-card-header"><h2>Add Child Domain / Alias</h2></div>
+            <div class="v2-card-body">
+                <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:16px;">
+                    <div class="v2-form-group">
+                        <label>Domain Name</label>
+                        <input type="text" class="v2-input" x-model="formData.domain" placeholder="sub.example.com">
+                    </div>
+                    <div class="v2-form-group">
+                        <label>Path</label>
+                        <input type="text" class="v2-input" x-model="formData.path" placeholder="subdirectory">
+                    </div>
+                    <div class="v2-form-group">
+                        <label>PHP Version</label>
+                        <input type="text" class="v2-input" x-model="formData.php" placeholder="{{ website.phpSelection }}" value="{{ website.phpSelection }}">
+                    </div>
+                    <div class="v2-form-group">
+                        <label>Type</label>
+                        <select class="v2-select" x-model="formData.isAlias">
+                            <option value="0">Child Domain</option>
+                            <option value="1">Alias Domain</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                    <button class="v2-btn v2-btn-primary" @click="create(formData)">Add</button>
+                    <button class="v2-btn v2-btn-outline" @click="showForm = false">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Table -->
+    <div class="v2-card">
+        <div class="v2-card-body no-pad">
+            <template x-if="loading">
+                <div style="padding:32px; text-align:center;"><div class="v2-spinner"></div></div>
+            </template>
+            <template x-if="!loading && items.length > 0">
+                <div class="v2-table-wrap">
+                    <table class="v2-table">
+                        <thead>
+                            <tr>
+                                <th>Domain</th>
+                                <th>Type</th>
+                                <th>Path</th>
+                                <th>PHP</th>
+                                <th>SSL</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="d in items" :key="d.id">
+                                <tr>
+                                    <td><span style="font-weight:600;" x-text="d.domain"></span></td>
+                                    <td>
+                                        <span class="v2-badge" :class="d.isAlias == 1 ? 'v2-badge-info' : 'v2-badge-warning'" x-text="d.isAlias == 1 ? 'Alias' : 'Child'"></span>
+                                    </td>
+                                    <td x-text="d.path || '/'"></td>
+                                    <td x-text="d.php"></td>
+                                    <td>
+                                        <span class="v2-badge" :class="d.ssl == 1 ? 'v2-badge-success' : 'v2-badge-warning'" x-text="d.ssl == 1 ? 'Active' : 'None'"></span>
+                                    </td>
+                                    <td>
+                                        <button class="v2-btn v2-btn-danger v2-btn-sm" @click="remove({id: d.id})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </template>
+            <template x-if="!loading && items.length === 0">
+                <div class="v2-empty">
+                    <i class="fas fa-sitemap"></i>
+                    <p>No child domains or aliases. Add one to extend your site.</p>
+                </div>
+            </template>
+        </div>
+    </div>
+</div>
+{% endblock %}

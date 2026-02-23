@@ -1,0 +1,78 @@
+{% extends "panelv2/base.html" %}
+
+{% block title %}SSL - {{ site_context.domain }} - CyberPanel v2{% endblock %}
+{% block nav_ssl %}active{% endblock %}
+
+{% block breadcrumb %}
+<a href="/v2/">Sites</a>
+<span class="sep">/</span>
+<a href="/v2/sites/{{ site_context.id }}/">{{ site_context.domain }}</a>
+<span class="sep">/</span>
+<span>SSL</span>
+{% endblock %}
+
+{% block content %}
+<div x-data="{ issuing: false, error: '', success: '' }">
+    <!-- Header -->
+    <div style="margin-bottom:20px;">
+        <h1 style="font-size:22px; font-weight:700; color:var(--text-heading); margin:0;">SSL Certificate</h1>
+    </div>
+
+    <!-- Alerts -->
+    <template x-if="error">
+        <div class="v2-alert v2-alert-danger"><i class="fas fa-exclamation-circle"></i> <span x-text="error"></span></div>
+    </template>
+    <template x-if="success">
+        <div class="v2-alert v2-alert-success"><i class="fas fa-check-circle"></i> <span x-text="success"></span></div>
+    </template>
+
+    <!-- SSL Status -->
+    <div class="v2-card" style="margin-bottom:20px;">
+        <div class="v2-card-header">
+            <h2>Current Status</h2>
+            <span class="v2-badge {% if website.ssl == 1 %}v2-badge-success{% else %}v2-badge-warning{% endif %}">
+                {% if website.ssl == 1 %}SSL Active{% else %}No SSL{% endif %}
+            </span>
+        </div>
+        <div class="v2-card-body">
+            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:16px;">
+                <div>
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-secondary); margin-bottom:4px;">Domain</div>
+                    <div style="font-weight:600;">{{ website.domain }}</div>
+                </div>
+                <div>
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-secondary); margin-bottom:4px;">SSL Status</div>
+                    <div style="font-weight:600;">{% if website.ssl == 1 %}Enabled{% else %}Disabled{% endif %}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Issue SSL -->
+    <div class="v2-card">
+        <div class="v2-card-header">
+            <h2>Issue SSL Certificate</h2>
+        </div>
+        <div class="v2-card-body">
+            <p style="font-size:13px; color:var(--text-secondary); margin-bottom:16px;">
+                Issue a free Let's Encrypt SSL certificate for <strong>{{ website.domain }}</strong>. Make sure the domain's DNS points to this server.
+            </p>
+            <button class="v2-btn v2-btn-primary" :disabled="issuing"
+                @click="
+                    issuing = true; error = ''; success = '';
+                    v2Fetch('/v2/api/sites/{{ site_context.id }}/ssl', {method: 'POST', body: {action: 'issue'}})
+                        .then(d => {
+                            if (d.status === 1) { success = 'SSL certificate issued successfully. Reloading...'; setTimeout(() => location.reload(), 2000); }
+                            else { error = d.error_message; }
+                        })
+                        .catch(() => { error = 'Request failed'; })
+                        .finally(() => { issuing = false; })
+                ">
+                <template x-if="issuing"><span class="v2-spinner" style="width:14px;height:14px;border-width:2px;"></span></template>
+                <template x-if="!issuing"><i class="fas fa-certificate"></i></template>
+                Issue Let's Encrypt SSL
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

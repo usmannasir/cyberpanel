@@ -1,0 +1,114 @@
+{% extends "panelv2/base.html" %}
+
+{% block title %}Security - {{ site_context.domain }} - CyberPanel v2{% endblock %}
+{% block nav_security %}active{% endblock %}
+
+{% block breadcrumb %}
+<a href="/v2/">Sites</a>
+<span class="sep">/</span>
+<a href="/v2/sites/{{ site_context.id }}/">{{ site_context.domain }}</a>
+<span class="sep">/</span>
+<span>Security</span>
+{% endblock %}
+
+{% block content %}
+<div x-data="{
+    openBasedir: 1,
+    loading: true,
+    error: '',
+    success: '',
+    toggling: false,
+
+    async init() {
+        try {
+            const data = await v2Fetch('/v2/api/sites/{{ site_context.id }}/security');
+            if (data.status === 1) {
+                this.openBasedir = data.openBasedir;
+            }
+        } catch(e) {}
+        this.loading = false;
+    },
+
+    async toggleOpenBasedir() {
+        this.toggling = true;
+        this.error = '';
+        this.success = '';
+        const newVal = this.openBasedir === 1 ? 0 : 1;
+        try {
+            const data = await v2Fetch('/v2/api/sites/{{ site_context.id }}/security', {
+                method: 'POST',
+                body: { action: 'toggleOpenBasedir', value: newVal }
+            });
+            if (data.status === 1) {
+                this.openBasedir = newVal;
+                this.success = 'open_basedir ' + (newVal === 1 ? 'enabled' : 'disabled') + ' successfully';
+            } else {
+                this.error = data.error_message;
+            }
+        } catch(e) {
+            this.error = 'Request failed';
+        }
+        this.toggling = false;
+    }
+}">
+    <!-- Header -->
+    <div style="margin-bottom:20px;">
+        <h1 style="font-size:22px; font-weight:700; color:var(--text-heading); margin:0;">Security Settings</h1>
+    </div>
+
+    <!-- Alerts -->
+    <template x-if="error">
+        <div class="v2-alert v2-alert-danger"><i class="fas fa-exclamation-circle"></i> <span x-text="error"></span></div>
+    </template>
+    <template x-if="success">
+        <div class="v2-alert v2-alert-success"><i class="fas fa-check-circle"></i> <span x-text="success"></span></div>
+    </template>
+
+    <!-- open_basedir -->
+    <div class="v2-card" style="margin-bottom:20px;">
+        <div class="v2-card-header">
+            <h2>open_basedir Protection</h2>
+            <template x-if="!loading">
+                <span class="v2-badge" :class="openBasedir === 1 ? 'v2-badge-success' : 'v2-badge-warning'" x-text="openBasedir === 1 ? 'Enabled' : 'Disabled'"></span>
+            </template>
+        </div>
+        <div class="v2-card-body">
+            <p style="font-size:13px; color:var(--text-secondary); margin-bottom:16px;">
+                <strong>open_basedir</strong> restricts PHP scripts to only access files within the site's directory. This prevents a compromised script from reading other sites' files on the server.
+            </p>
+            <template x-if="loading">
+                <div><div class="v2-spinner"></div></div>
+            </template>
+            <template x-if="!loading">
+                <button class="v2-btn" :class="openBasedir === 1 ? 'v2-btn-danger' : 'v2-btn-primary'" :disabled="toggling" @click="toggleOpenBasedir()">
+                    <i class="fas" :class="openBasedir === 1 ? 'fa-unlock' : 'fa-lock'"></i>
+                    <span x-text="openBasedir === 1 ? 'Disable open_basedir' : 'Enable open_basedir'"></span>
+                </button>
+            </template>
+        </div>
+    </div>
+
+    <!-- SSH / SFTP Access info -->
+    <div class="v2-card">
+        <div class="v2-card-header">
+            <h2>SSH / SFTP Access</h2>
+        </div>
+        <div class="v2-card-body">
+            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:16px;">
+                <div>
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-secondary); margin-bottom:4px;">SFTP Host</div>
+                    <div style="font-weight:600;">{{ ipAddress }}</div>
+                </div>
+                <div>
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-secondary); margin-bottom:4px;">SFTP Port</div>
+                    <div style="font-weight:600;">22</div>
+                </div>
+                <div>
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-secondary); margin-bottom:4px;">Document Root</div>
+                    <div style="font-weight:600; word-break:break-all;">/home/{{ website.domain }}/public_html</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

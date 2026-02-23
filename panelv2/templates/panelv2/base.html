@@ -1,0 +1,146 @@
+{% load static %}
+{% load v2_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CyberPanel v2{% endblock %}</title>
+    <link rel="icon" type="image/x-icon" href="{% static 'baseTemplate/assets/finalBase/favicon.png' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'panelv2/css/v2.css' %}">
+    <style>
+        :root {
+            --bg-primary: #f0f0ff;
+            --bg-secondary: white;
+            --bg-sidebar: #f3f1ff;
+            --bg-sidebar-item: white;
+            --bg-hover: #e8e6ff;
+            --text-primary: #2f3640;
+            --text-secondary: #64748b;
+            --text-heading: #1e293b;
+            --border-color: #e8e9ff;
+            --shadow-color: rgba(0,0,0,0.05);
+            --accent-color: #5856d6;
+            --accent-hover: #4644c0;
+            --danger-color: #ef4444;
+            --success-color: #10b981;
+        }
+        [data-theme="dark"] {
+            --bg-primary: #0f0f23;
+            --bg-secondary: #1a1a3e;
+            --bg-sidebar: #16162e;
+            --bg-sidebar-item: #1e1e42;
+            --bg-hover: #252550;
+            --text-primary: #e4e4e7;
+            --text-secondary: #9ca3af;
+            --text-heading: #f3f4f6;
+            --border-color: #2a2a5e;
+            --shadow-color: rgba(0,0,0,0.3);
+            --accent-color: #7c7ff3;
+            --accent-hover: #6b6ee8;
+            --danger-color: #f87171;
+            --success-color: #34d399;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="v2-app" x-data x-init="$store.theme.init()">
+
+<!-- Sidebar -->
+<aside class="v2-sidebar" :class="{ 'open': $store.sidebar.open }">
+    <div class="v2-sidebar-brand">
+        <img src="{% static 'baseTemplate/assets/finalBase/favicon.png' %}" alt="CP">
+        <span>CyberPanel</span>
+        <span class="v2-version">v2</span>
+    </div>
+
+    {% if site_context %}
+    <!-- Site context mode -->
+    <div class="v2-site-header">
+        <a href="/v2/" class="back-link"><i class="fas fa-arrow-left"></i> All Sites</a>
+        <div class="site-domain">{{ site_context.domain }}</div>
+    </div>
+    <div class="v2-sidebar-section">
+        <ul class="v2-sidebar-nav">
+            <li><a href="/v2/sites/{{ site_context.id }}/" class="{% block nav_overview %}{% endblock %}"><i class="fas fa-tachometer-alt"></i> Overview</a></li>
+            <li><a href="/v2/sites/{{ site_context.id }}/domains" class="{% block nav_domains %}{% endblock %}"><i class="fas fa-sitemap"></i> Domains</a></li>
+            <li><a href="/v2/sites/{{ site_context.id }}/databases" class="{% block nav_databases %}{% endblock %}"><i class="fas fa-database"></i> Databases</a></li>
+            <li><a href="/v2/sites/{{ site_context.id }}/email" class="{% block nav_email %}{% endblock %}"><i class="fas fa-envelope"></i> Email</a></li>
+            <li><a href="/v2/sites/{{ site_context.id }}/ftp" class="{% block nav_ftp %}{% endblock %}"><i class="fas fa-upload"></i> FTP</a></li>
+            <li><a href="/v2/sites/{{ site_context.id }}/dns" class="{% block nav_dns %}{% endblock %}"><i class="fas fa-globe"></i> DNS</a></li>
+            <li><a href="/v2/sites/{{ site_context.id }}/ssl" class="{% block nav_ssl %}{% endblock %}"><i class="fas fa-lock"></i> SSL</a></li>
+            <li><a href="/v2/sites/{{ site_context.id }}/backup" class="{% block nav_backup %}{% endblock %}"><i class="fas fa-archive"></i> Backup</a></li>
+            <li><a href="/v2/sites/{{ site_context.id }}/files" class="{% block nav_files %}{% endblock %}"><i class="fas fa-folder-open"></i> Files</a></li>
+            <li><a href="/v2/sites/{{ site_context.id }}/logs" class="{% block nav_logs %}{% endblock %}"><i class="fas fa-file-alt"></i> Logs</a></li>
+            <li><a href="/v2/sites/{{ site_context.id }}/config" class="{% block nav_config %}{% endblock %}"><i class="fas fa-cog"></i> Config</a></li>
+            <li><a href="/v2/sites/{{ site_context.id }}/apps" class="{% block nav_apps %}{% endblock %}"><i class="fas fa-th-large"></i> Apps</a></li>
+            <li><a href="/v2/sites/{{ site_context.id }}/security" class="{% block nav_security %}{% endblock %}"><i class="fas fa-shield-alt"></i> Security</a></li>
+        </ul>
+    </div>
+    {% else %}
+    <!-- Default mode (no site context) -->
+    <div class="v2-sidebar-section">
+        <div class="v2-sidebar-label">Sites</div>
+        <ul class="v2-sidebar-nav">
+            <li><a href="/v2/" class="{% block nav_site_list %}{% endblock %}"><i class="fas fa-list"></i> All Sites</a></li>
+        </ul>
+    </div>
+    {% if admin %}
+    <div class="v2-sidebar-section">
+        <div class="v2-sidebar-label">Server</div>
+        <ul class="v2-sidebar-nav">
+            <li><a href="/v2/server/" class="{% block nav_server %}{% endblock %}"><i class="fas fa-server"></i> Server Management</a></li>
+        </ul>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <div class="v2-sidebar-footer">
+        <ul class="v2-sidebar-nav">
+            <li><a href="/"><i class="fas fa-arrow-left"></i> Classic Panel</a></li>
+        </ul>
+    </div>
+</aside>
+
+<!-- Header -->
+<header class="v2-header">
+    <div class="v2-header-left">
+        <button class="v2-menu-toggle" @click="$store.sidebar.toggle()">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="v2-breadcrumb">
+            {% block breadcrumb %}
+            <a href="/v2/">Sites</a>
+            {% endblock %}
+        </div>
+    </div>
+    <div class="v2-header-right">
+        <button class="v2-btn-icon" @click="$store.theme.toggle()" title="Toggle theme">
+            <i class="fas" :class="$store.theme.dark ? 'fa-sun' : 'fa-moon'"></i>
+        </button>
+        {% if fullName %}
+        <div class="v2-user-badge">
+            <i class="fas fa-user-circle"></i>
+            <span>{{ fullName }}</span>
+        </div>
+        {% endif %}
+    </div>
+</header>
+
+<!-- Main Content -->
+<main class="v2-main">
+    <div class="v2-content">
+        {% block content %}{% endblock %}
+    </div>
+</main>
+
+<!-- Overlay for mobile sidebar -->
+<div x-show="$store.sidebar.open" @click="$store.sidebar.close()" style="position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:150;display:none;" x-transition.opacity :style="$store.sidebar.open && 'display:block'"></div>
+
+<!-- Alpine.js (CDN) -->
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<script src="{% static 'panelv2/js/v2.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

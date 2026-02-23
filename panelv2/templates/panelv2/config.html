@@ -1,0 +1,104 @@
+{% extends "panelv2/base.html" %}
+
+{% block title %}Config - {{ site_context.domain }} - CyberPanel v2{% endblock %}
+{% block nav_config %}active{% endblock %}
+
+{% block breadcrumb %}
+<a href="/v2/">Sites</a>
+<span class="sep">/</span>
+<a href="/v2/sites/{{ site_context.id }}/">{{ site_context.domain }}</a>
+<span class="sep">/</span>
+<span>Config</span>
+{% endblock %}
+
+{% block content %}
+<div x-data="configEditorComponent('/v2/api/sites/{{ site_context.id }}/config')">
+    <!-- Header -->
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+        <h1 style="font-size:22px; font-weight:700; color:var(--text-heading); margin:0;">Site Configuration</h1>
+    </div>
+
+    <!-- Alerts -->
+    <template x-if="error">
+        <div class="v2-alert v2-alert-danger"><i class="fas fa-exclamation-circle"></i> <span x-text="error"></span></div>
+    </template>
+    <template x-if="success">
+        <div class="v2-alert v2-alert-success"><i class="fas fa-check-circle"></i> <span x-text="success"></span></div>
+    </template>
+
+    <!-- PHP Version Card -->
+    <div class="v2-card" style="margin-bottom:20px;">
+        <div class="v2-card-header">
+            <h2>PHP Version</h2>
+        </div>
+        <div class="v2-card-body" x-data="{ phpVersion: '{{ website.phpSelection }}', changingPHP: false, phpError: '', phpSuccess: '' }">
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                <div style="font-size:13px; color:var(--text-secondary);">Current PHP:</div>
+                <span class="v2-badge v2-badge-info">{{ website.phpSelection }}</span>
+                <select class="v2-select" style="width:auto; min-width:150px;" x-model="phpVersion">
+                    <option value="PHP 7.0">PHP 7.0</option>
+                    <option value="PHP 7.1">PHP 7.1</option>
+                    <option value="PHP 7.2">PHP 7.2</option>
+                    <option value="PHP 7.3">PHP 7.3</option>
+                    <option value="PHP 7.4">PHP 7.4</option>
+                    <option value="PHP 8.0">PHP 8.0</option>
+                    <option value="PHP 8.1">PHP 8.1</option>
+                    <option value="PHP 8.2">PHP 8.2</option>
+                    <option value="PHP 8.3">PHP 8.3</option>
+                    <option value="PHP 8.4">PHP 8.4</option>
+                </select>
+                <button class="v2-btn v2-btn-primary v2-btn-sm" :disabled="changingPHP"
+                    @click="
+                        changingPHP = true; phpError = ''; phpSuccess = '';
+                        v2Fetch('/v2/api/sites/{{ site_context.id }}/config', {method: 'POST', body: {type: 'php', phpVersion: phpVersion}})
+                            .then(d => {
+                                if (d.status === 1) { phpSuccess = 'PHP version changed. Reloading...'; setTimeout(() => location.reload(), 1500); }
+                                else { phpError = d.error_message; }
+                            })
+                            .catch(() => { phpError = 'Request failed'; })
+                            .finally(() => { changingPHP = false; })
+                    ">
+                    Change PHP
+                </button>
+            </div>
+            <template x-if="phpError"><div class="v2-alert v2-alert-danger" style="margin-top:12px;"><span x-text="phpError"></span></div></template>
+            <template x-if="phpSuccess"><div class="v2-alert v2-alert-success" style="margin-top:12px;"><span x-text="phpSuccess"></span></div></template>
+        </div>
+    </div>
+
+    <!-- Config Editor -->
+    <div class="v2-card">
+        <div class="v2-card-header">
+            <h2>Configuration Files</h2>
+            <div style="display:flex; gap:8px;">
+                <select class="v2-select" style="width:auto;" x-model="configType" @change="load()">
+                    <option value="vhost">vHost Config</option>
+                    <option value="rewrite">Rewrite Rules (.htaccess)</option>
+                </select>
+            </div>
+        </div>
+        <div class="v2-card-body">
+            <template x-if="loading">
+                <div style="padding:32px; text-align:center;"><div class="v2-spinner"></div></div>
+            </template>
+            <template x-if="!loading">
+                <div>
+                    <textarea class="v2-code-editor" x-model="content" :readonly="configType === 'vhost'"></textarea>
+                    <div style="display:flex; gap:8px; margin-top:12px; align-items:center;">
+                        <template x-if="configType !== 'vhost'">
+                            <button class="v2-btn v2-btn-primary" @click="save()">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                        </template>
+                        <template x-if="configType === 'vhost'">
+                            <div class="v2-alert v2-alert-info" style="margin:0;">
+                                <i class="fas fa-info-circle"></i> vHost config is read-only. Edit through the server configuration tools.
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+</div>
+{% endblock %}

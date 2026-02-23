@@ -1,0 +1,100 @@
+{% extends "panelv2/base.html" %}
+
+{% block title %}Databases - {{ site_context.domain }} - CyberPanel v2{% endblock %}
+{% block nav_databases %}active{% endblock %}
+
+{% block breadcrumb %}
+<a href="/v2/">Sites</a>
+<span class="sep">/</span>
+<a href="/v2/sites/{{ site_context.id }}/">{{ site_context.domain }}</a>
+<span class="sep">/</span>
+<span>Databases</span>
+{% endblock %}
+
+{% block content %}
+<div x-data="crudComponent('/v2/api/sites/{{ site_context.id }}/databases', 'databases')">
+    <!-- Header -->
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+        <h1 style="font-size:22px; font-weight:700; color:var(--text-heading); margin:0;">Databases</h1>
+        <button class="v2-btn v2-btn-primary" @click="showForm = !showForm; clearMessages()">
+            <i class="fas fa-plus"></i> Create Database
+        </button>
+    </div>
+
+    <!-- Alerts -->
+    <template x-if="error">
+        <div class="v2-alert v2-alert-danger"><i class="fas fa-exclamation-circle"></i> <span x-text="error"></span></div>
+    </template>
+    <template x-if="success">
+        <div class="v2-alert v2-alert-success"><i class="fas fa-check-circle"></i> <span x-text="success"></span></div>
+    </template>
+
+    <!-- Create form -->
+    <template x-if="showForm">
+        <div class="v2-card" style="margin-bottom:20px;">
+            <div class="v2-card-header"><h2>New Database</h2></div>
+            <div class="v2-card-body">
+                <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:16px;">
+                    <div class="v2-form-group">
+                        <label>Database Name</label>
+                        <input type="text" class="v2-input" x-model="formData.dbName" placeholder="mydb">
+                    </div>
+                    <div class="v2-form-group">
+                        <label>Database User</label>
+                        <input type="text" class="v2-input" x-model="formData.dbUser" placeholder="myuser">
+                    </div>
+                    <div class="v2-form-group">
+                        <label>Password</label>
+                        <input type="password" class="v2-input" x-model="formData.dbPassword" placeholder="Strong password">
+                    </div>
+                </div>
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                    <button class="v2-btn v2-btn-primary" @click="create(formData)">Create</button>
+                    <button class="v2-btn v2-btn-outline" @click="showForm = false">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Table -->
+    <div class="v2-card">
+        <div class="v2-card-body no-pad">
+            <template x-if="loading">
+                <div style="padding:32px; text-align:center;"><div class="v2-spinner"></div></div>
+            </template>
+            <template x-if="!loading && items.length > 0">
+                <div class="v2-table-wrap">
+                    <table class="v2-table">
+                        <thead>
+                            <tr>
+                                <th>Database Name</th>
+                                <th>Database User</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="db in items" :key="db.id">
+                                <tr>
+                                    <td><span style="font-weight:600;" x-text="db.name"></span></td>
+                                    <td x-text="db.user"></td>
+                                    <td>
+                                        <button class="v2-btn v2-btn-danger v2-btn-sm" @click="remove({id: db.id})">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </template>
+            <template x-if="!loading && items.length === 0">
+                <div class="v2-empty">
+                    <i class="fas fa-database"></i>
+                    <p>No databases yet. Create one to get started.</p>
+                </div>
+            </template>
+        </div>
+    </div>
+</div>
+{% endblock %}

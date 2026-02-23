@@ -45,5 +45,6 @@ urlpatterns = [
     path('CloudLinux/', include('CLManager.urls')),
     path('IncrementalBackups/', include('IncBackups.urls')),
     path('aiscanner/', include('aiScanner.urls')),
+    path('v2/', include('panelv2.urls')),
     # path('Terminal/', include('WebTerminal.urls')),
 ]
