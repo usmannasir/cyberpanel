@@ -1091,8 +1091,9 @@ class ACLManager:
         Returns None if no IPv6 address is found
         """
         try:
+            import ipaddress
             import subprocess
-            # Get IPv6 addresses, exclude link-local (fe80::) and loopback (::1)
+            # Get IPv6 addresses and filter loopback/link-local with proper IP parsing.
             result = subprocess.run(
                 ['ip', '-6', 'addr', 'show'],
                 capture_output=True,
@@ -1103,14 +1104,19 @@ class ACLManager:
             if result.returncode == 0:
                 lines = result.stdout.split('\n')
                 for line in lines:
-                    if 'inet6' in line and '::1' not in line and 'fe80::' not in line:
-                        # Extract IPv6 address (format: inet6 2a02:c207:2139:8929::1/64)
-                        parts = line.strip().split()
-                        if len(parts) >= 2:
-                            ipv6 = parts[1].split('/')[0]
-                            # Validate it's a real IPv6 (not link-local)
-                            if not ipv6.startswith('fe80::'):
-                                return ipv6
+                    if 'inet6' not in line:
+                        continue
+                    # Expected format: "inet6 2a02:c207:2139:8929::1/64 scope global ..."
+                    parts = line.strip().split()
+                    if len(parts) < 2:
+                        continue
+                    ipv6 = parts[1].split('/')[0]
+                    try:
+                        ip_obj = ipaddress.ip_address(ipv6)
+                    except ValueError:
+                        continue
+                    if ip_obj.version == 6 and not ip_obj.is_loopback and not ip_obj.is_link_local:
+                        return str(ip_obj)
         except Exception as e:
             logging.CyberCPLogFileWriter.writeToFile(f'Error getting IPv6 address: {str(e)}')
         

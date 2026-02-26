@@ -16,6 +16,7 @@ import plogical.CyberCPLogFileWriter as logging
 from plogical.errorSanitizer import secure_error_response, secure_log_error
 from django.shortcuts import HttpResponse, render, redirect
 from django.urls import reverse
+from django.db.utils import OperationalError
 from loginSystem.models import Administrator
 import subprocess
 import shlex
@@ -217,47 +218,72 @@ class ContainerManager(multi.Thread):
             return HttpResponse('Operation failed')
 
     def listContainers(self, request=None, userID=None, data=None):
-        client = docker.from_env()
-        dockerAPI = docker.APIClient()
+        def _render_list():
+            client = docker.from_env()
+            docker.APIClient()  # ensure API is usable
 
-        currentACL = ACLManager.loadedACL(userID)
-        containers = ACLManager.findAllContainers(currentACL, userID)
+            currentACL = ACLManager.loadedACL(userID)
+            containers = ACLManager.findAllContainers(currentACL, userID)
 
-        allContainers = client.containers.list()
-        containersList = []
-        showUnlistedContainer = True
+            allContainers = client.containers.list()
+            showUnlistedContainer = True
 
-        # TODO: Add condition to show unlisted Containers only if user has admin level access
+            unlistedContainers = []
+            for container in allContainers:
+                if container.name not in containers:
+                    unlistedContainers.append(container)
 
-        unlistedContainers = []
-        for container in allContainers:
-            if container.name not in containers:
-                unlistedContainers.append(container)
+            if not unlistedContainers:
+                showUnlistedContainer = False
 
-        if not unlistedContainers:
-            showUnlistedContainer = False
+            adminNames = ACLManager.loadAllUsers(userID)
 
-        adminNames = ACLManager.loadAllUsers(userID)
+            pages = float(len(containers)) / float(10)
+            pagination = []
 
-        pages = float(len(containers)) / float(10)
-        pagination = []
+            if pages <= 1.0:
+                pages = 1
+                pagination.append('<li><a href="\#"></a></li>')
+            else:
+                pages = ceil(pages)
+                finalPages = int(pages) + 1
 
-        if pages <= 1.0:
-            pages = 1
-            pagination.append('<li><a href="\#"></a></li>')
-        else:
-            pages = ceil(pages)
-            finalPages = int(pages) + 1
+                for i in range(1, finalPages):
+                    pagination.append('<li><a href="\#">' + str(i) + '</a></li>')
 
-            for i in range(1, finalPages):
-                pagination.append('<li><a href="\#">' + str(i) + '</a></li>')
+            template = 'dockerManager/listContainers.html'
+            proc = httpProc(request, template, {"pagination": pagination,
+                                                "unlistedContainers": unlistedContainers,
+                                                "adminNames": adminNames,
+                                                "showUnlistedContainer": showUnlistedContainer}, 'admin')
+            return proc.render()
 
-        template = 'dockerManager/listContainers.html'
-        proc = httpProc(request, template, {"pagination": pagination,
-                                            "unlistedContainers": unlistedContainers,
-                                            "adminNames": adminNames,
-                                            "showUnlistedContainer": showUnlistedContainer}, 'admin')
-        return proc.render()
+        try:
+            return _render_list()
+        except OperationalError as e:
+            logging.writeToFile(
+                "Docker containers list: DB error (table may be missing). Running migrations. Error: %s" % str(e)
+            )
+            try:
+                from django.core.management import call_command
+                call_command('migrate', 'dockerManager', verbosity=0)
+                return _render_list()
+            except Exception as migrate_err:
+                logging.writeToFile(
+                    "Docker containers list: migrate failed. Error: %s" % str(migrate_err)
+                )
+                return render(
+                    request,
+                    'baseTemplate/error.html',
+                    {'error_message': 'Docker Manager database not ready. Please run upgrade or: manage.py migrate dockerManager'}
+                )
+        except Exception as e:
+            secure_log_error(e, 'docker_list_containers')
+            return render(
+                request,
+                'baseTemplate/error.html',
+                {'error_message': 'Containers list could not be loaded. Check error logs.'}
+            )
 
     def getContainerLogs(self, userID=None, data=None):
         try:

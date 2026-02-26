@@ -625,11 +625,14 @@ install_cyberpanel_direct() {
     # Ask MariaDB version (after web server choice) if not set via --mariadb-version
     if [ -z "$MARIADB_VER" ]; then
         echo ""
-        echo "  MariaDB version: 10.11, 11.8 (LTS, default) or 12.1?"
-        read -r -t 60 -p "  Enter 10.11, 11.8 or 12.1 [11.8]: " MARIADB_VER || true
+        echo "  MariaDB version: 10.11, 11.8 (LTS, default), 12.1, 12.2, 12.3 or other X.Y?"
+        read -r -t 60 -p "  Enter version [11.8]: " MARIADB_VER || true
         MARIADB_VER="${MARIADB_VER:-11.8}"
         MARIADB_VER="${MARIADB_VER// /}"
-        if [ "$MARIADB_VER" != "10.11" ] && [ "$MARIADB_VER" != "11.8" ] && [ "$MARIADB_VER" != "12.1" ]; then
+        # Normalize to major.minor (e.g. 12.3.1 -> 12.3)
+        if [[ "$MARIADB_VER" =~ ^([0-9]+)\.([0-9]+) ]]; then
+            MARIADB_VER="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"
+        else
             MARIADB_VER="11.8"
         fi
         echo "  Using MariaDB $MARIADB_VER"

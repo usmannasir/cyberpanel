@@ -925,9 +925,12 @@ fi
 
 if [[ $debug == "1" ]] ; then
 	if [[ $DEV == "ON" ]] ; then
-	/usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --mariadb-version "${MARIADB_VER:-11.8}"
+	EXTRA_VER_ARGS=""
+	[[ -n "${PHPMYADMIN_VER:-}" ]] && EXTRA_VER_ARGS="$EXTRA_VER_ARGS --phpmyadmin-version ${PHPMYADMIN_VER}"
+	[[ -n "${SNAPPYMAIL_VER:-}" ]] && EXTRA_VER_ARGS="$EXTRA_VER_ARGS --snappymail-version ${SNAPPYMAIL_VER}"
+	/usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --mariadb-version "${MARIADB_VER:-11.8}" $EXTRA_VER_ARGS
 	else
-	/usr/local/CyberPanel/bin/python2 install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --mariadb-version "${MARIADB_VER:-11.8}"
+	/usr/local/CyberPanel/bin/python2 install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --mariadb-version "${MARIADB_VER:-11.8}" $EXTRA_VER_ARGS
 	fi
 	
 	if grep "CyberPanel installation successfully completed" /var/log/installLogs.txt > /dev/null; then 

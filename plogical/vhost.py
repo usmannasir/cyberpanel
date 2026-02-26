@@ -321,44 +321,54 @@ class vhost:
 
     @staticmethod
     def createNONSSLMapEntry(virtualHostName):
+        """Add NON-SSL map entry for virtualHostName in OLS httpd_config.conf.
+        Returns (1, None) on success, (0, error_message) on failure.
+        """
         try:
             def modify_config(lines):
                 map_entry = "  map                     " + virtualHostName + " " + virtualHostName + "\n"
                 modified = []
                 mapchecker = 1
-                
+                line_lower = None
                 for line in lines:
-                    if (mapchecker == 1 and (line.find("listener") > -1 and line.find("Default") > -1)):
+                    line_lower = line.lower()
+                    # Match listener block: "listener Default" or "listener default" (case-insensitive)
+                    if (mapchecker == 1 and "listener" in line_lower and "default" in line_lower):
                         modified.append(line)
                         modified.append(map_entry)
                         mapchecker = 0
                     else:
                         modified.append(line)
-                
+                if mapchecker != 0:
+                    raise ValueError(
+                        "Could not find Default listener block in /usr/local/lsws/conf/httpd_config.conf. "
+                        "Ensure the file contains a line like 'listener Default {'."
+                    )
                 return modified
-            
+
             success, error = installUtilities.installUtilities.safeModifyHttpdConfig(
                 modify_config,
                 f"Add NON-SSL map entry for {virtualHostName}"
             )
-            
+
             if not success:
                 error_msg = error if error else "Unknown error"
-                logging.writeToFile(f"[createNONSSLMapEntry] Failed: {error_msg}")
-                return 0
-            
-            return 1
+                logging.CyberCPLogFileWriter.writeToFile(f"[createNONSSLMapEntry] Failed: {error_msg}")
+                return 0, error_msg
+
+            return 1, None
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg))
-            return 0
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createNONSSLMapEntry]")
+            return 0, str(msg)
 
     @staticmethod
     def createConfigInMainVirtualHostFile(virtualHostName):
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             try:
-
-                if vhost.createNONSSLMapEntry(virtualHostName) == 0:
-                    return [0, "Failed to create NON SSL Map Entry [createConfigInMainVirtualHostFile]"]
+                success, error_msg = vhost.createNONSSLMapEntry(virtualHostName)
+                if success != 1:
+                    display_msg = error_msg or "Failed to create NON SSL Map Entry [createConfigInMainVirtualHostFile]"
+                    return [0, display_msg]
 
                 writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'a')
 
@@ -1236,9 +1246,10 @@ class vhost:
     def createConfigInMainDomainHostFile(domain, masterDomain):
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             try:
-
-                if vhost.createNONSSLMapEntry(domain) == 0:
-                    return [0, "Failed to create NON SSL Map Entry [createConfigInMainVirtualHostFile]"]
+                success, error_msg = vhost.createNONSSLMapEntry(domain)
+                if success != 1:
+                    display_msg = error_msg or "Failed to create NON SSL Map Entry [createConfigInMainVirtualHostFile]"
+                    return [0, display_msg]
 
                 writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'a')
 

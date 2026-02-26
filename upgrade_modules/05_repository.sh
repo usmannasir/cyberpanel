@@ -259,7 +259,8 @@ EOF
       sed -i 's|https://yum.mariadb.org/RPM-GPG-KEY-MariaDB|https://cyberpanel.sh/yum.mariadb.org/RPM-GPG-KEY-MariaDB|g' /etc/yum.repos.d/MariaDB.repo
     fi
     dnf clean metadata --disablerepo='*' --enablerepo=mariadb 2>/dev/null || true
-    # MariaDB 10 -> 11 or 11 -> 12: RPM scriptlet blocks in-place upgrade; do manual stop, remove old server, install target, start, mariadb-upgrade
+    # MariaDB 10 -> 11 or 11 -> 12: RPM scriptlet blocks in-place upgrade; do manual stop, remove old server, install target, start, mariadb-upgrade.
+    # Data in /var/lib/mysql is preserved; no databases are dropped.
     MARIADB_OLD_10=$(rpm -qa 'MariaDB-server-10*' 2>/dev/null | head -1)
     [[ -z "$MARIADB_OLD_10" ]] && MARIADB_OLD_10=$(rpm -qa 2>/dev/null | grep -E '^MariaDB-server-10\.' | head -1)
     MARIADB_OLD_11=$(rpm -qa 'MariaDB-server-11*' 2>/dev/null | head -1)
@@ -278,7 +279,7 @@ EOF
       printf "[client]\nssl=0\nskip-ssl\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
       systemctl start mariadb 2>/dev/null || true
       sleep 2
-      mariadb-upgrade -u root 2>/dev/null || true
+      mariadb-upgrade --force -u root 2>/dev/null || true
       echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB manual upgrade to $MARIADB_VER_REPO completed." | tee -a /var/log/cyberpanel_upgrade_debug.log
     elif [[ -n "$MARIADB_OLD_11" ]] && [[ "$MARIADB_VER_REPO" =~ ^12\. ]]; then
       echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB 11.x detected; performing manual upgrade to $MARIADB_VER_REPO (stop, remove, install, start, mariadb-upgrade)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
@@ -292,7 +293,7 @@ EOF
       printf "[client]\nssl=0\nskip-ssl\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
       systemctl start mariadb 2>/dev/null || true
       sleep 2
-      mariadb-upgrade -u root 2>/dev/null || true
+      mariadb-upgrade --force -u root 2>/dev/null || true
       echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB manual upgrade to $MARIADB_VER_REPO completed (11->12)." | tee -a /var/log/cyberpanel_upgrade_debug.log
     else
       # Normal install/upgrade (same version or 10.11)
@@ -315,7 +316,7 @@ EOF
           printf "[client]\nssl=0\nskip-ssl\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
           systemctl start mariadb 2>/dev/null || true
           sleep 2
-          mariadb-upgrade -u root 2>/dev/null || true
+          mariadb-upgrade --force -u root 2>/dev/null || true
           echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB manual 11->12 fallback completed." | tee -a /var/log/cyberpanel_upgrade_debug.log
         fi
       fi
@@ -366,7 +367,7 @@ EOF
       printf "[client]\nssl=0\nskip-ssl\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
       systemctl start mariadb 2>/dev/null || true
       sleep 2
-      mariadb-upgrade -u root 2>/dev/null || true
+      mariadb-upgrade --force -u root 2>/dev/null || true
       echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB manual upgrade to $MARIADB_VER_REPO completed (AlmaLinux 9)." | tee -a /var/log/cyberpanel_upgrade_debug.log
     elif [[ -n "$MARIADB_OLD_11_AL9" ]] && [[ "$MARIADB_VER_REPO" =~ ^12\. ]]; then
       echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB 11.x detected (AlmaLinux 9); manual upgrade to $MARIADB_VER_REPO..." | tee -a /var/log/cyberpanel_upgrade_debug.log
@@ -380,7 +381,7 @@ EOF
       printf "[client]\nssl=0\nskip-ssl\n" > /etc/my.cnf.d/cyberpanel-client.cnf 2>/dev/null || true
       systemctl start mariadb 2>/dev/null || true
       sleep 2
-      mariadb-upgrade -u root 2>/dev/null || true
+      mariadb-upgrade --force -u root 2>/dev/null || true
       echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] MariaDB manual upgrade to $MARIADB_VER_REPO completed (AlmaLinux 9, 11->12)." | tee -a /var/log/cyberpanel_upgrade_debug.log
     else
       dnf install -y --enablerepo=mariadb MariaDB-server MariaDB-devel 2>/dev/null || dnf install -y mariadb-server mariadb-devel
