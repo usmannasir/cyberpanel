@@ -27,6 +27,27 @@ app.add_middleware(
 SSH_USER = "your_website_user"  # Replace with a real user for testing
 AUTHORIZED_KEYS_PATH = f"/home/{SSH_USER}/.ssh/authorized_keys"
 
+# Read the actual SSH port from sshd_config (fixes WebTerminal when SSH uses custom port)
+def get_ssh_port() -> int:
+    try:
+        with open("/etc/ssh/sshd_config", "r") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
+                line = line.split('#')[0].strip()
+                parts = line.split()
+                if len(parts) >= 2 and parts[0].lower() == 'port':
+                    port = int(parts[1])
+                    logging.info(f"[get_ssh_port] SSH port detected: {port}")
+                    return port
+    except Exception as e:
+        logging.warning(f"[get_ssh_port] Could not read sshd_config: {e}")
+    logging.warning("[get_ssh_port] Falling back to default port 22")
+    return 22
+
+SSH_PORT = get_ssh_port()
+
 # Helper to generate a keypair
 def generate_ssh_keypair():
     key = paramiko.RSAKey.generate(2048)
@@ -90,7 +111,8 @@ async def websocket_endpoint(websocket: WebSocket, token: str = Query(None), ssh
     process = None
     try:
         conn = await asyncssh.connect(
-            "localhost",
+            "127.0.0.1",
+            port=SSH_PORT,
             username=user,
             client_keys=[keyfile_path],
             known_hosts=None
