@@ -186,14 +186,26 @@ def listContainersPage(request):
     """
     try:
         userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
         cm = ContainerManager()
         resp = cm.listContainers(request, userID)
-        resp['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
-        resp['Pragma'] = 'no-cache'
-        resp['Expires'] = '0'
+        if hasattr(resp, '__setitem__'):
+            resp['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+            resp['Pragma'] = 'no-cache'
+            resp['Expires'] = '0'
         return resp
     except KeyError:
         return redirect(loadLoginPage)
+    except Exception as e:
+        from django.shortcuts import render
+        from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+        logging.writeToFile("listContainersPage error: %s" % str(e))
+        return render(
+            request,
+            'baseTemplate/error.html',
+            {'error_message': 'Containers page could not be loaded. Check error logs.'},
+            status=500
+        )
 
 
 @preDockerRun

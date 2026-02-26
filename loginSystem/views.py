@@ -166,6 +166,36 @@ def verifyLogin(request):
 @ensure_csrf_cookie
 def loadLoginPage(request):
     try:
+        return _loadLoginPage(request)
+    except Exception as e:
+        try:
+            from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+            import traceback
+            logging.writeToFile("loadLoginPage error: %s\n%s" % (str(e), traceback.format_exc()))
+        except Exception:
+            pass
+        # User-friendly message for database connection errors
+        from django.db.utils import OperationalError
+        err_str = str(e).lower()
+        if isinstance(e, OperationalError) or 'access denied' in err_str or '1045' in err_str:
+            msg = (
+                "Database connection failed (Access denied for user 'cyberpanel'@'localhost'). "
+                "Check: 1) MariaDB is running (systemctl status mariadb). "
+                "2) Password in /etc/cyberpanel/mysqlPassword matches the MySQL user used by the panel. "
+                "3) User exists: mysql -u root -p -e \"SELECT User,Host FROM mysql.user WHERE User='cyberpanel';\""
+            )
+            return HttpResponse(msg, status=503, content_type="text/plain; charset=utf-8")
+        try:
+            # Minimal cosmetic so template does not break (login.html uses cosmetic.MainDashboardCSS)
+            class _MinimalCosmetic:
+                MainDashboardCSS = ''
+            return render(request, 'loginSystem/login.html', {'cosmetic': _MinimalCosmetic()})
+        except Exception:
+            return HttpResponse("Server error. Check /home/cyberpanel/error-logs.txt", status=500, content_type="text/plain")
+
+
+def _loadLoginPage(request):
+    try:
         userID = request.session['userID']
         currentACL = ACLManager.loadedACL(userID)
 

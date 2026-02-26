@@ -123,4 +123,6 @@ mysql_password.txt
 test.php
 test.sh
 *.test.php
-*.test.sh
+*.test.sh# Patreon secrets
+patreon_config.py
+patreon_secrets.env

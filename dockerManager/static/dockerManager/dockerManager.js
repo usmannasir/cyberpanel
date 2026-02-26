@@ -2713,4 +2713,3 @@ app.controller('manageImages', function ($scope, $http) {
         })
     }
 });
-

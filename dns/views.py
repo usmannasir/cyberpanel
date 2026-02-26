@@ -377,3 +377,57 @@ def enableProxy(request):
         return redirect(loadLoginPage)
     except (ValueError, TypeError):
         return HttpResponse(json.dumps({'status': 0, 'error_message': 'Invalid request'}), status=400, content_type='application/json')
+
+
+def getExportRecordsCloudFlare(request):
+    try:
+        userID = request.session['userID']
+        dm = DNSManager()
+        return dm.getExportRecordsCloudFlare(userID, json.loads(request.body or '{}'))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def clearAllDNSRecordsCloudFlare(request):
+    try:
+        userID = request.session['userID']
+        dm = DNSManager()
+        return dm.clearAllDNSRecordsCloudFlare(userID, json.loads(request.body or '{}'))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def importDNSRecordsCloudFlare(request):
+    try:
+        userID = request.session['userID']
+        dm = DNSManager()
+        return dm.importDNSRecordsCloudFlare(userID, json.loads(request.body or '{}'))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def getStaleDNSRecordsCloudFlare(request):
+    try:
+        userID = request.session['userID']
+        dm = DNSManager()
+        return dm.getStaleDNSRecordsCloudFlare(userID, json.loads(request.body or '{}'))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def removeStaleDNSRecordsCloudFlare(request):
+    try:
+        userID = request.session['userID']
+        dm = DNSManager()
+        return dm.removeStaleDNSRecordsCloudFlare(userID, json.loads(request.body or '{}'))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def fixDNSRecordsCloudFlare(request):
+    try:
+        userID = request.session['userID']
+        dm = DNSManager()
+        return dm.fixDNSRecordsCloudFlare(userID, json.loads(request.body or '{}'))
+    except KeyError:
+        return redirect(loadLoginPage)

@@ -20,20 +20,27 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.views.static import serve
 from django.views.generic import RedirectView
+from django.views.decorators.csrf import csrf_exempt
 from firewall import views as firewall_views
+
+
+@csrf_exempt
+def serve_phpmyadmin(request, path):
+    """Serve phpMyAdmin files; CSRF exempt so sign-in form POST does not get 403."""
+    return serve(request, path, document_root=os.path.join(settings.PUBLIC_ROOT, 'phpmyadmin'))
 
 # Plugin routes are no longer hardcoded here; pluginHolder.urls dynamically
 # includes each installed plugin (under /plugins/<name>/) so settings and
 # other plugin pages work for any installed plugin.
 
 # Optional app: may be missing after clean clone or git clean -fd (not in all repo trees).
-# When missing or broken, register a placeholder so {% url 'emailMarketing' %} in templates never raises Reverse not found.
+# When missing or broken, register a placeholder so {% url 'emailMarketing' %} in templates never raises Reverse not found. Redirect to Plugin Store.
 _optional_email_marketing = []
 try:
     _optional_email_marketing.append(path('emailMarketing/', include('emailMarketing.urls')))
 except (ModuleNotFoundError, ImportError, AttributeError):
     _optional_email_marketing.append(
-        path('emailMarketing/', RedirectView.as_view(url='/base/', permanent=False), name='emailMarketing')
+        path('emailMarketing/', RedirectView.as_view(url='/plugins/installed?view=store', permanent=False), name='emailMarketing')
     )
 
 urlpatterns = [
@@ -43,7 +50,7 @@ urlpatterns = [
     re_path(r'^snappymail/?$', RedirectView.as_view(url='/snappymail/index.php', permanent=False)),
     re_path(r'^snappymail/(?P<path>.*)$', serve, {'document_root': os.path.join(settings.PUBLIC_ROOT, 'snappymail')}),
     re_path(r'^phpmyadmin/?$', RedirectView.as_view(url='/phpmyadmin/index.php', permanent=False)),
-    re_path(r'^phpmyadmin/(?P<path>.*)$', serve, {'document_root': os.path.join(settings.PUBLIC_ROOT, 'phpmyadmin')}),
+    re_path(r'^phpmyadmin/(?P<path>.*)$', serve_phpmyadmin),
     path('base/', include('baseTemplate.urls')),
     path('imunifyav/', firewall_views.imunifyAV, name='imunifyav_root'),
     path('ImunifyAV/', firewall_views.imunifyAV, name='imunifyav_root_legacy'),

@@ -55,6 +55,24 @@ FetchCloudLinuxAlmaVersionVersion = install_utils.FetchCloudLinuxAlmaVersionVers
 get_distro = install_utils.get_distro
 
 
+def _normalize_mariadb_version(ver):
+    """Accept 10.3-10.11, 11.0-11.8, 12.0-12.x; return major.minor for repo or 11.8 if invalid."""
+    if not ver or not isinstance(ver, str):
+        return '11.8'
+    v = ver.strip()
+    m = re.match(r'^(\d+)\.(\d+)(?:\.\d+)*$', v)
+    if not m:
+        return '11.8'
+    major, minor = int(m.group(1)), int(m.group(2))
+    if major == 10 and 3 <= minor <= 11:
+        return '10.%d' % minor
+    if major == 11 and 0 <= minor <= 8:
+        return '11.%d' % minor
+    if major == 12 and 0 <= minor <= 99:
+        return '12.%d' % minor
+    return '11.8'
+
+
 def get_Ubuntu_release():
     release = install_utils.get_Ubuntu_release(use_print=False, exit_on_error=True)
     if release == -1:
@@ -1871,7 +1889,7 @@ module cyberpanel_ols {
                         except (ValueError, TypeError):
                             pass
                 
-                # Set up MariaDB repository only if not already installed (version from --mariadb-version: 10.11, 11.8 or 12.1)
+                # Set up MariaDB repository only if not already installed (version from --mariadb-version: 10.3-10.11, 11.0-11.8, 12.0-12.x)
                 mariadb_ver = getattr(preFlightsChecks, 'mariadb_version', '11.8')
                 command = f'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version={mariadb_ver}'
                 self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
@@ -1904,9 +1922,14 @@ module cyberpanel_ols {
                             shell=True, timeout=5, capture_output=True
                         )
                         self.stdOut("Temporarily removed MariaDB-server from dnf exclude for installation (fallback)", 1)
-                # Install from official MariaDB repo (capitalized package names); --nobest for 10.11/11.8 on el9
+                # Install from official MariaDB repo (capitalized package names); --nobest for 10.x and 11.0-11.8 on el9
                 mariadb_packages = 'MariaDB-server MariaDB-client MariaDB-backup MariaDB-devel'
-                if mariadb_ver in ('10.11', '11.8'):
+                try:
+                    maj_min = tuple(int(x) for x in mariadb_ver.split('.')[:2])
+                    use_nobest = (maj_min[0] == 10) or (maj_min[0] == 11 and maj_min[1] <= 8)
+                except (ValueError, IndexError):
+                    use_nobest = True
+                if use_nobest:
                     command = f'dnf install -y --nobest {mariadb_packages}'
                 else:
                     command = f'dnf install -y {mariadb_packages}'
@@ -3824,18 +3847,23 @@ class Migration(migrations.Migration):
             except Exception:
                 pass
 
-            # Resolve phpMyAdmin version (same as upgrade path)
-            phpmyadmin_version = '5.2.3'
-            try:
-                from plogical.versionFetcher import get_latest_phpmyadmin_version
-                latest_version = get_latest_phpmyadmin_version()
-                if latest_version and latest_version != phpmyadmin_version:
-                    self.stdOut(f"Using latest phpMyAdmin version: {latest_version}", 1)
-                    phpmyadmin_version = latest_version
-                else:
-                    self.stdOut(f"Using fallback phpMyAdmin version: {phpmyadmin_version}", 1)
-            except Exception as e:
-                self.stdOut(f"Failed to fetch latest phpMyAdmin version, using fallback: {e}", 1)
+            # Resolve phpMyAdmin version: CLI override (--phpmyadmin-version), else latest from API, else fallback
+            phpmyadmin_version = getattr(preFlightsChecks, 'phpmyadmin_version', None) or ''
+            phpmyadmin_version = (phpmyadmin_version or '').strip()
+            if not phpmyadmin_version or not re.match(r'^\d+\.\d+\.\d+$', phpmyadmin_version):
+                phpmyadmin_version = '5.2.3'
+                try:
+                    from plogical.versionFetcher import get_latest_phpmyadmin_version
+                    latest_version = get_latest_phpmyadmin_version()
+                    if latest_version and re.match(r'^\d+\.\d+\.\d+$', latest_version):
+                        self.stdOut(f"Using latest phpMyAdmin version: {latest_version}", 1)
+                        phpmyadmin_version = latest_version
+                    else:
+                        self.stdOut(f"Using fallback phpMyAdmin version: {phpmyadmin_version}", 1)
+                except Exception as e:
+                    self.stdOut(f"Failed to fetch latest phpMyAdmin version, using fallback: {e}", 1)
+            else:
+                self.stdOut(f"Using phpMyAdmin version: {phpmyadmin_version}", 1)
 
             self.stdOut("Installing phpMyAdmin...", 1)
             tarball = '/usr/local/CyberCP/public/phpmyadmin.tar.gz'
@@ -4544,27 +4572,40 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
 
     def downoad_and_install_raindloop(self):
         try:
-            #######
-
             if not os.path.exists("/usr/local/CyberCP/public"):
                 os.mkdir("/usr/local/CyberCP/public")
 
             if os.path.exists("/usr/local/CyberCP/public/snappymail"):
                 return 0
 
+            # Version: CLI override (--snappymail-version), then latest from API, else class default
+            snappy_ver = getattr(preFlightsChecks, 'snappymail_version', None) or ''
+            snappy_ver = (snappy_ver or '').strip()
+            if not snappy_ver or not re.match(r'^\d+\.\d+(\.\d+)?$', snappy_ver):
+                try:
+                    from plogical.versionFetcher import get_latest_snappymail_version
+                    latest = get_latest_snappymail_version()
+                    if latest and re.match(r'^\d+\.\d+', latest):
+                        snappy_ver = latest
+                    else:
+                        snappy_ver = preFlightsChecks.SnappyVersion
+                except Exception:
+                    snappy_ver = preFlightsChecks.SnappyVersion
+            self.stdOut("Using SnappyMail version: %s" % snappy_ver, 1)
+
             os.chdir("/usr/local/CyberCP/public")
 
-            command = 'wget https://github.com/the-djmaze/snappymail/releases/download/v%s/snappymail-%s.zip' % (preFlightsChecks.SnappyVersion, preFlightsChecks.SnappyVersion)
+            command = 'wget https://github.com/the-djmaze/snappymail/releases/download/v%s/snappymail-%s.zip' % (snappy_ver, snappy_ver)
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             #############
 
-            command = 'unzip snappymail-%s.zip -d /usr/local/CyberCP/public/snappymail' % (preFlightsChecks.SnappyVersion)
+            command = 'unzip snappymail-%s.zip -d /usr/local/CyberCP/public/snappymail' % (snappy_ver,)
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             try:
-                os.remove("snappymail-%s.zip" % (preFlightsChecks.SnappyVersion))
+                os.remove("snappymail-%s.zip" % (snappy_ver,))
             except:
                 pass
 
@@ -6616,14 +6657,19 @@ def main():
     parser.add_argument('--mysqluser', help='MySQL user if remote is chosen.')
     parser.add_argument('--mysqlpassword', help='MySQL password if remote is chosen.')
     parser.add_argument('--mysqlport', help='MySQL port if remote is chosen.')
-    parser.add_argument('--mariadb-version', default='11.8', help='MariaDB version: 10.11, 11.8 (LTS, default) or 12.1')
+    parser.add_argument('--mariadb-version', default='11.8', help='MariaDB version: 10.3-10.11, 11.0-11.8, 12.0-12.x (default 11.8)')
+    parser.add_argument('--phpmyadmin-version', default='', help='phpMyAdmin version (e.g. 5.2.3); empty = latest from API')
+    parser.add_argument('--snappymail-version', default='', help='SnappyMail version (e.g. 2.38.2); empty = latest from API')
 
     args = parser.parse_args()
     # Normalize and validate MariaDB version choice (default 11.8)
-    mariadb_ver = (getattr(args, 'mariadb_version', None) or '11.8').strip()
-    if mariadb_ver not in ('10.11', '11.8', '12.1'):
-        mariadb_ver = '11.8'
+    mariadb_ver = _normalize_mariadb_version(getattr(args, 'mariadb_version', None) or '11.8')
     preFlightsChecks.mariadb_version = mariadb_ver
+    # Optional phpMyAdmin/SnappyMail version overrides (empty = use latest from API)
+    if getattr(args, 'phpmyadmin_version', ''):
+        preFlightsChecks.phpmyadmin_version = (args.phpmyadmin_version or '').strip()
+    if getattr(args, 'snappymail_version', ''):
+        preFlightsChecks.snappymail_version = (args.snappymail_version or '').strip()
 
     logging.InstallLog.ServerIP = args.publicip
     logging.InstallLog.writeToFile("Starting CyberPanel installation..,10")
