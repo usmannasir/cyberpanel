@@ -724,6 +724,9 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$document
 
         apiCall('/webmail/api/switchAccount', {email: newEmail}, function(data) {
             if (data.status === 1) {
+                if (data.email) {
+                    $scope.currentEmail = data.email;
+                }
                 $scope.loadSettings(function() {
                     $scope.loadFolders();
                 });
