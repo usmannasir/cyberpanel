@@ -1454,6 +1454,27 @@ def blockIPAddress(request):
                     # Save to file
                     with open(primary_file, 'w') as f:
                         json.dump(banned_ips, f, indent=2)
+                    
+                    # Also add to firewall DB so it shows on Firewall > Banned IPs
+                    try:
+                        from firewall.models import BannedIP
+                        from django.utils import timezone
+                        user_id = request.session.get('userID')
+                        if user_id:
+                            admin = Administrator.objects.get(pk=user_id)
+                            BannedIP.objects.get_or_create(
+                                ip_address=ip_address,
+                                defaults={
+                                    'reason': reason,
+                                    'duration': 'permanent',
+                                    'banned_on': timezone.now(),
+                                    'expires': None,
+                                    'active': True,
+                                    'admin': admin,
+                                }
+                            )
+                    except Exception as db_e:
+                        logging.CyberCPLogFileWriter.writeToFile(f'Warning: Failed to add banned IP to firewall DB: {str(db_e)}')
             except Exception as e:
                 # Log but don't fail the request if JSON update fails
                 import plogical.CyberCPLogFileWriter as logging

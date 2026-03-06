@@ -197,15 +197,32 @@ def listContainersPage(request):
     except KeyError:
         return redirect(loadLoginPage)
     except Exception as e:
+        import traceback
         from django.shortcuts import render
+        from django.http import HttpResponse
         from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
-        logging.writeToFile("listContainersPage error: %s" % str(e))
-        return render(
-            request,
-            'baseTemplate/error.html',
-            {'error_message': 'Containers page could not be loaded. Check error logs.'},
-            status=500
-        )
+        err_msg = str(e)
+        err_type = type(e).__name__
+        logging.writeToFile("listContainersPage error: %s: %s" % (err_type, err_msg))
+        logging.writeToFile("listContainersPage traceback:\n%s" % traceback.format_exc())
+        # Try standard error template first; if it fails (e.g. missing), return minimal HTML so user sees the error
+        try:
+            return render(
+                request,
+                'baseTemplate/error.html',
+                {'error_message': 'Containers page could not be loaded. Check error logs.'},
+                status=500
+            )
+        except Exception as render_err:
+            logging.writeToFile("listContainersPage: render error.html failed: %s" % str(render_err))
+            safe_msg = err_type + ": " + (err_msg[:200] if err_msg else "Unknown error")
+            html = (
+                "<!DOCTYPE html><html><head><title>Docker Containers Error</title></head><body>"
+                "<h1>Containers page error</h1><p>%s</p>"
+                "<p>Check <code>/home/cyberpanel/error-logs.txt</code> for full traceback.</p>"
+                "</body></html>"
+            ) % (safe_msg.replace("<", "&lt;").replace(">", "&gt;"))
+            return HttpResponse(html, status=500)
 
 
 @preDockerRun
