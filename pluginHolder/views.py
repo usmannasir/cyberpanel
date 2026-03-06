@@ -54,6 +54,34 @@ RESERVED_PLUGIN_DIRS = frozenset([
     'websiteFunctions', 'aiScanner', 'dns', 'help', 'installed',
 ])
 
+def _find_plugin_prefix_in_archive(namelist, plugin_name):
+    """
+    Find the path prefix for a plugin inside a GitHub archive (e.g. repo-main/pluginName/ or repo-main/Category/pluginName/).
+    Returns (top_level, plugin_prefix) or (None, None) if not found.
+    """
+    top_level = None
+    for name in namelist:
+        if '/' in name:
+            top_level = name.split('/')[0]
+            break
+    if not top_level:
+        return None, None
+    plugin_name_lower = plugin_name.lower()
+    # Check every path: find one that has a segment equal to plugin_name (e.g. .../pm2Manager/ or .../snappymailAdmin/)
+    for name in namelist:
+        if '/' not in name:
+            continue
+        parts = name.split('/')
+        # parts[0] = top_level, then we need a segment that matches plugin_name
+        for i in range(1, len(parts)):
+            if parts[i].lower() == plugin_name_lower:
+                # Plugin folder is at top_level/parts[1]/.../parts[i]/
+                prefix_parts = [top_level] + parts[1:i + 1]
+                plugin_prefix = '/'.join(prefix_parts) + '/'
+                return top_level, plugin_prefix
+    return top_level, None
+
+
 def _get_plugin_source_path(plugin_name):
     """Return the full path to a plugin's source directory, or None if not found."""
     for base in PLUGIN_SOURCE_PATHS:
@@ -1439,29 +1467,10 @@ def upgrade_plugin(request, plugin_name):
             repo_zip = zipfile.ZipFile(io.BytesIO(repo_zip_data))
             namelist = repo_zip.namelist()
             
-            # Discover top-level folder (GitHub uses repo-name-branch, e.g. cyberpanel-plugins-main)
-            top_level = None
-            for name in namelist:
-                if '/' in name:
-                    top_level = name.split('/')[0]
-                    break
-                elif name and not name.endswith('/'):
-                    top_level = name
-                    break
+            # Find plugin folder (supports flat repo or nested e.g. Category/pluginName)
+            top_level, plugin_prefix = _find_plugin_prefix_in_archive(namelist, plugin_name)
             if not top_level:
                 raise Exception('GitHub archive has no recognizable structure')
-            
-            # Find plugin folder in ZIP (case-insensitive: repo may have RedisManager vs redisManager)
-            plugin_prefix = None
-            plugin_name_lower = plugin_name.lower()
-            for name in namelist:
-                if '/' not in name:
-                    continue
-                parts = name.split('/')
-                if len(parts) >= 2 and parts[0] == top_level and parts[1].lower() == plugin_name_lower:
-                    # Use the actual casing from the ZIP for reading
-                    plugin_prefix = f'{top_level}/{parts[1]}/'
-                    break
             if not plugin_prefix:
                 sample = namelist[:15] if len(namelist) > 15 else namelist
                 logging.writeToFile(f"Plugin {plugin_name} not in archive. Top-level={top_level}, sample paths: {sample}")
@@ -1697,23 +1706,10 @@ def install_from_store(request, plugin_name):
                 repo_zip = zipfile.ZipFile(io.BytesIO(repo_zip_data))
                 namelist = repo_zip.namelist()
                 
-                # Discover top-level folder and find plugin (case-insensitive)
-                top_level = None
-                for name in namelist:
-                    if '/' in name:
-                        top_level = name.split('/')[0]
-                        break
+                # Find plugin folder (supports flat repo or nested e.g. Category/pluginName)
+                top_level, plugin_prefix = _find_plugin_prefix_in_archive(namelist, plugin_name)
                 if not top_level:
                     raise Exception('GitHub archive has no recognizable structure')
-                plugin_prefix = None
-                plugin_name_lower = plugin_name.lower()
-                for name in namelist:
-                    if '/' not in name:
-                        continue
-                    parts = name.split('/')
-                    if len(parts) >= 2 and parts[0] == top_level and parts[1].lower() == plugin_name_lower:
-                        plugin_prefix = f'{top_level}/{parts[1]}/'
-                        break
                 if not plugin_prefix:
                     repo_zip.close()
                     logging.writeToFile(f"Plugin {plugin_name} not found in GitHub repository, trying local source")
