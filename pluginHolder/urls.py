@@ -104,10 +104,11 @@ urlpatterns = [
     path('api/revert/<str:plugin_name>/', views.revert_plugin, name='revert_plugin'),
     path('api/debug-plugins/', views.debug_loaded_plugins, name='debug_loaded_plugins'),
     path('api/check-subscription/<str:plugin_name>/', views.check_plugin_subscription, name='check_plugin_subscription'),
+    path('<str:plugin_name>/settings/', views.plugin_settings_proxy, name='plugin_settings_proxy'),
     path('<str:plugin_name>/help/', views.plugin_help, name='plugin_help'),
 ]
 
-# Include each installed plugin's URLs *before* the catch-all so /plugins/<name>/settings/ etc. match
+# Include each installed plugin's URLs *before* the catch-all so /plugins/<name>/... (other than settings/help) match
 _loaded_plugins = []
 _failed_plugins = {}
 for _plugin_name, _path_parent in _get_installed_plugin_list():

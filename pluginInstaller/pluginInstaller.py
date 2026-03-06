@@ -467,41 +467,50 @@ class pluginInstaller:
 
     @staticmethod
     def removeFromSettings(pluginName):
-        data = open("/usr/local/CyberCP/CyberCP/settings.py", 'r', encoding='utf-8').readlines()
-        writeToFile = open("/usr/local/CyberCP/CyberCP/settings.py", 'w', encoding='utf-8')
-        
+        settings_path = "/usr/local/CyberCP/CyberCP/settings.py"
+        try:
+            with open(settings_path, 'r', encoding='utf-8') as f:
+                data = f.readlines()
+        except (OSError, IOError) as e:
+            raise Exception(f'Cannot read {settings_path}: {e}. Ensure the panel user can read it.')
         in_installed_apps = False
+        out_lines = []
         for i, items in enumerate(data):
-            # Track if we're in INSTALLED_APPS section
             if 'INSTALLED_APPS' in items and '=' in items:
                 in_installed_apps = True
             elif in_installed_apps and items.strip().startswith(']'):
                 in_installed_apps = False
-            
-            # More precise matching: look for plugin name in quotes (e.g., 'pluginName' or "pluginName")
-            # Only match if we're in INSTALLED_APPS section to prevent false positives
             if in_installed_apps and (f"'{pluginName}'" in items or f'"{pluginName}"' in items):
                 continue
-            else:
-                writeToFile.writelines(items)
-        writeToFile.close()
+            out_lines.append(items)
+        try:
+            with open(settings_path, 'w', encoding='utf-8') as writeToFile:
+                writeToFile.writelines(out_lines)
+        except (OSError, IOError) as e:
+            raise Exception(
+                f'Cannot write {settings_path}: {e}. '
+                'Ensure the file is writable by the panel user (e.g. chgrp lscpd ... ; chmod g+w ...).'
+            )
 
     @staticmethod
     def removeFromURLs(pluginName):
-        data = open("/usr/local/CyberCP/CyberCP/urls.py", 'r', encoding='utf-8').readlines()
-        writeToFile = open("/usr/local/CyberCP/CyberCP/urls.py", 'w', encoding='utf-8')
-
+        urls_path = "/usr/local/CyberCP/CyberCP/urls.py"
+        try:
+            with open(urls_path, 'r', encoding='utf-8') as f:
+                data = f.readlines()
+        except (OSError, IOError) as e:
+            raise Exception(f'Cannot read {urls_path}: {e}.')
+        out_lines = []
         for items in data:
-            # More precise matching: look for plugin name in path() or include() calls
-            # Match patterns like: path('plugins/pluginName/', include('pluginName.urls'))
-            # This prevents partial matches
-            if (f"plugins/{pluginName}/" in items or f"'{pluginName}.urls'" in items or f'"{pluginName}.urls"' in items or 
+            if (f"plugins/{pluginName}/" in items or f"'{pluginName}.urls'" in items or f'"{pluginName}.urls"' in items or
                 f"include('{pluginName}.urls')" in items or f'include("{pluginName}.urls")' in items):
                 continue
-            else:
-                writeToFile.writelines(items)
-
-        writeToFile.close()
+            out_lines.append(items)
+        try:
+            with open(urls_path, 'w', encoding='utf-8') as f:
+                f.writelines(out_lines)
+        except (OSError, IOError) as e:
+            raise Exception(f'Cannot write {urls_path}: {e}. Ensure the file is writable by the panel user (chgrp lscpd; chmod g+w).')
 
     @staticmethod
     def informCyberPanelRemoval(pluginName):
