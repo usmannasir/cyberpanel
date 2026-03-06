@@ -1924,37 +1924,55 @@ class FirewallManager:
             active_banned_ips = []
             db_ips = set()  # IPs already added from DB (for merge with JSON)
             current_time = int(time.time())
+            from django.db.utils import OperationalError, ProgrammingError
 
-            try:
-                from firewall.models import BannedIP
-                from django.db.models import Q
+            for _migrate_attempt in (1, 2):
+                try:
+                    from firewall.models import BannedIP
+                    from django.db.models import Q
 
-                banned_ips_queryset = BannedIP.objects.filter(
-                    active=True
-                ).filter(
-                    Q(expires__isnull=True) | Q(expires__gt=current_time)
-                ).order_by('-banned_on')
+                    banned_ips_queryset = BannedIP.objects.filter(
+                        active=True
+                    ).filter(
+                        Q(expires__isnull=True) | Q(expires__gt=current_time)
+                    ).order_by('-banned_on')
 
-                for banned_ip in banned_ips_queryset:
-                    try:
-                        ip_data = {
-                            'id': banned_ip.id,
-                            'ip': banned_ip.ip_address,
-                            'reason': banned_ip.reason,
-                            'duration': banned_ip.duration,
-                            'banned_on': banned_ip.get_banned_on_display(),
-                            'expires': banned_ip.get_expires_display(),
-                            'active': not banned_ip.is_expired() and banned_ip.active
-                        }
-                        if ip_data['active']:
-                            active_banned_ips.append(ip_data)
-                            db_ips.add(banned_ip.ip_address)
-                    except Exception as row_e:
-                        import plogical.CyberCPLogFileWriter as _log
-                        _log.CyberCPLogFileWriter.writeToFile('getBannedIPs: skip row %s: %s' % (getattr(banned_ip, 'ip_address', '?'), str(row_e)))
-            except Exception as e:
-                import plogical.CyberCPLogFileWriter as _log
-                _log.CyberCPLogFileWriter.writeToFile('getBannedIPs: DB read failed, merging with JSON (%s)' % str(e))
+                    for banned_ip in banned_ips_queryset:
+                        try:
+                            ip_data = {
+                                'id': banned_ip.id,
+                                'ip': banned_ip.ip_address,
+                                'reason': banned_ip.reason,
+                                'duration': banned_ip.duration,
+                                'banned_on': banned_ip.get_banned_on_display(),
+                                'expires': banned_ip.get_expires_display(),
+                                'active': not banned_ip.is_expired() and banned_ip.active
+                            }
+                            if ip_data['active']:
+                                active_banned_ips.append(ip_data)
+                                db_ips.add(banned_ip.ip_address)
+                        except Exception as row_e:
+                            import plogical.CyberCPLogFileWriter as _log
+                            _log.CyberCPLogFileWriter.writeToFile('getBannedIPs: skip row %s: %s' % (getattr(banned_ip, 'ip_address', '?'), str(row_e)))
+                    break
+                except (OperationalError, ProgrammingError) as e:
+                    import plogical.CyberCPLogFileWriter as _log
+                    _log.CyberCPLogFileWriter.writeToFile('getBannedIPs: DB error (table may be missing). Error: %s' % str(e))
+                    if _migrate_attempt == 1:
+                        try:
+                            from django.core.management import call_command
+                            call_command('migrate', 'firewall', verbosity=0)
+                            _log.CyberCPLogFileWriter.writeToFile('getBannedIPs: ran migrate firewall, retrying.')
+                        except Exception as migrate_err:
+                            _log.CyberCPLogFileWriter.writeToFile('getBannedIPs: migrate firewall failed: %s' % str(migrate_err))
+                    else:
+                        _log.CyberCPLogFileWriter.writeToFile('getBannedIPs: DB read failed after retry, merging with JSON.')
+                    if _migrate_attempt == 2:
+                        break
+                except Exception as e:
+                    import plogical.CyberCPLogFileWriter as _log
+                    _log.CyberCPLogFileWriter.writeToFile('getBannedIPs: DB read failed, merging with JSON (%s)' % str(e))
+                    break
 
             # If ORM returned nothing but we have the table, try raw SQL as fallback
             if not active_banned_ips:
