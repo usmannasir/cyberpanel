@@ -6,6 +6,8 @@ import argparse
 import os
 import shutil
 import time
+import tempfile
+import zipfile
 import django
 from plogical.processUtilities import ProcessUtilities
 
@@ -59,15 +61,48 @@ class pluginInstaller:
 
     @staticmethod
     def extractPlugin(pluginName):
+        """
+        Extract plugin zip so that all files end up in /usr/local/CyberCP/pluginName/.
+        Handles zips with: (1) top-level folder pluginName/, (2) top-level folder with
+        another name (e.g. repo-main/), or (3) files at root (no top-level folder).
+        """
         pathToPlugin = pluginName + '.zip'
-        command = 'unzip -o ' + pathToPlugin + ' -d /usr/local/CyberCP'
-        result = subprocess.run(shlex.split(command), capture_output=True, text=True)
-        if result.returncode != 0:
-            raise Exception(f"Failed to extract plugin {pluginName}: {result.stderr}")
-        # Verify extraction succeeded
+        if not os.path.exists(pathToPlugin):
+            raise Exception(f"Plugin zip not found: {pathToPlugin}")
         pluginPath = '/usr/local/CyberCP/' + pluginName
-        if not os.path.exists(pluginPath):
-            raise Exception(f"Plugin extraction failed: {pluginPath} does not exist after extraction")
+        # Remove existing plugin dir so we start clean (e.g. from a previous failed install)
+        if os.path.exists(pluginPath):
+            shutil.rmtree(pluginPath)
+        extract_dir = tempfile.mkdtemp(prefix='cyberpanel_plugin_')
+        try:
+            with zipfile.ZipFile(pathToPlugin, 'r') as zf:
+                zf.extractall(extract_dir)
+            top_level = os.listdir(extract_dir)
+            if len(top_level) == 1:
+                single = os.path.join(extract_dir, top_level[0])
+                if os.path.isdir(single):
+                    # One top-level directory: use it as the plugin dir (move or rename to pluginName)
+                    shutil.move(single, pluginPath)
+                else:
+                    # Single file at root
+                    os.makedirs(pluginPath, exist_ok=True)
+                    shutil.move(single, os.path.join(pluginPath, top_level[0]))
+            else:
+                # Multiple items or empty: place everything inside pluginName/
+                os.makedirs(pluginPath, exist_ok=True)
+                for name in top_level:
+                    src = os.path.join(extract_dir, name)
+                    dst = os.path.join(pluginPath, name)
+                    if os.path.exists(dst):
+                        if os.path.isdir(dst):
+                            shutil.rmtree(dst)
+                        else:
+                            os.remove(dst)
+                    shutil.move(src, dst)
+            if not os.path.exists(pluginPath):
+                raise Exception(f"Plugin extraction failed: {pluginPath} does not exist after extraction")
+        finally:
+            shutil.rmtree(extract_dir, ignore_errors=True)
 
     @staticmethod
     def upgradingSettingsFile(pluginName):
