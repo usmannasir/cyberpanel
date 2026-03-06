@@ -663,8 +663,8 @@ def install_plugin(request, plugin_name):
             # Verify plugin was actually installed
             pluginInstalled = '/usr/local/CyberCP/' + plugin_name
             if not os.path.exists(pluginInstalled):
-                # Check if files were extracted to root instead
-                root_files = ['README.md', 'apps.py', 'meta.xml', 'urls.py', 'views.py']
+                # Check if plugin files were extracted to root (exclude README.md - main repo has it at root)
+                root_files = ['apps.py', 'meta.xml', 'urls.py', 'views.py']
                 found_root_files = [f for f in root_files if os.path.exists(os.path.join('/usr/local/CyberCP', f))]
                 if found_root_files:
                     raise Exception(f'Plugin installation failed: Files extracted to wrong location. Found {found_root_files} in /usr/local/CyberCP/ root instead of {pluginInstalled}/')
@@ -1798,7 +1798,8 @@ def install_from_store(request, plugin_name):
                 # Verify plugin was actually installed
                 pluginInstalled = '/usr/local/CyberCP/' + plugin_name
                 if not os.path.exists(pluginInstalled):
-                    root_files = ['README.md', 'apps.py', 'meta.xml', 'urls.py', 'views.py']
+                    # Exclude README.md - main CyberPanel repo has it at root
+                    root_files = ['apps.py', 'meta.xml', 'urls.py', 'views.py']
                     found_root_files = [f for f in root_files if os.path.exists(os.path.join('/usr/local/CyberCP', f))]
                     if found_root_files:
                         raise Exception(f'Plugin installation failed: Files extracted to wrong location. Found {found_root_files} in /usr/local/CyberCP/ root instead of {pluginInstalled}/')
