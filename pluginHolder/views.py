@@ -1862,6 +1862,38 @@ def debug_loaded_plugins(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
+
+@require_http_methods(["GET", "POST"])
+def plugin_settings_proxy(request, plugin_name):
+    """
+    Proxy for /plugins/<plugin_name>/settings/ so plugin settings pages work even when
+    the plugin was installed after the worker started (dynamic URL list is built at import time).
+    """
+    mailUtilities.checkHome()
+    plugin_path = '/usr/local/CyberCP/' + plugin_name
+    urls_py = os.path.join(plugin_path, 'urls.py')
+    if not plugin_name or not os.path.isdir(plugin_path) or not os.path.exists(urls_py):
+        from django.http import HttpResponseNotFound
+        return HttpResponseNotFound('Plugin not found or has no URL configuration.')
+    if plugin_name in RESERVED_PLUGIN_DIRS or plugin_name in (
+        'api', 'installed', 'help', 'emailMarketing', 'emailPremium', 'pluginHolder'
+    ):
+        from django.http import HttpResponseNotFound
+        return HttpResponseNotFound('Invalid plugin.')
+    try:
+        import importlib
+        views_mod = importlib.import_module(plugin_name + '.views')
+        settings_view = getattr(views_mod, 'settings', None)
+        if not callable(settings_view):
+            from django.http import HttpResponseNotFound
+            return HttpResponseNotFound('Plugin has no settings view.')
+        return settings_view(request)
+    except Exception as e:
+        logging.writeToFile(f"plugin_settings_proxy for {plugin_name}: {str(e)}")
+        from django.http import HttpResponseServerError
+        return HttpResponseServerError(f'Plugin settings error: {str(e)}')
+
+
 def plugin_help(request, plugin_name):
     """Plugin-specific help page - shows plugin information, version history, and help content"""
     mailUtilities.checkHome()
