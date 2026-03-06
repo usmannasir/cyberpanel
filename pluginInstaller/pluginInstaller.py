@@ -6,6 +6,8 @@ import argparse
 import os
 import shutil
 import time
+import tempfile
+import zipfile
 import django
 from plogical.processUtilities import ProcessUtilities
 
@@ -58,16 +60,96 @@ class pluginInstaller:
     ### Functions Related to plugin installation.
 
     @staticmethod
-    def extractPlugin(pluginName):
-        pathToPlugin = pluginName + '.zip'
-        command = 'unzip -o ' + pathToPlugin + ' -d /usr/local/CyberCP'
-        result = subprocess.run(shlex.split(command), capture_output=True, text=True)
-        if result.returncode != 0:
-            raise Exception(f"Failed to extract plugin {pluginName}: {result.stderr}")
-        # Verify extraction succeeded
+    def extractPlugin(pluginName, zip_path=None):
+        """
+        Extract plugin zip so that all files end up in /usr/local/CyberCP/pluginName/.
+        Handles zips with: (1) top-level folder pluginName/, (2) top-level folder with
+        another name (e.g. repo-main/), or (3) files at root (no top-level folder).
+        If zip_path is given (absolute path), use it; otherwise use pluginName + '.zip' in cwd.
+        """
+        if zip_path is not None:
+            pathToPlugin = os.path.abspath(zip_path)
+        else:
+            pathToPlugin = os.path.abspath(pluginName + '.zip')
+        if not os.path.exists(pathToPlugin):
+            raise Exception(f"Plugin zip not found: {pathToPlugin}")
         pluginPath = '/usr/local/CyberCP/' + pluginName
-        if not os.path.exists(pluginPath):
-            raise Exception(f"Plugin extraction failed: {pluginPath} does not exist after extraction")
+        # Remove existing plugin dir so we start clean (e.g. from a previous failed install)
+        if os.path.exists(pluginPath):
+            shutil.rmtree(pluginPath)
+        extract_dir = tempfile.mkdtemp(prefix='cyberpanel_plugin_')
+        try:
+            with zipfile.ZipFile(pathToPlugin, 'r') as zf:
+                zf.extractall(extract_dir)
+            top_level = os.listdir(extract_dir)
+            plugin_name_lower = pluginName.lower()
+            # Prefer a top-level directory whose name matches pluginName (case-insensitive)
+            matching_dir = None
+            for name in top_level:
+                if os.path.isdir(os.path.join(extract_dir, name)) and name.lower() == plugin_name_lower:
+                    matching_dir = name
+                    break
+            if len(top_level) == 1:
+                single = os.path.join(extract_dir, top_level[0])
+                if os.path.isdir(single):
+                    # One top-level directory
+                    single_name = top_level[0]
+                    # If it's the repo root (e.g. cyberpanel-plugins-main), check for plugin subdir
+                    if single_name.lower() != plugin_name_lower:
+                        plugin_subdir = os.path.join(single, pluginName)
+                        if not os.path.isdir(plugin_subdir):
+                            # Try case-insensitive subdir match
+                            for entry in os.listdir(single):
+                                if os.path.isdir(os.path.join(single, entry)) and entry.lower() == plugin_name_lower:
+                                    plugin_subdir = os.path.join(single, entry)
+                                    break
+                        if os.path.isdir(plugin_subdir):
+                            # Use the plugin subdir as the plugin content (avoid nesting repo root)
+                            shutil.move(plugin_subdir, pluginPath)
+                            shutil.rmtree(single, ignore_errors=True)
+                        else:
+                            shutil.move(single, pluginPath)
+                    else:
+                        shutil.move(single, pluginPath)
+                else:
+                    # Single file at root
+                    os.makedirs(pluginPath, exist_ok=True)
+                    shutil.move(single, os.path.join(pluginPath, top_level[0]))
+            elif matching_dir:
+                # Multiple items: one is a dir matching pluginName - use it as plugin, put rest inside pluginPath
+                os.makedirs(pluginPath, exist_ok=True)
+                src_match = os.path.join(extract_dir, matching_dir)
+                # Move the matching plugin dir to pluginPath (replace if exists)
+                if os.path.exists(pluginPath):
+                    shutil.rmtree(pluginPath)
+                shutil.move(src_match, pluginPath)
+                for name in top_level:
+                    if name == matching_dir:
+                        continue
+                    src = os.path.join(extract_dir, name)
+                    dst = os.path.join(pluginPath, name)
+                    if os.path.exists(dst):
+                        if os.path.isdir(dst):
+                            shutil.rmtree(dst)
+                        else:
+                            os.remove(dst)
+                    shutil.move(src, dst)
+            else:
+                # Multiple items or empty: place everything inside pluginName/
+                os.makedirs(pluginPath, exist_ok=True)
+                for name in top_level:
+                    src = os.path.join(extract_dir, name)
+                    dst = os.path.join(pluginPath, name)
+                    if os.path.exists(dst):
+                        if os.path.isdir(dst):
+                            shutil.rmtree(dst)
+                        else:
+                            os.remove(dst)
+                    shutil.move(src, dst)
+            if not os.path.exists(pluginPath):
+                raise Exception(f"Plugin extraction failed: {pluginPath} does not exist after extraction")
+        finally:
+            shutil.rmtree(extract_dir, ignore_errors=True)
 
     @staticmethod
     def upgradingSettingsFile(pluginName):
@@ -210,12 +292,12 @@ class pluginInstaller:
 
 
     @staticmethod
-    def installPlugin(pluginName):
+    def installPlugin(pluginName, zip_path=None):
         try:
             ##
 
             pluginInstaller.stdOut('Extracting plugin..')
-            pluginInstaller.extractPlugin(pluginName)
+            pluginInstaller.extractPlugin(pluginName, zip_path=zip_path)
             pluginInstaller.stdOut('Plugin extracted.')
 
             ##
@@ -385,41 +467,50 @@ class pluginInstaller:
 
     @staticmethod
     def removeFromSettings(pluginName):
-        data = open("/usr/local/CyberCP/CyberCP/settings.py", 'r', encoding='utf-8').readlines()
-        writeToFile = open("/usr/local/CyberCP/CyberCP/settings.py", 'w', encoding='utf-8')
-        
+        settings_path = "/usr/local/CyberCP/CyberCP/settings.py"
+        try:
+            with open(settings_path, 'r', encoding='utf-8') as f:
+                data = f.readlines()
+        except (OSError, IOError) as e:
+            raise Exception(f'Cannot read {settings_path}: {e}. Ensure the panel user can read it.')
         in_installed_apps = False
+        out_lines = []
         for i, items in enumerate(data):
-            # Track if we're in INSTALLED_APPS section
             if 'INSTALLED_APPS' in items and '=' in items:
                 in_installed_apps = True
             elif in_installed_apps and items.strip().startswith(']'):
                 in_installed_apps = False
-            
-            # More precise matching: look for plugin name in quotes (e.g., 'pluginName' or "pluginName")
-            # Only match if we're in INSTALLED_APPS section to prevent false positives
             if in_installed_apps and (f"'{pluginName}'" in items or f'"{pluginName}"' in items):
                 continue
-            else:
-                writeToFile.writelines(items)
-        writeToFile.close()
+            out_lines.append(items)
+        try:
+            with open(settings_path, 'w', encoding='utf-8') as writeToFile:
+                writeToFile.writelines(out_lines)
+        except (OSError, IOError) as e:
+            raise Exception(
+                f'Cannot write {settings_path}: {e}. '
+                'Ensure the file is writable by the panel user (e.g. chgrp lscpd ... ; chmod g+w ...).'
+            )
 
     @staticmethod
     def removeFromURLs(pluginName):
-        data = open("/usr/local/CyberCP/CyberCP/urls.py", 'r', encoding='utf-8').readlines()
-        writeToFile = open("/usr/local/CyberCP/CyberCP/urls.py", 'w', encoding='utf-8')
-
+        urls_path = "/usr/local/CyberCP/CyberCP/urls.py"
+        try:
+            with open(urls_path, 'r', encoding='utf-8') as f:
+                data = f.readlines()
+        except (OSError, IOError) as e:
+            raise Exception(f'Cannot read {urls_path}: {e}.')
+        out_lines = []
         for items in data:
-            # More precise matching: look for plugin name in path() or include() calls
-            # Match patterns like: path('plugins/pluginName/', include('pluginName.urls'))
-            # This prevents partial matches
-            if (f"plugins/{pluginName}/" in items or f"'{pluginName}.urls'" in items or f'"{pluginName}.urls"' in items or 
+            if (f"plugins/{pluginName}/" in items or f"'{pluginName}.urls'" in items or f'"{pluginName}.urls"' in items or
                 f"include('{pluginName}.urls')" in items or f'include("{pluginName}.urls")' in items):
                 continue
-            else:
-                writeToFile.writelines(items)
-
-        writeToFile.close()
+            out_lines.append(items)
+        try:
+            with open(urls_path, 'w', encoding='utf-8') as f:
+                f.writelines(out_lines)
+        except (OSError, IOError) as e:
+            raise Exception(f'Cannot write {urls_path}: {e}. Ensure the file is writable by the panel user (chgrp lscpd; chmod g+w).')
 
     @staticmethod
     def informCyberPanelRemoval(pluginName):
