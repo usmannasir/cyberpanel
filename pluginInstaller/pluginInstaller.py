@@ -82,15 +82,58 @@ class pluginInstaller:
             with zipfile.ZipFile(pathToPlugin, 'r') as zf:
                 zf.extractall(extract_dir)
             top_level = os.listdir(extract_dir)
+            plugin_name_lower = pluginName.lower()
+            # Prefer a top-level directory whose name matches pluginName (case-insensitive)
+            matching_dir = None
+            for name in top_level:
+                if os.path.isdir(os.path.join(extract_dir, name)) and name.lower() == plugin_name_lower:
+                    matching_dir = name
+                    break
             if len(top_level) == 1:
                 single = os.path.join(extract_dir, top_level[0])
                 if os.path.isdir(single):
-                    # One top-level directory: use it as the plugin dir (move or rename to pluginName)
-                    shutil.move(single, pluginPath)
+                    # One top-level directory
+                    single_name = top_level[0]
+                    # If it's the repo root (e.g. cyberpanel-plugins-main), check for plugin subdir
+                    if single_name.lower() != plugin_name_lower:
+                        plugin_subdir = os.path.join(single, pluginName)
+                        if not os.path.isdir(plugin_subdir):
+                            # Try case-insensitive subdir match
+                            for entry in os.listdir(single):
+                                if os.path.isdir(os.path.join(single, entry)) and entry.lower() == plugin_name_lower:
+                                    plugin_subdir = os.path.join(single, entry)
+                                    break
+                        if os.path.isdir(plugin_subdir):
+                            # Use the plugin subdir as the plugin content (avoid nesting repo root)
+                            shutil.move(plugin_subdir, pluginPath)
+                            shutil.rmtree(single, ignore_errors=True)
+                        else:
+                            shutil.move(single, pluginPath)
+                    else:
+                        shutil.move(single, pluginPath)
                 else:
                     # Single file at root
                     os.makedirs(pluginPath, exist_ok=True)
                     shutil.move(single, os.path.join(pluginPath, top_level[0]))
+            elif matching_dir:
+                # Multiple items: one is a dir matching pluginName - use it as plugin, put rest inside pluginPath
+                os.makedirs(pluginPath, exist_ok=True)
+                src_match = os.path.join(extract_dir, matching_dir)
+                # Move the matching plugin dir to pluginPath (replace if exists)
+                if os.path.exists(pluginPath):
+                    shutil.rmtree(pluginPath)
+                shutil.move(src_match, pluginPath)
+                for name in top_level:
+                    if name == matching_dir:
+                        continue
+                    src = os.path.join(extract_dir, name)
+                    dst = os.path.join(pluginPath, name)
+                    if os.path.exists(dst):
+                        if os.path.isdir(dst):
+                            shutil.rmtree(dst)
+                        else:
+                            os.remove(dst)
+                    shutil.move(src, dst)
             else:
                 # Multiple items or empty: place everything inside pluginName/
                 os.makedirs(pluginPath, exist_ok=True)
