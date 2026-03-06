@@ -607,19 +607,16 @@ def install_plugin(request, plugin_name):
                 'error': f'Failed to create zip file for {plugin_name}'
             }, status=500)
         
-        # Copy zip to current directory (pluginInstaller expects it in cwd)
+        zip_path_abs = os.path.abspath(zip_path)
+        if not os.path.exists(zip_path_abs):
+            raise Exception(f'Zip file not found: {zip_path_abs}')
         original_cwd = os.getcwd()
         os.chdir(temp_dir)
         
         try:
-            # Verify zip file exists in current directory
-            zip_file = plugin_name + '.zip'
-            if not os.path.exists(zip_file):
-                raise Exception(f'Zip file {zip_file} not found in temp directory')
-            
-            # Install using pluginInstaller
+            # Install using pluginInstaller with explicit zip path (avoids cwd races)
             try:
-                pluginInstaller.installPlugin(plugin_name)
+                pluginInstaller.installPlugin(plugin_name, zip_path=zip_path_abs)
             except Exception as install_error:
                 # Log the full error for debugging
                 error_msg = str(install_error)
@@ -1495,20 +1492,18 @@ def upgrade_plugin(request, plugin_name):
             
             logging.writeToFile(f"Created plugin ZIP: {zip_path}")
             
-            # Copy ZIP to current directory (pluginInstaller expects it in cwd)
+            zip_path_abs = os.path.abspath(zip_path)
+            if not os.path.exists(zip_path_abs):
+                raise Exception(f'Zip file not found: {zip_path_abs}')
             original_cwd = os.getcwd()
             os.chdir(temp_dir)
             
             try:
-                zip_file = plugin_name + '.zip'
-                if not os.path.exists(zip_file):
-                    raise Exception(f'Zip file {zip_file} not found in temp directory')
+                logging.writeToFile(f"Upgrading plugin using pluginInstaller (zip={zip_path_abs})")
                 
-                logging.writeToFile(f"Upgrading plugin using pluginInstaller")
-                
-                # Install using pluginInstaller (this will overwrite existing files)
+                # Install using pluginInstaller with explicit zip path (this will overwrite existing files)
                 try:
-                    pluginInstaller.installPlugin(plugin_name)
+                    pluginInstaller.installPlugin(plugin_name, zip_path=zip_path_abs)
                 except Exception as install_error:
                     error_msg = str(install_error)
                     logging.writeToFile(f"pluginInstaller.installPlugin raised exception: {error_msg}")
@@ -1775,21 +1770,20 @@ def install_from_store(request, plugin_name):
             
             logging.writeToFile(f"Created plugin ZIP: {zip_path}")
             
-            # Copy ZIP to current directory (pluginInstaller expects it in cwd)
+            if not os.path.exists(zip_path):
+                raise Exception(f'Zip file not found: {zip_path}')
+            
+            # Pass absolute path so extraction does not depend on cwd (installPlugin may change cwd)
+            zip_path_abs = os.path.abspath(zip_path)
             original_cwd = os.getcwd()
             os.chdir(temp_dir)
             
             try:
-                # Verify zip file exists in current directory
-                zip_file = plugin_name + '.zip'
-                if not os.path.exists(zip_file):
-                    raise Exception(f'Zip file {zip_file} not found in temp directory')
+                logging.writeToFile(f"Installing plugin using pluginInstaller (zip={zip_path_abs})")
                 
-                logging.writeToFile(f"Installing plugin using pluginInstaller")
-                
-                # Install using pluginInstaller (direct call, not via command line)
+                # Install using pluginInstaller with explicit zip path (avoids cwd races)
                 try:
-                    pluginInstaller.installPlugin(plugin_name)
+                    pluginInstaller.installPlugin(plugin_name, zip_path=zip_path_abs)
                 except Exception as install_error:
                     # Log the full error for debugging
                     error_msg = str(install_error)
@@ -1808,7 +1802,6 @@ def install_from_store(request, plugin_name):
                 # Verify plugin was actually installed
                 pluginInstalled = '/usr/local/CyberCP/' + plugin_name
                 if not os.path.exists(pluginInstalled):
-                    # Check if files were extracted to root instead
                     root_files = ['README.md', 'apps.py', 'meta.xml', 'urls.py', 'views.py']
                     found_root_files = [f for f in root_files if os.path.exists(os.path.join('/usr/local/CyberCP', f))]
                     if found_root_files:

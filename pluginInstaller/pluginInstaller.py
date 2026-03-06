@@ -60,13 +60,17 @@ class pluginInstaller:
     ### Functions Related to plugin installation.
 
     @staticmethod
-    def extractPlugin(pluginName):
+    def extractPlugin(pluginName, zip_path=None):
         """
         Extract plugin zip so that all files end up in /usr/local/CyberCP/pluginName/.
         Handles zips with: (1) top-level folder pluginName/, (2) top-level folder with
         another name (e.g. repo-main/), or (3) files at root (no top-level folder).
+        If zip_path is given (absolute path), use it; otherwise use pluginName + '.zip' in cwd.
         """
-        pathToPlugin = pluginName + '.zip'
+        if zip_path is not None:
+            pathToPlugin = os.path.abspath(zip_path)
+        else:
+            pathToPlugin = os.path.abspath(pluginName + '.zip')
         if not os.path.exists(pathToPlugin):
             raise Exception(f"Plugin zip not found: {pathToPlugin}")
         pluginPath = '/usr/local/CyberCP/' + pluginName
@@ -245,12 +249,12 @@ class pluginInstaller:
 
 
     @staticmethod
-    def installPlugin(pluginName):
+    def installPlugin(pluginName, zip_path=None):
         try:
             ##
 
             pluginInstaller.stdOut('Extracting plugin..')
-            pluginInstaller.extractPlugin(pluginName)
+            pluginInstaller.extractPlugin(pluginName, zip_path=zip_path)
             pluginInstaller.stdOut('Plugin extracted.')
 
             ##
