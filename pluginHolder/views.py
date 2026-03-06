@@ -54,6 +54,34 @@ RESERVED_PLUGIN_DIRS = frozenset([
     'websiteFunctions', 'aiScanner', 'dns', 'help', 'installed',
 ])
 
+def _find_plugin_prefix_in_archive(namelist, plugin_name):
+    """
+    Find the path prefix for a plugin inside a GitHub archive (e.g. repo-main/pluginName/ or repo-main/Category/pluginName/).
+    Returns (top_level, plugin_prefix) or (None, None) if not found.
+    """
+    top_level = None
+    for name in namelist:
+        if '/' in name:
+            top_level = name.split('/')[0]
+            break
+    if not top_level:
+        return None, None
+    plugin_name_lower = plugin_name.lower()
+    # Check every path: find one that has a segment equal to plugin_name (e.g. .../pm2Manager/ or .../snappymailAdmin/)
+    for name in namelist:
+        if '/' not in name:
+            continue
+        parts = name.split('/')
+        # parts[0] = top_level, then we need a segment that matches plugin_name
+        for i in range(1, len(parts)):
+            if parts[i].lower() == plugin_name_lower:
+                # Plugin folder is at top_level/parts[1]/.../parts[i]/
+                prefix_parts = [top_level] + parts[1:i + 1]
+                plugin_prefix = '/'.join(prefix_parts) + '/'
+                return top_level, plugin_prefix
+    return top_level, None
+
+
 def _get_plugin_source_path(plugin_name):
     """Return the full path to a plugin's source directory, or None if not found."""
     for base in PLUGIN_SOURCE_PATHS:
@@ -607,19 +635,16 @@ def install_plugin(request, plugin_name):
                 'error': f'Failed to create zip file for {plugin_name}'
             }, status=500)
         
-        # Copy zip to current directory (pluginInstaller expects it in cwd)
+        zip_path_abs = os.path.abspath(zip_path)
+        if not os.path.exists(zip_path_abs):
+            raise Exception(f'Zip file not found: {zip_path_abs}')
         original_cwd = os.getcwd()
         os.chdir(temp_dir)
         
         try:
-            # Verify zip file exists in current directory
-            zip_file = plugin_name + '.zip'
-            if not os.path.exists(zip_file):
-                raise Exception(f'Zip file {zip_file} not found in temp directory')
-            
-            # Install using pluginInstaller
+            # Install using pluginInstaller with explicit zip path (avoids cwd races)
             try:
-                pluginInstaller.installPlugin(plugin_name)
+                pluginInstaller.installPlugin(plugin_name, zip_path=zip_path_abs)
             except Exception as install_error:
                 # Log the full error for debugging
                 error_msg = str(install_error)
@@ -638,8 +663,8 @@ def install_plugin(request, plugin_name):
             # Verify plugin was actually installed
             pluginInstalled = '/usr/local/CyberCP/' + plugin_name
             if not os.path.exists(pluginInstalled):
-                # Check if files were extracted to root instead
-                root_files = ['README.md', 'apps.py', 'meta.xml', 'urls.py', 'views.py']
+                # Check if plugin files were extracted to root (exclude README.md - main repo has it at root)
+                root_files = ['apps.py', 'meta.xml', 'urls.py', 'views.py']
                 found_root_files = [f for f in root_files if os.path.exists(os.path.join('/usr/local/CyberCP', f))]
                 if found_root_files:
                     raise Exception(f'Plugin installation failed: Files extracted to wrong location. Found {found_root_files} in /usr/local/CyberCP/ root instead of {pluginInstalled}/')
@@ -1442,29 +1467,10 @@ def upgrade_plugin(request, plugin_name):
             repo_zip = zipfile.ZipFile(io.BytesIO(repo_zip_data))
             namelist = repo_zip.namelist()
             
-            # Discover top-level folder (GitHub uses repo-name-branch, e.g. cyberpanel-plugins-main)
-            top_level = None
-            for name in namelist:
-                if '/' in name:
-                    top_level = name.split('/')[0]
-                    break
-                elif name and not name.endswith('/'):
-                    top_level = name
-                    break
+            # Find plugin folder (supports flat repo or nested e.g. Category/pluginName)
+            top_level, plugin_prefix = _find_plugin_prefix_in_archive(namelist, plugin_name)
             if not top_level:
                 raise Exception('GitHub archive has no recognizable structure')
-            
-            # Find plugin folder in ZIP (case-insensitive: repo may have RedisManager vs redisManager)
-            plugin_prefix = None
-            plugin_name_lower = plugin_name.lower()
-            for name in namelist:
-                if '/' not in name:
-                    continue
-                parts = name.split('/')
-                if len(parts) >= 2 and parts[0] == top_level and parts[1].lower() == plugin_name_lower:
-                    # Use the actual casing from the ZIP for reading
-                    plugin_prefix = f'{top_level}/{parts[1]}/'
-                    break
             if not plugin_prefix:
                 sample = namelist[:15] if len(namelist) > 15 else namelist
                 logging.writeToFile(f"Plugin {plugin_name} not in archive. Top-level={top_level}, sample paths: {sample}")
@@ -1495,20 +1501,18 @@ def upgrade_plugin(request, plugin_name):
             
             logging.writeToFile(f"Created plugin ZIP: {zip_path}")
             
-            # Copy ZIP to current directory (pluginInstaller expects it in cwd)
+            zip_path_abs = os.path.abspath(zip_path)
+            if not os.path.exists(zip_path_abs):
+                raise Exception(f'Zip file not found: {zip_path_abs}')
             original_cwd = os.getcwd()
             os.chdir(temp_dir)
             
             try:
-                zip_file = plugin_name + '.zip'
-                if not os.path.exists(zip_file):
-                    raise Exception(f'Zip file {zip_file} not found in temp directory')
+                logging.writeToFile(f"Upgrading plugin using pluginInstaller (zip={zip_path_abs})")
                 
-                logging.writeToFile(f"Upgrading plugin using pluginInstaller")
-                
-                # Install using pluginInstaller (this will overwrite existing files)
+                # Install using pluginInstaller with explicit zip path (this will overwrite existing files)
                 try:
-                    pluginInstaller.installPlugin(plugin_name)
+                    pluginInstaller.installPlugin(plugin_name, zip_path=zip_path_abs)
                 except Exception as install_error:
                     error_msg = str(install_error)
                     logging.writeToFile(f"pluginInstaller.installPlugin raised exception: {error_msg}")
@@ -1702,23 +1706,10 @@ def install_from_store(request, plugin_name):
                 repo_zip = zipfile.ZipFile(io.BytesIO(repo_zip_data))
                 namelist = repo_zip.namelist()
                 
-                # Discover top-level folder and find plugin (case-insensitive)
-                top_level = None
-                for name in namelist:
-                    if '/' in name:
-                        top_level = name.split('/')[0]
-                        break
+                # Find plugin folder (supports flat repo or nested e.g. Category/pluginName)
+                top_level, plugin_prefix = _find_plugin_prefix_in_archive(namelist, plugin_name)
                 if not top_level:
                     raise Exception('GitHub archive has no recognizable structure')
-                plugin_prefix = None
-                plugin_name_lower = plugin_name.lower()
-                for name in namelist:
-                    if '/' not in name:
-                        continue
-                    parts = name.split('/')
-                    if len(parts) >= 2 and parts[0] == top_level and parts[1].lower() == plugin_name_lower:
-                        plugin_prefix = f'{top_level}/{parts[1]}/'
-                        break
                 if not plugin_prefix:
                     repo_zip.close()
                     logging.writeToFile(f"Plugin {plugin_name} not found in GitHub repository, trying local source")
@@ -1775,21 +1766,20 @@ def install_from_store(request, plugin_name):
             
             logging.writeToFile(f"Created plugin ZIP: {zip_path}")
             
-            # Copy ZIP to current directory (pluginInstaller expects it in cwd)
+            if not os.path.exists(zip_path):
+                raise Exception(f'Zip file not found: {zip_path}')
+            
+            # Pass absolute path so extraction does not depend on cwd (installPlugin may change cwd)
+            zip_path_abs = os.path.abspath(zip_path)
             original_cwd = os.getcwd()
             os.chdir(temp_dir)
             
             try:
-                # Verify zip file exists in current directory
-                zip_file = plugin_name + '.zip'
-                if not os.path.exists(zip_file):
-                    raise Exception(f'Zip file {zip_file} not found in temp directory')
+                logging.writeToFile(f"Installing plugin using pluginInstaller (zip={zip_path_abs})")
                 
-                logging.writeToFile(f"Installing plugin using pluginInstaller")
-                
-                # Install using pluginInstaller (direct call, not via command line)
+                # Install using pluginInstaller with explicit zip path (avoids cwd races)
                 try:
-                    pluginInstaller.installPlugin(plugin_name)
+                    pluginInstaller.installPlugin(plugin_name, zip_path=zip_path_abs)
                 except Exception as install_error:
                     # Log the full error for debugging
                     error_msg = str(install_error)
@@ -1808,8 +1798,8 @@ def install_from_store(request, plugin_name):
                 # Verify plugin was actually installed
                 pluginInstalled = '/usr/local/CyberCP/' + plugin_name
                 if not os.path.exists(pluginInstalled):
-                    # Check if files were extracted to root instead
-                    root_files = ['README.md', 'apps.py', 'meta.xml', 'urls.py', 'views.py']
+                    # Exclude README.md - main CyberPanel repo has it at root
+                    root_files = ['apps.py', 'meta.xml', 'urls.py', 'views.py']
                     found_root_files = [f for f in root_files if os.path.exists(os.path.join('/usr/local/CyberCP', f))]
                     if found_root_files:
                         raise Exception(f'Plugin installation failed: Files extracted to wrong location. Found {found_root_files} in /usr/local/CyberCP/ root instead of {pluginInstalled}/')
@@ -1871,6 +1861,38 @@ def debug_loaded_plugins(request):
         }, json_dumps_params={'indent': 2})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@require_http_methods(["GET", "POST"])
+def plugin_settings_proxy(request, plugin_name):
+    """
+    Proxy for /plugins/<plugin_name>/settings/ so plugin settings pages work even when
+    the plugin was installed after the worker started (dynamic URL list is built at import time).
+    """
+    mailUtilities.checkHome()
+    plugin_path = '/usr/local/CyberCP/' + plugin_name
+    urls_py = os.path.join(plugin_path, 'urls.py')
+    if not plugin_name or not os.path.isdir(plugin_path) or not os.path.exists(urls_py):
+        from django.http import HttpResponseNotFound
+        return HttpResponseNotFound('Plugin not found or has no URL configuration.')
+    if plugin_name in RESERVED_PLUGIN_DIRS or plugin_name in (
+        'api', 'installed', 'help', 'emailMarketing', 'emailPremium', 'pluginHolder'
+    ):
+        from django.http import HttpResponseNotFound
+        return HttpResponseNotFound('Invalid plugin.')
+    try:
+        import importlib
+        views_mod = importlib.import_module(plugin_name + '.views')
+        settings_view = getattr(views_mod, 'settings', None)
+        if not callable(settings_view):
+            from django.http import HttpResponseNotFound
+            return HttpResponseNotFound('Plugin has no settings view.')
+        return settings_view(request)
+    except Exception as e:
+        logging.writeToFile(f"plugin_settings_proxy for {plugin_name}: {str(e)}")
+        from django.http import HttpResponseServerError
+        return HttpResponseServerError(f'Plugin settings error: {str(e)}')
+
 
 def plugin_help(request, plugin_name):
     """Plugin-specific help page - shows plugin information, version history, and help content"""

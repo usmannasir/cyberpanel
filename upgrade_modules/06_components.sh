@@ -37,12 +37,13 @@ Pre_Upgrade_Required_Components() {
 # Check if CyberCP directory exists but is incomplete/damaged
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Checking CyberCP directory integrity..." | tee -a /var/log/cyberpanel_upgrade_debug.log
 
-# Define essential CyberCP components
+# Define essential CyberCP components (do not add /usr/local/CyberCP/manage - it does not exist; see usmannasir/cyberpanel#1721)
 CYBERCP_ESSENTIAL_DIRS=(
     "/usr/local/CyberCP/CyberCP"
     "/usr/local/CyberCP/plogical"
     "/usr/local/CyberCP/websiteFunctions"
-    "/usr/local/CyberCP/manage"
+    "/usr/local/CyberCP/pluginHolder"
+    "/usr/local/CyberCP/pluginInstaller"
 )
 
 CYBERCP_MISSING=0
