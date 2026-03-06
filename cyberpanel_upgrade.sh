@@ -593,7 +593,6 @@ CYBERCP_ESSENTIAL_DIRS=(
     "/usr/local/CyberCP/CyberCP"
     "/usr/local/CyberCP/plogical"
     "/usr/local/CyberCP/websiteFunctions"
-    "/usr/local/CyberCP/manage"
 )
 
 CYBERCP_MISSING=0
