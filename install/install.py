@@ -3455,6 +3455,11 @@ skip-ssl
         command = f"{python_path} {manage_py} migrate --noinput"
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
+        # Ensure firewall (banned IPs) table exists so /firewall/#banned-ips works
+        logging.InstallLog.writeToFile("Applying firewall migrations (firewall_bannedips)...")
+        command = f"{python_path} {manage_py} migrate firewall --noinput"
+        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+
         logging.InstallLog.writeToFile("Django migrations completed successfully!")
         preFlightsChecks.stdOut("Django migrations completed successfully!")
 
