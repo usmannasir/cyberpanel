@@ -16,7 +16,7 @@ import plogical.CyberCPLogFileWriter as logging
 from plogical.errorSanitizer import secure_error_response, secure_log_error
 from django.shortcuts import HttpResponse, render, redirect
 from django.urls import reverse
-from django.db.utils import OperationalError
+from django.db.utils import OperationalError, ProgrammingError, InternalError
 from loginSystem.models import Administrator
 import subprocess
 import shlex
@@ -258,32 +258,69 @@ class ContainerManager(multi.Thread):
                                                 "showUnlistedContainer": showUnlistedContainer}, 'admin')
             return proc.render()
 
-        try:
-            return _render_list()
-        except OperationalError as e:
-            logging.writeToFile(
-                "Docker containers list: DB error (table may be missing). Running migrations. Error: %s" % str(e)
+        def _run_migrate_and_retry(exc):
+            logging.CyberCPLogFileWriter.writeToFile(
+                "Docker containers list: DB error (table/column may be missing). Running migrations. Error: %s" % str(exc)
             )
             try:
+                # Ensure table exists: raw SQL path (idempotent) then Django migrate
+                try:
+                    from plogical.upgrade import Upgrade
+                    Upgrade.dockerMigrations()
+                except Exception as _:
+                    pass
                 from django.core.management import call_command
                 call_command('migrate', 'dockerManager', verbosity=0)
                 return _render_list()
             except Exception as migrate_err:
-                logging.writeToFile(
+                logging.CyberCPLogFileWriter.writeToFile(
                     "Docker containers list: migrate failed. Error: %s" % str(migrate_err)
                 )
+                return _safe_error_response(
+                    request,
+                    'Docker Manager database not ready. Please run upgrade or: manage.py migrate dockerManager',
+                    status=500
+                )
+
+        def _safe_error_response(request, message, status=500):
+            """Return error page or minimal HttpResponse if template render fails."""
+            try:
                 return render(
                     request,
                     'baseTemplate/error.html',
-                    {'error_message': 'Docker Manager database not ready. Please run upgrade or: manage.py migrate dockerManager'}
+                    {'error_message': message},
+                    status=status
                 )
+            except Exception as render_err:
+                logging.CyberCPLogFileWriter.writeToFile("Docker listContainers: render error.html failed: %s" % str(render_err))
+                safe_msg = (message or "Error")[:500].replace("<", "&lt;").replace(">", "&gt;")
+                html = "<!DOCTYPE html><html><body><h1>Docker Containers</h1><p>%s</p></body></html>" % safe_msg
+                return HttpResponse(html, status=status)
+
+        try:
+            return _render_list()
+        except OperationalError as e:
+            return _run_migrate_and_retry(e)
+        except ProgrammingError as e:
+            return _run_migrate_and_retry(e)
+        except InternalError as e:
+            return _run_migrate_and_retry(e)
         except Exception as e:
+            import traceback
             secure_log_error(e, 'docker_list_containers')
-            return render(
-                request,
-                'baseTemplate/error.html',
-                {'error_message': 'Containers list could not be loaded. Check error logs.'}
+            logging.CyberCPLogFileWriter.writeToFile(
+                "Docker containers list: %s: %s" % (type(e).__name__, str(e))
             )
+            logging.CyberCPLogFileWriter.writeToFile("Docker containers list traceback:\n%s" % traceback.format_exc())
+            # User-friendly message for common Docker errors
+            err_msg = str(e)
+            if hasattr(e, 'explicit') and getattr(e, 'explicit', None):
+                err_msg = getattr(e, 'explicit', err_msg) or err_msg
+            if 'docker' in type(e).__name__.lower() or 'connection' in err_msg.lower() or 'refused' in err_msg.lower():
+                message = 'Docker is not responding. Ensure the Docker daemon is running and try again. Error: %s' % (err_msg[:150])
+            else:
+                message = 'Containers list could not be loaded. Check error logs.'
+            return _safe_error_response(request, message, status=500)
 
     def getContainerLogs(self, userID=None, data=None):
         try:

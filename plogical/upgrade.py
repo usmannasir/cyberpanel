@@ -2957,6 +2957,20 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
         except:
             pass
 
+        # Sync Django migration state so manage.py migrate sees dockerManager as applied
+        try:
+            cwd = os.getcwd()
+            os.chdir('/usr/local/CyberCP')
+            py = Upgrade._python_for_manage()
+            command = py + ' manage.py migrate dockerManager --noinput'
+            Upgrade.executioner(command, 'migrate dockerManager', 0)
+            os.chdir(cwd)
+        except Exception:
+            try:
+                os.chdir(cwd)
+            except Exception:
+                pass
+
     @staticmethod
     def containerMigrations():
         try:
@@ -3172,6 +3186,79 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
                 pass
         except:
             pass
+
+    @staticmethod
+    def firewallMigrations():
+        """Ensure firewall app tables exist (e.g. firewall_bannedips for Ban IP). Upgrade does not run GeneralMigrations(), so run migrate firewall explicitly."""
+        try:
+            cwd = os.getcwd()
+            os.chdir('/usr/local/CyberCP')
+            py = Upgrade._python_for_manage()
+            command = py + ' manage.py migrate firewall --noinput'
+            Upgrade.executioner(command, 'Run firewall migrations (firewall_bannedips)', 0)
+            os.chdir(cwd)
+        except Exception as e:
+            ErrorSanitizer.log_error_securely(e, 'firewallMigrations')
+            try:
+                os.chdir(cwd)
+            except Exception:
+                pass
+        Upgrade.syncBannedIPsJsonToDb()
+
+    @staticmethod
+    def syncBannedIPsJsonToDb():
+        """Sync banned IPs from JSON (e.g. from base dashboard Ban IP) into firewall_bannedips so Firewall > Banned IPs shows all."""
+        try:
+            import json
+            for path in ['/usr/local/CyberCP/data/banned_ips.json', '/etc/cyberpanel/banned_ips.json']:
+                if not os.path.exists(path):
+                    continue
+                try:
+                    with open(path, 'r') as f:
+                        data = json.load(f)
+                except Exception:
+                    continue
+                if not isinstance(data, list):
+                    continue
+                connection, cursor = Upgrade.setupConnection('cyberpanel')
+                if not cursor:
+                    continue
+                try:
+                    cursor.execute('SELECT id FROM loginSystem_administrator ORDER BY id ASC LIMIT 1')
+                    row = cursor.fetchone()
+                    admin_id = int(row[0]) if row else 1
+                except Exception:
+                    admin_id = 1
+                for b in data:
+                    if not b.get('active', True):
+                        continue
+                    ip_val = (b.get('ip') or '').strip()
+                    if not ip_val or len(ip_val) > 45:
+                        continue
+                    reason = (b.get('reason') or 'Banned from dashboard')[:255]
+                    banned_on = b.get('banned_on')
+                    if isinstance(banned_on, (int, float)):
+                        from_unixtime = banned_on
+                    else:
+                        from_unixtime = int(__import__('time').time())
+                    try:
+                        cursor.execute(
+                            """INSERT IGNORE INTO firewall_bannedips (ip_address, reason, duration, banned_on, expires, active, admin_id)
+                               VALUES (%s, %s, 'permanent', FROM_UNIXTIME(%s), NULL, 1, %s)""",
+                            (ip_val, reason, from_unixtime, admin_id)
+                        )
+                    except Exception:
+                        pass
+                try:
+                    connection.close()
+                except Exception:
+                    pass
+                break
+        except Exception as e:
+            try:
+                ErrorSanitizer.log_error_securely(e, 'syncBannedIPsJsonToDb')
+            except Exception:
+                pass
 
     @staticmethod
     def _python_for_manage():
@@ -3998,20 +4085,44 @@ class Migration(migrations.Migration):
 
             # Clone the new repository (use CYBERPANEL_GIT_USER for fork, e.g. master3395)
             git_user = os.environ.get('CYBERPANEL_GIT_USER', 'master3395')
+            upstream_user = os.environ.get('CYBERPANEL_UPSTREAM_GIT_USER', 'usmannasir')
+            checkout_ok = False
+
             Upgrade.stdOut("Cloning fresh CyberPanel repository...")
             command = 'git clone https://github.com/%s/cyberpanel CyberCP' % git_user
             if not Upgrade.executioner(command, command, 1):
-                # Try to restore backup if clone fails
                 Upgrade.stdOut("Clone failed, attempting to restore backup...")
                 Upgrade.restoreCriticalFiles(backup_dir, backed_up_files)
                 return 0, 'Failed to clone CyberPanel repository'
-            
-            # Checkout the correct branch
+
             os.chdir('/usr/local/CyberCP')
             command = 'git checkout %s' % (branch)
-            if not Upgrade.executioner(command, command, 1):
-                Upgrade.stdOut(f"Warning: Failed to checkout branch {branch}, continuing with default branch")
-            
+            if Upgrade.executioner(command, command, 1):
+                checkout_ok = True
+
+            if not checkout_ok and git_user != upstream_user:
+                Upgrade.stdOut("Branch not found on primary repo, trying upstream (%s)..." % upstream_user)
+                os.chdir('/usr/local')
+                if os.path.exists('CyberCP'):
+                    try:
+                        shutil.rmtree('CyberCP')
+                    except Exception as e:
+                        Upgrade.stdOut("Error removing CyberCP: %s" % str(e))
+                        Upgrade.restoreCriticalFiles(backup_dir, backed_up_files)
+                        return 0, 'Failed to remove CyberCP for upstream clone'
+                command = 'git clone https://github.com/%s/cyberpanel CyberCP' % upstream_user
+                if not Upgrade.executioner(command, command, 1):
+                    Upgrade.restoreCriticalFiles(backup_dir, backed_up_files)
+                    return 0, 'Failed to clone upstream CyberPanel repository'
+                os.chdir('/usr/local/CyberCP')
+                command = 'git checkout %s' % (branch)
+                if Upgrade.executioner(command, command, 1):
+                    checkout_ok = True
+
+            if not checkout_ok:
+                Upgrade.restoreCriticalFiles(backup_dir, backed_up_files)
+                return 0, 'Branch %s not found on primary or upstream repo; ensure it exists.' % branch
+
             # Restore all backed up configuration files (except settings.py)
             Upgrade.stdOut("Restoring configuration files...")
             Upgrade.restoreCriticalFiles(backup_dir, backed_up_files)
@@ -5136,6 +5247,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         command = "mkdir -p /usr/local/lscp/cyberpanel/logs"
         Upgrade.executioner(command, 0)
 
+        command = "mkdir -p /usr/local/CyberCP/data"
+        Upgrade.executioner(command, 0)
+
     @staticmethod
     def upgradeDovecot():
         try:
@@ -5933,6 +6047,7 @@ slowlog = /var/log/php{version}-fpm-slow.log
         Upgrade.s3BackupMigrations()
         Upgrade.containerMigrations()
         Upgrade.manageServiceMigrations()
+        Upgrade.firewallMigrations()
         Upgrade.enableServices()
 
         # Apply AlmaLinux 9 fixes before other installations
