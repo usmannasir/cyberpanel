@@ -706,6 +706,16 @@
             align-items: center;
             justify-content: center;
         }
+        /* SSL form close (X) button – centered in row and icon centered in button */
+        .ssl-form-close-btn {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        .ssl-form-close-btn i.fa-times {
+            line-height: 1;
+            display: block;
+        }
     }
     
     @media (max-width: 576px) {
@@ -2036,6 +2046,13 @@
                         </div>
 
                         <div class="col-md-3">
+                            <a href="#" ng-click="issueSSL('{{ domain|escapejs }}'); $event.preventDefault()" title="{% trans 'Obtain or restore Let\'s Encrypt SSL (default)' %}">
+                                <img src="{% static 'images/icons/locked.png' %}" width="65" class="mr-10">
+                                <span class="h4">{% trans "Issue SSL" %}</span>
+                            </a>
+                        </div>
+
+                        <div class="col-md-3">
                             <a href="#" ng-click="changePHPMaster(); $event.preventDefault()" title="{% trans 'Change PHP Version' %}">
                                 <img src="{% static 'images/icons/laptop.png' %}" width="65" class="mr-10">
                                 <span class="h4">{% trans "Change PHP" %}</span>
@@ -2063,16 +2080,19 @@
                                 </div>
 
 
-                                <div ng-hide="" class="form-group">
-                                    <div style="margin-bottom: 1%;" class="col-sm-offset-11 col-sm-1">
-                                        <a ng-click="hidesslbtn()" href=""><img
-                                                src="/static/images/close-32.png"></a>
+                                <div class="form-group">
+                                    <div class="col-sm-12" style="margin-bottom: 15px; display: flex; justify-content: center; align-items: center;">
+                                        <button type="button" ng-click="hidesslbtn()" class="btn btn-link ssl-form-close-btn" style="color: var(--danger-color, #dc3545); padding: 8px 12px; min-width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%;">
+                                            <i class="fas fa-times" style="font-size: 24px;"></i>
+                                        </button>
                                     </div>
                                     <div class="col-sm-6">
+                                        <label class="control-label">{% trans "Paste Your Cert" %}</label>
                                         <textarea placeholder="Paste Your Cert" ng-model="cert" rows="10"
                                                   class="form-control"></textarea>
                                     </div>
                                     <div class="col-sm-6">
+                                        <label class="control-label">{% trans "Paste Your Key" %}</label>
                                         <textarea placeholder="Paste Your Key" ng-model="key" rows="10"
                                                   class="form-control"></textarea>
                                     </div>
