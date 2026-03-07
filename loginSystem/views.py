@@ -163,6 +163,15 @@ def verifyLogin(request):
             json_data = json.dumps(data)
             return HttpResponse(json_data)
 
+def _passkey_login_enabled():
+    """Return True only when passkey login should be shown (at least one passkey registered)."""
+    try:
+        from .webauthn_models import WebAuthnCredential
+        return WebAuthnCredential.objects.filter(is_active=True).exists()
+    except Exception:
+        return False
+
+
 @ensure_csrf_cookie
 def loadLoginPage(request):
     try:
@@ -189,7 +198,7 @@ def loadLoginPage(request):
             # Minimal cosmetic so template does not break (login.html uses cosmetic.MainDashboardCSS)
             class _MinimalCosmetic:
                 MainDashboardCSS = ''
-            return render(request, 'loginSystem/login.html', {'cosmetic': _MinimalCosmetic()})
+            return render(request, 'loginSystem/login.html', {'cosmetic': _MinimalCosmetic(), 'passkey_login_available': False})
         except Exception:
             return HttpResponse("Server error. Check /home/cyberpanel/error-logs.txt", status=500, content_type="text/plain")
 
@@ -293,7 +302,8 @@ def _loadLoginPage(request):
                 cosmetic = CyberPanelCosmetic()
                 cosmetic.save()
 
-            return render(request, 'loginSystem/login.html', {'cosmetic': cosmetic})
+            passkey_login_available = _passkey_login_enabled()
+            return render(request, 'loginSystem/login.html', {'cosmetic': cosmetic, 'passkey_login_available': passkey_login_available})
         else:
             ### Load Custom CSS
             try:
@@ -303,13 +313,21 @@ def _loadLoginPage(request):
                 from baseTemplate.models import CyberPanelCosmetic
                 cosmetic = CyberPanelCosmetic()
                 cosmetic.save()
-            return render(request, 'loginSystem/login.html', {'cosmetic': cosmetic})
+            passkey_login_available = _passkey_login_enabled()
+            return render(request, 'loginSystem/login.html', {'cosmetic': cosmetic, 'passkey_login_available': passkey_login_available})
 
 
 @ensure_csrf_cookie
 def logout(request):
     try:
         del request.session['userID']
-        return render(request, 'loginSystem/login.html', {})
-    except:
-        return render(request, 'loginSystem/login.html', {})
+    except KeyError:
+        pass
+    try:
+        from baseTemplate.models import CyberPanelCosmetic
+        cosmetic = CyberPanelCosmetic.objects.get(pk=1)
+    except Exception:
+        class _MinimalCosmetic:
+            MainDashboardCSS = ''
+        cosmetic = _MinimalCosmetic()
+    return render(request, 'loginSystem/login.html', {'cosmetic': cosmetic, 'passkey_login_available': _passkey_login_enabled()})

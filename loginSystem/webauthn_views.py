@@ -70,7 +70,7 @@ class WebAuthnRegistrationStart(WebAuthnAPIView):
                        user.owner == current_user.pk):
                     return self.error_response('Unauthorized access', 403)
             
-            result = self.webauthn.create_registration_challenge(user, credential_name)
+            result = self.webauthn.create_registration_challenge(user, credential_name, request=request)
             return self.json_response(result)
             
         except json.JSONDecodeError:
@@ -99,7 +99,8 @@ class WebAuthnRegistrationComplete(WebAuthnAPIView):
                 challenge_id=challenge_id,
                 credential_data=credential_data,
                 client_data_json=client_data_json,
-                attestation_object=attestation_object
+                attestation_object=attestation_object,
+                request=request,
             )
             
             return self.json_response(result)
@@ -128,7 +129,7 @@ class WebAuthnAuthenticationStart(WebAuthnAPIView):
             except Administrator.DoesNotExist:
                 return self.error_response('User not found', 404)
             
-            result = self.webauthn.create_authentication_challenge(user)
+            result = self.webauthn.create_authentication_challenge(user, request=request)
             return self.json_response(result)
             
         except json.JSONDecodeError:
@@ -140,37 +141,57 @@ class WebAuthnAuthenticationStart(WebAuthnAPIView):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class WebAuthnAuthenticationComplete(WebAuthnAPIView):
-    """Complete WebAuthn authentication process"""
-    
+    """Complete WebAuthn authentication (username-first or passkey-first)."""
+
     def post(self, request):
         try:
             data = json.loads(request.body)
-            challenge_id = data.get('challenge_id')
             credential_data = data.get('credential')
+            if not credential_data:
+                return self.error_response('Missing credential')
+
+            # Passkey-first: credential only, challenge in session
+            challenge_id = data.get('challenge_id')
+            if not challenge_id:
+                result = self.webauthn.verify_passkey_first_authentication(credential_data, request)
+                if result.get('success'):
+                    request.session['userID'] = result['user_id']
+                    request.session['webauthn_auth'] = True
+                    request.session.set_expiry(43200)
+                    ip_addr = request.META.get('HTTP_CF_CONNECTING_IP') or request.META.get('REMOTE_ADDR', '')
+                    if ip_addr.find(':') > -1:
+                        ip_addr = ':'.join(ip_addr.split(':')[:3])
+                    request.session['ipAddr'] = ip_addr
+                    redirect_url = data.get('redirect') or request.session.pop('webauthn_redirect', '/') or '/'
+                    if '//' in redirect_url or not redirect_url.startswith('/'):
+                        redirect_url = '/'
+                    result['redirect'] = redirect_url
+                    logger.info(f"WebAuthn passkey-first authentication successful for user ID: {result['user_id']}")
+                return self.json_response(result)
+
+            # Username-first: challenge_id + credential parts
             client_data_json = data.get('client_data_json')
             authenticator_data = data.get('authenticator_data')
-            
-            if not all([challenge_id, credential_data, client_data_json, authenticator_data]):
-                return self.error_response('Missing required fields')
-            
+            if not all([client_data_json, authenticator_data]):
+                return self.error_response('Missing required fields for username-first auth')
             result = self.webauthn.verify_authentication(
                 challenge_id=challenge_id,
                 credential_data=credential_data,
                 client_data_json=client_data_json,
-                authenticator_data=authenticator_data
+                authenticator_data=authenticator_data,
+                request=request,
             )
-            
-            if result['success']:
-                # Set session for successful authentication
+            if result.get('success'):
                 request.session['userID'] = result['user_id']
                 request.session['webauthn_auth'] = True
-                request.session.set_expiry(43200)  # 12 hours
-                
-                # Log successful authentication
+                request.session.set_expiry(43200)
+                ip_addr = request.META.get('HTTP_CF_CONNECTING_IP') or request.META.get('REMOTE_ADDR', '')
+                if ip_addr.find(':') > -1:
+                    ip_addr = ':'.join(ip_addr.split(':')[:3])
+                request.session['ipAddr'] = ip_addr
                 logger.info(f"WebAuthn authentication successful for user ID: {result['user_id']}")
-            
             return self.json_response(result)
-            
+
         except json.JSONDecodeError:
             return self.error_response('Invalid JSON')
         except Exception as e:
@@ -399,11 +420,43 @@ class WebAuthnCleanup(WebAuthnAPIView):
             return self.error_response(f'Internal server error: {str(e)}', 500)
 
 
-# Traditional function-based views for easier integration
+# Passkey-first authentication (no username): GET options
+@csrf_exempt
+@require_http_methods(["GET"])
+def webauthn_authentication_options(request):
+    """GET authentication options for all credentials (passkey-first login)."""
+    try:
+        backend = WebAuthnBackend(request=request)
+        result = backend.create_passkey_first_options(request)
+        if not result.get('success'):
+            return HttpResponse(
+                json.dumps(result, ensure_ascii=False),
+                content_type='application/json',
+                status=400,
+            )
+        redirect_url = request.GET.get('return', '/')
+        if '//' in redirect_url or not redirect_url.startswith('/'):
+            redirect_url = '/'
+        request.session['webauthn_redirect'] = redirect_url
+        return HttpResponse(
+            json.dumps(result, ensure_ascii=False),
+            content_type='application/json',
+        )
+    except Exception as e:
+        logger.error(f"Error in authentication options: {str(e)}")
+        return HttpResponse(
+            json.dumps({'success': False, 'error': str(e)}, ensure_ascii=False),
+            content_type='application/json',
+            status=500,
+        )
+
+
+# Traditional function-based views for easier integration (pass request into backend)
 @csrf_exempt
 def webauthn_registration_start(request):
     """Start WebAuthn registration - function view"""
     view = WebAuthnRegistrationStart()
+    view.webauthn = WebAuthnBackend(request=request)
     return view.post(request)
 
 
@@ -411,6 +464,7 @@ def webauthn_registration_start(request):
 def webauthn_registration_complete(request):
     """Complete WebAuthn registration - function view"""
     view = WebAuthnRegistrationComplete()
+    view.webauthn = WebAuthnBackend(request=request)
     return view.post(request)
 
 
@@ -418,13 +472,16 @@ def webauthn_registration_complete(request):
 def webauthn_authentication_start(request):
     """Start WebAuthn authentication - function view"""
     view = WebAuthnAuthenticationStart()
+    view.webauthn = WebAuthnBackend(request=request)
     return view.post(request)
 
 
 @csrf_exempt
+@csrf_exempt
 def webauthn_authentication_complete(request):
-    """Complete WebAuthn authentication - function view"""
+    """Complete WebAuthn authentication - function view (username-first or passkey-first)"""
     view = WebAuthnAuthenticationComplete()
+    view.webauthn = WebAuthnBackend(request=request)
     return view.post(request)
 
 

@@ -342,6 +342,11 @@
                         class="form-control">
                 </select>
                 <p class="help-text">{% trans "Choose the security level for this account" %}</p>
+                <div class="mt-2 p-3" style="font-size: 0.9rem; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; color: #212529;">
+                    <strong class="d-block mb-2">{% trans "What's the difference?" %}</strong>
+                    <strong>{% trans "High" %}:</strong> {% trans "Session is tied to the IP address used at login. If the user logs in from one IP and later visits from another (e.g. different network, VPN, or mobile), the session is invalidated and they must log in again." %}<br><br>
+                    <strong>{% trans "Low" %}:</strong> {% trans "Session is not tied to IP. The user can stay logged in when their IP changes (e.g. switching networks or using VPN). More convenient but slightly less strict against session reuse from another location." %}
+                </div>
             </div>
 
             <div class="form-group" style="margin-top: 2rem;">

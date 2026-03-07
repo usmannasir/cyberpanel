@@ -352,7 +352,8 @@
                                     class="btn btn-success btn-block  btn-login">Sign In
                             </button>
                             
-                            <!-- WebAuthn Passkey Login Button -->
+                            {% if passkey_login_available %}
+                            <!-- WebAuthn Passkey Login Button (only when at least one passkey is registered) -->
                             <div id="webauthn-login-section" style="margin-top: 15px; display: none;">
                                 <button type="button" id="webauthn-login-btn" 
                                         class="btn btn-primary btn-block btn-login" 
@@ -363,6 +364,7 @@
                                     <small class="text-muted">or</small>
                                 </div>
                             </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -414,29 +416,17 @@
     }
 </script>
 <script>
-// Initialize WebAuthn login functionality
+// Initialize WebAuthn login functionality (passkey-first: no username required)
 document.addEventListener('DOMContentLoaded', function() {
     const webauthnSection = document.getElementById('webauthn-login-section');
     const webauthnBtn = document.getElementById('webauthn-login-btn');
-    const usernameInput = document.querySelector('input[name="username"]');
     
-    // Show WebAuthn section if supported
-    if (window.cyberPanelWebAuthn && window.cyberPanelWebAuthn.isSupported()) {
+    if (webauthnSection && webauthnBtn && window.cyberPanelWebAuthn && window.cyberPanelWebAuthn.isSupported()) {
         webauthnSection.style.display = 'block';
-        
-        // Add click handler for WebAuthn login
+        webauthnBtn.disabled = false;
         webauthnBtn.addEventListener('click', function() {
             if (window.cyberPanelWebAuthn) {
-                window.cyberPanelWebAuthn.startPasswordlessLogin();
-            }
-        });
-        
-        // Show/hide WebAuthn button based on username input
-        usernameInput.addEventListener('input', function() {
-            if (this.value.trim()) {
-                webauthnBtn.disabled = false;
-            } else {
-                webauthnBtn.disabled = true;
+                window.cyberPanelWebAuthn.startPasskeyFirstLogin();
             }
         });
     }
