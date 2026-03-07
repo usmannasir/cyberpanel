@@ -953,7 +953,8 @@ def _compare_versions(version1, version2):
         return 0
 
 def _get_installed_version(plugin_dir, plugin_install_dir):
-    """Get installed version of a plugin from meta.xml"""
+    """Get installed version of a plugin from meta.xml.
+    Supports both <plugin> and <cyberpanelPluginConfig> root elements."""
     installed_path = os.path.join(plugin_install_dir, plugin_dir)
     meta_path = os.path.join(installed_path, 'meta.xml')
     
@@ -973,21 +974,36 @@ def _sync_meta_xml_from_github(plugin_name, plugin_install_dir='/usr/local/Cyber
     """
     Fetch meta.xml from GitHub raw (main) and overwrite installed meta.xml.
     Ensures installed version matches store even when archive ZIP is cached/stale.
-    Returns True if synced, False on non-fatal failure (logged).
+    Verifies write by re-reading version. Returns True if synced and version readable, False otherwise.
     """
     meta_url = f'{GITHUB_RAW_BASE}/{plugin_name}/meta.xml'
     meta_path = os.path.join(plugin_install_dir, plugin_name, 'meta.xml')
-    try:
-        req = urllib.request.Request(meta_url, headers={'User-Agent': 'CyberPanel-Plugin-Store/1.0'})
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            content = resp.read()
-        if content:
+    for attempt in (1, 2):
+        try:
+            req = urllib.request.Request(meta_url, headers={'User-Agent': 'CyberPanel-Plugin-Store/1.0'})
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                content = resp.read()
+            if not content:
+                if attempt == 2:
+                    logging.writeToFile(f"Sync meta.xml for {plugin_name}: empty response from GitHub")
+                continue
             with open(meta_path, 'wb') as f:
                 f.write(content)
-            logging.writeToFile(f"Synced meta.xml for {plugin_name} from GitHub raw")
-            return True
-    except Exception as e:
-        logging.writeToFile(f"Could not sync meta.xml for {plugin_name} from GitHub: {str(e)}")
+                f.flush()
+                if hasattr(os, 'fsync'):
+                    try:
+                        f.fsync()
+                    except Exception:
+                        pass
+            # Verify we can read version back (ensures file is valid and readable)
+            ver = _get_installed_version(plugin_name, plugin_install_dir)
+            if ver:
+                logging.writeToFile(f"Synced meta.xml for {plugin_name} from GitHub raw (version {ver})")
+                return True
+            if attempt == 2:
+                logging.writeToFile(f"Sync meta.xml for {plugin_name}: wrote file but could not parse version")
+        except Exception as e:
+            logging.writeToFile(f"Could not sync meta.xml for {plugin_name} from GitHub (attempt {attempt}): {str(e)}")
     return False
 
 def _create_plugin_backup(plugin_name, plugin_install_dir='/usr/local/CyberCP'):
@@ -1530,9 +1546,14 @@ def upgrade_plugin(request, plugin_name):
                 
                 # Sync meta.xml from GitHub raw so version matches store (archive ZIP can be cached/stale)
                 _sync_meta_xml_from_github(plugin_name, '/usr/local/CyberCP')
-                
-                # Get new version (now reflects meta.xml from main)
                 new_version = _get_installed_version(plugin_name, '/usr/local/CyberCP')
+                # If version unchanged, meta sync may have failed (e.g. network); retry once
+                if new_version == installed_version:
+                    logging.writeToFile(f"Plugin {plugin_name}: version unchanged after first meta sync, retrying sync")
+                    _sync_meta_xml_from_github(plugin_name, '/usr/local/CyberCP')
+                    new_version = _get_installed_version(plugin_name, '/usr/local/CyberCP')
+                if new_version == installed_version:
+                    logging.writeToFile(f"Plugin {plugin_name}: version still {installed_version} after upgrade; meta.xml may not have been updated from GitHub")
                 
                 logging.writeToFile(f"Plugin {plugin_name} upgraded successfully from {installed_version} to {new_version}")
                 
