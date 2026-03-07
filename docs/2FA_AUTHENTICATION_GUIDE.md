@@ -97,6 +97,8 @@ TOTP generates time-based codes that change every 30 seconds. Users scan a QR co
 ### What is WebAuthn?
 WebAuthn is a web standard that enables secure, passwordless authentication using public-key cryptography. It supports biometric authentication, security keys, and device passkeys.
 
+**Login behaviour**: The login page supports **passkey-first** sign-in: users can click "Login with Passkey" without entering a username. Passkeys are managed under **User Management → Modify User**. The relying party ID (`rp_id`) and origin are derived from the current request host only (never hardcoded), so WebAuthn works on any domain or IP (e.g. `https://your-server:2087`).
+
 ### Setting Up WebAuthn
 
 #### Prerequisites

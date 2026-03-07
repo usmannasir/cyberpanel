@@ -5,6 +5,7 @@
 {% block content %}
 
     {% load static %}
+    <script src="{% static 'loginSystem/webauthn.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'userManagment/userManagment.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     {% get_current_language as LANGUAGE_CODE %}
     <!-- Current language: {{ LANGUAGE_CODE }} -->
@@ -234,14 +235,30 @@
             <form name="modifyUserForm" action="/">
                 <div class="form-group">
                     <label class="form-label">{% trans "Select User Account" %}</label>
-                    <select ng-change="fetchUserDetails()" ng-model="accountUsername" class="form-control">
+                    <input type="text" id="modifyUserSearchInput" class="form-control" placeholder="{% trans 'Search users...' %}" style="margin-bottom: 8px;" autocomplete="off">
+                    <select id="modifyUserAccountSelect" ng-change="fetchUserDetails()" ng-model="accountUsername" class="form-control">
                         <option value="">-- {% trans "Choose a user to modify" %} --</option>
-                        {% for accts in acctNames %}
-                            <option>{{ accts }}</option>
+                        {% for acct in acctNames %}
+                        <option value="{{ acct|escapejs }}" data-acct="{{ acct|escapejs }}">{{ acct|escapejs }}</option>
                         {% endfor %}
                     </select>
                     <p class="help-text">{% trans "Select the user account you want to modify" %}</p>
                 </div>
+                <script>
+                (function() {
+                    var searchEl = document.getElementById('modifyUserSearchInput');
+                    var selectEl = document.getElementById('modifyUserAccountSelect');
+                    if (!searchEl || !selectEl) return;
+                    searchEl.addEventListener('input', function() {
+                        var q = (searchEl.value || '').toLowerCase().trim();
+                        var opts = selectEl.querySelectorAll('option[data-acct]');
+                        for (var i = 0; i < opts.length; i++) {
+                            var text = (opts[i].getAttribute('data-acct') || '').toLowerCase();
+                            opts[i].style.display = text.indexOf(q) !== -1 ? '' : 'none';
+                        }
+                    });
+                })();
+                </script>
                 <div ng-hide="acctDetailsFetched">
                     <div class="form-row">
                         <div class="form-col-6">
@@ -294,6 +311,11 @@
                                 class="form-control">
                         </select>
                         <p class="help-text">{% trans "Choose the security level for this account" %}</p>
+                        <div class="mt-2 p-3" style="font-size: 0.9rem; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; color: #212529;">
+                            <strong class="d-block mb-2">{% trans "What's the difference?" %}</strong>
+                            <strong>{% trans "High" %}:</strong> {% trans "Session is tied to the IP address used at login. If the user logs in from one IP and later visits from another (e.g. different network, VPN, or mobile), the session is invalidated and they must log in again." %}<br><br>
+                            <strong>{% trans "Low" %}:</strong> {% trans "Session is not tied to IP. The user can stay logged in when their IP changes (e.g. switching networks or using VPN). More convenient but slightly less strict against session reuse from another location." %}
+                        </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">{% trans "Additional Features" %}</label>
@@ -352,27 +374,7 @@
                                 <p class="help-text mb-2">{% trans "When enabled, users must use passkeys to login (password becomes optional)" %}</p>
                             </div>
                             
-                            <div class="checkbox-wrapper">
-                                <label>
-                                    <input ng-model="webauthnAllowMultiple" type="checkbox">
-                                    {% trans "Allow Multiple Passkeys" %}
-                                </label>
-                                <p class="help-text mb-2">{% trans "Allow users to register multiple passkeys for backup access" %}</p>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="form-label">{% trans "Maximum Passkeys" %}</label>
-                                <input type="number" class="form-control" ng-model="webauthnMaxCredentials" min="1" max="20" style="max-width: 150px;">
-                                <p class="help-text">{% trans "Maximum number of passkeys allowed per user" %}</p>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="form-label">{% trans "Passkey Timeout (seconds)" %}</label>
-                                <input type="number" class="form-control" ng-model="webauthnTimeout" min="30" max="300" style="max-width: 150px;">
-                                <p class="help-text">{% trans "How long to wait for passkey interaction" %}</p>
-                            </div>
-                            
-                            <!-- Passkey Management -->
+                            <!-- Passkey Management (no max/timeout like diabetes.newstargeted.com) -->
                             <div class="mt-4">
                                 <h5>{% trans "Manage Passkeys" %}</h5>
                                 <div ng-show="webauthnCredentials.length === 0" class="alert alert-info">
@@ -407,21 +409,136 @@
                                     </table>
                                 </div>
                                 
-                                <div class="mt-3">
-                                    <button type="button" class="btn btn-primary" ng-click="registerNewPasskey()" ng-disabled="!canAddCredential">
-                                        <i class="fa fa-plus"></i> {% trans "Register New Passkey" %}
+                                <p id="webauthn-msg" ng-show="webauthnMessage" ng-class="webauthnMessageError ? 'text-danger' : 'text-success'" class="mb-2" style="margin-top: 0.5rem;" ng-bind="webauthnMessage"></p>
+                                <div id="webauthn-msg-js" style="display:none; margin-top: 0.5rem; padding: 0.5rem 0.75rem; border-radius: 8px;"></div>
+                                <div class="mt-3" style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+                                    <label for="webauthn-name-input" class="mb-0" style="margin-right: 0.25rem;">{% trans "Passkey name" %}:</label>
+                                    <input type="text" id="webauthn-name-input" class="form-control" ng-model="newPasskeyName" placeholder="{% trans 'e.g. My laptop, Phone' %}" style="max-width: 240px;">
+                                    <button type="button" id="btnRegisterPasskey" class="btn btn-primary">
+                                        <i class="fa fa-plus"></i> <span id="btnRegisterPasskeyText">{% trans "Register New Passkey" %}</span>
                                     </button>
                                     <button type="button" class="btn btn-secondary" ng-click="refreshCredentials()">
                                         <i class="fa fa-refresh"></i> {% trans "Refresh" %}
                                     </button>
                                 </div>
-                                
-                                <div ng-show="!canAddCredential" class="alert alert-warning mt-2">
-                                    <i class="fa fa-exclamation-triangle"></i> {% trans "Maximum number of passkeys reached" %}
-                                </div>
                             </div>
                         </div>
                     </div>
+                    <!-- Diabetes-style vanilla JS passkey registration (works without Angular) -->
+                    <script>
+                    (function() {
+                        function getCsrfToken() {
+                            var m = document.cookie.match(/csrftoken=([^;]+)/);
+                            return m ? m[1].trim() : '';
+                        }
+                        function b64url(buf) {
+                            var b = new Uint8Array(buf);
+                            var s = '';
+                            for (var i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);
+                            return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+                        }
+                        function b64urlToBuffer(str) {
+                            var pad = (4 - (str.length % 4)) % 4;
+                            for (var i = 0; i < pad; i++) str += '=';
+                            var base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+                            var bin = atob(base64);
+                            var u = new Uint8Array(bin.length);
+                            for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+                            return u.buffer;
+                        }
+                        function prepareCreateOptions(data) {
+                            if (!data || !data.challenge) return data;
+                            var pk = data.challenge;
+                            if (typeof pk.challenge === 'string') pk.challenge = b64urlToBuffer(pk.challenge);
+                            if (pk.user && typeof pk.user.id === 'string') pk.user.id = b64urlToBuffer(pk.user.id);
+                            if (pk.excludeCredentials && pk.excludeCredentials.length) {
+                                pk.excludeCredentials = pk.excludeCredentials.map(function(c) {
+                                    return { type: c.type || 'public-key', id: typeof c.id === 'string' ? b64urlToBuffer(c.id) : c.id };
+                                });
+                            }
+                            return data;
+                        }
+                        function showMsg(text, isError) {
+                            var el = document.getElementById('webauthn-msg-js');
+                            if (!el) return;
+                            el.textContent = text;
+                            el.style.display = text ? 'block' : 'none';
+                            el.className = isError ? 'alert alert-danger' : 'alert alert-success';
+                        }
+                        function runRegister() {
+                            var btn = document.getElementById('btnRegisterPasskey');
+                            var btnText = document.getElementById('btnRegisterPasskeyText');
+                            var nameInput = document.getElementById('webauthn-name-input');
+                            var selectEl = document.getElementById('modifyUserAccountSelect');
+                            if (!btn || !selectEl) return;
+                            var username = (selectEl.value || '').trim();
+                            var name = (nameInput && nameInput.value) ? nameInput.value.trim() : '';
+                            if (!name) name = 'Security key';
+                            if (!username) {
+                                showMsg('{% trans "Please select a user account first." %}', true);
+                                return;
+                            }
+                            if (!window.PublicKeyCredential || !navigator.credentials || !navigator.credentials.create) {
+                                showMsg('{% trans "WebAuthn is not supported in this browser." %}', true);
+                                return;
+                            }
+                            btn.disabled = true;
+                            if (btnText) btnText.textContent = '{% trans "Loading..." %}';
+                            showMsg('', false);
+                            var csrf = getCsrfToken();
+                            fetch('/webauthn/registration/start/', {
+                                method: 'POST',
+                                credentials: 'same-origin',
+                                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+                                body: JSON.stringify({ username: username, credential_name: name })
+                            })
+                            .then(function(r) { return r.json(); })
+                            .then(function(data) {
+                                if (!data.success) throw new Error(data.error || 'Failed to start registration');
+                                if (!data.challenge) throw new Error('Invalid options');
+                                prepareCreateOptions(data);
+                                var pk = data.challenge;
+                                return navigator.credentials.create({ publicKey: pk }).then(function(cred) {
+                                    if (!cred) throw new Error('No credential');
+                                    return { cred: cred, challenge_id: data.challenge_id };
+                                });
+                            })
+                            .then(function(result) {
+                                var cred = result.cred;
+                                var challengeId = result.challenge_id;
+                                var body = JSON.stringify({
+                                    challenge_id: challengeId,
+                                    credential: { id: b64url(cred.rawId), type: cred.type },
+                                    client_data_json: b64url(cred.response.clientDataJSON),
+                                    attestation_object: b64url(cred.response.attestationObject)
+                                });
+                                return fetch('/webauthn/registration/complete/', {
+                                    method: 'POST',
+                                    credentials: 'same-origin',
+                                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
+                                    body: body
+                                });
+                            })
+                            .then(function(r) { return r.json(); })
+                            .then(function(data) {
+                                if (data.success) {
+                                    showMsg('{% trans "Passkey registered successfully." %}', false);
+                                    if (nameInput) nameInput.value = '';
+                                    window.location.reload();
+                                } else throw new Error(data.error || 'Registration failed');
+                            })
+                            .catch(function(e) {
+                                var msg = e.message || '{% trans "Passkey registration failed." %}';
+                                if (e.name === 'NotAllowedError') msg = '{% trans "Registration was cancelled or timed out." %}';
+                                showMsg(msg, true);
+                                btn.disabled = false;
+                                if (btnText) btnText.textContent = '{% trans "Register New Passkey" %}';
+                            });
+                        }
+                        var btn = document.getElementById('btnRegisterPasskey');
+                        if (btn) btn.addEventListener('click', runRegister);
+                    })();
+                    </script>
                     <div class="form-group" style="margin-top: 2rem;">
                         <button type="button" ng-click="modifyUser()" class="btn-primary">
                             <i class="fa fa-save"></i> {% trans "Save Changes" %}
@@ -437,10 +554,10 @@
                 <div ng-cloak ng-show="couldNotConnect === false" class="alert alert-danger">
                     <i class="fa fa-times-circle"></i> {% trans "Could not connect to server. Please refresh this page." %}
                 </div>
-                <div ng-cloak ng-show="canotFetchDetails === true" class="alert alert-danger">
+                <div ng-cloak ng-show="canotFetchDetails === true && userModified !== false" class="alert alert-danger">
                     <i class="fa fa-exclamation-circle"></i> {% trans "Cannot fetch details. Error message:" %} <span ng-bind="errorMessage || 'Unknown error'"></span>
                 </div>
-                <div ng-cloak ng-show="detailsFetched === true" class="alert alert-success">
+                <div ng-cloak ng-show="detailsFetched === true && userModified !== false" class="alert alert-success">
                     <i class="fa fa-info-circle"></i> {% trans "User details loaded successfully." %}
                 </div>
             </form>

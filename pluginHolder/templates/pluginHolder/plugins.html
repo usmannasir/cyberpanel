@@ -1035,6 +1035,38 @@
         cursor: not-allowed;
     }
     
+    .upgrades-badge {
+        display: inline-block;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 6px;
+        margin-left: 6px;
+        background: #f59e0b;
+        color: white;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 20px;
+        text-align: center;
+    }
+    
+    .upgrades-view-notice {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 8px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .upgrades-view-notice i {
+        color: #2563eb;
+        font-size: 20px;
+        margin-top: 2px;
+    }
+    
     .btn-link {
         padding: 6px 12px;
         background: var(--bg-secondary, #f8f9ff);
@@ -1297,6 +1329,11 @@
                     <button class="view-btn" onclick="toggleView('table', true)">
                         <i class="fas fa-list"></i>
                         {% trans "Table View" %}
+                    </button>
+                    <button class="view-btn" id="viewBtnUpgrades" onclick="toggleView('upgrades', true)">
+                        <i class="fas fa-arrow-circle-up"></i>
+                        {% trans "Upgrades Available" %}
+                        <span id="upgradesBadge" class="upgrades-badge" style="display: none;">0</span>
                     </button>
                     <button class="view-btn" onclick="toggleView('store', true)">
                         <i class="fas fa-store"></i>
@@ -1619,6 +1656,11 @@
                     <i class="fas fa-list"></i>
                     {% trans "Table View" %}
                 </button>
+                <button class="view-btn" id="viewBtnUpgradesNoPlugins" onclick="toggleView('upgrades', true)">
+                    <i class="fas fa-arrow-circle-up"></i>
+                    {% trans "Upgrades Available" %}
+                    <span id="upgradesBadgeNoPlugins" class="upgrades-badge" style="display: none;">0</span>
+                </button>
                 <button class="view-btn active" onclick="toggleView('store', true)">
                     <i class="fas fa-store"></i>
                     {% trans "CyberPanel Plugin Store" %}
@@ -1629,6 +1671,43 @@
                 </a>
             </div>
             {% endif %}
+            
+            <!-- Upgrades Available (plugins with newer version in store) -->
+            <div id="upgradesView" style="display: none;">
+                <div class="upgrades-view-notice">
+                    <i class="fas fa-info-circle"></i>
+                    <div>
+                        <strong>{% trans "Upgrades Available" %}</strong>
+                        <p style="margin: 8px 0 0 0; color: var(--text-secondary, #64748b); font-size: 14px;">{% trans "The following installed plugins have a newer version available in the CyberPanel Plugin Store. Before upgrading, please read the about information for the release and ensure you have a current backup of your website." %}</p>
+                    </div>
+                </div>
+                <div id="upgradesLoading" class="store-loading" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i> {% trans "Checking for upgrades..." %}
+                </div>
+                <div id="upgradesError" class="alert alert-danger" style="display: none;">
+                    <i class="fas fa-exclamation-circle alert-icon"></i>
+                    <span id="upgradesErrorText"></span>
+                </div>
+                <div id="upgradesContent" style="display: block;">
+                    <span id="transNoUpgrades" style="display: none;">{% trans "No upgrades available. All installed plugins are up to date." %}</span>
+                    <div class="store-table-wrapper">
+                        <table class="store-table">
+                            <thead>
+                                <tr>
+                                    <th>{% trans "Plugin Name" %}</th>
+                                    <th>{% trans "New Version" %}</th>
+                                    <th>{% trans "Your Version" %}</th>
+                                    <th>{% trans "Date" %}</th>
+                                    <th>{% trans "Status / Action" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody id="upgradesTableBody">
+                                <!-- Populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
             
             <!-- CyberPanel Plugin Store (always available) -->
             <div id="storeView" style="display: {% if not plugins %}block{% else %}none{% endif %};">
@@ -1801,6 +1880,7 @@ function toggleView(view, updateHash = true) {
     const gridView = document.getElementById('gridView');
     const tableView = document.getElementById('tableView');
     const storeView = document.getElementById('storeView');
+    const upgradesView = document.getElementById('upgradesView');
     const viewBtns = document.querySelectorAll('.view-btn');
     
     viewBtns.forEach(btn => btn.classList.remove('active'));
@@ -1831,10 +1911,15 @@ function toggleView(view, updateHash = true) {
         return;
     }
     
+    // Index of view buttons: 0=Grid, 1=Table, 2=Upgrades Available, 3=Store, 4=Dev Guide (or 3 when no plugins)
+    const upgradesBtnIndex = viewBtns.length >= 4 ? 2 : -1;
+    const storeBtnIndex = viewBtns.length >= 4 ? 3 : 2;
+    
     if (view === 'grid') {
         gridView.style.display = 'grid';
         tableView.style.display = 'none';
         storeView.style.display = 'none';
+        if (upgradesView) upgradesView.style.display = 'none';
         if (viewBtns[0]) viewBtns[0].classList.add('active');
         if (installedSearchWrapper) installedSearchWrapper.style.display = 'block';
         if (installedSortFilterBar) installedSortFilterBar.style.display = 'flex';
@@ -1845,40 +1930,110 @@ function toggleView(view, updateHash = true) {
         gridView.style.display = 'none';
         tableView.style.display = 'block';
         storeView.style.display = 'none';
+        if (upgradesView) upgradesView.style.display = 'none';
         if (viewBtns[1]) viewBtns[1].classList.add('active');
         if (installedSearchWrapper) installedSearchWrapper.style.display = 'block';
         if (installedSortFilterBar) installedSortFilterBar.style.display = 'flex';
         if (typeof updateInstalledSortButtons === 'function') updateInstalledSortButtons();
         if (typeof doApplyInstalledSort === 'function') doApplyInstalledSort();
         filterInstalledPlugins();
+    } else if (view === 'upgrades') {
+        if (installedSearchWrapper) installedSearchWrapper.style.display = 'none';
+        if (installedSortFilterBar) installedSortFilterBar.style.display = 'none';
+        gridView.style.display = 'none';
+        tableView.style.display = 'none';
+        storeView.style.display = 'none';
+        if (upgradesView) upgradesView.style.display = 'block';
+        if (upgradesBtnIndex >= 0 && viewBtns[upgradesBtnIndex]) viewBtns[upgradesBtnIndex].classList.add('active');
+        else if (document.getElementById('viewBtnUpgrades')) document.getElementById('viewBtnUpgrades').classList.add('active');
+        else if (document.getElementById('viewBtnUpgradesNoPlugins')) document.getElementById('viewBtnUpgradesNoPlugins').classList.add('active');
+        
+        if (storePlugins.length === 0) {
+            loadPluginStore(true);
+        } else {
+            displayUpgradesAvailable();
+        }
     } else if (view === 'store') {
         if (installedSearchWrapper) installedSearchWrapper.style.display = 'none';
         if (installedSortFilterBar) installedSortFilterBar.style.display = 'none';
         gridView.style.display = 'none';
         tableView.style.display = 'none';
+        if (upgradesView) upgradesView.style.display = 'none';
         storeView.style.display = 'block';
-        if (viewBtns[2]) viewBtns[2].classList.add('active');
+        if (storeBtnIndex >= 0 && viewBtns[storeBtnIndex]) viewBtns[storeBtnIndex].classList.add('active');
+        else if (viewBtns[2]) viewBtns[2].classList.add('active');
         
         // Load plugins from store if not already loaded
         if (storePlugins.length === 0) {
-            loadPluginStore();
+            loadPluginStore(false);
         } else {
             displayStorePlugins();
         }
     }
 }
 
-function loadPluginStore() {
+function updateUpgradesBadge() {
+    const count = (storePlugins && storePlugins.filter(p => p.update_available).length) || 0;
+    const badge = document.getElementById('upgradesBadge');
+    const badgeNoPlugins = document.getElementById('upgradesBadgeNoPlugins');
+    if (badge) {
+        badge.textContent = String(count);
+        badge.style.display = count > 0 ? 'inline-block' : 'none';
+    }
+    if (badgeNoPlugins) {
+        badgeNoPlugins.textContent = String(count);
+        badgeNoPlugins.style.display = count > 0 ? 'inline-block' : 'none';
+    }
+}
+
+function displayUpgradesAvailable() {
+    const tbody = document.getElementById('upgradesTableBody');
+    const loading = document.getElementById('upgradesLoading');
+    const errorDiv = document.getElementById('upgradesError');
+    const errorText = document.getElementById('upgradesErrorText');
+    const content = document.getElementById('upgradesContent');
+    if (!tbody) return;
+    
+    if (loading) loading.style.display = 'none';
+    if (errorDiv) errorDiv.style.display = 'none';
+    if (content) content.style.display = 'block';
+    
+    const upgrades = (storePlugins || []).filter(p => p.update_available);
+    if (upgrades.length === 0) {
+        const noUpgradesEl = document.getElementById('transNoUpgrades');
+        const noUpgradesMsg = (noUpgradesEl && noUpgradesEl.textContent) ? noUpgradesEl.textContent : 'No upgrades available. All installed plugins are up to date.';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 24px; color: var(--text-secondary, #64748b);"><i class="fas fa-check-circle" style="color: #10b981; margin-right: 8px;"></i>' + escapeHtml(noUpgradesMsg) + '</td></tr>';
+        return;
+    }
+    
+    let html = '';
+    upgrades.forEach(plugin => {
+        const dir = (plugin.plugin_dir || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+        const name = escapeHtml(plugin.name || plugin.plugin_dir || '');
+        const newVer = escapeHtml(plugin.version || '');
+        const yourVer = escapeHtml(plugin.installed_version || 'Unknown');
+        const date = escapeHtml(plugin.modify_date || '');
+        const curVer = (plugin.installed_version || 'Unknown').replace(/'/g, '&#39;');
+        const nVer = (plugin.version || 'Unknown').replace(/'/g, '&#39;');
+        const actionHtml = '<button type="button" class="btn-action btn-upgrade" data-plugin-dir="' + dir + '" data-current-version="' + escapeHtml(curVer) + '" data-new-version="' + escapeHtml(nVer) + '" onclick="upgradePlugin(this.getAttribute(\'data-plugin-dir\'), this.getAttribute(\'data-current-version\'), this.getAttribute(\'data-new-version\'))"><i class="fas fa-arrow-up"></i> Upgrade</button>';
+        html += '<tr><td><strong>' + name + '</strong></td><td>' + newVer + '</td><td>' + yourVer + '</td><td>' + date + '</td><td>' + actionHtml + '</td></tr>';
+    });
+    tbody.innerHTML = html;
+}
+
+function loadPluginStore(forUpgradesView) {
     const storeLoading = document.getElementById('storeLoading');
     const storeError = document.getElementById('storeError');
     const storeErrorText = document.getElementById('storeErrorText');
     const storeContent = document.getElementById('storeContent');
     const storeTableBody = document.getElementById('storeTableBody');
+    const upgradesLoading = document.getElementById('upgradesLoading');
     if (!storeLoading || !storeError || !storeErrorText || !storeContent) return;
     
     storeLoading.style.display = 'block';
     storeError.style.display = 'none';
     storeContent.style.display = 'block';
+    if (upgradesLoading) upgradesLoading.style.display = forUpgradesView ? 'block' : 'none';
     
     fetch('/plugins/api/store/plugins/', {
         method: 'GET',
@@ -1903,21 +2058,43 @@ function loadPluginStore() {
     })
     .then(data => {
         storeLoading.style.display = 'none';
+        const upgradesLoadingEl = document.getElementById('upgradesLoading');
+        if (upgradesLoadingEl) upgradesLoadingEl.style.display = 'none';
         
         if (data.success) {
             storePlugins = data.plugins;
-            displayStorePlugins();
+            if (typeof updateUpgradesBadge === 'function') updateUpgradesBadge();
+            const upgradesViewEl = document.getElementById('upgradesView');
+            if (upgradesViewEl && upgradesViewEl.style.display === 'block' && typeof displayUpgradesAvailable === 'function') {
+                displayUpgradesAvailable();
+            } else {
+                displayStorePlugins();
+            }
             storeContent.style.display = 'block';
         } else {
             storeErrorText.textContent = data.error || 'Failed to load plugins from store';
             storeError.style.display = 'block';
+            const upgradesError = document.getElementById('upgradesError');
+            const upgradesErrorText = document.getElementById('upgradesErrorText');
+            if (upgradesError && upgradesErrorText) {
+                upgradesErrorText.textContent = data.error || 'Failed to load plugin store';
+                upgradesError.style.display = 'block';
+            }
         }
     })
     .catch(error => {
         storeLoading.style.display = 'none';
+        const upgradesLoadingEl = document.getElementById('upgradesLoading');
+        if (upgradesLoadingEl) upgradesLoadingEl.style.display = 'none';
         storeErrorText.textContent = error.message || 'Error loading plugin store. Please refresh the page and try again.';
         storeError.style.display = 'block';
         storeContent.style.display = 'block';
+        const upgradesError = document.getElementById('upgradesError');
+        const upgradesErrorText = document.getElementById('upgradesErrorText');
+        if (upgradesError && upgradesErrorText) {
+            upgradesErrorText.textContent = error.message || 'Error checking for upgrades.';
+            upgradesError.style.display = 'block';
+        }
         if (storeTableBody && storeTableBody.innerHTML === '') {
             storeTableBody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 20px; color: var(--text-secondary, #64748b);">Unable to load plugins. Please check your connection and try again.</td></tr>';
         }
@@ -3158,12 +3335,13 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Check URL hash for view preference
         const hash = window.location.hash.substring(1); // Remove #
-        const validViews = ['grid', 'table', 'store'];
+        const validViews = ['grid', 'table', 'upgrades', 'store'];
         
         // Check if view elements exist before calling toggleView
         const gridView = document.getElementById('gridView');
         const tableView = document.getElementById('tableView');
         const storeView = document.getElementById('storeView');
+        const upgradesViewEl = document.getElementById('upgradesView');
         
         // Only proceed if all view elements exist (plugins are installed)
         if (gridView && tableView && storeView) {
