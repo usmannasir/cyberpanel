@@ -9,6 +9,7 @@ urlpatterns = [
     path('registration/complete/', webauthn_views.webauthn_registration_complete, name='webauthn_registration_complete'),
     
     # WebAuthn Authentication
+    path('authentication/options/', webauthn_views.webauthn_authentication_options, name='webauthn_authentication_options'),
     path('authentication/start/', webauthn_views.webauthn_authentication_start, name='webauthn_authentication_start'),
     path('authentication/complete/', webauthn_views.webauthn_authentication_complete, name='webauthn_authentication_complete'),
     

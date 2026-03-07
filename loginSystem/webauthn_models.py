@@ -198,7 +198,5 @@ class WebAuthnSettings(models.Model):
         return settings
     
     def can_add_credential(self):
-        """Check if user can add another credential"""
-        if not self.allow_multiple_credentials:
-            return WebAuthnCredential.objects.filter(user=self.user, is_active=True).count() == 0
-        return WebAuthnCredential.objects.filter(user=self.user, is_active=True).count() < self.max_credentials
+        """Check if user can add another credential. No limit (like diabetes.newstargeted.com)."""
+        return True

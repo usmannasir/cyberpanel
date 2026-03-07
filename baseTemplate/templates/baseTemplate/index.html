@@ -2221,6 +2221,7 @@
     <!-- Additional Scripts (data-cfasync=false ensures controllers load before Angular compiles) -->
     <script src="{% static 'packages/packages.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'websiteFunctions/websiteFunctions.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'loginSystem/webauthn.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'userManagment/userManagment.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'databases/databases.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'dns/dns.js' %}?v={{ CP_VERSION }}&dns={{ DNS_STATIC_VERSION }}" data-cfasync="false"></script>

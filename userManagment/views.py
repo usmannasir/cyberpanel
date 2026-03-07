@@ -379,8 +379,9 @@ def submitUserCreation(request):
 def modifyUsers(request):
     userID = request.session['userID']
     userNames = ACLManager.loadAllUsers(userID)
+    acctNamesJson = json.dumps(list(userNames))
     proc = httpProc(request, 'userManagment/modifyUser.html',
-                    {"acctNames": userNames, 'securityLevels': SecurityLevel.list()})
+                    {"acctNames": userNames, "acctNamesJson": acctNamesJson, 'securityLevels': SecurityLevel.list()})
     return proc.render()
 
 
