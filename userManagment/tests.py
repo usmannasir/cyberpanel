@@ -258,6 +258,19 @@ class TestUserManagement(TestCase):
 
         self.assertEqual(Administrator.objects.get(userName='usman').api, 1)
 
+    def test_modifyUsers_page_shows_user_dropdown_and_search(self):
+        """Modify User page must render server-side user options and search input."""
+        modify_url = reverse('modifyUsers')
+        response = self.client.get(modify_url)
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode('utf-8')
+        # Server-rendered options: at least one user option (admin exists from login)
+        self.assertIn('data-acct=', html, 'Template should render option with data-acct for filtering')
+        self.assertIn('modifyUserSearchInput', html, 'Search input id must be present')
+        self.assertIn('modifyUserAccountSelect', html, 'Select id must be present')
+        # Should have at least one real option (value not empty)
+        self.assertRegex(html, r'<option\s+value="[^"]+"\s+data-acct=', 'At least one user option must be rendered')
+
 
 
 
