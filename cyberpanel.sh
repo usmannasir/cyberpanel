@@ -1149,6 +1149,9 @@ if [[ $Server_OS = "CentOS" ]] ; then
       dnf config-manager --set-enabled crb
     fi
 
+    # el9/el10 need libxcrypt-compat for lscpd (libcrypt.so.1); install for all arches
+    dnf install -y libxcrypt-compat
+
     if [[ "$Server_OS_Version" = "9" ]]; then
       yum install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm
     else
@@ -2355,7 +2358,16 @@ else
   sed -i 's|Include /usr/local/lsws/conf/rules.conf||g' /usr/local/lsws/conf/modsec.conf
 fi
 
+systemctl daemon-reload >/dev/null 2>&1
 systemctl restart lscpd >/dev/null 2>&1
+if ! systemctl is-active --quiet lscpd 2>/dev/null; then
+  systemctl daemon-reload
+  systemctl restart lscpd
+fi
+if ! systemctl is-active --quiet lscpd 2>/dev/null; then
+  log_warning "lscpd did not start. Run: systemctl status lscpd"
+fi
+systemctl restart fastapi_ssh_server 2>/dev/null || true
 /usr/local/lsws/bin/lswsctrl stop >/dev/null 2>&1
 systemctl stop lsws >/dev/null 2>&1
 systemctl start lsws >/dev/null 2>&1

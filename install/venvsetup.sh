@@ -971,7 +971,13 @@ wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel
 pip3.6 install --ignore-installed -r requirements.txt
 # Install python-dotenv for loading .env file (critical for AlmaLinux 8)
 pip3.6 install python-dotenv
-systemctl restart lscpd
+systemctl daemon-reload 2>/dev/null || true
+systemctl restart lscpd 2>/dev/null || true
+if ! systemctl is-active --quiet lscpd 2>/dev/null; then
+	systemctl daemon-reload
+	systemctl restart lscpd
+fi
+systemctl restart fastapi_ssh_server 2>/dev/null || true
 fi
 
 for version in $(ls /usr/local/lsws | grep lsphp); 
@@ -1027,7 +1033,13 @@ ELAPSED="$(($SECONDS / 3600)) hrs $((($SECONDS / 60) % 60)) min $(($SECONDS % 60
 MYSQLPASSWD=$(cat /etc/cyberpanel/mysqlPassword)
 echo "$ADMIN_PASS" > /etc/cyberpanel/adminPass
 /usr/local/CyberPanel/bin/python2 /usr/local/CyberCP/plogical/adminPass.py --password $ADMIN_PASS
-systemctl restart lscpd
+systemctl daemon-reload 2>/dev/null || true
+systemctl restart lscpd 2>/dev/null || true
+if ! systemctl is-active --quiet lscpd 2>/dev/null; then
+	systemctl daemon-reload
+	systemctl restart lscpd
+fi
+systemctl restart fastapi_ssh_server 2>/dev/null || true
 systemctl restart lsws
 echo "/usr/local/CyberPanel/bin/python2 /usr/local/CyberCP/plogical/adminPass.py --password \"\$@\"" > /usr/bin/adminPass
 echo "systemctl restart lscpd" >> /usr/bin/adminPass
