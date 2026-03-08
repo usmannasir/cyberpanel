@@ -270,6 +270,10 @@ setup_epel_repo() {
             yum install -y https://cyberpanel.sh/dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
             Check_Return "yum repo" "no_exit"
             ;;
+        "10")
+            yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm
+            Check_Return "yum repo" "no_exit"
+            ;;
     esac
 }
 
@@ -1112,7 +1116,13 @@ log_function_start "Pre_Install_Setup_Repository"
 log_info "Setting up package repositories for $Server_OS $Server_OS_Version"
 if [[ $Server_OS = "CentOS" ]] ; then
   log_debug "Importing LiteSpeed GPG key"
+  if [[ "$Server_OS_Version" = "10" ]] && command -v update-crypto-policies >/dev/null 2>&1; then
+    update-crypto-policies --set LEGACY
+  fi
   rpm --import https://cyberpanel.sh/rpms.litespeedtech.com/centos/RPM-GPG-KEY-litespeed
+  if [[ "$Server_OS_Version" = "10" ]] && command -v update-crypto-policies >/dev/null 2>&1; then
+    update-crypto-policies --set DEFAULT
+  fi
   #import the LiteSpeed GPG key
 
   yum clean all
@@ -1146,7 +1156,11 @@ if [[ $Server_OS = "CentOS" ]] ; then
       dnf config-manager --set-enabled crb
     fi
 
-    yum install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm
+    if [[ "$Server_OS_Version" = "9" ]]; then
+      yum install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm
+    else
+      yum install -y https://rpms.remirepo.net/enterprise/remi-release-10.rpm
+    fi
       Check_Return "yum repo" "no_exit"
   fi
 
@@ -1331,12 +1345,11 @@ if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "openEuler" ]] ; then
   elif [[ "$Server_OS_Version" = "8" ]] ; then
     dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils gpgme-devel
       Check_Return
-  elif [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]] ; then
-
-    #!/bin/bash
-
-
+  elif [[ "$Server_OS_Version" = "9" ]] ; then
     dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel MariaDB-server MariaDB-client MariaDB-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils gpgme-devel openssl-devel
+      Check_Return
+  elif [[ "$Server_OS_Version" = "10" ]] ; then
+    dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-server mariadb mariadb-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils gpgme-devel openssl-devel
       Check_Return
   elif [[ "$Server_OS_Version" = "20" ]] || [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] ; then
     dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git python3-devel tar socat python3 zip unzip bind-utils gpgme-devel
