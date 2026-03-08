@@ -312,16 +312,9 @@ enabled=1
 gpgcheck=1
 EOF
     elif [[ "$Server_OS_Version" = "10" ]] && uname -m | grep -q 'x86_64'; then
-        cat <<EOF >/etc/yum.repos.d/MariaDB.repo
-# MariaDB 10.11 CentOS repository list - created 2021-08-06 02:01 UTC
-# http://downloads.mariadb.org/mariadb/repositories/
-[mariadb]
-name = MariaDB
-baseurl = http://yum.mariadb.org/10.11/rhel9-amd64/
-gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
-enabled=1
-gpgcheck=1
-EOF
+        # AlmaLinux 10: use distro AppStream (mariadb-server, mariadb, mariadb-devel) only.
+        # Do not add MariaDB rhel9 repo - el9 packages need galera-4/libboost from el9 and break on el10.
+        rm -f /etc/yum.repos.d/MariaDB.repo
     fi
 }
 
