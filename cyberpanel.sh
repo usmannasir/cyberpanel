@@ -314,7 +314,8 @@ EOF
     elif [[ "$Server_OS_Version" = "10" ]] && uname -m | grep -q 'x86_64'; then
         # AlmaLinux 10: use distro AppStream (mariadb-server, mariadb, mariadb-devel) only.
         # Do not add MariaDB rhel9 repo - el9 packages need galera-4/libboost from el9 and break on el10.
-        rm -f /etc/yum.repos.d/MariaDB.repo
+        # Remove any MariaDB/mariadb repo files (from previous installs or mariadb_repo_setup) to avoid conflicts with AppStream.
+        rm -f /etc/yum.repos.d/MariaDB.repo /etc/yum.repos.d/mariadb.repo /etc/yum.repos.d/mariadb-main.repo /etc/yum.repos.d/mariadb*.repo
     fi
 }
 
@@ -1345,7 +1346,11 @@ if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "openEuler" ]] ; then
     dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel MariaDB-server MariaDB-client MariaDB-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils gpgme-devel openssl-devel
       Check_Return
   elif [[ "$Server_OS_Version" = "10" ]] ; then
-    dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-server mariadb mariadb-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils gpgme-devel openssl-devel
+    # Use only AppStream for mariadb to avoid conflict with MariaDB repo -devel packages (file conflicts).
+    # Remove any MariaDB repo files so re-runs or leftover repos do not pull in conflicting -devel.
+    rm -f /etc/yum.repos.d/MariaDB.repo /etc/yum.repos.d/mariadb.repo /etc/yum.repos.d/mariadb-main.repo /etc/yum.repos.d/mariadb*.repo 2>/dev/null || true
+    # --disablerepo=mariadb* and --allowerasing so we use only AppStream; allow replacing existing MariaDB-* with mariadb-* if present.
+    dnf install -y --disablerepo='mariadb*' --allowerasing libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-server mariadb mariadb-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils gpgme-devel openssl-devel
       Check_Return
   elif [[ "$Server_OS_Version" = "20" ]] || [[ "$Server_OS_Version" = "22" ]] || [[ "$Server_OS_Version" = "24" ]] ; then
     dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git python3-devel tar socat python3 zip unzip bind-utils gpgme-devel
