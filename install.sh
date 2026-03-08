@@ -64,6 +64,11 @@ fi
 
 rm -f cyberpanel.sh
 rm -f install.tar.gz
-curl --silent -o cyberpanel.sh "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null
+# Fetch cyberpanel.sh from this repo (master3395/cyberpanel) so AlmaLinux 10 and other fixes are used
+CYBERPANEL_SCRIPT_URL="https://raw.githubusercontent.com/master3395/cyberpanel/v2.4.5/cyberpanel.sh"
+curl --silent -o cyberpanel.sh "$CYBERPANEL_SCRIPT_URL" 2>/dev/null
+if [ ! -s cyberpanel.sh ]; then
+	curl --silent -o cyberpanel.sh "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev/null
+fi
 chmod +x cyberpanel.sh
 ./cyberpanel.sh $@
