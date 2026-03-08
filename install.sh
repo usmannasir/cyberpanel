@@ -118,8 +118,8 @@ rm -f "$SCRIPT_PATH" "$TEMP_DIR/cyberpanel.sh" "$TEMP_DIR/install.tar.gz"
 # Ensure temp directory exists and is writable
 mkdir -p "$TEMP_DIR" 2>/dev/null || true
 
-# For v2.5.5-dev, try to get the cyberpanel.sh from the branch
-if [ "$BRANCH_NAME" = "v2.5.5-dev" ] || [ "$BRANCH_NAME" = "stable" ]; then
+# Prefer master3395/cyberpanel raw cyberpanel.sh for known branches (includes AlmaLinux 10 etc.)
+if [ "$BRANCH_NAME" = "v2.5.5-dev" ] || [ "$BRANCH_NAME" = "stable" ] || [ "$BRANCH_NAME" = "v2.4.5" ]; then
     # Try to download from the branch-specific URL
     if curl --silent -o "$SCRIPT_PATH" "https://raw.githubusercontent.com/master3395/cyberpanel/$BRANCH_NAME/cyberpanel.sh" 2>/dev/null; then
         if [ -f "$SCRIPT_PATH" ] && [ -s "$SCRIPT_PATH" ]; then
