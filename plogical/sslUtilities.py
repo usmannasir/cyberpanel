@@ -846,6 +846,7 @@ context /.well-known/acme-challenge {
                         if result.returncode == 0:
                             # Step 3: Install the certificate to the desired location
                             install_command = acmePath + " --install-cert -d " + virtualHostName \
+                                            + ' --ecc' \
                                             + ' --cert-file ' + existingCertPath + '/cert.pem' \
                                             + ' --key-file ' + existingCertPath + '/privkey.pem' \
                                             + ' --fullchain-file ' + existingCertPath + '/fullchain.pem'
@@ -902,6 +903,7 @@ context /.well-known/acme-challenge {
                     if result.returncode == 0:
                         # Step 2: Install the certificate to the desired location
                         install_command = acmePath + " --install-cert -d " + virtualHostName \
+                                        + ' --ecc' \
                                         + ' --cert-file ' + existingCertPath + '/cert.pem' \
                                         + ' --key-file ' + existingCertPath + '/privkey.pem' \
                                         + ' --fullchain-file ' + existingCertPath + '/fullchain.pem'
@@ -963,10 +965,10 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
                 if is_expired:
                     logging.CyberCPLogFileWriter.writeToFile(
                         f"Certificate is expired, using --issue --force for {domain}")
-                    command = f'{acmePath} --issue {renewal_domains} --webroot /usr/local/lsws/Example/html --force'
+                    command = f'{acmePath} --issue {renewal_domains} --webroot /usr/local/lsws/Example/html -k ec-256 --force'
                 else:
                     # Try to renew with explicit webroot
-                    command = f'{acmePath} --renew {renewal_domains} --webroot /usr/local/lsws/Example/html --force'
+                    command = f'{acmePath} --renew {renewal_domains} --webroot /usr/local/lsws/Example/html --ecc --force'
 
                 try:
                     result = subprocess.run(command, capture_output=True, text=True, shell=True)
@@ -977,6 +979,10 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
 
                 if result.returncode == 0:
                     logging.CyberCPLogFileWriter.writeToFile(f"Successfully renewed SSL for {domain}")
+                    # ADDED: Copy cert from acme.sh to /etc/letsencrypt/live/
+                    certPath = '/etc/letsencrypt/live/' + domain
+                    install_cmd = f'{acmePath} --install-cert -d {domain} --ecc --key-file {certPath}/privkey.pem --fullchain-file {certPath}/fullchain.pem'
+                    subprocess.call(install_cmd, shell=True)
                     if sslUtilities.installSSLForDomain(domain, adminEmail) == 1:
                         return [1, "SSL successfully renewed"]
                 else:
