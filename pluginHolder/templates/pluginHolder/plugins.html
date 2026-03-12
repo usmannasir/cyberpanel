@@ -2554,11 +2554,6 @@ function upgradePlugin(pluginName, currentVersion, newVersion) {
         return;
     }
     
-    // Double confirmation
-    if (!confirm(`Final confirmation: Upgrade ${pluginName} now?\n\nThis action cannot be undone.`)) {
-        return;
-    }
-    
     const btn = event.target.closest('.btn-upgrade') || event.target;
     const originalText = btn.innerHTML;
     btn.disabled = true;
@@ -2583,10 +2578,10 @@ function upgradePlugin(pluginName, currentVersion, newVersion) {
             } else {
                 alert('Success: ' + (data.message || `Plugin ${pluginName} upgraded successfully`));
             }
-            // Reload page after short delay to show success message
-            setTimeout(() => {
-                location.reload();
-            }, 1500);
+            // Refetch store so upgrades list and badge update (plugin no longer shows as upgradable)
+            if (typeof loadPluginStore === 'function') {
+                loadPluginStore(true);
+            }
         } else {
             if (typeof PNotify !== 'undefined') {
                 new PNotify({
