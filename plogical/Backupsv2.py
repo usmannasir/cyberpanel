@@ -923,7 +923,7 @@ team_drive =
 
                                 logging.CyberCPLogFileWriter.writeToFile('Database did not exist, creating new.. %s' % (dbName))
 
-                                if mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, "cyberpanel") == 0:
+                                if mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, "cyberpanel") != 1:
                                     logging.CyberCPLogFileWriter.writeToFile('Failed the creation of database: %s' % (dbName))
                                 else:
                                     logging.CyberCPLogFileWriter.writeToFile('Database: %s successfully created.' % (dbName))

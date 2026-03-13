@@ -144,7 +144,7 @@ class restoreMeta():
 
                             logging.statusWriter(statusPath, 'Database did not exist, creating new.. %s' % (dbName))
 
-                            if mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, "cyberpanel") == 0:
+                            if mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, "cyberpanel") != 1:
                                 logging.statusWriter(statusPath, 'Failed the creation of database: %s' % (dbName))
                             else:
                                 logging.statusWriter(statusPath, 'Database: %s successfully created.' % (dbName))

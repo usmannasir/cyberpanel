@@ -119,31 +119,33 @@ class mysqlUtilities:
             connection, cursor = mysqlUtilities.setupConnection()
 
             if connection == 0:
-                return 0
+                return 0, "Could not connect to MySQL."
 
             if dbcreate == 1:
                 HostToUse = mysqlUtilities.LOCALHOST
             else:
                 HostToUse = host
-            ## Create db
+            ## Escape password and user for use in SQL single-quoted strings
+            _pw = str(dbpassword).replace('\\', '\\\\').replace("'", "''")
+            _user_quoted = "'" + str(dbuser).replace("'", "''") + "'"
+            ## Backtick-quote database name so names with hyphens work (e.g. my-admin)
+            _db = '`' + str(dbname).replace('`', '``') + '`'
 
             if dbcreate:
 
-                query = "CREATE DATABASE %s" % (dbname)
+                query = "CREATE DATABASE " + _db
 
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.CyberCPLogFileWriter.writeToFile(query)
 
                 cursor.execute(query)
 
-            ## create user
-
+            ## create user (user and password in single-quoted strings, escaped)
             if mysqlUtilities.REMOTEHOST.find('ondigitalocean') > -1:
-                query = "CREATE USER '%s'@'%s' IDENTIFIED WITH mysql_native_password BY '%s'" % (
-                dbuser, HostToUse, dbpassword)
+                query = "CREATE USER " + _user_quoted + "@'%s' IDENTIFIED WITH mysql_native_password BY '%s'" % (
+                    HostToUse, _pw)
             else:
-                query = "CREATE USER '" + dbuser + "'@'%s' IDENTIFIED BY '" % (
-                    HostToUse) + dbpassword + "'"
+                query = "CREATE USER " + _user_quoted + "@'%s' IDENTIFIED BY '%s'" % (HostToUse, _pw)
 
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.CyberCPLogFileWriter.writeToFile(query)
@@ -151,14 +153,14 @@ class mysqlUtilities:
             cursor.execute(query)
 
             if mysqlUtilities.RDS == 0:
-                cursor.execute("GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (HostToUse))
+                cursor.execute("GRANT ALL PRIVILEGES ON " + _db + ".* TO " + _user_quoted + "@'%s'" % (HostToUse))
                 if os.path.exists(ProcessUtilities.debugPath):
-                    logging.CyberCPLogFileWriter.writeToFile("GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (HostToUse))
+                    logging.CyberCPLogFileWriter.writeToFile("GRANT ALL PRIVILEGES ON " + _db + ".* TO " + _user_quoted + "@'%s'" % (HostToUse))
             else:
                 cursor.execute(
-                    "GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (HostToUse))
+                    "GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON " + _db + ".* TO " + _user_quoted + "@'%s'" % (HostToUse))
                 if os.path.exists(ProcessUtilities.debugPath):
-                    logging.CyberCPLogFileWriter.writeToFile("GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (HostToUse))
+                    logging.CyberCPLogFileWriter.writeToFile("GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON " + _db + ".* TO " + _user_quoted + "@'%s'" % (HostToUse))
 
             connection.close()
 
@@ -169,8 +171,9 @@ class mysqlUtilities:
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.CyberCPLogFileWriter.writeToFile('Deleting database because failed to create %s' % (dbname))
                 #mysqlUtilities.deleteDatabase(dbname, dbuser)
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[createDatabase]")
-            return 0
+            err_msg = str(msg)
+            logging.CyberCPLogFileWriter.writeToFile(err_msg + "[createDatabase]")
+            return 0, err_msg
 
     @staticmethod
     def createDBUser(dbuser, dbpassword):
@@ -477,7 +480,8 @@ password=%s
             if result == 1:
                 pass
             else:
-                raise BaseException(result)
+                err_msg = result[1] if isinstance(result, (list, tuple)) and len(result) > 1 else str(result)
+                raise BaseException(err_msg)
 
             db = Databases(website=website, dbName=dbName, dbUser=dbUsername)
             db.save()

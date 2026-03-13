@@ -748,7 +748,7 @@ class backupUtilities:
 
                         dbUser = databaseUser.find('dbUser').text
                         res = mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, 'cyberpanel')
-                        if res == 0:
+                        if res != 1:
                             logging.CyberCPLogFileWriter.writeToFile(
                                 'Failed to restore database %s. But it can be false positive, moving on..' % (dbName))
 
@@ -759,7 +759,7 @@ class backupUtilities:
                 else:
                     dbUser = database.find('dbUser').text
 
-                    if mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, "cyberpanel") == 0:
+                    if mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, "cyberpanel") != 1:
                         raise BaseException
 
                     newDB = Databases(website=website, dbName=dbName, dbUser=dbUser)
@@ -2135,7 +2135,7 @@ class backupUtilities:
 
                 mysqlUtilities.mysqlUtilities.submitDBDeletion(db['databaseName'])
 
-                if mysqlUtilities.mysqlUtilities.createDatabase(db['databaseName'], db['databaseUser'], "cyberpanel") == 0:
+                if mysqlUtilities.mysqlUtilities.createDatabase(db['databaseName'], db['databaseUser'], "cyberpanel") != 1:
                     raise BaseException("Failed to create Databases!")
 
                 newDB = Databases(website=self.website, dbName=db['databaseName'], dbUser=db['databaseUser'])
@@ -2340,7 +2340,7 @@ class backupUtilities:
 
                 mysqlUtilities.mysqlUtilities.submitDBDeletion(db['databaseName'])
 
-                if mysqlUtilities.mysqlUtilities.createDatabase(db['databaseName'], db['databaseUser'], "cyberpanel") == 0:
+                if mysqlUtilities.mysqlUtilities.createDatabase(db['databaseName'], db['databaseUser'], "cyberpanel") != 1:
                     raise BaseException("Failed to create Databases!")
 
                 newDB = Databases(website=self.website, dbName=db['databaseName'], dbUser=db['databaseUser'])
