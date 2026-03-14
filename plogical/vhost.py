@@ -1047,6 +1047,17 @@ class vhost:
             cmd = shlex.split(command)
             subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
+            # Create .well-known/acme-challenge so LiteSpeed config validation does not fail (path must exist)
+            acme_path = path.rstrip('/') + '/.well-known/acme-challenge'
+            try:
+                command = 'sudo -u %s mkdir -p %s' % (virtualHostUser, acme_path)
+                ProcessUtilities.normalExecutioner(command)
+                command = "sudo -u %s chmod 755 %s" % (virtualHostUser, acme_path)
+                subprocess.call(shlex.split(command), stdout=FNULL, stderr=subprocess.STDOUT)
+            except Exception as acme_err:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    str(acme_err) + " [createDirectoryForDomain acme-challenge]")
+
         except OSError as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "329 [Not able to create directories for virtual host [createDirectoryForDomain]]")
