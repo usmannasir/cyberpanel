@@ -711,11 +711,30 @@ context /.well-known/acme-challenge {
 
         sslUtilities.PatchVhostConf(virtualHostName)
 
-        if not os.path.exists('/usr/local/lsws/Example/html/.well-known/acme-challenge'):
-            command = f'mkdir -p /usr/local/lsws/Example/html/.well-known/acme-challenge'
+        default_webroot = '/usr/local/lsws/Example/html'
+        # Child domains: use their docroot so HTTP-01 challenge is served from the correct vhost
+        if sslpath and str(sslpath).strip():
+            webroot = str(sslpath).strip().rstrip('/')
+            if webroot != default_webroot and os.path.isdir(webroot):
+                challenge_path = webroot + '/.well-known/acme-challenge'
+                if not os.path.exists(challenge_path):
+                    os.makedirs(challenge_path, exist_ok=True)
+                    command = f'chmod -R 755 {webroot}/.well-known'
+                    ProcessUtilities.executioner(command)
+                logging.CyberCPLogFileWriter.writeToFile(
+                    f"Using domain webroot for ACME challenge: {webroot}")
+            else:
+                webroot = default_webroot
+                challenge_path = None
+        else:
+            webroot = default_webroot
+            challenge_path = None
+
+        if not os.path.exists(default_webroot + '/.well-known/acme-challenge'):
+            command = f'mkdir -p {default_webroot}/.well-known/acme-challenge'
             ProcessUtilities.normalExecutioner(command)
 
-        command = f'chmod -R 755 /usr/local/lsws/Example/html'
+        command = f'chmod -R 755 {default_webroot}'
         ProcessUtilities.executioner(command)
 
         # Try Let's Encrypt first
@@ -752,7 +771,7 @@ context /.well-known/acme-challenge {
             except:
                 pass
 
-            acme = CustomACME(virtualHostName, adminEmail, staging=False, provider='letsencrypt')
+            acme = CustomACME(virtualHostName, adminEmail, staging=False, provider='letsencrypt', challenge_path=challenge_path)
             if acme.issue_certificate(domains, use_dns=use_dns):
                 logging.CyberCPLogFileWriter.writeToFile(
                     f"Successfully obtained SSL using Let's Encrypt for: {virtualHostName}")
@@ -797,7 +816,7 @@ context /.well-known/acme-challenge {
                     logging.CyberCPLogFileWriter.writeToFile(
                         f"www.{aliasDomain} has no DNS records, excluding from SSL request")
 
-            acme = CustomACME(virtualHostName, adminEmail, staging=False, provider='zerossl')
+            acme = CustomACME(virtualHostName, adminEmail, staging=False, provider='zerossl', challenge_path=challenge_path)
             if acme.issue_certificate(domains, use_dns=use_dns):
                 logging.CyberCPLogFileWriter.writeToFile(
                     f"Successfully obtained SSL using ZeroSSL for: {virtualHostName}")
@@ -836,8 +855,8 @@ context /.well-known/acme-challenge {
 
                     command = acmePath + " --issue" + domain_list \
                               + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
-                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w /usr/local/lsws/Example/html -k ec-256 --force --staging' \
-                              + ' --webroot-path /usr/local/lsws/Example/html'
+                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + webroot + ' -k ec-256 --force --staging' \
+                              + ' --webroot-path ' + webroot
 
                     try:
                         result = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
@@ -849,8 +868,8 @@ context /.well-known/acme-challenge {
                     if result.returncode == 0:
                         command = acmePath + " --issue" + domain_list \
                                   + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
-                                  + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w /usr/local/lsws/Example/html -k ec-256 --force --server letsencrypt' \
-                                  + ' --webroot-path /usr/local/lsws/Example/html'
+                                  + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + webroot + ' -k ec-256 --force --server letsencrypt' \
+                                  + ' --webroot-path ' + webroot
 
                         try:
                             result = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)
@@ -892,7 +911,7 @@ context /.well-known/acme-challenge {
 
                     command = acmePath + " --issue" + domain_list \
                               + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
-                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w /usr/local/lsws/Example/html -k ec-256 --force --server letsencrypt'
+                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + webroot + ' -k ec-256 --force --server letsencrypt'
 
                     try:
                         result = subprocess.run(command, capture_output=True, universal_newlines=True, shell=True)

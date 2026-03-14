@@ -951,46 +951,74 @@ class DNS:
             cf = CloudFlare.CloudFlare(email=email, token=token)
 
             try:
-                # Find the zone for this domain
+                # Find the zone: for subdomains (e.g. status.newstargeted.com) the zone is the parent (newstargeted.com)
+                zone_id = None
+                zone_name = None
+                is_subdomain = False
+
+                # Try zone = domainName first (main domain)
                 params = {'name': domainName, 'per_page': 50}
                 zones = cf.zones.get(params=params)
+                for z in sorted(zones, key=lambda v: v['name']):
+                    if z['name'] == domainName:
+                        zone_id = z['id']
+                        zone_name = z['name']
+                        break
 
-                for zone in sorted(zones, key=lambda v: v['name']):
-                    if zone['name'] == domainName:
-                        zone_id = zone['id']
-
-                        # Get all DNS records for this zone
-                        try:
-                            dns_records = cf.zones.dns_records.get(zone_id)
-                            
-                            # Delete all DNS records
-                            deleted_count = 0
-                            for record in dns_records:
-                                try:
-                                    cf.zones.dns_records.delete(zone_id, record['id'])
-                                    deleted_count += 1
-                                except Exception as e:
-                                    logging.CyberCPLogFileWriter.writeToFile(
-                                        f'Error deleting CloudFlare DNS record {record["id"]} for {domainName}: {str(e)}')
-
-                            if deleted_count > 0:
-                                logging.CyberCPLogFileWriter.writeToFile(
-                                    f'Deleted {deleted_count} CloudFlare DNS records for {domainName}')
-                                return 1, f"Deleted {deleted_count} DNS records"
-                            else:
-                                return 1, "No DNS records found to delete"
-
-                        except CloudFlare.exceptions.CloudFlareAPIError as e:
+                # If not found, try parent zone (subdomain case: status.newstargeted.com -> newstargeted.com)
+                if not zone_id and '.' in domainName:
+                    parent_domain = domainName.split('.', 1)[1]
+                    params = {'name': parent_domain, 'per_page': 50}
+                    zones = cf.zones.get(params=params)
+                    for z in sorted(zones, key=lambda v: v['name']):
+                        if z['name'] == parent_domain:
+                            zone_id = z['id']
+                            zone_name = z['name']
+                            is_subdomain = True
                             logging.CyberCPLogFileWriter.writeToFile(
-                                f'CloudFlare API error deleting DNS records for {domainName}: {str(e)}')
-                            return 0, str(e)
+                                f'Subdomain {domainName}: using parent zone {zone_name}')
+                            break
+
+                if not zone_id:
+                    return 1, "Domain not found in CloudFlare"
+
+                # Get all DNS records for this zone
+                try:
+                    dns_records = cf.zones.dns_records.get(zone_id)
+                    # For subdomains, only delete records that match this subdomain (name can be "status" or "status.newstargeted.com")
+                    if is_subdomain:
+                        subdomain_label = domainName.split('.')[0]
+                        def record_matches(r):
+                            n = (r.get('name') or '').rstrip('.')
+                            return n == domainName or n == subdomain_label
+                        to_delete = [r for r in dns_records if record_matches(r)]
+                    else:
+                        to_delete = list(dns_records)
+
+                    deleted_count = 0
+                    for record in to_delete:
+                        try:
+                            cf.zones.dns_records.delete(zone_id, record['id'])
+                            deleted_count += 1
                         except Exception as e:
                             logging.CyberCPLogFileWriter.writeToFile(
-                                f'Error getting CloudFlare DNS records for {domainName}: {str(e)}')
-                            return 0, str(e)
+                                f'Error deleting CloudFlare DNS record {record["id"]} for {domainName}: {str(e)}')
 
-                # Zone not found in CloudFlare
-                return 1, "Domain not found in CloudFlare"
+                    if deleted_count > 0:
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            f'Deleted {deleted_count} CloudFlare DNS records for {domainName}')
+                        return 1, f"Deleted {deleted_count} DNS records"
+                    else:
+                        return 1, "No DNS records found to delete"
+
+                except CloudFlare.exceptions.CloudFlareAPIError as e:
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        f'CloudFlare API error deleting DNS records for {domainName}: {str(e)}')
+                    return 0, str(e)
+                except Exception as e:
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        f'Error getting CloudFlare DNS records for {domainName}: {str(e)}')
+                    return 0, str(e)
 
             except CloudFlare.exceptions.CloudFlareAPIError as e:
                 logging.CyberCPLogFileWriter.writeToFile(
