@@ -2401,13 +2401,22 @@ Require valid-user
             except:
                 alias = 0
 
-            masterDomain = data['masterDomain']
-            domain = data['domainName']
+            masterDomain = (data.get('masterDomain') or '').strip()
+            domain = (data.get('domainName') or '').strip()
 
+            # When user enters only the subdomain label (e.g. "ai"), build full FQDN (e.g. "ai.newstargeted.com")
+            # so validators.domain() passes; single-label "ai" is not a valid domain.
+            if domain and '.' not in domain and masterDomain:
+                domain = domain + '.' + masterDomain
+
+            if not domain:
+                data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': "Invalid domain."}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
             if alias == 0:
                 phpSelection = data['phpSelection']
-                path = data['path']
+                path = (data.get('path') or '').strip()
             else:
 
                 ### if master website have apache then create this sub-domain also as ols + apache
@@ -2426,13 +2435,13 @@ Require valid-user
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            if data['domainName'].find("cyberpanel.website") > -1:
+            if domain.find("cyberpanel.website") > -1:
                 url = "https://platform.cyberpersons.com/CyberpanelAdOns/CreateDomain"
 
                 domain_data = {
                     "name": "test-domain",
                     "IP": ACLManager.GetServerIP(),
-                    "domain": data['domainName']
+                    "domain": domain
                 }
 
                 import requests
@@ -2449,7 +2458,8 @@ Require valid-user
             else:
                 return ACLManager.loadErrorJson('createWebSiteStatus', 0)
 
-            if data['path'].find('..') > -1:
+            path_from_data = (data.get('path') or '') if alias == 0 else ''
+            if path_from_data.find('..') > -1:
                 return ACLManager.loadErrorJson('createWebSiteStatus', 0)
 
             if currentACL['admin'] != 1:
