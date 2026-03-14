@@ -19,8 +19,8 @@ import socket
 
 
 class CustomACME:
-    def __init__(self, domain, admin_email, staging=False, provider='letsencrypt'):
-        """Initialize CustomACME"""
+    def __init__(self, domain, admin_email, staging=False, provider='letsencrypt', challenge_path=None):
+        """Initialize CustomACME. challenge_path: use domain docroot's .well-known/acme-challenge for child domains."""
         logging.CyberCPLogFileWriter.writeToFile(
             f'Initializing CustomACME for domain: {domain}, email: {admin_email}, staging: {staging}, provider: {provider}')
         self.domain = domain
@@ -53,9 +53,13 @@ class CustomACME:
         self.finalize_url = None
         self.certificate_url = None
 
-        # Initialize paths
+        # Initialize paths; use domain docroot for child domains so HTTP-01 validation succeeds
         self.cert_path = f'/etc/letsencrypt/live/{domain}'
-        self.challenge_path = '/usr/local/lsws/Example/html/.well-known/acme-challenge'
+        if challenge_path and isinstance(challenge_path, str) and challenge_path.strip():
+            self.challenge_path = challenge_path.strip().rstrip('/')
+            logging.CyberCPLogFileWriter.writeToFile(f'Using domain webroot challenge path: {self.challenge_path}')
+        else:
+            self.challenge_path = '/usr/local/lsws/Example/html/.well-known/acme-challenge'
         self.account_key_path = f'/etc/letsencrypt/accounts/{domain}.key'
         logging.CyberCPLogFileWriter.writeToFile(
             f'Certificate path: {self.cert_path}, Challenge path: {self.challenge_path}')
