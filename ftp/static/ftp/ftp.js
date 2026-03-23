@@ -6,13 +6,19 @@
 /* Java script code to create account */
 app.controller('createFTPAccount', function ($scope, $http) {
 
-    // Initialize all ng-hide variables to hide alerts on page load
     $scope.ftpLoading = false;
     $scope.ftpDetails = true;
-    $scope.canNotCreateFTP = true;
-    $scope.successfullyCreatedFTP = true;
-    $scope.couldNotConnect = true;
+    // Positive flags + ng-show: stay hidden until create flow sets them (avoids pre-bind ng-hide/undefined flash)
+    $scope.alertFtpCreateError = false;
+    $scope.alertFtpCreateSuccess = false;
+    $scope.alertFtpConnectFailed = false;
     $scope.generatedPasswordView = true;
+
+    function resetFtpCreateAlerts() {
+        $scope.alertFtpCreateError = false;
+        $scope.alertFtpCreateSuccess = false;
+        $scope.alertFtpConnectFailed = false;
+    }
 
     $(document).ready(function () {
         $( ".ftpDetails, .account-details" ).hide();
@@ -65,11 +71,11 @@ app.controller('createFTPAccount', function ($scope, $http) {
 
     $scope.createFTPAccount = function () {
 
+        var submissionCompleted = false;
+
         $scope.ftpLoading = true;  // Show loading while creating
         $scope.ftpDetails = false;
-        $scope.canNotCreateFTP = true;
-        $scope.successfullyCreatedFTP = true;
-        $scope.couldNotConnect = true;
+        resetFtpCreateAlerts();
 
         var ftpDomain = $scope.ftpDomain;
         var ftpUserName = $scope.ftpUserName;
@@ -89,9 +95,8 @@ app.controller('createFTPAccount', function ($scope, $http) {
             var dangerousChars = /[;&|$`'"<>*?~]/;
             if (dangerousChars.test(path)) {
                 $scope.ftpLoading = false;
-                $scope.canNotCreateFTP = false;
-                $scope.successfullyCreatedFTP = true;
-                $scope.couldNotConnect = true;
+                resetFtpCreateAlerts();
+                $scope.alertFtpCreateError = true;
                 $scope.errorMessage = "Invalid path: Path contains dangerous characters";
                 return;
             }
@@ -99,9 +104,8 @@ app.controller('createFTPAccount', function ($scope, $http) {
             // Check for path traversal attempts
             if (path.indexOf("..") !== -1 || path.indexOf("~") !== -1) {
                 $scope.ftpLoading = false;
-                $scope.canNotCreateFTP = false;
-                $scope.successfullyCreatedFTP = true;
-                $scope.couldNotConnect = true;
+                resetFtpCreateAlerts();
+                $scope.alertFtpCreateError = true;
                 $scope.errorMessage = "Invalid path: Path cannot contain '..' or '~'";
                 return;
             }
@@ -109,9 +113,8 @@ app.controller('createFTPAccount', function ($scope, $http) {
             // Check if path starts with slash (should be relative)
             if (path.startsWith("/")) {
                 $scope.ftpLoading = false;
-                $scope.canNotCreateFTP = false;
-                $scope.successfullyCreatedFTP = true;
-                $scope.couldNotConnect = true;
+                resetFtpCreateAlerts();
+                $scope.alertFtpCreateError = true;
                 $scope.errorMessage = "Invalid path: Path must be relative (not starting with '/')";
                 return;
             }
@@ -140,20 +143,20 @@ app.controller('createFTPAccount', function ($scope, $http) {
 
 
         function ListInitialDatas(response) {
+            if (submissionCompleted) {
+                return;
+            }
+            submissionCompleted = true;
+            $scope.ftpLoading = false;
+            resetFtpCreateAlerts();
             if (response.data && response.data.creatFTPStatus === 1) {
-                $scope.ftpLoading = false;  // Hide loading on success
-                $scope.successfullyCreatedFTP = false;
-                $scope.canNotCreateFTP = true;
-                $scope.couldNotConnect = true;
+                $scope.alertFtpCreateSuccess = true;
                 $scope.createdFTPUsername = (response.data.createdFTPUsername != null && response.data.createdFTPUsername !== '') ? response.data.createdFTPUsername : (ftpDomain + '_' + ftpUserName);
                 if (typeof PNotify !== 'undefined') {
                     new PNotify({ title: 'Success!', text: 'FTP account successfully created.', type: 'success' });
                 }
             } else {
-                $scope.ftpLoading = false;
-                $scope.canNotCreateFTP = false;
-                $scope.successfullyCreatedFTP = true;
-                $scope.couldNotConnect = true;
+                $scope.alertFtpCreateError = true;
                 $scope.errorMessage = (response.data && response.data.error_message) ? response.data.error_message : 'Unknown error';
                 if (typeof PNotify !== 'undefined') {
                     new PNotify({ title: 'Operation Failed!', text: $scope.errorMessage, type: 'error' });
@@ -162,14 +165,15 @@ app.controller('createFTPAccount', function ($scope, $http) {
         }
         
         function cantLoadInitialDatas(response) {
+            if (submissionCompleted) {
+                return;
+            }
+            submissionCompleted = true;
             $scope.ftpLoading = false;
-            if ($scope.successfullyCreatedFTP !== false) {
-                $scope.couldNotConnect = false;
-                $scope.canNotCreateFTP = true;
-                $scope.successfullyCreatedFTP = true;
-                if (typeof PNotify !== 'undefined') {
-                    new PNotify({ title: 'Operation Failed!', text: 'Could not connect to server, please refresh this page', type: 'error' });
-                }
+            resetFtpCreateAlerts();
+            $scope.alertFtpConnectFailed = true;
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({ title: 'Operation Failed!', text: 'Could not connect to server, please refresh this page', type: 'error' });
             }
         }
 
@@ -177,9 +181,7 @@ app.controller('createFTPAccount', function ($scope, $http) {
     };
 
     $scope.hideFewDetails = function () {
-        $scope.successfullyCreatedFTP = true;
-        $scope.canNotCreateFTP = true;
-        $scope.couldNotConnect = true;
+        resetFtpCreateAlerts();
     };
 
     ///

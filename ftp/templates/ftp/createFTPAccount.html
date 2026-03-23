@@ -415,9 +415,14 @@
         .package-quota-info {
             margin-top: 1rem;
         }
+
+        /* Hide Angular root until first digest (avoids inverted ng-hide flashing all alerts) */
+        [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak {
+            display: none !important;
+        }
     </style>
 
-    <div class="modern-container" ng-controller="createFTPAccount">
+    <div class="modern-container" ng-controller="createFTPAccount" ng-cloak>
         <div class="page-header">
             <h1 class="page-title">
                 <i class="fas fa-folder-plus"></i>
@@ -631,19 +636,19 @@
                             </div>
                         </div>
 
-                        <!-- Alert Messages -->
+                        <!-- Alert Messages (ng-show + false defaults: only after submit / API outcome) -->
                         <div class="form-section">
-                            <div ng-hide="canNotCreateFTP" class="alert alert-danger">
+                            <div ng-show="alertFtpCreateError" class="alert alert-danger">
                                 <i class="fas fa-exclamation-circle"></i>
                                 {% trans "Cannot create FTP account. Error message:" %} {$ errorMessage $}
                             </div>
 
-                            <div ng-hide="successfullyCreatedFTP" class="alert alert-success">
+                            <div ng-show="alertFtpCreateSuccess" class="alert alert-success">
                                 <i class="fas fa-check-circle"></i>
                                 {% trans "FTP account successfully created with username:" %} <strong>{$ createdFTPUsername $}</strong>
                             </div>
                             
-                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                            <div ng-show="alertFtpConnectFailed" class="alert alert-danger">
                                 <i class="fas fa-times-circle"></i>
                                 {% trans "Could not connect to server. Please refresh this page." %}
                             </div>
