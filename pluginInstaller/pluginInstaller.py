@@ -4,6 +4,7 @@ import subprocess
 import shlex
 import argparse
 import os
+import errno
 import shutil
 import time
 import tempfile
@@ -88,6 +89,36 @@ class pluginInstaller:
             'Cannot write %s. As root: chgrp lscpd %s && chmod 664 %s'
             % (target_path, target_path, target_path)
         )
+
+    @staticmethod
+    def _read_lines_from_protected_file(source_path):
+        """
+        Read UTF-8 lines from a core panel file. If the panel user cannot read the file
+        (e.g. root:root 600), copy via ProcessUtilities.executioner to /tmp then read.
+        """
+        try:
+            with open(source_path, 'r', encoding='utf-8') as rf:
+                return rf.readlines()
+        except OSError as e:
+            if e.errno not in (errno.EACCES, errno.EPERM):
+                raise
+            pluginInstaller.stdOut('Direct read failed for %s: %s' % (source_path, str(e)))
+        fd, tmp_path = tempfile.mkstemp(prefix='cprd_', suffix='.txt', dir='/tmp')
+        os.close(fd)
+        try:
+            cmd = 'cp %s %s' % (shlex.quote(source_path), shlex.quote(tmp_path))
+            if ProcessUtilities.executioner(cmd) != 1:
+                raise PermissionError(
+                    'Privileged read copy failed for %s. As root: chgrp lscpd %s && chmod 640 %s'
+                    % (source_path, source_path, source_path)
+                )
+            with open(tmp_path, 'r', encoding='utf-8') as rf:
+                return rf.readlines()
+        finally:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
 
     ### Functions Related to plugin installation.
 
@@ -186,8 +217,7 @@ class pluginInstaller:
     @staticmethod
     def upgradingSettingsFile(pluginName):
         settings_path = "/usr/local/CyberCP/CyberCP/settings.py"
-        with open(settings_path, 'r', encoding='utf-8') as rf:
-            data = rf.readlines()
+        data = pluginInstaller._read_lines_from_protected_file(settings_path)
         line_plugin = "    '" + pluginName + "',\n"
         if any(line.strip() in ("'" + pluginName + "',", '"' + pluginName + '",') for line in data):
             pluginInstaller.stdOut(
@@ -228,8 +258,8 @@ class pluginInstaller:
         pluginHolder.urls for all plugins — skip to avoid duplicate routes and root-only writes.
         """
         urls_path = "/usr/local/CyberCP/CyberCP/urls.py"
-        with open(urls_path, 'r', encoding='utf-8') as rf:
-            content = rf.read()
+        _url_lines = pluginInstaller._read_lines_from_protected_file(urls_path)
+        content = ''.join(_url_lines)
         if "include('pluginHolder.urls')" in content or 'include("pluginHolder.urls")' in content:
             pluginInstaller.stdOut(
                 'pluginHolder.urls found; skipping per-plugin urls.py line for %s (dynamic routes).' % pluginName
@@ -274,8 +304,7 @@ class pluginInstaller:
     @staticmethod
     def addInterfaceLink(pluginName):
         path_html = "/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html"
-        with open(path_html, 'r', encoding='utf-8') as rf:
-            data = rf.readlines()
+        data = pluginInstaller._read_lines_from_protected_file(path_html)
         out = []
         for items in data:
             if items.find("{# pluginsList #}") > -1:
@@ -529,10 +558,12 @@ class pluginInstaller:
     def removeFromSettings(pluginName):
         settings_path = "/usr/local/CyberCP/CyberCP/settings.py"
         try:
-            with open(settings_path, 'r', encoding='utf-8') as f:
-                data = f.readlines()
-        except (OSError, IOError) as e:
-            raise Exception(f'Cannot read {settings_path}: {e}. Ensure the panel user can read it.')
+            data = pluginInstaller._read_lines_from_protected_file(settings_path)
+        except (OSError, IOError, PermissionError) as e:
+            raise Exception(
+                f'Cannot read {settings_path}: {e}. Ensure the panel user can read it '
+                f'(e.g. chgrp lscpd {settings_path} && chmod 640 {settings_path}).'
+            )
         in_installed_apps = False
         out_lines = []
         for i, items in enumerate(data):
@@ -555,10 +586,12 @@ class pluginInstaller:
     def removeFromURLs(pluginName):
         urls_path = "/usr/local/CyberCP/CyberCP/urls.py"
         try:
-            with open(urls_path, 'r', encoding='utf-8') as f:
-                data = f.readlines()
-        except (OSError, IOError) as e:
-            raise Exception(f'Cannot read {urls_path}: {e}.')
+            data = pluginInstaller._read_lines_from_protected_file(urls_path)
+        except (OSError, IOError, PermissionError) as e:
+            raise Exception(
+                f'Cannot read {urls_path}: {e}. '
+                f'As root: chgrp lscpd {urls_path} && chmod 640 {urls_path}'
+            )
         out_lines = []
         for items in data:
             if (f"plugins/{pluginName}/" in items or f"'{pluginName}.urls'" in items or f'"{pluginName}.urls"' in items or
@@ -580,8 +613,7 @@ class pluginInstaller:
     @staticmethod
     def removeInterfaceLink(pluginName):
         path_html = "/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html"
-        with open(path_html, 'r', encoding='utf-8') as rf:
-            data = rf.readlines()
+        data = pluginInstaller._read_lines_from_protected_file(path_html)
         out = []
         for items in data:
             if items.find(pluginName) > -1 and items.find('<li>') > -1:
