@@ -301,6 +301,10 @@
             font-size: 0.875rem;
             font-weight: 500;
         }
+
+        .ftp-row-disabled td {
+            opacity: 0.75;
+        }
         
         @keyframes spin {
             to { transform: rotate(360deg); }
@@ -541,24 +545,57 @@
                             </div>
                         </div>
 
+                        <!-- Change FTP home directory -->
+                        <div ng-hide="directoryManagementBox" class="password-section">
+                            <h3><i class="fas fa-folder-open"></i> {% trans "FTP home directory for" %} {$ ftpUsername $}</h3>
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="form-group">
+                                        <label class="form-label">{% trans "Path" %}</label>
+                                        <div class="path-info" style="margin-bottom: 0.75rem;">
+                                            <i class="fas fa-info-circle"></i>
+                                            {% trans "Leave empty to use this site's home directory. You may enter a subdirectory or the full path under that home (no path traversal)." %}
+                                        </div>
+                                        <input type="text" class="form-control" ng-model="ftpPathEdit"
+                                               placeholder="{% trans 'e.g. public_html/sub or full path under site home' %}">
+                                    </div>
+                                    <div style="margin-top: 1rem;">
+                                        <button type="button" ng-click="changeDirectoryBtn()" class="btn-primary">
+                                            <i class="fas fa-save"></i>
+                                            {% trans "Update Directory" %}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- FTP Accounts Table -->
                         <div ng-hide="ftpAccounts">
                             <table class="ftp-table">
                                 <thead>
                                 <tr>
-                                    <th style="width: 8%;">{% trans "ID" %}</th>
-                                    <th style="width: 20%;">{% trans "User Name" %}</th>
-                                    <th style="width: 30%;">{% trans "Directory" %}</th>
-                                    <th style="width: 15%;">{% trans "Quota" %}</th>
-                                    <th style="width: 27%; text-align: center;">{% trans "Actions" %}</th>
+                                    <th style="width: 7%;">{% trans "ID" %}</th>
+                                    <th style="width: 16%;">{% trans "User Name" %}</th>
+                                    <th style="width: 10%;">{% trans "Status" %}</th>
+                                    <th style="width: 24%;">{% trans "Directory" %}</th>
+                                    <th style="width: 12%;">{% trans "Quota" %}</th>
+                                    <th style="width: 31%; text-align: center;">{% trans "Actions" %}</th>
                                 </tr>
                                 </thead>
                                 <tbody>
-                                <tr ng-repeat="record in records track by $index">
+                                <tr ng-repeat="record in records track by $index" ng-class="{'ftp-row-disabled': !record.acct_enabled}">
                                     <td><strong ng-bind="record.id"></strong></td>
                                     <td>
                                         <i class="fas fa-user-circle" style="color: var(--accent-color, #5b5fcf); margin-right: 0.5rem;"></i>
                                         <span ng-bind="record.user"></span>
+                                    </td>
+                                    <td>
+                                        <span class="quota-badge" ng-show="record.acct_enabled" style="background: rgba(34,197,94,0.15); color: #16a34a;">
+                                            <i class="fas fa-check-circle"></i> {% trans "Enabled" %}
+                                        </span>
+                                        <span class="quota-badge" ng-hide="record.acct_enabled" style="background: rgba(239,68,68,0.12); color: #dc2626;">
+                                            <i class="fas fa-ban"></i> {% trans "Disabled" %}
+                                        </span>
                                     </td>
                                     <td>
                                         <span class="directory-badge">
@@ -578,6 +615,18 @@
                                             <button type="button" ng-click="manageQuota(record)" class="btn-action">
                                                 <i class="fas fa-hdd"></i>
                                                 {% trans "Quota" %}
+                                            </button>
+                                            <button type="button" ng-click="manageDirectory(record)" class="btn-action" title="{% trans 'Change which directory this FTP user is locked to' %}">
+                                                <i class="fas fa-folder-open"></i>
+                                                {% trans "Directory" %}
+                                            </button>
+                                            <button type="button" ng-click="setFtpAccountStatus(record, false)" ng-show="record.acct_enabled" class="btn-action" style="opacity: 0.95;" title="{% trans 'Block FTP login without deleting the account' %}">
+                                                <i class="fas fa-user-slash"></i>
+                                                {% trans "Disable" %}
+                                            </button>
+                                            <button type="button" ng-click="setFtpAccountStatus(record, true)" ng-hide="record.acct_enabled" class="btn-action" title="{% trans 'Allow FTP login again' %}">
+                                                <i class="fas fa-user-check"></i>
+                                                {% trans "Enable" %}
                                             </button>
                                         </div>
                                     </td>

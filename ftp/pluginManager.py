@@ -34,3 +34,19 @@ class pluginManager:
     @staticmethod
     def postChangePassword(request, response):
         return pluginManagerGlobal.globalPlug(request, postChangePassword, response)
+
+    @staticmethod
+    def preChangeFTPDirectory(request):
+        return pluginManagerGlobal.globalPlug(request, preChangeFTPDirectory)
+
+    @staticmethod
+    def postChangeFTPDirectory(request, response):
+        return pluginManagerGlobal.globalPlug(request, postChangeFTPDirectory, response)
+
+    @staticmethod
+    def preSetFTPAccountStatus(request):
+        return pluginManagerGlobal.globalPlug(request, preSetFTPAccountStatus)
+
+    @staticmethod
+    def postSetFTPAccountStatus(request, response):
+        return pluginManagerGlobal.globalPlug(request, postSetFTPAccountStatus, response)
