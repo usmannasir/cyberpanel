@@ -255,6 +255,42 @@ def changePassword(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def changeFTPDirectory(request):
+    try:
+        result = pluginManager.preChangeFTPDirectory(request)
+        if result != 200:
+            return result
+
+        fm = FTPManager(request)
+        coreResult = fm.changeFTPDirectory()
+
+        result = pluginManager.postChangeFTPDirectory(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def setFTPAccountStatus(request):
+    try:
+        result = pluginManager.preSetFTPAccountStatus(request)
+        if result != 200:
+            return result
+
+        fm = FTPManager(request)
+        coreResult = fm.setFTPAccountStatus()
+
+        result = pluginManager.postSetFTPAccountStatus(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
 def updateFTPQuota(request):
     try:
         fm = FTPManager(request)
