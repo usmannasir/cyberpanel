@@ -368,6 +368,18 @@ if [ -f /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php ]; then
   grep -q "127.0.0.1" /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php && echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] phpMyAdmin signon default host set to 127.0.0.1" | tee -a /var/log/cyberpanel_upgrade_debug.log
 fi
 
+# FTP users table: custom quota columns (fixes 1054 on Create FTP Account if schema predates model fields)
+if [[ -f /usr/local/CyberCP/CPScripts/ensure_ftp_users_quota_columns.py ]]; then
+  if [[ -x /usr/local/CyberCP/bin/python ]]; then
+    CP_DIR=/usr/local/CyberCP /usr/local/CyberCP/bin/python /usr/local/CyberCP/CPScripts/ensure_ftp_users_quota_columns.py /usr/local/CyberCP 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log || true
+  else
+    CP_DIR=/usr/local/CyberCP python3 /usr/local/CyberCP/CPScripts/ensure_ftp_users_quota_columns.py /usr/local/CyberCP 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log || true
+  fi
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Ran ensure_ftp_users_quota_columns (FTP users table custom quota columns)" | tee -a /var/log/cyberpanel_upgrade_debug.log
+else
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] INFO: ensure_ftp_users_quota_columns.py not in CyberCP yet; run deploy-ftp-users-custom-quota-columns.sh after sync" | tee -a /var/log/cyberpanel_upgrade_debug.log
+fi
+
 systemctl restart lscpd
 
 }

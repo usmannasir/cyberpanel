@@ -27,3 +27,10 @@ preChangePassword = Signal()
 
 ## This event is fired after CyberPanel core finished deletion of child-domain
 postChangePassword = Signal()
+
+## Before / after changing FTP account home directory (list FTP page)
+preChangeFTPDirectory = Signal()
+postChangeFTPDirectory = Signal()
+
+preSetFTPAccountStatus = Signal()
+postSetFTPAccountStatus = Signal()

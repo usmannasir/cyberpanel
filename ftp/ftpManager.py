@@ -283,6 +283,7 @@ class FTPManager:
                        'custom_quota_enabled': items.custom_quota_enabled,
                        'custom_quota_size': items.custom_quota_size,
                        'package_quota': items.domain.package.diskSpace,
+                       'acct_enabled': (str(items.status) == '1'),
                        }
 
                 if checker == 0:
@@ -329,6 +330,75 @@ class FTPManager:
             data_ret = {'status': 0, 'changePasswordStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
+
+    def changeFTPDirectory(self):
+        """
+        Change FTP account home directory after creation.
+        Uses listFTPAccounts permission (same as password / quota).
+        """
+        try:
+            userID = self.request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'listFTPAccounts') == 0:
+                return ACLManager.loadErrorJson('changeDirectoryStatus', 0)
+
+            data = json.loads(self.request.body)
+            userName = data['ftpUserName']
+            selectedDomain = data['selectedDomain']
+            newPath = data.get('path', '')
+            if newPath is None:
+                newPath = ''
+
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(selectedDomain, admin, currentACL) != 1:
+                return ACLManager.loadErrorJson()
+
+            ftp = Users.objects.get(user=userName)
+            if currentACL['admin'] != 1 and ftp.domain.admin != admin:
+                return ACLManager.loadErrorJson()
+
+            result = FTPUtilities.changeFTPDirectory(userName, newPath, selectedDomain)
+            if result[0] == 1:
+                data_ret = {'status': 1, 'changeDirectoryStatus': 1, 'error_message': 'None'}
+            else:
+                data_ret = {'status': 0, 'changeDirectoryStatus': 0, 'error_message': result[1]}
+            return HttpResponse(json.dumps(data_ret), content_type='application/json')
+        except BaseException as msg:
+            data_ret = {'status': 0, 'changeDirectoryStatus': 0, 'error_message': str(msg)}
+            return HttpResponse(json.dumps(data_ret), content_type='application/json')
+
+    def setFTPAccountStatus(self):
+        """Enable (enabled=true) or disable (enabled=false) FTP login for a user."""
+        try:
+            userID = self.request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'listFTPAccounts') == 0:
+                return ACLManager.loadErrorJson('setFTPStatusResult', 0)
+
+            data = json.loads(self.request.body)
+            userName = data['ftpUserName']
+            selectedDomain = data['selectedDomain']
+            enabled = bool(data.get('enabled', True))
+
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(selectedDomain, admin, currentACL) != 1:
+                return ACLManager.loadErrorJson()
+
+            ftp = Users.objects.get(user=userName)
+            if currentACL['admin'] != 1 and ftp.domain.admin != admin:
+                return ACLManager.loadErrorJson()
+
+            result = FTPUtilities.setFTPAccountStatus(userName, enabled, selectedDomain)
+            if result[0] == 1:
+                data_ret = {'status': 1, 'setFTPStatusResult': 1, 'error_message': 'None'}
+            else:
+                data_ret = {'status': 0, 'setFTPStatusResult': 0, 'error_message': result[1]}
+            return HttpResponse(json.dumps(data_ret), content_type='application/json')
+        except BaseException as msg:
+            data_ret = {'status': 0, 'setFTPStatusResult': 0, 'error_message': str(msg)}
+            return HttpResponse(json.dumps(data_ret), content_type='application/json')
 
     def updateFTPQuota(self):
         try:
