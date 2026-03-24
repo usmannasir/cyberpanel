@@ -23,6 +23,57 @@ from plogical.processUtilities import ProcessUtilities
 class FTPUtilities:
 
     @staticmethod
+    def get_domain_home_directory(domain_name):
+        """
+        Filesystem root for the selected site: primary domain /home/<domain>,
+        or child domain /home/<master>/<child.path> per CyberPanel vhost layout.
+        """
+        try:
+            child = ChildDomains.objects.select_related('master').get(domain=domain_name)
+            master_dom = child.master.domain
+            rel = (child.path or '').strip().strip('/')
+            if rel:
+                return os.path.abspath('/home/%s/%s' % (master_dom, rel))
+        except ChildDomains.DoesNotExist:
+            pass
+        return os.path.abspath('/home/' + domain_name)
+
+    @staticmethod
+    def assert_ftp_raw_path_safe(raw):
+        """Reject shell metacharacters and obvious traversal markers in user input."""
+        if raw is None or not str(raw).strip():
+            return
+        s = str(raw)
+        dangerous_chars = [';', '|', '&', '$', '`', '\'', '"', '<', '>', '*', '?']
+        if any(char in s for char in dangerous_chars):
+            raise BaseException("Invalid path: Path contains dangerous characters")
+        if '..' in s or '~' in s:
+            raise BaseException("Invalid path: Path cannot contain '..' or '~'")
+
+    @staticmethod
+    def resolve_ftp_home_path(domain_name, raw_path):
+        """
+        Resolve FTP home directory under domain_name.
+        Empty / None / 'None' -> domain document root only.
+        Absolute paths are allowed if they resolve under that root (no /home duplication).
+        """
+        domain_home = FTPUtilities.get_domain_home_directory(domain_name)
+        if raw_path is None:
+            return domain_home
+        raw = str(raw_path).strip()
+        if raw == '' or raw == 'None':
+            return domain_home
+        FTPUtilities.assert_ftp_raw_path_safe(raw)
+        if raw.startswith('/'):
+            candidate = os.path.abspath(raw)
+        else:
+            candidate = os.path.abspath(os.path.join(domain_home, raw))
+        dh = domain_home
+        if candidate != dh and not candidate.startswith(dh + os.sep):
+            raise BaseException("Security violation: Path must be within domain home directory")
+        return candidate
+
+    @staticmethod
     def createNewFTPAccount(udb,upass,username,password,path):
         try:
 
@@ -143,37 +194,14 @@ class FTPUtilities:
 
             ## gid , uid ends
 
-            # Enhanced path validation and handling
-            if path and path.strip() and path != 'None':
-                # Clean the path
-                path = path.strip().lstrip("/")
-                
-                # Additional security checks
-                if path.find("..") > -1 or path.find("~") > -1 or path.startswith("/"):
-                    raise BaseException("Invalid path: Path must be relative and not contain '..' or '~' or start with '/'")
-                
-                # Check for dangerous characters
-                dangerous_chars = [';', '|', '&', '$', '`', '\'', '"', '<', '>', '*', '?']
-                if any(char in path for char in dangerous_chars):
-                    raise BaseException("Invalid path: Path contains dangerous characters")
-                
-                # Construct full path
-                full_path = "/home/" + domainName + "/" + path
-                
-                # Additional security: ensure path is within domain directory
-                domain_home = "/home/" + domainName
-                if not os.path.abspath(full_path).startswith(os.path.abspath(domain_home)):
-                    raise BaseException("Security violation: Path must be within domain directory")
-
-                result = FTPUtilities.ftpFunctions(full_path, externalApp)
-
-                if result[0] == 1:
-                    path = full_path
-                else:
+            # Path: empty -> domain home; relative or absolute under domain home (no duplicate /home/... prefix)
+            if path and str(path).strip() and str(path).strip() != 'None':
+                path = FTPUtilities.resolve_ftp_home_path(domainName, path)
+                result = FTPUtilities.ftpFunctions(path, externalApp)
+                if result[0] != 1:
                     raise BaseException("Path validation failed: " + result[1])
-
             else:
-                path = "/home/" + domainName
+                path = FTPUtilities.get_domain_home_directory(domainName)
 
             # Enhanced symlink handling
             if os.path.islink(path):
@@ -249,6 +277,63 @@ class FTPUtilities:
             ftp.delete()
             return 1,'None'
         except BaseException as msg:
+            return 0, str(msg)
+
+    @staticmethod
+    def changeFTPDirectory(userName, raw_path, selected_domain):
+        """
+        Update FTP user home directory after creation. selected_domain must match
+        the master website domain for this account (same as list FTP dropdown).
+        """
+        try:
+            website = Websites.objects.get(domain=selected_domain)
+            ftp = Users.objects.get(user=userName)
+            if ftp.domain_id != website.id:
+                raise BaseException("FTP user does not belong to the selected domain")
+
+            externalApp = website.externalApp
+            resolved = FTPUtilities.resolve_ftp_home_path(selected_domain, raw_path)
+
+            if os.path.islink(resolved):
+                logging.CyberCPLogFileWriter.writeToFile(
+                    "FTP path is symlinked: %s" % resolved)
+                raise BaseException("Cannot set FTP directory: Path is a symbolic link")
+
+            result = FTPUtilities.ftpFunctions(resolved, externalApp)
+            if result[0] != 1:
+                raise BaseException("Path validation failed: " + result[1])
+
+            ftp.dir = resolved
+            ftp.save()
+            return 1, None
+        except Users.DoesNotExist:
+            return 0, "FTP user not found"
+        except Websites.DoesNotExist:
+            return 0, "Domain not found"
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [changeFTPDirectory]")
+            return 0, str(msg)
+
+    @staticmethod
+    def setFTPAccountStatus(userName, enabled, selected_domain):
+        """
+        Enable or disable FTP login (Status '1' / '0'). Pure-FTPd must use
+        MySQL queries that include AND Status='1' for authentication.
+        """
+        try:
+            website = Websites.objects.get(domain=selected_domain)
+            ftp = Users.objects.get(user=userName)
+            if ftp.domain_id != website.id:
+                raise BaseException("FTP user does not belong to the selected domain")
+            ftp.status = '1' if enabled else '0'
+            ftp.save()
+            return 1, None
+        except Users.DoesNotExist:
+            return 0, "FTP user not found"
+        except Websites.DoesNotExist:
+            return 0, "Domain not found"
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [setFTPAccountStatus]")
             return 0, str(msg)
 
     @staticmethod

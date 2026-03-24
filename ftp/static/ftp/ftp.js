@@ -109,15 +109,7 @@ app.controller('createFTPAccount', function ($scope, $http) {
                 $scope.errorMessage = "Invalid path: Path cannot contain '..' or '~'";
                 return;
             }
-            
-            // Check if path starts with slash (should be relative)
-            if (path.startsWith("/")) {
-                $scope.ftpLoading = false;
-                resetFtpCreateAlerts();
-                $scope.alertFtpCreateError = true;
-                $scope.errorMessage = "Invalid path: Path must be relative (not starting with '/')";
-                return;
-            }
+            // Absolute paths under /home/... are allowed; server validates they stay inside the site home
         }
 
         var url = "/ftp/submitFTPCreation";
@@ -375,6 +367,7 @@ app.controller('listFTPAccounts', function ($scope, $http) {
     $scope.ftpAccounts = true;
     $scope.changePasswordBox = true;
     $scope.quotaManagementBox = true;
+    $scope.directoryManagementBox = true;
     $scope.notificationsBox = true;
 
     var globalFTPUsername = "";
@@ -390,6 +383,8 @@ app.controller('listFTPAccounts', function ($scope, $http) {
         $scope.couldNotConnect = true;
         $scope.ftpLoading = false;  // Don't show loading when opening password dialog
         $scope.changePasswordBox = false;
+        $scope.quotaManagementBox = true;
+        $scope.directoryManagementBox = true;
         $scope.notificationsBox = true;
         $scope.ftpUsername = ftpUsername;
         globalFTPUsername = ftpUsername;
@@ -454,6 +449,8 @@ app.controller('listFTPAccounts', function ($scope, $http) {
         $scope.ftpLoading = true;  // Show loading while fetching
         $scope.ftpAccounts = true;
         $scope.changePasswordBox = true;
+        $scope.quotaManagementBox = true;
+        $scope.directoryManagementBox = true;
 
         var selectedDomain = $scope.selectedDomain;
 
@@ -479,7 +476,11 @@ app.controller('listFTPAccounts', function ($scope, $http) {
             if (response.data.fetchStatus == 1) {
 
                 $scope.records = JSON.parse(response.data.data);
-
+                angular.forEach($scope.records, function (r) {
+                    if (typeof r.acct_enabled === 'undefined') {
+                        r.acct_enabled = true;
+                    }
+                });
 
                 $scope.notificationsBox = false;
                 $scope.recordsFetched = false;
@@ -489,6 +490,8 @@ app.controller('listFTPAccounts', function ($scope, $http) {
                 $scope.ftpLoading = false;  // Hide loading when done
                 $scope.ftpAccounts = false;
                 $scope.changePasswordBox = true;
+                $scope.quotaManagementBox = true;
+                $scope.directoryManagementBox = true;
 
                 $scope.domainFeteched = $scope.selectedDomain;
 
@@ -501,6 +504,8 @@ app.controller('listFTPAccounts', function ($scope, $http) {
                 $scope.ftpLoading = false;  // Hide loading on error
                 $scope.ftpAccounts = true;
                 $scope.changePasswordBox = true;
+                $scope.quotaManagementBox = true;
+                $scope.directoryManagementBox = true;
 
                 $scope.errorMessage = response.data.error_message;
             }
@@ -516,6 +521,8 @@ app.controller('listFTPAccounts', function ($scope, $http) {
             $scope.ftpLoading = false;  // Hide loading on connection error
             $scope.ftpAccounts = true;
             $scope.changePasswordBox = true;
+            $scope.quotaManagementBox = true;
+            $scope.directoryManagementBox = true;
 
 
         }
@@ -542,6 +549,8 @@ app.controller('listFTPAccounts', function ($scope, $http) {
         $scope.canNotChangePassword = true;
         $scope.couldNotConnect = true;
         $scope.ftpLoading = false;
+        $scope.changePasswordBox = true;
+        $scope.directoryManagementBox = true;
         $scope.quotaManagementBox = false;
         $scope.notificationsBox = true;
         $scope.ftpUsername = record.user;
@@ -628,6 +637,128 @@ app.controller('listFTPAccounts', function ($scope, $http) {
                 });
             }
         }
+    };
+
+    $scope.manageDirectory = function (record) {
+        $scope.recordsFetched = true;
+        $scope.passwordChanged = true;
+        $scope.canNotChangePassword = true;
+        $scope.couldNotConnect = true;
+        $scope.ftpLoading = false;
+        $scope.changePasswordBox = true;
+        $scope.quotaManagementBox = true;
+        $scope.directoryManagementBox = false;
+        $scope.notificationsBox = true;
+        $scope.ftpUsername = record.user;
+        globalFTPUsername = record.user;
+        $scope.ftpPathEdit = record.dir || '';
+    };
+
+    $scope.changeDirectoryBtn = function () {
+        $scope.ftpLoading = true;
+        var url = "/ftp/changeFTPDirectory";
+        var pathVal = $scope.ftpPathEdit;
+        if (typeof pathVal === 'undefined' || pathVal === null) {
+            pathVal = '';
+        } else {
+            pathVal = String(pathVal).trim();
+        }
+        var data = {
+            ftpUserName: globalFTPUsername,
+            selectedDomain: $scope.selectedDomain,
+            path: pathVal
+        };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            if (response.data.changeDirectoryStatus === 1) {
+                $scope.ftpLoading = false;
+                $scope.directoryManagementBox = true;
+                if (typeof PNotify !== 'undefined') {
+                    new PNotify({
+                        title: 'Success!',
+                        text: 'FTP directory updated successfully.',
+                        type: 'success'
+                    });
+                }
+                populateCurrentRecords();
+            } else {
+                $scope.ftpLoading = false;
+                $scope.errorMessage = response.data.error_message;
+                if (typeof PNotify !== 'undefined') {
+                    new PNotify({
+                        title: 'Error!',
+                        text: response.data.error_message,
+                        type: 'error'
+                    });
+                }
+            }
+        }
+
+        function cantLoadInitialDatas() {
+            $scope.ftpLoading = false;
+            $scope.couldNotConnect = false;
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Error!',
+                    text: 'Could not connect to server.',
+                    type: 'error'
+                });
+            }
+        }
+    };
+
+    $scope.setFtpAccountStatus = function (record, enabled) {
+        $scope.ftpLoading = true;
+        var url = "/ftp/setFTPAccountStatus";
+        var data = {
+            ftpUserName: record.user,
+            selectedDomain: $scope.selectedDomain,
+            enabled: !!enabled
+        };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post(url, data, config).then(function (response) {
+            $scope.ftpLoading = false;
+            if (response.data.setFTPStatusResult === 1) {
+                record.acct_enabled = !!enabled;
+                if (typeof PNotify !== 'undefined') {
+                    new PNotify({
+                        title: 'Success!',
+                        text: enabled ? 'FTP account enabled.' : 'FTP account disabled.',
+                        type: 'success'
+                    });
+                }
+                populateCurrentRecords();
+            } else {
+                $scope.errorMessage = response.data.error_message;
+                if (typeof PNotify !== 'undefined') {
+                    new PNotify({
+                        title: 'Error!',
+                        text: response.data.error_message,
+                        type: 'error'
+                    });
+                }
+            }
+        }, function () {
+            $scope.ftpLoading = false;
+            $scope.couldNotConnect = false;
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Error!',
+                    text: 'Could not connect to server.',
+                    type: 'error'
+                });
+            }
+        });
     };
 
 });
