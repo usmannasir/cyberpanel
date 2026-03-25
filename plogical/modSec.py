@@ -22,7 +22,7 @@ class modSec:
     tempRulesFile = "/home/cyberpanel/tempModSecRules"
     mirrorPath = "cyberpanel.net"
 
-    # Compatible ModSecurity binaries (from ols_binaries_config - v2.4.4)
+    # Compatible ModSecurity binaries (from install/ols_binaries_config.py)
     MODSEC_COMPATIBLE = ols_binaries_config.MODSEC_COMPATIBLE
 
     @staticmethod
@@ -131,10 +131,13 @@ class modSec:
                 writeToFile.writelines("ModSecurity Installed.[200]\n")
                 writeToFile.close()
 
-            # Always download and install compatible ModSecurity binary to prevent LMDB dependency crashes
-            # This fixes the "undefined symbol: mdb_env_create" error that causes OpenLiteSpeed to crash
+            # Always download compatible ModSecurity when cyberpanel_ols.so is present or to fix LMDB ABI issues
+            custom_ols_marker = "/usr/local/lsws/modules/cyberpanel_ols.so"
             writeToFile = open(modSec.installLogPath, 'a')
-            writeToFile.writelines("Downloading compatible ModSecurity binary to prevent LMDB dependency issues...\n")
+            if os.path.exists(custom_ols_marker):
+                writeToFile.writelines("Custom OLS (cyberpanel_ols) detected; ensuring compatible ModSecurity...\n")
+            else:
+                writeToFile.writelines("Downloading compatible ModSecurity binary to prevent LMDB dependency issues...\n")
             writeToFile.close()
 
             platform = modSec.detectPlatform()
@@ -142,13 +145,13 @@ class modSec:
                 writeToFile = open(modSec.installLogPath, 'a')
                 writeToFile.writelines("Compatible ModSecurity binary installed successfully.\n")
                 writeToFile.close()
-                logging.CyberCPLogFileWriter.writeToFile("Compatible ModSecurity binary installed to prevent LMDB dependency crashes [installModSec]")
+                logging.CyberCPLogFileWriter.writeToFile("Compatible ModSecurity binary installed [installModSec]")
             else:
                 writeToFile = open(modSec.installLogPath, 'a')
                 writeToFile.writelines("WARNING: Could not install compatible ModSecurity binary. Using package-manager binary instead.\n")
                 writeToFile.writelines("WARNING: If you experience crashes (SIGSEGV signal 11), manually download compatible binary.\n")
                 writeToFile.close()
-                logging.CyberCPLogFileWriter.writeToFile("WARNING: Could not install compatible ModSecurity binary - may experience LMDB dependency crashes [installModSec]")
+                logging.CyberCPLogFileWriter.writeToFile("WARNING: Could not install compatible ModSecurity binary [installModSec]")
 
             return 1
         except BaseException as msg:
@@ -544,7 +547,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
             result = subprocess.call(shlex.split(command))
 
             if result != 0:
-                logging.CyberCPLogFileWriter.writeToFile("Failed to download OWASP rules: " + str(result) + " [setupOWASPRules]")
+                logging.CyberCPLogFileWriter.writeToFile("Failed to download OWASP CRS from GitHub (code " + str(result) + "). Check internet connection. [setupOWASPRules]")
                 return 0
 
             command = "unzip -o /usr/local/lsws/conf/modsec/owasp.zip -d /usr/local/lsws/conf/modsec/"
@@ -552,7 +555,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
             result = subprocess.call(shlex.split(command))
 
             if result != 0:
-                logging.CyberCPLogFileWriter.writeToFile("Failed to extract OWASP rules: " + str(result) + " [setupOWASPRules]")
+                logging.CyberCPLogFileWriter.writeToFile("Failed to extract OWASP CRS zip (code " + str(result) + "). Ensure unzip is installed. [setupOWASPRules]")
                 return 0
 
             command = 'mv /usr/local/lsws/conf/modsec/coreruleset-4.18.0 /usr/local/lsws/conf/modsec/owasp-modsecurity-crs-4.18.0'
@@ -560,19 +563,21 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
             result = subprocess.call(shlex.split(command))
 
             if result != 0:
-                logging.CyberCPLogFileWriter.writeToFile("Failed to move OWASP rules: " + str(result) + " [setupOWASPRules]")
+                logging.CyberCPLogFileWriter.writeToFile("Failed to rename OWASP CRS directory (code " + str(result) + "). [setupOWASPRules]")
                 return 0
 
             command = 'mv %s/crs-setup.conf.example %s/crs-setup.conf' % (pathToOWASFolderNew, pathToOWASFolderNew)
             result = subprocess.call(shlex.split(command))
 
             if result != 0:
+                logging.CyberCPLogFileWriter.writeToFile("Failed to setup crs-setup.conf configuration file. [setupOWASPRules]")
                 return 0
 
             command = 'mv %s/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf.example %s/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf' % (pathToOWASFolderNew, pathToOWASFolderNew)
             result = subprocess.call(shlex.split(command))
 
             if result != 0:
+                logging.CyberCPLogFileWriter.writeToFile("Failed to setup REQUEST-900 exclusion rules. [setupOWASPRules]")
                 return 0
 
             command = 'mv %s/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf.example %s/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf' % (
@@ -580,6 +585,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
             result = subprocess.call(shlex.split(command))
 
             if result != 0:
+                logging.CyberCPLogFileWriter.writeToFile("Failed to setup RESPONSE-999 exclusion rules. [setupOWASPRules]")
                 return 0
 
             # CRS v4.0.0 uses a different structure - it has a main crs.conf file

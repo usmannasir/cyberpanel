@@ -42,4 +42,15 @@ urlpatterns = [
     re_path(r'^ai-scanner/status-webhook$', views.aiScannerStatusWebhook, name='aiScannerStatusWebhookAPI'),
     re_path(r'^ai-scanner/callback/status-webhook$', views.aiScannerStatusWebhook, name='aiScannerStatusWebhookCallbackAPI'),  # Alternative URL for worker compatibility
     re_path(r'^ai-scanner/scan/(?P<scan_id>[^/]+)/live-progress$', views.aiScannerLiveProgress, name='aiScannerLiveProgressAPI'),
+
+    # File operation endpoints for AI Scanner
+    re_path(r'^scanner/backup-file$', views.scannerBackupFile, name='scannerBackupFileAPI'),
+    re_path(r'^scanner/get-file$', views.scannerGetFile, name='scannerGetFileAPI'),
+    re_path(r'^scanner/replace-file$', views.scannerReplaceFile, name='scannerReplaceFileAPI'),
+    re_path(r'^scanner/rename-file$', views.scannerRenameFile, name='scannerRenameFileAPI'),
+    re_path(r'^scanner/delete-file$', views.scannerDeleteFile, name='scannerDeleteFileAPI'),
+
+    # Debug endpoints for testing API authentication (remove in production)
+    re_path(r'^ai-scanner/test-auth$', views.testAuthDebug, name='testAuthDebugAPI'),
+    re_path(r'^ai-scanner/list-api-keys$', views.listApiKeysDebug, name='listApiKeysDebugAPI'),
 ]

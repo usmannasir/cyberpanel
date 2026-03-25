@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 from django.shortcuts import render,redirect
 from loginSystem.models import Administrator
 from loginSystem.views import loadLoginPage
@@ -314,7 +315,6 @@ def downloadFile(request):
         userID = request.session['userID']
         admin = Administrator.objects.get(pk=userID)
         from urllib.parse import unquote
-        import os
 
         # Properly get fileToDownload from query parameters
         fileToDownload = request.GET.get('fileToDownload')
@@ -346,13 +346,20 @@ def downloadFile(request):
         if not fileToDownload.startswith(homePath):
             return HttpResponse("Unauthorized access: Not a valid file.")
 
-        # Verify file exists and is a file (not a directory)
-        if not os.path.exists(fileToDownload) or not os.path.isfile(fileToDownload):
-            return HttpResponse("Unauthorized access: Not a valid file.")
+        try:
+            realPath = os.path.realpath(fileToDownload)
+            if not realPath.startswith(homePath + '/') and realPath != homePath:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    f"Symlink attack blocked: {fileToDownload} -> {realPath} (outside {homePath})")
+                return HttpResponse("Unauthorized access: Symlink points outside allowed directory.")
+            if not os.path.isfile(realPath):
+                return HttpResponse("Unauthorized access: Not a valid file.")
+        except OSError:
+            return HttpResponse("Unauthorized access: Cannot verify file path.")
 
         response = HttpResponse(content_type='application/force-download')
-        response['Content-Disposition'] = 'attachment; filename=%s' % (fileToDownload.split('/')[-1])
-        response['X-LiteSpeed-Location'] = '%s' % (fileToDownload)
+        response['Content-Disposition'] = 'attachment; filename=%s' % (realPath.split('/')[-1])
+        response['X-LiteSpeed-Location'] = '%s' % (realPath)
 
         return response
 
@@ -363,7 +370,6 @@ def RootDownloadFile(request):
     try:
         userID = request.session['userID']
         from urllib.parse import unquote
-        import os
 
         # Properly get fileToDownload from query parameters
         fileToDownload = request.GET.get('fileToDownload')
@@ -380,20 +386,29 @@ def RootDownloadFile(request):
         else:
             return ACLManager.loadError()
 
-        # Security checks: prevent directory traversal
         if '..' in fileToDownload:
-            return HttpResponse("Unauthorized access: Not a valid file.")
+            return HttpResponse("Unauthorized access: Path traversal detected.")
 
-        # Normalize path to prevent any path traversal attempts
         fileToDownload = os.path.normpath(fileToDownload)
 
-        # Verify file exists and is a file (not a directory)
-        if not os.path.exists(fileToDownload) or not os.path.isfile(fileToDownload):
-            return HttpResponse("Unauthorized access: Not a valid file.")
+        try:
+            realPath = os.path.realpath(fileToDownload)
+            sensitive_paths = ['/etc/shadow', '/etc/passwd', '/etc/sudoers', '/root/.ssh',
+                              '/var/log', '/proc', '/sys', '/dev']
+            for sensitive in sensitive_paths:
+                if realPath.startswith(sensitive):
+                    return HttpResponse("Unauthorized access: Access to system files denied.")
+            if not os.path.isfile(realPath):
+                return HttpResponse("Unauthorized access: Not a valid file.")
+            if fileToDownload != realPath:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    f"Symlink download detected: {fileToDownload} -> {realPath}")
+        except OSError:
+            return HttpResponse("Unauthorized access: Cannot verify file path.")
 
         response = HttpResponse(content_type='application/force-download')
-        response['Content-Disposition'] = 'attachment; filename=%s' % (fileToDownload.split('/')[-1])
-        response['X-LiteSpeed-Location'] = '%s' % (fileToDownload)
+        response['Content-Disposition'] = 'attachment; filename=%s' % (realPath.split('/')[-1])
+        response['X-LiteSpeed-Location'] = '%s' % (realPath)
 
         return response
         #return HttpResponse(response['X-LiteSpeed-Location'])

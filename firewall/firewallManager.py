@@ -1145,7 +1145,7 @@ class FirewallManager:
                         if owaspInstalled == 1 and comodoInstalled == 1:
                             break
 
-                    # Also check rules.conf for manual OWASP installations (case-insensitive)
+                    # Check rules.conf and other OWASP CRS locations
                     if owaspInstalled == 0:
                         rulesConfPath = os.path.join(virtualHostUtilities.Server_root, "conf/modsec/rules.conf")
                         if os.path.exists(rulesConfPath):
@@ -1161,13 +1161,38 @@ class FirewallManager:
                             except:
                                 pass
 
-                    # Additional check: verify OWASP files actually exist
                     if owaspInstalled == 0:
                         owaspPath = os.path.join(virtualHostUtilities.Server_root, "conf/modsec/owasp-modsecurity-crs-4.18.0")
                         if os.path.exists(owaspPath) and os.path.exists(os.path.join(owaspPath, "owasp-master.conf")):
                             owaspInstalled = 1
 
-                    # Additional check: verify Comodo files actually exist
+                    if owaspInstalled == 0:
+                        owaspMasterConf = os.path.join(virtualHostUtilities.Server_root, "conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf")
+                        if os.path.exists(owaspMasterConf):
+                            try:
+                                command = "sudo cat " + owaspMasterConf
+                                owaspConfig = ProcessUtilities.outputExecutioner(command).splitlines()
+                                for items in owaspConfig:
+                                    if items.strip() and not items.strip().startswith('#') and 'include' in items.lower():
+                                        owaspInstalled = 1
+                                        break
+                            except Exception:
+                                pass
+
+                    if owaspInstalled == 0:
+                        owaspRulesDir = os.path.join(virtualHostUtilities.Server_root, "conf/modsec/owasp-modsecurity-crs-3.0-master/rules")
+                        if os.path.exists(owaspRulesDir):
+                            try:
+                                command = "sudo ls " + owaspRulesDir + " | grep -c '.conf'"
+                                output = ProcessUtilities.outputExecutioner(command).strip()
+                                if output.isdigit() and int(output) > 0:
+                                    for items in httpdConfig:
+                                        if 'owasp-modsecurity-crs' in items.lower() or 'owasp-master.conf' in items.lower():
+                                            owaspInstalled = 1
+                                            break
+                            except Exception:
+                                pass
+
                     if comodoInstalled == 0:
                         comodoPath = os.path.join(virtualHostUtilities.Server_root, "conf/modsec/comodo")
                         if os.path.exists(comodoPath) and os.path.exists(os.path.join(comodoPath, "modsecurity.conf")):
@@ -1202,6 +1227,7 @@ class FirewallManager:
                 except subprocess.CalledProcessError:
                     pass
 
+                # Check multiple locations for OWASP in LiteSpeed Enterprise
                 try:
                     command = 'cat /usr/local/lsws/conf/modsec.conf'
                     output = ProcessUtilities.outputExecutioner(command)
@@ -1209,6 +1235,20 @@ class FirewallManager:
                         owaspInstalled = 1
                 except:
                     pass
+
+                # Also check owasp-master.conf for LSWS Enterprise
+                if owaspInstalled == 0:
+                    owaspMasterConf = '/usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf'
+                    if os.path.exists(owaspMasterConf):
+                        try:
+                            command = "cat " + owaspMasterConf
+                            owaspConfig = ProcessUtilities.outputExecutioner(command).splitlines()
+                            for items in owaspConfig:
+                                if items.strip() and not items.strip().startswith('#') and 'include' in items.lower():
+                                    owaspInstalled = 1
+                                    break
+                        except:
+                            pass
 
                 final_dic = {
                     'modSecInstalled': 1,

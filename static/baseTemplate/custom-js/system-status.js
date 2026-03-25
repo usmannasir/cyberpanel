@@ -830,7 +830,7 @@ app.controller('OnboardingCP', function ($scope, $http, $timeout, $window) {
     $scope.ExecutionStatus = true;
     $scope.ReportStatus = true;
     $scope.OnboardineDone = true;
-    
+
     var statusTimer = null;
 
     function statusFunc() {
@@ -988,7 +988,7 @@ app.controller('OnboardingCP', function ($scope, $http, $timeout, $window) {
 // Single implementation registered under both names for compatibility (some templates/caches use newDashboardStat)
 var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
     console.log('dashboardStatsController initialized');
-    
+
     // Card values
     $scope.totalUsers = 0;
     $scope.totalSites = 0;
@@ -996,7 +996,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
     $scope.totalDBs = 0;
     $scope.totalEmails = 0;
     $scope.totalFTPUsers = 0;
-    
+
     // Hide system charts for non-admin users
     $scope.hideSystemCharts = false;
 
@@ -1022,63 +1022,199 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
 
     // SSH Logins
     $scope.sshLogins = [];
+    $scope.sshLoginsPaginated = [];
+    $scope.sshLoginsCurrentPage = 1;
+    $scope.sshLoginsPerPage = 10;
+    $scope.sshLoginsGoToPage = 1;
     $scope.loadingSSHLogins = true;
     $scope.errorSSHLogins = '';
+
+    $scope.getSSHLoginsTotalPages = function() {
+        return Math.ceil($scope.sshLogins.length / $scope.sshLoginsPerPage);
+    };
+
+    $scope.getSSHLoginsStart = function() {
+        if (!$scope.sshLogins || $scope.sshLogins.length === 0) {
+            return 0;
+        }
+        return ($scope.sshLoginsCurrentPage - 1) * $scope.sshLoginsPerPage + 1;
+    };
+
+    $scope.getSSHLoginsEnd = function() {
+        if (!$scope.sshLogins || $scope.sshLogins.length === 0) {
+            return 0;
+        }
+        var end = $scope.sshLoginsCurrentPage * $scope.sshLoginsPerPage;
+        return Math.min(end, $scope.sshLogins.length);
+    };
+
+    $scope.updateSSHLoginsPaginated = function() {
+        if (!$scope.sshLogins || $scope.sshLogins.length === 0) {
+            $scope.sshLoginsPaginated = [];
+            console.log('updateSSHLoginsPaginated: No data, cleared paginated array');
+            return;
+        }
+        var start = ($scope.sshLoginsCurrentPage - 1) * $scope.sshLoginsPerPage;
+        var end = start + $scope.sshLoginsPerPage;
+        $scope.sshLoginsPaginated = $scope.sshLogins.slice(start, end);
+        console.log('updateSSHLoginsPaginated: start=', start, 'end=', end, 'total=', $scope.sshLogins.length, 'paginated=', $scope.sshLoginsPaginated.length);
+    };
+
+    $scope.sshLoginsPrevPage = function() {
+        if ($scope.sshLoginsCurrentPage > 1) {
+            $scope.sshLoginsCurrentPage--;
+            $scope.updateSSHLoginsPaginated();
+        }
+    };
+
+    $scope.sshLoginsNextPage = function() {
+        if ($scope.sshLoginsCurrentPage < $scope.getSSHLoginsTotalPages()) {
+            $scope.sshLoginsCurrentPage++;
+            $scope.updateSSHLoginsPaginated();
+        }
+    };
+
+    $scope.sshLoginsGoToPageNumber = function() {
+        var page = parseInt($scope.sshLoginsGoToPage);
+        var totalPages = $scope.getSSHLoginsTotalPages();
+        if (page >= 1 && page <= totalPages) {
+            $scope.sshLoginsCurrentPage = page;
+            $scope.updateSSHLoginsPaginated();
+        } else {
+            $scope.sshLoginsGoToPage = $scope.sshLoginsCurrentPage;
+        }
+    };
+
     $scope.refreshSSHLogins = function() {
         $scope.loadingSSHLogins = true;
         var h = { headers: { 'X-CSRFToken': (typeof getCookie === 'function') ? getCookie('csrftoken') : '' } };
         $http.get('/base/getRecentSSHLogins', h).then(function (response) {
             $scope.loadingSSHLogins = false;
-            if (response.data && response.data.logins) {
+            console.log('SSH Logins response:', response.data);
+            if (response.data && response.data.logins && Array.isArray(response.data.logins)) {
                 $scope.sshLogins = response.data.logins;
-                // Debug: Log first login to see structure
-                if ($scope.sshLogins.length > 0) {
-                    console.log('First SSH login object:', $scope.sshLogins[0]);
-                    console.log('IP field:', $scope.sshLogins[0].ip);
-                    console.log('All keys:', Object.keys($scope.sshLogins[0]));
-                }
+                $scope.sshLoginsCurrentPage = 1;
+                $scope.sshLoginsGoToPage = 1;
+                $scope.updateSSHLoginsPaginated();
             } else {
+                console.warn('SSH Logins: No data or invalid format', response.data);
                 $scope.sshLogins = [];
+                $scope.sshLoginsPaginated = [];
             }
         }, function (err) {
             $scope.loadingSSHLogins = false;
+            console.error('SSH Logins error:', err);
             $scope.errorSSHLogins = 'Failed to load SSH logins.';
             console.error('Failed to load SSH logins:', err);
+            $scope.sshLogins = [];
+            $scope.sshLoginsPaginated = [];
         });
     };
 
     // SSH Logs
     $scope.sshLogs = [];
+    $scope.sshLogsPaginated = [];
+    $scope.sshLogsCurrentPage = 1;
+    $scope.sshLogsPerPage = 10;
+    $scope.sshLogsGoToPage = 1;
     $scope.loadingSSHLogs = true;
     $scope.errorSSHLogs = '';
     $scope.securityAlerts = [];
     $scope.loadingSecurityAnalysis = false;
+
+    $scope.getSSHLogsTotalPages = function() {
+        return Math.ceil($scope.sshLogs.length / $scope.sshLogsPerPage);
+    };
+
+    $scope.getSSHLogsStart = function() {
+        if (!$scope.sshLogs || $scope.sshLogs.length === 0) {
+            return 0;
+        }
+        return ($scope.sshLogsCurrentPage - 1) * $scope.sshLogsPerPage + 1;
+    };
+
+    $scope.getSSHLogsEnd = function() {
+        if (!$scope.sshLogs || $scope.sshLogs.length === 0) {
+            return 0;
+        }
+        var end = $scope.sshLogsCurrentPage * $scope.sshLogsPerPage;
+        return Math.min(end, $scope.sshLogs.length);
+    };
+
+    $scope.updateSSHLogsPaginated = function() {
+        if (!$scope.sshLogs || $scope.sshLogs.length === 0) {
+            $scope.sshLogsPaginated = [];
+            console.log('updateSSHLogsPaginated: No data, cleared paginated array');
+            return;
+        }
+        var start = ($scope.sshLogsCurrentPage - 1) * $scope.sshLogsPerPage;
+        var end = start + $scope.sshLogsPerPage;
+        $scope.sshLogsPaginated = $scope.sshLogs.slice(start, end);
+        console.log('updateSSHLogsPaginated: start=', start, 'end=', end, 'total=', $scope.sshLogs.length, 'paginated=', $scope.sshLogsPaginated.length);
+    };
+
+    $scope.sshLogsPrevPage = function() {
+        if ($scope.sshLogsCurrentPage > 1) {
+            $scope.sshLogsCurrentPage--;
+            $scope.updateSSHLogsPaginated();
+        }
+    };
+
+    $scope.sshLogsNextPage = function() {
+        if ($scope.sshLogsCurrentPage < $scope.getSSHLogsTotalPages()) {
+            $scope.sshLogsCurrentPage++;
+            $scope.updateSSHLogsPaginated();
+        }
+    };
+
+    $scope.sshLogsGoToPageNumber = function() {
+        var page = parseInt($scope.sshLogsGoToPage);
+        var totalPages = $scope.getSSHLogsTotalPages();
+        if (page >= 1 && page <= totalPages) {
+            $scope.sshLogsCurrentPage = page;
+            $scope.updateSSHLogsPaginated();
+        } else {
+            $scope.sshLogsGoToPage = $scope.sshLogsCurrentPage;
+        }
+    };
+
     $scope.refreshSSHLogs = function() {
         $scope.loadingSSHLogs = true;
         var h = { headers: { 'X-CSRFToken': (typeof getCookie === 'function') ? getCookie('csrftoken') : '' } };
         $http.get('/base/getRecentSSHLogs', h).then(function (response) {
             $scope.loadingSSHLogs = false;
-            if (response.data && response.data.logs) {
+            console.log('SSH Logs response:', response.data);
+            if (response.data && response.data.logs && Array.isArray(response.data.logs)) {
                 $scope.sshLogs = response.data.logs;
+                $scope.sshLogsCurrentPage = 1;
+                $scope.sshLogsGoToPage = 1;
+                console.log('SSH Logs loaded:', $scope.sshLogs.length, 'items');
+                $scope.updateSSHLogsPaginated();
+                console.log('SSH Logs paginated:', $scope.sshLogsPaginated.length, 'items');
                 // Analyze logs for security issues
                 $scope.analyzeSSHSecurity();
             } else {
+                console.warn('SSH Logs: No data or invalid format', response.data);
                 $scope.sshLogs = [];
+                $scope.sshLogsPaginated = [];
             }
         }, function (err) {
             $scope.loadingSSHLogs = false;
+            console.error('SSH Logs error:', err);
             $scope.errorSSHLogs = 'Failed to load SSH logs.';
+            $scope.sshLogs = [];
+            $scope.sshLogsPaginated = [];
         });
     };
-    
+
     // Security Analysis
     $scope.showAddonRequired = false;
     $scope.addonInfo = {};
-    
+
     // IP Blocking functionality
     $scope.blockingIP = null;
     $scope.blockedIPs = {};
-    
+
     $scope.analyzeSSHSecurity = function() {
         $scope.loadingSecurityAnalysis = true;
         $scope.showAddonRequired = false;
@@ -1098,7 +1234,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             $scope.loadingSecurityAnalysis = false;
         });
     };
-    
+
     $scope.blockIPAddress = function(ipAddress) {
         try {
             console.log('========================================');
@@ -1109,7 +1245,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             console.log('ipAddress value:', ipAddress);
             console.log('$scope:', $scope);
             console.log('$scope.blockIPAddress:', typeof $scope.blockIPAddress);
-            
+
             // Validate IP address parameter
         if (!ipAddress) {
             console.error('No IP address provided:', ipAddress);
@@ -1123,10 +1259,10 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             }
             return;
         }
-        
+
         // Ensure it's a string and trim it
         ipAddress = String(ipAddress).trim();
-        
+
         // Validate after trimming
         if (!ipAddress || ipAddress === '' || ipAddress === 'undefined' || ipAddress === 'null') {
             console.error('IP address is empty or invalid after trim:', ipAddress);
@@ -1140,7 +1276,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             }
             return;
         }
-        
+
         // Basic IP format validation
         var ipPattern = /^(\d{1,3}\.){3}\d{1,3}(\/\d{1,2})?$/;
         if (!ipPattern.test(ipAddress)) {
@@ -1155,51 +1291,51 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             }
             return;
         }
-        
+
         // Prevent duplicate requests
         if ($scope.blockingIP === ipAddress) {
             console.log('Already processing IP:', ipAddress);
             return; // Already processing this IP
         }
-        
+
         // Do not early-return when IP is already in blockedIPs: still call the API so the
         // backend can close any active connections from this IP (already-banned path).
-        
+
         // Set blocking flag to prevent duplicate requests
         $scope.blockingIP = ipAddress;
-            
+
             // Use the new Banned IPs system instead of the old blockIPAddress
             var data = {
                 ip: ipAddress,
                 reason: 'Brute force attack detected from SSH Security Analysis',
                 duration: 'permanent'
             };
-            
+
             var config = {
                 headers: {
                     'X-CSRFToken': getCookie('csrftoken')
                 }
             };
-            
+
             console.log('Sending ban IP request:', data);
             console.log('CSRF Token:', getCookie('csrftoken'));
             console.log('Config:', config);
-            
+
             $http.post('/firewall/addBannedIP', data, config).then(function (response) {
                 console.log('=== addBannedIP SUCCESS ===');
                 console.log('Full response:', response);
                 console.log('response.data:', response.data);
                 console.log('response.data type:', typeof response.data);
                 console.log('response.status:', response.status);
-                
+
                 // Reset blocking flag
                 $scope.blockingIP = null;
-                
+
                 // Apply scope changes
                 if (!$scope.$$phase && !$scope.$root.$$phase) {
                     $scope.$apply();
                 }
-                
+
                 // Handle both JSON string and object responses
                 var responseData = response.data;
                 if (typeof responseData === 'string') {
@@ -1216,12 +1352,12 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                         return;
                     }
                 }
-                
+
                 console.log('Final responseData:', responseData);
                 console.log('responseData.status:', responseData ? responseData.status : 'undefined');
                 console.log('responseData.message:', responseData ? responseData.message : 'undefined');
                 console.log('responseData.error_message:', responseData ? responseData.error_message : 'undefined');
-                
+
                 // Check for success (status === 1 or status === '1')
                 if (responseData && (responseData.status === 1 || responseData.status === '1')) {
                     // Mark IP as blocked
@@ -1229,7 +1365,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                         $scope.blockedIPs = {};
                     }
                     $scope.blockedIPs[ipAddress] = true;
-                    
+
                     // Show success notification (use server message when present, e.g. already-banned + connections closed)
                     if (typeof PNotify !== 'undefined') {
                         var successText = (responseData.message && responseData.message.length) ? responseData.message : `IP address ${ipAddress} has been permanently banned and added to the firewall. You can manage it in the Firewall > Banned IPs section.`;
@@ -1240,12 +1376,12 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                             delay: 5000
                         });
                     }
-                    
+
                     // Refresh security analysis to update alerts
                     if ($scope.analyzeSSHSecurity) {
                         $scope.analyzeSSHSecurity();
                     }
-                    
+
                     // Apply scope changes
                     if (!$scope.$$phase && !$scope.$root.$$phase) {
                         $scope.$apply();
@@ -1278,16 +1414,16 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                 console.error('Error status:', err.status);
                 console.error('Error statusText:', err.statusText);
                 console.error('Error data:', err.data);
-                
+
                 // Prevent showing duplicate error notifications
                 if ($scope.lastErrorIP === ipAddress && $scope.lastErrorTime && (Date.now() - $scope.lastErrorTime) < 2000) {
                     console.log('Skipping duplicate error notification for IP:', ipAddress);
                     return;
                 }
-                
+
                 $scope.lastErrorIP = ipAddress;
                 $scope.lastErrorTime = Date.now();
-                
+
                 var errorMessage = 'Failed to block IP address';
                 var errData = err.data;
                 if (typeof errData === 'string') {
@@ -1304,9 +1440,9 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                 } else if (err.status) {
                     errorMessage = 'HTTP ' + err.status + ': ' + (errorMessage);
                 }
-                
+
                 console.error('Final error message:', errorMessage);
-                
+
                 if (typeof PNotify !== 'undefined') {
                     new PNotify({
                         title: 'Error',
@@ -1334,7 +1470,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             }
         }
     };
-    
+
     // Ban IP from SSH Logs
     $scope.banIPFromSSHLog = function(ipAddress) {
         if (!ipAddress) {
@@ -1346,37 +1482,37 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             });
             return;
         }
-        
+
         if ($scope.blockingIP === ipAddress) {
             return; // Already processing
         }
-        
+
         // Still call API when already in blockedIPs so backend can close active connections
         if (!$scope.blockedIPs) {
             $scope.blockedIPs = {};
         }
-        
+
         $scope.blockingIP = ipAddress;
-        
+
         // Use the Banned IPs system
         var data = {
             ip: ipAddress,
             reason: 'Suspicious activity detected from SSH logs',
             duration: 'permanent'
         };
-        
+
         var config = {
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
             }
         };
-        
+
         $http.post('/firewall/addBannedIP', data, config).then(function (response) {
             $scope.blockingIP = null;
             if (response.data && response.data.status === 1) {
                 // Mark IP as blocked
                 $scope.blockedIPs[ipAddress] = true;
-                
+
                 // Show success notification
                 new PNotify({
                     title: 'IP Address Banned',
@@ -1384,7 +1520,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                     type: 'success',
                     delay: 5000
                 });
-                
+
                 // Refresh SSH logs to update the UI
                 $scope.refreshSSHLogs();
             } else {
@@ -1395,7 +1531,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                 } else if (response.data && response.data.error) {
                     errorMsg = response.data.error;
                 }
-                
+
                 new PNotify({
                     title: 'Error',
                     text: errorMsg,
@@ -1413,7 +1549,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             } else if (err.data && err.data.message) {
                 errorMessage = err.data.message;
             }
-            
+
             new PNotify({
                 title: 'Error',
                 text: errorMessage,
@@ -1422,7 +1558,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             });
         });
     };
-    
+
     // Ban IP from SSH Logs
     $scope.banIPFromSSHLog = function(ipAddress) {
         if (!ipAddress) {
@@ -1434,37 +1570,37 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             });
             return;
         }
-        
+
         if ($scope.blockingIP === ipAddress) {
             return; // Already processing
         }
-        
+
         // Still call API when already in blockedIPs so backend can close active connections
         if (!$scope.blockedIPs) {
             $scope.blockedIPs = {};
         }
-        
+
         $scope.blockingIP = ipAddress;
-        
+
         // Use the Banned IPs system
         var data = {
             ip: ipAddress,
             reason: 'Suspicious activity detected from SSH logs',
             duration: 'permanent'
         };
-        
+
         var config = {
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
             }
         };
-        
+
         $http.post('/firewall/addBannedIP', data, config).then(function (response) {
             $scope.blockingIP = null;
             if (response.data && response.data.status === 1) {
                 // Mark IP as blocked
                 $scope.blockedIPs[ipAddress] = true;
-                
+
                 // Show success notification
                 new PNotify({
                     title: 'IP Address Banned',
@@ -1472,7 +1608,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                     type: 'success',
                     delay: 5000
                 });
-                
+
                 // Refresh SSH logs to update the UI
                 $scope.refreshSSHLogs();
             } else {
@@ -1483,7 +1619,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                 } else if (response.data && response.data.error) {
                     errorMsg = response.data.error;
                 }
-                
+
                 new PNotify({
                     title: 'Error',
                     text: errorMsg,
@@ -1501,7 +1637,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             } else if (err.data && err.data.message) {
                 errorMessage = err.data.message;
             }
-            
+
             new PNotify({
                 title: 'Error',
                 text: errorMessage,
@@ -1767,31 +1903,31 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             data: {
                 labels: [],
                 datasets: [
-                    { 
-                        label: 'Download', 
-                        data: [], 
-                        borderColor: '#5b5fcf', 
-                        backgroundColor: 'rgba(91,95,207,0.1)', 
+                    {
+                        label: 'Download',
+                        data: [],
+                        borderColor: '#5b5fcf',
+                        backgroundColor: 'rgba(91,95,207,0.1)',
                         pointBackgroundColor: '#5b5fcf',
                         pointBorderColor: '#5b5fcf',
                         pointRadius: 3,
                         pointHoverRadius: 5,
                         borderWidth: 2,
-                        tension: 0.4, 
-                        fill: true 
+                        tension: 0.4,
+                        fill: true
                     },
-                    { 
-                        label: 'Upload', 
-                        data: [], 
-                        borderColor: '#4a90e2', 
-                        backgroundColor: 'rgba(74,144,226,0.1)', 
+                    {
+                        label: 'Upload',
+                        data: [],
+                        borderColor: '#4a90e2',
+                        backgroundColor: 'rgba(74,144,226,0.1)',
                         pointBackgroundColor: '#4a90e2',
                         pointBorderColor: '#4a90e2',
                         pointRadius: 3,
                         pointHoverRadius: 5,
                         borderWidth: 2,
-                        tension: 0.4, 
-                        fill: true 
+                        tension: 0.4,
+                        fill: true
                     }
                 ]
             },
@@ -1800,20 +1936,20 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                 maintainAspectRatio: false,
                 animation: { duration: 0 },
                 plugins: {
-                    legend: { 
-                        display: true, 
+                    legend: {
+                        display: true,
                         position: 'top',
-                        labels: { 
+                        labels: {
                             font: { size: 12, weight: '600' },
                             color: '#64748b',
                             usePointStyle: true,
                             padding: 20
-                        } 
+                        }
                     },
                     title: { display: false },
-                    tooltip: { 
-                        enabled: true, 
-                        mode: 'index', 
+                    tooltip: {
+                        enabled: true,
+                        mode: 'index',
                         intersect: false,
                         backgroundColor: 'rgba(255,255,255,0.95)',
                         titleColor: '#2f3640',
@@ -1826,18 +1962,18 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                 },
                 interaction: { mode: 'nearest', axis: 'x', intersect: false },
                 scales: {
-                    x: { 
-                        grid: { color: '#f0f0ff', drawBorder: false }, 
-                        ticks: { 
+                    x: {
+                        grid: { color: '#f0f0ff', drawBorder: false },
+                        ticks: {
                             font: { size: 11 },
                             color: '#94a3b8',
                             maxTicksLimit: 8
                         }
                     },
-                    y: { 
-                        beginAtZero: true, 
-                        grid: { color: '#f0f0ff', drawBorder: false }, 
-                        ticks: { 
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#f0f0ff', drawBorder: false },
+                        ticks: {
                             font: { size: 11 },
                             color: '#94a3b8'
                         }
@@ -1862,31 +1998,31 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             data: {
                 labels: [],
                 datasets: [
-                    { 
-                        label: 'Read', 
-                        data: [], 
-                        borderColor: '#5b5fcf', 
-                        backgroundColor: 'rgba(91,95,207,0.1)', 
+                    {
+                        label: 'Read',
+                        data: [],
+                        borderColor: '#5b5fcf',
+                        backgroundColor: 'rgba(91,95,207,0.1)',
                         pointBackgroundColor: '#5b5fcf',
                         pointBorderColor: '#5b5fcf',
                         pointRadius: 3,
                         pointHoverRadius: 5,
                         borderWidth: 2,
-                        tension: 0.4, 
-                        fill: true 
+                        tension: 0.4,
+                        fill: true
                     },
-                    { 
-                        label: 'Write', 
-                        data: [], 
-                        borderColor: '#e74c3c', 
-                        backgroundColor: 'rgba(231,76,60,0.1)', 
+                    {
+                        label: 'Write',
+                        data: [],
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231,76,60,0.1)',
                         pointBackgroundColor: '#e74c3c',
                         pointBorderColor: '#e74c3c',
                         pointRadius: 3,
                         pointHoverRadius: 5,
                         borderWidth: 2,
-                        tension: 0.4, 
-                        fill: true 
+                        tension: 0.4,
+                        fill: true
                     }
                 ]
             },
@@ -1895,20 +2031,20 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                 maintainAspectRatio: false,
                 animation: { duration: 0 },
                 plugins: {
-                    legend: { 
-                        display: true, 
+                    legend: {
+                        display: true,
                         position: 'top',
-                        labels: { 
+                        labels: {
                             font: { size: 12, weight: '600' },
                             color: '#64748b',
                             usePointStyle: true,
                             padding: 20
-                        } 
+                        }
                     },
                     title: { display: false },
-                    tooltip: { 
-                        enabled: true, 
-                        mode: 'index', 
+                    tooltip: {
+                        enabled: true,
+                        mode: 'index',
                         intersect: false,
                         backgroundColor: 'rgba(255,255,255,0.95)',
                         titleColor: '#2f3640',
@@ -1921,18 +2057,18 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                 },
                 interaction: { mode: 'nearest', axis: 'x', intersect: false },
                 scales: {
-                    x: { 
-                        grid: { color: '#f0f0ff', drawBorder: false }, 
-                        ticks: { 
+                    x: {
+                        grid: { color: '#f0f0ff', drawBorder: false },
+                        ticks: {
                             font: { size: 11 },
                             color: '#94a3b8',
                             maxTicksLimit: 8
                         }
                     },
-                    y: { 
-                        beginAtZero: true, 
-                        grid: { color: '#f0f0ff', drawBorder: false }, 
-                        ticks: { 
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#f0f0ff', drawBorder: false },
+                        ticks: {
                             font: { size: 11 },
                             color: '#94a3b8'
                         }
@@ -1950,18 +2086,18 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             data: {
                 labels: [],
                 datasets: [
-                    { 
-                        label: 'CPU Usage (%)', 
-                        data: [], 
-                        borderColor: '#5b5fcf', 
-                        backgroundColor: 'rgba(91,95,207,0.1)', 
+                    {
+                        label: 'CPU Usage (%)',
+                        data: [],
+                        borderColor: '#5b5fcf',
+                        backgroundColor: 'rgba(91,95,207,0.1)',
                         pointBackgroundColor: '#5b5fcf',
                         pointBorderColor: '#5b5fcf',
                         pointRadius: 3,
                         pointHoverRadius: 5,
                         borderWidth: 2,
-                        tension: 0.4, 
-                        fill: true 
+                        tension: 0.4,
+                        fill: true
                     }
                 ]
             },
@@ -1970,20 +2106,20 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                 maintainAspectRatio: false,
                 animation: { duration: 0 },
                 plugins: {
-                    legend: { 
-                        display: true, 
+                    legend: {
+                        display: true,
                         position: 'top',
-                        labels: { 
+                        labels: {
                             font: { size: 12, weight: '600' },
                             color: '#64748b',
                             usePointStyle: true,
                             padding: 20
-                        } 
+                        }
                     },
                     title: { display: false },
-                    tooltip: { 
-                        enabled: true, 
-                        mode: 'index', 
+                    tooltip: {
+                        enabled: true,
+                        mode: 'index',
                         intersect: false,
                         backgroundColor: 'rgba(255,255,255,0.95)',
                         titleColor: '#2f3640',
@@ -1996,19 +2132,19 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                 },
                 interaction: { mode: 'nearest', axis: 'x', intersect: false },
                 scales: {
-                    x: { 
-                        grid: { color: '#f0f0ff', drawBorder: false }, 
-                        ticks: { 
+                    x: {
+                        grid: { color: '#f0f0ff', drawBorder: false },
+                        ticks: {
                             font: { size: 11 },
                             color: '#94a3b8',
                             maxTicksLimit: 8
                         }
                     },
-                    y: { 
-                        beginAtZero: true, 
-                        max: 100, 
-                        grid: { color: '#f0f0ff', drawBorder: false }, 
-                        ticks: { 
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        grid: { color: '#f0f0ff', drawBorder: false },
+                        ticks: {
                             font: { size: 11 },
                             color: '#94a3b8'
                         }
@@ -2030,7 +2166,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                 if (cpuChart) cpuChart.resize();
             }, 100);
         });
-        
+
         // Also handle custom tab switching
         document.addEventListener('DOMContentLoaded', function() {
             var tabs = document.querySelectorAll('a[data-toggle="tab"]');
@@ -2051,7 +2187,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
     $scope.refreshTopProcesses();
     $scope.refreshSSHLogins();
     $scope.refreshSSHLogs();
-    
+
     $timeout(function() {
         // Always create charts so Traffic/Disk IO/CPU tabs have something to show; admin check only affects hideSystemCharts
         setupCharts();
@@ -2065,7 +2201,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             console.warn('getAdminStatus failed:', err);
             $scope.hideSystemCharts = true;
         });
-        
+
         // Start polling for all stats (data feeds charts)
         function pollAll() {
             pollDashboardStats();
@@ -2084,29 +2220,29 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
     $scope.sshActivityUser = '';
     $scope.loadingSSHActivity = false;
     $scope.errorSSHActivity = '';
-    
+
     $scope.viewSSHActivity = function(login, event) {
         $scope.showSSHActivityModal = true;
         $scope.sshActivity = { processes: [], w: [] };
         $scope.sshActivityUser = login.user;
-        
+
         // Extract IP from multiple sources - comprehensive extraction for IPv4 and IPv6
         var extractedIP = '';
-        
+
         // Method 1: Direct property access (highest priority - from backend)
         if (login && login.ip) {
             extractedIP = login.ip.toString().trim();
         } else if (login && login['ip']) {
             extractedIP = login['ip'].toString().trim();
         }
-        
+
         // Method 2: Alternative field names
         if (!extractedIP && login) {
             if (login.ipAddress) extractedIP = login.ipAddress.toString().trim();
             else if (login['IP Address']) extractedIP = login['IP Address'].toString().trim();
             else if (login['IP']) extractedIP = login['IP'].toString().trim();
         }
-        
+
         // Method 3: Extract from raw line using regex (IPv4 and IPv6)
         if (!extractedIP && login && login.raw) {
             // Try IPv4 first (most common)
@@ -2117,7 +2253,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                     extractedIP = ipv4;
                 }
             }
-            
+
             // If no valid IPv4, try IPv6
             if (!extractedIP) {
                 // IPv6 pattern: matches full IPv6 addresses and compressed forms
@@ -2131,13 +2267,13 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                 }
             }
         }
-        
+
         // Method 4: Try to get from event target data attribute as fallback
         if (!extractedIP && event && event.currentTarget) {
             var dataIP = event.currentTarget.getAttribute('data-ip');
             if (dataIP) extractedIP = dataIP.toString().trim();
         }
-        
+
         // Final fallback: search entire raw line for any IP
         if (!extractedIP && login && login.raw) {
             // Try all IPv4 addresses
@@ -2165,13 +2301,13 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                 }
             }
         }
-        
+
         // Final cleanup
         $scope.sshActivityIP = (extractedIP || '').toString().trim();
         $scope.sshActivityTTY = ''; // Store TTY for kill session
         // Check both 'session' and 'activity' fields for status
         $scope.sshActivityStatus = login.session || login.activity || '';
-        
+
         // Use backend is_active field if available (most reliable)
         // Fallback to checking session text if is_active is not set
         // IMPORTANT: Check for both boolean true and string 'true' (JSON might serialize differently)
@@ -2185,7 +2321,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             $scope.isActiveSession = (sessionStatus.indexOf('still logged in') !== -1);
             console.log('Using fallback session text check:', sessionStatus, '-> isActiveSession:', $scope.isActiveSession);
         }
-        
+
         // If IP is still empty, try one more time with more aggressive extraction
         if (!$scope.sshActivityIP && login) {
             console.log('IP still empty, trying aggressive extraction...');
@@ -2227,7 +2363,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                 }
             }
         }
-        
+
         // Debug logging - detailed inspection
         console.log('View SSH Activity - Login object:', login);
         console.log('Login keys:', Object.keys(login));
@@ -2250,7 +2386,6 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                 $scope.sshActivityTTY = tty;
             }
         }
-        // Also try to extract from session field or raw line
         if (!tty && login.session) {
             var sessionMatch = login.session.match(/(pts\/[0-9]+)/);
             if (sessionMatch) {
@@ -2258,36 +2393,27 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                 $scope.sshActivityTTY = tty;
             }
         }
-        // Also check raw line for TTY
-        if (!tty && login.raw) {
-            var rawMatch = login.raw.match(/(pts\/[0-9]+)/);
-            if (rawMatch) {
-                tty = rawMatch[1];
-                $scope.sshActivityTTY = tty;
-            }
-        }
-        // Make API call with IP included - reduced timeout for faster response
-        var requestData = { 
-            user: login.user, 
+        var reqIp = (login.ip || $scope.sshActivityIP || '').toString().trim();
+        var requestData = {
+            user: login.user,
             tty: tty,
-            ip: $scope.sshActivityIP
+            ip: reqIp
         };
-        
-        // Set shorter timeout for faster feedback
+
         var timeoutPromise = $timeout(function() {
             $scope.loadingSSHActivity = false;
-            $scope.errorSSHActivity = 'Request timed out. The user may not have any active processes.';
-            $scope.sshActivity = { processes: [], w: [] };
-        }, 5000); // 5 second timeout (reduced from 10)
-        
-        $http.post('/base/getSSHUserActivity', requestData, { timeout: 3000 }).then(function(response) {
+            $scope.errorSSHActivity = 'Request timed out. The server took too long to respond.';
+            $scope.sshActivity = { processes: [], w: [], shell_history: [], geoip: {}, disk_usage: '' };
+        }, 30000);
+
+        $http.post('/base/getSSHUserActivity', requestData, { timeout: 30000 }).then(function(response) {
             $timeout.cancel(timeoutPromise); // Cancel timeout on success
             $scope.loadingSSHActivity = false;
             if (response.data) {
                 // Check if response has error field
                 if (response.data.error) {
                     $scope.errorSSHActivity = response.data.error;
-                    $scope.sshActivity = { processes: [], w: [] };
+                    $scope.sshActivity = { processes: [], w: [], shell_history: [], geoip: {}, disk_usage: '' };
                 } else {
                     $scope.sshActivity = response.data;
                     // Ensure all expected fields exist
@@ -2295,7 +2421,11 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                     if (!$scope.sshActivity.w) $scope.sshActivity.w = [];
                     if (!$scope.sshActivity.process_tree) $scope.sshActivity.process_tree = [];
                     if (!$scope.sshActivity.shell_history) $scope.sshActivity.shell_history = [];
-                    
+                    if (!$scope.sshActivity.geoip) $scope.sshActivity.geoip = {};
+                    if ($scope.sshActivity.disk_usage === undefined || $scope.sshActivity.disk_usage === null) {
+                        $scope.sshActivity.disk_usage = '';
+                    }
+
                     // Try to extract TTY from processes if not already set
                     if (!$scope.sshActivityTTY && response.data.processes && response.data.processes.length > 0) {
                         var firstProcess = response.data.processes[0];
@@ -2308,7 +2438,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                     // Only update if we have additional evidence (processes/w output)
                     var hasProcesses = response.data.processes && response.data.processes.length > 0;
                     var hasActiveW = response.data.w && response.data.w.length > 0;
-                    
+
                     // If backend says it's active, keep it active (don't override)
                     // If backend says inactive but we find processes/w, mark as active
                     if ($scope.isActiveSession === true) {
@@ -2319,7 +2449,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                         $scope.isActiveSession = true;
                     }
                     // If backend said inactive and no processes found, keep as inactive
-                    
+
                     // Debug logging
                     console.log('SSH Activity loaded:', {
                         processes: response.data.processes ? response.data.processes.length : 0,
@@ -2332,14 +2462,14 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                     });
                 }
             } else {
-                $scope.sshActivity = { processes: [], w: [] };
+                $scope.sshActivity = { processes: [], w: [], shell_history: [], geoip: {}, disk_usage: '' };
                 $scope.errorSSHActivity = 'No data returned from server.';
             }
         }, function(err) {
             $timeout.cancel(timeoutPromise); // Cancel timeout on error
             $scope.loadingSSHActivity = false;
             var errorMsg = 'Failed to fetch activity.';
-            
+
             // Handle different error scenarios
             if (err.data) {
                 // Server returned error data
@@ -2365,42 +2495,42 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             } else if (err.message) {
                 errorMsg = err.message;
             }
-            
+
             $scope.errorSSHActivity = errorMsg;
             // Set empty activity data so modal can still display
-            $scope.sshActivity = { 
-                processes: [], 
+            $scope.sshActivity = {
+                processes: [],
                 w: [],
                 process_tree: [],
                 shell_history: [],
                 disk_usage: '',
                 geoip: {}
             };
-            
+
             // Log error for debugging
             console.error('SSH Activity fetch error:', err);
         });
     };
-    
+
     // Kill individual process
     $scope.killProcess = function(pid, user) {
         if (!confirm('Are you sure you want to force kill process ' + pid + '? This action cannot be undone.')) {
             return;
         }
-        
+
         $scope.killingProcess = pid;
-        
+
         var data = {
             pid: pid,
             user: user
         };
-        
+
         var config = {
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
             }
         };
-        
+
         $http.post('/base/killSSHProcess', data, config).then(function(response) {
             $scope.killingProcess = null;
             if (response.data && response.data.success) {
@@ -2436,7 +2566,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             });
         });
     };
-    
+
     // Kill entire SSH session
     $scope.killSSHSession = function(user, tty) {
         var confirmMsg = 'Are you sure you want to kill all processes for user ' + user;
@@ -2444,24 +2574,24 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             confirmMsg += ' on terminal ' + tty;
         }
         confirmMsg += '? This will terminate their SSH session.';
-        
+
         if (!confirm(confirmMsg)) {
             return;
         }
-        
+
         $scope.killingSession = true;
-        
+
         var data = {
             user: user,
             tty: tty || ''
         };
-        
+
         var config = {
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
             }
         };
-        
+
         $http.post('/base/killSSHSession', data, config).then(function(response) {
             $scope.killingSession = false;
             if (response.data && response.data.success) {
@@ -2500,7 +2630,11 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             });
         });
     };
-    
+
+    $scope.killSession = function(user, tty) {
+        $scope.killSSHSession(user, tty || $scope.sshActivityTTY || '');
+    };
+
     $scope.closeSSHActivityModal = function() {
         $scope.showSSHActivityModal = false;
         $scope.sshActivity = { processes: [], w: [] };

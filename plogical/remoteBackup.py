@@ -1,5 +1,6 @@
 from plogical import CyberCPLogFileWriter as logging
 import os
+import re
 import requests
 import json
 import time
@@ -9,6 +10,7 @@ import shlex
 from multiprocessing import Process
 from plogical.backupSchedule import backupSchedule
 from shutil import rmtree
+from plogical.acl import ACLManager
 
 class remoteBackup:
 
@@ -216,16 +218,42 @@ class remoteBackup:
 
 
     @staticmethod
-    def sendBackup(completedPathToSend, IPAddress, folderNumber,writeToFile):
+    def sendBackup(completedPathToSend, IPAddress, folderNumber, writeToFile):
         try:
             ## complete path is a path to the file need to send
 
-            command = 'sudo rsync -avz -e "ssh  -i /root/.ssh/cyberpanel -o StrictHostKeyChecking=no" ' + completedPathToSend + ' root@' + IPAddress + ':/home/backup/transfer-'+folderNumber
+            # SECURITY: Validate IPAddress to prevent command injection
+            if ACLManager.commandInjectionCheck(IPAddress) == 1:
+                logging.CyberCPLogFileWriter.writeToFile("Invalid IP address - command injection attempt detected [sendBackup]")
+                return
+
+            # SECURITY: Validate IPAddress format (IPv4 or hostname)
+            ip_pattern = r'^[a-zA-Z0-9][a-zA-Z0-9.-]*[a-zA-Z0-9]$|^[a-zA-Z0-9]$'
+            if not re.match(ip_pattern, IPAddress):
+                logging.CyberCPLogFileWriter.writeToFile("Invalid IP address format [sendBackup]")
+                return
+
+            # SECURITY: Validate folderNumber is alphanumeric
+            if ACLManager.commandInjectionCheck(str(folderNumber)) == 1:
+                logging.CyberCPLogFileWriter.writeToFile("Invalid folder number - command injection attempt detected [sendBackup]")
+                return
+
+            if not re.match(r'^[a-zA-Z0-9_-]+$', str(folderNumber)):
+                logging.CyberCPLogFileWriter.writeToFile("Invalid folder number format [sendBackup]")
+                return
+
+            # SECURITY: Validate completedPathToSend - must be under /home/backup
+            if '..' in completedPathToSend or not completedPathToSend.startswith('/home/backup/'):
+                logging.CyberCPLogFileWriter.writeToFile("Invalid backup path - path traversal attempt detected [sendBackup]")
+                return
+
+            # SECURITY: Use shlex.quote for all user-controllable parameters
+            command = 'sudo rsync -avz -e "ssh -i /root/.ssh/cyberpanel -o StrictHostKeyChecking=no" ' + shlex.quote(completedPathToSend) + ' root@' + shlex.quote(IPAddress) + ':/home/backup/transfer-' + shlex.quote(str(folderNumber))
             subprocess.call(shlex.split(command), stdout=writeToFile)
             os.remove(completedPathToSend)
 
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [sendBackup]")
 
     @staticmethod
     def backupProcess(ipAddress, dir, backupLogPath,folderNumber, accountsToTransfer):

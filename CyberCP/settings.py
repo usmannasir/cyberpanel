@@ -120,6 +120,8 @@ INSTALLED_APPS = [
     'manageServices',
     'pluginHolder',
     'highAvailability',
+    'webmail',
+    'emailDelivery',
     #    'WebTerminal'
 ]
 

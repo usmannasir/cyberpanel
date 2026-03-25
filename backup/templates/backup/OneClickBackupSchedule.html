@@ -380,14 +380,122 @@
             </h1>
             <p class="page-subtitle">{% trans "Schedule automated backups to protect your data on localhost or remote server" %}</p>
             <div class="header-actions">
-                <a href="https://cyberpanel.net/KnowledgeBase/home/schedule-backups-local-or-sftp/" 
-                   target="_blank" 
+                <a href="https://cyberpanel.net/KnowledgeBase/home/schedule-backups-local-or-sftp/"
+                   target="_blank"
                    class="btn-secondary">
                     <i class="fas fa-book"></i>
                     {% trans "Documentation" %}
                 </a>
             </div>
         </div>
+
+        <!-- Storage and Backup Stats Section -->
+        <div class="main-card" style="margin-bottom: 2rem;">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-chart-pie"></i>
+                    {% trans "Backup Account Overview" %}
+                </h2>
+            </div>
+            <div class="card-body">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                    <!-- Storage Stats -->
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem; border-radius: 12px; color: white;">
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                            <i class="fas fa-hdd" style="font-size: 2rem; opacity: 0.9;"></i>
+                            <div>
+                                <div style="font-size: 0.875rem; opacity: 0.9;">{% trans "Storage Used" %}</div>
+                                <div style="font-size: 1.5rem; font-weight: 700;">{{ storage_info.used_storage }}</div>
+                            </div>
+                        </div>
+                        <div style="font-size: 0.875rem; opacity: 0.9;">{% trans "of" %} {{ storage_info.total_storage }}</div>
+                        <div style="background: rgba(255,255,255,0.2); height: 8px; border-radius: 4px; margin-top: 0.75rem; overflow: hidden;">
+                            <div style="background: rgba(255,255,255,0.9); height: 100%; width: {{ storage_info.usage_percentage }}%; transition: width 0.3s ease;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Last Backup -->
+                    <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 1.5rem; border-radius: 12px; color: white;">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <i class="fas fa-clock" style="font-size: 2rem; opacity: 0.9;"></i>
+                            <div>
+                                <div style="font-size: 0.875rem; opacity: 0.9;">{% trans "Last Backup Run" %}</div>
+                                <div style="font-size: 1.125rem; font-weight: 600;">{{ storage_info.last_backup_run }}</div>
+                                <div style="font-size: 0.875rem; opacity: 0.9; margin-top: 0.25rem;">
+                                    {% if storage_info.last_backup_status == 'success' %}
+                                        <i class="fas fa-check-circle"></i> {% trans "Success" %}
+                                    {% elif storage_info.last_backup_status == 'failed' %}
+                                        <i class="fas fa-exclamation-circle"></i> {% trans "Failed" %}
+                                    {% else %}
+                                        {{ storage_info.last_backup_status }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total Backups -->
+                    <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 1.5rem; border-radius: 12px; color: white;">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <i class="fas fa-database" style="font-size: 2rem; opacity: 0.9;"></i>
+                            <div>
+                                <div style="font-size: 0.875rem; opacity: 0.9;">{% trans "Total Backups" %}</div>
+                                <div style="font-size: 1.5rem; font-weight: 700;">{{ storage_info.total_backups }}</div>
+                                {% if storage_info.failed_backups > 0 %}
+                                    <div style="font-size: 0.875rem; opacity: 0.9; margin-top: 0.25rem;">
+                                        <i class="fas fa-exclamation-triangle"></i> {{ storage_info.failed_backups }} {% trans "failed" %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Account Info -->
+                    <div style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); padding: 1.5rem; border-radius: 12px; color: white;">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <i class="fas fa-user-circle" style="font-size: 2rem; opacity: 0.9;"></i>
+                            <div>
+                                <div style="font-size: 0.875rem; opacity: 0.9;">{% trans "Backup Account" %}</div>
+                                <div style="font-size: 1.125rem; font-weight: 600;">{{ ocb_sftp_user }}</div>
+                                <div style="font-size: 0.875rem; opacity: 0.9; margin-top: 0.25rem;">{{ ocb_plan_name }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Logs Section -->
+        {% if storage_info.error_logs %}
+        <div class="main-card" style="margin-bottom: 2rem;">
+            <div class="card-header" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);">
+                <h2 class="card-title" style="color: #991b1b;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    {% trans "Recent Backup Errors" %}
+                </h2>
+            </div>
+            <div class="card-body" style="padding: 0;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 180px;">{% trans "Date/Time" %}</th>
+                            <th style="width: 150px;">{% trans "Website" %}</th>
+                            <th>{% trans "Error Message" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in storage_info.error_logs %}
+                        <tr>
+                            <td>{{ log.timestamp }}</td>
+                            <td><strong>{{ log.website }}</strong></td>
+                            <td style="color: var(--danger-text, #991b1b);">{{ log.error_message }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
 
         <div ng-controller="scheduleBackup">
             <!-- Create New Schedule Card -->

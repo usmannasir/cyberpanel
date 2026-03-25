@@ -4010,6 +4010,44 @@ context /cyberpanel_suspension_page.html {
             except Exception as e:
                 CyberCPLogFileWriter.writeLog(f"Failed to ensure fastapi_ssh_server is running: {e}")
 
+            # Fetch actual resource limits from lscgctl command if they exist
+            Data['resource_limits'] = None
+            try:
+                import subprocess
+                lscgctl_path = '/usr/local/lsws/lsns/bin/lscgctl'
+                if os.path.exists(lscgctl_path):
+                    # Get the website username
+                    username = website.exsysUser
+
+                    # Run lscgctl list-user command
+                    result = subprocess.run(
+                        [lscgctl_path, 'list-user', username],
+                        capture_output=True,
+                        text=True,
+                        timeout=5
+                    )
+
+                    if result.returncode == 0 and result.stdout.strip():
+                        # Parse JSON output
+                        import json
+                        limits_data = json.loads(result.stdout.strip())
+
+                        # Find the user's limits (key is UID)
+                        for uid, user_limits in limits_data.items():
+                            if user_limits.get('name') == username:
+                                # Extract and format the limits for display
+                                Data['resource_limits'] = {
+                                    'cpu': user_limits.get('cpu', ''),
+                                    'memory': user_limits.get('mem', ''),
+                                    'io': user_limits.get('io', ''),
+                                    'tasks': user_limits.get('tasks', ''),
+                                    'iops': user_limits.get('iops', '')
+                                }
+                                break
+            except Exception as e:
+                # Silently fail - resource limits are optional
+                CyberCPLogFileWriter.writeToFile(f"Could not fetch resource limits for {self.domain}: {str(e)}")
+
             proc = httpProc(request, 'websiteFunctions/website.html', Data)
             return proc.render()
         else:
@@ -4040,6 +4078,12 @@ context /cyberpanel_suspension_page.html {
 
             Data['domain'] = self.domain
             Data['childDomain'] = self.childDomain
+
+            try:
+                child_rec = ChildDomains.objects.get(domain=self.childDomain)
+                Data['childPath'] = (child_rec.path or '').rstrip('/')
+            except BaseException:
+                Data['childPath'] = ''
 
             DiskUsage, DiskUsagePercentage, bwInMB, bwUsage = virtualHostUtilities.FindStats(website)
 

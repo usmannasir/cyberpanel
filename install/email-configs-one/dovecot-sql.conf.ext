@@ -1,4 +1,4 @@
 driver = mysql
 connect = host=localhost dbname=cyberpanel user=cyberpanel password=SLTUIUxqhulwsh port=3306
 password_query = SELECT email as user, password FROM e_users WHERE email='%u';
-user_query = SELECT '5000' as uid, '5000' as gid, mail FROM e_users WHERE email='%u';
+user_query = SELECT '5000' as uid, '5000' as gid, mail, CONCAT('/home/vmail/', SUBSTRING_INDEX(email, '@', -1), '/', SUBSTRING_INDEX(email, '@', 1)) as home FROM e_users WHERE email='%u';
