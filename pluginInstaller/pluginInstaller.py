@@ -4,6 +4,7 @@ import subprocess
 import shlex
 import argparse
 import os
+import errno
 import shutil
 import time
 import tempfile
@@ -56,6 +57,68 @@ class pluginInstaller:
     def migrationsEnabled(pluginName: str) -> bool:
         pluginHome = '/usr/local/CyberCP/' + pluginName
         return os.path.exists(pluginHome + '/enable_migrations')
+
+    @staticmethod
+    def _write_lines_to_protected_file(target_path, lines):
+        """
+        Write UTF-8 lines to a file. Core panel files are often root:root 644; the panel
+        process may need a privileged copy (lscpd/sudo) to update them.
+        """
+        try:
+            with open(target_path, 'w', encoding='utf-8') as wf:
+                wf.writelines(lines)
+            return
+        except (PermissionError, OSError) as e:
+            pluginInstaller.stdOut('Direct write failed for %s: %s' % (target_path, str(e)))
+        fd, tmp_path = tempfile.mkstemp(prefix='cpwr_', suffix='.txt', dir='/tmp')
+        try:
+            with os.fdopen(fd, 'w', encoding='utf-8') as wf:
+                wf.writelines(lines)
+            cmd = 'cp %s %s' % (shlex.quote(tmp_path), shlex.quote(target_path))
+            if ProcessUtilities.executioner(cmd) == 1:
+                pluginInstaller.stdOut('Wrote %s via privileged copy' % target_path)
+                return
+        except Exception as ex:
+            pluginInstaller.stdOut('Privileged write failed: %s' % str(ex))
+        finally:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+        raise PermissionError(
+            'Cannot write %s. As root: chgrp lscpd %s && chmod 664 %s'
+            % (target_path, target_path, target_path)
+        )
+
+    @staticmethod
+    def _read_lines_from_protected_file(source_path):
+        """
+        Read UTF-8 lines from a core panel file. If the panel user cannot read the file
+        (e.g. root:root 600), copy via ProcessUtilities.executioner to /tmp then read.
+        """
+        try:
+            with open(source_path, 'r', encoding='utf-8') as rf:
+                return rf.readlines()
+        except OSError as e:
+            if e.errno not in (errno.EACCES, errno.EPERM):
+                raise
+            pluginInstaller.stdOut('Direct read failed for %s: %s' % (source_path, str(e)))
+        fd, tmp_path = tempfile.mkstemp(prefix='cprd_', suffix='.txt', dir='/tmp')
+        os.close(fd)
+        try:
+            cmd = 'cp %s %s' % (shlex.quote(source_path), shlex.quote(tmp_path))
+            if ProcessUtilities.executioner(cmd) != 1:
+                raise PermissionError(
+                    'Privileged read copy failed for %s. As root: chgrp lscpd %s && chmod 640 %s'
+                    % (source_path, source_path, source_path)
+                )
+            with open(tmp_path, 'r', encoding='utf-8') as rf:
+                return rf.readlines()
+        finally:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
 
     ### Functions Related to plugin installation.
 
@@ -153,53 +216,79 @@ class pluginInstaller:
 
     @staticmethod
     def upgradingSettingsFile(pluginName):
-        data = open("/usr/local/CyberCP/CyberCP/settings.py", 'r', encoding='utf-8').readlines()
-        writeToFile = open("/usr/local/CyberCP/CyberCP/settings.py", 'w', encoding='utf-8')
-
+        settings_path = "/usr/local/CyberCP/CyberCP/settings.py"
+        data = pluginInstaller._read_lines_from_protected_file(settings_path)
+        line_plugin = "    '" + pluginName + "',\n"
+        if any(line.strip() in ("'" + pluginName + "',", '"' + pluginName + '",') for line in data):
+            pluginInstaller.stdOut(
+                'Plugin %s already listed in settings.py; skipping INSTALLED_APPS insert.' % pluginName
+            )
+            return
+        out = []
+        inserted = False
         for items in data:
             if items.find("'emailPremium',") > -1:
-                writeToFile.writelines(items)
-                writeToFile.writelines("    '" + pluginName + "',\n")
+                out.append(items)
+                out.append(line_plugin)
+                inserted = True
             else:
-                writeToFile.writelines(items)
-
-        writeToFile.close()
+                out.append(items)
+        if not inserted:
+            out = []
+            for items in data:
+                if "'pluginHolder'," in items or '"pluginHolder",' in items:
+                    out.append(items)
+                    out.append(line_plugin)
+                    inserted = True
+                else:
+                    out.append(items)
+        if not inserted:
+            pluginInstaller.stdOut(
+                'Warning: no emailPremium or pluginHolder anchor in settings.py; '
+                'add %r to INSTALLED_APPS manually or upgrade CyberPanel (auto-sync plugins on disk).'
+                % pluginName
+            )
+            return
+        pluginInstaller._write_lines_to_protected_file(settings_path, out)
 
     @staticmethod
     def upgradingURLs(pluginName):
         """
-        Add plugin URL pattern to urls.py
-        Plugin URLs must be inserted BEFORE the generic 'plugins/' line
-        to ensure proper route matching (more specific routes first)
+        Legacy: add explicit path('plugins/<name>/', ...). Modern CyberPanel uses
+        pluginHolder.urls for all plugins — skip to avoid duplicate routes and root-only writes.
         """
-        data = open("/usr/local/CyberCP/CyberCP/urls.py", 'r', encoding='utf-8').readlines()
-        writeToFile = open("/usr/local/CyberCP/CyberCP/urls.py", 'w', encoding='utf-8')
+        urls_path = "/usr/local/CyberCP/CyberCP/urls.py"
+        _url_lines = pluginInstaller._read_lines_from_protected_file(urls_path)
+        content = ''.join(_url_lines)
+        if "include('pluginHolder.urls')" in content or 'include("pluginHolder.urls")' in content:
+            pluginInstaller.stdOut(
+                'pluginHolder.urls found; skipping per-plugin urls.py line for %s (dynamic routes).' % pluginName
+            )
+            return
+        data = content.splitlines(keepends=True)
+        out = []
         urlPatternAdded = False
-
         for items in data:
-            # Insert plugin URL BEFORE the generic 'plugins/' line
-            # This ensures more specific routes are matched first
-            if items.find("path('plugins/', include('pluginHolder.urls'))") > -1 or items.find("path(\"plugins/\", include('pluginHolder.urls'))") > -1:
+            if items.find("path('plugins/', include('pluginHolder.urls'))") > -1 or items.find(
+                "path(\"plugins/\", include('pluginHolder.urls'))"
+            ) > -1:
                 if not urlPatternAdded:
-                    writeToFile.writelines(pluginInstaller.getUrlPattern(pluginName))
+                    out.append(pluginInstaller.getUrlPattern(pluginName))
                     urlPatternAdded = True
-                writeToFile.writelines(items)
+                out.append(items)
             else:
-                writeToFile.writelines(items)
-
-        # Fallback: if 'plugins/' line not found, insert after 'manageservices'
+                out.append(items)
         if not urlPatternAdded:
-            pluginInstaller.stdOut(f"Warning: 'plugins/' line not found, using fallback insertion after 'manageservices'")
-            writeToFile.close()
-            writeToFile = open("/usr/local/CyberCP/CyberCP/urls.py", 'w', encoding='utf-8')
+            pluginInstaller.stdOut("Warning: 'plugins/' line not found, using fallback insertion after 'manageservices'")
+            out = []
             for items in data:
                 if items.find("manageservices") > -1:
-                    writeToFile.writelines(items)
-                    writeToFile.writelines(pluginInstaller.getUrlPattern(pluginName))
+                    out.append(items)
+                    out.append(pluginInstaller.getUrlPattern(pluginName))
+                    urlPatternAdded = True
                 else:
-                    writeToFile.writelines(items)
-
-        writeToFile.close()
+                    out.append(items)
+        pluginInstaller._write_lines_to_protected_file(urls_path, out)
 
     @staticmethod
     def informCyberPanel(pluginName):
@@ -214,19 +303,19 @@ class pluginInstaller:
 
     @staticmethod
     def addInterfaceLink(pluginName):
-        data = open("/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html", 'r', encoding='utf-8').readlines()
-        writeToFile = open("/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html", 'w', encoding='utf-8')
-
+        path_html = "/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html"
+        data = pluginInstaller._read_lines_from_protected_file(path_html)
+        out = []
         for items in data:
             if items.find("{# pluginsList #}") > -1:
-                writeToFile.writelines(items)
-                writeToFile.writelines("                                ")
-                writeToFile.writelines(
-                    '<li><a href="{% url \'' + pluginName + '\' %}" title="{% trans \'' + pluginName + '\' %}"><span>{% trans "' + pluginName + '" %}</span></a></li>\n')
+                out.append(items)
+                out.append("                                ")
+                out.append(
+                    '<li><a href="{% url \'' + pluginName + '\' %}" title="{% trans \'' + pluginName + '\' %}"><span>{% trans "' + pluginName + '" %}</span></a></li>\n'
+                )
             else:
-                writeToFile.writelines(items)
-
-        writeToFile.close()
+                out.append(items)
+        pluginInstaller._write_lines_to_protected_file(path_html, out)
 
     @staticmethod
     def staticContent():
@@ -469,10 +558,12 @@ class pluginInstaller:
     def removeFromSettings(pluginName):
         settings_path = "/usr/local/CyberCP/CyberCP/settings.py"
         try:
-            with open(settings_path, 'r', encoding='utf-8') as f:
-                data = f.readlines()
-        except (OSError, IOError) as e:
-            raise Exception(f'Cannot read {settings_path}: {e}. Ensure the panel user can read it.')
+            data = pluginInstaller._read_lines_from_protected_file(settings_path)
+        except (OSError, IOError, PermissionError) as e:
+            raise Exception(
+                f'Cannot read {settings_path}: {e}. Ensure the panel user can read it '
+                f'(e.g. chgrp lscpd {settings_path} && chmod 640 {settings_path}).'
+            )
         in_installed_apps = False
         out_lines = []
         for i, items in enumerate(data):
@@ -484,9 +575,8 @@ class pluginInstaller:
                 continue
             out_lines.append(items)
         try:
-            with open(settings_path, 'w', encoding='utf-8') as writeToFile:
-                writeToFile.writelines(out_lines)
-        except (OSError, IOError) as e:
+            pluginInstaller._write_lines_to_protected_file(settings_path, out_lines)
+        except (OSError, IOError, PermissionError) as e:
             raise Exception(
                 f'Cannot write {settings_path}: {e}. '
                 'Ensure the file is writable by the panel user (e.g. chgrp lscpd ... ; chmod g+w ...).'
@@ -496,10 +586,12 @@ class pluginInstaller:
     def removeFromURLs(pluginName):
         urls_path = "/usr/local/CyberCP/CyberCP/urls.py"
         try:
-            with open(urls_path, 'r', encoding='utf-8') as f:
-                data = f.readlines()
-        except (OSError, IOError) as e:
-            raise Exception(f'Cannot read {urls_path}: {e}.')
+            data = pluginInstaller._read_lines_from_protected_file(urls_path)
+        except (OSError, IOError, PermissionError) as e:
+            raise Exception(
+                f'Cannot read {urls_path}: {e}. '
+                f'As root: chgrp lscpd {urls_path} && chmod 640 {urls_path}'
+            )
         out_lines = []
         for items in data:
             if (f"plugins/{pluginName}/" in items or f"'{pluginName}.urls'" in items or f'"{pluginName}.urls"' in items or
@@ -507,9 +599,8 @@ class pluginInstaller:
                 continue
             out_lines.append(items)
         try:
-            with open(urls_path, 'w', encoding='utf-8') as f:
-                f.writelines(out_lines)
-        except (OSError, IOError) as e:
+            pluginInstaller._write_lines_to_protected_file(urls_path, out_lines)
+        except (OSError, IOError, PermissionError) as e:
             raise Exception(f'Cannot write {urls_path}: {e}. Ensure the file is writable by the panel user (chgrp lscpd; chmod g+w).')
 
     @staticmethod
@@ -521,15 +612,14 @@ class pluginInstaller:
 
     @staticmethod
     def removeInterfaceLink(pluginName):
-        data = open("/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html", 'r', encoding='utf-8').readlines()
-        writeToFile = open("/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html", 'w', encoding='utf-8')
-
+        path_html = "/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html"
+        data = pluginInstaller._read_lines_from_protected_file(path_html)
+        out = []
         for items in data:
             if items.find(pluginName) > -1 and items.find('<li>') > -1:
                 continue
-            else:
-                writeToFile.writelines(items)
-        writeToFile.close()
+            out.append(items)
+        pluginInstaller._write_lines_to_protected_file(path_html, out)
 
     @staticmethod
     def removeMigrations(pluginName):

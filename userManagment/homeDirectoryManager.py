@@ -51,7 +51,7 @@ class HomeDirectoryManager:
             return home_dirs
             
         except Exception as e:
-            logging.CyberCPLogFileWriter.writeToFile(f"Error detecting home directories: {str(e)}")
+            logging.writeToFile(f"Error detecting home directories: {str(e)}")
             return []
     
     @staticmethod
@@ -103,7 +103,7 @@ class HomeDirectoryManager:
             return home_dirs[0]['path']
             
         except Exception as e:
-            logging.CyberCPLogFileWriter.writeToFile(f"Error selecting best home directory: {str(e)}")
+            logging.writeToFile(f"Error selecting best home directory: {str(e)}")
             return '/home'
     
     @staticmethod
@@ -134,7 +134,7 @@ class HomeDirectoryManager:
             return True
             
         except Exception as e:
-            logging.CyberCPLogFileWriter.writeToFile(f"Error creating user directory: {str(e)}")
+            logging.writeToFile(f"Error creating user directory: {str(e)}")
             return False
     
     @staticmethod
@@ -154,7 +154,7 @@ class HomeDirectoryManager:
             return True
             
         except Exception as e:
-            logging.CyberCPLogFileWriter.writeToFile(f"Error setting ownership: {str(e)}")
+            logging.writeToFile(f"Error setting ownership: {str(e)}")
             return False
     
     @staticmethod
@@ -188,7 +188,7 @@ class HomeDirectoryManager:
             return True, "User migrated successfully"
             
         except Exception as e:
-            logging.CyberCPLogFileWriter.writeToFile(f"Error migrating user: {str(e)}")
+            logging.writeToFile(f"Error migrating user: {str(e)}")
             return False, str(e)
     
     @staticmethod
@@ -217,7 +217,7 @@ class HomeDirectoryManager:
             return stats
             
         except Exception as e:
-            logging.CyberCPLogFileWriter.writeToFile(f"Error getting home directory stats: {str(e)}")
+            logging.writeToFile(f"Error getting home directory stats: {str(e)}")
             return None
     
     @staticmethod

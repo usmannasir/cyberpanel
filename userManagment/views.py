@@ -4,6 +4,8 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.db import models
+from django.db.utils import IntegrityError, ProgrammingError, OperationalError
+from django.views.decorators.csrf import ensure_csrf_cookie
 from loginSystem.views import loadLoginPage
 from loginSystem.models import Administrator, ACL
 import json
@@ -50,24 +52,31 @@ def viewProfile(request):
     return proc.render()
 
 
+@ensure_csrf_cookie
 def createUser(request):
     userID = request.session['userID']
     currentACL = ACLManager.loadedACL(userID)
 
     if currentACL['admin'] == 1:
         aclNames = ACLManager.unFileteredACLs()
+        default_acl = aclNames[0] if aclNames else 'user'
         proc = httpProc(request, 'userManagment/createUser.html',
-                        {'aclNames': aclNames, 'securityLevels': SecurityLevel.list()})
+                        {'aclNames': aclNames, 'default_acl_name': default_acl,
+                         'securityLevels': SecurityLevel.list()})
         return proc.render()
     elif currentACL['changeUserACL'] == 1:
         aclNames = ACLManager.unFileteredACLs()
+        default_acl = aclNames[0] if aclNames else 'user'
         proc = httpProc(request, 'userManagment/createUser.html',
-                        {'aclNames': aclNames, 'securityLevels': SecurityLevel.list()})
+                        {'aclNames': aclNames, 'default_acl_name': default_acl,
+                         'securityLevels': SecurityLevel.list()})
         return proc.render()
     elif currentACL['createNewUser'] == 1:
         aclNames = ['user']
+        default_acl = 'user'
         proc = httpProc(request, 'userManagment/createUser.html',
-                        {'aclNames': aclNames, 'securityLevels': SecurityLevel.list()})
+                        {'aclNames': aclNames, 'default_acl_name': default_acl,
+                         'securityLevels': SecurityLevel.list()})
         return proc.render()
     else:
         return ACLManager.loadError()
@@ -213,8 +222,32 @@ def submitUserCreation(request):
             email = data['email']
             userName = data['userName']
             password = data['password']
-            websitesLimit = data['websitesLimit']
-            selectedACL = data['selectedACL']
+            if userName is None:
+                userName = ''
+            else:
+                userName = str(userName).strip()
+            if not userName:
+                data_ret = {'status': 0, 'createStatus': 0,
+                            'error_message': 'Username is required.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data, content_type='application/json')
+            if Administrator.objects.filter(userName=userName).exists():
+                data_ret = {'status': 0, 'createStatus': 0,
+                            'error_message': 'That username is already in use. Choose a different username.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data, content_type='application/json')
+            try:
+                websitesLimit = int(data['websitesLimit'])
+            except (KeyError, TypeError, ValueError):
+                websitesLimit = 0
+            selectedACL = data.get('selectedACL')
+            if selectedACL is None or (isinstance(selectedACL, str) and not selectedACL.strip()):
+                data_ret = {'status': 0, 'createStatus': 0,
+                            'error_message': 'Please select an access control list (ACL).'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data, content_type='application/json')
+            if isinstance(selectedACL, str):
+                selectedACL = selectedACL.strip()
             selectedHomeDirectory = data.get('selectedHomeDirectory', '')
 
             if ACLManager.CheckRegEx("^[\w'\-,.][^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]]{2,}$", firstName) == 0:
@@ -239,7 +272,13 @@ def submitUserCreation(request):
             except:
                 securityLevel = 'HIGH'
 
-            selectedACL = ACL.objects.get(name=selectedACL)
+            try:
+                selectedACL = ACL.objects.get(name=selectedACL)
+            except ACL.DoesNotExist:
+                data_ret = {'status': 0, 'createStatus': 0,
+                            'error_message': 'The selected access level (ACL) was not found. Refresh the page and try again.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data, content_type='application/json')
 
             if selectedACL.adminStatus == 1:
                 type = 1
@@ -325,34 +364,43 @@ def submitUserCreation(request):
             # Handle home directory assignment
             from .homeDirectoryManager import HomeDirectoryManager
             from .models import HomeDirectory, UserHomeMapping
-            
-            if selectedHomeDirectory:
-                # Use selected home directory
+
+            # Always resolve home_dir after home_path. Previously, if selectedHomeDirectory was set but
+            # the row was missing (DoesNotExist), we set home_path but left home_dir undefined and
+            # UserHomeMapping.objects.create() raised UnboundLocalError → "Failed to create user account".
+            home_dir = None
+            if selectedHomeDirectory not in (None, '', 0, '0', 'false', 'null'):
                 try:
-                    home_dir = HomeDirectory.objects.get(id=selectedHomeDirectory)
-                    home_path = home_dir.path
-                except HomeDirectory.DoesNotExist:
+                    hid = int(str(selectedHomeDirectory).strip())
+                    if hid > 0:
+                        home_dir = HomeDirectory.objects.get(id=hid)
+                        home_path = home_dir.path
+                    else:
+                        home_path = HomeDirectoryManager.getBestHomeDirectory()
+                except (ValueError, TypeError, HomeDirectory.DoesNotExist):
                     home_path = HomeDirectoryManager.getBestHomeDirectory()
             else:
-                # Auto-select best home directory
                 home_path = HomeDirectoryManager.getBestHomeDirectory()
+
+            if home_dir is None:
                 try:
                     home_dir = HomeDirectory.objects.get(path=home_path)
                 except HomeDirectory.DoesNotExist:
-                    # Create home directory entry if it doesn't exist
                     home_dir = HomeDirectory.objects.create(
-                        name=home_path.split('/')[-1],
+                        name=(home_path.split('/')[-1] or 'home'),
                         path=home_path,
                         is_active=True,
                         is_default=(home_path == '/home')
                     )
-            
+                except HomeDirectory.MultipleObjectsReturned:
+                    home_dir = HomeDirectory.objects.filter(path=home_path).order_by('id').first()
+
             # Create user directory
             if HomeDirectoryManager.createUserDirectory(userName, home_path):
-                # Create user-home mapping
-                UserHomeMapping.objects.create(
+                # Create user-home mapping (ignore duplicate if re-run)
+                UserHomeMapping.objects.get_or_create(
                     user=newAdmin,
-                    home_directory=home_dir
+                    defaults={'home_directory': home_dir}
                 )
             else:
                 # Log error but don't fail user creation
@@ -364,11 +412,23 @@ def submitUserCreation(request):
             final_json = json.dumps(data_ret)
             return HttpResponse(final_json, content_type='application/json')
 
+        except IntegrityError as e:
+            secure_log_error(e, 'submitUserCreation', request.session.get('userID', 'Unknown'))
+            data_ret = {
+                'status': 0,
+                'createStatus': 0,
+                'error_message': 'That username is already in use. Choose a different username.',
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data, content_type='application/json')
+
         except Exception as e:
             secure_log_error(e, 'submitUserCreation', request.session.get('userID', 'Unknown'))
             data_ret = secure_error_response(e, 'Failed to create user account')
+            if isinstance(data_ret, dict):
+                data_ret['createStatus'] = 0
             json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
+            return HttpResponse(json_data, content_type='application/json')
 
     except KeyError:
         data_ret = {'status': 0, 'createStatus': 0, 'error_message': "Not logged in as admin", }
@@ -570,6 +630,62 @@ def deleteUser(request):
         return ACLManager.loadError()
 
 
+def robust_delete_administrator(admin_instance):
+    """
+    Delete an Administrator when optional WebAuthn tables were never migrated.
+    ORM .delete() still collects WebAuthnCredential etc. and MySQL raises 1146 if
+    webauthn_credentials is missing. Fall back to SQL DELETE on the admin row
+    (and any WebAuthn tables that do exist) after removing child admins (owner FK is integer, not DB FK).
+    """
+    from django.db import connection
+
+    if admin_instance is None:
+        return
+
+    pk = admin_instance.pk
+    db_table = Administrator._meta.db_table
+
+    try:
+        table_names = set(connection.introspection.table_names())
+    except Exception:
+        table_names = set()
+
+    webauthn_tables = (
+        ('webauthn_credentials', 'user_id'),
+        ('webauthn_challenges', 'user_id'),
+        ('webauthn_sessions', 'user_id'),
+        ('webauthn_settings', 'user_id'),
+    )
+
+    for child in Administrator.objects.filter(owner=pk):
+        robust_delete_administrator(child)
+
+    use_orm = 'webauthn_credentials' in table_names
+    if use_orm:
+        try:
+            admin_instance.delete()
+            return
+        except (ProgrammingError, OperationalError) as exc:
+            err = str(exc).lower()
+            if 'webauthn' not in err and "doesn't exist" not in err and 'does not exist' not in err:
+                raise
+
+    qn = connection.ops.quote_name
+    tbl = qn(db_table)
+    col_id = qn('id')
+    with connection.cursor() as cursor:
+        for tname, cname in webauthn_tables:
+            if tname in table_names:
+                try:
+                    cursor.execute(
+                        'DELETE FROM %s WHERE %s = %%s' % (qn(tname), qn(cname)),
+                        [pk],
+                    )
+                except (ProgrammingError, OperationalError):
+                    pass
+        cursor.execute('DELETE FROM %s WHERE %s = %%s' % (tbl, col_id), [pk])
+
+
 def submitUserDeletion(request):
 
     try:
@@ -610,31 +726,28 @@ def submitUserDeletion(request):
 
                 user = Administrator.objects.get(userName=accountUsername)
 
-                childUsers = Administrator.objects.filter(owner=user.pk)
-
-                for items in childUsers:
-                    items.delete()
-
-                user.delete()
+                robust_delete_administrator(user)
 
                 data_ret = {'status': 1, 'deleteStatus': 1, 'error_message': 'None'}
                 json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
+                return HttpResponse(json_data, content_type='application/json')
             else:
                 data_ret = {'status': 0, 'deleteStatus': 0, 'error_message': 'Not enough privileges.'}
                 json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
+                return HttpResponse(json_data, content_type='application/json')
 
         except Exception as e:
             secure_log_error(e, 'submitUserDeletion', request.session.get('userID', 'Unknown'))
             data_ret = secure_error_response(e, 'Failed to delete user account')
+            if isinstance(data_ret, dict):
+                data_ret['deleteStatus'] = 0
             json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
+            return HttpResponse(json_data, content_type='application/json')
 
     except KeyError:
         data_ret = {'deleteStatus': 0, 'error_message': "Not logged in as admin", }
         json_data = json.dumps(data_ret)
-        return HttpResponse(json_data)
+        return HttpResponse(json_data, content_type='application/json')
 
 
 def createNewACL(request):
@@ -1089,7 +1202,8 @@ def userMigration(request):
         return proc.render()
         
     except Exception as e:
-        logging.CyberCPLogFileWriter.writeToFile(f"Error loading user migration: {str(e)}")
+        from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as _cp_log
+        _cp_log.writeToFile(f"Error loading user migration: {str(e)}")
         return ACLManager.loadError()
 
 
