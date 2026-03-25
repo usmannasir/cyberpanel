@@ -773,6 +773,7 @@ app.controller('createACLCTRL', function ($scope, $http) {
     //
 
     $scope.versionManagement = false;
+    $scope.managePlugins = false;
 
     // User Management
 
@@ -854,6 +855,7 @@ app.controller('createACLCTRL', function ($scope, $http) {
 
             //
             versionManagement: $scope.versionManagement,
+            managePlugins: $scope.managePlugins,
 
             // User Management
 
@@ -977,6 +979,7 @@ app.controller('createACLCTRL', function ($scope, $http) {
             //
 
             $scope.versionManagement = true;
+            $scope.managePlugins = true;
 
             // User Management
 
@@ -1048,6 +1051,7 @@ app.controller('createACLCTRL', function ($scope, $http) {
             //
 
             $scope.versionManagement = false;
+            $scope.managePlugins = false;
 
             // User Management
 
@@ -1232,6 +1236,7 @@ app.controller('modifyACLCtrl', function ($scope, $http) {
                 //
 
                 $scope.versionManagement = Boolean(response.data.versionManagement);
+                $scope.managePlugins = Boolean(response.data.managePlugins);
 
                 // User Management
 
@@ -1333,6 +1338,7 @@ app.controller('modifyACLCtrl', function ($scope, $http) {
             adminStatus: $scope.makeAdmin,
             //
             versionManagement: $scope.versionManagement,
+            managePlugins: $scope.managePlugins,
 
             // User Management
 
@@ -1456,6 +1462,7 @@ app.controller('modifyACLCtrl', function ($scope, $http) {
             //
 
             $scope.versionManagement = true;
+            $scope.managePlugins = true;
 
             // User Management
 
@@ -1527,6 +1534,7 @@ app.controller('modifyACLCtrl', function ($scope, $http) {
             //
 
             $scope.versionManagement = false;
+            $scope.managePlugins = false;
 
             // User Management
 

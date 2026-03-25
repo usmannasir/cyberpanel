@@ -2130,7 +2130,11 @@
                 </a>
                 {% endif %}
             </div>
-            
+        {% endif %}
+        {% if admin or managePlugins %}
+            {% if managePlugins and not admin %}
+            <div class="section-header">{% trans "PLUGINS" %}</div>
+            {% endif %}
             <a href="#" class="menu-item" onclick="toggleSubmenu('plugins-submenu', this); return false;">
                 <div class="icon-wrapper">
                     <i class="fas fa-plug"></i>

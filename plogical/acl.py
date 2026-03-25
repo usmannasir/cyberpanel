@@ -283,6 +283,17 @@ class ACLManager:
             finalResponse['mailServerSSL'] = config['mailServerSSL']
             finalResponse['sslReconcile'] = config.get('sslReconcile', 0)
 
+            ## Plugin management (Plugin Store / installed plugins UI and APIs)
+
+            _mpv = config.get('managePlugins', 0)
+            if _mpv in (1, True, '1', 'true'):
+                finalResponse['managePlugins'] = 1
+            else:
+                try:
+                    finalResponse['managePlugins'] = 1 if int(_mpv) else 0
+                except (TypeError, ValueError):
+                    finalResponse['managePlugins'] = 0
+
         return finalResponse
 
     @staticmethod
