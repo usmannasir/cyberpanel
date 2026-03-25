@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 import os
+import sys
 from django.utils.translation import gettext_lazy as _
 
 # Patreon OAuth (optional): for paid-plugin verification via Patreon membership.
@@ -281,6 +282,20 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 _cybercp_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if os.path.isdir(_cybercp_root):
     try:
+        # Allow importing plugin packages from the on-disk plugin store sources.
+        # This helps when /usr/local/CyberCP/<plugin>/ exists as an "installed marker"
+        # but the full plugin code is missing/incomplete.
+        _plugin_source_roots = [
+            '/home/cyberpanel/plugins',
+            '/home/cyberpanel-plugins',
+        ]
+        for _src_root in _plugin_source_roots:
+            try:
+                if os.path.isdir(_src_root) and _src_root not in sys.path:
+                    sys.path.append(_src_root)
+            except Exception:
+                pass
+
         _existing_apps = set(INSTALLED_APPS)
         for _name in os.listdir(_cybercp_root):
             if _name.startswith('.'):
@@ -290,8 +305,27 @@ if os.path.isdir(_cybercp_root):
                 continue
             if _name in _existing_apps:
                 continue
-            if (os.path.exists(os.path.join(_plugin_dir, 'meta.xml')) and
-                    os.path.exists(os.path.join(_plugin_dir, 'urls.py'))):
+
+            _installed_has_meta_and_urls = (
+                os.path.exists(os.path.join(_plugin_dir, 'meta.xml')) and
+                os.path.exists(os.path.join(_plugin_dir, 'urls.py'))
+            )
+
+            # Fallback: if the installed directory exists but is incomplete,
+            # try to treat the plugin as installed if we can find meta.xml + urls.py in source.
+            _source_has_meta_and_urls = False
+            for _src_root in (
+                '/home/cyberpanel/plugins',
+                '/home/cyberpanel-plugins',
+            ):
+                _src_dir = os.path.join(_src_root, _name)
+                if not os.path.isdir(_src_dir):
+                    continue
+                if os.path.exists(os.path.join(_src_dir, 'meta.xml')) and os.path.exists(os.path.join(_src_dir, 'urls.py')):
+                    _source_has_meta_and_urls = True
+                    break
+
+            if _installed_has_meta_and_urls or _source_has_meta_and_urls:
                 INSTALLED_APPS.append(_name)
                 _existing_apps.add(_name)
     except (OSError, IOError):

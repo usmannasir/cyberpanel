@@ -18,6 +18,7 @@ import sys
 import urllib.request
 import urllib.error
 import time
+import threading
 import inspect
 sys.path.append('/usr/local/CyberCP')
 from pluginInstaller.pluginInstaller import pluginInstaller
@@ -31,6 +32,7 @@ PLUGIN_STORE_CACHE_DIR = '/home/cyberpanel/plugin_store_cache'
 PLUGIN_STORE_CACHE_FILE = os.path.join(PLUGIN_STORE_CACHE_DIR, 'plugins_cache.json')
 PLUGIN_STORE_CACHE_DURATION = 3600  # Base cache duration: 1 hour (3600 seconds)
 PLUGIN_STORE_CACHE_RANDOM_OFFSET = 600  # Random offset: ±10 minutes (600 seconds) to prevent simultaneous requests
+PLUGIN_STORE_REFRESH_LOCK_FILE = os.path.join(PLUGIN_STORE_CACHE_DIR, 'plugins_cache_refresh.lock')
 GITHUB_REPO_API = 'https://api.github.com/repos/master3395/cyberpanel-plugins/contents'
 GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/master3395/cyberpanel-plugins/main'
 GITHUB_COMMITS_API = 'https://api.github.com/repos/master3395/cyberpanel-plugins/commits'
@@ -142,10 +144,13 @@ def _ensure_plugin_meta_xml(plugin_name):
             except Exception as e:
                 logging.writeToFile(f"Could not restore meta.xml for {plugin_name}: {e}")
             return
-    try:
-        _sync_meta_xml_from_github(plugin_name)
-    except Exception:
-        pass
+
+    # Performance: do not call GitHub during /plugins/installed render path.
+    # If meta.xml is still missing, we just skip enrichment for this plugin.
+    logging.writeToFile(
+        f"meta.xml still missing for {plugin_name}; GitHub sync skipped for performance"
+    )
+    return
 
 def _get_plugin_state_file(plugin_name):
     """Get the path to the plugin state file"""
@@ -217,6 +222,17 @@ def installed(request):
     errorPlugins = []
     processed_plugins = set()  # Track which plugins we've already processed
 
+    # Timing instrumentation for /plugins/installed slowness
+    t_total_start = time.perf_counter()
+    t_repair_start = t_total_start
+    t_repair = 0.0
+    repair_attempts = 0
+    t_source_loop_start = None
+    t_source_loop = 0.0
+    t_installed_fallback_start = None
+    t_installed_fallback = 0.0
+    t_filesystem_count_start = None
+
     # Repair pass: ensure every installed plugin dir has meta.xml (from source or GitHub) so counts and grid are correct
     if os.path.exists(installedPath):
         for plugin in os.listdir(installedPath):
@@ -224,10 +240,13 @@ def installed(request):
                 continue
             plugin_dir = os.path.join(installedPath, plugin)
             if os.path.isdir(plugin_dir):
+                repair_attempts += 1
                 _ensure_plugin_meta_xml(plugin)
+        t_repair = time.perf_counter() - t_repair_start
 
     # First, process plugins from source directories (multiple paths: /home/cyberpanel/plugins, /home/cyberpanel-plugins)
     # BUT: Skip plugins that are already installed - we'll process those from the installed location instead
+    t_source_loop_start = time.perf_counter()
     for pluginPath in PLUGIN_SOURCE_PATHS:
         if not os.path.exists(pluginPath):
             continue
@@ -398,6 +417,8 @@ def installed(request):
     # Also check for installed plugins that don't have source directories
     # This handles plugins installed from the store that may not be in /home/cyberpanel/plugins/
     if os.path.exists(installedPath):
+        t_source_loop = time.perf_counter() - t_source_loop_start
+        t_installed_fallback_start = time.perf_counter()
         for plugin in os.listdir(installedPath):
             # Skip if already processed
             if plugin in processed_plugins:
@@ -517,6 +538,7 @@ def installed(request):
                 errorPlugins.append({'name': plugin, 'error': f'Error loading installed plugin: {str(e)}'})
                 logging.writeToFile(f"Installed plugin {plugin}: Error loading - {str(e)}")
                 continue
+        t_installed_fallback = time.perf_counter() - t_installed_fallback_start
 
     # Ensure redisManager and memcacheManager load when present (fallback if missed by listdir)
     for plugin_name in ('redisManager', 'memcacheManager'):
@@ -574,6 +596,7 @@ def installed(request):
             logging.writeToFile(f"Plugin {plugin_name} fallback load error: {str(e)}")
 
     # Calculate installed and active counts: only count real plugins (have meta.xml, not core apps)
+    t_filesystem_count_start = time.perf_counter()
     installed_plugins_in_filesystem = set()
     if os.path.exists(installedPath):
         for plugin in os.listdir(installedPath):
@@ -609,6 +632,20 @@ def installed(request):
     # Sort plugins A-Å by name (case-insensitive) for Grid and Table view
     pluginList.sort(key=lambda p: (p.get('name') or '').lower())
     
+    # Summary timing log (keep it single-line to avoid huge logs)
+    try:
+        t_total = time.perf_counter() - t_total_start
+        # The individual phase durations were captured immediately after their loops.
+        t_filesystem_count = (time.perf_counter() - t_filesystem_count_start) if t_filesystem_count_start else 0.0
+        logging.writeToFile(
+            f"/plugins/installed timing: total={t_total:.3f}s repair_attempts={repair_attempts} "
+            f"repair={t_repair:.3f}s source_loop={t_source_loop:.3f}s installed_fallback={t_installed_fallback:.3f}s "
+            f"filesystem_count={t_filesystem_count:.3f}s pluginList={len(pluginList)} installed_count={installed_count} active_count={active_count}"
+        )
+    except Exception:
+        # Never break page render due to logging failure.
+        pass
+
     proc = httpProc(request, 'pluginHolder/plugins.html',
                     {'plugins': pluginList, 'error_plugins': errorPlugins, 
                      'installed_count': installed_count, 'active_count': active_count,
@@ -959,6 +996,54 @@ def _save_plugins_cache(plugins):
     except Exception as e:
         logging.writeToFile(f"Error saving plugin store cache: {str(e)}")
 
+def _try_start_plugin_store_refresh_background():
+    """
+    Best-effort background refresh of the plugin store cache.
+    Returns True if a refresh thread was started, False otherwise.
+    """
+    lock_path = PLUGIN_STORE_REFRESH_LOCK_FILE
+    try:
+        _ensure_cache_dir()
+
+        # Try to acquire a file lock so multiple workers don't stampede GitHub.
+        try:
+            fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+            with os.fdopen(fd, 'w') as f:
+                f.write(str(os.getpid()))
+        except FileExistsError:
+            return False
+        except Exception as e:
+            logging.writeToFile(f"Plugin store refresh lock acquire failed: {str(e)}")
+            return False
+
+        def _worker():
+            try:
+                t0 = time.perf_counter()
+                plugins = _fetch_plugins_from_github()
+                if plugins:
+                    _save_plugins_cache(plugins)
+                    dt = time.perf_counter() - t0
+                    logging.writeToFile(
+                        f"Background plugin store refresh complete: plugins={len(plugins)} duration={dt:.3f}s"
+                    )
+                else:
+                    logging.writeToFile("Background plugin store refresh: fetched 0 plugins")
+            except Exception as e:
+                # Avoid leaking secrets; just record the error summary.
+                logging.writeToFile(f"Background plugin store refresh failed: {str(e)}")
+            finally:
+                try:
+                    if os.path.exists(lock_path):
+                        os.remove(lock_path)
+                except Exception:
+                    pass
+
+        threading.Thread(target=_worker, daemon=True).start()
+        return True
+    except Exception as e:
+        logging.writeToFile(f"Error starting plugin store background refresh: {str(e)}")
+        return False
+
 def _compare_versions(version1, version2):
     """
     Compare two version strings (semantic versioning)
@@ -1288,33 +1373,10 @@ def _fetch_plugins_from_github():
                 # Parse meta.xml
                 root = ElementTree.fromstring(meta_xml_content)
                 
-                # Fetch last commit date for this plugin from GitHub
+                # Performance: do not call GitHub commits API per plugin.
+                # We keep modify_date/freshness badge as safe defaults so the UI still renders.
                 modify_date = 'N/A'
-                try:
-                    commits_url = f"{GITHUB_COMMITS_API}?path={plugin_name}&per_page=1"
-                    commits_req = urllib.request.Request(
-                        commits_url,
-                        headers={
-                            'User-Agent': 'CyberPanel-Plugin-Store/1.0',
-                            'Accept': 'application/vnd.github.v3+json'
-                        }
-                    )
-                    
-                    with urllib.request.urlopen(commits_req, timeout=10) as commits_response:
-                        commits_data = json.loads(commits_response.read().decode('utf-8'))
-                        if commits_data and len(commits_data) > 0:
-                            commit_date = commits_data[0].get('commit', {}).get('author', {}).get('date', '')
-                            if commit_date:
-                                # Parse ISO 8601 date and format it
-                                try:
-                                    from datetime import datetime
-                                    dt = datetime.fromisoformat(commit_date.replace('Z', '+00:00'))
-                                    modify_date = dt.strftime('%Y-%m-%d %H:%M:%S')
-                                except Exception:
-                                    modify_date = commit_date[:19].replace('T', ' ')  # Fallback formatting
-                except Exception as e:
-                    logging.writeToFile(f"Could not fetch commit date for {plugin_name}: {str(e)}")
-                    modify_date = 'N/A'
+                freshness = None
                 
                 # Extract paid plugin information
                 paid_elem = root.find('paid')
@@ -1340,7 +1402,6 @@ def _fetch_plugins_from_github():
                     logging.writeToFile(f"Plugin {plugin_name}: Invalid category '{type_elem.text}', skipping (use Utility, Security, Backup, or Performance)")
                     continue
                 
-                freshness = _get_freshness_badge(modify_date)
                 plugin_data = {
                     'plugin_dir': plugin_name,
                     'name': root.find('name').text if root.find('name') is not None else plugin_name,
@@ -1415,20 +1476,46 @@ def fetch_plugin_store(request):
         }, status=401)
     
     try:
-        # Try to get from cache first
-        cached_plugins = _get_cached_plugins()
+        t_total_start = time.perf_counter()
+
+        # 1) Fast path: non-expired cache hit
+        cached_plugins = _get_cached_plugins(allow_expired=False)
         if cached_plugins is not None:
-            # Enrich cached plugins with installed/enabled status
+            t_enrich_start = time.perf_counter()
             enriched_plugins = _enrich_store_plugins(cached_plugins)
+            dt_total = time.perf_counter() - t_total_start
+            logging.writeToFile(
+                f"fetch_plugin_store: cache_hit plugins={len(cached_plugins)} duration={dt_total:.3f}s enrich={time.perf_counter() - t_enrich_start:.3f}s"
+            )
             return JsonResponse({
                 'success': True,
                 'plugins': enriched_plugins,
                 'cached': True
             })
+
+        # 2) Cache miss OR expired cache: return stale-but-available cache immediately (if present)
+        stale_plugins = _get_cached_plugins(allow_expired=True)
+        if stale_plugins is not None:
+            started_refresh = _try_start_plugin_store_refresh_background()
+            t_enrich_start = time.perf_counter()
+            enriched_plugins = _enrich_store_plugins(stale_plugins)
+            dt_total = time.perf_counter() - t_total_start
+            warning = 'Using stale plugin store cache (refreshing in background).' if started_refresh else 'Using stale plugin store cache.'
+            logging.writeToFile(
+                f"fetch_plugin_store: cache_stale_fallback plugins={len(stale_plugins)} refresh_started={started_refresh} duration={dt_total:.3f}s enrich={time.perf_counter() - t_enrich_start:.3f}s"
+            )
+            return JsonResponse({
+                'success': True,
+                'plugins': enriched_plugins,
+                'cached': True,
+                'warning': warning
+            })
         
-        # Cache miss or expired - fetch from GitHub
+        # 3) No cache available: fetch from GitHub (slow path)
+        t_fetch_start = time.perf_counter()
         plugins = _fetch_plugins_from_github()
-        
+        dt_fetch = time.perf_counter() - t_fetch_start
+
         # Enrich plugins with installed/enabled status
         enriched_plugins = _enrich_store_plugins(plugins)
         
@@ -1436,6 +1523,10 @@ def fetch_plugin_store(request):
         if plugins:
             _save_plugins_cache(plugins)
         
+        dt_total = time.perf_counter() - t_total_start
+        logging.writeToFile(
+            f"fetch_plugin_store: cache_miss_fetched plugins={len(plugins)} fetch_duration={dt_fetch:.3f}s total_duration={dt_total:.3f}s"
+        )
         return JsonResponse({
             'success': True,
             'plugins': enriched_plugins,
@@ -1929,32 +2020,77 @@ def plugin_settings_proxy(request, plugin_name):
     Proxy for /plugins/<plugin_name>/settings/ so plugin settings pages work even when
     the plugin was installed after the worker started (dynamic URL list is built at import time).
     """
+    import re
+    import sys
+    import importlib
+
     mailUtilities.checkHome()
     if not user_can_manage_plugins(request):
         from django.http import HttpResponseForbidden
         return HttpResponseForbidden('You are not authorized to manage plugins.')
-    plugin_path = '/usr/local/CyberCP/' + plugin_name
-    urls_py = os.path.join(plugin_path, 'urls.py')
-    if not plugin_name or not os.path.isdir(plugin_path) or not os.path.exists(urls_py):
+
+    # Basic hardening against path traversal / unexpected module names.
+    if not plugin_name or not re.match(r'^[A-Za-z0-9_]+$', plugin_name):
         from django.http import HttpResponseNotFound
-        return HttpResponseNotFound('Plugin not found or has no URL configuration.')
+        return HttpResponseNotFound('Invalid plugin.')
+
+    # Reserved internal directories / apps.
     if plugin_name in RESERVED_PLUGIN_DIRS or plugin_name in (
         'api', 'installed', 'help', 'emailMarketing', 'emailPremium', 'pluginHolder'
     ):
         from django.http import HttpResponseNotFound
         return HttpResponseNotFound('Invalid plugin.')
+
+    installed_plugin_path = os.path.join('/usr/local/CyberCP', plugin_name)
+
+    # Try to import plugin settings from either:
+    # - installed plugin directory (/usr/local/CyberCP/<plugin_name>/)
+    # - plugin source directories (/home/cyberpanel-plugins/<plugin_name>/ etc)
+    # This fixes 404s when the installed copy is incomplete.
+    source_candidates = []
+    for src_base in PLUGIN_SOURCE_PATHS:
+        src_dir = os.path.join(src_base, plugin_name)
+        if os.path.isdir(src_dir):
+            source_candidates.append((src_base, src_dir))
+
+    parents_to_try = ['/usr/local/CyberCP'] + [p for (p, _) in source_candidates]
+
+    orig_sys_path = list(sys.path)
+    last_err = None
     try:
-        import importlib
-        views_mod = importlib.import_module(plugin_name + '.views')
-        settings_view = getattr(views_mod, 'settings', None)
-        if not callable(settings_view):
-            from django.http import HttpResponseNotFound
-            return HttpResponseNotFound('Plugin has no settings view.')
-        return settings_view(request)
-    except Exception as e:
-        logging.writeToFile(f"plugin_settings_proxy for {plugin_name}: {str(e)}")
-        from django.http import HttpResponseServerError
-        return HttpResponseServerError(f'Plugin settings error: {str(e)}')
+        for parent in parents_to_try:
+            if not parent or not os.path.isdir(parent):
+                continue
+
+            # Ensure import searches this candidate parent first.
+            if parent in sys.path:
+                sys.path.remove(parent)
+            sys.path.insert(0, parent)
+
+            # Clear partially imported modules so we can retry from a different path.
+            for mod_name in [plugin_name, plugin_name + '.views', plugin_name + '.urls']:
+                if mod_name in sys.modules:
+                    del sys.modules[mod_name]
+
+            try:
+                views_mod = importlib.import_module(plugin_name + '.views')
+                settings_view = getattr(views_mod, 'settings', None)
+                if callable(settings_view):
+                    return settings_view(request)
+            except ModuleNotFoundError as e:
+                last_err = str(e)
+                continue
+            except Exception as e:
+                last_err = str(e)
+                continue
+    finally:
+        sys.path = orig_sys_path
+
+    from django.http import HttpResponseNotFound
+    # If the plugin directory exists under /usr/local/CyberCP, treat this as a broken/incomplete install.
+    if os.path.isdir(installed_plugin_path):
+        return HttpResponseNotFound('Plugin settings not available (incomplete installation).')
+    return HttpResponseNotFound('Plugin not found.')
 
 
 def plugin_help(request, plugin_name):
@@ -1962,11 +2098,21 @@ def plugin_help(request, plugin_name):
     mailUtilities.checkHome()
     
     # Paths for the plugin
-    plugin_path = '/usr/local/CyberCP/' + plugin_name
-    meta_xml_path = os.path.join(plugin_path, 'meta.xml')
-    
-    # Check if plugin exists
-    if not os.path.exists(plugin_path) or not os.path.exists(meta_xml_path):
+    installed_plugin_path = '/usr/local/CyberCP/' + plugin_name
+    meta_xml_path = os.path.join(installed_plugin_path, 'meta.xml')
+
+    # If installed meta.xml is missing (e.g. incomplete install), fall back to plugin source.
+    plugin_path = installed_plugin_path
+    if not os.path.exists(meta_xml_path):
+        for src_base in PLUGIN_SOURCE_PATHS:
+            candidate = os.path.join(src_base, plugin_name, 'meta.xml')
+            if os.path.exists(candidate):
+                plugin_path = os.path.join(src_base, plugin_name)
+                meta_xml_path = candidate
+                break
+
+    # Check if plugin exists (at least meta.xml must exist)
+    if not os.path.exists(meta_xml_path):
         proc = httpProc(request, 'pluginHolder/plugin_not_found.html', {
             'plugin_name': plugin_name
         }, 'managePlugins')
@@ -1985,7 +2131,7 @@ def plugin_help(request, plugin_name):
         plugin_type = root.find('type').text if root.find('type') is not None else 'Plugin'
         
         # Check if plugin is installed
-        installed = os.path.exists(plugin_path)
+        installed = os.path.exists(installed_plugin_path)
         
     except Exception as e:
         logging.writeToFile(f"Error parsing meta.xml for {plugin_name}: {str(e)}")

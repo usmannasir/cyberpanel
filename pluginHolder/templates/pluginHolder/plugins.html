@@ -1949,7 +1949,8 @@ function toggleView(view, updateHash = true) {
         else if (document.getElementById('viewBtnUpgradesNoPlugins')) document.getElementById('viewBtnUpgradesNoPlugins').classList.add('active');
         
         if (storePlugins.length === 0) {
-            loadPluginStore(true);
+            // Lazy-load: only fetch when upgrades view is opened by user action (not initial render).
+            if (updateHash) loadPluginStore(true);
         } else {
             displayUpgradesAvailable();
         }
@@ -2580,7 +2581,9 @@ function upgradePlugin(pluginName, currentVersion, newVersion) {
             }
             // Refetch store so upgrades list and badge update (plugin no longer shows as upgradable)
             if (typeof loadPluginStore === 'function') {
-                loadPluginStore(true);
+                const upgradesViewEl = document.getElementById('upgradesView');
+                const shouldShowUpgrades = upgradesViewEl && upgradesViewEl.style.display === 'block';
+                loadPluginStore(shouldShowUpgrades);
             }
         } else {
             if (typeof PNotify !== 'undefined') {
