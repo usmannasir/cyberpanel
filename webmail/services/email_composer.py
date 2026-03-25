@@ -1,16 +1,55 @@
 import email
+import re
 from email.message import EmailMessage
-from email.utils import formatdate, make_msgid, formataddr
+from email.utils import formatdate, make_msgid, formataddr, parseaddr
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
 import mimetypes
-import re
-
-
 class EmailComposer:
     """Construct MIME messages for sending."""
+
+    # Light validation after parseaddr (avoid empty / garbage tokens from trailing commas).
+    @staticmethod
+    def _valid_email(addr):
+        if not addr or '@' not in addr:
+            return False
+        local, _, domain = addr.partition('@')
+        if not local or not domain or '.' not in domain:
+            return False
+        if len(addr) > 254:
+            return False
+        return True
+
+    @classmethod
+    def normalize_address_list(cls, raw):
+        """Split comma/semicolon-separated addresses; drop empties and obviously invalid tokens."""
+        if not raw:
+            return []
+        if isinstance(raw, (list, tuple)):
+            chunks = raw
+        else:
+            txt = str(raw).replace(';', ',')
+            chunks = txt.split(',')
+        out = []
+        seen = set()
+        for chunk in chunks:
+            part = (chunk or '').strip()
+            if not part:
+                continue
+            _name, addr = parseaddr(part)
+            addr = (addr or '').strip()
+            if not addr:
+                continue
+            key = addr.lower()
+            if key in seen:
+                continue
+            if not cls._valid_email(addr):
+                continue
+            seen.add(key)
+            out.append(addr)
+        return out
 
     @staticmethod
     def compose(from_addr, to_addrs, subject, body_html='', body_text='',
@@ -62,10 +101,23 @@ class EmailComposer:
             elif not body_text:
                 msg.attach(MIMEText('', 'plain', 'utf-8'))
 
+        to_list = EmailComposer.normalize_address_list(to_addrs)
+        cc_list = EmailComposer.normalize_address_list(cc_addrs)
+        bcc_list = EmailComposer.normalize_address_list(bcc_addrs)
+        if not to_list and not cc_list and not bcc_list:
+            raise ValueError('No valid recipients after parsing To/Cc/Bcc.')
+
         msg['From'] = from_addr
-        msg['To'] = to_addrs
-        if cc_addrs:
-            msg['Cc'] = cc_addrs
+        if to_list:
+            msg['To'] = ', '.join(to_list)
+        elif cc_list:
+            msg['To'] = ', '.join(cc_list)
+        else:
+            msg['To'] = 'undisclosed-recipients:;'
+        if cc_list and to_list:
+            msg['Cc'] = ', '.join(cc_list)
+        if bcc_list:
+            msg['Bcc'] = ', '.join(bcc_list)
         msg['Subject'] = subject
         msg['Date'] = formatdate(localtime=True)
         msg['Message-ID'] = make_msgid(domain=from_addr.split('@')[-1] if '@' in from_addr else 'localhost')

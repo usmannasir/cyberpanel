@@ -4,16 +4,39 @@ import base64
 
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
+from django.db import transaction
 
 from .models import Contact, ContactGroup, ContactGroupMembership, WebmailSettings, SieveRule
 from .services.imap_client import IMAPClient
 from .services.smtp_client import SMTPClient
 from .services.email_composer import EmailComposer
 from .services.sieve_client import SieveClient
+from .services.snappymail_contacts_importer import SnappymailContactsImporter
+from .services.snappymail_rules_importer import SnappymailRulesImporter
+from .services.webmail_folder_settings_store import WebmailFolderSettingsStore
 
 import plogical.CyberCPLogFileWriter as logging
 
 WEBMAIL_CONF = '/etc/cyberpanel/webmail.conf'
+
+WEBMAIL_SEARCH_MAX_RESULTS = 500
+
+
+def _webmail_message_sort_ts(msg):
+    """Parse message date header for sorting (best-effort)."""
+    if not msg or not isinstance(msg, dict):
+        return 0.0
+    raw = msg.get('date') or ''
+    if not raw:
+        return 0.0
+    try:
+        from email.utils import parsedate_to_datetime
+        dt = parsedate_to_datetime(raw)
+        if dt is not None:
+            return dt.timestamp()
+    except Exception:
+        pass
+    return 0.0
 
 
 class WebmailManager:
@@ -259,8 +282,13 @@ class WebmailManager:
         if not name:
             return self._error('Folder name is required.')
         # CyberPanel/Dovecot folder names (INBOX. prefix, separator '.')
-        protected = ['INBOX', 'INBOX.Sent', 'INBOX.Drafts', 'INBOX.Deleted Items',
-                      'INBOX.Junk E-mail', 'INBOX.Archive']
+        protected = {
+            'INBOX', 'INBOX.Sent', 'INBOX.Drafts', 'INBOX.Deleted Items',
+            'INBOX.Junk E-mail', 'INBOX.Archive', 'INBOX.spam', 'INBOX.Trash',
+            'Sent', 'Drafts', 'Trash', 'Spam', 'Junk', 'Archive',
+            'Deleted Items', 'Junk E-mail',
+        }
+        protected.update(set(IMAPClient.SPECIAL_FOLDERS.values()))
         if name in protected:
             return self._error('Cannot delete system folder.')
         try:
@@ -278,22 +306,87 @@ class WebmailManager:
         folder = data.get('folder', 'INBOX')
         page = int(data.get('page', 1))
         per_page = int(data.get('perPage', 25))
+        uids_filter = data.get('uids')
+        if uids_filter is not None and not isinstance(uids_filter, list):
+            uids_filter = None
         try:
             with self._get_imap() as imap:
-                result = imap.list_messages(folder, page, per_page)
+                result = imap.list_messages(
+                    folder, page, per_page, uids_filter=uids_filter)
             return self._success(result)
         except Exception as e:
             return self._error(str(e))
 
     def apiSearchMessages(self):
         data = self._get_post_data()
-        folder = data.get('folder', 'INBOX')
-        query = data.get('query', '')
+        folder = (data.get('folder') or 'INBOX').strip()
+        query = (data.get('query') or '').strip()
+        scope = (data.get('scope') or 'all').strip().lower()
+        if not query:
+            return self._error('Search text is required.')
+        if scope not in ('all', 'folder'):
+            scope = 'all'
         try:
             with self._get_imap() as imap:
-                uids = imap.search_messages(folder, query)
-                uids = [u.decode() if isinstance(u, bytes) else str(u) for u in uids]
-            return self._success({'uids': uids})
+                if scope == 'folder':
+                    uids = imap.search_messages(folder, query)
+                    uids = [
+                        u.decode() if isinstance(u, bytes) else str(u)
+                        for u in uids if u]
+                    if not uids:
+                        return self._success({
+                            'messages': [],
+                            'scope': 'folder',
+                            'folder': folder,
+                        })
+                    per = max(len(uids), 1)
+                    result = imap.list_messages(
+                        folder, 1, per, uids_filter=uids)
+                    for m in result.get('messages') or []:
+                        m['folder'] = folder
+                    return self._success({
+                        'messages': result.get('messages') or [],
+                        'scope': 'folder',
+                        'folder': folder,
+                    })
+
+                # Search all selectable folders
+                folders = imap.list_folders()
+                all_messages = []
+                for finfo in folders:
+                    if len(all_messages) >= WEBMAIL_SEARCH_MAX_RESULTS:
+                        break
+                    fname = finfo.get('name')
+                    if not fname:
+                        continue
+                    try:
+                        uids = imap.search_messages(fname, query)
+                        if not uids:
+                            continue
+                        uids = [
+                            u.decode() if isinstance(u, bytes) else str(u)
+                            for u in uids if u]
+                        remaining = WEBMAIL_SEARCH_MAX_RESULTS - len(all_messages)
+                        if remaining <= 0:
+                            break
+                        if len(uids) > remaining:
+                            uids = uids[:remaining]
+                        result = imap.list_messages(
+                            fname, 1, len(uids), uids_filter=uids)
+                        for m in result.get('messages') or []:
+                            m['folder'] = fname
+                            all_messages.append(m)
+                    except Exception:
+                        continue
+                try:
+                    all_messages.sort(
+                        key=_webmail_message_sort_ts, reverse=True)
+                except Exception:
+                    pass
+                return self._success({
+                    'messages': all_messages,
+                    'scope': 'all',
+                })
         except Exception as e:
             return self._error(str(e))
 
@@ -377,20 +470,20 @@ class WebmailManager:
                 references = data.get('references', '')
                 attachments = None
 
-            if not to:
-                return self._error('At least one recipient is required.')
-
-            mime_msg = EmailComposer.compose(
-                from_addr=email_addr,
-                to_addrs=to,
-                subject=subject,
-                body_html=body_html,
-                cc_addrs=cc,
-                bcc_addrs=bcc,
-                attachments=attachments,
-                in_reply_to=in_reply_to,
-                references=references,
-            )
+            try:
+                mime_msg = EmailComposer.compose(
+                    from_addr=email_addr,
+                    to_addrs=to,
+                    subject=subject,
+                    body_html=body_html,
+                    cc_addrs=cc,
+                    bcc_addrs=bcc,
+                    attachments=attachments,
+                    in_reply_to=in_reply_to,
+                    references=references,
+                )
+            except ValueError as ve:
+                return self._error(str(ve))
 
             smtp = self._get_smtp()
             result = smtp.send_message(mime_msg)
@@ -533,9 +626,40 @@ class WebmailManager:
     def apiListContacts(self):
         email = self._get_email()
         try:
-            contacts = list(Contact.objects.filter(owner_email=email).values(
+            contacts_qs = Contact.objects.filter(owner_email=email)
+            contacts = list(contacts_qs.values(
                 'id', 'display_name', 'email_address', 'phone', 'organization', 'notes', 'is_auto_collected'
             ))
+            if not contacts and not contacts_qs.exists():
+                # Best-effort: auto-import contacts from SnappyMail if our DB is empty.
+                try:
+                    importer = SnappymailContactsImporter()
+                    sn_contacts = importer.import_contacts(email)
+                    if sn_contacts:
+                        with transaction.atomic():
+                            for c in sn_contacts:
+                                c_email = (c.get('email_address') or '').strip()
+                                if not c_email:
+                                    continue
+                                display = (c.get('display_name') or '').strip()
+                                Contact.objects.get_or_create(
+                                    owner_email=email,
+                                    email_address=c_email,
+                                    defaults={
+                                        'display_name': display,
+                                        'is_auto_collected': False,
+                                    }
+                                )
+                        contacts = list(Contact.objects.filter(owner_email=email).values(
+                            'id', 'display_name', 'email_address', 'phone', 'organization', 'notes', 'is_auto_collected'
+                        ))
+                except Exception as e:
+                    # Don't break UI if auto-import fails.
+                    try:
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            'SnappyMail auto-import contacts failed for %s: %s' % (email, str(e)))
+                    except Exception:
+                        pass
             return self._success({'contacts': contacts})
         except Exception as e:
             return self._error(str(e))
@@ -629,16 +753,181 @@ class WebmailManager:
         except Exception as e:
             return self._error(str(e))
 
+    # ── SnappyMail Imports ─────────────────────────────────────
+
+    def apiImportContactsFromSnappymail(self):
+        """
+        Import contacts from SnappyMail/RainLoop into wm_contacts.
+
+        Optional POST body:
+          - clearExisting (bool): delete existing contacts for this email before importing.
+        """
+        email = self._get_email()
+        data = self._get_post_data()
+        clear_existing = bool(data.get('clearExisting', False))
+
+        try:
+            if clear_existing:
+                Contact.objects.filter(owner_email=email).delete()
+
+            importer = SnappymailContactsImporter()
+            contacts = importer.import_contacts(email)
+
+            imported_new = 0
+            updated_existing = 0
+
+            with transaction.atomic():
+                for c in contacts:
+                    c_email = (c.get('email_address') or '').strip()
+                    if not c_email:
+                        continue
+                    display = (c.get('display_name') or '').strip()
+
+                    obj, created = Contact.objects.get_or_create(
+                        owner_email=email,
+                        email_address=c_email,
+                        defaults={
+                            'display_name': display,
+                            'is_auto_collected': False,
+                        }
+                    )
+                    if created:
+                        imported_new += 1
+                    else:
+                        # Only overwrite if current display name is empty.
+                        if display and not (obj.display_name or '').strip():
+                            obj.display_name = display
+                            obj.is_auto_collected = False
+                            obj.save(update_fields=['display_name', 'is_auto_collected'])
+                            updated_existing += 1
+
+            return self._success({
+                'imported_new': imported_new,
+                'updated_existing': updated_existing,
+                'total_found': len(contacts),
+            })
+        except Exception as e:
+            # Do not leak DB credentials in error output.
+            try:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    'SnappyMail contacts import failed for %s: %s' % (email, str(e)))
+            except Exception:
+                pass
+            return self._error('SnappyMail contacts import failed.')
+
+    def apiImportRulesFromSnappymail(self):
+        """
+        Import RainLoop/SnappyMail sieve filters into CyberPanel webmail.
+
+        Approach:
+        - Fetch RainLoop ManageSieve script body (typically `rainloop.user`)
+        - Store it as RAW in wm_sieve_rules.sieve_script
+        - Upload it to ManageSieve as CyberPanel's `cyberpanel` active script
+        """
+        email = self._get_email()
+        data = self._get_post_data()
+        clear_existing = bool(data.get('clearExisting', True))
+
+        try:
+            importer = SnappymailRulesImporter()
+            script_name = ''
+            raw_script = ''
+
+            with self._get_sieve(email) as sieve:
+                script_name, raw_script = importer.fetch_raw_script(sieve)
+
+            raw_script = (raw_script or '').strip()
+            if not raw_script:
+                return self._error('No RainLoop sieve script content found to import.')
+
+            if clear_existing:
+                SieveRule.objects.filter(email_account=email, sieve_script__gt='').delete()
+
+            priority = -1000
+            rule_name = 'SnappyMail import: %s' % (script_name or 'rainloop.user')
+
+            SieveRule.objects.create(
+                email_account=email,
+                name=rule_name,
+                priority=priority,
+                is_active=True,
+                condition_field='from',
+                condition_type='contains',
+                condition_value='',
+                action_type='move',
+                action_value='',
+                sieve_script=raw_script,
+            )
+
+            self._sync_sieve_rules(email)
+
+            return self._success({'imported_rule': rule_name})
+        except ConnectionRefusedError:
+            return self._error('ManageSieve connection refused. Is dovecot-sieve running on port 4190?')
+        except Exception as e:
+            try:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    'SnappyMail rules import failed for %s: %s' % (email, str(e)))
+            except Exception:
+                pass
+            return self._error('SnappyMail rules import failed.')
+
     # ── Sieve Rule APIs ───────────────────────────────────────
 
     def apiListRules(self):
         email = self._get_email()
         try:
-            rules = list(SieveRule.objects.filter(email_account=email).values(
-                'id', 'name', 'priority', 'is_active',
-                'condition_field', 'condition_type', 'condition_value',
-                'action_type', 'action_value',
-            ))
+            rules_qs = SieveRule.objects.filter(email_account=email)
+
+            # Best-effort auto-import when our DB doesn't have rules yet.
+            if not rules_qs.exists():
+                try:
+                    importer = SnappymailRulesImporter()
+                    script_name = ''
+                    raw_script = ''
+                    with self._get_sieve(email) as sieve:
+                        script_name, raw_script = importer.fetch_raw_script(sieve)
+
+                    raw_script = (raw_script or '').strip()
+                    if raw_script:
+                        # Create a single RAW rule. This makes the imported script active.
+                        SieveRule.objects.create(
+                            email_account=email,
+                            name='SnappyMail import: %s' % (script_name or 'rainloop.user'),
+                            priority=-1000,
+                            is_active=True,
+                            condition_field='from',
+                            condition_type='contains',
+                            condition_value='',
+                            action_type='move',
+                            action_value='',
+                            sieve_script=raw_script,
+                        )
+                        self._sync_sieve_rules(email)
+                        rules_qs = SieveRule.objects.filter(email_account=email)
+                except Exception as e:
+                    try:
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            'SnappyMail auto-import rules failed for %s: %s' % (email, str(e)))
+                    except Exception:
+                        pass
+
+            rules_qs = rules_qs.order_by('priority')
+            rules = []
+            for r in rules_qs:
+                sieve_script = getattr(r, 'sieve_script', '') or ''
+                rules.append({
+                    'id': r.id,
+                    'name': r.name,
+                    'priority': r.priority,
+                    'is_active': bool(r.is_active),
+                    'condition_field': r.condition_field,
+                    'condition_type': r.condition_type,
+                    'condition_value': r.condition_value,
+                    'action_type': r.action_type,
+                    'action_value': r.action_value,
+                    'is_raw': bool(sieve_script.strip()),
+                })
             return self._success({'rules': rules})
         except Exception as e:
             return self._error(str(e))
@@ -715,18 +1004,28 @@ class WebmailManager:
         Rules are always saved to the database; Sieve sync is best-effort.
         """
         rules = SieveRule.objects.filter(email_account=email, is_active=True).order_by('priority')
-        rule_dicts = []
+        raw_script = ''
         for r in rules:
-            rule_dicts.append({
-                'name': r.name,
-                'condition_field': r.condition_field,
-                'condition_type': r.condition_type,
-                'condition_value': r.condition_value,
-                'action_type': r.action_type,
-                'action_value': r.action_value,
-            })
+            sieve_script = getattr(r, 'sieve_script', '') or ''
+            if sieve_script.strip():
+                raw_script = sieve_script
+                break
 
-        script = SieveClient.rules_to_sieve(rule_dicts)
+        if raw_script.strip():
+            # If we imported raw ManageSieve rules, override CyberPanel-generated rules.
+            script = raw_script
+        else:
+            rule_dicts = []
+            for r in rules:
+                rule_dicts.append({
+                    'name': r.name,
+                    'condition_field': r.condition_field,
+                    'condition_type': r.condition_type,
+                    'condition_value': r.condition_value,
+                    'action_type': r.action_type,
+                    'action_value': r.action_value,
+                })
+            script = SieveClient.rules_to_sieve(rule_dicts)
 
         try:
             with self._get_sieve(email) as sieve:
@@ -745,6 +1044,8 @@ class WebmailManager:
         email = self._get_email()
         try:
             settings, created = WebmailSettings.objects.get_or_create(email_account=email)
+            folder_store = WebmailFolderSettingsStore()
+            folder_settings = folder_store.get_for_account(email)
             return self._success({
                 'settings': {
                     'displayName': settings.display_name,
@@ -753,6 +1054,7 @@ class WebmailManager:
                     'defaultReplyBehavior': settings.default_reply_behavior,
                     'themePreference': settings.theme_preference,
                     'autoCollectContacts': settings.auto_collect_contacts,
+                    'folderSettings': folder_settings,
                 }
             })
         except Exception as e:
@@ -763,19 +1065,37 @@ class WebmailManager:
         data = self._get_post_data()
         try:
             settings, created = WebmailSettings.objects.get_or_create(email_account=email)
-            if 'displayName' in data:
-                settings.display_name = data['displayName']
-            if 'signatureHtml' in data:
-                settings.signature_html = data['signatureHtml']
-            if 'messagesPerPage' in data:
-                settings.messages_per_page = int(data['messagesPerPage'])
-            if 'defaultReplyBehavior' in data:
-                settings.default_reply_behavior = data['defaultReplyBehavior']
-            if 'themePreference' in data:
-                settings.theme_preference = data['themePreference']
-            if 'autoCollectContacts' in data:
-                settings.auto_collect_contacts = bool(data['autoCollectContacts'])
+            if isinstance(data, dict):
+                if 'displayName' in data:
+                    settings.display_name = (data.get('displayName') or '')[:200]
+                if 'signatureHtml' in data:
+                    settings.signature_html = data.get('signatureHtml') or ''
+                if 'messagesPerPage' in data:
+                    try:
+                        mp = int(data.get('messagesPerPage'))
+                        if mp < 1:
+                            mp = 25
+                        settings.messages_per_page = mp
+                    except Exception:
+                        pass
+                if 'defaultReplyBehavior' in data:
+                    drb = data.get('defaultReplyBehavior') or 'reply'
+                    if drb in ['reply', 'reply_all']:
+                        settings.default_reply_behavior = drb
+                if 'themePreference' in data:
+                    tp = data.get('themePreference') or 'auto'
+                    if tp in ['light', 'dark', 'auto']:
+                        settings.theme_preference = tp
+                if 'autoCollectContacts' in data:
+                    settings.auto_collect_contacts = bool(data.get('autoCollectContacts'))
+
             settings.save()
+
+            # Folder settings are stored outside the DB (file-based) to avoid migrations.
+            folder_settings = data.get('folderSettings') if isinstance(data, dict) else None
+            if isinstance(folder_settings, dict):
+                folder_store = WebmailFolderSettingsStore()
+                folder_store.save_for_account(email, folder_settings)
             return self._success()
         except Exception as e:
             return self._error(str(e))

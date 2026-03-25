@@ -5,8 +5,7 @@ from loginSystem.views import loadLoginPage
 from .webmailManager import WebmailManager
 
 
-# ── Page Views ────────────────────────────────────────────────
-
+# --- Page Views ---
 def loadWebmail(request):
     try:
         wm = WebmailManager(request)
@@ -20,8 +19,7 @@ def loadLogin(request):
     return wm.loadLogin()
 
 
-# ── Auth APIs ─────────────────────────────────────────────────
-
+# --- Auth APIs ---
 def apiLogin(request):
     try:
         wm = WebmailManager(request)
@@ -68,8 +66,7 @@ def apiSwitchAccount(request):
         return _error_response(e)
 
 
-# ── Folder APIs ───────────────────────────────────────────────
-
+# --- Folder APIs ---
 def apiListFolders(request):
     try:
         wm = WebmailManager(request)
@@ -110,8 +107,7 @@ def apiDeleteFolder(request):
         return _error_response(e)
 
 
-# ── Message APIs ──────────────────────────────────────────────
-
+# --- Message APIs ---
 def apiListMessages(request):
     try:
         wm = WebmailManager(request)
@@ -152,8 +148,7 @@ def apiGetAttachment(request):
         return _error_response(e)
 
 
-# ── Action APIs ───────────────────────────────────────────────
-
+# --- Action APIs ---
 def apiSendMessage(request):
     try:
         wm = WebmailManager(request)
@@ -224,8 +219,7 @@ def apiMarkFlagged(request):
         return _error_response(e)
 
 
-# ── Contact APIs ──────────────────────────────────────────────
-
+# --- Contact APIs ---
 def apiListContacts(request):
     try:
         wm = WebmailManager(request)
@@ -305,9 +299,27 @@ def apiDeleteContactGroup(request):
     except Exception as e:
         return _error_response(e)
 
+def apiImportContactsFromSnappymail(request):
+    try:
+        wm = WebmailManager(request)
+        return wm.apiImportContactsFromSnappymail()
+    except KeyError:
+        return redirect(loadLoginPage)
+    except Exception as e:
+        return _error_response(e)
 
-# ── Sieve Rule APIs ──────────────────────────────────────────
 
+def apiImportRulesFromSnappymail(request):
+    try:
+        wm = WebmailManager(request)
+        return wm.apiImportRulesFromSnappymail()
+    except KeyError:
+        return redirect(loadLoginPage)
+    except Exception as e:
+        return _error_response(e)
+
+
+# --- Sieve Rule APIs ---
 def apiListRules(request):
     try:
         wm = WebmailManager(request)
@@ -358,8 +370,7 @@ def apiActivateRules(request):
         return _error_response(e)
 
 
-# ── Settings APIs ─────────────────────────────────────────────
-
+# --- Settings APIs ---
 def apiGetSettings(request):
     try:
         wm = WebmailManager(request)
@@ -380,8 +391,7 @@ def apiSaveSettings(request):
         return _error_response(e)
 
 
-# ── Image Proxy ───────────────────────────────────────────────
-
+# --- Image Proxy ---
 def apiProxyImage(request):
     try:
         wm = WebmailManager(request)
@@ -390,8 +400,7 @@ def apiProxyImage(request):
         return _error_response(e)
 
 
-# ── Helpers ───────────────────────────────────────────────────
-
+# --- Helpers ---
 def _error_response(e):
     data = {'status': 0, 'error_message': str(e)}
     return HttpResponse(json.dumps(data), content_type='application/json')

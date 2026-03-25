@@ -44,6 +44,10 @@ urlpatterns = [
     re_path(r'^api/createContactGroup$', views.apiCreateContactGroup, name='wmApiCreateContactGroup'),
     re_path(r'^api/deleteContactGroup$', views.apiDeleteContactGroup, name='wmApiDeleteContactGroup'),
 
+    # SnappyMail Imports
+    re_path(r'^api/importContactsFromSnappymail$', views.apiImportContactsFromSnappymail, name='wmApiImportContactsFromSnappymail'),
+    re_path(r'^api/importRulesFromSnappymail$', views.apiImportRulesFromSnappymail, name='wmApiImportRulesFromSnappymail'),
+
     # Sieve Rules
     re_path(r'^api/listRules$', views.apiListRules, name='wmApiListRules'),
     re_path(r'^api/createRule$', views.apiCreateRule, name='wmApiCreateRule'),

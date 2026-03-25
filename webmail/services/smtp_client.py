@@ -6,8 +6,8 @@ class SMTPClient:
     """Wrapper around smtplib.SMTP for sending mail via Postfix.
 
     Supports two modes:
-    1. Authenticated (port 587 + STARTTLS) — for standalone login sessions
-    2. Local relay (port 25, no auth) — for SSO sessions using master user
+    1. Authenticated (port 587 + STARTTLS) for standalone login sessions.
+    2. Local relay (port 25, no auth) for SSO sessions using master user.
        Postfix accepts relay from localhost (permit_mynetworks in main.cf)
     """
 
@@ -15,9 +15,21 @@ class SMTPClient:
                  use_local_relay=False):
         self.email_address = email_address
         self.password = password
-        self.host = host
+        # Postfix on AlmaLinux/CyberPanel often sets mynetworks=127.0.0.0/8 only.
+        # Python resolves "localhost" to ::1 first → SMTP is not treated as mynetworks
+        # → 554 Relay access denied. Force IPv4 loopback for predictable relay.
+        self.host = self._smtp_host_ipv4_loopback(host)
         self.port = port
         self.use_local_relay = use_local_relay
+
+    @staticmethod
+    def _smtp_host_ipv4_loopback(host):
+        if not host:
+            return '127.0.0.1'
+        h = str(host).strip().lower()
+        if h in ('localhost', '::1', '[::1]'):
+            return '127.0.0.1'
+        return host
 
     def send_message(self, mime_message):
         """Send a composed email via SMTP.
@@ -26,10 +38,12 @@ class SMTPClient:
             dict: {success: bool, message_id: str or None, error: str or None}
         """
         try:
+            # Bind outbound socket to IPv4 so Postfix sees 127.0.0.1 (mynetworks), not ::1.
+            src = ('127.0.0.1', 0)
             if self.use_local_relay:
                 # SSO mode: send via port 25 without auth
                 # Postfix permits relay from localhost (permit_mynetworks)
-                smtp = smtplib.SMTP(self.host, 25)
+                smtp = smtplib.SMTP(self.host, 25, source_address=src)
                 smtp.ehlo()
                 smtp.send_message(mime_message)
                 smtp.quit()
@@ -39,7 +53,7 @@ class SMTPClient:
                 ctx.check_hostname = False
                 ctx.verify_mode = ssl.CERT_NONE
 
-                smtp = smtplib.SMTP(self.host, self.port)
+                smtp = smtplib.SMTP(self.host, self.port, source_address=src)
                 smtp.ehlo()
                 smtp.starttls(context=ctx)
                 smtp.ehlo()

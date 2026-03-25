@@ -40,18 +40,32 @@
     <div class="wm-layout">
 
         <!-- Column 1: Sidebar -->
-        <div class="wm-sidebar">
+        <div class="wm-sidebar" ng-style="sidebarResizeEnabled ? {width: sidebarWidthPx + 'px', minWidth: sidebarWidthPx + 'px', flexShrink: 0} : {}">
             <button class="btn btn-primary wm-compose-btn" ng-click="composeNew()">
                 <i class="fa fa-pen-to-square"></i> {% trans "Compose" %}
             </button>
 
             <div class="wm-folder-list">
-                <div class="wm-folder-item" ng-repeat="folder in folders"
-                     ng-class="{'active': currentFolder === folder.name}"
-                     ng-click="selectFolder(folder.name)">
-                    <i class="fa" ng-class="getFolderIcon(folder)"></i>
-                    <span class="wm-folder-name">{$ folder.display_name || folder.name $}</span>
-                    <span class="wm-badge" ng-if="folder.unread_count > 0">{$ folder.unread_count $}</span>
+                <div class="wm-folder-item" ng-repeat="row in displayFolderRows"
+                     ng-style="{'padding-left': (8 + row.depth * 14) + 'px'}"
+                     ng-class="{'active': currentFolder === row.folder.name, 'dragging': draggingFolder === row.folder.name, 'drag-over': dragOverFolder === row.folder.name}"
+                     ng-click="selectFolder(row.folder.name)"
+                     wm-folder-dnd="row.folder.name">
+                    <button type="button" class="wm-folder-chevron" ng-if="row.hasChildren"
+                            title="{% trans 'Expand or collapse subfolders' %}"
+                            ng-attr-aria-expanded="{$ isFolderRowExpanded(row.folder.name) ? 'true' : 'false' $}"
+                            ng-click="toggleFolderExpand(row.folder.name, $event)">
+                        <i class="fa" ng-class="isFolderRowExpanded(row.folder.name) ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+                    </button>
+                    <span class="wm-folder-chevron-spacer" ng-if="!row.hasChildren" aria-hidden="true"></span>
+                    <i class="fa" ng-class="getFolderIcon(row.folder)"></i>
+                    <span class="wm-folder-name" title="{$ row.folder.display_name || row.folder.name $}">{$ getFolderRowLabel(row.folder, row.depth) $}</span>
+                    <span class="wm-badge" ng-if="row.folder.unread_count > 0">{$ row.folder.unread_count $}</span>
+                    <button type="button" class="wm-folder-delete-btn" ng-if="canDeleteFolder(row.folder)"
+                            title="{% trans 'Delete folder' %}"
+                            ng-click="$event.preventDefault(); $event.stopPropagation(); openDeleteFolderConfirm(row.folder)">
+                        <i class="fa fa-trash"></i>
+                    </button>
                 </div>
             </div>
 
@@ -71,9 +85,48 @@
 
             <div class="wm-sidebar-divider"></div>
             <div class="wm-sidebar-nav">
-                <a ng-click="createFolder()" class="wm-nav-link">
+                <button type="button" class="wm-nav-link wm-nav-btn" ng-click="openNewFolderDialog()">
                     <i class="fa fa-folder-plus"></i> {% trans "New Folder" %}
-                </a>
+                </button>
+            </div>
+        </div>
+
+        <div class="wm-sidebar-resizer"
+             wm-sidebar-resizer-touch
+             ng-show="sidebarResizeEnabled"
+             title="{% trans 'Drag to resize folder panel' %}"
+             role="separator"
+             aria-orientation="vertical"
+             aria-label="{% trans 'Resize folder panel' %}"
+             ng-mousedown="startSidebarResize($event)"></div>
+
+        <!-- New folder (no browser prompt; works when dialogs are blocked) -->
+        <div class="wm-modal-backdrop" ng-if="showNewFolderDialog" ng-click="cancelNewFolderDialog()"></div>
+        <div class="wm-modal" ng-if="showNewFolderDialog" role="dialog" aria-labelledby="wm-new-folder-title">
+            <h4 id="wm-new-folder-title">{% trans "New folder" %}</h4>
+            <p class="wm-modal-hint">{% trans "Enter a short name only. The server will create it under your account mailbox (INBOX plus dot and this name)." %}</p>
+            <input type="text" id="wm-new-folder-input" class="form-control" ng-model="newFolderNameInput"
+                   placeholder="{% trans 'e.g. Projects or Work/Clients' %}"
+                   ng-keydown="$event.keyCode === 13 && submitNewFolderDialog(); $event.keyCode === 27 && cancelNewFolderDialog()">
+            <div class="wm-modal-actions">
+                <button type="button" class="btn btn-primary" ng-click="submitNewFolderDialog()">{% trans "Create" %}</button>
+                <button type="button" class="btn btn-default" ng-click="cancelNewFolderDialog()">{% trans "Cancel" %}</button>
+            </div>
+        </div>
+
+        <!-- Delete folder confirmation -->
+        <div class="wm-modal-backdrop" ng-if="showDeleteFolderDialog" ng-click="cancelDeleteFolderDialog()"></div>
+        <div class="wm-modal wm-modal-confirm-delete" ng-if="showDeleteFolderDialog" role="dialog" aria-labelledby="wm-delete-folder-title"
+             ng-click="$event.stopPropagation()">
+            <h4 id="wm-delete-folder-title">{% trans "Delete this folder?" %}</h4>
+            <p class="wm-modal-hint">
+                {% trans "You are about to permanently delete:" %}<br>
+                <strong class="wm-modal-emphasis">{$ (folderPendingDelete.display_name || folderPendingDelete.name) $}</strong>
+            </p>
+            <p class="wm-modal-hint wm-modal-warning">{% trans "All messages in this folder may be removed. This cannot be undone." %}</p>
+            <div class="wm-modal-actions">
+                <button type="button" class="btn btn-danger" ng-click="confirmDeleteFolder()">{% trans "Delete folder" %}</button>
+                <button type="button" class="btn btn-default" ng-click="cancelDeleteFolderDialog()">{% trans "Cancel" %}</button>
             </div>
         </div>
 
@@ -81,9 +134,15 @@
         <div class="wm-message-list" ng-show="viewMode === 'list' || viewMode === 'read'">
             <!-- Search Bar -->
             <div class="wm-search-bar">
+                <select ng-model="messageSearchScope" class="wm-search-scope form-control"
+                        aria-label="{% trans 'Search scope' %}"
+                        title="{% trans 'Search all folders or pick one folder' %}">
+                    <option value="__all__">{% trans "All folders" %}</option>
+                    <option ng-repeat="f in folders" value="{$ f.name $}">{$ f.display_name || f.name $}</option>
+                </select>
                 <input type="text" ng-model="searchQuery" placeholder="{% trans 'Search messages...' %}"
                        ng-keyup="$event.keyCode === 13 && searchMessages()" class="wm-search-input">
-                <button class="wm-search-btn" ng-click="searchMessages()">
+                <button type="button" class="wm-search-btn" ng-click="searchMessages()">
                     <i class="fa fa-search"></i>
                 </button>
             </div>
@@ -123,6 +182,7 @@
             <!-- Message Rows -->
             <div class="wm-messages">
                 <div class="wm-msg-row" ng-repeat="msg in messages"
+                     wm-message-drag
                      ng-class="{'unread': !msg.is_read, 'flagged': msg.is_flagged, 'selected': msg.selected}"
                      ng-click="openMessage(msg)">
                     <label class="wm-checkbox-label" ng-click="$event.stopPropagation()">
@@ -132,7 +192,11 @@
                         <i class="fa" ng-class="msg.is_flagged ? 'fa-star wm-starred' : 'fa-star wm-unstarred'"></i>
                     </button>
                     <div class="wm-msg-from">{$ msg.from | limitTo:30 $}</div>
-                    <div class="wm-msg-subject">{$ msg.subject | limitTo:60 $}</div>
+                    <div class="wm-msg-subject">
+                        <span class="wm-msg-folder-pill" ng-if="messageListSearchActive && messageSearchScope === '__all__' && msg.folder"
+                              title="{$ msg.folder $}">{$ getFolderDisplayName(msg.folder) $}</span>
+                        {$ msg.subject | limitTo:60 $}
+                    </div>
                     <div class="wm-msg-date">{$ msg.date | wmDate $}</div>
                 </div>
                 <div class="wm-empty" ng-if="messages.length === 0 && !loading">
@@ -202,7 +266,10 @@
                     <div class="wm-field">
                         <label>{% trans "To" %}</label>
                         <input type="text" ng-model="compose.to" class="form-control"
-                               wm-autocomplete required>
+                               wm-autocomplete
+                               placeholder="{% trans 'name@example.com (required. Use a full email address)' %}"
+                               autocomplete="off">
+                        <div class="wm-field-hint">{% trans "Separate multiple addresses with commas. Words like “test” are not valid email addresses." %}</div>
                     </div>
                     <div class="wm-field">
                         <label>{% trans "Cc" %}</label>
@@ -265,9 +332,14 @@
             <div ng-if="viewMode === 'contacts'" class="wm-contacts-view">
                 <div class="wm-section-header">
                     <h3>{% trans "Contacts" %}</h3>
-                    <button class="btn btn-sm btn-primary" ng-click="newContact()">
-                        <i class="fa fa-plus"></i> {% trans "Add" %}
-                    </button>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <button class="btn btn-sm btn-primary" ng-click="newContact()">
+                            <i class="fa fa-plus"></i> {% trans "Add" %}
+                        </button>
+                        <button class="btn btn-sm btn-default" ng-click="importContactsFromSnappymail()">
+                            <i class="fa fa-download"></i> {% trans "Import from SnappyMail" %}
+                        </button>
+                    </div>
                 </div>
                 <div class="wm-contacts-search">
                     <input type="text" ng-model="contactSearch" placeholder="{% trans 'Search contacts...' %}"
@@ -327,21 +399,31 @@
             <div ng-if="viewMode === 'rules'" class="wm-rules-view">
                 <div class="wm-section-header">
                     <h3>{% trans "Mail Filter Rules" %}</h3>
-                    <button class="btn btn-sm btn-primary" ng-click="newRule()">
-                        <i class="fa fa-plus"></i> {% trans "Add Rule" %}
-                    </button>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <button class="btn btn-sm btn-primary" ng-click="newRule()">
+                            <i class="fa fa-plus"></i> {% trans "Add Rule" %}
+                        </button>
+                        <button class="btn btn-sm btn-default" ng-click="importRulesFromSnappymail()">
+                            <i class="fa fa-download"></i> {% trans "Import from SnappyMail" %}
+                        </button>
+                    </div>
                 </div>
                 <div class="wm-rule-list">
                     <div class="wm-rule-item" ng-repeat="rule in sieveRules">
                         <div class="wm-rule-info">
                             <strong>{$ rule.name $}</strong>
                             <span class="wm-rule-desc">
-                                If <em>{$ rule.condition_field $}</em> {$ rule.condition_type $} "{$ rule.condition_value $}"
-                                &rarr; {$ rule.action_type $} {$ rule.action_value $}
+                                <span ng-if="rule.is_raw">
+                                    {% trans "Imported RAW sieve rules (read-only)" %}
+                                </span>
+                                <span ng-if="!rule.is_raw">
+                                    If <em>{$ rule.condition_field $}</em> {$ rule.condition_type $} "{$ rule.condition_value $}"
+                                    &rarr; {$ rule.action_type $} {$ rule.action_value $}
+                                </span>
                             </span>
                         </div>
                         <div class="wm-rule-actions">
-                            <button class="wm-action-btn" ng-click="editRule(rule)"><i class="fa fa-pencil"></i></button>
+                            <button class="wm-action-btn" ng-if="!rule.is_raw" ng-click="editRule(rule)"><i class="fa fa-pencil"></i></button>
                             <button class="wm-action-btn" ng-click="removeRule(rule)"><i class="fa fa-trash"></i></button>
                         </div>
                     </div>
@@ -448,6 +530,74 @@
                             {% trans "Auto-collect contacts from sent messages" %}
                         </label>
                     </div>
+
+                    <div class="wm-field-row">
+                        <div class="wm-field">
+                            <label>{% trans "Special folders display" %}</label>
+                            <select ng-model="wmSettings.folderSettings.specialDisplayMode" class="form-control">
+                                <option value="top">{% trans "At top" %}</option>
+                                <option value="interleaved">{% trans "Interleaved" %}</option>
+                            </select>
+                        </div>
+                        <div class="wm-field">
+                            <label class="wm-checkbox-label" style="display:flex; align-items:center; gap:10px;">
+                                <input type="checkbox" ng-model="wmSettings.folderSettings.enableDragDrop">
+                                {% trans "Enable drag/drop reorder" %}
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="wm-field-row">
+                        <div class="wm-field">
+                            <label>{% trans "Inbox" %}</label>
+                            <select ng-model="wmSettings.folderSettings.folderMappings.inbox" class="form-control">
+                                <option ng-repeat="f in folders" value="{$ f.name $}">{$ f.display_name || f.name $}</option>
+                            </select>
+                        </div>
+                        <div class="wm-field">
+                            <label>{% trans "Spam" %}</label>
+                            <select ng-model="wmSettings.folderSettings.folderMappings.spam" class="form-control">
+                                <option ng-repeat="f in folders" value="{$ f.name $}">{$ f.display_name || f.name $}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="wm-field-row">
+                        <div class="wm-field">
+                            <label>{% trans "Deleted Items" %}</label>
+                            <select ng-model="wmSettings.folderSettings.folderMappings.deleted_items" class="form-control">
+                                <option ng-repeat="f in folders" value="{$ f.name $}">{$ f.display_name || f.name $}</option>
+                            </select>
+                        </div>
+                        <div class="wm-field">
+                            <label>{% trans "Junk E-mail" %}</label>
+                            <select ng-model="wmSettings.folderSettings.folderMappings.junk_e_mail" class="form-control">
+                                <option ng-repeat="f in folders" value="{$ f.name $}">{$ f.display_name || f.name $}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="wm-field-row">
+                        <div class="wm-field">
+                            <label>{% trans "Drafts" %}</label>
+                            <select ng-model="wmSettings.folderSettings.folderMappings.drafts" class="form-control">
+                                <option ng-repeat="f in folders" value="{$ f.name $}">{$ f.display_name || f.name $}</option>
+                            </select>
+                        </div>
+                        <div class="wm-field">
+                            <label>{% trans "Trash" %}</label>
+                            <select ng-model="wmSettings.folderSettings.folderMappings.trash" class="form-control">
+                                <option ng-repeat="f in folders" value="{$ f.name $}">{$ f.display_name || f.name $}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="margin:12px 0 2px;">
+                        <div style="font-size:12px; color:var(--text-secondary);">
+                            {% trans "Drag folders in the sidebar to reorder (when enabled). Folder order is saved automatically; use Save Settings for display name, signature, and folder role mappings." %}
+                        </div>
+                    </div>
+
                     <div class="wm-form-actions">
                         <button class="btn btn-primary" ng-click="saveSettings()">
                             <i class="fa fa-floppy-disk"></i> {% trans "Save Settings" %}
@@ -466,6 +616,6 @@
     </div>
 </div>
 
-<script src="{% static 'webmail/webmail.js' %}?v=6"></script>
+<script src="{% static 'webmail/webmail.js' %}?v=16"></script>
 
 {% endblock %}
