@@ -1716,10 +1716,17 @@ Sync_CyberCP_To_Latest() {
     fi
   )
   local sync_code=$?
-  # Restore production settings so panel keeps working (DB, secrets, etc.)
-  if [[ -f /tmp/cyberpanel_settings_backup.py ]]; then
+  # Merge production DATABASES into branch settings.py (preserve webmail/emailDelivery in INSTALLED_APPS)
+  if [[ -f /tmp/cyberpanel_settings_backup.py ]] && [[ -f /usr/local/CyberCP/upgrade_modules/merge_production_settings.py ]]; then
+    python3 /usr/local/CyberCP/upgrade_modules/merge_production_settings.py /tmp/cyberpanel_settings_backup.py /usr/local/CyberCP/CyberCP/settings.py 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+    if [[ "${PIPESTATUS[0]}" -eq 0 ]]; then
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Merged production DATABASES into branch settings.py (INSTALLED_APPS from branch preserved)" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    else
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: settings merge failed; keeping branch settings.py as-is" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    fi
+  elif [[ -f /tmp/cyberpanel_settings_backup.py ]]; then
     cp /tmp/cyberpanel_settings_backup.py /usr/local/CyberCP/CyberCP/settings.py
-    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Restored settings.py after sync" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Restored settings.py after sync (merge script missing)" | tee -a /var/log/cyberpanel_upgrade_debug.log
   fi
   # LiteSpeed serves /static/ from public/static/; ensure it has latest baseTemplate static files (e.g. dashboard JS)
   if [[ -d /usr/local/CyberCP/public/static ]] && [[ -d /usr/local/CyberCP/baseTemplate/static/baseTemplate ]]; then
