@@ -2,11 +2,6 @@
 {% load i18n %}
 {% load static %}
 {% block title %}{% trans "Webmail - CyberPanel" %}{% endblock %}
-{% block header_scripts %}
-{{ block.super }}
-<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-{% endblock %}
 {% block content %}
 
 <link rel="stylesheet" href="{% static 'webmail/webmail.css' %}">
@@ -34,10 +29,35 @@
             <i class="fa fa-envelope"></i>
             <span>{$ currentEmail $}</span>
         </div>
-        <div class="wm-account-switch">
-            <select ng-model="currentEmail" ng-change="switchAccount()"
-                    ng-options="a for a in managedAccounts" class="wm-account-select">
-            </select>
+        <div class="wm-account-switch" ng-class="{'wm-account-switch--open': accountPickerOpen}">
+            <button type="button" class="wm-account-picker-trigger"
+                    ng-click="toggleAccountPicker($event)"
+                    aria-haspopup="listbox"
+                    aria-expanded="{$ accountPickerOpen ? 'true' : 'false' $}">
+                <span>{% trans "Change mailbox" %}</span>
+                <i class="fa fa-chevron-down wm-account-picker-chevron" ng-class="{'is-open': accountPickerOpen}"></i>
+            </button>
+            <div class="wm-account-picker-dropdown" ng-show="accountPickerOpen" ng-click="$event.stopPropagation()" role="listbox">
+                <label class="wm-sr-only" for="wm-account-search-input">{% trans "Search accounts" %}</label>
+                <input id="wm-account-search-input" type="search" class="form-control wm-account-search-input"
+                       ng-model="accountPickerQuery"
+                       ng-click="$event.stopPropagation()"
+                       placeholder="{% trans 'Search accounts…' %}"
+                       autocomplete="off"
+                       wm-focus-when="accountPickerOpen">
+                <ul class="wm-account-picker-list">
+                    <li ng-repeat="a in managedAccounts | filter:accountPickerQuery track by a"
+                        class="wm-account-picker-item"
+                        ng-class="{'is-active': a === currentEmail}"
+                        role="option"
+                        ng-click="selectManagedAccount(a)">
+                        {$ a $}
+                    </li>
+                </ul>
+                <div class="wm-account-picker-empty" ng-show="(managedAccounts | filter:accountPickerQuery).length === 0">
+                    {% trans "No matches" %}
+                </div>
+            </div>
         </div>
     </div>
 
@@ -136,7 +156,8 @@
         </div>
 
         <!-- Column 2: Message List -->
-        <div class="wm-message-list" ng-show="viewMode === 'list' || viewMode === 'read'">
+        <div class="wm-message-list" ng-show="viewMode === 'list' || viewMode === 'read'"
+             ng-style="listDetailResizeEnabled ? {width: messageListWidthPx + 'px', minWidth: messageListWidthPx + 'px', flexShrink: 0} : {}">
             <!-- Search Bar -->
             <div class="wm-search-bar">
                 <select ng-model="messageSearchScope" class="wm-search-scope form-control"
@@ -214,6 +235,15 @@
             </div>
         </div>
 
+        <div class="wm-list-detail-resizer"
+             wm-list-detail-resizer-touch
+             ng-show="listDetailResizeEnabled && (viewMode === 'list' || viewMode === 'read')"
+             title="{% trans 'Drag to resize message list' %}"
+             role="separator"
+             aria-orientation="vertical"
+             aria-label="{% trans 'Resize message list' %}"
+             ng-mousedown="startMessageListResize($event)"></div>
+
         <!-- Column 3: Detail Pane -->
         <div class="wm-detail-pane">
 
@@ -261,10 +291,15 @@
                 <form name="composeForm" ng-submit="sendMessage()" class="wm-compose-form">
                     <div class="wm-field">
                         <label>{% trans "From" %}</label>
+                        <input type="search" class="form-control wm-compose-account-filter"
+                               ng-show="managedAccounts.length > 1"
+                               ng-model="composeAccountFilter"
+                               placeholder="{% trans 'Filter accounts…' %}"
+                               autocomplete="off">
                         <select ng-model="$parent.currentEmail"
-                                ng-options="a for a in managedAccounts"
+                                ng-options="a for a in managedAccounts | filter:composeAccountFilter"
                                 ng-change="switchAccount()"
-                                ng-show="managedAccounts.length > 1" class="form-control"></select>
+                                ng-show="managedAccounts.length > 1" class="form-control wm-compose-account-select"></select>
                         <input type="text" value="{$ currentEmail $}" class="form-control" readonly
                                ng-show="managedAccounts.length <= 1">
                     </div>
@@ -502,7 +537,7 @@
             <!-- Settings View -->
             <div ng-if="viewMode === 'settings'" class="wm-settings-view">
                 <div class="wm-section-header">
-                    <h3>{% trans "Settings" %} <span style="font-size:11px;font-weight:600;color:var(--text-secondary);">(UI build 2026-03-26 · Spam-only map · Sent row)</span></h3>
+                    <h3>{% trans "Settings" %}</h3>
                 </div>
                 <div class="wm-settings-form" data-webmail-folder-mapping-ui="v5-spam-only">
                     <!-- webmail-settings-ui:v5 no Junk-E-mail mapping row; only Spam maps junk/spam -->
@@ -637,6 +672,6 @@
     </div>
 </div>
 
-<script src="{% static 'webmail/webmail.js' %}?v=26"></script>
+<script src="{% static 'webmail/webmail.js' %}?v=28"></script>
 
 {% endblock %}
