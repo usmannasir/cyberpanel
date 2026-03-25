@@ -44,6 +44,120 @@
     cursor: pointer;
 }
 
+.wm-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.wm-account-switch {
+    position: relative;
+}
+
+.wm-account-picker-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.wm-account-picker-trigger:hover {
+    border-color: var(--accent-color);
+    background: var(--bg-secondary);
+}
+
+.wm-account-picker-chevron {
+    font-size: 11px;
+    opacity: 0.65;
+    transition: transform 0.2s ease;
+}
+
+.wm-account-picker-chevron.is-open {
+    transform: rotate(180deg);
+}
+
+.wm-account-picker-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    min-width: min(360px, 92vw);
+    max-width: 420px;
+    max-height: min(340px, 70vh);
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+    z-index: 200;
+    overflow: hidden;
+}
+
+.wm-account-search-input {
+    margin: 10px 10px 6px;
+    flex-shrink: 0;
+    font-size: 13px;
+}
+
+.wm-account-picker-list {
+    list-style: none;
+    margin: 0;
+    padding: 4px 0;
+    overflow-y: auto;
+    flex: 1;
+    max-height: 260px;
+}
+
+.wm-account-picker-item {
+    padding: 8px 14px;
+    font-size: 13px;
+    color: var(--text-primary);
+    cursor: pointer;
+    word-break: break-all;
+    line-height: 1.35;
+    border-left: 3px solid transparent;
+}
+
+.wm-account-picker-item:hover {
+    background: var(--bg-secondary);
+}
+
+.wm-account-picker-item.is-active {
+    background: rgba(108, 92, 231, 0.1);
+    border-left-color: var(--accent-color);
+    font-weight: 600;
+}
+
+.wm-account-picker-empty {
+    padding: 14px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.wm-compose-account-filter {
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+
+.wm-compose-account-select {
+    margin-top: 0;
+}
+
 /* Main Layout */
 .wm-layout {
     display: flex;
@@ -85,12 +199,35 @@
     outline: none;
 }
 
-body.wm-resizing-sidebar {
+/* Drag handle between message list and reader (same interaction as folder panel resizer) */
+.wm-list-detail-resizer {
+    width: 6px;
+    flex-shrink: 0;
+    cursor: col-resize;
+    background: transparent;
+    border-right: 1px solid var(--border-color);
+    align-self: stretch;
+    margin: 0 -3px 0 -3px;
+    padding: 0;
+    z-index: 5;
+    touch-action: none;
+    transition: background 0.15s ease;
+}
+
+.wm-list-detail-resizer:hover,
+.wm-list-detail-resizer:focus {
+    background: rgba(108, 92, 231, 0.18);
+    outline: none;
+}
+
+body.wm-resizing-sidebar,
+body.wm-resizing-message-list {
     cursor: col-resize !important;
     user-select: none !important;
 }
 
-body.wm-resizing-sidebar * {
+body.wm-resizing-sidebar *,
+body.wm-resizing-message-list * {
     cursor: col-resize !important;
 }
 
@@ -1054,7 +1191,8 @@ button.wm-nav-link.wm-nav-btn:focus {
     .wm-layout {
         flex-direction: column;
     }
-    .wm-sidebar-resizer {
+    .wm-sidebar-resizer,
+    .wm-list-detail-resizer {
         display: none !important;
     }
     .wm-sidebar {

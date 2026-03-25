@@ -328,6 +328,44 @@ app.directive('wmSidebarResizerTouch', function() {
     };
 });
 
+app.directive('wmListDetailResizerTouch', function() {
+    return {
+        restrict: 'A',
+        link: function(scope, element) {
+            element.on('touchstart', function(ev) {
+                try {
+                    ev.preventDefault();
+                } catch (e) { /* ignore */ }
+                scope.startMessageListResize(ev);
+            });
+            scope.$on('$destroy', function() {
+                element.off('touchstart');
+            });
+        }
+    };
+});
+
+/** Focus input when expression becomes true (e.g. open account picker). No isolate scope (same element may use ng-model). */
+app.directive('wmFocusWhen', ['$timeout', function($timeout) {
+    return {
+        restrict: 'A',
+        link: function(scope, element, attrs) {
+            scope.$watch(attrs.wmFocusWhen, function(v) {
+                if (v) {
+                    $timeout(function() {
+                        try {
+                            element[0].focus();
+                            if (typeof element[0].select === 'function') {
+                                element[0].select();
+                            }
+                        } catch (e) { /* ignore */ }
+                    }, 0);
+                }
+            });
+        }
+    };
+}]);
+
 app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$document', '$window', function($scope, $http, $sce, $timeout, $document, $window) {
 
     // System folders: must stay in sync with webmailManager.apiDeleteFolder protected set
@@ -336,6 +374,14 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$document
     var WM_SIDEBAR_MAX = 560;
     var WM_SIDEBAR_DEFAULT = 220;
     var sidebarResizeActive = false;
+
+    var WM_MESSAGE_LIST_WIDTH_KEY = 'wm_message_list_width_px';
+    var WM_ML_MIN = 240;
+    var WM_ML_MAX = 720;
+    var WM_ML_DEFAULT = 380;
+    /** Minimum width (px) kept for the message reader / detail column when dragging the list split. */
+    var WM_DETAIL_MIN = 280;
+    var listDetailResizeActive = false;
 
     var WM_FOLDER_PROTECTED = {
         'INBOX': true,
@@ -348,6 +394,11 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$document
     // ── State ────────────────────────────────────────────────
     $scope.currentEmail = '';
     $scope.managedAccounts = [];
+    $scope.accountPickerOpen = false;
+    $scope.accountPickerQuery = '';
+    $scope.composeAccountFilter = '';
+    /** Bound click handler on document.body to close account picker; cleared on close/destroy. */
+    var accountPickerBodyClose = null;
     $scope.folders = [];
     $scope.displayFolders = [];
     /** Nested sidebar rows: { folder, depth, hasChildren } */
@@ -372,12 +423,17 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$document
     $scope.selectAll = false;
     $scope.sidebarWidthPx = WM_SIDEBAR_DEFAULT;
     $scope.sidebarResizeEnabled = true;
+    $scope.messageListWidthPx = WM_ML_DEFAULT;
+    $scope.listDetailResizeEnabled = true;
 
     function refreshSidebarResizeEnabled() {
         try {
-            $scope.sidebarResizeEnabled = $window.matchMedia('(min-width: 769px)').matches;
+            var wide = $window.matchMedia('(min-width: 769px)').matches;
+            $scope.sidebarResizeEnabled = wide;
+            $scope.listDetailResizeEnabled = wide;
         } catch (e) {
             $scope.sidebarResizeEnabled = true;
+            $scope.listDetailResizeEnabled = true;
         }
     }
     refreshSidebarResizeEnabled();
@@ -389,8 +445,37 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$document
         }
     } catch (e) { /* ignore */ }
 
+    try {
+        var storedMl = parseInt(localStorage.getItem(WM_MESSAGE_LIST_WIDTH_KEY), 10);
+        if (!isNaN(storedMl) && storedMl >= WM_ML_MIN && storedMl <= WM_ML_MAX) {
+            $scope.messageListWidthPx = storedMl;
+        }
+    } catch (e) { /* ignore */ }
+
+    function maxMessageListWidthAllowed() {
+        try {
+            var side = ($scope.sidebarWidthPx != null) ? $scope.sidebarWidthPx : WM_SIDEBAR_DEFAULT;
+            var resizerGutter = 18;
+            return Math.max(WM_ML_MIN, $window.innerWidth - side - resizerGutter - WM_DETAIL_MIN);
+        } catch (e) {
+            return WM_ML_MAX;
+        }
+    }
+
+    function clampMessageListWidth(n) {
+        var w = Math.round(Number(n));
+        if (isNaN(w)) w = WM_ML_DEFAULT;
+        var cap = Math.min(WM_ML_MAX, maxMessageListWidthAllowed());
+        return Math.max(WM_ML_MIN, Math.min(cap, w));
+    }
+
+    $scope.messageListWidthPx = clampMessageListWidth($scope.messageListWidthPx);
+
     angular.element($window).on('resize', function() {
-        $scope.$applyAsync(refreshSidebarResizeEnabled);
+        $scope.$applyAsync(function() {
+            refreshSidebarResizeEnabled();
+            $scope.messageListWidthPx = clampMessageListWidth($scope.messageListWidthPx);
+        });
     });
 
     $scope.startSidebarResize = function(event) {
@@ -422,6 +507,7 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$document
             try {
                 localStorage.setItem(WM_SIDEBAR_WIDTH_KEY, String($scope.sidebarWidthPx));
             } catch (err) { /* ignore */ }
+            $scope.messageListWidthPx = clampMessageListWidth($scope.messageListWidthPx);
             angular.element($window.document.body).removeClass('wm-resizing-sidebar');
         }
 
@@ -429,6 +515,40 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$document
         $document.on('mousemove touchmove', onMove);
         $document.on('mouseup touchend touchcancel', onUp);
     };
+
+    $scope.startMessageListResize = function(event) {
+        if (!$scope.listDetailResizeEnabled) return;
+        if (listDetailResizeActive) return;
+        if (event.type === 'mousedown' && event.button !== 0) return;
+        event.preventDefault();
+        listDetailResizeActive = true;
+        var startX = event.clientX != null ? event.clientX : (event.originalEvent && event.originalEvent.touches && event.originalEvent.touches[0] ? event.originalEvent.touches[0].clientX : (event.touches && event.touches[0] ? event.touches[0].clientX : 0));
+        var startW = $scope.messageListWidthPx;
+
+        function onMove(e) {
+            if (!$scope.listDetailResizeEnabled) return;
+            var oe = e.originalEvent || e;
+            var x = oe.clientX != null ? oe.clientX : (oe.touches && oe.touches[0] ? oe.touches[0].clientX : (e.clientX != null ? e.clientX : startX));
+            var dx = x - startX;
+            $scope.messageListWidthPx = clampMessageListWidth(Math.round(startW + dx));
+            $scope.$digest();
+        }
+
+        function onUp() {
+            listDetailResizeActive = false;
+            $document.off('mousemove touchmove', onMove);
+            $document.off('mouseup touchend touchcancel', onUp);
+            try {
+                localStorage.setItem(WM_MESSAGE_LIST_WIDTH_KEY, String($scope.messageListWidthPx));
+            } catch (err) { /* ignore */ }
+            angular.element($window.document.body).removeClass('wm-resizing-message-list');
+        }
+
+        angular.element($window.document.body).addClass('wm-resizing-message-list');
+        $document.on('mousemove touchmove', onMove);
+        $document.on('mouseup touchend touchcancel', onUp);
+    };
+
     $scope.showMoveDropdown = false;
     $scope.moveTarget = '';
     $scope.showBcc = false;
@@ -535,6 +655,57 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$document
             }
         });
     };
+
+    function detachAccountPickerBodyListener() {
+        if (accountPickerBodyClose) {
+            angular.element($window.document.body).off('click', accountPickerBodyClose);
+            accountPickerBodyClose = null;
+        }
+    }
+
+    $scope.toggleAccountPicker = function(ev) {
+        if (ev) ev.stopPropagation();
+        if ($scope.accountPickerOpen) {
+            $scope.accountPickerOpen = false;
+            $scope.accountPickerQuery = '';
+            detachAccountPickerBodyListener();
+            return;
+        }
+        $scope.accountPickerOpen = true;
+        $scope.accountPickerQuery = '';
+        $timeout(function() {
+            accountPickerBodyClose = function() {
+                $scope.$apply(function() {
+                    $scope.accountPickerOpen = false;
+                    $scope.accountPickerQuery = '';
+                });
+                detachAccountPickerBodyListener();
+            };
+            angular.element($window.document.body).on('click', accountPickerBodyClose);
+        }, 0);
+    };
+
+    $scope.selectManagedAccount = function(email) {
+        var addr = (email || '').trim();
+        if (!addr) {
+            $scope.accountPickerOpen = false;
+            $scope.accountPickerQuery = '';
+            detachAccountPickerBodyListener();
+            return;
+        }
+        $scope.accountPickerOpen = false;
+        $scope.accountPickerQuery = '';
+        detachAccountPickerBodyListener();
+        if (addr === ($scope.currentEmail || '').trim()) {
+            return;
+        }
+        $scope.currentEmail = addr;
+        $scope.switchAccount();
+    };
+
+    $scope.$on('$destroy', function() {
+        detachAccountPickerBodyListener();
+    });
 
     // ── Account Switching ────────────────────────────────────
     $scope.switchAccount = function() {
