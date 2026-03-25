@@ -171,14 +171,28 @@ app.controller('createUserCtr', function ($scope, $http) {
 
 
 /* Java script code to modify user account */
-app.controller('modifyUser', function ($scope, $http) {
+app.controller('modifyUser', function ($scope, $http, $timeout) {
 
-    var qrCode = window.qr = new QRious({
-        element: document.getElementById('qr'),
+    var qrEl = document.getElementById('qr');
+    var qrCode = window.qr = (qrEl && typeof QRious !== 'undefined') ? new QRious({
+        element: qrEl,
         size: 200,
         value: 'QRious'
-    });
+    }) : null;
+    if (!qrCode && qrEl) {
+        try { window.qr = new QRious({ element: qrEl, size: 200, value: 'QRious' }); } catch (e) { /* ignore */ }
+    }
 
+    $scope.userSearch = '';
+    /* Prefer global set by inline script (before Angular); fallback to script tag */
+    var list = (typeof window.__CP_ACCT_NAMES !== 'undefined' && Array.isArray(window.__CP_ACCT_NAMES))
+        ? window.__CP_ACCT_NAMES
+        : (function() {
+            var el = document.getElementById('acctNamesData');
+            if (!el || !el.textContent) return [];
+            try { return JSON.parse(el.textContent); } catch (e) { return []; }
+        })();
+    $scope.acctNamesList = Array.isArray(list) ? list : [];
 
     $scope.userModificationLoading = true;
     $scope.acctDetailsFetched = true;
@@ -253,9 +267,7 @@ app.controller('modifyUser', function ($scope, $http) {
                 $scope.formattedSecretKey = response.data.secretKey.match(/.{1,4}/g).join(' ');
                 
                 // Update the QR code with new provisioning URI
-                qrCode.set({
-                    value: response.data.otpauth
-                });
+                if (qrCode) qrCode.set({ value: response.data.otpauth });
                 
                 // Show success message
                 alert('2FA secret has been successfully regenerated! Please update your authenticator app with the new QR code or secret key.');
@@ -271,20 +283,24 @@ app.controller('modifyUser', function ($scope, $http) {
     // WebAuthn Functions
     $scope.loadWebAuthnData = function() {
         if (!$scope.accountUsername) return;
-        
+        $scope.webauthnDataLoaded = false;
         var url = '/webauthn/credentials/' + $scope.accountUsername + '/';
-        
         $http.get(url).then(function(response) {
             if (response.data.success) {
-                $scope.webauthnCredentials = response.data.credentials;
+                $scope.webauthnCredentials = response.data.credentials || [];
                 $scope.webauthnEnabled = response.data.settings.enabled;
                 $scope.webauthnRequirePasskey = response.data.settings.require_passkey;
                 $scope.webauthnAllowMultiple = response.data.settings.allow_multiple_credentials;
                 $scope.webauthnMaxCredentials = response.data.settings.max_credentials;
-                $scope.canAddCredential = response.data.settings.can_add_credential;
+                $scope.canAddCredential = !!response.data.settings.can_add_credential;
+                $scope.webauthnDataLoaded = true;
+            } else {
+                $scope.canAddCredential = true;
             }
         }, function(error) {
             console.error('Error loading WebAuthn data:', error);
+            $scope.canAddCredential = true;
+            $scope.webauthnCredentials = [];
         });
     };
     
@@ -294,27 +310,59 @@ app.controller('modifyUser', function ($scope, $http) {
         } else {
             $scope.webauthnCredentials = [];
             $scope.canAddCredential = true;
+            $scope.webauthnDataLoaded = false;
         }
     };
     
+    /* Inline passkey UX like diabetes.newstargeted.com/profile?tab=2fa: name input + button + message area, no modal */
+    $scope.newPasskeyName = '';
+    $scope.webauthnMessage = '';
+    $scope.webauthnMessageError = false;
+    $scope.registerPasskeyLoading = false;
+    
     $scope.registerNewPasskey = function() {
-        if (!window.cyberPanelWebAuthn) {
-            alert('WebAuthn is not supported in this browser');
+        if (!$scope.accountUsername) {
+            $scope.webauthnMessage = 'Please select a user account first.';
+            $scope.webauthnMessageError = true;
             return;
         }
-        
-        var credentialName = prompt('Enter a name for this passkey:', 'Passkey ' + new Date().toLocaleDateString());
-        if (!credentialName) return;
-        
-        window.cyberPanelWebAuthn.registerPasskey($scope.accountUsername, credentialName)
+        if (typeof window.cyberPanelWebAuthn === 'undefined') {
+            $scope.webauthnMessage = 'WebAuthn script not loaded. Refresh the page (Ctrl+F5) and try again.';
+            $scope.webauthnMessageError = true;
+            return;
+        }
+        if (typeof window.cyberPanelWebAuthn.isSupported !== 'function' || !window.cyberPanelWebAuthn.isSupported()) {
+            $scope.webauthnMessage = 'WebAuthn is not supported in this browser.';
+            $scope.webauthnMessageError = true;
+            return;
+        }
+        var name = ($scope.newPasskeyName || '').trim() || 'Security key';
+        $scope.webauthnMessage = '';
+        $scope.webauthnMessageError = false;
+        $scope.registerPasskeyLoading = true;
+        var username = $scope.accountUsername;
+        window.cyberPanelWebAuthn.registerPasskey(username, name, { silent: true })
             .then(function(response) {
-                if (response.success) {
-                    $scope.loadWebAuthnData();
-                    $scope.$apply();
+                if (response && response.success) {
+                    $scope.webauthnMessage = 'Passkey registered successfully.';
+                    $scope.webauthnMessageError = false;
+                    $scope.newPasskeyName = '';
+                    $timeout(function() { $scope.loadWebAuthnData(); }, 0);
+                } else {
+                    $scope.webauthnMessage = (response && response.error) ? response.error : 'Registration failed.';
+                    $scope.webauthnMessageError = true;
                 }
             })
             .catch(function(error) {
+                var msg = (error && error.message) ? error.message : 'Passkey registration failed.';
+                if (error && error.name === 'NotAllowedError') msg = 'Registration was cancelled or timed out.';
+                $scope.webauthnMessage = msg;
+                $scope.webauthnMessageError = true;
                 console.error('Error registering passkey:', error);
+            })
+            .finally(function() {
+                $scope.registerPasskeyLoading = false;
+                if (!$scope.$$phase && !$scope.$root.$$phase) { try { $scope.$apply(); } catch (e) { /* already applied */ } }
             });
     };
     
@@ -435,14 +483,11 @@ app.controller('modifyUser', function ($scope, $http) {
                 $scope.webauthnTimeout = 60;
                 $scope.webauthnCredentials = [];
                 $scope.canAddCredential = true;
-                
+                $scope.webauthnDataLoaded = false;
                 // Load WebAuthn settings and credentials
                 $scope.loadWebAuthnData();
 
-                qrCode.set({
-                    value: userDetails.otpauth
-                });
-
+                if (qrCode) qrCode.set({ value: userDetails.otpauth });
 
                 $scope.userModificationLoading = true;
                 $scope.acctDetailsFetched = false;
@@ -537,8 +582,8 @@ app.controller('modifyUser', function ($scope, $http) {
 
         $http.post(url, data, config).then(function(response) {
             ListInitialDatas(response);
-            // Save WebAuthn settings after successful user modification
-            if (response.data.saveStatus == 1) {
+            // Save WebAuthn settings after successful user modification (only if WebAuthn script loaded)
+            if (response.data.saveStatus == 1 && window.cyberPanelWebAuthn) {
                 $scope.saveWebAuthnSettings();
             }
         }, cantLoadInitialDatas);
@@ -554,7 +599,7 @@ app.controller('modifyUser', function ($scope, $http) {
                 $scope.userModified = false;
                 $scope.canotModifyUser = false;  // hide modify error on success
                 $scope.couldNotConnect = true;
-                $scope.canotFetchDetails = true;
+                $scope.canotFetchDetails = false;  // hide "Cannot fetch details" on save success
                 $scope.detailsFetched = true;
                 $scope.userAccountsLimit = true;
                 $scope.accountTypeView = true;
@@ -592,7 +637,7 @@ app.controller('modifyUser', function ($scope, $http) {
             $scope.couldNotConnect = false;
             $scope.canotFetchDetails = true;
             $scope.detailsFetched = true;
-
+            $scope.errorMessage = (response && response.data && (response.data.error_message || response.data.message || response.data.errorMessage)) || 'Unknown error';
 
         }
 
@@ -1934,7 +1979,11 @@ app.controller('listTableUsers', function ($scope, $http) {
 
     var UserToDelete;
 
-    $scope.populateCurrentRecords = function () {
+    /**
+     * Reload the user table from the server.
+     * @param {boolean} [suppressSuccessNotify=false] - When true, no success toast (avoids double popups after delete/edit/suspend when the caller already notified).
+     */
+    $scope.populateCurrentRecords = function (suppressSuccessNotify) {
         $scope.cyberpanelLoading = false;
 
         url = "/users/fetchTableUsers";
@@ -1958,11 +2007,13 @@ app.controller('listTableUsers', function ($scope, $http) {
 
                 $scope.records = JSON.parse(response.data.data);
 
-                safePNotify({
-                    title: 'Success!',
-                    text: 'Users successfully fetched!',
-                    type: 'success'
-                });
+                if (!suppressSuccessNotify) {
+                    safePNotify({
+                        title: 'Success!',
+                        text: 'Users successfully fetched!',
+                        type: 'success'
+                    });
+                }
 
             } else {
                 safePNotify({
@@ -1984,7 +2035,8 @@ app.controller('listTableUsers', function ($scope, $http) {
         }
 
     };
-    $scope.populateCurrentRecords();
+    /* Initial load: silent (no "fetched" toast on every page open) */
+    $scope.populateCurrentRecords(true);
 
 
     $scope.deleteUserInitial = function (name){
@@ -2014,7 +2066,7 @@ app.controller('listTableUsers', function ($scope, $http) {
         function ListInitialDatas(response) {
             $scope.cyberpanelLoading = true;
             if (response.data.deleteStatus === 1) {
-                $scope.populateCurrentRecords();
+                $scope.populateCurrentRecords(true);
                 hideModalById('deleteModal');
                 safePNotify({
                     title: 'Success!',
@@ -2078,7 +2130,7 @@ app.controller('listTableUsers', function ($scope, $http) {
         function ListInitialDatas(response) {
 
             if (response.data.status === 1) {
-                $scope.populateCurrentRecords();
+                $scope.populateCurrentRecords(true);
                 hideModalById('editModal');
                 safePNotify({
                     title: 'Success!',
@@ -2132,7 +2184,7 @@ app.controller('listTableUsers', function ($scope, $http) {
             $scope.cyberpanelLoading = true;
 
             if (response.data.status === 1) {
-                $scope.populateCurrentRecords();
+                $scope.populateCurrentRecords(true);
                 hideModalById('editModal');
                 safePNotify({
                     title: 'Success!',
@@ -2186,7 +2238,7 @@ app.controller('listTableUsers', function ($scope, $http) {
         function ListInitialDatas(response) {
             $scope.cyberpanelLoading = true;
             if (response.data.status === 1) {
-                $scope.populateCurrentRecords();
+                $scope.populateCurrentRecords(true);
                 safePNotify({
                     title: 'Success!',
                     text: 'Action successfully started.',

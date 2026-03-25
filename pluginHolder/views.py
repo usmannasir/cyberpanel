@@ -12,11 +12,13 @@ import json
 from datetime import datetime, timedelta
 from xml.etree import ElementTree
 from plogical.httpProc import httpProc
+from plogical.plugin_acl import user_can_manage_plugins, deny_plugin_manage_json_response
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import sys
 import urllib.request
 import urllib.error
 import time
+import inspect
 sys.path.append('/usr/local/CyberCP')
 from pluginInstaller.pluginInstaller import pluginInstaller
 from .patreon_verifier import PatreonVerifier
@@ -42,6 +44,36 @@ PLUGIN_SOURCE_PATHS = ['/home/cyberpanel/plugins', '/home/cyberpanel-plugins']
 # Builtin/core plugins that are part of CyberPanel (not user-installable plugins)
 # These plugins show "Built-in" badge and only Settings button (no Deactivate/Uninstall)
 BUILTIN_PLUGINS = frozenset(['emailMarketing', 'emailPremium'])
+
+
+def _install_plugin_compat(plugin_name, zip_path_abs):
+    """
+    Call pluginInstaller.installPlugin with zip_path when supported (newer CyberPanel).
+    Older installs only accept installPlugin(pluginName) and expect pluginName.zip in CWD.
+    """
+    zip_path_abs = os.path.abspath(zip_path_abs)
+    work_dir = os.path.dirname(zip_path_abs)
+    use_zip_kw = False
+    try:
+        sig = inspect.signature(pluginInstaller.installPlugin)
+        use_zip_kw = 'zip_path' in sig.parameters
+    except (TypeError, ValueError):
+        use_zip_kw = False
+    if use_zip_kw:
+        pluginInstaller.installPlugin(plugin_name, zip_path=zip_path_abs)
+        return
+    prev_cwd = os.getcwd()
+    try:
+        os.chdir(work_dir)
+        expected_zip = os.path.join(work_dir, plugin_name + '.zip')
+        if zip_path_abs != expected_zip:
+            shutil.copy2(zip_path_abs, expected_zip)
+        pluginInstaller.installPlugin(plugin_name)
+    finally:
+        try:
+            os.chdir(prev_cwd)
+        except Exception:
+            pass
 
 # Core CyberPanel app dirs under /usr/local/CyberCP that must not be counted as "installed plugins"
 # (matches pluginHolder.urls so Installed count = store/plugin dirs only, not core apps)
@@ -175,7 +207,7 @@ def _set_plugin_state(plugin_name, enabled):
 def help_page(request):
     """Display plugin development help page"""
     mailUtilities.checkHome()
-    proc = httpProc(request, 'pluginHolder/help.html', {}, 'admin')
+    proc = httpProc(request, 'pluginHolder/help.html', {}, 'managePlugins')
     return proc.render()
 
 def installed(request):
@@ -580,7 +612,7 @@ def installed(request):
     proc = httpProc(request, 'pluginHolder/plugins.html',
                     {'plugins': pluginList, 'error_plugins': errorPlugins, 
                      'installed_count': installed_count, 'active_count': active_count,
-                     'cache_expiry_timestamp': cache_expiry_timestamp}, 'admin')
+                     'cache_expiry_timestamp': cache_expiry_timestamp}, 'managePlugins')
     return proc.render()
 
 @csrf_exempt
@@ -588,6 +620,8 @@ def installed(request):
 def install_plugin(request, plugin_name):
     """Install a plugin"""
     try:
+        if not user_can_manage_plugins(request):
+            return deny_plugin_manage_json_response(request)
         # Check if plugin source exists (in any configured source path)
         pluginSource = _get_plugin_source_path(plugin_name)
         if not pluginSource:
@@ -638,13 +672,11 @@ def install_plugin(request, plugin_name):
         zip_path_abs = os.path.abspath(zip_path)
         if not os.path.exists(zip_path_abs):
             raise Exception(f'Zip file not found: {zip_path_abs}')
-        original_cwd = os.getcwd()
-        os.chdir(temp_dir)
         
         try:
-            # Install using pluginInstaller with explicit zip path (avoids cwd races)
+            # Install using pluginInstaller (zip_path kw when supported; else legacy CWD + pluginName.zip)
             try:
-                pluginInstaller.installPlugin(plugin_name, zip_path=zip_path_abs)
+                _install_plugin_compat(plugin_name, zip_path_abs)
             except Exception as install_error:
                 # Log the full error for debugging
                 error_msg = str(install_error)
@@ -680,7 +712,6 @@ def install_plugin(request, plugin_name):
                 'message': f'Plugin {plugin_name} installed successfully'
             })
         finally:
-            os.chdir(original_cwd)
             # Cleanup
             shutil.rmtree(temp_dir, ignore_errors=True)
             
@@ -696,6 +727,8 @@ def install_plugin(request, plugin_name):
 def uninstall_plugin(request, plugin_name):
     """Uninstall a plugin - but keep source files and settings"""
     try:
+        if not user_can_manage_plugins(request):
+            return deny_plugin_manage_json_response(request)
         # Check if plugin is installed
         pluginInstalled = '/usr/local/CyberCP/' + plugin_name
         if not os.path.exists(pluginInstalled):
@@ -750,6 +783,8 @@ def uninstall_plugin(request, plugin_name):
 def enable_plugin(request, plugin_name):
     """Enable a plugin"""
     try:
+        if not user_can_manage_plugins(request):
+            return deny_plugin_manage_json_response(request)
         # Check if plugin is installed
         pluginInstalled = '/usr/local/CyberCP/' + plugin_name
         if not os.path.exists(pluginInstalled):
@@ -782,6 +817,8 @@ def enable_plugin(request, plugin_name):
 def disable_plugin(request, plugin_name):
     """Disable a plugin"""
     try:
+        if not user_can_manage_plugins(request):
+            return deny_plugin_manage_json_response(request)
         # Check if plugin is installed
         pluginInstalled = '/usr/local/CyberCP/' + plugin_name
         if not os.path.exists(pluginInstalled):
@@ -1366,6 +1403,8 @@ def _fetch_plugins_from_github():
 def fetch_plugin_store(request):
     """Fetch plugins from the plugin store with caching"""
     try:
+        if not user_can_manage_plugins(request):
+            return deny_plugin_manage_json_response(request)
         mailUtilities.checkHome()
     except Exception as e:
         logging.writeToFile(f"fetch_plugin_store: checkHome failed: {str(e)}")
@@ -1433,6 +1472,8 @@ def upgrade_plugin(request, plugin_name):
     mailUtilities.checkHome()
     
     try:
+        if not user_can_manage_plugins(request):
+            return deny_plugin_manage_json_response(request)
         # Check if plugin is installed
         pluginInstalled = '/usr/local/CyberCP/' + plugin_name
         if not os.path.exists(pluginInstalled):
@@ -1520,55 +1561,50 @@ def upgrade_plugin(request, plugin_name):
             zip_path_abs = os.path.abspath(zip_path)
             if not os.path.exists(zip_path_abs):
                 raise Exception(f'Zip file not found: {zip_path_abs}')
-            original_cwd = os.getcwd()
-            os.chdir(temp_dir)
             
+            logging.writeToFile(f"Upgrading plugin using pluginInstaller (zip={zip_path_abs})")
+            
+            # Install using pluginInstaller (zip_path kw when supported; else legacy)
             try:
-                logging.writeToFile(f"Upgrading plugin using pluginInstaller (zip={zip_path_abs})")
-                
-                # Install using pluginInstaller with explicit zip path (this will overwrite existing files)
-                try:
-                    pluginInstaller.installPlugin(plugin_name, zip_path=zip_path_abs)
-                except Exception as install_error:
-                    error_msg = str(install_error)
-                    logging.writeToFile(f"pluginInstaller.installPlugin raised exception: {error_msg}")
-                    # Check if plugin directory exists despite the error
-                    if not os.path.exists(pluginInstalled):
-                        raise Exception(f'Plugin upgrade failed: {error_msg}')
-                
-                # Wait for file system to sync
-                import time
-                time.sleep(3)
-                
-                # Verify plugin was upgraded
+                _install_plugin_compat(plugin_name, zip_path_abs)
+            except Exception as install_error:
+                error_msg = str(install_error)
+                logging.writeToFile(f"pluginInstaller.installPlugin raised exception: {error_msg}")
+                # Check if plugin directory exists despite the error
                 if not os.path.exists(pluginInstalled):
-                    raise Exception(f'Plugin upgrade failed: {pluginInstalled} does not exist after upgrade')
-                
-                # Sync meta.xml from GitHub raw so version matches store (archive ZIP can be cached/stale)
+                    raise Exception(f'Plugin upgrade failed: {error_msg}')
+            
+            # Wait for file system to sync
+            import time
+            time.sleep(3)
+            
+            # Verify plugin was upgraded
+            if not os.path.exists(pluginInstalled):
+                raise Exception(f'Plugin upgrade failed: {pluginInstalled} does not exist after upgrade')
+            
+            # Sync meta.xml from GitHub raw so version matches store (archive ZIP can be cached/stale)
+            _sync_meta_xml_from_github(plugin_name, '/usr/local/CyberCP')
+            new_version = _get_installed_version(plugin_name, '/usr/local/CyberCP')
+            # If version unchanged, meta sync may have failed (e.g. network); retry once
+            if new_version == installed_version:
+                logging.writeToFile(f"Plugin {plugin_name}: version unchanged after first meta sync, retrying sync")
                 _sync_meta_xml_from_github(plugin_name, '/usr/local/CyberCP')
                 new_version = _get_installed_version(plugin_name, '/usr/local/CyberCP')
-                # If version unchanged, meta sync may have failed (e.g. network); retry once
-                if new_version == installed_version:
-                    logging.writeToFile(f"Plugin {plugin_name}: version unchanged after first meta sync, retrying sync")
-                    _sync_meta_xml_from_github(plugin_name, '/usr/local/CyberCP')
-                    new_version = _get_installed_version(plugin_name, '/usr/local/CyberCP')
-                if new_version == installed_version:
-                    logging.writeToFile(f"Plugin {plugin_name}: version still {installed_version} after upgrade; meta.xml may not have been updated from GitHub")
-                
-                logging.writeToFile(f"Plugin {plugin_name} upgraded successfully from {installed_version} to {new_version}")
-                
-                backup_message = ''
-                if backup_path:
-                    backup_message = f' Backup created at: {backup_info.get("timestamp", "unknown")}'
-                
-                return JsonResponse({
-                    'success': True,
-                    'message': f'Plugin {plugin_name} upgraded successfully from {installed_version} to {new_version}.{backup_message}',
-                    'backup_created': backup_path is not None,
-                    'backup_path': backup_path if backup_path else None
-                })
-            finally:
-                os.chdir(original_cwd)
+            if new_version == installed_version:
+                logging.writeToFile(f"Plugin {plugin_name}: version still {installed_version} after upgrade; meta.xml may not have been updated from GitHub")
+            
+            logging.writeToFile(f"Plugin {plugin_name} upgraded successfully from {installed_version} to {new_version}")
+            
+            backup_message = ''
+            if backup_path:
+                backup_message = f' Backup created at: {backup_info.get("timestamp", "unknown")}'
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Plugin {plugin_name} upgraded successfully from {installed_version} to {new_version}.{backup_message}',
+                'backup_created': backup_path is not None,
+                'backup_path': backup_path if backup_path else None
+            })
                 
         finally:
             # Cleanup
@@ -1600,6 +1636,8 @@ def get_plugin_backups(request, plugin_name):
     mailUtilities.checkHome()
     
     try:
+        if not user_can_manage_plugins(request):
+            return deny_plugin_manage_json_response(request)
         backups = _get_plugin_backups(plugin_name)
         return JsonResponse({
             'success': True,
@@ -1620,6 +1658,8 @@ def revert_plugin(request, plugin_name):
     mailUtilities.checkHome()
     
     try:
+        if not user_can_manage_plugins(request):
+            return deny_plugin_manage_json_response(request)
         # Get backup path from request
         data = json.loads(request.body)
         backup_path = data.get('backup_path')
@@ -1684,6 +1724,8 @@ def install_from_store(request, plugin_name):
     mailUtilities.checkHome()
     
     try:
+        if not user_can_manage_plugins(request):
+            return deny_plugin_manage_json_response(request)
         # Check if already installed
         pluginInstalled = '/usr/local/CyberCP/' + plugin_name
         if os.path.exists(pluginInstalled):
@@ -1792,55 +1834,50 @@ def install_from_store(request, plugin_name):
             
             # Pass absolute path so extraction does not depend on cwd (installPlugin may change cwd)
             zip_path_abs = os.path.abspath(zip_path)
-            original_cwd = os.getcwd()
-            os.chdir(temp_dir)
             
+            logging.writeToFile(f"Installing plugin using pluginInstaller (zip={zip_path_abs})")
+            
+            # Install using pluginInstaller (zip_path kw when supported; else legacy)
             try:
-                logging.writeToFile(f"Installing plugin using pluginInstaller (zip={zip_path_abs})")
-                
-                # Install using pluginInstaller with explicit zip path (avoids cwd races)
-                try:
-                    pluginInstaller.installPlugin(plugin_name, zip_path=zip_path_abs)
-                except Exception as install_error:
-                    # Log the full error for debugging
-                    error_msg = str(install_error)
-                    logging.writeToFile(f"pluginInstaller.installPlugin raised exception: {error_msg}")
-                    # Check if plugin directory exists despite the error
-                    pluginInstalled = '/usr/local/CyberCP/' + plugin_name
-                    if os.path.exists(pluginInstalled):
-                        logging.writeToFile(f"Plugin directory exists despite error, continuing...")
-                    else:
-                        raise Exception(f'Plugin installation failed: {error_msg}')
-                
-                # Wait a moment for file system to sync and service to restart
-                import time
-                time.sleep(3)  # Increased wait time for file system sync
-                
-                # Verify plugin was actually installed
+                _install_plugin_compat(plugin_name, zip_path_abs)
+            except Exception as install_error:
+                # Log the full error for debugging
+                error_msg = str(install_error)
+                logging.writeToFile(f"pluginInstaller.installPlugin raised exception: {error_msg}")
+                # Check if plugin directory exists despite the error
                 pluginInstalled = '/usr/local/CyberCP/' + plugin_name
-                if not os.path.exists(pluginInstalled):
-                    # Exclude README.md - main CyberPanel repo has it at root
-                    root_files = ['apps.py', 'meta.xml', 'urls.py', 'views.py']
-                    found_root_files = [f for f in root_files if os.path.exists(os.path.join('/usr/local/CyberCP', f))]
-                    if found_root_files:
-                        raise Exception(f'Plugin installation failed: Files extracted to wrong location. Found {found_root_files} in /usr/local/CyberCP/ root instead of {pluginInstalled}/')
-                    raise Exception(f'Plugin installation failed: {pluginInstalled} does not exist after installation')
-                
-                # Sync meta.xml from GitHub raw so version matches store
-                _sync_meta_xml_from_github(plugin_name, '/usr/local/CyberCP')
-                
-                logging.writeToFile(f"Plugin {plugin_name} installed successfully")
-                
-                # Set plugin to enabled by default after installation
-                _set_plugin_state(plugin_name, True)
-                
-                _ensure_plugin_meta_xml(plugin_name)
-                return JsonResponse({
-                    'success': True,
-                    'message': f'Plugin {plugin_name} installed successfully from store'
-                })
-            finally:
-                os.chdir(original_cwd)
+                if os.path.exists(pluginInstalled):
+                    logging.writeToFile(f"Plugin directory exists despite error, continuing...")
+                else:
+                    raise Exception(f'Plugin installation failed: {error_msg}')
+            
+            # Wait a moment for file system to sync and service to restart
+            import time
+            time.sleep(3)  # Increased wait time for file system sync
+            
+            # Verify plugin was actually installed
+            pluginInstalled = '/usr/local/CyberCP/' + plugin_name
+            if not os.path.exists(pluginInstalled):
+                # Exclude README.md - main CyberPanel repo has it at root
+                root_files = ['apps.py', 'meta.xml', 'urls.py', 'views.py']
+                found_root_files = [f for f in root_files if os.path.exists(os.path.join('/usr/local/CyberCP', f))]
+                if found_root_files:
+                    raise Exception(f'Plugin installation failed: Files extracted to wrong location. Found {found_root_files} in /usr/local/CyberCP/ root instead of {pluginInstalled}/')
+                raise Exception(f'Plugin installation failed: {pluginInstalled} does not exist after installation')
+            
+            # Sync meta.xml from GitHub raw so version matches store
+            _sync_meta_xml_from_github(plugin_name, '/usr/local/CyberCP')
+            
+            logging.writeToFile(f"Plugin {plugin_name} installed successfully")
+            
+            # Set plugin to enabled by default after installation
+            _set_plugin_state(plugin_name, True)
+            
+            _ensure_plugin_meta_xml(plugin_name)
+            return JsonResponse({
+                'success': True,
+                'message': f'Plugin {plugin_name} installed successfully from store'
+            })
                 
         finally:
             # Cleanup
@@ -1870,6 +1907,8 @@ def install_from_store(request, plugin_name):
 def debug_loaded_plugins(request):
     """Return which plugins have URL routes loaded and which failed (for diagnosing 404s)."""
     try:
+        if not user_can_manage_plugins(request):
+            return deny_plugin_manage_json_response(request)
         import pluginHolder.urls as urls_mod
         loaded = list(getattr(urls_mod, '_loaded_plugins', []))
         failed = dict(getattr(urls_mod, '_failed_plugins', {}))
@@ -1891,6 +1930,9 @@ def plugin_settings_proxy(request, plugin_name):
     the plugin was installed after the worker started (dynamic URL list is built at import time).
     """
     mailUtilities.checkHome()
+    if not user_can_manage_plugins(request):
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden('You are not authorized to manage plugins.')
     plugin_path = '/usr/local/CyberCP/' + plugin_name
     urls_py = os.path.join(plugin_path, 'urls.py')
     if not plugin_name or not os.path.isdir(plugin_path) or not os.path.exists(urls_py):
@@ -1927,7 +1969,7 @@ def plugin_help(request, plugin_name):
     if not os.path.exists(plugin_path) or not os.path.exists(meta_xml_path):
         proc = httpProc(request, 'pluginHolder/plugin_not_found.html', {
             'plugin_name': plugin_name
-        }, 'admin')
+        }, 'managePlugins')
         return proc.render()
     
     # Parse meta.xml
@@ -1949,7 +1991,7 @@ def plugin_help(request, plugin_name):
         logging.writeToFile(f"Error parsing meta.xml for {plugin_name}: {str(e)}")
         proc = httpProc(request, 'pluginHolder/plugin_not_found.html', {
             'plugin_name': plugin_name
-        }, 'admin')
+        }, 'managePlugins')
         return proc.render()
     
     # Look for help content files (README.md, CHANGELOG.md, HELP.md, etc.)
@@ -2100,7 +2142,7 @@ def plugin_help(request, plugin_name):
         'help_content': help_content,
     }
     
-    proc = httpProc(request, 'pluginHolder/plugin_help.html', context, 'admin')
+    proc = httpProc(request, 'pluginHolder/plugin_help.html', context, 'managePlugins')
     return proc.render()
 
 @csrf_exempt
@@ -2122,6 +2164,8 @@ def check_plugin_subscription(request, plugin_name):
         }
     """
     try:
+        if not user_can_manage_plugins(request):
+            return deny_plugin_manage_json_response(request)
         # Check if user is authenticated
         if not request.user or not request.user.is_authenticated:
             return JsonResponse({

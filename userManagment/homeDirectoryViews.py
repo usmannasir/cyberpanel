@@ -35,7 +35,7 @@ def loadHomeDirectoryManagement(request):
         return proc.render()
         
     except Exception as e:
-        logging.CyberCPLogFileWriter.writeToFile(f"Error loading home directory management: {str(e)}")
+        logging.writeToFile(f"Error loading home directory management: {str(e)}")
         return ACLManager.loadError()
 
 def detectHomeDirectories(request):
@@ -71,7 +71,7 @@ def detectHomeDirectories(request):
         })
         
     except Exception as e:
-        logging.CyberCPLogFileWriter.writeToFile(f"Error detecting home directories: {str(e)}")
+        logging.writeToFile(f"Error detecting home directories: {str(e)}")
         return JsonResponse({'status': 0, 'error_message': str(e)})
 
 def updateHomeDirectory(request):
@@ -109,7 +109,7 @@ def updateHomeDirectory(request):
             return JsonResponse({'status': 0, 'error_message': 'Home directory not found'})
         
     except Exception as e:
-        logging.CyberCPLogFileWriter.writeToFile(f"Error updating home directory: {str(e)}")
+        logging.writeToFile(f"Error updating home directory: {str(e)}")
         return JsonResponse({'status': 0, 'error_message': str(e)})
 
 def deleteHomeDirectory(request):
@@ -149,7 +149,7 @@ def deleteHomeDirectory(request):
             return JsonResponse({'status': 0, 'error_message': 'Home directory not found'})
         
     except Exception as e:
-        logging.CyberCPLogFileWriter.writeToFile(f"Error deleting home directory: {str(e)}")
+        logging.writeToFile(f"Error deleting home directory: {str(e)}")
         return JsonResponse({'status': 0, 'error_message': str(e)})
 
 def getHomeDirectoryStats(request):
@@ -165,7 +165,7 @@ def getHomeDirectoryStats(request):
         return JsonResponse({'status': 1, 'stats': stats})
         
     except Exception as e:
-        logging.CyberCPLogFileWriter.writeToFile(f"Error getting home directory stats: {str(e)}")
+        logging.writeToFile(f"Error getting home directory stats: {str(e)}")
         return JsonResponse({'status': 0, 'error_message': str(e)})
 
 def getUserHomeDirectories(request):
@@ -174,7 +174,9 @@ def getUserHomeDirectories(request):
         userID = request.session['userID']
         currentACL = ACLManager.loadedACL(userID)
         
-        if currentACL['admin'] != 1 and currentACL['createNewUser'] != 1:
+        # Same visibility as create user page: admins, ACL editors, and users allowed to create accounts
+        if (currentACL['admin'] != 1 and currentACL['createNewUser'] != 1
+                and currentACL.get('changeUserACL', 0) != 1):
             return JsonResponse({'status': 0, 'error_message': 'Unauthorized access'})
         
         # Get active home directories (tables home_directories / user_home_mappings may not exist yet)
@@ -195,7 +197,7 @@ def getUserHomeDirectories(request):
         return JsonResponse({'status': 1, 'directories': directories})
         
     except Exception as e:
-        logging.CyberCPLogFileWriter.writeToFile(f"Error getting user home directories: {str(e)}")
+        logging.writeToFile(f"Error getting user home directories: {str(e)}")
         # If tables don't exist (e.g. user_home_mappings), return empty list so Modify Website still works
         return JsonResponse({'status': 1, 'directories': []})
 
@@ -251,5 +253,5 @@ def migrateUser(request):
             return JsonResponse({'status': 0, 'error_message': 'Target home directory not found'})
         
     except Exception as e:
-        logging.CyberCPLogFileWriter.writeToFile(f"Error migrating user: {str(e)}")
+        logging.writeToFile(f"Error migrating user: {str(e)}")
         return JsonResponse({'status': 0, 'error_message': str(e)})
