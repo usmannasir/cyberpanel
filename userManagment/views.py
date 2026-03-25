@@ -3,7 +3,8 @@
 
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
-from django.db import models, IntegrityError
+from django.db import models
+from django.db.utils import IntegrityError
 from django.views.decorators.csrf import ensure_csrf_cookie
 from loginSystem.views import loadLoginPage
 from loginSystem.models import Administrator, ACL
@@ -221,6 +222,20 @@ def submitUserCreation(request):
             email = data['email']
             userName = data['userName']
             password = data['password']
+            if userName is None:
+                userName = ''
+            else:
+                userName = str(userName).strip()
+            if not userName:
+                data_ret = {'status': 0, 'createStatus': 0,
+                            'error_message': 'Username is required.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data, content_type='application/json')
+            if Administrator.objects.filter(userName=userName).exists():
+                data_ret = {'status': 0, 'createStatus': 0,
+                            'error_message': 'That username is already in use. Choose a different username.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data, content_type='application/json')
             try:
                 websitesLimit = int(data['websitesLimit'])
             except (KeyError, TypeError, ValueError):
@@ -1134,7 +1149,8 @@ def userMigration(request):
         return proc.render()
         
     except Exception as e:
-        logging.CyberCPLogFileWriter.writeToFile(f"Error loading user migration: {str(e)}")
+        from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as _cp_log
+        _cp_log.writeToFile(f"Error loading user migration: {str(e)}")
         return ACLManager.loadError()
 
 
