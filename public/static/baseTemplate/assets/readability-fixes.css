@@ -216,7 +216,7 @@ span, div, p, label, td, th, a, li {
     .container-fluid {
         color: var(--text-primary) !important;
     }
-    
+
     /* Fix mobile menu text */
     .mobile-menu .menu-item,
     .mobile-menu .menu-item span {
@@ -233,7 +233,7 @@ span, div, p, label, td, th, a, li {
         color: #000000 !important;
         background: #ffffff !important;
     }
-    
+
     .text-muted,
     .text-secondary {
         color: #000000 !important;
@@ -247,7 +247,7 @@ span, div, p, label, td, th, a, li {
         --text-secondary: #000000;
         --text-heading: #000000;
     }
-    
+
     [data-theme="dark"] {
         --text-primary: #ffffff;
         --text-secondary: #ffffff;

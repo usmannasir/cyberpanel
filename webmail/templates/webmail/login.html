@@ -1,0 +1,181 @@
+{% load i18n %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" ng-app="CyberCP">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% trans "Webmail Login - CyberPanel" %}</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/bootstrap/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="{% static 'baseTemplate/angularjs.1.6.5.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #f0f0ff;
+            --bg-secondary: white;
+            --accent-color: #6C5CE7;
+            --accent-hover: #5A4BD1;
+            --text-primary: #2D3436;
+            --text-secondary: #636E72;
+            --border-color: #DFE6E9;
+        }
+        body {
+            background: var(--bg-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .wm-login-card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 420px;
+        }
+        .wm-login-logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .wm-login-logo i {
+            font-size: 48px;
+            color: var(--accent-color);
+        }
+        .wm-login-logo h2 {
+            margin-top: 12px;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        .wm-login-logo p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        .wm-login-field {
+            margin-bottom: 20px;
+        }
+        .wm-login-field label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+        .wm-login-field input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 15px;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+        .wm-login-field input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(108,92,231,0.1);
+        }
+        .wm-login-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .wm-login-btn:hover {
+            background: var(--accent-hover);
+        }
+        .wm-login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .wm-login-error {
+            background: #FFE0E0;
+            color: #D63031;
+            padding: 10px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="wm-login-card" ng-controller="webmailLoginCtrl">
+        <div class="wm-login-logo">
+            <i class="fa fa-envelope"></i>
+            <h2>{% trans "CyberPanel Webmail" %}</h2>
+            <p>{% trans "Sign in to access your email" %}</p>
+        </div>
+
+        <div class="wm-login-error" ng-if="errorMsg">
+            {$ errorMsg $}
+        </div>
+
+        <form ng-submit="login()">
+            <div class="wm-login-field">
+                <label>{% trans "Email Address" %}</label>
+                <input type="email" ng-model="email" placeholder="user@example.com" required autofocus>
+            </div>
+            <div class="wm-login-field">
+                <label>{% trans "Password" %}</label>
+                <input type="password" ng-model="password" placeholder="{% trans 'Your email password' %}" required>
+            </div>
+            <button type="submit" class="wm-login-btn" ng-disabled="loggingIn">
+                <span ng-if="!loggingIn">{% trans "Sign In" %}</span>
+                <span ng-if="loggingIn"><i class="fa fa-spinner fa-spin"></i> {% trans "Signing in..." %}</span>
+            </button>
+        </form>
+    </div>
+
+    <script>
+        var app = angular.module('CyberCP', []);
+        app.config(['$interpolateProvider', function($ip) {
+            $ip.startSymbol('{$');
+            $ip.endSymbol('$}');
+        }]);
+
+        function getCookie(name) {
+            var value = '; ' + document.cookie;
+            var parts = value.split('; ' + name + '=');
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return '';
+        }
+
+        app.controller('webmailLoginCtrl', function($scope, $http) {
+            $scope.email = '';
+            $scope.password = '';
+            $scope.errorMsg = '';
+            $scope.loggingIn = false;
+
+            $scope.login = function() {
+                $scope.loggingIn = true;
+                $scope.errorMsg = '';
+                $http.post('/webmail/api/login', {
+                    email: $scope.email,
+                    password: $scope.password
+                }, {
+                    headers: { 'X-CSRFToken': getCookie('csrftoken') }
+                }).then(function(resp) {
+                    if (resp.data.status === 1) {
+                        window.location.href = '/webmail/';
+                    } else {
+                        $scope.errorMsg = resp.data.error_message || 'Login failed.';
+                    }
+                    $scope.loggingIn = false;
+                }, function(err) {
+                    $scope.errorMsg = 'Connection error. Please try again.';
+                    $scope.loggingIn = false;
+                });
+            };
+        });
+    </script>
+</body>
+</html>

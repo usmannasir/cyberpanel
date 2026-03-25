@@ -194,9 +194,13 @@ class secMiddleware:
                                    pathActual.find('plugins/discordWebhooks/webhook/') > -1)
                     
                     if isAPIEndpoint:
+                        # Skip validation for fields that contain legitimate code/scripts
+                        if key == 'content' or key == 'fileContent' or key == 'configData' or key == 'rewriteRules' or key == 'modSecRules' or key == 'contentNow' or key == 'emailMessage':
+                            continue
+
                         # For API endpoints, still check for the most dangerous command injection characters
-                        if isinstance(value, (str, bytes)) and (value.find('- -') > -1 or value.find('\n') > -1 or value.find(';') > -1 or 
-                            value.find('&&') > -1 or value.find('||') > -1 or value.find('|') > -1 or 
+                        if isinstance(value, (str, bytes)) and (value.find('- -') > -1 or value.find('\n') > -1 or value.find(';') > -1 or
+                            value.find('&&') > -1 or value.find('||') > -1 or value.find('|') > -1 or
                             value.find('...') > -1 or value.find("`") > -1 or value.find("$") > -1 or
                             value.find('../') > -1 or value.find('../../') > -1):
                             logging.writeToFile(request.body)
@@ -215,7 +219,7 @@ class secMiddleware:
                             or key == 'emailMessage' or key == 'configData' or key == 'rewriteRules' \
                             or key == 'modSecRules' or key == 'recordContentTXT' or key == 'SecAuditLogRelevantStatus' \
                             or key == 'fileContent' or key == 'commands' or key == 'gitHost' or key == 'ipv6' or key == 'contentNow' \
-                            or key == 'time_of_day' or key == 'notification_emails' or key == 'domains':
+                            or key == 'time_of_day' or key == 'notification_emails' or key == 'domains' or key == 'content':
                         continue
 
                     # Skip validation for API endpoints that need JSON structure characters

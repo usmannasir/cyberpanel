@@ -979,9 +979,194 @@
         .notification-shown.ai-scanner-shown #main-content {
             padding-top: 220px;
         }
-        
+
         .notification-shown .ai-scanner-banner {
             top: 130px;
+        }
+
+        /* .htaccess Feature Banner */
+        .htaccess-feature-banner {
+            position: fixed;
+            top: 80px;
+            left: 260px;
+            right: 0;
+            background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
+            border-bottom: 2px solid #065f46;
+            padding: 18px 30px;
+            z-index: 997;
+            box-shadow: 0 6px 25px rgba(16, 185, 129, 0.3);
+            animation: slideDown 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            display: none;
+        }
+
+        .htaccess-feature-banner.show {
+            display: block;
+        }
+
+        .htaccess-content {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .htaccess-icon {
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 14px;
+            padding: 14px;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .htaccess-icon i {
+            color: white;
+            font-size: 1.75rem;
+            display: block;
+        }
+
+        .htaccess-text {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .htaccess-main-text {
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 700;
+            line-height: 1.4;
+            letter-spacing: 0.3px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .htaccess-sub-text {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .htaccess-sub-text span {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .htaccess-sub-text i {
+            font-size: 0.75rem;
+        }
+
+        .htaccess-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .htaccess-btn {
+            background: white;
+            color: #047857;
+            padding: 14px 28px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+            border: 2px solid transparent;
+        }
+
+        .htaccess-btn:hover {
+            background: #f0fdf4;
+            color: #065f46;
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            text-decoration: none;
+            border-color: white;
+        }
+
+        .htaccess-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(16, 185, 129, 0.1);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
+        }
+
+        .htaccess-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .htaccess-btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .htaccess-btn i {
+            font-size: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .htaccess-close {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(12px);
+        }
+
+        .htaccess-close:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.1) rotate(90deg);
+        }
+
+        /* Adjust main content when .htaccess banner is shown */
+        .htaccess-shown #main-content {
+            padding-top: 190px;
+        }
+
+        /* Multiple banners adjustments */
+        .notification-shown.htaccess-shown #main-content {
+            padding-top: 240px;
+        }
+
+        .ai-scanner-shown.htaccess-shown #main-content {
+            padding-top: 270px;
+        }
+
+        .notification-shown.ai-scanner-shown.htaccess-shown #main-content {
+            padding-top: 320px;
+        }
+
+        .notification-shown .htaccess-feature-banner {
+            top: 130px;
+        }
+
+        .ai-scanner-shown .htaccess-feature-banner {
+            top: 160px;
+        }
+
+        .notification-shown.ai-scanner-shown .htaccess-feature-banner {
+            top: 210px;
         }
         
         /* .htaccess Feature Banner */
@@ -1175,53 +1360,109 @@
                 left: 0;
                 padding: 12px 20px;
             }
-            
+
             .ai-scanner-content {
                 gap: 1rem;
                 flex-wrap: wrap;
             }
-            
+
             .ai-scanner-text {
                 min-width: 200px;
             }
-            
+
             .ai-scanner-main-text {
                 font-size: 1.1rem;
             }
-            
+
             .ai-scanner-sub-text {
                 font-size: 0.95rem;
             }
-            
+
             .ai-scanner-btn {
                 padding: 10px 20px;
                 font-size: 0.8rem;
             }
-            
+
             .ai-scanner-icon {
                 padding: 10px;
             }
-            
+
             .ai-scanner-icon i {
                 font-size: 1.25rem;
             }
+
+            /* .htaccess banner mobile styles */
+            .htaccess-feature-banner {
+                left: 0;
+                padding: 14px 20px;
+            }
+
+            .htaccess-content {
+                gap: 1rem;
+                flex-wrap: wrap;
+            }
+
+            .htaccess-text {
+                min-width: 200px;
+            }
+
+            .htaccess-main-text {
+                font-size: 0.95rem;
+            }
+
+            .htaccess-sub-text {
+                font-size: 0.8rem;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .htaccess-btn {
+                padding: 12px 22px;
+                font-size: 0.85rem;
+            }
+
+            .htaccess-icon {
+                padding: 12px;
+            }
+
+            .htaccess-icon i {
+                font-size: 1.4rem;
+            }
         }
-        
+
         @media (max-width: 480px) {
             .ai-scanner-content {
                 flex-direction: column;
                 align-items: stretch;
                 gap: 12px;
             }
-            
+
             .ai-scanner-actions {
                 justify-content: center;
             }
-            
+
             .ai-scanner-close {
                 position: absolute;
                 top: 8px;
                 right: 8px;
+            }
+
+            /* .htaccess banner small mobile styles */
+            .htaccess-content {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+
+            .htaccess-actions {
+                justify-content: center;
+            }
+
+            .htaccess-close {
+                position: absolute;
+                top: 10px;
+                right: 10px;
             }
         }
         
@@ -1744,6 +1985,21 @@
                     <span>Email Forwarding</span>
                 </a>
                 {% endif %}
+                {% if admin or emailForwarding %}
+                <a href="{% url 'catchAllEmail' %}" class="menu-item">
+                    <span>Catch-All Email</span>
+                </a>
+                {% endif %}
+                {% if admin or emailForwarding %}
+                <a href="{% url 'patternForwarding' %}" class="menu-item">
+                    <span>Pattern Forwarding</span>
+                </a>
+                {% endif %}
+                {% if admin %}
+                <a href="{% url 'plusAddressingSettings' %}" class="menu-item">
+                    <span>Plus-Addressing</span>
+                </a>
+                {% endif %}
                 {% if admin or changeEmailPassword %}
                 <a href="{% url 'changeEmailAccountPassword' %}" class="menu-item">
                     <span>Change Password</span>
@@ -1755,8 +2011,13 @@
                 </a>
                 {% endif %}
                 {% if admin or createEmail %}
-                <a href="/snappymail/index.php" class="menu-item" target="_blank" rel="noopener">
+                <a href="/webmail/" class="menu-item">
                     <span>Access Webmail</span>
+                </a>
+                {% endif %}
+                {% if admin %}
+                <a href="/snappymail/" class="menu-item" target="_blank" rel="noopener noreferrer">
+                    <span>SnappyMail</span>
                 </a>
                 {% endif %}
             </div>
@@ -2099,8 +2360,12 @@
                 <a href="{% url 'Rspamd' %}" class="menu-item">
                     <span>RSPAMD</span>
                 </a>
+                <a href="{% url 'emailDeliveryHome' %}" class="menu-item">
+                    <span>Email Delivery</span>
+                    <span class="badge">NEW</span>
+                </a>
             </div>
-            
+
             <a href="#" class="menu-item" onclick="toggleSubmenu('manage-services-submenu', this); return false;">
                 <div class="icon-wrapper">
                     <i class="fas fa-folder-open"></i>
@@ -2190,7 +2455,6 @@
             </button>
         </div>
     </div>
-    
     <!-- .htaccess Feature Announcement -->
     <div id="htaccess-notification" class="htaccess-feature-banner">
         <div class="htaccess-content">
@@ -2216,7 +2480,6 @@
             </button>
         </div>
     </div>
-    
     <!-- Main Content -->
     <div id="main-content">
         {% block content %}{% endblock %}
@@ -2391,24 +2654,25 @@
         
         // AI Scanner Notification Functions
         function checkAIScannerStatus() {
-            // Check if user has dismissed the notification permanently (from server-side context)
             {% if ai_scanner_notification_dismissed %}
-                return; // Notification already dismissed permanently
+                return;
             {% endif %}
-            
+            if (sessionStorage.getItem('aiScannerNotificationDismissed') === 'true') {
+                return;
+            }
             // Check if we're not already on the AI Scanner page
             if (!window.location.href.includes('aiscanner')) {
                 showAIScannerNotification();
             }
         }
-        
+
         function showAIScannerNotification() {
             const banner = document.getElementById('ai-scanner-notification');
             const body = document.body;
             banner.classList.add('show');
             body.classList.add('ai-scanner-shown');
         }
-        
+
         function dismissAIScannerNotification() {
             const banner = document.getElementById('ai-scanner-notification');
             const body = document.body;
@@ -2435,16 +2699,14 @@
                 console.error('Error dismissing AI scanner notification:', error);
             });
         }
-        
+
         // .htaccess Feature Notification Functions
         function checkHtaccessStatus() {
-            // Check if user has dismissed the notification permanently (localStorage for longer persistence)
             try {
                 if (localStorage.getItem('htaccessNotificationDismissed') === 'true') return;
             } catch (e) { return; }
 
-            // Check if notification has been shown today
-            var lastShown;
+            let lastShown;
             try { lastShown = localStorage.getItem('htaccessNotificationLastShown'); } catch (e) { return; }
             const today = new Date().toDateString();
 
@@ -2469,7 +2731,6 @@
             const body = document.body;
             banner.classList.remove('show');
             body.classList.remove('htaccess-shown');
-            // Remember dismissal permanently
             try { localStorage.setItem('htaccessNotificationDismissed', 'true'); } catch (e) {}
         }
         
@@ -2564,7 +2825,6 @@
             setTimeout(checkAIScannerStatus, 1000);
             // Show .htaccess notification with additional delay for staggered effect
             setTimeout(checkHtaccessStatus, 1500);
-            
             // Set active menu state based on current URL
             setActiveMenuState();
         });

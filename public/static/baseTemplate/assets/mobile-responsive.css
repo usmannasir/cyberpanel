@@ -270,7 +270,7 @@ p {
         padding-left: 15px;
         padding-right: 15px;
     }
-    
+
     .table-responsive {
         border: none;
         margin-bottom: 20px;
@@ -284,19 +284,19 @@ p {
         max-width: 100%;
         margin-bottom: 20px;
     }
-    
+
     /* Adjust sidebar for tablets */
     #page-sidebar {
         width: 100%;
         position: static;
         height: auto;
     }
-    
+
     /* Make tables horizontally scrollable */
     .table-responsive {
         overflow-x: auto;
     }
-    
+
     .table {
         min-width: 600px;
     }
@@ -307,17 +307,17 @@ p {
     html {
         font-size: 14px;
     }
-    
+
     body {
         font-size: 14px;
         padding: 0;
     }
-    
+
     .container, .container-fluid {
         padding-left: 10px;
         padding-right: 10px;
     }
-    
+
     /* Stack all columns on mobile */
     .col-sm-1, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-6, .col-sm-8, .col-sm-9, .col-sm-12,
     .col-md-1, .col-md-2, .col-md-3, .col-md-4, .col-md-6, .col-md-8, .col-md-9, .col-md-12 {
@@ -325,24 +325,24 @@ p {
         max-width: 100%;
         margin-bottom: 15px;
     }
-    
+
     /* Adjust headings for mobile */
     h1 {
         font-size: 2rem !important; /* 32px */
     }
-    
+
     h2 {
         font-size: 1.75rem !important; /* 28px */
     }
-    
+
     h3 {
         font-size: 1.5rem !important; /* 24px */
     }
-    
+
     h4 {
         font-size: 1.25rem !important; /* 20px */
     }
-    
+
     /* Button adjustments for mobile */
     .btn {
         font-size: 16px !important;
@@ -350,50 +350,50 @@ p {
         width: 100%;
         margin-bottom: 10px;
     }
-    
+
     .btn-group .btn {
         width: auto;
         margin-bottom: 0;
     }
-    
+
     /* Form adjustments for mobile */
     .form-control, input, textarea, select {
         font-size: 16px !important; /* Prevents zoom on iOS */
         padding: 14px 16px !important;
         width: 100%;
     }
-    
+
     /* Table adjustments for mobile */
     .table {
         font-size: 14px !important;
     }
-    
+
     .table th, .table td {
         padding: 8px 6px !important;
         font-size: 13px !important;
     }
-    
+
     /* Hide less important columns on mobile */
     .table .d-none-mobile {
         display: none !important;
     }
-    
+
     /* Modal adjustments for mobile */
     .modal-dialog {
         margin: 10px;
         width: calc(100% - 20px);
     }
-    
+
     .modal-content {
         padding: 20px 15px;
     }
-    
+
     /* Content box adjustments */
     .content-box, .panel, .card {
         padding: 15px;
         margin-bottom: 15px;
     }
-    
+
     /* Sidebar adjustments for mobile */
     #page-sidebar {
         position: fixed;
@@ -406,20 +406,20 @@ p {
         background-color: #ffffff;
         box-shadow: 2px 0 10px rgba(0,0,0,0.1);
     }
-    
+
     #page-sidebar.show {
         left: 0;
     }
-    
+
     /* Main content adjustments when sidebar is open */
     #main-content {
         transition: margin-left 0.3s ease;
     }
-    
+
     #main-content.sidebar-open {
         margin-left: 280px;
     }
-    
+
     /* Mobile menu toggle */
     .mobile-menu-toggle {
         display: block;
@@ -442,29 +442,29 @@ p {
     html {
         font-size: 14px;
     }
-    
+
     .container, .container-fluid {
         padding-left: 8px;
         padding-right: 8px;
     }
-    
+
     /* Even smaller buttons and forms for very small screens */
     .btn {
         font-size: 14px !important;
         padding: 12px 16px !important;
     }
-    
+
     .form-control, input, textarea, select {
         font-size: 16px !important; /* Still 16px to prevent zoom */
         padding: 12px 14px !important;
     }
-    
+
     /* Compact table for very small screens */
     .table th, .table td {
         padding: 6px 4px !important;
         font-size: 12px !important;
     }
-    
+
     /* Hide even more columns on very small screens */
     .table .d-none-mobile-sm {
         display: none !important;
@@ -577,12 +577,12 @@ span, div, p, label, td, th {
         color: #000000 !important;
         background: #ffffff !important;
     }
-    
+
     .table th, .table td {
         font-size: 10pt !important;
         color: #000000 !important;
     }
-    
+
     .btn, .alert, .modal {
         display: none !important;
     }

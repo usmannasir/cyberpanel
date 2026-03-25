@@ -37,3 +37,4 @@ asyncssh
 python-jose
 websockets
 PyJWT
+python-dotenv

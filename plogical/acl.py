@@ -808,6 +808,8 @@ class ACLManager:
             else:
                 if childDomain.master.admin.owner == admin.pk:
                     return 1
+                else:
+                    return 0
 
         except:
             domainName = Websites.objects.get(domain=domain)

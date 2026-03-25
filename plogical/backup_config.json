@@ -1,0 +1,21 @@
+{
+    "database_backup": {
+        "use_compression": false,
+        "use_new_features": false,
+        "parallel_threads": 4,
+        "single_transaction": true,
+        "compress_on_fly": false,
+        "compression_level": 6,
+        "fallback_to_legacy": true
+    },
+    "compatibility": {
+        "maintain_legacy_format": true,
+        "dual_format_backup": false,
+        "auto_detect_restore": true
+    },
+    "file_backup": {
+        "use_parallel_compression": false,
+        "compression_algorithm": "gzip",
+        "rsync_compression": false
+    }
+}

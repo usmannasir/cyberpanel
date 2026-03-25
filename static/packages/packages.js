@@ -64,7 +64,15 @@ app.controller('createPackage', function ($scope, $http) {
             dataBases: dataBases,
             emails: emails,
             allowedDomains: $scope.allowedDomains,
-            enforceDiskLimits: $scope.enforceDiskLimits
+            enforceDiskLimits: $scope.enforceDiskLimits,
+            // Resource Limits
+            memoryLimitMB: $scope.memoryLimitMB || 1024,
+            cpuCores: $scope.cpuCores || 1,
+            ioLimitMBPS: $scope.ioLimitMBPS || 10,
+            inodeLimit: $scope.inodeLimit || 400000,
+            maxConnections: $scope.maxConnections || 10,
+            procSoftLimit: $scope.procSoftLimit || 400,
+            procHardLimit: $scope.procHardLimit || 500
         };
 
         var config = {
@@ -236,6 +244,15 @@ app.controller('modifyPackages', function ($scope, $http) {
                 $scope.allowFullDomain = response.data.allowFullDomain === 1;
                 $scope.enforceDiskLimits = response.data.enforceDiskLimits === 1;
 
+                // Load resource limits
+                $scope.memoryLimitMB = response.data.memoryLimitMB || 1024;
+                $scope.cpuCores = response.data.cpuCores || 1;
+                $scope.ioLimitMBPS = response.data.ioLimitMBPS || 10;
+                $scope.inodeLimit = response.data.inodeLimit || 400000;
+                $scope.maxConnections = response.data.maxConnections || 10;
+                $scope.procSoftLimit = response.data.procSoftLimit || 400;
+                $scope.procHardLimit = response.data.procHardLimit || 500;
+
                 $scope.modifyButton = "Save Details";
 
                 $("#packageDetailsToBeModified").fadeIn();
@@ -283,6 +300,14 @@ app.controller('modifyPackages', function ($scope, $http) {
             allowedDomains: $scope.allowedDomains,
             allowFullDomain: $scope.allowFullDomain,
             enforceDiskLimits: $scope.enforceDiskLimits,
+            // Resource Limits
+            memoryLimitMB: $scope.memoryLimitMB || 1024,
+            cpuCores: $scope.cpuCores || 1,
+            ioLimitMBPS: $scope.ioLimitMBPS || 10,
+            inodeLimit: $scope.inodeLimit || 400000,
+            maxConnections: $scope.maxConnections || 10,
+            procSoftLimit: $scope.procSoftLimit || 400,
+            procHardLimit: $scope.procHardLimit || 500
         };
 
         var config = {

@@ -1061,3 +1061,85 @@ def aiScannerLiveProgress(request, scan_id):
         logging.writeToFile(f'[API] AI Scanner live progress error: {str(e)}')
         data_ret = {'error': 'Live progress service unavailable'}
         return HttpResponse(json.dumps(data_ret), status=500)
+
+
+# AI Scanner File Operation endpoints
+@csrf_exempt
+def scannerBackupFile(request):
+    """Scanner backup file endpoint"""
+    try:
+        from aiScanner.api import scanner_backup_file
+        return scanner_backup_file(request)
+    except Exception as e:
+        logging.writeToFile(f'[API] Scanner backup file error: {str(e)}')
+        data_ret = {'error': 'Backup file service unavailable'}
+        return HttpResponse(json.dumps(data_ret), status=500)
+
+
+@csrf_exempt
+def scannerGetFile(request):
+    """Scanner get file endpoint"""
+    try:
+        from aiScanner.api import scanner_get_file
+        return scanner_get_file(request)
+    except Exception as e:
+        logging.writeToFile(f'[API] Scanner get file error: {str(e)}')
+        data_ret = {'error': 'Get file service unavailable'}
+        return HttpResponse(json.dumps(data_ret), status=500)
+
+
+@csrf_exempt
+def scannerReplaceFile(request):
+    """Scanner replace file endpoint"""
+    try:
+        from aiScanner.api import scanner_replace_file
+        return scanner_replace_file(request)
+    except Exception as e:
+        logging.writeToFile(f'[API] Scanner replace file error: {str(e)}')
+        data_ret = {'error': 'Replace file service unavailable'}
+        return HttpResponse(json.dumps(data_ret), status=500)
+
+
+@csrf_exempt
+def scannerRenameFile(request):
+    """Scanner rename file endpoint"""
+    try:
+        from aiScanner.api import scanner_rename_file
+        return scanner_rename_file(request)
+    except Exception as e:
+        logging.writeToFile(f'[API] Scanner rename file error: {str(e)}')
+        data_ret = {'error': 'Rename file service unavailable'}
+        return HttpResponse(json.dumps(data_ret), status=500)
+
+
+@csrf_exempt
+def scannerDeleteFile(request):
+    """Scanner delete file endpoint"""
+    try:
+        from aiScanner.api import scanner_delete_file
+        return scanner_delete_file(request)
+    except Exception as e:
+        logging.writeToFile(f'[API] Scanner delete file error: {str(e)}')
+        data_ret = {'error': 'Delete file service unavailable'}
+        return HttpResponse(json.dumps(data_ret), status=500)
+
+
+# Debug endpoints for testing API authentication (remove in production)
+def testAuthDebug(request):
+    """Test endpoint to debug API authentication"""
+    try:
+        from aiScanner.test_api_endpoint import test_auth
+        return test_auth(request)
+    except Exception as e:
+        logging.writeToFile(f'[API] Test auth debug error: {str(e)}')
+        return HttpResponse(json.dumps({'error': str(e)}), status=500)
+
+
+def listApiKeysDebug(request):
+    """Debug endpoint to list API keys in system"""
+    try:
+        from aiScanner.test_api_endpoint import list_api_keys
+        return list_api_keys(request)
+    except Exception as e:
+        logging.writeToFile(f'[API] List API keys debug error: {str(e)}')
+        return HttpResponse(json.dumps({'error': str(e)}), status=500)
