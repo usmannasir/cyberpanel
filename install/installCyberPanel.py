@@ -308,6 +308,9 @@ class InstallCyberPanel:
                         if f'version="{ver}' in content or f'version_id="{ver}' in content:
                             if any(distro in content for distro in ['red hat', 'almalinux', 'rocky', 'cloudlinux', 'centos']):
                                 return 'rhel9'
+                    if 'version_id="9"' in content or 'version_id="10"' in content:
+                        if any(distro in content for distro in ['red hat', 'almalinux', 'rocky', 'cloudlinux', 'centos']):
+                            return 'rhel9'
 
             if self.distro == ubuntu:
                 return 'ubuntu'
