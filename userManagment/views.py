@@ -4,7 +4,7 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.db import models
-from django.db.utils import IntegrityError
+from django.db.utils import IntegrityError, ProgrammingError, OperationalError
 from django.views.decorators.csrf import ensure_csrf_cookie
 from loginSystem.views import loadLoginPage
 from loginSystem.models import Administrator, ACL
@@ -630,6 +630,62 @@ def deleteUser(request):
         return ACLManager.loadError()
 
 
+def robust_delete_administrator(admin_instance):
+    """
+    Delete an Administrator when optional WebAuthn tables were never migrated.
+    ORM .delete() still collects WebAuthnCredential etc. and MySQL raises 1146 if
+    webauthn_credentials is missing. Fall back to SQL DELETE on the admin row
+    (and any WebAuthn tables that do exist) after removing child admins (owner FK is integer, not DB FK).
+    """
+    from django.db import connection
+
+    if admin_instance is None:
+        return
+
+    pk = admin_instance.pk
+    db_table = Administrator._meta.db_table
+
+    try:
+        table_names = set(connection.introspection.table_names())
+    except Exception:
+        table_names = set()
+
+    webauthn_tables = (
+        ('webauthn_credentials', 'user_id'),
+        ('webauthn_challenges', 'user_id'),
+        ('webauthn_sessions', 'user_id'),
+        ('webauthn_settings', 'user_id'),
+    )
+
+    for child in Administrator.objects.filter(owner=pk):
+        robust_delete_administrator(child)
+
+    use_orm = 'webauthn_credentials' in table_names
+    if use_orm:
+        try:
+            admin_instance.delete()
+            return
+        except (ProgrammingError, OperationalError) as exc:
+            err = str(exc).lower()
+            if 'webauthn' not in err and "doesn't exist" not in err and 'does not exist' not in err:
+                raise
+
+    qn = connection.ops.quote_name
+    tbl = qn(db_table)
+    col_id = qn('id')
+    with connection.cursor() as cursor:
+        for tname, cname in webauthn_tables:
+            if tname in table_names:
+                try:
+                    cursor.execute(
+                        'DELETE FROM %s WHERE %s = %%s' % (qn(tname), qn(cname)),
+                        [pk],
+                    )
+                except (ProgrammingError, OperationalError):
+                    pass
+        cursor.execute('DELETE FROM %s WHERE %s = %%s' % (tbl, col_id), [pk])
+
+
 def submitUserDeletion(request):
 
     try:
@@ -670,31 +726,28 @@ def submitUserDeletion(request):
 
                 user = Administrator.objects.get(userName=accountUsername)
 
-                childUsers = Administrator.objects.filter(owner=user.pk)
-
-                for items in childUsers:
-                    items.delete()
-
-                user.delete()
+                robust_delete_administrator(user)
 
                 data_ret = {'status': 1, 'deleteStatus': 1, 'error_message': 'None'}
                 json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
+                return HttpResponse(json_data, content_type='application/json')
             else:
                 data_ret = {'status': 0, 'deleteStatus': 0, 'error_message': 'Not enough privileges.'}
                 json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
+                return HttpResponse(json_data, content_type='application/json')
 
         except Exception as e:
             secure_log_error(e, 'submitUserDeletion', request.session.get('userID', 'Unknown'))
             data_ret = secure_error_response(e, 'Failed to delete user account')
+            if isinstance(data_ret, dict):
+                data_ret['deleteStatus'] = 0
             json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
+            return HttpResponse(json_data, content_type='application/json')
 
     except KeyError:
         data_ret = {'deleteStatus': 0, 'error_message': "Not logged in as admin", }
         json_data = json.dumps(data_ret)
-        return HttpResponse(json_data)
+        return HttpResponse(json_data, content_type='application/json')
 
 
 def createNewACL(request):
