@@ -2,6 +2,7 @@
 import os
 import os.path
 import sys
+import re
 from io import StringIO
 
 import django
@@ -811,9 +812,35 @@ class BackupManager:
                 except:
                     finalDic['user'] = "root"
 
+                # SECURITY: Validate all inputs to prevent command injection
+                if ACLManager.commandInjectionCheck(finalDic['ipAddress']) == 1:
+                    final_dic = {'status': 0, 'destStatus': 0, 'error_message': 'Invalid characters in IP address'}
+                    return HttpResponse(json.dumps(final_dic))
+
+                if ACLManager.commandInjectionCheck(finalDic['password']) == 1:
+                    final_dic = {'status': 0, 'destStatus': 0, 'error_message': 'Invalid characters in password'}
+                    return HttpResponse(json.dumps(final_dic))
+
+                if ACLManager.commandInjectionCheck(finalDic['port']) == 1:
+                    final_dic = {'status': 0, 'destStatus': 0, 'error_message': 'Invalid characters in port'}
+                    return HttpResponse(json.dumps(final_dic))
+
+                if ACLManager.commandInjectionCheck(finalDic['user']) == 1:
+                    final_dic = {'status': 0, 'destStatus': 0, 'error_message': 'Invalid characters in username'}
+                    return HttpResponse(json.dumps(final_dic))
+
+                # SECURITY: Validate port is numeric
+                try:
+                    port_int = int(finalDic['port'])
+                    if port_int < 1 or port_int > 65535:
+                        raise ValueError("Port out of range")
+                except ValueError:
+                    final_dic = {'status': 0, 'destStatus': 0, 'error_message': 'Port must be a valid number (1-65535)'}
+                    return HttpResponse(json.dumps(final_dic))
+
                 execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
-                execPath = execPath + " submitDestinationCreation --ipAddress " + finalDic['ipAddress'] + " --password " \
-                           + finalDic['password'] + " --port " + finalDic['port'] + ' --user %s' % (finalDic['user'])
+                execPath = execPath + " submitDestinationCreation --ipAddress " + shlex.quote(finalDic['ipAddress']) + " --password " \
+                           + shlex.quote(finalDic['password']) + " --port " + shlex.quote(finalDic['port']) + ' --user %s' % (shlex.quote(finalDic['user']))
 
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.CyberCPLogFileWriter.writeToFile(execPath)
@@ -907,8 +934,13 @@ class BackupManager:
 
             ipAddress = data['IPAddress']
 
+            # SECURITY: Validate IP address to prevent command injection
+            if ACLManager.commandInjectionCheck(ipAddress) == 1:
+                final_dic = {'connStatus': 0, 'error_message': 'Invalid characters in IP address'}
+                return HttpResponse(json.dumps(final_dic))
+
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
-            execPath = execPath + " getConnectionStatus --ipAddress " + ipAddress
+            execPath = execPath + " getConnectionStatus --ipAddress " + shlex.quote(ipAddress)
 
             output = ProcessUtilities.executioner(execPath)
 
@@ -1422,16 +1454,32 @@ class BackupManager:
             if ACLManager.currentContextPermission(currentACL, 'remoteBackups') == 0:
                 return ACLManager.loadErrorJson('remoteTransferStatus', 0)
 
-            backupDir = data['backupDir']
+            backupDir = str(data['backupDir'])
 
-            backupDirComplete = "/home/backup/transfer-" + str(backupDir)
-            # adminEmail = admin.email
+            # SECURITY: Validate backupDir to prevent command injection and path traversal
+            if ACLManager.commandInjectionCheck(backupDir) == 1:
+                data = {'remoteRestoreStatus': 0, 'error_message': 'Invalid characters in backup directory name'}
+                return HttpResponse(json.dumps(data))
 
-            ##
+            # SECURITY: Ensure backupDir is alphanumeric only (backup dirs are typically numeric IDs)
+            if not re.match(r'^[a-zA-Z0-9_-]+$', backupDir):
+                data = {'remoteRestoreStatus': 0, 'error_message': 'Backup directory name must be alphanumeric'}
+                return HttpResponse(json.dumps(data))
+
+            # SECURITY: Prevent path traversal
+            if '..' in backupDir or '/' in backupDir:
+                data = {'remoteRestoreStatus': 0, 'error_message': 'Invalid backup directory path'}
+                return HttpResponse(json.dumps(data))
+
+            backupDirComplete = "/home/backup/transfer-" + backupDir
+
+            # SECURITY: Verify the backup directory exists
+            if not os.path.exists(backupDirComplete):
+                data = {'remoteRestoreStatus': 0, 'error_message': 'Backup directory does not exist'}
+                return HttpResponse(json.dumps(data))
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/remoteTransferUtilities.py"
-            execPath = execPath + " remoteBackupRestore --backupDirComplete " + backupDirComplete + " --backupDir " + str(
-                backupDir)
+            execPath = execPath + " remoteBackupRestore --backupDirComplete " + shlex.quote(backupDirComplete) + " --backupDir " + shlex.quote(backupDir)
 
             ProcessUtilities.popenExecutioner(execPath)
 
@@ -1453,16 +1501,35 @@ class BackupManager:
             if ACLManager.currentContextPermission(currentACL, 'remoteBackups') == 0:
                 return ACLManager.loadErrorJson('remoteTransferStatus', 0)
 
-            backupDir = data['backupDir']
+            backupDir = str(data['backupDir'])
+
+            # SECURITY: Validate backupDir to prevent command injection and path traversal
+            if ACLManager.commandInjectionCheck(backupDir) == 1:
+                data = {'remoteTransferStatus': 0, 'error_message': 'Invalid characters in backup directory name', "status": "None", "complete": 0}
+                return HttpResponse(json.dumps(data))
+
+            # SECURITY: Ensure backupDir is alphanumeric only
+            if not re.match(r'^[a-zA-Z0-9_-]+$', backupDir):
+                data = {'remoteTransferStatus': 0, 'error_message': 'Backup directory name must be alphanumeric', "status": "None", "complete": 0}
+                return HttpResponse(json.dumps(data))
+
+            # SECURITY: Prevent path traversal
+            if '..' in backupDir or '/' in backupDir:
+                data = {'remoteTransferStatus': 0, 'error_message': 'Invalid backup directory path', "status": "None", "complete": 0}
+                return HttpResponse(json.dumps(data))
 
             # admin = Administrator.objects.get(userName=username)
             backupLogPath = "/home/backup/transfer-" + backupDir + "/" + "backup_log"
+            removalPath = "/home/backup/transfer-" + backupDir
 
-            removalPath = "/home/backup/transfer-" + str(backupDir)
+            # SECURITY: Verify the backup directory exists before operating on it
+            if not os.path.exists(removalPath):
+                data = {'remoteTransferStatus': 0, 'error_message': 'Backup directory does not exist', "status": "None", "complete": 0}
+                return HttpResponse(json.dumps(data))
 
             time.sleep(3)
 
-            command = "sudo cat " + backupLogPath
+            command = "sudo cat " + shlex.quote(backupLogPath)
             status = ProcessUtilities.outputExecutioner(command)
 
 
@@ -1473,14 +1540,14 @@ class BackupManager:
 
 
             if status.find("completed[success]") > -1:
-                command = "rm -rf " + removalPath
+                command = "rm -rf " + shlex.quote(removalPath)
                 ProcessUtilities.executioner(command)
                 data_ret = {'remoteTransferStatus': 1, 'error_message': "None", "status": status, "complete": 1}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
             elif status.find("[5010]") > -1:
-                command = "sudo rm -rf " + removalPath
+                command = "sudo rm -rf " + shlex.quote(removalPath)
                 ProcessUtilities.executioner(command)
                 data = {'remoteTransferStatus': 0, 'error_message': status,
                         "status": "None", "complete": 0}
@@ -2223,8 +2290,53 @@ class BackupManager:
 
         websitesName = ACLManager.findAllSites(currentACL, userID)
 
-        proc = httpProc(request, 'backup/OneClickBackupSchedule.html', {'destination': NormalBackupDests.objects.get(name=ocb.sftpUser).name, 'websites': websitesName},
-                        'scheduleBackups')
+        # Fetch storage stats and backup info from platform API
+        storage_info = {
+            'total_storage': 'N/A',
+            'used_storage': 'N/A',
+            'available_storage': 'N/A',
+            'usage_percentage': 0,
+            'last_backup_run': 'Never',
+            'last_backup_status': 'N/A',
+            'total_backups': 0,
+            'failed_backups': 0,
+            'error_logs': []
+        }
+
+        try:
+            import requests
+            url = 'https://platform.cyberpersons.com/Billing/GetBackupStats'
+            payload = {
+                'sub': ocb.subscription,
+                'sftpUser': ocb.sftpUser,
+                'serverIP': ACLManager.fetchIP()
+            }
+            headers = {'Content-Type': 'application/json'}
+
+            response = requests.post(url, headers=headers, data=json.dumps(payload), timeout=30)
+
+            if response.status_code == 200:
+                api_data = response.json()
+                if api_data.get('status') == 1:
+                    storage_info = api_data.get('data', storage_info)
+                    logging.CyberCPLogFileWriter.writeToFile(f'Successfully fetched backup stats for {ocb.sftpUser} [ManageOCBackups]')
+                else:
+                    logging.CyberCPLogFileWriter.writeToFile(f'Platform API returned error: {api_data.get("error_message")} [ManageOCBackups]')
+            else:
+                logging.CyberCPLogFileWriter.writeToFile(f'Platform API returned HTTP {response.status_code} [ManageOCBackups]')
+        except Exception as e:
+            logging.CyberCPLogFileWriter.writeToFile(f'Failed to fetch backup stats: {str(e)} [ManageOCBackups]')
+
+        context = {
+            'destination': NormalBackupDests.objects.get(name=ocb.sftpUser).name,
+            'websites': websitesName,
+            'storage_info': storage_info,
+            'ocb_subscription': ocb.subscription,
+            'ocb_plan_name': ocb.planName,
+            'ocb_sftp_user': ocb.sftpUser
+        }
+
+        proc = httpProc(request, 'backup/OneClickBackupSchedule.html', context, 'scheduleBackups')
         return proc.render()
 
     def RestoreOCBackups(self, request=None, userID=None, data=None):
@@ -2347,6 +2459,7 @@ class BackupManager:
         return proc.render()
 
     def fetchOCSites(self, request=None, userID=None, data=None):
+        ssh = None
         try:
             userID = request.session['userID']
             currentACL = ACLManager.loadedACL(userID)
@@ -2357,47 +2470,143 @@ class BackupManager:
 
             admin = Administrator.objects.get(pk=userID)
             from IncBackups.models import OneClickBackups
-            ocb = OneClickBackups.objects.get(pk = id, owner=admin)
 
-            # Load the private key
+            try:
+                ocb = OneClickBackups.objects.get(pk=id, owner=admin)
+            except OneClickBackups.DoesNotExist:
+                logging.CyberCPLogFileWriter.writeToFile(f"OneClickBackup with id {id} not found for user {userID} [fetchOCSites]")
+                data_ret = {'status': 0, 'error_message': 'Backup plan not found or you do not have permission to access it.'}
+                return HttpResponse(json.dumps(data_ret))
 
-            nbd = NormalBackupDests.objects.get(name=ocb.sftpUser)
-            ip = json.loads(nbd.config)['ip']
+            # Load backup destination configuration
+            try:
+                nbd = NormalBackupDests.objects.get(name=ocb.sftpUser)
+                ip = json.loads(nbd.config)['ip']
+            except NormalBackupDests.DoesNotExist:
+                logging.CyberCPLogFileWriter.writeToFile(f"Backup destination {ocb.sftpUser} not found [fetchOCSites]")
+                data_ret = {'status': 0, 'error_message': 'Backup destination not configured. Please deploy your backup account first.'}
+                return HttpResponse(json.dumps(data_ret))
+            except (KeyError, json.JSONDecodeError) as e:
+                logging.CyberCPLogFileWriter.writeToFile(f"Invalid backup destination config for {ocb.sftpUser}: {str(e)} [fetchOCSites]")
+                data_ret = {'status': 0, 'error_message': 'Backup destination configuration is invalid. Please reconfigure your backup account.'}
+                return HttpResponse(json.dumps(data_ret))
 
-            # Connect to the remote server using the private key
+            # Read and validate SSH private key
+            private_key_path = '/root/.ssh/cyberpanel'
+
+            # Check if SSH key exists
+            check_exists = ProcessUtilities.outputExecutioner(f'test -f {private_key_path} && echo "EXISTS" || echo "NOT_EXISTS"').strip()
+
+            if check_exists == "NOT_EXISTS":
+                logging.CyberCPLogFileWriter.writeToFile(f"SSH key not found at {private_key_path} [fetchOCSites]")
+                data_ret = {'status': 0, 'error_message': f'SSH key not found at {private_key_path}. Please ensure One-click Backup is properly configured.'}
+                return HttpResponse(json.dumps(data_ret))
+
+            # Read the key content
+            key_content = ProcessUtilities.outputExecutioner(f'sudo cat {private_key_path}').rstrip('\n')
+
+            if not key_content or key_content.startswith('cat:'):
+                logging.CyberCPLogFileWriter.writeToFile(f"Failed to read SSH key at {private_key_path} [fetchOCSites]")
+                data_ret = {'status': 0, 'error_message': f'Could not read SSH key at {private_key_path}. Please check permissions.'}
+                return HttpResponse(json.dumps(data_ret))
+
+            # Load the private key with support for multiple key types
+            key_file = StringIO(key_content)
+            key = None
+
+            try:
+                key = paramiko.RSAKey.from_private_key(key_file)
+            except:
+                try:
+                    key_file.seek(0)
+                    key = paramiko.Ed25519Key.from_private_key(key_file)
+                except:
+                    try:
+                        key_file.seek(0)
+                        key = paramiko.ECDSAKey.from_private_key(key_file)
+                    except:
+                        try:
+                            key_file.seek(0)
+                            key = paramiko.DSSKey.from_private_key(key_file)
+                        except Exception as e:
+                            logging.CyberCPLogFileWriter.writeToFile(f"Failed to load SSH key: {str(e)} [fetchOCSites]")
+                            data_ret = {'status': 0, 'error_message': 'Failed to load SSH key. The key format may be unsupported or corrupted.'}
+                            return HttpResponse(json.dumps(data_ret))
+
+            # Connect to the remote server
             ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            # Read the private key content
-            private_key_path = '/root/.ssh/cyberpanel'
-            key_content = ProcessUtilities.outputExecutioner(f'cat {private_key_path}').rstrip('\n')
 
-            # Load the private key from the content
-            key_file = StringIO(key_content)
-            key = paramiko.RSAKey.from_private_key(key_file)
-            # Connect to the server using the private key
-            ssh.connect(ip, username=ocb.sftpUser, pkey=key)
-            # Command to list directories under the specified path
-            command = f"ls -d cpbackups/{folder}/*"
+            try:
+                ssh.connect(ip, username=ocb.sftpUser, pkey=key, timeout=30)
+            except paramiko.AuthenticationException as e:
+                logging.CyberCPLogFileWriter.writeToFile(f"SSH Authentication failed for {ocb.sftpUser}@{ip}: {str(e)} [fetchOCSites]")
+                data_ret = {'status': 0, 'error_message': 'SSH Authentication failed. Your backup account credentials may have changed. Please try redeploying your backup account.'}
+                return HttpResponse(json.dumps(data_ret))
+            except paramiko.SSHException as e:
+                logging.CyberCPLogFileWriter.writeToFile(f"SSH Connection failed to {ip}: {str(e)} [fetchOCSites]")
+                data_ret = {'status': 0, 'error_message': f'Failed to connect to backup server: {str(e)}. Please check your network connection and try again.'}
+                return HttpResponse(json.dumps(data_ret))
+            except Exception as e:
+                logging.CyberCPLogFileWriter.writeToFile(f"Unexpected SSH error connecting to {ip}: {str(e)} [fetchOCSites]")
+                data_ret = {'status': 0, 'error_message': f'Connection to backup server failed: {str(e)}'}
+                return HttpResponse(json.dumps(data_ret))
 
-            # Execute the command
-            stdin, stdout, stderr = ssh.exec_command(command)
+            # Execute command to list backup files
+            command = f"ls -d cpbackups/{folder}/* 2>/dev/null || echo 'NO_FILES_FOUND'"
 
-            # Read the results
-            directories = stdout.read().decode().splitlines()
+            try:
+                stdin, stdout, stderr = ssh.exec_command(command)
+                output = stdout.read().decode().strip()
+                error_output = stderr.read().decode().strip()
 
-            finalDirs = []
+                if output == 'NO_FILES_FOUND' or not output:
+                    # No backups found in this folder
+                    data_ret = {'status': 1, 'finalDirs': []}
+                    return HttpResponse(json.dumps(data_ret))
 
-            # Print directories
-            for directory in directories:
-                finalDirs.append(directory.split('/')[2])
+                directories = output.splitlines()
+                finalDirs = []
 
-            data_ret = {'status': 1, 'finalDirs': finalDirs}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-        except BaseException as msg:
-            data_ret = {'status': 0, 'error_message': str(msg)}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
+                # Extract backup names from paths
+                for directory in directories:
+                    if directory and '/' in directory:
+                        try:
+                            # Extract the backup filename from path: cpbackups/{folder}/{backup_name}
+                            parts = directory.split('/')
+                            if len(parts) >= 3:
+                                finalDirs.append(parts[2])
+                        except (IndexError, ValueError) as e:
+                            logging.CyberCPLogFileWriter.writeToFile(f"Failed to parse directory path '{directory}': {str(e)} [fetchOCSites]")
+                            continue
+
+                data_ret = {'status': 1, 'finalDirs': finalDirs}
+                return HttpResponse(json.dumps(data_ret))
+
+            except Exception as e:
+                logging.CyberCPLogFileWriter.writeToFile(f"Failed to execute command on remote server: {str(e)} [fetchOCSites]")
+                data_ret = {'status': 0, 'error_message': f'Failed to list backups: {str(e)}'}
+                return HttpResponse(json.dumps(data_ret))
+
+        except json.JSONDecodeError as e:
+            logging.CyberCPLogFileWriter.writeToFile(f"Invalid JSON in request: {str(e)} [fetchOCSites]")
+            data_ret = {'status': 0, 'error_message': 'Invalid request format.'}
+            return HttpResponse(json.dumps(data_ret))
+        except KeyError as e:
+            logging.CyberCPLogFileWriter.writeToFile(f"Missing required field in request: {str(e)} [fetchOCSites]")
+            data_ret = {'status': 0, 'error_message': f'Missing required field: {str(e)}'}
+            return HttpResponse(json.dumps(data_ret))
+        except Exception as msg:
+            logging.CyberCPLogFileWriter.writeToFile(f"Unexpected error in fetchOCSites: {str(msg)}")
+            data_ret = {'status': 0, 'error_message': f'An unexpected error occurred: {str(msg)}'}
+            return HttpResponse(json.dumps(data_ret))
+        finally:
+            # Always close SSH connection
+            if ssh:
+                try:
+                    ssh.close()
+                except:
+                    pass
 
     def StartOCRestore(self, request=None, userID=None, data=None):
         try:
@@ -2439,122 +2648,159 @@ class BackupManager:
             return HttpResponse(json_data)
 
     def DeployAccount(self, request=None, userID=None, data=None):
-        user = Administrator.objects.get(pk=userID)
+        """Deploy a One-Click Backup account by creating SFTP credentials on remote server"""
+        try:
+            user = Administrator.objects.get(pk=userID)
+            userID = request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
 
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-        import json
+            # Parse request data
+            try:
+                data = json.loads(request.body)
+                backup_id = data['id']
+            except (json.JSONDecodeError, KeyError) as e:
+                logging.CyberCPLogFileWriter.writeToFile(f"Invalid request data in DeployAccount: {str(e)}")
+                return HttpResponse(json.dumps({
+                    'status': 0,
+                    'error_message': 'Invalid request format. Missing required field: id'
+                }))
 
-        data = json.loads(request.body)
-        id = data['id']
+            # Get backup plan
+            from IncBackups.models import OneClickBackups
+            try:
+                ocb = OneClickBackups.objects.get(pk=backup_id, owner=user)
+            except OneClickBackups.DoesNotExist:
+                logging.CyberCPLogFileWriter.writeToFile(f"OneClickBackup {backup_id} not found for user {userID} [DeployAccount]")
+                return HttpResponse(json.dumps({
+                    'status': 0,
+                    'error_message': 'Backup plan not found or you do not have permission to access it.'
+                }))
 
-        from IncBackups.models import OneClickBackups
-        ocb = OneClickBackups.objects.get(pk=id, owner=user)
+            # Check if already deployed
+            if ocb.state == 1:
+                logging.CyberCPLogFileWriter.writeToFile(f"Backup plan {backup_id} already deployed [DeployAccount]")
+                return HttpResponse(json.dumps({
+                    'status': 1,
+                    'error_message': 'This backup account is already deployed.'
+                }))
 
-        data = {}
+            # Read SSH public key
+            try:
+                ssh_pub_key = ProcessUtilities.outputExecutioner('cat /root/.ssh/cyberpanel.pub').strip()
+                if not ssh_pub_key or ssh_pub_key.startswith('cat:'):
+                    raise Exception("Failed to read SSH public key")
+            except Exception as e:
+                logging.CyberCPLogFileWriter.writeToFile(f"Failed to read SSH public key: {str(e)} [DeployAccount]")
+                return HttpResponse(json.dumps({
+                    'status': 0,
+                    'error_message': 'SSH public key not found. Please ensure One-Click Backup is properly configured.'
+                }))
 
-        ####
+            # Prepare API request
+            url = 'https://platform.cyberpersons.com/Billing/CreateSFTPAccount'
+            payload = {
+                'sub': ocb.subscription,
+                'key': ssh_pub_key,
+                'sftpUser': ocb.sftpUser,
+                'serverIP': ACLManager.fetchIP(),
+                'planName': ocb.planName
+            }
+            headers = {'Content-Type': 'application/json'}
 
-        import requests
-        import json
+            # Make API request
+            try:
+                response = requests.post(url, headers=headers, data=json.dumps(payload), timeout=30)
+            except requests.exceptions.RequestException as e:
+                logging.CyberCPLogFileWriter.writeToFile(f"API request failed: {str(e)} [DeployAccount]")
+                return HttpResponse(json.dumps({
+                    'status': 0,
+                    'error_message': f'Failed to connect to backup platform: {str(e)}'
+                }))
 
-        # Define the URL of the endpoint
-        url = 'http://platform.cyberpersons.com/Billing/CreateSFTPAccount'  # Replace with your actual endpoint URL
+            # Handle non-200 responses
+            if response.status_code != 200:
+                logging.CyberCPLogFileWriter.writeToFile(f"API returned status {response.status_code}: {response.text} [DeployAccount]")
+                return HttpResponse(json.dumps({
+                    'status': 0,
+                    'error_message': f'Backup platform returned error (HTTP {response.status_code}). Please try again later.'
+                }))
 
-        # Define the payload to send in the POST request
-        payload = {
-            'sub': ocb.subscription,
-            'key': ProcessUtilities.outputExecutioner(f'cat /root/.ssh/cyberpanel.pub'),
-            # Replace with the actual SSH public key
-            'sftpUser': ocb.sftpUser,
-            'serverIP': ACLManager.fetchIP(),  # Replace with the actual server IP
-            'planName': ocb.planName
-        }
+            # Parse API response
+            try:
+                response_data = response.json()
+            except json.JSONDecodeError:
+                logging.CyberCPLogFileWriter.writeToFile(f"Invalid JSON response from API: {response.text} [DeployAccount]")
+                return HttpResponse(json.dumps({
+                    'status': 0,
+                    'error_message': 'Received invalid response from backup platform.'
+                }))
 
-        # Convert the payload to JSON format
-        headers = {'Content-Type': 'application/json'}
-        dataRet = json.dumps(payload)
+            # Check if deployment was successful or already deployed
+            api_status = response_data.get('status')
+            api_error = response_data.get('error_message', '')
 
-        # Make the POST request
-        response = requests.post(url, headers=headers, data=dataRet)
+            if api_status == 1 or api_error == "Already deployed.":
+                # Both cases are success - account exists and is ready
+                deployment_status = "created" if api_status == 1 else "already deployed"
+                logging.CyberCPLogFileWriter.writeToFile(f"SFTP account {deployment_status} for {ocb.sftpUser} [DeployAccount]")
 
-        # Handle the response
-        # Handle the response
-        if response.status_code == 200:
-            response_data = response.json()
-            if response_data.get('status') == 1:
-
+                # Update backup plan state
                 ocb.state = 1
                 ocb.save()
 
-                print("SFTP account created successfully.")
+                # Create local backup destination
+                finalDic = {
+                    'IPAddress': response_data.get('ipAddress'),
+                    'password': 'NOT-NEEDED',
+                    'backupSSHPort': '22',
+                    'userName': ocb.sftpUser,
+                    'type': 'SFTP',
+                    'path': 'cpbackups',
+                    'name': ocb.sftpUser
+                }
 
-                finalDic = {}
-
-                finalDic['IPAddress'] = response_data.get('ipAddress')
-                finalDic['password'] = 'NOT-NEEDED'
-                finalDic['backupSSHPort'] = '22'
-                finalDic['userName'] = ocb.sftpUser
-                finalDic['type'] = 'SFTP'
-                finalDic['path'] = 'cpbackups'
-                finalDic['name'] = ocb.sftpUser
-
-                wm = BackupManager()
-                response_inner = wm.submitDestinationCreation(userID, finalDic)
-
-                response_data_inner = json.loads(response_inner.content.decode('utf-8'))
-
-                # Extract the value of 'status'
-                if response_data_inner.get('status') == 0:
-                    data_ret = {'status': 1, 'error_message': response_data_inner.get('error_message')}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-                else:
-                    data_ret = {'status': 1,}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-
-            else:
-
-                if response_data.get('error_message') == "Already deployed.":
-                    ocb.state = 1
-                    ocb.save()
-
-                    print("SFTP account created successfully.")
-
-                    finalDic = {}
-
-                    finalDic['IPAddress'] = response_data.get('ipAddress')
-                    finalDic['password'] = 'NOT-NEEDED'
-                    finalDic['backupSSHPort'] = '22'
-                    finalDic['userName'] = ocb.sftpUser
-                    finalDic['type'] = 'SFTP'
-                    finalDic['path'] = 'cpbackups'
-                    finalDic['name'] = ocb.sftpUser
-
+                try:
                     wm = BackupManager()
                     response_inner = wm.submitDestinationCreation(userID, finalDic)
-
                     response_data_inner = json.loads(response_inner.content.decode('utf-8'))
 
-                    # Extract the value of 'status'
                     if response_data_inner.get('status') == 0:
-                        data_ret = {'status': 1, 'error_message': response_data_inner.get('error_message')}
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
-                    else:
-                        data_ret = {'status': 1, }
-                        json_data = json.dumps(data_ret)
-                        return HttpResponse(json_data)
+                        # Destination creation failed, but account is deployed
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            f"Destination creation failed: {response_data_inner.get('error_message')} [DeployAccount]"
+                        )
+                        return HttpResponse(json.dumps({
+                            'status': 0,
+                            'error_message': f"Account deployed but failed to create local destination: {response_data_inner.get('error_message')}"
+                        }))
 
-                data_ret = {'status': 0, 'error_message': response_data.get('error_message')}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-        else:
-            data['message'] = f"[1991] Failed to create sftp account {response.text}"
-            data_ret = {'status': 0, 'error_message': response.text}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
+                    # Full success
+                    return HttpResponse(json.dumps({
+                        'status': 1,
+                        'message': f'Backup account {deployment_status} successfully.'
+                    }))
+
+                except Exception as e:
+                    logging.CyberCPLogFileWriter.writeToFile(f"Failed to create destination: {str(e)} [DeployAccount]")
+                    return HttpResponse(json.dumps({
+                        'status': 0,
+                        'error_message': f'Account deployed but failed to create local destination: {str(e)}'
+                    }))
+
+            else:
+                # API returned an error
+                logging.CyberCPLogFileWriter.writeToFile(f"API returned error: {api_error} [DeployAccount]")
+                return HttpResponse(json.dumps({
+                    'status': 0,
+                    'error_message': api_error or 'Unknown error occurred during deployment.'
+                }))
+
+        except Exception as e:
+            logging.CyberCPLogFileWriter.writeToFile(f"Unexpected error in DeployAccount: {str(e)}")
+            return HttpResponse(json.dumps({
+                'status': 0,
+                'error_message': f'An unexpected error occurred: {str(e)}'
+            }))
 
     def ReconfigureSubscription(self, request=None, userID=None, data=None):
         try:

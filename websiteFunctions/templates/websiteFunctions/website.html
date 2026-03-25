@@ -1597,6 +1597,69 @@
             {% endif %}
         </div>
 
+        <!-- Resource Limits Section -->
+        {% if resource_limits %}
+        <div class="cyber-card" style="margin-top: 25px;">
+            <div class="cyber-section-title" style="margin-bottom:20px;">
+                <span style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border:1.5px solid #dbeafe;border-radius:8px;margin-right:12px;background:#f6faff;">
+                    <i class="fas fa-sliders-h" style="color: #222b38; font-size: 18px;"></i>
+                </span>
+                <span>{% trans "Resource Limits" %}</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                {% if resource_limits.cpu %}
+                <div class="resource-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+                    <div class="resource-icon" style="background: rgba(255, 255, 255, 0.2); color: white;">
+                        <i class="fas fa-microchip"></i>
+                    </div>
+                    <div class="resource-title" style="color: white;">{% trans "CPU" %}</div>
+                    <div class="resource-value" style="color: white;">{{ resource_limits.cpu }}%</div>
+                    <div class="resource-limit" style="color: rgba(255, 255, 255, 0.9);">{% trans "CPU cores allocated" %}</div>
+                </div>
+                {% endif %}
+
+                {% if resource_limits.memory %}
+                <div class="resource-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border: none;">
+                    <div class="resource-icon" style="background: rgba(255, 255, 255, 0.2); color: white;">
+                        <i class="fas fa-memory"></i>
+                    </div>
+                    <div class="resource-title" style="color: white;">{% trans "Memory" %}</div>
+                    <div class="resource-value" style="color: white;">{{ resource_limits.memory }}</div>
+                    <div class="resource-limit" style="color: rgba(255, 255, 255, 0.9);">{% trans "RAM limit" %}</div>
+                </div>
+                {% endif %}
+
+                {% if resource_limits.io %}
+                <div class="resource-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; border: none;">
+                    <div class="resource-icon" style="background: rgba(255, 255, 255, 0.2); color: white;">
+                        <i class="fas fa-tachometer-alt"></i>
+                    </div>
+                    <div class="resource-title" style="color: white;">{% trans "I/O" %}</div>
+                    <div class="resource-value" style="color: white;">{{ resource_limits.io }}</div>
+                    <div class="resource-limit" style="color: rgba(255, 255, 255, 0.9);">{% trans "Disk I/O limit" %}</div>
+                </div>
+                {% endif %}
+
+                {% if resource_limits.tasks %}
+                <div class="resource-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; border: none;">
+                    <div class="resource-icon" style="background: rgba(255, 255, 255, 0.2); color: white;">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="resource-title" style="color: white;">{% trans "Processes" %}</div>
+                    <div class="resource-value" style="color: white;">{{ resource_limits.tasks }}</div>
+                    <div class="resource-limit" style="color: rgba(255, 255, 255, 0.9);">{% trans "Max processes" %}</div>
+                </div>
+                {% endif %}
+            </div>
+            <div style="margin-top: 15px; padding: 12px; background: #f8f9ff; border-radius: 8px; border-left: 4px solid #5b5fcf;">
+                <p style="margin: 0; color: #64748b; font-size: 13px;">
+                    <i class="fas fa-info-circle" style="color: #5b5fcf; margin-right: 8px;"></i>
+                    {% trans "These are the actual resource limits applied to this website. Limits are enforced at the system level using OpenLiteSpeed cgroups." %}
+                </p>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Add Resource Usage Graphs -->
         <div class="cyber-card">
             <div class="cyber-section-title" style="margin-bottom:28px;">

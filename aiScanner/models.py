@@ -272,7 +272,7 @@ class ScheduledScanExecution(models.Model):
         ('failed', 'Failed'),
         ('cancelled', 'Cancelled'),
     ]
-    
+
     scheduled_scan = models.ForeignKey(ScheduledScan, on_delete=models.CASCADE, related_name='executions')
     execution_time = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
@@ -285,14 +285,14 @@ class ScheduledScanExecution(models.Model):
     error_message = models.TextField(blank=True, null=True)
     started_at = models.DateTimeField(null=True, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
-    
+
     class Meta:
         db_table = 'ai_scanner_scheduled_executions'
         ordering = ['-execution_time']
-    
+
     def __str__(self):
         return f"Execution of {self.scheduled_scan.name} at {self.execution_time}"
-    
+
     @property
     def scanned_domains(self):
         """Parse domains scanned JSON"""
@@ -302,7 +302,7 @@ class ScheduledScanExecution(models.Model):
             except json.JSONDecodeError:
                 return []
         return []
-    
+
     @property
     def scan_id_list(self):
         """Parse scan IDs JSON"""
@@ -312,11 +312,60 @@ class ScheduledScanExecution(models.Model):
             except json.JSONDecodeError:
                 return []
         return []
-    
+
     def set_scanned_domains(self, domain_list):
         """Set scanned domains from list"""
         self.domains_scanned = json.dumps(domain_list)
-    
+
     def set_scan_ids(self, scan_id_list):
         """Set scan IDs from list"""
         self.scan_ids = json.dumps(scan_id_list)
+
+
+class ScannerFileOperation(models.Model):
+    """Audit log for file operations performed by scanner"""
+    OPERATION_CHOICES = [
+        ('backup', 'Backup'),
+        ('read', 'Read'),
+        ('replace', 'Replace'),
+        ('rename', 'Rename'),
+        ('delete', 'Delete'),
+    ]
+
+    scan_id = models.CharField(max_length=255, db_index=True)
+    operation = models.CharField(max_length=20, choices=OPERATION_CHOICES)
+    file_path = models.CharField(max_length=500)
+    backup_path = models.CharField(max_length=500, blank=True, null=True)
+    success = models.BooleanField(default=False)
+    error_message = models.TextField(blank=True, null=True)
+    ip_address = models.CharField(max_length=45, blank=True, null=True)
+    user_agent = models.CharField(max_length=255, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        db_table = 'scanner_file_operations'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['scan_id', 'created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.operation} - {self.file_path} ({'success' if self.success else 'failed'})"
+
+
+class ScannerAPIRateLimit(models.Model):
+    """Rate limiting for scanner API endpoints"""
+    scan_id = models.CharField(max_length=255)
+    endpoint = models.CharField(max_length=100)
+    request_count = models.IntegerField(default=0)
+    last_request_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'scanner_api_rate_limits'
+        unique_together = ['scan_id', 'endpoint']
+        indexes = [
+            models.Index(fields=['scan_id', 'endpoint']),
+        ]
+
+    def __str__(self):
+        return f"{self.scan_id} - {self.endpoint}: {self.request_count} requests"

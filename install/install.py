@@ -3304,7 +3304,7 @@ skip-ssl
             # On Ubuntu/Debian, the cyberpanel password is the same as root password
             self.cyberpanel_db_password = mysql_root_password
 
-        # Update settings.py with correct passwords (no .env files needed)
+        # Update settings.py with correct passwords (no .env files for secrets)
         self.update_settings_file(mysql_root_password, self.cyberpanel_db_password, mysql)
 
         logging.InstallLog.writeToFile("Environment configuration generated successfully!")
@@ -3989,10 +3989,10 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                     command = 'dnf --nogpg install -y https://mirror.ghettoforge.net/distributions/gf/gf-release-latest.gf.el8.noarch.rpm'
                     preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-                command = 'dnf install --enablerepo=gf-plus postfix3 postfix3-mysql -y'
+                command = 'dnf install --enablerepo=gf-plus postfix3 postfix3-mysql cyrus-sasl-plain -y'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
             elif self.distro == openeuler:
-                command = 'dnf install postfix -y'
+                command = 'dnf install postfix cyrus-sasl-plain -y'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             else:
@@ -4036,16 +4036,20 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 # CentOS 7 (Legacy - EOL)
                 command = 'yum --enablerepo=gf-plus -y install dovecot23 dovecot23-mysql --allowerasing'
             elif self.distro == cent8:
-                # CentOS 8, AlmaLinux 8, RockyLinux 8, RHEL 8, CloudLinux 8
-                command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql -y --allowerasing'
+                clAPVersion = FetchCloudLinuxAlmaVersionVersion()
+                type = clAPVersion.split('-')[0]
+                version = int(clAPVersion.split('-')[1])
+                if type == 'al' and version >= 90:
+                    command = 'dnf install -y dovecot dovecot-mysql'
+                else:
+                    command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql -y --allowerasing'
             elif self.distro == openeuler:
-                # AlmaLinux 9/10, RockyLinux 9, RHEL 9, CloudLinux 9, and other modern RHEL-based systems
                 dovecot_commands = [
                     'dnf install dovecot dovecot-mysql -y --skip-broken --nobest',
                     'dnf install dovecot23 dovecot23-mysql -y --skip-broken --nobest',
                     'dnf install dovecot -y --skip-broken --nobest'
                 ]
-                
+
                 dovecot_installed = False
                 for cmd in dovecot_commands:
                     try:
@@ -4053,9 +4057,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                         if os.path.exists('/etc/dovecot') or os.path.exists('/usr/sbin/dovecot'):
                             dovecot_installed = True
                             break
-                    except:
+                    except Exception:
                         continue
-                
+
                 if not dovecot_installed:
                     command = 'dnf install dovecot -y --skip-broken --nobest --allowerasing'
                     preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
@@ -4063,7 +4067,8 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 # Ubuntu 24.04/22.04/20.04, Debian 13/12/11
                 command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install dovecot-mysql dovecot-imapd dovecot-pop3d'
 
-            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+            if self.distro != openeuler:
+                preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
             
             # Ensure Dovecot service is properly configured
             self.manage_service('dovecot', 'enable')
@@ -4543,6 +4548,16 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
                 command = "mkdir -p /etc/pki/dovecot/certs/"
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+                # Copy self-signed certs to where Postfix main.cf expects them
+                command = "cp /etc/dovecot/cert.pem /etc/pki/dovecot/certs/dovecot.pem"
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+                command = "cp /etc/dovecot/key.pem /etc/pki/dovecot/private/dovecot.pem"
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+                command = "chmod 600 /etc/pki/dovecot/private/dovecot.pem"
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
                 command = "mkdir -p /etc/opendkim/keys/"
@@ -6870,21 +6885,18 @@ def main():
             checks.cyberpanel_db_password = checks.mysql_Root_password
         checks.setup_email_Passwords(checks.cyberpanel_db_password, mysql)
         checks.setup_postfix_dovecot_config(mysql)
-        # Create marker immediately after successful install
         checks.enableDisableEmail('on')
+        installCyberPanel.InstallCyberPanel.setupWebmail()
     elif args.postfix == 'ON':
         checks.install_postfix_dovecot()
-        # Ensure cyberpanel_db_password is set before calling setup_email_Passwords
         if not hasattr(checks, 'cyberpanel_db_password') or checks.cyberpanel_db_password is None:
             checks.cyberpanel_db_password = checks.mysql_Root_password
         checks.setup_email_Passwords(checks.cyberpanel_db_password, mysql)
         checks.setup_postfix_dovecot_config(mysql)
-        # Create marker immediately after successful install
         checks.enableDisableEmail('on')
+        installCyberPanel.InstallCyberPanel.setupWebmail()
     else:
-        # User explicitly disabled postfix
         preFlightsChecks.stdOut("Skipping Postfix/Mail services installation as requested.")
-        # Ensure marker doesn't exist
         checks.enableDisableEmail('off')
 
     checks.install_unzip()

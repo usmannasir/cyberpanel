@@ -1,0 +1,465 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Pattern Forwarding - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+
+    <style>
+        .modern-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.5s ease-out;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-primary, #1e293b);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .page-subtitle {
+            font-size: 1.125rem;
+            color: var(--text-secondary, #64748b);
+            margin-bottom: 0;
+        }
+
+        .main-card {
+            background: var(--bg-secondary, white);
+            border-radius: 16px;
+            box-shadow: 0 1px 3px var(--shadow-light, rgba(0,0,0,0.05)), 0 10px 40px var(--shadow-color, rgba(0,0,0,0.08));
+            border: 1px solid var(--border-color, #e8e9ff);
+            overflow: hidden;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--bg-hover, #f8f9ff) 0%, var(--bg-gradient, #f0f1ff) 100%);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color, #e8e9ff);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary, #1e293b);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .card-body {
+            padding: 2rem;
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary, #1e293b);
+            font-size: 0.875rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-color, #e8e9ff);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+            background: var(--bg-secondary, #fff);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent-color, #5b5fcf);
+            box-shadow: 0 0 0 3px var(--accent-focus, rgba(91, 95, 207, 0.1));
+        }
+
+        .btn-primary {
+            background: var(--accent-color, #5b5fcf);
+            color: var(--text-inverse, white);
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-dark, #4547a9);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: var(--bg-secondary, #fff);
+            color: var(--danger-color, #ef4444);
+            border: 1px solid var(--danger-bg-light, #fee2e2);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.875rem;
+        }
+
+        .btn-danger:hover {
+            background: var(--danger-color, #ef4444);
+            color: var(--text-inverse, white);
+        }
+
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .alert-success {
+            background: var(--success-bg, #d1fae5);
+            color: var(--success-text, #065f46);
+            border: 1px solid var(--success-border, #a7f3d0);
+        }
+
+        .alert-danger {
+            background: var(--danger-bg-light, #fee2e2);
+            color: var(--danger-text, #991b1b);
+            border: 1px solid var(--danger-border, #fecaca);
+        }
+
+        .alert-info {
+            background: var(--info-bg, #dbeafe);
+            color: var(--info-text, #1e40af);
+            border: 1px solid var(--info-border, #bfdbfe);
+        }
+
+        .disabled-notice {
+            background: var(--warning-bg, #fef3c7);
+            border: 1px solid var(--warning-border, #fde68a);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color, #e8e9ff);
+            border-top-color: var(--accent-color, #5b5fcf);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .config-box {
+            background: var(--bg-hover, #f8f9ff);
+            border: 1px solid var(--border-color, #e8e9ff);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 1.5rem;
+        }
+
+        .config-box h3 {
+            color: var(--text-primary, #1e293b);
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .rules-table {
+            width: 100%;
+            background: var(--bg-secondary, white);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border-color, #e8e9ff);
+            margin-top: 2rem;
+        }
+
+        .rules-table thead {
+            background: var(--bg-hover, #f8f9ff);
+        }
+
+        .rules-table th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-primary, #1e293b);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border-color, #e8e9ff);
+        }
+
+        .rules-table td {
+            padding: 1rem;
+            color: var(--text-secondary, #64748b);
+            font-size: 0.875rem;
+            border-bottom: 1px solid var(--border-light, #f3f4f6);
+        }
+
+        .rules-table tbody tr:hover {
+            background: var(--bg-hover, #f8f9ff);
+        }
+
+        .rules-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .pattern-type-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .type-wildcard {
+            background: var(--accent-bg, #e0e7ff);
+            color: var(--accent-color, #5b5fcf);
+        }
+
+        .type-regex {
+            background: var(--warning-bg, #fef3c7);
+            color: var(--warning-text, #92400e);
+        }
+
+        .help-text {
+            background: var(--info-bg, #dbeafe);
+            border: 1px solid var(--info-border, #bfdbfe);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .help-text h4 {
+            color: var(--info-text, #1e40af);
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .help-text ul {
+            color: var(--info-text, #1e40af);
+            margin: 0;
+            padding-left: 1.5rem;
+            font-size: 0.875rem;
+        }
+
+        .help-text li {
+            margin-bottom: 0.25rem;
+        }
+
+        .warning-icon {
+            color: var(--warning-color, #ffa000);
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+
+    <div class="modern-container" ng-controller="patternForwarding">
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-asterisk"></i>
+                {% trans "Pattern Forwarding" %}
+            </h1>
+            <p class="page-subtitle">{% trans "Create wildcard and regex-based email forwarding rules" %}</p>
+        </div>
+
+        <div class="main-card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-code-branch"></i>
+                    {% trans "Pattern Forwarding Rules" %}
+                    <span ng-show="loading" class="loading-spinner"></span>
+                </h2>
+            </div>
+            <div class="card-body">
+                {% if not status %}
+                    <div class="disabled-notice">
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3 warning-icon"></i>
+                        <h3>{% trans "Postfix is disabled" %}</h3>
+                        <p class="mb-3">{% trans "You need to enable Postfix to configure pattern forwarding" %}</p>
+                        <a href="{% url 'managePostfix' %}" class="btn-primary">
+                            <i class="fas fa-power-off"></i>
+                            {% trans "Enable Postfix Now" %}
+                        </a>
+                    </div>
+                {% else %}
+                    <form action="/" method="post">
+                        <div class="form-section">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">{% trans "Select Domain" %}</label>
+                                        <select ng-change="fetchRules()" ng-model="selectedDomain" class="form-control">
+                                            <option value="">{% trans "Choose a domain..." %}</option>
+                                            {% for items in websiteList %}
+                                                <option value="{{ items }}">{{ items }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div ng-hide="configBox" class="config-box">
+                            <h3><i class="fas fa-plus-circle"></i> {% trans "Create New Rule" %}</h3>
+
+                            <div class="help-text" ng-show="patternType === 'wildcard'">
+                                <h4><i class="fas fa-lightbulb"></i> {% trans "Wildcard Pattern Examples" %}</h4>
+                                <ul>
+                                    <li><code>user_*</code> - {% trans "Matches user_anything (e.g., user_sales, user_123)" %}</li>
+                                    <li><code>support-?</code> - {% trans "Matches support- followed by any single character" %}</li>
+                                    <li><code>team*</code> - {% trans "Matches anything starting with team" %}</li>
+                                </ul>
+                            </div>
+
+                            <div class="help-text" ng-show="patternType === 'regex'">
+                                <h4><i class="fas fa-exclamation-triangle"></i> {% trans "Regex Pattern (Advanced)" %}</h4>
+                                <ul>
+                                    <li><code>user_[0-9]+</code> - {% trans "Matches user_ followed by digits" %}</li>
+                                    <li><code>support-(sales|billing)</code> - {% trans "Matches support-sales or support-billing" %}</li>
+                                    <li>{% trans "Note: Pattern is matched against the local part only (before @)" %}</li>
+                                </ul>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label class="form-label">{% trans "Pattern Type" %}</label>
+                                        <select class="form-control" ng-model="patternType" ng-init="patternType='wildcard'">
+                                            <option value="wildcard">{% trans "Wildcard" %}</option>
+                                            <option value="regex">{% trans "Regex (Advanced)" %}</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label class="form-label">{% trans "Pattern" %}</label>
+                                        <input type="text" class="form-control" ng-model="pattern"
+                                               placeholder="{% trans 'e.g., user_*' %}">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label class="form-label">{% trans "Destination Email" %}</label>
+                                        <input type="email" class="form-control" ng-model="destination"
+                                               placeholder="{% trans 'forward@example.com' %}">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label class="form-label">{% trans "Priority" %}</label>
+                                        <input type="number" class="form-control" ng-model="priority"
+                                               ng-init="priority=100" min="1" max="999">
+                                    </div>
+                                </div>
+                                <div class="col-md-1">
+                                    <div class="form-group">
+                                        <label class="form-label">&nbsp;</label>
+                                        <button type="button" ng-click="createRule()" class="btn-primary" style="width:100%">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table class="rules-table" ng-show="rules.length > 0">
+                                <thead>
+                                <tr>
+                                    <th style="width:10%">{% trans "Priority" %}</th>
+                                    <th style="width:15%">{% trans "Type" %}</th>
+                                    <th style="width:25%">{% trans "Pattern" %}</th>
+                                    <th style="width:35%">{% trans "Destination" %}</th>
+                                    <th style="width:15%">{% trans "Actions" %}</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr ng-repeat="rule in rules track by $index">
+                                    <td><strong ng-bind="rule.priority"></strong></td>
+                                    <td>
+                                        <span class="pattern-type-badge" ng-class="rule.pattern_type === 'wildcard' ? 'type-wildcard' : 'type-regex'">
+                                            <i ng-class="rule.pattern_type === 'wildcard' ? 'fas fa-asterisk' : 'fas fa-code'"></i>
+                                            {$ rule.pattern_type $}
+                                        </span>
+                                    </td>
+                                    <td><code ng-bind="rule.pattern"></code>@{$ selectedDomain $}</td>
+                                    <td ng-bind="rule.destination"></td>
+                                    <td>
+                                        <button type="button" ng-click="deleteRule(rule.id)" class="btn-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+
+                            <div ng-hide="rules.length > 0" class="alert alert-info mt-3">
+                                <i class="fas fa-info-circle"></i>
+                                {% trans "No pattern forwarding rules configured for this domain yet." %}
+                            </div>
+                        </div>
+
+                        <!-- Alert Messages -->
+                        <div ng-hide="notifyBox" class="form-section mt-3">
+                            <div ng-hide="errorBox" class="alert alert-danger">
+                                <i class="fas fa-exclamation-circle"></i>
+                                {$ errorMessage $}
+                            </div>
+
+                            <div ng-hide="successBox" class="alert alert-success">
+                                <i class="fas fa-check-circle"></i>
+                                {$ successMessage $}
+                            </div>
+
+                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                <i class="fas fa-times-circle"></i>
+                                {% trans "Could not connect to server. Please refresh this page." %}
+                            </div>
+                        </div>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

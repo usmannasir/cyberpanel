@@ -398,6 +398,22 @@
         }
     </style>
 
+    <div id="cybermailBanner" style="display:none; margin-bottom:20px;">
+      <div style="background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 50%,#9333ea 100%);border-radius:10px;padding:20px 24px;display:flex;align-items:center;gap:18px;box-shadow:0 4px 15px rgba(79,70,229,0.3);">
+        <div style="flex-shrink:0;font-size:32px;">&#9993;</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:800;font-size:18px;color:#fff;margin-bottom:4px;letter-spacing:-0.3px;">Stop Landing in Spam</div>
+          <div style="font-size:13.5px;color:rgba(255,255,255,0.85);line-height:1.5;">Route your emails through CyberMail's optimized servers. <strong style="color:#fff;">15,000 emails/month free</strong> with automatic DNS configuration, real-time analytics, and dedicated IPs. <a href="https://cyberpanel.net/KnowledgeBase/cybermail-user-guide/" target="_blank" style="color:rgba(255,255,255,0.9);text-decoration:underline;font-weight:500;">Learn more</a></div>
+        </div>
+        <a href="/emailDelivery/" style="background:#fff;color:#4f46e5;padding:10px 24px;border-radius:7px;font-weight:700;font-size:13px;text-decoration:none;white-space:nowrap;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.1);transition:transform 0.15s;">Get Started Free &rarr;</a>
+        <button onclick="dismissCyberMailBanner()" style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:20px;cursor:pointer;padding:0 4px;line-height:1;flex-shrink:0;" title="Dismiss">&times;</button>
+      </div>
+    </div>
+    <script>
+    (function(){if(!document.cookie.includes('cybermail_dismiss=1')){document.getElementById('cybermailBanner').style.display='';}})();
+    function dismissCyberMailBanner(){document.getElementById('cybermailBanner').style.display='none';document.cookie='cybermail_dismiss=1; path=/; max-age='+7*86400;}
+    </script>
+
     <div class="modern-container" ng-controller="dkimManager">
         <div class="page-header">
             <h1 class="page-title">

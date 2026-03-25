@@ -8,2095 +8,790 @@
     <!-- Current language: {{ LANGUAGE_CODE }} -->
 
     <style>
-        /* WordPress Page Specific Variables */
-        :root {
-            /* WordPress-specific gradients */
-            --wp-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
-            --wp-gradient-alt: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            --wp-radius-xl: 16px;
-            --wp-radius-lg: 12px;
-            --wp-radius-md: 8px;
-            --wp-shadow-card: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
-            --wp-shadow-hover: 0 20px 40px rgba(0, 0, 0, 0.12), 0 8px 16px rgba(0, 0, 0, 0.08);
-        }
+        /* WordPress Manager - Consistent with Base Template Theme */
 
-        /* Dark mode specific overrides for WordPress page */
-        [data-theme="dark"] {
-            /* WordPress-specific dark mode gradients */
-            --wp-gradient: linear-gradient(135deg, #7c7ff3 0%, #9b5de5 25%, #ec4899 50%, #f97316 75%, #06b6d4 100%);
-            --wp-gradient-alt: linear-gradient(135deg, #ec4899 0%, #f97316 100%);
-            --wp-shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3);
-            --wp-shadow-hover: 0 20px 40px rgba(0, 0, 0, 0.5), 0 8px 16px rgba(0, 0, 0, 0.4);
-        }
-
-        /* Container Styling */
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-            min-height: 100vh;
+        /* Container Styling - Aligned with base template */
+        .wp-container {
+            max-width: 100%;
+            margin: 0;
+            padding: 0;
             background: var(--bg-primary);
             position: relative;
+            min-height: calc(100vh - 80px);
         }
 
-        .container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background:
-                radial-gradient(circle at 20% 80%, rgba(88, 86, 214, 0.05) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(124, 127, 243, 0.05) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(16, 185, 129, 0.03) 0%, transparent 50%);
-            pointer-events: none;
-        }
-
-        /* Page Title Section */
-        #page-title {
-            background: var(--wp-gradient);
+        /* Page Header - Using base template gradient style */
+        .wp-page-header {
+            background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-hover) 100%);
             color: white;
-            padding: 50px 40px;
-            border-radius: var(--wp-radius-xl);
-            margin-bottom: 40px;
-            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.25);
+            padding: 40px;
+            margin-bottom: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(88, 86, 214, 0.2);
             position: relative;
             overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        #page-title::before {
+        .wp-page-header::before {
             content: '';
             position: absolute;
             top: -50%;
             right: -50%;
             width: 200%;
             height: 200%;
-            background:
-                radial-gradient(circle at 30% 70%, rgba(255,255,255,0.15) 0%, transparent 40%),
-                radial-gradient(circle at 70% 30%, rgba(255,255,255,0.1) 0%, transparent 40%);
+            background: radial-gradient(circle at 30% 70%, rgba(255,255,255,0.1) 0%, transparent 40%);
             animation: pulse 6s ease-in-out infinite;
         }
 
         @keyframes pulse {
-            0%, 100% {
-                transform: scale(1) rotate(0deg);
-                opacity: 0.6;
-            }
-            33% {
-                transform: scale(1.05) rotate(1deg);
-                opacity: 0.4;
-            }
-            66% {
-                transform: scale(0.98) rotate(-1deg);
-                opacity: 0.5;
-            }
+            0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.6; }
+            50% { transform: scale(1.05) rotate(2deg); opacity: 0.3; }
         }
 
-        #page-title h2 {
-            font-size: 36px;
-            font-weight: 800;
-            margin-bottom: 12px;
-            letter-spacing: -0.8px;
-            position: relative;
-            z-index: 1;
+        .wp-page-header h2 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
             color: white;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            letter-spacing: -0.5px;
         }
 
-        #page-title p {
-            font-size: 18px;
+        .wp-page-header p {
+            font-size: 16px;
             opacity: 0.95;
             margin: 0;
-            position: relative;
-            z-index: 1;
             display: flex;
             align-items: center;
-            gap: 12px;
-            font-weight: 500;
+            gap: 15px;
             color: white;
         }
-        
+
         .status-badge {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: rgba(255, 255, 255, 0.25);
-            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 14px;
             border-radius: 20px;
             font-size: 13px;
             font-weight: 600;
-            letter-spacing: 0.4px;
-            backdrop-filter: blur(15px);
+            backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-        }
-
-        .status-badge:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
         }
 
         .status-badge::before {
             content: '';
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             background: var(--success-color);
             border-radius: 50%;
             animation: statusPulse 2s ease-in-out infinite;
-            box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
         }
 
         @keyframes statusPulse {
-            0%, 100% {
-                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6);
-                transform: scale(1);
-            }
-            50% {
-                box-shadow: 0 0 0 12px rgba(16, 185, 129, 0);
-                transform: scale(1.1);
-            }
+            0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
+            50% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
         }
 
-        /* Main Panel */
-        .panel {
+        /* Main Panel - Matching base template style */
+        .wp-panel {
             background: var(--bg-secondary);
-            border-radius: var(--wp-radius-lg);
-            box-shadow: var(--wp-shadow-card);
+            border-radius: 12px;
+            box-shadow: 0 2px 12px var(--shadow-color);
             border: 1px solid var(--border-color);
             overflow: hidden;
-            position: relative;
             transition: all 0.3s ease;
         }
 
-        .panel:hover {
-            box-shadow: var(--wp-shadow-hover);
-            transform: translateY(-2px);
+        .wp-panel-header {
+            background: var(--bg-secondary);
+            padding: 20px 30px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-heading);
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
-        .panel::before {
+        .wp-panel-header::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: var(--accent-color);
+            border-radius: 2px;
+        }
+
+        /* Navigation Tabs - Matching base template */
+        .wp-nav-tabs {
+            background: var(--bg-secondary);
+            padding: 0 30px;
+            border: none;
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .wp-nav-tabs li {
+            list-style: none;
+            margin: 0;
+        }
+
+        .wp-nav-tabs li a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 20px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.3s ease;
+            background: transparent;
+            border: none;
+            position: relative;
+        }
+
+        .wp-nav-tabs li a i {
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .wp-nav-tabs li a:hover {
+            color: var(--accent-color);
+            background: var(--bg-hover);
+        }
+
+        .wp-nav-tabs li.active a {
+            color: var(--accent-color);
+            background: var(--bg-primary);
+            position: relative;
+        }
+
+        .wp-nav-tabs li.active a::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent-color);
+        }
+
+        /* Tab Content */
+        .wp-tab-content {
+            padding: 30px;
+            background: var(--bg-secondary);
+            min-height: 400px;
+        }
+
+        .tab-pane {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Stats Cards - Matching base template card style */
+        .wp-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .wp-stat-card {
+            background: var(--bg-primary);
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wp-stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px var(--shadow-color);
+        }
+
+        .wp-stat-card::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             height: 3px;
-            background: var(--wp-gradient);
-            border-radius: var(--wp-radius-lg) var(--wp-radius-lg) 0 0;
-        }
-
-        .panel-body {
-            padding: 0;
-        }
-
-        /* Content Box Header */
-        .content-box-header {
-            background: var(--bg-light);
-            padding: 24px 32px;
-            margin: 0;
-            font-size: 22px;
-            font-weight: 700;
-            color: var(--text-primary);
-            border-bottom: 1px solid var(--border-color);
-            letter-spacing: 0.4px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .content-box-header::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: var(--wp-gradient);
-            opacity: 0.3;
-        }
-
-        /* Nav Tabs */
-        .nav-tabs {
-            background: var(--bg-light);
-            padding: 20px 32px 0;
-            border: none;
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            position: relative;
-        }
-
-        .nav-tabs::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 32px;
-            right: 32px;
-            height: 1px;
-            background: linear-gradient(90deg, rgba(226, 232, 240, 0.5), rgba(148, 163, 184, 0.3), rgba(226, 232, 240, 0.5));
-        }
-
-        .nav-tabs li {
-            margin-bottom: 0;
-        }
-
-        .nav-tabs li a {
-            background: transparent;
-            border: none;
-            border-radius: var(--wp-radius-md) var(--wp-radius-md) 0 0;
-            padding: 14px 26px;
-            color: var(--text-secondary);
-            font-weight: 600;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-size: 15px;
-            letter-spacing: 0.4px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .nav-tabs li a::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(248,250,252,0.6));
+            background: linear-gradient(90deg, var(--accent-color), var(--accent-hover));
             opacity: 0;
             transition: opacity 0.3s ease;
         }
 
-        .nav-tabs li a i {
-            font-size: 16px;
-            transition: all 0.3s ease;
-        }
-
-        .nav-tabs li.active a,
-        .nav-tabs li a:hover {
-            background: var(--bg-secondary);
-            color: var(--accent-color);
-            box-shadow: 0 -3px 12px rgba(102, 126, 234, 0.15), 0 2px 8px var(--shadow-light);
-            transform: translateY(-1px);
-        }
-
-        .nav-tabs li.active a::before,
-        .nav-tabs li a:hover::before {
+        .wp-stat-card:hover::before {
             opacity: 1;
         }
 
-        .nav-tabs li.active a i,
-        .nav-tabs li a:hover i {
-            color: var(--accent-color);
-            transform: scale(1.1);
-        }
-
-        /* Tab Content */
-        .tab-content {
-            padding: 40px;
-            background: var(--bg-secondary);
-            min-height: 400px;
-            position: relative;
-        }
-
-        .tab-content::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background:
-                radial-gradient(circle at 20% 20%, rgba(88, 86, 214, 0.02) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(124, 127, 243, 0.02) 0%, transparent 50%);
-            pointer-events: none;
-        }
-
-        .tab-pane {
-            animation: fadeInUp 0.4s ease;
-            position: relative;
-            z-index: 1;
-        }
-
-        /* Fix spacing for info sections */
-        .tab-pane .row {
-            background: var(--bg-light);
-            padding: 24px;
-            border-radius: var(--wp-radius-lg);
-            margin-bottom: 24px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 2px 8px var(--shadow-light);
-            transition: all 0.3s ease;
-        }
-
-        .tab-pane .row:hover {
-            box-shadow: 0 4px 16px var(--shadow-medium);
-            transform: translateY(-1px);
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Enhanced Action Links */
-        .action-card {
-            background: var(--bg-secondary);
-            border-radius: var(--wp-radius-xl);
-            padding: 32px;
-            margin-bottom: 32px;
-            box-shadow: var(--wp-shadow-card);
-            border: 1px solid var(--border-color);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .action-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: var(--wp-gradient);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .action-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: var(--wp-shadow-hover);
-        }
-
-        .action-card:hover::before {
-            opacity: 0.8;
-        }
-
-        .action-card-title {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 20px;
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--bg-hover);
+            border-radius: 10px;
             display: flex;
             align-items: center;
-            gap: 12px;
-            letter-spacing: 0.3px;
-        }
-
-        .action-card-title i {
+            justify-content: center;
+            margin-bottom: 15px;
             color: var(--accent-color);
             font-size: 24px;
             transition: all 0.3s ease;
         }
 
-        .action-card:hover .action-card-title i {
-            transform: rotate(360deg) scale(1.1);
-            color: var(--accent-color);
-        }
-
-        /* Quick Stats Section */
-        .quick-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 24px;
-            margin-bottom: 40px;
-        }
-
-        .stat-card {
-            background: var(--bg-secondary);
-            border-radius: var(--wp-radius-xl);
-            padding: 32px;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid var(--border-color);
-            box-shadow: var(--wp-shadow-card);
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: -30%;
-            right: -20%;
-            width: 120px;
-            height: 120px;
-            background: var(--wp-gradient);
-            opacity: 0.08;
-            border-radius: 50%;
-            transition: all 0.4s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: var(--wp-shadow-hover);
-            border-color: var(--accent-color);
-        }
-
-        .stat-card:hover::before {
-            transform: scale(1.3) rotate(10deg);
-            opacity: 0.12;
-        }
-        
-        .stat-icon {
-            width: 60px;
-            height: 60px;
-            background: var(--wp-gradient);
-            border-radius: var(--wp-radius-lg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-            font-size: 28px;
+        .wp-stat-card:hover .stat-icon {
+            background: var(--accent-color);
             color: white;
-            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
-            transition: all 0.3s ease;
-        }
-
-        .stat-card:hover .stat-icon {
-            transform: scale(1.1) rotate(5deg);
-            box-shadow: 0 12px 32px rgba(102, 126, 234, 0.4);
+            transform: scale(1.05);
         }
 
         .stat-value {
-            font-size: 36px;
-            font-weight: 800;
-            color: var(--text-primary);
-            margin: 0 0 8px 0;
-            line-height: 1;
-            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            letter-spacing: -0.5px;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-heading);
+            margin: 0 0 5px 0;
         }
 
         .stat-label {
-            font-size: 15px;
+            font-size: 13px;
             color: var(--text-secondary);
-            margin: 0;
-            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.8px;
-            opacity: 0.8;
-        }
-        
-        #WPVersion {
-            display: inline-block;
-        }
-
-        /* Enhanced Checkbox Styling */
-        .custom-control {
-            position: relative;
-            display: block;
-            min-height: 1.5rem;
-            padding-left: 1.5rem;
-        }
-
-        .custom-control-checkbox {
-            position: relative;
-            display: block;
-            min-height: 1.5rem;
-            padding-left: 2rem;
-        }
-        
-        .custom-control-checkbox .custom-control-input {
-            position: absolute;
-            left: 0;
-            z-index: -1;
-            width: 1rem;
-            height: 1.25rem;
-            opacity: 0;
-        }
-        
-        .custom-control-checkbox .custom-control-label {
-            position: relative;
-            margin-bottom: 0;
-            vertical-align: middle;
-            cursor: pointer;
-        }
-        
-        .custom-control-checkbox .custom-control-label::before {
-            position: absolute;
-            top: 0.25rem;
-            left: -2rem;
-            display: block;
-            width: 1.25rem;
-            height: 1.25rem;
-            pointer-events: none;
-            content: "";
-            background-color: var(--bg-primary, #fff);
-            border: 2px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            transition: var(--transition-base);
-        }
-        
-        .custom-control-checkbox .custom-control-label::after {
-            position: absolute;
-            top: 0.25rem;
-            left: -2rem;
-            display: block;
-            width: 1.25rem;
-            height: 1.25rem;
-            content: "";
-            background: no-repeat 50% / 50% 50%;
-        }
-        
-        .custom-control-checkbox .custom-control-input:checked ~ .custom-control-label::before {
-            color: var(--text-on-primary, #fff);
-            border-color: var(--primary-color);
-            background-color: var(--primary-color);
-        }
-        
-        .custom-control-checkbox .custom-control-input:checked ~ .custom-control-label::after {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3e%3cpath fill='%23fff' d='M6.564.75l-3.59 3.612-1.538-1.55L0 4.26l2.974 2.99L8 2.193z'/%3e%3c/svg%3e");
-        }
-        
-        .custom-control-checkbox .custom-control-input:focus ~ .custom-control-label::before {
-            box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
-        }
-        
-        .custom-control-checkbox .custom-control-input:focus:not(:checked) ~ .custom-control-label::before {
-            border-color: var(--primary-color);
-        }
-        
-        .custom-control-checkbox .custom-control-input:disabled ~ .custom-control-label,
-        .custom-control-checkbox .custom-control-input[disabled] ~ .custom-control-label {
-            color: var(--text-secondary, #6c757d);
-        }
-        
-        .custom-control-checkbox .custom-control-input:disabled ~ .custom-control-label::before,
-        .custom-control-checkbox .custom-control-input[disabled] ~ .custom-control-label::before {
-            background-color: var(--bg-secondary, #e9ecef);
-        }
-
-        /* Enhanced Toggle Switch */
-        .custom-control-switch {
-            padding-left: 3.5rem;
-        }
-
-        .custom-control-switch .custom-control-label {
-            margin-bottom: 0;
-            cursor: pointer;
-            font-weight: 500;
-            color: var(--text-primary);
-        }
-
-        .custom-control-switch .custom-control-label::before {
-            left: -3.5rem;
-            width: 3.5rem;
-            height: 1.75rem;
-            pointer-events: all;
-            border-radius: var(--radius-full);
-            background-color: var(--bg-secondary, #e2e8f0);
-            border: 2px solid var(--border-color, #cbd5e1);
-            transition: all var(--transition-base);
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
-        }
-
-        .custom-control-switch .custom-control-label::after {
-            top: calc(0.25rem + 2px);
-            left: calc(-3.5rem + 4px);
-            width: calc(1.75rem - 8px);
-            height: calc(1.75rem - 8px);
-            background-color: var(--bg-primary, white);
-            border-radius: var(--radius-full);
-            transition: all var(--transition-base);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-        }
-
-        .custom-control-switch .custom-control-input:checked ~ .custom-control-label::before {
-            background: var(--bg-gradient);
-            border-color: var(--primary-color);
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1), 0 0 0 3px rgba(99, 102, 241, 0.2);
-        }
-
-        .custom-control-switch .custom-control-input:checked ~ .custom-control-label::after {
-            background-color: var(--bg-primary, white);
-            transform: translateX(1.75rem);
-            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-        }
-
-        .custom-control-label {
-            position: relative;
-            margin-bottom: 0;
-            vertical-align: middle;
-        }
-
-        .custom-control-label::before,
-        .custom-control-label::after {
-            position: absolute;
-            top: 0.25rem;
-            display: block;
-            content: "";
-        }
-
-        .custom-control-input {
-            position: absolute;
-            left: 0;
-            z-index: -1;
-            width: 1rem;
-            height: 1.25rem;
-            opacity: 0;
-        }
-
-        .custom-control-input:focus ~ .custom-control-label::before {
-            box-shadow: 0 0 0 0.2rem rgba(88, 86, 214, 0.25);
-        }
-
-        .custom-control-input:focus:not(:checked) ~ .custom-control-label::before {
-            border-color: var(--primary-color);
-        }
-
-        .custom-control-input:disabled ~ .custom-control-label,
-        .custom-control-input[disabled] ~ .custom-control-label {
-            color: var(--text-secondary, #6c757d);
-        }
-
-        .custom-control-input:disabled ~ .custom-control-label::before,
-        .custom-control-input[disabled] ~ .custom-control-label::before {
-            background-color: var(--bg-secondary, #e9ecef);
-        }
-
-        /* Enhanced Buttons */
-        .btn {
-            padding: 14px 32px;
-            border-radius: var(--radius-lg);
-            font-weight: 700;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            border: none;
-            font-size: 15px;
             letter-spacing: 0.5px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            position: relative;
-            overflow: hidden;
-            cursor: pointer;
-            text-decoration: none;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            font-weight: 500;
         }
 
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.25);
-            transform: translate(-50%, -50%);
-            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1), height 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 0;
-        }
-
-        .btn:active::before {
-            width: 400px;
-            height: 400px;
-        }
-
-        .btn i {
-            font-size: 18px;
+        /* Action Cards */
+        .wp-action-card {
+            background: var(--bg-primary);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid var(--border-color);
             transition: all 0.3s ease;
-            position: relative;
-            z-index: 1;
         }
 
-        .btn span {
-            position: relative;
-            z-index: 1;
+        .wp-action-card:hover {
+            box-shadow: 0 4px 12px var(--shadow-color);
         }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
-            color: var(--text-on-primary, white);
-            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+        .action-card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-heading);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        .btn-primary:hover {
-            transform: translateY(-4px) scale(1.05);
-            box-shadow: 0 12px 32px rgba(102, 126, 234, 0.5);
-            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 25%, #d53f8c 50%, #e53e3e 75%, #3182ce 100%);
-            color: var(--text-on-primary, white);
+        .action-card-title i {
+            color: var(--accent-color);
+            font-size: 20px;
         }
 
-        .btn-primary:hover i {
-            transform: rotate(360deg) scale(1.2);
-        }
-
-        .btn-danger {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: var(--text-on-primary, white);
-            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
-        }
-
-        .btn-danger:hover {
-            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 8px 24px rgba(239, 68, 68, 0.4);
-            color: var(--text-on-primary, white);
-        }
-
-        .btn-default {
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            color: var(--text-primary);
-            border: 1px solid rgba(226, 232, 240, 0.8);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-
-        .btn-default:hover {
-            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-            transform: translateY(-2px);
-            border-color: rgba(102, 126, 234, 0.3);
-        }
-
-        .btn-outline-primary {
-            background: transparent;
-            color: var(--primary-color);
-            border: 2px solid var(--primary-color);
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
-        }
-
-        .btn-outline-primary:hover {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: var(--text-on-primary, white);
-            border-color: transparent;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
-        }
-
-        .btn-outline-danger {
-            background: transparent;
-            color: var(--danger-color);
-            border: 2px solid var(--danger-color);
-            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
-        }
-
-        .btn-outline-danger:hover {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: var(--text-on-primary, white);
-            border-color: transparent;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
-        }
-
-        /* Site Settings Section */
-        .settings-section {
-            margin-bottom: 40px;
-        }
-        
+        /* Settings Grid */
         .settings-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             gap: 20px;
         }
-        
+
         .setting-item {
-            background: var(--bg-card);
+            background: var(--bg-primary);
+            border-radius: 10px;
+            padding: 20px;
             border: 1px solid var(--border-color);
-            border-radius: var(--radius-lg);
-            padding: 25px;
             display: flex;
-            gap: 20px;
             align-items: center;
-            transition: var(--transition-base);
-            position: relative;
-            overflow: hidden;
+            gap: 15px;
+            transition: all 0.3s ease;
         }
-        
-        .setting-item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: var(--bg-gradient);
-            transform: translateX(-100%);
-            transition: transform 0.3s ease;
-        }
-        
+
         .setting-item:hover {
-            box-shadow: var(--shadow-lg);
-            border-color: var(--primary-color);
+            box-shadow: 0 3px 10px var(--shadow-color);
+            transform: translateY(-1px);
         }
-        
-        .setting-item:hover::before {
-            transform: translateX(0);
-        }
-        
+
         .setting-icon {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, var(--primary-light) 0%, var(--bg-light) 100%);
-            border-radius: var(--radius-md);
+            width: 40px;
+            height: 40px;
+            background: var(--bg-hover);
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
+            color: var(--accent-color);
+            font-size: 18px;
             flex-shrink: 0;
         }
-        
-        .setting-icon i {
-            font-size: 22px;
-            background: var(--bg-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
+
         .setting-content {
             flex: 1;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            gap: 20px;
+            justify-content: space-between;
         }
-        
-        .setting-info {
-            flex: 1;
-        }
-        
+
         .setting-info h6 {
-            margin: 0 0 5px 0;
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--text-primary);
+            margin: 0 0 4px 0;
+            color: var(--text-heading);
+            font-size: 15px;
+            font-weight: 600;
         }
-        
+
         .setting-info p {
             margin: 0;
-            font-size: 13px;
             color: var(--text-secondary);
-        }
-        
-        /* Simple checkbox styling */
-        .checkbox-inline {
-            display: inline-block;
-            margin: 0;
-            vertical-align: middle;
-        }
-        
-        .checkbox-inline input[type="checkbox"] {
-            accent-color: var(--primary-color);
-            transform: scale(1.2);
-        }
-        
-        /* Enhanced Tables */
-        .modern-table-wrapper {
-            background: var(--bg-card);
-            border-radius: var(--radius-lg);
-            overflow: hidden;
-            box-shadow: var(--shadow-sm);
-            margin-top: 20px;
-        }
-        
-        .table {
-            margin: 0;
-            border: none;
-            border-radius: 0;
+            font-size: 13px;
         }
 
-        .table thead {
-            background: var(--bg-gradient);
-        }
-
-        .table thead th {
-            border: none;
-            color: var(--text-on-primary, white);
-            font-weight: 600;
-            padding: 18px;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-        }
-
-        .table tbody tr {
-            transition: all var(--transition-base);
-            border-bottom: 1px solid var(--border-light);
-        }
-        
-        .table tbody tr:last-child {
-            border-bottom: none;
-        }
-
-        .table tbody tr:hover {
-            background: var(--bg-hover);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-        }
-
-        .table tbody td {
-            padding: 18px;
-            border: none;
-            vertical-align: middle;
-            color: var(--text-primary);
-        }
-        
-        .table-actions {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        /* Forms */
-        .form-group {
-            margin-bottom: 25px;
+        /* Forms - Matching base template */
+        .form-card {
+            background: var(--bg-primary);
+            border-radius: 10px;
+            padding: 25px;
+            border: 1px solid var(--border-color);
         }
 
         .form-control {
+            background: var(--bg-secondary);
             border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            padding: 12px 15px;
-            font-size: 15px;
+            border-radius: 8px;
+            padding: 10px 15px;
+            font-size: 14px;
+            color: var(--text-primary);
             transition: all 0.3s ease;
-            background: var(--bg-secondary, white);
         }
 
         .form-control:focus {
-            border-color: var(--primary-color);
+            border-color: var(--accent-color);
             box-shadow: 0 0 0 3px rgba(88, 86, 214, 0.1);
             outline: none;
         }
 
-        .control-label {
+        /* Buttons - Matching base template */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
             font-weight: 500;
-            color: var(--text-primary);
-            margin-bottom: 8px;
             font-size: 14px;
-            letter-spacing: 0.3px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(88, 86, 214, 0.3);
+        }
+
+        .btn-default {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-default:hover {
+            background: var(--bg-secondary);
+            box-shadow: 0 2px 8px var(--shadow-color);
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Tables - Matching base template */
+        .table {
+            width: 100%;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px var(--shadow-color);
+        }
+
+        .table thead {
+            background: var(--bg-hover);
+        }
+
+        .table thead th {
+            padding: 15px;
+            font-weight: 600;
+            color: var(--text-heading);
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: none;
+        }
+
+        .table tbody td {
+            padding: 15px;
+            color: var(--text-primary);
+            font-size: 14px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .table tbody tr:hover {
+            background: var(--bg-hover);
+        }
+
+        /* Alerts - Matching base template */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            border: none;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .alert-info {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--accent-color);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+            border: 1px solid rgba(239, 68, 68, 0.2);
         }
 
         /* Progress Bar */
         .progress {
             height: 8px;
-            border-radius: 4px;
-            background: var(--border-color);
+            background: var(--bg-hover);
+            border-radius: 10px;
             overflow: hidden;
-            margin-top: 10px;
+            margin: 20px 0;
         }
 
         .progress-bar {
-            background: var(--primary-color);
-            transition: width 0.3s ease;
-        }
-
-        /* Alerts */
-        .alert {
-            border-radius: var(--radius-md);
-            border: none;
-            padding: 15px 20px;
-            margin-bottom: 20px;
-        }
-
-        .alert-success {
-            background: var(--success-bg, #d1fae5);
-            color: var(--success-text, #065f46);
-        }
-
-        .alert-danger {
-            background: var(--danger-bg, #fee2e2);
-            color: var(--danger-text, #991b1b);
-        }
-
-        .alert-warning {
-            background: var(--warning-bg, #fef3c7);
-            color: var(--warning-text, #92400e);
-            border: 1px solid var(--warning-border, #fde68a);
-        }
-
-        /* Labels */
-        .label {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .label-success {
-            background: var(--success-bg, #d1fae5);
-            color: var(--success-text, #065f46);
-        }
-
-        /* Modal Styling */
-        .modal-content {
-            border-radius: var(--radius-lg);
-            border: none;
-            box-shadow: var(--shadow-md);
-        }
-
-        .modal-header {
-            background: var(--bg-light);
-            border-bottom: 1px solid var(--border-color);
-            padding: 20px 25px;
-            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-        }
-
-        .modal-title {
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .modal-body {
-            padding: 25px;
-        }
-
-        .modal-footer {
-            background: var(--bg-light);
-            border-top: 1px solid var(--border-color);
-            padding: 15px 25px;
-            border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-        }
-
-        /* Help Tooltip */
-        .help_test_domain {
-            background: var(--text-primary);
-            padding: 12px 15px;
-            display: none;
-            position: absolute;
-            z-index: 1000;
-            text-align: left;
-            color: var(--text-on-primary, white);
-            font-size: 13px;
-            border-radius: var(--radius-sm);
-            box-shadow: var(--shadow-md);
-            max-width: 250px;
-            line-height: 1.5;
-        }
-
-        #help:hover + .help_test_domain {
-            display: block;
-        }
-
-        /* Loading Spinner */
-        #wordpresshomeloading {
-            width: 24px;
-            height: 24px;
-            vertical-align: middle;
-            margin-left: 10px;
-        }
-        
-        /* Animated Background Elements */
-        @keyframes float-slow {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(180deg); }
-        }
-        
-        @keyframes float-fast {
-            0%, 100% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(-30px) scale(1.1); }
-        }
-        
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 10px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: var(--bg-light);
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: var(--bg-gradient);
-            border-radius: var(--radius-full);
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--primary-hover);
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .container {
-                padding: 15px;
-            }
-            
-            #page-title {
-                padding: 25px;
-                border-radius: var(--radius-lg);
-            }
-            
-            #page-title h2 {
-                font-size: 24px;
-            }
-            
-            .tab-content {
-                padding: 20px;
-            }
-            
-            .nav-tabs {
-                padding: 10px 20px 0;
-                gap: 5px;
-            }
-            
-            .nav-tabs li a {
-                padding: 10px 16px;
-                font-size: 13px;
-            }
-            
-            .site-overview-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .quick-stats {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 15px;
-            }
-            
-            .settings-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .action-links-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .bottom-action-links {
-                flex-direction: column;
-                width: 100%;
-            }
-            
-            .bottom-action-link {
-                width: 100%;
-                justify-content: center;
-            }
-        }
-
-        /* Additional custom styles */
-        .center-div {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .no-margin {
-            margin: 0;
-        }
-
-        hr {
-            border: none;
-            border-top: 1px solid var(--border-color);
-            margin: 30px 0;
-        }
-        
-        /* Fix for example-box-wrapper */
-        .example-box-wrapper {
-            padding: 0 !important;
-        }
-        
-        /* Tab buttons action area */
-        .tab-action-area {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 25px;
-            padding: 20px;
-            background: var(--bg-light);
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border-color);
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        
-        /* Enhanced nav tabs design */
-        .nav-tabs li a {
-            position: relative;
-        }
-        
-        .nav-tabs li a::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            width: 0;
-            height: 3px;
-            background: var(--bg-gradient);
-            transform: translateX(-50%);
-            transition: width 0.3s ease;
-        }
-        
-        .nav-tabs li.active a::after,
-        .nav-tabs li a:hover::after {
-            width: 80%;
-        }
-        
-        /* Loading animation */
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .fa-spin {
-            animation: spin 1s linear infinite;
-        }
-        
-        /* Enhanced form elements */
-        .form-card {
-            background: var(--bg-card);
-            padding: 30px;
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-sm);
-            margin-bottom: 25px;
-        }
-        
-        /* Badge styles */
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 4px 12px;
-            border-radius: var(--radius-full);
-            font-size: 12px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
-        
-        .badge-success {
-            background: var(--success-color);
-            color: var(--text-on-primary, white);
-        }
-        
-        .badge-danger {
-            background: var(--danger-color);
-            color: var(--text-on-primary, white);
-        }
-        
-        .badge-info {
-            background: var(--info-color);
-            color: var(--text-on-primary, white);
-        }
-        
-        /* Additional Modern Enhancements */
-        
-        /* Animated gradient backgrounds */
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        
-        .gradient-animate {
-            background-size: 200% 200%;
-            animation: gradientShift 10s ease infinite;
-        }
-        
-        /* Plugin/Theme Tables Enhancement */
-        .plugins-themes-section {
-            position: relative;
-        }
-        
-        .table-section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        /* Enhanced existing staging section */
-        .existing-staging-section {
-            margin-top: 50px;
-            padding-top: 30px;
-            border-top: 2px solid var(--border-color);
-        }
-        
-        .existing-staging-section h5 {
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 20px;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .existing-staging-section h5::before {
-            content: '';
-            width: 4px;
-            height: 20px;
-            background: var(--bg-gradient);
-            border-radius: 2px;
-        }
-        
-        /* Progress indicators */
-        .progress {
-            height: 8px;
-            border-radius: 4px;
-            background: var(--border-color);
-            overflow: hidden;
-            margin-top: 10px;
-        }
-        
-        .progress-bar {
-            background: var(--bg-gradient);
+            background: linear-gradient(90deg, var(--accent-color), var(--accent-hover));
             transition: width 0.3s ease;
             height: 100%;
         }
-        
-        /* Enhanced modals */
-        .modal-content {
-            border-radius: var(--radius-xl);
-            border: none;
-            box-shadow: var(--shadow-xl);
-            overflow: hidden;
-        }
-        
-        .modal-header {
-            background: var(--bg-gradient);
-            color: var(--text-on-primary, white);
-            border-bottom: none;
-            padding: 20px 25px;
-        }
-        
-        .modal-title {
-            font-weight: 600;
-            font-size: 18px;
-        }
-        
-        .modal-body {
-            padding: 30px;
-        }
-        
-        .modal-footer {
-            background: var(--bg-light);
-            border-top: 1px solid var(--border-color);
-            padding: 15px 25px;
-        }
-        
-        /* Bottom Actions Enhancement */
-        .bottom-actions {
-            background: linear-gradient(135deg, var(--bg-light) 0%, var(--bg-card) 100%);
-            padding: 30px 40px;
-            margin: 40px -30px -30px;
-            border-radius: 0 0 var(--radius-xl) var(--radius-xl);
-            border-top: 1px solid var(--border-color);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .bottom-actions::before {
-            content: '';
-            position: absolute;
-            top: -100px;
-            left: -100px;
-            width: 300px;
-            height: 300px;
-            background: var(--bg-gradient);
-            opacity: 0.05;
-            border-radius: 50%;
-            animation: float 6s ease-in-out infinite;
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-20px); }
-        }
-        
-        .bottom-action-links {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .bottom-action-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            padding: 14px 28px;
-            background: var(--bg-card);
-            color: var(--text-primary);
-            border-radius: var(--radius-full);
-            text-decoration: none;
-            transition: var(--transition-base);
-            font-weight: 600;
-            border: 2px solid transparent;
-            font-size: 14px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: var(--shadow-sm);
-        }
-        
-        .bottom-action-link::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            background: var(--bg-gradient);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            transition: width 0.6s ease, height 0.6s ease;
-            z-index: 0;
-        }
-        
-        .bottom-action-link:hover::before {
-            width: 300px;
-            height: 300px;
-        }
-        
-        .bottom-action-link:hover {
-            color: var(--text-on-primary, white);
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: var(--shadow-xl);
-            border-color: var(--primary-color);
-        }
-        
-        .bottom-action-link i,
-        .bottom-action-link span {
-            position: relative;
-            z-index: 1;
-            transition: var(--transition-base);
-        }
-        
-        .bottom-action-link i {
-            font-size: 16px;
-        }
-        
-        .bottom-action-link:hover i {
-            transform: rotate(360deg);
-        }
-        
-        /* Fix panel padding */
-        .panel-body {
-            padding: 0 !important;
-        }
-        
-        /* Fix row spacing in General tab */
-        #tab1 .row {
-            margin-left: 0;
-            margin-right: 0;
-        }
-        
-        /* Staging Section Styles */
-        .staging-section {
-            padding: 0;
-        }
-        
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .section-header h4 {
-            margin: 0;
-            color: var(--text-primary);
-            font-weight: 600;
-            font-size: 24px;
-        }
-        
-        .section-header p {
-            margin: 5px 0 0 0;
-            color: var(--text-secondary);
-        }
-        
-        .restore-link {
-            padding: 8px 16px;
-            background: var(--bg-light);
-            color: var(--text-primary);
-            text-decoration: none;
-            border-radius: var(--radius-sm);
-            font-size: 14px;
-            transition: all 0.3s ease;
-            border: 1px solid var(--border-color);
-        }
-        
-        .restore-link:hover {
-            background: var(--primary-color);
-            color: var(--text-on-primary, white);
-            text-decoration: none;
-            border-color: var(--primary-color);
-        }
-        
-        .form-card {
-            background: var(--bg-light);
-            padding: 30px;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border-color);
-            margin-bottom: 30px;
-        }
-        
-        .create-staging-form .form-group {
-            margin-bottom: 25px;
-        }
-        
-        .domain-selection-box {
-            background: var(--bg-primary, white);
-            padding: 20px;
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--border-color);
-        }
-        
-        .domain-option-content {
-            margin-top: 15px;
-            padding: 15px;
-            background: var(--bg-light);
-            border-radius: var(--radius-sm);
-        }
-        
-        .input-group {
-            display: flex;
-            width: 100%;
-        }
-        
-        .input-group .form-control {
-            border-radius: var(--radius-sm) 0 0 var(--radius-sm);
-        }
-        
-        .input-group-append {
-            margin-left: -1px;
-        }
-        
-        .domain-select {
-            border-radius: 0 var(--radius-sm) var(--radius-sm) 0 !important;
-            border-left: 0;
-            background: var(--bg-primary, white);
-            min-width: 200px;
-        }
-        
-        .existing-staging-section {
-            margin-top: 50px;
-            padding-top: 30px;
-            border-top: 1px solid var(--border-color);
-        }
-        
-        .existing-staging-section h5 {
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 20px;
-            font-size: 18px;
-        }
-        
-        .staging-table {
-            background: var(--bg-primary, white);
-        }
-        
-        /* Backup Section Styles */
-        .backup-section {
-            padding: 0;
-        }
-        
-        .backup-form {
-            margin-top: 30px;
-        }
-        
-        .alert-modern {
-            display: flex;
-            align-items: flex-start;
-            gap: 15px;
-            padding: 20px;
-            border-radius: var(--radius-md);
-            border: 1px solid;
-        }
-        
-        .alert-modern.alert-info {
-            background: var(--info-bg, #e0f2fe);
-            color: var(--info-text, #0369a1);
-            border-color: var(--info-border, #7dd3fc);
-        }
-        
-        .alert-modern i {
-            font-size: 20px;
-            flex-shrink: 0;
-            margin-top: 2px;
-        }
-        
-        .alert-modern p {
-            margin: 0 0 8px 0;
-        }
-        
-        .alert-modern p:last-child {
-            margin-bottom: 0;
-        }
-        
-        .alert-modern a {
-            color: var(--info-accent, #0284c7);
-            font-weight: 500;
-        }
-        
-        .alert-modern a:hover {
-            text-decoration: underline;
-        }
-        
-        /* Button styling improvements */
-        .btn-lg {
-            padding: 12px 32px;
-            font-size: 16px;
-        }
-        
-        /* Form improvements */
-        .form-group.row {
-            align-items: center;
-        }
-        
-        .form-group.row .control-label {
-            font-weight: 500;
-            color: var(--text-primary);
-        }
-        
-        /* Site Overview Section */
-        .site-overview-section {
-            margin-bottom: 40px;
-        }
-        
-        .section-title {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 25px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            position: relative;
-        }
-        
-        .section-title::before {
-            content: '';
-            width: 5px;
-            height: 28px;
-            background: var(--bg-gradient);
-            border-radius: 3px;
-        }
-        
-        .site-overview-grid {
-            display: grid;
-            grid-template-columns: 380px 1fr;
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-        
+
+        /* Site Preview Card */
         .site-preview-card {
-            background: var(--bg-card);
-            border-radius: var(--radius-xl);
-            box-shadow: var(--shadow-lg);
+            background: var(--bg-primary);
+            border-radius: 12px;
+            padding: 20px;
             border: 1px solid var(--border-color);
-            overflow: hidden;
-            position: relative;
-            transition: var(--transition-base);
+            transition: all 0.3s ease;
         }
-        
+
         .site-preview-card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-xl);
+            box-shadow: 0 5px 15px var(--shadow-color);
         }
-        
+
         .preview-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px;
-            background: linear-gradient(135deg, var(--primary-light) 0%, var(--bg-light) 100%);
-            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 15px;
         }
-        
+
         .preview-header h6 {
             margin: 0;
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--text-primary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            color: var(--text-heading);
+            font-size: 16px;
+            font-weight: 600;
         }
-        
+
         .btn-refresh {
-            background: var(--bg-primary, white);
+            background: var(--bg-hover);
             border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: 8px 12px;
+            border-radius: 8px;
+            padding: 8px;
             cursor: pointer;
-            transition: var(--transition-base);
+            transition: all 0.3s ease;
             color: var(--text-secondary);
         }
-        
+
         .btn-refresh:hover {
-            background: var(--primary-color);
-            color: var(--text-on-primary, white);
-            border-color: var(--primary-color);
+            background: var(--accent-color);
+            color: white;
             transform: rotate(180deg);
         }
-        
+
         .preview-container {
             position: relative;
-            width: 100%;
-            height: 220px;
+            border-radius: 8px;
             overflow: hidden;
-            background: linear-gradient(45deg, #f3f4f6 25%, transparent 25%, transparent 75%, #f3f4f6 75%, #f3f4f6),
-                        linear-gradient(45deg, #f3f4f6 25%, transparent 25%, transparent 75%, #f3f4f6 75%, #f3f4f6);
-            background-size: 20px 20px;
-            background-position: 0 0, 10px 10px;
+            background: var(--bg-hover);
+            aspect-ratio: 16/9;
         }
-        
+
         .preview-container img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.6s ease;
-            position: relative;
-            z-index: 1;
+            transition: opacity 0.3s ease;
         }
-        
+
         .preview-overlay {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.9) 0%, rgba(139, 92, 246, 0.9) 100%);
+            background: rgba(0, 0, 0, 0.7);
             display: flex;
             align-items: center;
             justify-content: center;
             opacity: 0;
             transition: opacity 0.3s ease;
-            z-index: 2;
         }
-        
+
         .preview-container:hover .preview-overlay {
             opacity: 1;
         }
-        
-        .preview-container:hover img {
-            transform: scale(1.1);
-        }
-        
+
         .preview-link {
-            color: var(--text-on-primary, white);
+            background: var(--accent-color);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
             text-decoration: none;
-            font-size: 16px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 28px;
-            background: rgba(255, 255, 255, 0.2);
-            border: 2px solid white;
-            border-radius: var(--radius-full);
+            font-weight: 500;
             transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
         }
-        
+
         .preview-link:hover {
-            background: var(--bg-primary, white);
-            color: var(--primary-color);
-            text-decoration: none;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            background: var(--accent-hover);
+            transform: scale(1.05);
         }
-        
-        .preview-actions {
-            padding: 20px;
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            background: var(--bg-light);
-            border-top: 1px solid var(--border-color);
-        }
-        
-        .preview-actions .btn {
-            flex: 1;
-        }
-        
-        .quick-actions-card {
-            background: var(--bg-card);
-            border-radius: var(--radius-xl);
-            padding: 30px;
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-sm);
-            height: 100%;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .quick-actions-card::before {
-            content: '';
-            position: absolute;
-            top: -100px;
-            right: -100px;
-            width: 200px;
-            height: 200px;
-            background: var(--bg-gradient);
-            opacity: 0.05;
-            border-radius: 50%;
-        }
-        
-        .quick-actions-card h5 {
-            margin: 0 0 25px 0;
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .quick-actions-card h5::before {
-            content: '⚡';
-            font-size: 20px;
-        }
-        
+
+        /* Quick Actions */
         .action-links-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 16px;
+            gap: 10px;
         }
-        
+
         .action-links-grid a {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 18px 20px;
-            background: linear-gradient(135deg, var(--bg-light) 0%, white 100%);
+            gap: 8px;
+            padding: 12px 15px;
+            background: var(--bg-hover);
+            border-radius: 8px;
             color: var(--text-primary);
-            border-radius: var(--radius-lg);
             text-decoration: none;
-            transition: var(--transition-base);
-            font-weight: 600;
-            border: 2px solid transparent;
             font-size: 14px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: var(--shadow-sm);
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
         }
-        
-        .action-links-grid a::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--bg-gradient);
-            opacity: 0;
-            transition: var(--transition-base);
-            z-index: 0;
-        }
-        
+
         .action-links-grid a:hover {
-            transform: translateY(-3px);
-            box-shadow: var(--shadow-lg);
-            border-color: var(--primary-color);
-            color: var(--text-on-primary, white);
+            background: var(--accent-color);
+            color: white;
+            transform: translateX(5px);
         }
-        
-        .action-links-grid a:hover::before {
-            opacity: 1;
-        }
-        
-        .action-links-grid a > * {
-            position: relative;
-            z-index: 1;
-        }
-        
-        .action-links-grid a svg {
-            width: 20px;
-            height: 20px;
-            transition: var(--transition-base);
-            flex-shrink: 0;
-        }
-        
-        .action-links-grid a:hover svg path {
-            fill: white;
-        }
-        
+
         .action-links-grid a i {
-            font-size: 18px;
-            width: 20px;
-            text-align: center;
-            flex-shrink: 0;
-            background: var(--bg-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            transition: var(--transition-base);
+            font-size: 16px;
         }
-        
-        .action-links-grid a:hover i {
-            -webkit-text-fill-color: var(--text-on-primary, white);
+
+        /* Section Headers */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
         }
-        
-        /* Responsive improvements */
-        @media (max-width: 992px) {
+
+        .section-header h4 {
+            margin: 0;
+            color: var(--text-heading);
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .section-header .text-muted {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* Tab Action Area */
+        .tab-action-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Staging Section */
+        .staging-section {
+            padding: 20px 0;
+        }
+
+        .create-staging-form {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Backup Section */
+        .backup-section {
+            padding: 20px 0;
+        }
+
+        .restore-link {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .restore-link:hover {
+            color: var(--accent-hover);
+            transform: translateX(5px);
+        }
+
+        /* Site Overview Grid */
+        .site-overview-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 968px) {
             .site-overview-grid {
                 grid-template-columns: 1fr;
             }
-            
-            .site-preview-card {
-                max-width: 500px;
-                margin: 0 auto;
-            }
         }
-        
+
+        /* Quick Actions Card */
+        .quick-actions-card {
+            background: var(--bg-primary);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .quick-actions-card h5 {
+            margin: 0 0 20px 0;
+            color: var(--text-heading);
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        /* Checkbox Styling */
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--accent-color);
+        }
+
+        /* Loading Spinner */
+        #wordpresshomeloading {
+            display: inline-block;
+            margin-left: 10px;
+        }
+
+        /* Responsive Design */
         @media (max-width: 768px) {
-            .section-header {
+            .wp-stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .wp-nav-tabs {
+                padding: 0 15px;
+            }
+
+            .wp-tab-content {
+                padding: 20px 15px;
+            }
+
+            .action-links-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tab-action-area {
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 15px;
             }
-            
-            .form-card {
-                padding: 20px;
+
+            .action-buttons {
+                width: 100%;
+                flex-wrap: wrap;
             }
-            
-            .form-group.row .control-label {
-                margin-bottom: 10px;
-            }
-            
-            .domain-select {
-                min-width: auto;
-            }
-            
-            .action-links-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .site-overview-grid {
-                gap: 20px;
-            }
-            
-            .quick-actions-card {
-                padding: 20px;
-            }
-        }
-        
-        /* Custom checkbox styling */
-        .custom-control-checkbox {
-            position: relative;
-            display: block;
-            min-height: 1.5rem;
-            padding-left: 1.5rem;
-        }
-        
-        .custom-control-checkbox .custom-control-input {
-            position: absolute;
-            left: 0;
-            z-index: -1;
-            width: 1rem;
-            height: 1.25rem;
-            opacity: 0;
-        }
-        
-        .custom-control-checkbox .custom-control-label {
-            position: relative;
-            margin-bottom: 0;
-            vertical-align: middle;
-            cursor: pointer;
-        }
-        
-        .custom-control-checkbox .custom-control-label::before {
-            position: absolute;
-            top: 0.25rem;
-            left: -1.5rem;
-            display: block;
-            width: 1rem;
-            height: 1rem;
-            pointer-events: none;
-            content: "";
-            background-color: var(--bg-primary, #fff);
-            border: 1px solid var(--border-color, #adb5bd);
-            border-radius: 0.25rem;
-        }
-        
-        .custom-control-checkbox .custom-control-label::after {
-            position: absolute;
-            top: 0.25rem;
-            left: -1.5rem;
-            display: block;
-            width: 1rem;
-            height: 1rem;
-            content: "";
-            background: no-repeat 50% / 50% 50%;
-        }
-        
-        .custom-control-checkbox .custom-control-input:checked ~ .custom-control-label::before {
-            color: var(--text-on-primary, #fff);
-            border-color: var(--primary-color);
-            background-color: var(--primary-color);
-        }
-        
-        .custom-control-checkbox .custom-control-input:checked ~ .custom-control-label::after {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3e%3cpath fill='%23fff' d='M6.564.75l-3.59 3.612-1.538-1.55L0 4.26l2.974 2.99L8 2.193z'/%3e%3c/svg%3e");
-        }
-        
-        /* Input group styling */
-        .input-group {
-            position: relative;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: stretch;
-            width: 100%;
-        }
-        
-        .input-group > .form-control {
-            position: relative;
-            flex: 1 1 auto;
-            width: 1%;
-            min-width: 0;
-            margin-bottom: 0;
-            border-top-right-radius: 0;
-            border-bottom-right-radius: 0;
-        }
-        
-        .input-group-addon {
-            padding: 0;
-            margin-bottom: 0;
-            font-size: 1rem;
-            font-weight: 400;
-            line-height: 1.25;
-            text-align: center;
-            white-space: nowrap;
-            border: 1px solid var(--border-color, #ced4da);
-            border-radius: 0.25rem;
-            display: flex;
-            align-items: center;
-            border-top-left-radius: 0;
-            border-bottom-left-radius: 0;
-            border-left: 0;
-        }
-        
-        .input-group-addon select {
-            padding: 0.375rem 0.75rem;
-            margin: 0;
-            border-radius: 0 var(--radius-sm) var(--radius-sm) 0 !important;
-            background: var(--bg-secondary, white);
         }
     </style>
-    
+
     <script>
         function refreshSitePreview() {
             var previewImg = document.getElementById('sitePreviewImage');
             var currentSrc = previewImg.src;
-            
-            // Add a spinner/loading state
+
+            // Add timestamp to force refresh
+            if (currentSrc.includes('?')) {
+                previewImg.src = currentSrc.split('&t=')[0] + '&t=' + new Date().getTime();
+            } else {
+                previewImg.src = currentSrc + '?t=' + new Date().getTime();
+            }
+
+            // Add loading state
             previewImg.style.opacity = '0.5';
-            
-            // Force reload by adding timestamp
-            var baseUrl = currentSrc.split('&t=')[0];
-            previewImg.src = baseUrl + '&t=' + new Date().getTime();
-            
+
             // Restore opacity when loaded
             previewImg.onload = function() {
                 previewImg.style.opacity = '1';
@@ -2104,801 +799,581 @@
         }
     </script>
 
-
-
     <div style="display: none" id="wordpresshome"></div>
     <div style="display: none" id="WPid">{{ wpsite.id }}</div>
 
-    <div ng-controller="WPsiteHome" class="container">
+    <div ng-controller="WPsiteHome" class="wp-container">
 
-    <div id="page-title">
-        <h2>{{ wpsite.title }}</h2>
-        <p>
-            <span>{{ wpsite.path }}</span>
-            <span class="status-badge">Active</span>
-            <img style="display: none" id="wordpresshomeloading" ng-hide="wordpresshomeloading"
-                 src="{% static 'images/loading.gif' %}">
-        </p>
-    </div>
+        <div class="wp-page-header">
+            <h2>{{ wpsite.title }}</h2>
+            <p>
+                <span>{{ wpsite.path }}</span>
+                <span class="status-badge">Active</span>
+                <img style="display: none" id="wordpresshomeloading" ng-hide="wordpresshomeloading"
+                     src="{% static 'images/loading.gif' %}">
+            </p>
+        </div>
 
-    <div class="panel">
-        <div class="panel-body">
-            <h3 class="content-box-header">
+        <div class="wp-panel">
+            <div class="wp-panel-header">
                 {% trans "WordPress Manager" %}
-            </h3>
+            </div>
 
-                    <div class="example-box-wrapper">
-                        <ul class="nav-responsive nav nav-tabs">
+            <ul class="wp-nav-tabs nav nav-tabs">
+                <li class="active">
+                    <a href="#tab1" data-toggle="tab" aria-selected="true">
+                        <i class="fas fa-cog"></i> General
+                    </a>
+                </li>
+                <li>
+                    <a href="#tab2" ng-click="GetCurrentPlugins()" data-toggle="tab">
+                        <i class="fas fa-plug"></i> Plugins
+                    </a>
+                </li>
+                <li>
+                    <a href="#tab3" ng-click="GetCurrentThemes()" data-toggle="tab">
+                        <i class="fas fa-palette"></i> Themes
+                    </a>
+                </li>
+                <li>
+                    <a href="#tab4" data-toggle="tab" ng-click="fetchstaging()">
+                        <i class="fas fa-clone"></i> Staging
+                    </a>
+                </li>
+                <li>
+                    <a href="#tab5" data-toggle="tab">
+                        <i class="fas fa-download"></i> Backups
+                    </a>
+                </li>
+                <li>
+                    <a ng-click="fetchDatabase()" href="#tab6" data-toggle="tab">
+                        <i class="fas fa-database"></i> Database
+                    </a>
+                </li>
+            </ul>
 
-                            <li class="active"><a href="#tab1" data-toggle="tab"
-                                                  aria-selected="true"><i class="fas fa-cog"></i> General</a></li>
-                            <li class=""><a href="#tab2" ng-click="GetCurrentPlugins()"
-                                            data-toggle="tab"><i class="fas fa-plug"></i> Plugins</a></li>
-                            <li class=""><a href="#tab3" ng-click="GetCurrentThemes()"
-                                            data-toggle="tab"><i class="fas fa-palette"></i> Themes</a></li>
-                            <li><a href="#tab4" data-toggle="tab" ng-click="fetchstaging()"><i class="fas fa-clone"></i> Staging</a></li>
-                            <li><a href="#tab5" data-toggle="tab"><i class="fas fa-download"></i> Backups</a></li>
-                            <li><a ng-click="fetchDatabase()" href="#tab6" data-toggle="tab"><i class="fas fa-database"></i> Database</a></li>
-                        </ul>
-                        <div class="tab-content">
-                            <div class="tab-pane active" id="tab1">
-                                <!-- Quick Stats -->
-                                <div class="quick-stats">
-                                    <div class="stat-card">
-                                        <div class="stat-icon">
-                                            <i class="fas fa-globe"></i>
-                                        </div>
-                                        <p class="stat-value">Active</p>
-                                        <p class="stat-label">Site Status</p>
-                                    </div>
-                                    <div class="stat-card">
-                                        <div class="stat-icon">
-                                            <i class="fab fa-wordpress"></i>
-                                        </div>
-                                        <p class="stat-value" id="WPVersion">Loading...</p>
-                                        <p class="stat-label">WordPress Version</p>
-                                    </div>
-                                    <div class="stat-card">
-                                        <div class="stat-icon">
-                                            <i class="fab fa-php"></i>
-                                        </div>
-                                        <p class="stat-value">{{ wpsite.owner.phpSelection }}</p>
-                                        <p class="stat-label">PHP Version</p>
-                                    </div>
-                                    <div class="stat-card">
-                                        <div class="stat-icon">
-                                            <i class="fas fa-server"></i>
-                                        </div>
-                                        <p class="stat-value">LiteSpeed</p>
-                                        <p class="stat-label">Web Server</p>
-                                    </div>
-                                </div>
-                                
-                                <!-- Site Preview and Quick Actions -->
-                                <div class="site-overview-section">
-                                    <h3 class="section-title">Site Overview</h3>
-                                    <div class="site-overview-grid">
-                                    <!-- Site Preview Card -->
-                                    <div class="site-preview-card">
-                                        <div class="preview-header">
-                                            <h6>🖼️ Live Preview</h6>
-                                            <button class="btn-refresh" onclick="refreshSitePreview()" title="Refresh preview">
-                                                <i class="fas fa-sync-alt"></i>
-                                            </button>
-                                        </div>
-                                        <div class="preview-container">
-                                            <img id="sitePreviewImage" 
-                                                 src="https://api.microlink.io/?url=http://{{ wpsite.FinalURL }}&screenshot=true&meta=false&embed=screenshot.url" 
-                                                 alt="{{ wpsite.title }}" 
-                                                 onerror="this.onerror=null; this.src='https://s.wordpress.org/style/images/about/WordPress-logotype-standard.png';">
-                                            <div class="preview-overlay">
-                                                <a href="http://{{ wpsite.FinalURL }}" target="_blank" class="preview-link">
-                                                    <i class="fas fa-external-link-alt"></i>
-                                                    Visit Live Site
-                                                </a>
-                                            </div>
-                                        </div>
-                                        <div class="preview-actions">
-                                            <a target="_blank" href="http://{{ wpsite.FinalURL }}" class="btn btn-sm btn-default">
-                                                <i class="fas fa-external-link-alt"></i> Open Site
-                                            </a>
-                                            <a target="_blank" href="{% url 'AutoLogin' %}?id={{ wpsite.id }}" class="btn btn-sm btn-primary">
-                                                <i class="fas fa-sign-in-alt"></i> WP Admin
-                                            </a>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Quick Actions Card -->
-                                    <div class="quick-actions-card">
-                                        <h5>Quick Actions</h5>
-                                        <div class="action-links-grid">
-                                            <a target="_blank" href="/filemanager/{{ wpsite.owner.domain }}?path={{ wpsite.path }}">
-                                                <i class="fas fa-folder-open"></i>
-                                                File Manager
-                                            </a>
-                                            <a target="_blank" href="/websites/{{ wpsite.owner.domain }}/manageGIT">
-                                                <i class="fab fa-git-alt"></i>
-                                                Git Manager
-                                            </a>
-                                            <a href="/dataBases/phpMyAdmin" target="_blank">
-                                                <i class="fas fa-database"></i>
-                                                phpMyAdmin
-                                            </a>
-                                            <a href="/websites/{{ wpsite.owner.domain }}">
-                                                <i class="fas fa-globe"></i>
-                                                Domain Settings
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                                </div>
-                                
-                                <!-- Site Settings Section -->
-                                <div class="settings-section">
-                                    <h3 class="section-title">Site Settings</h3>
-                                    <div class="settings-grid">
-                                        <div class="setting-item">
-                                            <div class="setting-icon">
-                                                <i class="fas fa-rocket"></i>
-                                            </div>
-                                            <div class="setting-content">
-                                                <div class="setting-info">
-                                                    <h6>LSCache</h6>
-                                                    <p>LiteSpeed caching for better performance</p>
-                                                </div>
-                                                <label class="checkbox-inline">
-                                                    <input ng-click="UpdateWPSettings('lscache')"
-                                                           type="checkbox"
-                                                           id="lscache"
-                                                           style="width: 18px; height: 18px; margin-right: 8px; cursor: pointer;">
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="setting-item">
-                                            <div class="setting-icon">
-                                                <i class="fas fa-lock"></i>
-                                            </div>
-                                            <div class="setting-content">
-                                                <div class="setting-info">
-                                                    <h6>Password Protection</h6>
-                                                    <p>Restrict access with authentication</p>
-                                                </div>
-                                                <div id="prsswdprodata">
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="setting-item">
-                                            <div class="setting-icon">
-                                                <i class="fas fa-bug"></i>
-                                            </div>
-                                            <div class="setting-content">
-                                                <div class="setting-info">
-                                                    <h6>Debugging</h6>
-                                                    <p>Display errors for development</p>
-                                                </div>
-                                                <label class="checkbox-inline">
-                                                    <input ng-click="UpdateWPSettings('debugging')"
-                                                           type="checkbox"
-                                                           id="debugging"
-                                                           style="width: 18px; height: 18px; margin-right: 8px; cursor: pointer;">
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="setting-item">
-                                            <div class="setting-icon">
-                                                <i class="fas fa-search"></i>
-                                            </div>
-                                            <div class="setting-content">
-                                                <div class="setting-info">
-                                                    <h6>Search Indexing</h6>
-                                                    <p>Allow search engines to index site</p>
-                                                </div>
-                                                <label class="checkbox-inline">
-                                                    <input type="checkbox"
-                                                           id="searchIndex"
-                                                           ng-click="UpdateWPSettings('searchIndex')"
-                                                           ng-checked="searchIndex == 1"
-                                                           style="width: 18px; height: 18px; margin-right: 8px; cursor: pointer;">
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="setting-item">
-                                            <div class="setting-icon">
-                                                <i class="fas fa-tools"></i>
-                                            </div>
-                                            <div class="setting-content">
-                                                <div class="setting-info">
-                                                    <h6>Maintenance Mode</h6>
-                                                    <p>Show maintenance message to visitors</p>
-                                                </div>
-                                                <label class="checkbox-inline">
-                                                    <input ng-click="UpdateWPSettings('maintenanceMode')"
-                                                           type="checkbox"
-                                                           id="maintenanceMode"
-                                                           style="width: 18px; height: 18px; margin-right: 8px; cursor: pointer;">
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="setting-item">
-                                            <div class="setting-icon">
-                                                <i class="fas fa-clock"></i>
-                                            </div>
-                                            <div class="setting-content">
-                                                <div class="setting-info">
-                                                    <h6>WP Cron</h6>
-                                                    <p>Disable built-in WordPress cron</p>
-                                                </div>
-                                                <label class="checkbox-inline">
-                                                    <input ng-click="UpdateWPSettings('Wpcron')"
-                                                           type="checkbox"
-                                                           id="Wpcron"
-                                                           style="width: 18px; height: 18px; margin-right: 8px; cursor: pointer;">
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <span style="display: none" id="#checkjq"></span>
+            <div class="wp-tab-content tab-content">
+                <!-- General Tab -->
+                <div class="tab-pane active" id="tab1">
+                    <!-- Quick Stats -->
+                    <div class="wp-stats-grid">
+                        <div class="wp-stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-globe"></i>
                             </div>
-                            <div class="tab-pane" id="tab2">
-                                <div class="tab-action-area">
-                                    <div>
-                                        <h4 style="margin: 0; font-weight: 600; color: var(--text-primary);">Installed Plugins</h4>
-                                        <p style="margin: 5px 0 0 0; color: var(--text-secondary); font-size: 14px;">Manage your WordPress plugins</p>
-                                    </div>
-                                    <div class="action-buttons">
-                                        <a ng-click="UpdatePlugins('all')"
-                                           href="javascript:void(0);"
-                                           class="btn btn-primary">
-                                            <i class="fas fa-sync-alt"></i>
-                                            Update All
-                                        </a>
-                                        <a ng-click="UpdatePlugins('selected')"
-                                           href="javascript:void(0);"
-                                           class="btn btn-default"> 
-                                            <i class="fas fa-check-circle"></i>
-                                            Update Selected
-                                        </a>
-                                        <button data-toggle="modal" data-target="#DeleteWebsite"
-                                                ng-click="DeletePlugins('selected')"
-                                                aria-label=""
-                                                class="btn btn-danger"
-                                                type="button">
-                                            <i class="fas fa-trash"></i>
-                                            Delete Selected
-                                        </button>
-                                    </div>
-                                </div>
-                                <table class="table table-hover mb-0">
-                                    <thead>
-                                    <tr>
-                                        <th>
-                                            {% comment %}<div class="custom-control custom-checkbox" style="padding-left: 0px">
-                                                                <input type="checkbox" id="CheckAll">
-                                                                <label for="CheckAll"></label>
-                                                            </div>{% endcomment %}
-                                        </th>
-                                        <th>Plugin</th>
-                                        <th>State</th>
-                                        <th>Updates</th>
-                                        <th>Version</th>
-                                        <th>Delete</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody id="PluginBody">
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="tab-pane" id="tab3">
-                                <div class="tab-action-area">
-                                    <div>
-                                        <h4 style="margin: 0; font-weight: 600; color: var(--text-primary);">Installed Themes</h4>
-                                        <p style="margin: 5px 0 0 0; color: var(--text-secondary); font-size: 14px;">Manage your WordPress themes</p>
-                                    </div>
-                                    <div class="action-buttons">
-                                        <a ng-click="UpdateThemes('all')" href="javascript:void(0);"
-                                           class="btn btn-primary">
-                                            <i class="fas fa-sync-alt"></i>
-                                            Update All
-                                        </a>
-                                        <a ng-click="UpdateThemes('selected')"
-                                           href="javascript:void(0);"
-                                           class="btn btn-default"> 
-                                            <i class="fas fa-check-circle"></i>
-                                            Update Selected
-                                        </a>
-                                        <button data-toggle="modal" data-target="#DeleteWebsite"
-                                                ng-click="DeleteThemes('selected')"
-                                                aria-label=""
-                                                class="btn btn-danger"
-                                                type="button">
-                                            <i class="fas fa-trash"></i>
-                                            Delete Selected
-                                        </button>
-                                    </div>
-                                </div>
-                                <table class="table table-hover mb-0">
-                                    <thead>
-                                    <tr>
-                                        <th>
-                                            {% comment %}<div class="custom-control custom-checkbox" style="padding-left: 0px">
-                                                                <input type="checkbox" id="CheckAll">
-                                                                <label for="CheckAll"></label>
-                                                            </div>{% endcomment %}
-                                        </th>
-                                        <th>Theme</th>
-                                        <th>State</th>
-                                        <th>Updates</th>
-                                        <th>Version</th>
-                                        <th>Delete</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody id="ThemeBody">
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="tab-pane" id="tab4">
-                                <div class="staging-section">
-                                    <div class="section-header">
-                                        <h4>Create Staging Site</h4>
-                                        <p class="text-muted">Create a copy of your WordPress site for testing and development</p>
-                                    </div>
-                                    
-                                    <div ng-hide="stagingDetailsForm" class="create-staging-form">
-                                        <div class="form-card">
-                                            <div class="form-group row">
-                                                <label class="col-sm-3 control-label">Staging Name</label>
-                                                <div class="col-sm-9">
-                                                    <input type="text" class="form-control" id="stagingName" placeholder="Enter staging site name (e.g., staging, dev, test)">
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="form-group row">
-                                                <label class="col-sm-3 control-label">Staging Domain</label>
-                                                <div class="col-sm-9">
-                                                    <input type="text" class="form-control" id="stagingDomainName" 
-                                                           ng-model="stagingDomainName"
-                                                           placeholder="Enter staging domain (e.g., staging.example.com)" 
-                                                           required>
-                                                    <small class="form-text text-muted">Enter the full domain name for your staging site</small>
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="form-group row">
-                                                <div class="col-sm-12 text-center">
-                                                    <button ng-click="CreateStagingNow()" class="btn btn-primary btn-lg">
-                                                        <i class="fas fa-clone"></i>
-                                                        Create Staging Site
-                                                    </button>
-                                                    <div id="stagingStatus" style="margin-top: 15px; font-weight: 500;"></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                <div style="margin-top: 1%" ng-hide="installationProgress" class="form-group">
-                                    <div class="row">
-                                        <label class="col-sm-2 control-label"></label>
-                                        <div class="col-sm-7">
-
-                                        <div class="alert alert-success text-center">
-                                            <h2>{$ currentStatus $}</h2>
-                                        </div>
-
-                                        <div class="progress">
-                                            <div id="installProgress" class="progress-bar"
-                                                 role="progressbar" aria-valuenow="70"
-                                                 aria-valuemin="0" aria-valuemax="100"
-                                                 style="width:0%">
-                                                <span class="sr-only">70% Complete</span>
-                                            </div>
-                                        </div>
-
-                                        <div ng-hide="errorMessageBox" class="alert alert-danger">
-                                            <p>{% trans "Error message:" %} {$ errorMessage $}</p>
-                                        </div>
-
-                                        <div ng-hide="success" class="alert alert-success">
-                                            <p>{% trans "Website succesfully created." %}</p>
-                                        </div>
-
-
-                                        <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                            <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
-                                        </div>
-
-                                        <div style="margin-top: 20px; text-align: center;">
-                                            <button type="button" ng-disabled="goBackDisable"
-                                                    ng-click="goBack()"
-                                                    class="btn btn-default">
-                                                <i class="fas fa-arrow-left"></i>
-                                                {% trans "Go Back" %}
-                                            </button>
-                                        </div>
-
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Existing Staging Sites -->
-                                <div class="existing-staging-section" style="margin-top: 40px; clear: both;">
-                                    <div class="section-header">
-                                        <h4>Existing Staging Sites</h4>
-                                        <p class="text-muted">Manage your staging environments</p>
-                                    </div>
-                                    <div class="form-card">
-                                        <div class="table-responsive">
-                                            <table class="table table-hover staging-table mb-0">
-                                                <thead>
-                                                <tr>
-                                                    <th>Name</th>
-                                                    <th>Domain</th>
-                                                    <th>Path</th>
-                                                    <th>Actions</th>
-                                                </tr>
-                                                </thead>
-                                                <tbody id="StagingBody">
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                                </div>
-
-                            </div>
-                            <div class="tab-pane" id="tab5">
-                                <div class="backup-section">
-                                    <div class="section-header">
-                                        <h4>{% trans "Create Backup" %}</h4>
-                                        <a href="{% url 'RestoreBackups' %}" class="restore-link">
-                                            <i class="fas fa-undo"></i> {% trans "Restore Backups" %}
-                                        </a>
-                                    </div>
-                                    
-                                    <div class="alert alert-info alert-modern">
-                                        <i class="fas fa-info-circle"></i>
-                                        <div>
-                                            <p>This feature will create a backup of your WordPress website.</p>
-                                            <p>For scheduled remote backups of your entire site, including email accounts and DNS records, <a href="/backup/OneClickBackups">click here</a>.</p>
-                                        </div>
-                                    </div>
-
-                                    <div ng-hide="installationDetailsForm" class="backup-form">
-                                        <div class="form-card">
-                                            <div class="form-group row">
-                                                <label class="col-sm-3 control-label">{% trans "Backup Type" %}</label>
-                                                <div class="col-sm-9">
-                                                    <select id="backuptype" class="form-control">
-                                                        <option value="1">Website and Database Both</option>
-                                                        <option value="2">Only Website Data</option>
-                                                        <option value="3">Only Database</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="form-group row">
-                                                <div class="col-sm-12 text-center">
-                                                    <button type="button" id="createbackupbutton"
-                                                            ng-click="CreateBackup()"
-                                                            class="btn btn-primary btn-lg">
-                                                        <i class="fas fa-download"></i>
-                                                        {% trans "Create Backup" %}
-                                                    </button>
-                                                    <div id="backupStatus" style="margin-top: 15px; font-weight: 500;"></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                            <div style="margin-top: 1%" ng-hide="installationProgress"
-                                                 class="form-group">
-                                                <label class="col-sm-2 control-label"></label>
-                                                <div class="col-sm-7">
-
-                                                    <div class="alert alert-success text-center">
-                                                        <h2>{$ currentStatus $}</h2>
-                                                    </div>
-
-                                                    <div class="progress">
-                                                        <div id="installProgressbackup" class="progress-bar"
-                                                             role="progressbar" aria-valuenow="70"
-                                                             aria-valuemin="0" aria-valuemax="100"
-                                                             style="width:0%">
-                                                            <span class="sr-only">70% Complete</span>
-                                                        </div>
-                                                    </div>
-
-                                                    <div ng-hide="errorMessageBox" class="alert alert-danger">
-                                                        <p>{% trans "Error message:" %} {$ errorMessage $}</p>
-                                                    </div>
-
-                                                    <div ng-hide="success" class="alert alert-success">
-                                                        <p>{% trans "Backup succesfully created." %}</p>
-                                                    </div>
-
-
-                                                    <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                                        <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
-                                                    </div>
-
-
-                                                </div>
-                                            </div>
-                                            <div ng-hide="installationProgress" class="form-group center-div">
-                                                <div class="col-sm-12">
-                                                    <button type="button" ng-disabled="goBackDisable"
-                                                            ng-click="goBack()"
-                                                            class="btn btn-default center-div">
-                                                        <i class="fas fa-arrow-left"></i>
-                                                        {% trans "Go Back" %}
-                                                    </button>
-                                                </div>
-                                            </div>
-                                </div>
-                            </div>
-                            <div class="tab-pane" id="tab6">
-                                <div class="panel-body" style="padding: 0;">
-                                    <h4 style="margin-bottom: 25px; color: var(--text-primary); font-weight: 600;">
-                                        {% trans "Database Information" %}
-                                    </h4>
-                                    <div class="example-box-wrapper">
-                                        <form action="/" class="form-horizontal bordered-row panel-body">
-                                            <div class="form-group">
-                                                <label class="col-sm-2 control-label mb-5"
-                                                       style="padding-top: 0px;">{% trans "Database Name" %}</label>
-                                                <div class="col-sm-1 mb-10">
-                                                    <a target="_blank" href="/dataBases/phpMyAdmin">
-                                                        <div id="DB_Name" class="mb-10 text-bold"></div>
-                                                    </a>
-                                                </div>
-                                            </div>
-
-                                            <div class="form-group">
-                                                <label class="col-sm-2 control-label mb-5"
-                                                       style="padding-top: 0px;">{% trans "Database User" %}</label>
-                                                <div class="col-sm-1 mb-10">
-                                                    <div id="DB_User" class="mb-10 text-bold"></div>
-                                                </div>
-                                            </div>
-
-                                            <div class="form-group">
-                                                <label class="col-sm-2 control-label mb-5"
-                                                       style="padding-top: 0px;">{% trans "Table Prefix" %}</label>
-                                                <div class="col-sm-1 mb-10">
-                                                    <div id="tableprefix" class="mb-10 text-bold"></div>
-                                                </div>
-                                            </div>
-                                        </form>
-                                    </div>
-
-                                </div>
-                            </div>
-
+                            <p class="stat-value">Active</p>
+                            <p class="stat-label">Site Status</p>
                         </div>
-                        <div class="bottom-actions">
-                            <div class="bottom-action-links">
-                                <a href="/websites/{{ wpsite.owner.domain }}" class="bottom-action-link">
-                                    <i class="fas fa-th-large"></i>
-                                    <span>Manage Application</span>
-                                </a>
-                                <a data-toggle="modal"
-                                   data-target="#autoUpdateConfig"
-                                   href="javascript: void(0);"
-                                   class="bottom-action-link">
+                        <div class="wp-stat-card">
+                            <div class="stat-icon">
+                                <i class="fab fa-wordpress"></i>
+                            </div>
+                            <p class="stat-value" id="WPVersion">Loading...</p>
+                            <p class="stat-label">WordPress Version</p>
+                        </div>
+                        <div class="wp-stat-card">
+                            <div class="stat-icon">
+                                <i class="fab fa-php"></i>
+                            </div>
+                            <p class="stat-value">{{ wpsite.owner.phpSelection }}</p>
+                            <p class="stat-label">PHP Version</p>
+                        </div>
+                        <div class="wp-stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-server"></i>
+                            </div>
+                            <p class="stat-value">LiteSpeed</p>
+                            <p class="stat-label">Web Server</p>
+                        </div>
+                    </div>
+
+                    <!-- Site Overview Section -->
+                    <div class="section-header">
+                        <h4>Site Overview</h4>
+                    </div>
+                    <div class="site-overview-grid">
+                        <!-- Site Preview Card -->
+                        <div class="site-preview-card">
+                            <div class="preview-header">
+                                <h6>Live Preview</h6>
+                                <button class="btn-refresh" onclick="refreshSitePreview()" title="Refresh preview">
                                     <i class="fas fa-sync-alt"></i>
-                                    <span>Autoupdate Configurations</span>
+                                </button>
+                            </div>
+                            <div class="preview-container">
+                                <img id="sitePreviewImage"
+                                     src="https://api.microlink.io/?url=http://{{ wpsite.FinalURL }}&screenshot=true&meta=false&embed=screenshot.url"
+                                     alt="{{ wpsite.title }}"
+                                     onerror="this.onerror=null; this.src='https://s.wordpress.org/style/images/about/WordPress-logotype-standard.png';">
+                                <div class="preview-overlay">
+                                    <a href="http://{{ wpsite.FinalURL }}" target="_blank" class="preview-link">
+                                        <i class="fas fa-external-link-alt"></i>
+                                        Visit Live Site
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Actions Card -->
+                        <div class="quick-actions-card">
+                            <h5>Quick Actions</h5>
+                            <div class="action-links-grid">
+                                <a target="_blank" href="/filemanager/{{ wpsite.owner.domain }}?path={{ wpsite.path }}">
+                                    <i class="fas fa-folder-open"></i>
+                                    File Manager
                                 </a>
-                                <a data-toggle="modal"
-                                   data-target="#securitymodel" 
-                                   href="javascript: void(0);"
-                                   class="bottom-action-link">
-                                    <i class="fas fa-shield-alt"></i>
-                                    <span>Security</span>
+                                <a target="_blank" href="/websites/{{ wpsite.owner.domain }}/manageGIT">
+                                    <i class="fab fa-git-alt"></i>
+                                    Git Manager
+                                </a>
+                                <a href="/dataBases/phpMyAdmin" target="_blank">
+                                    <i class="fas fa-database"></i>
+                                    phpMyAdmin
+                                </a>
+                                <a href="/websites/{{ wpsite.owner.domain }}">
+                                    <i class="fas fa-globe"></i>
+                                    Domain Settings
+                                </a>
+                                <a target="_blank" href="http://{{ wpsite.FinalURL }}">
+                                    <i class="fas fa-external-link-alt"></i>
+                                    Open Site
+                                </a>
+                                <a target="_blank" href="{% url 'AutoLogin' %}?id={{ wpsite.id }}">
+                                    <i class="fas fa-sign-in-alt"></i>
+                                    WP Admin
                                 </a>
                             </div>
                         </div>
                     </div>
 
-
+                    <!-- Site Settings Section -->
+                    <div class="section-header">
+                        <h4>Site Settings</h4>
                     </div>
-    </div>
-
-        <!------------------MOdael for passwd protection-------->
-        <div id="Passwordprotection" class="modal fade" role="dialog">
-            <div class="modal-dialog">
-                <!-- Modal content-->
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal">&times;
-                        </button>
-                        <h4 class="modal-title">Enable Password Protection
-                            <img ng-hide="$parent.cyberPanelLoading"
-                                 src="/static/images/loading.gif"
-                                 style="display: none;">
-                        </h4>
+                    <div class="settings-grid">
+                        <div class="setting-item">
+                            <div class="setting-icon">
+                                <i class="fas fa-rocket"></i>
+                            </div>
+                            <div class="setting-content">
+                                <div class="setting-info">
+                                    <h6>LSCache</h6>
+                                    <p>LiteSpeed caching for better performance</p>
+                                </div>
+                                <label class="checkbox-inline">
+                                    <input ng-click="UpdateWPSettings('lscache')"
+                                           type="checkbox"
+                                           id="lscache">
+                                </label>
+                            </div>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-icon">
+                                <i class="fas fa-lock"></i>
+                            </div>
+                            <div class="setting-content">
+                                <div class="setting-info">
+                                    <h6>Password Protection</h6>
+                                    <p>Restrict access with authentication</p>
+                                </div>
+                                <div id="prsswdprodata"></div>
+                            </div>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-icon">
+                                <i class="fas fa-bug"></i>
+                            </div>
+                            <div class="setting-content">
+                                <div class="setting-info">
+                                    <h6>Debugging</h6>
+                                    <p>Display errors for development</p>
+                                </div>
+                                <label class="checkbox-inline">
+                                    <input ng-click="UpdateWPSettings('debugging')"
+                                           type="checkbox"
+                                           id="debugging">
+                                </label>
+                            </div>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-icon">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <div class="setting-content">
+                                <div class="setting-info">
+                                    <h6>Search Indexing</h6>
+                                    <p>Allow search engines to index site</p>
+                                </div>
+                                <label class="checkbox-inline">
+                                    <input type="checkbox"
+                                           id="searchIndex"
+                                           ng-click="UpdateWPSettings('searchIndex')"
+                                           ng-checked="searchIndex == 1">
+                                </label>
+                            </div>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-icon">
+                                <i class="fas fa-tools"></i>
+                            </div>
+                            <div class="setting-content">
+                                <div class="setting-info">
+                                    <h6>Maintenance Mode</h6>
+                                    <p>Show maintenance message to visitors</p>
+                                </div>
+                                <label class="checkbox-inline">
+                                    <input ng-click="UpdateWPSettings('maintenanceMode')"
+                                           type="checkbox"
+                                           id="maintenanceMode">
+                                </label>
+                            </div>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="setting-content">
+                                <div class="setting-info">
+                                    <h6>WP Cron</h6>
+                                    <p>Disable built-in WordPress cron</p>
+                                </div>
+                                <label class="checkbox-inline">
+                                    <input ng-click="UpdateWPSettings('Wpcron')"
+                                           type="checkbox"
+                                           id="Wpcron">
+                                </label>
+                            </div>
+                        </div>
                     </div>
-                    <div class="modal-body" style="height: 100px;">
+                    <span style="display: none" id="#checkjq"></span>
+                </div>
 
+                <!-- Plugins Tab -->
+                <div class="tab-pane" id="tab2">
+                    <div class="tab-action-area">
                         <div>
-                            <label class="col-sm-4">Username</label>
-                            <input ng-model="$parent.PPUsername" required class="col-lg-8"
-                                   type="text" placeholder="Username">
-
+                            <h4 style="margin: 0; font-weight: 600; color: var(--text-heading);">Installed Plugins</h4>
+                            <p style="margin: 5px 0 0 0; color: var(--text-secondary); font-size: 14px;">Manage your WordPress plugins</p>
                         </div>
-                        <div style="margin-top: 36px;">
-                            <label class="col-sm-4">Password</label>
-                            <input ng-model="$parent.PPPassword" required class="col-lg-8"
-                                   type="password" placeholder="*******************">
-
+                        <div class="action-buttons">
+                            <a ng-click="UpdatePlugins('all')"
+                               href="javascript:void(0);"
+                               class="btn btn-primary">
+                                <i class="fas fa-sync-alt"></i>
+                                Update All
+                            </a>
+                            <a ng-click="UpdatePlugins('selected')"
+                               href="javascript:void(0);"
+                               class="btn btn-default">
+                                <i class="fas fa-check-circle"></i>
+                                Update Selected
+                            </a>
+                            <button data-toggle="modal" data-target="#DeleteWebsite"
+                                    ng-click="DeletePlugins('selected')"
+                                    aria-label=""
+                                    class="btn btn-danger"
+                                    type="button">
+                                <i class="fas fa-trash"></i>
+                                Delete Selected
+                            </button>
                         </div>
-
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-primary"
-                                ng-click="UpdateWPSettings('PasswordProtection')">Yes
-                        </button>
-                        <button type="button" ng-disabled="savingSettings"
-                                class="btn btn-default" data-dismiss="modal">
-                            Cancel
-                        </button>
-                    </div>
+                    <table class="table table-hover mb-0">
+                        <thead>
+                        <tr>
+                            <th></th>
+                            <th>Plugin</th>
+                            <th>State</th>
+                            <th>Updates</th>
+                            <th>Version</th>
+                            <th>Delete</th>
+                        </tr>
+                        </thead>
+                        <tbody id="PluginBody">
+                        </tbody>
+                    </table>
                 </div>
-            </div>
-        </div>
-        <!------------------End MOdael for passwd protection-------->
 
-        <!-------Start Model of AutoUpdateCongiguration-->
-        <div id="autoUpdateConfig" class="modal fade" tabindex="-1" role="dialog"
-             aria-hidden="true">
-            <div class="modal-dialog">
-
-                <!-- Modal content-->
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal">
-                            &times;
-                        </button>
-                        <h4 class="modal-title">{% trans "Updates" %}</h4>
+                <!-- Themes Tab -->
+                <div class="tab-pane" id="tab3">
+                    <div class="tab-action-area">
+                        <div>
+                            <h4 style="margin: 0; font-weight: 600; color: var(--text-heading);">Installed Themes</h4>
+                            <p style="margin: 5px 0 0 0; color: var(--text-secondary); font-size: 14px;">Manage your WordPress themes</p>
+                        </div>
+                        <div class="action-buttons">
+                            <a ng-click="UpdateThemes('all')" href="javascript:void(0);"
+                               class="btn btn-primary">
+                                <i class="fas fa-sync-alt"></i>
+                                Update All
+                            </a>
+                            <a ng-click="UpdateThemes('selected')"
+                               href="javascript:void(0);"
+                               class="btn btn-default">
+                                <i class="fas fa-check-circle"></i>
+                                Update Selected
+                            </a>
+                            <button data-toggle="modal" data-target="#DeleteWebsite"
+                                    ng-click="DeleteThemes('selected')"
+                                    aria-label=""
+                                    class="btn btn-danger"
+                                    type="button">
+                                <i class="fas fa-trash"></i>
+                                Delete Selected
+                            </button>
+                        </div>
                     </div>
-                    <div class="modal-body">
-                        <form>
+                    <table class="table table-hover mb-0">
+                        <thead>
+                        <tr>
+                            <th></th>
+                            <th>Theme</th>
+                            <th>State</th>
+                            <th>Updates</th>
+                            <th>Version</th>
+                            <th>Delete</th>
+                        </tr>
+                        </thead>
+                        <tbody id="ThemeBody">
+                        </tbody>
+                    </table>
+                </div>
 
-                            <h4 style="margin: 2%">Configure setting for automatic
-                                updates.</h4>
-                            <div class="row">
-                                <label class="col-lg-6">Automatic Updates
-                                    (Currently:
-                                    {{ wpsite.AutoUpdates }})</label>
-                                <div class="col-lg-6">
-                                    <select id="AutomaticUpdates"
-                                            style="padding: 10px">
-                                        <option>Disabled</option>
-                                        <option>Minor and Security Updates</option>
-                                        <option>All minor and major</option>
-                                    </select>
+                <!-- Staging Tab -->
+                <div class="tab-pane" id="tab4">
+                    <div class="staging-section">
+                        <div class="section-header">
+                            <h4>Create Staging Site</h4>
+                            <p class="text-muted">Create a copy of your WordPress site for testing and development</p>
+                        </div>
+
+                        <div ng-hide="stagingDetailsForm" class="create-staging-form">
+                            <div class="form-card">
+                                <div class="form-group row">
+                                    <label class="col-sm-3 control-label">Staging Name</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" class="form-control" id="stagingName" placeholder="Enter staging site name (e.g., staging, dev, test)">
+                                    </div>
+                                </div>
+
+                                <div class="form-group row">
+                                    <label class="col-sm-3 control-label">Staging Domain</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" class="form-control" id="stagingDomainName"
+                                               ng-model="stagingDomainName"
+                                               placeholder="Enter staging domain (e.g., staging.example.com)"
+                                               required>
+                                        <small class="form-text text-muted">Enter the full domain name for your staging site</small>
+                                    </div>
+                                </div>
+
+                                <div class="form-group row">
+                                    <div class="col-sm-12 text-center">
+                                        <button ng-click="CreateStagingNow()" class="btn btn-primary btn-lg">
+                                            <i class="fas fa-clone"></i>
+                                            Create Staging Site
+                                        </button>
+                                        <div id="stagingStatus" style="margin-top: 15px; font-weight: 500;"></div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="row">
-                                <label class="col-lg-4">Plugins
-                                    (Currently: {{ wpsite.PluginUpdates }})</label>
-                                <div class="col-lg-8">
-                                    <select id="Plugins"
-
-                                            style="padding: 10px">
-                                        <option>Enabled</option>
-                                        <option>Disabled</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <label class="col-lg-4">Themes
-                                    (Currently: {{ wpsite.ThemeUpdates }})</label>
-                                <div class="col-lg-8">
-                                    <select id="Themes"
-
-                                            style="padding: 10px">
-                                        <option>Enabled</option>
-                                        <option>Disabled</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                        </form>
-
-
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-primary"
-                                ng-click="SaveUpdateConfig()">Save
-                        </button>
-                        <button type="button" ng-disabled="savingSettings"
-                                class="btn btn-default" data-dismiss="modal">
-                            Close
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <!-- /.modal-dialog -->
-        </div>
-        <!-------End Model of AutoUpdateCongiguration-->
-
-        <!-------Start Model of Security-->
-        <div id="securitymodel" class="modal fade" tabindex="-1" role="dialog"
-             aria-hidden="true">
-            <div class="modal-dialog">
-
-                <!-- Modal content-->
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal">
-                            &times;
-                        </button>
-                        <h4 class="modal-title">{% trans "Security" %}<img style="display: none"
-                                                                           id="wordpresshomeloadingsec"
-                                                                           ng-hide="wordpresshomeloading"
-                                                                           src="{% static 'images/loading.gif' %}"></h4>
-                    </div>
-                    <div class="modal-body center-div">
-                        <div class="alert alert-warning">
-                            <h4 class="alert-title">Status</h4>
-                            <p id="SecurityResult"></p>
                         </div>
-                        <button
-                                data-toggle="modal"
-                                data-target="#DeleteMember" aria-label=""
-                                ng-click="dataintegrity()"
-                                type="button" class="btn btn-outline-primary">
-                            <i class="fas fa-check-circle"></i>
-                            Data Integrity
-                        </button>
-                        <button
-                                data-toggle="modal"
-                                data-target="#DeleteMember" aria-label=""
-                                ng-click="installwpcore()"
-                                type="button" class="btn btn-outline-primary" style="margin-left: 10px;">
-                            <i class="fas fa-redo"></i>
-                            Re-Install WP Core
-                        </button>
 
+                        <div style="margin-top: 1%" ng-hide="installationProgress" class="form-group">
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="alert alert-success text-center">
+                                        <h2>{$ currentStatus $}</h2>
+                                    </div>
 
+                                    <div class="progress">
+                                        <div id="installProgress" class="progress-bar"
+                                             role="progressbar" aria-valuenow="70"
+                                             aria-valuemin="0" aria-valuemax="100"
+                                             style="width:0%">
+                                            <span class="sr-only">70% Complete</span>
+                                        </div>
+                                    </div>
+
+                                    <div ng-hide="errorMessageBox" class="alert alert-danger">
+                                        <p>{% trans "Error message:" %} {$ errorMessage $}</p>
+                                    </div>
+
+                                    <div ng-hide="success" class="alert alert-success">
+                                        <p>{% trans "Website successfully created." %}</p>
+                                    </div>
+
+                                    <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                        <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                    </div>
+
+                                    <div style="margin-top: 20px; text-align: center;">
+                                        <button type="button" ng-disabled="goBackDisable"
+                                                ng-click="goBack()"
+                                                class="btn btn-default">
+                                            <i class="fas fa-arrow-left"></i>
+                                            {% trans "Go Back" %}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Existing Staging Sites -->
+                        <div class="existing-staging-section" style="margin-top: 40px;">
+                            <div class="section-header">
+                                <h4>Existing Staging Sites</h4>
+                                <p class="text-muted">Manage your staging environments</p>
+                            </div>
+                            <div class="form-card">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Domain</th>
+                                            <th>Path</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody id="StagingBody">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-
                 </div>
-            </div>
-            <!-- /.modal-dialog -->
-        </div>
-        <!-------End Model of Security-->
-        <div id="DeployToProduction" class="modal fade" role="dialog">
-            <div class="modal-dialog">
-                <!-- Modal content-->
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal">&times;
-                        </button>
-                        <h4 class="modal-title">DeployToProduction
-                            <img ng-hide="$parent.cyberPanelLoading"
-                                 src="/static/images/loading.gif"
-                                 style="display: none;">
-                        </h4>
+
+                <!-- Backups Tab -->
+                <div class="tab-pane" id="tab5">
+                    <div class="backup-section">
+                        <div class="section-header">
+                            <h4>{% trans "Create Backup" %}</h4>
+                            <a href="{% url 'RestoreBackups' %}" class="restore-link">
+                                <i class="fas fa-undo"></i> {% trans "Restore Backups" %}
+                            </a>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <div>
+                                <p>This feature will create a backup of your WordPress website.</p>
+                                <p>For scheduled remote backups of your entire site, including email accounts and DNS records, <a href="/backup/OneClickBackups">click here</a>.</p>
+                            </div>
+                        </div>
+
+                        <div ng-hide="installationDetailsForm" class="backup-form">
+                            <div class="form-card">
+                                <div class="form-group row">
+                                    <label class="col-sm-3 control-label">{% trans "Backup Type" %}</label>
+                                    <div class="col-sm-9">
+                                        <select id="backuptype" class="form-control">
+                                            <option value="1">Website and Database Both</option>
+                                            <option value="2">Only Website Data</option>
+                                            <option value="3">Only Database</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col-sm-12 text-center">
+                                        <button type="button" id="createbackupbutton"
+                                                ng-click="CreateBackup()"
+                                                class="btn btn-primary btn-lg">
+                                            <i class="fas fa-download"></i>
+                                            {% trans "Create Backup" %}
+                                        </button>
+                                        <div id="backupStatus" style="margin-top: 15px; font-weight: 500;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 1%" ng-hide="installationProgress" class="form-group">
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="alert alert-success text-center">
+                                        <h2>{$ currentStatus $}</h2>
+                                    </div>
+
+                                    <div class="progress">
+                                        <div id="installProgress2" class="progress-bar"
+                                             role="progressbar" aria-valuenow="70"
+                                             aria-valuemin="0" aria-valuemax="100"
+                                             style="width:0%">
+                                            <span class="sr-only">70% Complete</span>
+                                        </div>
+                                    </div>
+
+                                    <div ng-hide="errorMessageBox" class="alert alert-danger">
+                                        <p>{% trans "Error message:" %} {$ errorMessage $}</p>
+                                    </div>
+
+                                    <div ng-hide="success" class="alert alert-success">
+                                        <p>{% trans "Backup successfully created." %}</p>
+                                    </div>
+
+                                    <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                        <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                    </div>
+
+                                    <div style="margin-top: 20px; text-align: center;">
+                                        <button type="button" ng-disabled="goBackDisable"
+                                                ng-click="goBack()"
+                                                class="btn btn-default">
+                                            <i class="fas fa-arrow-left"></i>
+                                            {% trans "Go Back" %}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="modal-body">
-                        <p class="no-margin">When you deploy a
-                            staging site to production, the main
-                            site is completely restored with the
-                            staging site, so if you have made
-                            any changes to main site they will
-                            be lost.</p>
+                </div>
+
+                <!-- Database Tab -->
+                <div class="tab-pane" id="tab6">
+                    <div class="section-header">
+                        <h4>Database Management</h4>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-primary"
-                                ng-click="FinalDeployToProduction()" data-dismiss="modal">Yes
-                        </button>
-                        <button type="button" ng-disabled="savingSettings"
-                                class="btn btn-default" data-dismiss="modal">
-                            Cancel
-                        </button>
+
+                    <div class="wp-action-card">
+                        <div class="action-card-title">
+                            <i class="fas fa-database"></i>
+                            Database Information
+                        </div>
+                        <div id="databaseDetails">
+                            <p style="color: var(--text-secondary);">Loading database information...</p>
+                        </div>
+                    </div>
+
+                    <div class="wp-action-card">
+                        <div class="action-card-title">
+                            <i class="fas fa-tools"></i>
+                            Database Actions
+                        </div>
+                        <div class="action-links-grid" style="max-width: 500px;">
+                            <a href="/dataBases/phpMyAdmin" target="_blank">
+                                <i class="fas fa-external-link-alt"></i>
+                                Open phpMyAdmin
+                            </a>
+                            <a href="javascript:void(0);" ng-click="optimizeDatabase()">
+                                <i class="fas fa-compress"></i>
+                                Optimize Database
+                            </a>
+                            <a href="javascript:void(0);" ng-click="repairDatabase()">
+                                <i class="fas fa-wrench"></i>
+                                Repair Database
+                            </a>
+                            <a href="javascript:void(0);" ng-click="exportDatabase()">
+                                <i class="fas fa-download"></i>
+                                Export Database
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
 
 {% endblock %}

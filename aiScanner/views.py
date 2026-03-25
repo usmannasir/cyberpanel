@@ -265,9 +265,29 @@ def getPlatformMonitorUrl(request, scan_id):
                     vps_info.get('free_scans_available', 0) > 0):
                     
                     vps_key_data = sm.get_or_create_vps_api_key(server_ip)
-                    
+
                     if vps_key_data and vps_key_data.get('api_key'):
                         api_key = vps_key_data.get('api_key')
+
+                        # Save VPS API key to database for future operations
+                        try:
+                            admin = Administrator.objects.get(pk=userID)
+                            scanner_settings, created = AIScannerSettings.objects.get_or_create(
+                                admin=admin,
+                                defaults={
+                                    'api_key': api_key,
+                                    'balance': 0.0000,
+                                    'is_payment_configured': True
+                                }
+                            )
+
+                            if not created and (not scanner_settings.api_key or scanner_settings.api_key != api_key):
+                                scanner_settings.api_key = api_key
+                                scanner_settings.is_payment_configured = True
+                                scanner_settings.save()
+                                logging.writeToFile(f"[AI Scanner] Updated VPS API key in database")
+                        except Exception as save_error:
+                            logging.writeToFile(f"[AI Scanner] Error saving VPS API key: {str(save_error)}")
             except Exception as e:
                 pass
         

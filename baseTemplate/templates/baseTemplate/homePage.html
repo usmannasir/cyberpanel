@@ -296,6 +296,14 @@
         overflow-x: auto;
     }
     
+    .activity-table thead {
+        display: table-header-group;
+    }
+    
+    .activity-table tbody {
+        display: table-row-group;
+    }
+    
     .activity-table th,
     .activity-table td {
         display: table-cell !important;
@@ -307,7 +315,6 @@
     
     .activity-table thead {
         display: table-header-group !important;
-        background: linear-gradient(135deg, #5b5fcf 0%, #4a4fc7 100%);
     }
     
     .activity-table tbody {
@@ -350,6 +357,91 @@
         overflow-wrap: break-word;
     }
     
+    .activity-table td:nth-child(1) { 
+        min-width: 80px;
+        max-width: 120px;
+    }
+    
+    .activity-table td:nth-child(2) { 
+        min-width: 120px;
+        max-width: 180px;
+        font-family: monospace;
+        font-size: 12px;
+    }
+    
+    .activity-table td:nth-child(3) { 
+        min-width: 80px;
+        max-width: 120px;
+    }
+    
+    .activity-table td:nth-child(4) { 
+        min-width: 140px;
+        max-width: 200px;
+        white-space: nowrap;
+    }
+    
+    .activity-table td:nth-child(5) { 
+        min-width: 150px;
+        max-width: 300px;
+    }
+    
+    .activity-table td:nth-child(6) { 
+        min-width: 120px;
+        text-align: center;
+    }
+    
+    /* SSH Logs table specific column widths */
+    .ssh-logs-table th:nth-child(1),
+    .ssh-logs-table td:nth-child(1) {
+        min-width: 180px;
+        max-width: 220px;
+        white-space: nowrap;
+    }
+    
+    .ssh-logs-table th:nth-child(2),
+    .ssh-logs-table td:nth-child(2) {
+        min-width: 300px;
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
+    
+    /* Process table specific column widths (for modal only) */
+    .process-table thead th:nth-child(1),
+    .process-table tbody td:nth-child(1) { 
+        min-width: 70px;
+        max-width: 90px;
+    }
+    
+    .process-table thead th:nth-child(2),
+    .process-table tbody td:nth-child(2) { 
+        min-width: 80px;
+        max-width: 100px;
+    }
+    
+    .process-table thead th:nth-child(3),
+    .process-table tbody td:nth-child(3) { 
+        min-width: 90px;
+        max-width: 120px;
+    }
+    
+    .process-table thead th:nth-child(4),
+    .process-table tbody td:nth-child(4) { 
+        min-width: 200px;
+    }
+    
+    .process-table thead th:nth-child(5),
+    .process-table tbody td:nth-child(5) { 
+        min-width: 150px;
+        max-width: 250px;
+    }
+    
+    .process-table thead th:nth-child(6),
+    .process-table tbody td:nth-child(6) { 
+        min-width: 100px;
+        max-width: 120px;
+        text-align: center;
+    }
+    
     .view-activity-btn {
         background: var(--bg-hover, #f8f9ff);
         border: 1px solid var(--border-color, #e8e9ff);
@@ -367,6 +459,87 @@
         color: white;
         border-color: var(--accent-color, #5b5fcf);
         box-shadow: 0 2px 4px rgba(91,95,207,0.3);
+    }
+    
+    /* Pagination Styles */
+    .pagination-container {
+        margin-top: 20px;
+        padding: 16px 20px;
+        background: #ffffff;
+        border: 1px solid #e8e9ff;
+        border-radius: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    
+    .pagination-info {
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 500;
+    }
+    
+    .pagination-controls {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    
+    .pagination-btn {
+        background: #f8f9ff;
+        border: 1px solid #e8e9ff;
+        color: #5b5fcf;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .pagination-btn:hover:not(:disabled) {
+        background: #5b5fcf;
+        color: #ffffff;
+        border-color: #5b5fcf;
+    }
+    
+    .pagination-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .pagination-page-info {
+        color: #2f3640;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 0 8px;
+    }
+    
+    .pagination-goto {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .pagination-goto input {
+        width: 80px;
+        padding: 6px 8px;
+        border: 1px solid #e8e9ff;
+        border-radius: 6px;
+        font-size: 12px;
+        margin-right: 6px;
+    }
+    
+    .pagination-goto input:focus {
+        outline: none;
+        border-color: #5b5fcf;
+        box-shadow: 0 0 0 3px rgba(91, 95, 207, 0.1);
     }
     
     .chart-container {
@@ -408,11 +581,14 @@
         display: flex !important;
     }
     
-    /* Ensure modal is hidden when ng-show is false */
     .modal-backdrop:not(.show) {
         display: none !important;
         visibility: hidden;
         opacity: 0;
+    }
+
+    .modal-backdrop.ng-hide {
+        display: none !important;
     }
     
     .modal-content {
@@ -427,6 +603,7 @@
         overflow-y: auto;
         animation: modalFadeIn 0.3s ease-out;
         margin: auto;
+        align-self: center;
     }
     
     .modal-header {
@@ -622,6 +799,29 @@
     .ban-ip-btn:disabled {
         opacity: 0.5;
         cursor: not-allowed;
+    }
+    
+    /* Ensure tables inside modal render correctly */
+    .modal-content table {
+        display: table !important;
+        width: 100% !important;
+    }
+    
+    .modal-content table thead {
+        display: table-header-group !important;
+    }
+    
+    .modal-content table tbody {
+        display: table-row-group !important;
+    }
+    
+    .modal-content table tr {
+        display: table-row !important;
+    }
+    
+    .modal-content table th,
+    .modal-content table td {
+        display: table-cell !important;
     }
     
     @keyframes modalFadeIn {
@@ -847,12 +1047,12 @@
                 </thead>
                 <tbody>
                     <tr ng-repeat="login in sshLogins">
-                        <td>{$ login.user $}</td>
-                        <td>{$ login.ip $}</td>
+                        <td><strong>{$ login.user $}</strong></td>
+                        <td><code style="background: #f0f0ff; padding: 2px 6px; border-radius: 4px; font-size: 11px;">{$ login.ip $}</code></td>
                         <td>
                             <div style="display: flex; align-items: center; gap: 6px;">
                                 <img ng-if="login.flag" ng-src="{$ login.flag $}" alt="{$ login.country $}" style="width: 24px; height: 18px; border: 1px solid #e8e9ff; border-radius: 2px;" />
-                                <span>{$ login.country $}</span>
+                                <span>{$ login.country || 'N/A' $}</span>
                             </div>
                         </td>
                         <td>{$ login.date $}</td>
@@ -1043,7 +1243,7 @@
             <div ng-if="!loadingSSHLogs && sshLogs.length === 0" style="text-align: center; padding: 20px; color: #8893a7;">
                 No recent SSH logs found.
             </div>
-            <table class="activity-table records-table" ng-if="!loadingSSHLogs && sshLogs.length > 0">
+            <table class="activity-table ssh-logs-table records-table" ng-if="!loadingSSHLogs && sshLogs.length > 0">
                 <thead>
                     <tr>
                         <th>TIMESTAMP</th>
@@ -1054,8 +1254,8 @@
                 </thead>
                 <tbody>
                     <tr ng-repeat="log in sshLogs">
-                        <td>{$ log.timestamp $}</td>
-                        <td>{$ log.message $}</td>
+                        <td><strong>{$ log.timestamp $}</strong></td>
+                        <td><code style="background: #f0f0ff; padding: 4px 8px; border-radius: 4px; font-size: 11px; display: inline-block; word-break: break-word; overflow-wrap: break-word;">{$ log.message $}</code></td>
                         <td>
                             <span ng-if="log.ip_address" style="font-family: monospace; color: #5b5fcf; font-weight: 600;">
                                 {$ log.ip_address $}
@@ -1170,7 +1370,7 @@
     </div>
     
     <!-- SSH Activity Modal -->
-    <div ng-if="showSSHActivityModal" class="modal-backdrop" ng-class="{'show': showSSHActivityModal}" ng-click="closeModalOnBackdrop($event)">
+    <div ng-if="showSSHActivityModal" class="modal-backdrop ng-cloak" ng-class="{'show': showSSHActivityModal}" ng-click="closeModalOnBackdrop($event)">
         <div class="modal-content" ng-click="$event.stopPropagation()">
             <div class="modal-header">
                 <div class="modal-title">
@@ -1184,18 +1384,17 @@
                     &times;
                 </button>
             </div>
-            
+
             <div ng-if="loadingSSHActivity" style="text-align: center; color: #8893a7; padding: 40px 20px;">
                 <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
                 <div>Loading activity...</div>
             </div>
-            
+
             <div ng-if="errorSSHActivity" style="background: #fee2e2; border: 1px solid #fecaca; color: #991b1b; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
                 <i class="fas fa-exclamation-circle"></i> {$ errorSSHActivity $}
             </div>
-            
-            <div ng-if="!loadingSSHActivity && !errorSSHActivity">
-                <!-- Session Status Info -->
+
+            <div ng-if="!loadingSSHActivity && !errorSSHActivity && sshActivity">
                 <div style="background: #f8f9ff; border-left: 4px solid #5b5fcf; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px;">
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
                         <i class="fas fa-info-circle" style="color: #5b5fcf;"></i>
@@ -1231,40 +1430,95 @@
                         </div>
                     </div>
                 </div>
-                
-                <!-- Processes List -->
-                <div ng-if="sshActivity.processes && sshActivity.processes.length > 0" class="process-list">
-                    <h4 style="font-size: 14px; font-weight: 600; color: #2f3640; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                        <i class="fas fa-microchip"></i> Running Processes ({$ sshActivity.processes.length $})
+
+                <div ng-if="sshActivity.processes && sshActivity.processes.length > 0" style="margin-bottom: 20px;">
+                    <h4 style="font-size: 14px; font-weight: 700; color: #2f3640; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <i class="fas fa-microchip" style="margin-right: 8px; color: #5b5fcf;"></i>Running Processes ({$ sshActivity.processes.length $})
                     </h4>
-                    <div ng-repeat="process in sshActivity.processes" class="process-item">
-                        <div class="process-info">
-                            <span class="process-pid">PID: {$ process.pid $}</span>
-                            <span ng-if="process.ppid" style="color: #94a3b8; font-size: 12px;">PPID: {$ process.ppid $}</span>
-                            <div class="process-cmd">
-                                <strong>Command:</strong> {$ process.cmd $}
-                                <span ng-if="process.tty" style="margin-left: 10px; color: #94a3b8;">TTY: {$ process.tty $}</span>
-                                <span ng-if="process.time" style="margin-left: 10px; color: #94a3b8;">Time: {$ process.time $}</span>
-                            </div>
-                            <div ng-if="process.cwd" style="font-size: 11px; color: #94a3b8; margin-top: 4px;">
-                                <i class="fas fa-folder"></i> {$ process.cwd $}
-                            </div>
-                        </div>
-                        <div class="process-actions">
-                            <button class="kill-process-btn" 
-                                    ng-click="killProcess(process.pid, sshActivityUser)"
-                                    ng-disabled="killingProcess === process.pid"
-                                    title="Force Kill Process">
-                                <i class="fas fa-skull" ng-if="killingProcess !== process.pid"></i>
-                                <i class="fas fa-spinner fa-spin" ng-if="killingProcess === process.pid"></i>
-                                <span ng-if="killingProcess !== process.pid">Kill</span>
-                                <span ng-if="killingProcess === process.pid">Killing...</span>
-                            </button>
+                    <div style="overflow-x: auto; max-height: 300px; overflow-y: auto; border: 1px solid #e8e9ff; border-radius: 8px;">
+                        <table class="activity-table process-table" style="margin-top: 0;">
+                            <thead>
+                                <tr>
+                                    <th>PID</th>
+                                    <th>TTY</th>
+                                    <th>Time</th>
+                                    <th>Command</th>
+                                    <th>CWD</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="proc in sshActivity.processes">
+                                    <td><strong>{$ proc.pid $}</strong></td>
+                                    <td style="font-family: monospace; font-size: 12px;">{$ proc.tty $}</td>
+                                    <td>{$ proc.time $}</td>
+                                    <td style="font-family: monospace; font-size: 11px; word-break: break-word; overflow-wrap: break-word;">{$ proc.cmd $}</td>
+                                    <td style="font-family: monospace; font-size: 11px; word-break: break-word; overflow-wrap: break-word;">{$ proc.cwd || 'N/A' $}</td>
+                                    <td style="text-align: center;">
+                                        <button ng-click="killProcess(proc.pid, sshActivityUser)" style="background: #ef4444; color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
+                                            <i class="fas fa-times-circle" style="margin-right: 4px;"></i>Kill
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div ng-if="sshActivity.shell_history && sshActivity.shell_history.length > 0" style="margin-bottom: 20px;">
+                    <h4 style="font-size: 14px; font-weight: 700; color: #2f3640; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <i class="fas fa-history" style="margin-right: 8px; color: #5b5fcf;"></i>Recent Shell History (Last 10 commands)
+                    </h4>
+                    <div style="background: #f8f9fa; border: 1px solid #e8e9ff; border-radius: 8px; padding: 15px; max-height: 200px; overflow-y: auto;">
+                        <div ng-repeat="cmd in sshActivity.shell_history" style="padding: 8px 0; border-bottom: 1px solid #e8e9ff; font-family: monospace; font-size: 12px; color: #2f3640;">
+                            <span style="color: #64748b; margin-right: 10px;">{$ $index + 1 $}.</span>{$ cmd $}
                         </div>
                     </div>
                 </div>
-                
-                <!-- Session Info (w command output) -->
+
+                <div ng-if="sshActivity.disk_usage" style="margin-bottom: 20px;">
+                    <h4 style="font-size: 14px; font-weight: 700; color: #2f3640; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <i class="fas fa-hdd" style="margin-right: 8px; color: #5b5fcf;"></i>Disk Usage
+                    </h4>
+                    <div style="background: #f8f9fa; border: 1px solid #e8e9ff; border-radius: 8px; padding: 15px; color: #2f3640; font-size: 14px;">
+                        {$ sshActivity.disk_usage $}
+                    </div>
+                </div>
+
+                <div ng-if="sshActivity.geoip && Object.keys(sshActivity.geoip).length > 0" style="margin-bottom: 20px;">
+                    <h4 style="font-size: 14px; font-weight: 700; color: #2f3640; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <i class="fas fa-globe" style="margin-right: 8px; color: #5b5fcf;"></i>Location Information
+                    </h4>
+                    <div style="background: #f8f9fa; border: 1px solid #e8e9ff; border-radius: 8px; padding: 15px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                            <div ng-if="sshActivity.geoip.country">
+                                <strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">Country:</strong>
+                                <div style="color: #2f3640; margin-top: 4px;">{$ sshActivity.geoip.country $}</div>
+                            </div>
+                            <div ng-if="sshActivity.geoip.region">
+                                <strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">Region:</strong>
+                                <div style="color: #2f3640; margin-top: 4px;">{$ sshActivity.geoip.region $}</div>
+                            </div>
+                            <div ng-if="sshActivity.geoip.city">
+                                <strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">City:</strong>
+                                <div style="color: #2f3640; margin-top: 4px;">{$ sshActivity.geoip.city $}</div>
+                            </div>
+                            <div ng-if="sshActivity.geoip.isp">
+                                <strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">ISP:</strong>
+                                <div style="color: #2f3640; margin-top: 4px;">{$ sshActivity.geoip.isp $}</div>
+                            </div>
+                            <div ng-if="sshActivity.geoip.org">
+                                <strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">Organization:</strong>
+                                <div style="color: #2f3640; margin-top: 4px;">{$ sshActivity.geoip.org $}</div>
+                            </div>
+                            <div ng-if="sshActivity.geoip.ip">
+                                <strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">IP Address:</strong>
+                                <div style="color: #2f3640; margin-top: 4px; font-family: monospace;">{$ sshActivity.geoip.ip $}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div ng-if="sshActivity.w && sshActivity.w.length > 0" style="margin-top: 20px;">
                     <h4 style="font-size: 14px; font-weight: 600; color: #2f3640; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
                         <i class="fas fa-terminal"></i> Session Information
@@ -1275,10 +1529,21 @@
                         </div>
                     </div>
                 </div>
-                
-                <!-- Full Activity JSON (Collapsible) -->
+
+                <div ng-if="(!sshActivity.w || sshActivity.w.length === 0) && sshActivityUser" style="margin-bottom: 20px; padding: 15px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong style="color: #856404; font-size: 13px;">Session Management</strong>
+                            <p style="margin: 4px 0 0 0; color: #856404; font-size: 12px;">Force close all sessions for user: <strong>{$ sshActivityUser $}</strong></p>
+                        </div>
+                        <button ng-click="killSession(sshActivityUser)" style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
+                            <i class="fas fa-power-off"></i>Force Close Session
+                        </button>
+                    </div>
+                </div>
+
                 <div style="margin-top: 20px;">
-                    <button ng-click="showFullJSON = !showFullJSON" 
+                    <button ng-click="showFullJSON = !showFullJSON"
                             style="background: var(--bg-hover, #f8f9ff); border: 1px solid var(--border-color, #e8e9ff); color: #5b5fcf; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; width: 100%;">
                         <i class="fas" ng-class="showFullJSON ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
                         <span ng-if="!showFullJSON">Show Full Activity JSON</span>
@@ -1288,12 +1553,10 @@
                         <pre class="activity-json">{$ sshActivity | json $}</pre>
                     </div>
                 </div>
-                
-                <!-- Action Buttons -->
+
                 <div class="modal-actions">
                     <div class="modal-actions-left">
-                        <!-- Only show Kill Session button for active sessions -->
-                        <button class="kill-session-btn" 
+                        <button class="kill-session-btn"
                                 ng-click="killSSHSession(sshActivityUser, sshActivityTTY)"
                                 ng-disabled="killingSession || !isActiveSession || !sshActivity.processes || sshActivity.processes.length === 0"
                                 ng-if="isActiveSession && sshActivity.processes && sshActivity.processes.length > 0"
@@ -1311,12 +1574,11 @@
                         </div>
                     </div>
                     <div class="modal-actions-right">
-                        <!-- Always show Ban IP button if IP is available - show for all sessions -->
                         <div ng-if="!sshActivityIP" style="color: #94a3b8; font-size: 13px; padding: 10px 20px; display: inline-flex; align-items: center; gap: 8px;">
                             <i class="fas fa-info-circle"></i>
                             <span>IP address not available</span>
                         </div>
-                        <button ng-click="blockIPAddress(sshActivityIP)" 
+                        <button ng-click="blockIPAddress(sshActivityIP)"
                                 ng-disabled="blockingIP === sshActivityIP || !sshActivityIP"
                                 class="ban-ip-btn"
                                 ng-if="sshActivityIP && sshActivityIP.trim() !== ''"
@@ -1326,11 +1588,16 @@
                             <span ng-if="blockingIP !== sshActivityIP">Ban IP Permanently</span>
                             <span ng-if="blockingIP === sshActivityIP">Banning...</span>
                         </button>
-                        <span ng-if="blockedIPs && blockedIPs[sshActivityIP] && sshActivityIP && sshActivityIP.trim() !== ''" 
+                        <span ng-if="blockedIPs && blockedIPs[sshActivityIP] && sshActivityIP && sshActivityIP.trim() !== ''"
                               style="display: inline-flex; align-items: center; gap: 6px; color: #10b981; font-size: 14px; font-weight: 600; padding: 10px 20px;">
                             <i class="fas fa-check-circle"></i> Already Blocked
                         </span>
                     </div>
+                </div>
+
+                <div ng-if="(!sshActivity.processes || sshActivity.processes.length === 0) && (!sshActivity.shell_history || sshActivity.shell_history.length === 0) && !sshActivity.disk_usage && (!sshActivity.geoip || Object.keys(sshActivity.geoip).length === 0) && (!sshActivity.w || sshActivity.w.length === 0)" style="text-align: center; padding: 40px 20px; color: #8893a7;">
+                    <i class="fas fa-info-circle" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i>
+                    <p style="margin: 0; font-size: 14px;">No activity data available for this user.</p>
                 </div>
             </div>
         </div>
