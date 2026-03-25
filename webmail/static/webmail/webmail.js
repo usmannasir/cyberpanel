@@ -215,6 +215,58 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($
         apiCall('/webmail/api/listFolders', {}, function(data) {
             if (data.status === 1) {
                 $scope.folders = data.folders;
+                // Pick a sane default folder.
+                // Some Dovecot setups may not expose a real "INBOX" mailbox (messages live under "INBOX.*").
+                // The UI previously hardcoded currentFolder='INBOX', which caused "No messages" even when mail exists.
+                var chooseDefaultFolder = function(folders) {
+                    if (!folders || folders.length === 0) return 'INBOX';
+
+                    // 1) Prefer exact INBOX if it has messages; otherwise some servers store mail only under INBOX.*.
+                    var inbox = null;
+                    for (var i = 0; i < folders.length; i++) {
+                        if (folders[i] && folders[i].name === 'INBOX') {
+                            inbox = folders[i];
+                            break;
+                        }
+                    }
+                    if (inbox) {
+                        var inboxUnread = parseInt((inbox.unread_count) ? inbox.unread_count : 0, 10);
+                        var inboxTotal = parseInt((inbox.total_count) ? inbox.total_count : 0, 10);
+                        if (inboxUnread > 0 || inboxTotal > 0) {
+                            return inbox.name;
+                        }
+                    }
+
+                    // 2) Prefer the folder with most unread messages.
+                    var best = null;
+                    var bestUnread = -1;
+                    for (var j = 0; j < folders.length; j++) {
+                        var u = parseInt((folders[j] && folders[j].unread_count) ? folders[j].unread_count : 0, 10);
+                        if (u > bestUnread) {
+                            bestUnread = u;
+                            best = folders[j];
+                        }
+                    }
+                    if (best && bestUnread > 0) {
+                        return best.name;
+                    }
+
+                    // 3) Otherwise, pick the folder with most total messages.
+                    best = null;
+                    var bestTotal = -1;
+                    for (var k = 0; k < folders.length; k++) {
+                        var t = parseInt((folders[k] && folders[k].total_count) ? folders[k].total_count : 0, 10);
+                        if (t > bestTotal) {
+                            bestTotal = t;
+                            best = folders[k];
+                        }
+                    }
+
+                    return (best && best.name) ? best.name : (folders[0].name || 'INBOX');
+                };
+
+                $scope.currentFolder = chooseDefaultFolder($scope.folders);
+                $scope.currentPage = 1;
                 $scope.loadMessages();
             } else {
                 notify(data.error_message || 'Failed to load folders.', 'error');
