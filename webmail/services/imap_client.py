@@ -27,7 +27,7 @@ class IMAPClient:
         'archive': 'INBOX.Archive',
     }
 
-    def __init__(self, email_address, password, host='localhost', port=993,
+    def __init__(self, email_address, password, host='127.0.0.1', port=993,
                  master_user=None, master_password=None):
         self.email_address = email_address
         self.host = host
@@ -143,33 +143,53 @@ class IMAPClient:
             })
         return folders
 
+    def _mbox_quoted(self, folder):
+        """Quote IMAP mailbox name (spaces and special characters)."""
+        if folder is None:
+            return '""'
+        name = str(folder).strip()
+        return '"' + name.replace('\\', '\\\\').replace('"', '\\"') + '"'
+
     def _select(self, folder):
         """Select a folder, quoting names with spaces."""
-        return self.conn.select('"%s"' % folder)
+        return self.conn.select(self._mbox_quoted(folder))
 
-    def list_messages(self, folder='INBOX', page=1, per_page=25, sort='date_desc'):
+    def list_messages(self, folder='INBOX', page=1, per_page=25, sort='date_desc', uids_filter=None):
         self._select(folder)
 
-        # Try IMAP SORT for proper date ordering (Dovecot supports this)
-        uids = []
-        try:
-            if sort == 'date_desc':
-                status, data = self.conn.uid('sort', '(REVERSE DATE)', 'UTF-8', 'ALL')
-            else:
-                status, data = self.conn.uid('sort', '(DATE)', 'UTF-8', 'ALL')
-            if status == 'OK' and data[0]:
-                uids = data[0].split()
-        except Exception:
-            pass
+        uids = None
+        if uids_filter is not None:
+            uids = []
+            for u in uids_filter:
+                if u is None:
+                    continue
+                s = u.decode('utf-8', errors='replace') if isinstance(u, bytes) else str(u).strip()
+                if s.isdigit():
+                    uids.append(s.encode('ascii'))
+            if not uids:
+                return {'messages': [], 'total': 0, 'page': 1, 'pages': 0}
 
-        # Fallback to search + reverse UIDs if SORT not supported
-        if not uids:
-            status, data = self.conn.uid('search', None, 'ALL')
-            if status != 'OK':
-                return {'messages': [], 'total': 0, 'page': page, 'pages': 0}
-            uids = data[0].split() if data[0] else []
-            if sort == 'date_desc':
-                uids = list(reversed(uids))
+        if uids is None:
+            # Try IMAP SORT for proper date ordering (Dovecot supports this)
+            uids = []
+            try:
+                if sort == 'date_desc':
+                    status, data = self.conn.uid('sort', '(REVERSE DATE)', 'UTF-8', 'ALL')
+                else:
+                    status, data = self.conn.uid('sort', '(DATE)', 'UTF-8', 'ALL')
+                if status == 'OK' and data[0]:
+                    uids = data[0].split()
+            except Exception:
+                pass
+
+            # Fallback to search + reverse UIDs if SORT not supported
+            if not uids:
+                status, data = self.conn.uid('search', None, 'ALL')
+                if status != 'OK':
+                    return {'messages': [], 'total': 0, 'page': page, 'pages': 0}
+                uids = data[0].split() if data[0] else []
+                if sort == 'date_desc':
+                    uids = list(reversed(uids))
 
         total = len(uids)
         pages = max(1, (total + per_page - 1) // per_page)
@@ -354,20 +374,21 @@ class IMAPClient:
         return self.set_flags(folder, uids, ['\\Flagged'], 'add')
 
     def create_folder(self, name):
-        status, _ = self.conn.create(name)
+        status, _ = self.conn.create(self._mbox_quoted(name))
         return status == 'OK'
 
     def rename_folder(self, old_name, new_name):
-        status, _ = self.conn.rename(old_name, new_name)
+        status, _ = self.conn.rename(
+            self._mbox_quoted(old_name), self._mbox_quoted(new_name))
         return status == 'OK'
 
     def delete_folder(self, name):
-        status, _ = self.conn.delete(name)
+        status, _ = self.conn.delete(self._mbox_quoted(name))
         return status == 'OK'
 
     def append_message(self, folder, raw_message, flags=''):
         if isinstance(raw_message, str):
             raw_message = raw_message.encode('utf-8')
         flag_str = '(%s)' % flags if flags else None
-        status, _ = self.conn.append('"%s"' % folder, flag_str, None, raw_message)
+        status, _ = self.conn.append(self._mbox_quoted(folder), flag_str, None, raw_message)
         return status == 'OK'

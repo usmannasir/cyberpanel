@@ -104,12 +104,256 @@ app.directive('wmAutocomplete', ['$http', function($http) {
     };
 }]);
 
-app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($scope, $http, $sce, $timeout) {
+var WM_MIME_MAIL_ITEMS = 'application/x-cyberpanel-webmail-messages';
+
+function _dataTransferOf(ev) {
+    if (!ev) return null;
+    return ev.dataTransfer || (ev.originalEvent && ev.originalEvent.dataTransfer) || null;
+}
+
+function _dataTransferHasWebmailMessages(dt) {
+    if (!dt || !dt.types) return false;
+    var t = WM_MIME_MAIL_ITEMS;
+    if (typeof dt.types.includes === 'function') return dt.types.includes(t);
+    for (var i = 0; i < dt.types.length; i++) {
+        if (dt.types[i] === t) return true;
+    }
+    return false;
+}
+
+/**
+ * Drag one or more messages (selected rows, or the row under the cursor) to move them.
+ */
+app.directive('wmMessageDrag', ['$timeout', function($timeout) {
+    return {
+        restrict: 'A',
+        link: function(scope, element) {
+            element.prop('draggable', true);
+            element.attr('title', element.attr('title') || '');
+
+            function safeDigest(fn) {
+                var phase = scope.$root.$$phase;
+                if (phase === '$apply' || phase === '$digest') {
+                    $timeout(fn, 0);
+                } else {
+                    scope.$apply(fn);
+                }
+            }
+
+            element.on('dragstart', function(ev) {
+                var msg = scope.msg;
+                if (!msg || !scope.getDragMessageItemsForMove) return;
+                var items = scope.getDragMessageItemsForMove(msg);
+                if (!items.length) {
+                    ev.preventDefault();
+                    return;
+                }
+                var dt = _dataTransferOf(ev);
+                if (dt) {
+                    try {
+                        dt.effectAllowed = 'move';
+                        dt.setData(WM_MIME_MAIL_ITEMS, JSON.stringify({ items: items }));
+                        dt.setData('text/plain', 'webmail-messages');
+                    } catch (e) { /* ignore */ }
+                }
+                safeDigest(function() {
+                    if (scope.onMailItemsDragStart) scope.onMailItemsDragStart();
+                });
+            });
+
+            element.on('dragend', function() {
+                safeDigest(function() {
+                    if (scope.onMailItemsDragEnd) scope.onMailItemsDragEnd();
+                });
+            });
+
+            scope.$on('$destroy', function() {
+                element.off('dragstart dragend');
+            });
+        }
+    };
+}]);
+
+/**
+ * Native HTML5 drag/drop for folder rows with proper digest + dataTransfer (Safari/Firefox).
+ */
+app.directive('wmFolderDnd', ['$timeout', function($timeout) {
+    return {
+        restrict: 'A',
+        link: function(scope, element, attrs) {
+            function folderName() {
+                try {
+                    return scope.$eval(attrs.wmFolderDnd);
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            function dragEnabled() {
+                var fs = scope.wmSettings && scope.wmSettings.folderSettings;
+                if (!fs || fs.enableDragDrop === undefined || fs.enableDragDrop === null) {
+                    return true;
+                }
+                return !!fs.enableDragDrop;
+            }
+
+            function safeDigest(fn) {
+                var phase = scope.$root.$$phase;
+                if (phase === '$apply' || phase === '$digest') {
+                    $timeout(fn, 0);
+                } else {
+                    scope.$apply(fn);
+                }
+            }
+
+            function dataTransferOf(ev) {
+                return _dataTransferOf(ev);
+            }
+
+            scope.$watch(function() {
+                return [folderName(), dragEnabled()];
+            }, function() {
+                element.prop('draggable', dragEnabled() ? 'true' : 'false');
+            }, true);
+
+            element.on('dragstart', function(ev) {
+                if (!dragEnabled()) {
+                    ev.preventDefault();
+                    return;
+                }
+                var name = folderName();
+                if (!name) return;
+                var dt = dataTransferOf(ev);
+                if (dt) {
+                    try {
+                        dt.effectAllowed = 'move';
+                        dt.setData('text/plain', name);
+                    } catch (e) {}
+                }
+                safeDigest(function() {
+                    scope.onFolderDragStart(name);
+                });
+            });
+
+            element.on('dragover', function(ev) {
+                var dt = dataTransferOf(ev);
+                if (_dataTransferHasWebmailMessages(dt)) {
+                    ev.preventDefault();
+                    if (dt) {
+                        try {
+                            dt.dropEffect = 'move';
+                        } catch (e2) {}
+                    }
+                    var name = folderName();
+                    safeDigest(function() {
+                        if (scope.onMessageDragOverFolder) scope.onMessageDragOverFolder(name);
+                    });
+                    return;
+                }
+                if (!dragEnabled()) return;
+                ev.preventDefault();
+                if (dt) {
+                    try {
+                        dt.dropEffect = 'move';
+                    } catch (e3) {}
+                }
+                var name2 = folderName();
+                safeDigest(function() {
+                    scope.onFolderDragOver(ev, name2);
+                });
+            });
+
+            element.on('drop', function(ev) {
+                ev.preventDefault();
+                var dt = dataTransferOf(ev);
+                var raw = '';
+                if (dt) {
+                    try {
+                        raw = dt.getData(WM_MIME_MAIL_ITEMS) || '';
+                    } catch (e) {
+                        raw = '';
+                    }
+                }
+                if (raw) {
+                    var parsed = null;
+                    try {
+                        parsed = JSON.parse(raw);
+                    } catch (e2) {
+                        parsed = null;
+                    }
+                    if (parsed && parsed.items && parsed.items.length) {
+                        var dropName = folderName();
+                        safeDigest(function() {
+                            if (scope.onMessagesDropOnFolder) {
+                                scope.onMessagesDropOnFolder(parsed.items, dropName);
+                            }
+                        });
+                        return;
+                    }
+                }
+                if (!dragEnabled()) return;
+                var name3 = folderName();
+                safeDigest(function() {
+                    scope.onFolderDrop(ev, name3);
+                });
+            });
+
+            element.on('dragend', function() {
+                safeDigest(function() {
+                    scope.onFolderDragEnd();
+                });
+            });
+
+            scope.$on('$destroy', function() {
+                element.off('dragstart dragover drop dragend');
+            });
+        }
+    };
+}]);
+
+app.directive('wmSidebarResizerTouch', function() {
+    return {
+        restrict: 'A',
+        link: function(scope, element) {
+            element.on('touchstart', function(ev) {
+                try {
+                    ev.preventDefault();
+                } catch (e) { /* ignore */ }
+                scope.startSidebarResize(ev);
+            });
+            scope.$on('$destroy', function() {
+                element.off('touchstart');
+            });
+        }
+    };
+});
+
+app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$document', '$window', function($scope, $http, $sce, $timeout, $document, $window) {
+
+    // System folders: must stay in sync with webmailManager.apiDeleteFolder protected set
+    var WM_SIDEBAR_WIDTH_KEY = 'wm_sidebar_width_px';
+    var WM_SIDEBAR_MIN = 180;
+    var WM_SIDEBAR_MAX = 560;
+    var WM_SIDEBAR_DEFAULT = 220;
+    var sidebarResizeActive = false;
+
+    var WM_FOLDER_PROTECTED = {
+        'INBOX': true,
+        'INBOX.Sent': true, 'INBOX.Drafts': true, 'INBOX.Deleted Items': true,
+        'INBOX.Junk E-mail': true, 'INBOX.Archive': true, 'INBOX.spam': true, 'INBOX.Trash': true,
+        'Sent': true, 'Drafts': true, 'Trash': true, 'Spam': true, 'Junk': true, 'Archive': true,
+        'Deleted Items': true, 'Junk E-mail': true
+    };
 
     // ── State ────────────────────────────────────────────────
     $scope.currentEmail = '';
     $scope.managedAccounts = [];
     $scope.folders = [];
+    $scope.displayFolders = [];
+    /** Nested sidebar rows: { folder, depth, hasChildren } */
+    $scope.displayFolderRows = [];
+    /** folder name -> false when collapsed (expanded when unset/true) */
+    $scope.folderExpanded = {};
     $scope.currentFolder = 'INBOX';
     $scope.messages = [];
     $scope.currentPage = 1;
@@ -122,10 +366,76 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($
     $scope.loading = false;
     $scope.sending = false;
     $scope.searchQuery = '';
+    /** '__all__' or concrete IMAP folder name */
+    $scope.messageSearchScope = '__all__';
+    $scope.messageListSearchActive = false;
     $scope.selectAll = false;
+    $scope.sidebarWidthPx = WM_SIDEBAR_DEFAULT;
+    $scope.sidebarResizeEnabled = true;
+
+    function refreshSidebarResizeEnabled() {
+        try {
+            $scope.sidebarResizeEnabled = $window.matchMedia('(min-width: 769px)').matches;
+        } catch (e) {
+            $scope.sidebarResizeEnabled = true;
+        }
+    }
+    refreshSidebarResizeEnabled();
+
+    try {
+        var storedW = parseInt(localStorage.getItem(WM_SIDEBAR_WIDTH_KEY), 10);
+        if (!isNaN(storedW) && storedW >= WM_SIDEBAR_MIN && storedW <= WM_SIDEBAR_MAX) {
+            $scope.sidebarWidthPx = storedW;
+        }
+    } catch (e) { /* ignore */ }
+
+    angular.element($window).on('resize', function() {
+        $scope.$applyAsync(refreshSidebarResizeEnabled);
+    });
+
+    $scope.startSidebarResize = function(event) {
+        if (!$scope.sidebarResizeEnabled) return;
+        if (sidebarResizeActive) return;
+        if (event.type === 'mousedown' && event.button !== 0) return;
+        event.preventDefault();
+        sidebarResizeActive = true;
+        var startX = event.clientX != null ? event.clientX : (event.originalEvent && event.originalEvent.touches && event.originalEvent.touches[0] ? event.originalEvent.touches[0].clientX : (event.touches && event.touches[0] ? event.touches[0].clientX : 0));
+        var startW = $scope.sidebarWidthPx;
+
+        function clampW(n) {
+            return Math.max(WM_SIDEBAR_MIN, Math.min(WM_SIDEBAR_MAX, n));
+        }
+
+        function onMove(e) {
+            if (!$scope.sidebarResizeEnabled) return;
+            var oe = e.originalEvent || e;
+            var x = oe.clientX != null ? oe.clientX : (oe.touches && oe.touches[0] ? oe.touches[0].clientX : (e.clientX != null ? e.clientX : startX));
+            var dx = x - startX;
+            $scope.sidebarWidthPx = clampW(Math.round(startW + dx));
+            $scope.$digest();
+        }
+
+        function onUp() {
+            sidebarResizeActive = false;
+            $document.off('mousemove touchmove', onMove);
+            $document.off('mouseup touchend touchcancel', onUp);
+            try {
+                localStorage.setItem(WM_SIDEBAR_WIDTH_KEY, String($scope.sidebarWidthPx));
+            } catch (err) { /* ignore */ }
+            angular.element($window.document.body).removeClass('wm-resizing-sidebar');
+        }
+
+        angular.element($window.document.body).addClass('wm-resizing-sidebar');
+        $document.on('mousemove touchmove', onMove);
+        $document.on('mouseup touchend touchcancel', onUp);
+    };
     $scope.showMoveDropdown = false;
     $scope.moveTarget = '';
     $scope.showBcc = false;
+    $scope.showNewFolderDialog = false;
+    $scope.newFolderNameInput = '';
+    $scope.showDeleteFolderDialog = false;
+    $scope.folderPendingDelete = null;
 
     // Compose
     $scope.compose = {to: '', cc: '', bcc: '', subject: '', body: '', files: [], inReplyTo: '', references: ''};
@@ -141,7 +451,26 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($
     $scope.editingRule = null;
 
     // Settings
-    $scope.wmSettings = {};
+    $scope.wmSettings = {
+        folderSettings: {
+            specialDisplayMode: 'top',
+            folderMappings: {
+                inbox: 'INBOX',
+                spam: 'INBOX.Junk E-mail',
+                deleted_items: 'INBOX.Deleted Items',
+                junk_e_mail: 'INBOX.Junk E-mail',
+                drafts: 'INBOX.Drafts',
+                trash: 'INBOX.Deleted Items'
+            },
+            folderOrder: [],
+            specialOrder: ['inbox', 'spam', 'deleted_items', 'junk_e_mail', 'drafts', 'trash'],
+            enableDragDrop: true
+        }
+    };
+    $scope.draggingFolder = null;
+    $scope.dragOverFolder = null;
+    $scope.draggingMailItems = false;
+    $scope.folderLayoutDirty = false;
 
     // Draft auto-save
     var draftTimer = null;
@@ -166,6 +495,28 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($
         new PNotify({title: type === 'error' ? 'Error' : 'Webmail', text: msg, type: type || 'success'});
     }
 
+    function splitRecipients(s) {
+        if (!s || typeof s !== 'string') return [];
+        return s.split(/[,;]+/).map(function(t) { return (t || '').trim(); }).filter(Boolean);
+    }
+
+    function isPlausibleEmail(addr) {
+        if (!addr || addr.indexOf('@') < 0) return false;
+        var p = addr.split('@');
+        if (p.length !== 2 || !p[0] || !p[1] || p[1].indexOf('.') < 0) return false;
+        if (addr.length > 254) return false;
+        return true;
+    }
+
+    function countValidRecipients(to, cc, bcc) {
+        var all = splitRecipients(to).concat(splitRecipients(cc || '')).concat(splitRecipients(bcc || ''));
+        var n = 0;
+        for (var i = 0; i < all.length; i++) {
+            if (isPlausibleEmail(all[i])) n++;
+        }
+        return n;
+    }
+
     // ── Init ─────────────────────────────────────────────────
     $scope.init = function() {
         // Try SSO first
@@ -173,8 +524,8 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($
             if (data.status === 1) {
                 $scope.currentEmail = data.email;
                 $scope.managedAccounts = data.accounts || [];
-                $scope.loadFolders();
                 $scope.loadSettings();
+                $scope.loadFolders();
             } else {
                 notify(data.error_message || 'No email accounts found. Create an email account first or use the standalone login.', 'error');
             }
@@ -198,8 +549,8 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($
 
         apiCall('/webmail/api/switchAccount', {email: newEmail}, function(data) {
             if (data.status === 1) {
-                $scope.loadFolders();
                 $scope.loadSettings();
+                $scope.loadFolders();
             } else {
                 notify(data.error_message || 'Failed to switch account', 'error');
                 console.error('switchAccount failed:', data);
@@ -214,7 +565,8 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($
     $scope.loadFolders = function() {
         apiCall('/webmail/api/listFolders', {}, function(data) {
             if (data.status === 1) {
-                $scope.folders = data.folders;
+                $scope.folders = data.folders || [];
+                $scope.applyFolderLayout();
                 // Pick a sane default folder.
                 // Some Dovecot setups may not expose a real "INBOX" mailbox (messages live under "INBOX.*").
                 // The UI previously hardcoded currentFolder='INBOX', which caused "No messages" even when mail exists.
@@ -265,7 +617,35 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($
                     return (best && best.name) ? best.name : (folders[0].name || 'INBOX');
                 };
 
-                $scope.currentFolder = chooseDefaultFolder($scope.folders);
+                var mappings = (($scope.wmSettings || {}).folderSettings || {}).folderMappings || {};
+                var mappedInbox = mappings.inbox || 'INBOX';
+                var inboxFolder = null;
+                for (var i = 0; i < $scope.folders.length; i++) {
+                    if ($scope.folders[i] && $scope.folders[i].name === mappedInbox) {
+                        inboxFolder = $scope.folders[i];
+                        break;
+                    }
+                }
+                if (inboxFolder && ((inboxFolder.unread_count || 0) > 0 || (inboxFolder.total_count || 0) > 0)) {
+                    $scope.currentFolder = mappedInbox;
+                } else {
+                    $scope.currentFolder = chooseDefaultFolder($scope.folders);
+                }
+
+                // If folder ordering/mapping hides the selected folder from the UI list,
+                // ensure we still display something sensible.
+                if ($scope.displayFolders && $scope.displayFolders.length > 0) {
+                    var ok = false;
+                    for (var df = 0; df < $scope.displayFolders.length; df++) {
+                        if ($scope.displayFolders[df] && $scope.displayFolders[df].name === $scope.currentFolder) {
+                            ok = true;
+                            break;
+                        }
+                    }
+                    if (!ok) {
+                        $scope.currentFolder = $scope.displayFolders[0].name;
+                    }
+                }
                 $scope.currentPage = 1;
                 $scope.loadMessages();
             } else {
@@ -274,16 +654,450 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($
         });
     };
 
+    // ── Folder Layout (mapping + ordering + drag/drop) ─────────
+    function _getFolderMappings() {
+        return (($scope.wmSettings || {}).folderSettings || {}).folderMappings || {};
+    }
+
+    function _getSpecialDisplayMode() {
+        var mode = (($scope.wmSettings || {}).folderSettings || {}).specialDisplayMode;
+        return (mode === 'interleaved') ? 'interleaved' : 'top';
+    }
+
+    function _getEnableDragDrop() {
+        var enabled = (($scope.wmSettings || {}).folderSettings || {}).enableDragDrop;
+        return enabled === undefined ? true : !!enabled;
+    }
+
+    function _getSpecialOrderKeys() {
+        var keys = (($scope.wmSettings || {}).folderSettings || {}).specialOrder;
+        if (!keys || !Array.isArray(keys) || keys.length === 0) {
+            return ['inbox', 'spam', 'deleted_items', 'junk_e_mail', 'drafts', 'trash'];
+        }
+        return keys;
+    }
+
+    function _getFolderByName() {
+        var map = {};
+        for (var i = 0; i < ($scope.folders || []).length; i++) {
+            var f = $scope.folders[i];
+            if (f && f.name) map[f.name] = f;
+        }
+        return map;
+    }
+
+    function _folderDelimiterFromList() {
+        var list = $scope.folders || [];
+        for (var i = 0; i < list.length; i++) {
+            var d = list[i] && list[i].delimiter;
+            if (d != null && d !== '') {
+                var s = String(d).replace(/^"|"$/g, '');
+                return s || '.';
+            }
+        }
+        return '.';
+    }
+
+    /** Parent for nested display: INBOX.X is root; INBOX.X.Y parents to INBOX.X if it exists. */
+    function _getEffectiveFolderParent(name, folderByName) {
+        if (!name || name === 'INBOX') return null;
+        var sep = _folderDelimiterFromList();
+        var parts = name.split(sep);
+        if (parts.length <= 2) return null;
+        var parentPath = parts.slice(0, -1).join(sep);
+        while (parentPath && parentPath !== 'INBOX' && !folderByName[parentPath]) {
+            var pp = parentPath.split(sep);
+            if (pp.length <= 2) {
+                parentPath = null;
+                break;
+            }
+            parentPath = pp.slice(0, -1).join(sep);
+        }
+        if (!parentPath || parentPath === 'INBOX' || !folderByName[parentPath]) return null;
+        return parentPath;
+    }
+
+    function _buildDisplayFolderRows(orderedFolders, folderByName) {
+        var names = orderedFolders.map(function(f) { return f.name; });
+        var parentOf = {};
+        var childMap = {};
+        for (var i = 0; i < names.length; i++) {
+            childMap[names[i]] = [];
+        }
+        for (var j = 0; j < names.length; j++) {
+            var nm = names[j];
+            var p = _getEffectiveFolderParent(nm, folderByName);
+            parentOf[nm] = p;
+            if (p && childMap[p] !== undefined) {
+                childMap[p].push(nm);
+            }
+        }
+        var indexByName = {};
+        for (var ix = 0; ix < names.length; ix++) {
+            indexByName[names[ix]] = ix;
+        }
+        var key;
+        for (key in childMap) {
+            if (Object.prototype.hasOwnProperty.call(childMap, key)) {
+                childMap[key].sort(function(a, b) {
+                    var ia = indexByName[a] !== undefined ? indexByName[a] : 999999;
+                    var ib = indexByName[b] !== undefined ? indexByName[b] : 999999;
+                    return ia - ib;
+                });
+            }
+        }
+        var rows = [];
+        function pushVisible(fname, depth) {
+            var f = folderByName[fname];
+            if (!f) return;
+            var kids = childMap[fname] || [];
+            var hasKids = kids.length > 0;
+            rows.push({ folder: f, depth: depth, hasChildren: hasKids });
+            var expanded = $scope.folderExpanded[fname] !== false;
+            if (hasKids && expanded) {
+                for (var c = 0; c < kids.length; c++) {
+                    pushVisible(kids[c], depth + 1);
+                }
+            }
+        }
+        for (var r = 0; r < names.length; r++) {
+            if (parentOf[names[r]] == null) {
+                pushVisible(names[r], 0);
+            }
+        }
+        return rows;
+    }
+
+    function _normalizeFolderOrder(folderByName) {
+        var baseNames = Object.keys(folderByName);
+        var baseOrder = ($scope.folders || []).map(function(f) { return f.name; });
+        // Normalize order to contain only known folders and keep backend order as a fallback.
+        var stored = (((($scope.wmSettings || {}).folderSettings || {}).folderOrder) || []).slice();
+        var existing = {};
+        for (var i = 0; i < baseOrder.length; i++) existing[baseOrder[i]] = true;
+
+        var result = [];
+        var seen = {};
+        for (var j = 0; j < stored.length; j++) {
+            var n = stored[j];
+            if (existing[n] && !seen[n]) {
+                seen[n] = true;
+                result.push(n);
+            }
+        }
+        // Append any missing folders in backend order.
+        for (var k = 0; k < baseOrder.length; k++) {
+            var bn = baseOrder[k];
+            if (existing[bn] && !seen[bn]) {
+                seen[bn] = true;
+                result.push(bn);
+            }
+        }
+        return result;
+    }
+
+    function _getSpecialFolderNames(folderByName, normalizedOrder) {
+        var mappings = _getFolderMappings();
+        var specialKeys = _getSpecialOrderKeys();
+        var specialNamesInKeyOrder = [];
+        var seen = {};
+        for (var i = 0; i < specialKeys.length; i++) {
+            var key = specialKeys[i];
+            var mapped = mappings[key];
+            if (mapped && folderByName[mapped] && !seen[mapped]) {
+                seen[mapped] = true;
+                specialNamesInKeyOrder.push(mapped);
+            }
+        }
+
+        // If we have a stored order, keep special ordering consistent with it.
+        var indexMap = {};
+        for (var j = 0; j < normalizedOrder.length; j++) {
+            indexMap[normalizedOrder[j]] = j;
+        }
+        specialNamesInKeyOrder.sort(function(a, b) {
+            var ia = (indexMap[a] !== undefined) ? indexMap[a] : 999999;
+            var ib = (indexMap[b] !== undefined) ? indexMap[b] : 999999;
+            return ia - ib;
+        });
+        return specialNamesInKeyOrder;
+    }
+
+    $scope.ensureFolderAncestorsExpanded = function(folderName) {
+        if (!folderName) return;
+        var folderByName = _getFolderByName();
+        var p = _getEffectiveFolderParent(folderName, folderByName);
+        while (p) {
+            $scope.folderExpanded[p] = true;
+            p = _getEffectiveFolderParent(p, folderByName);
+        }
+    };
+
+    $scope.toggleFolderExpand = function(folderName, evt) {
+        if (evt) {
+            evt.preventDefault();
+            evt.stopPropagation();
+        }
+        if (!folderName) return;
+        if ($scope.folderExpanded[folderName] === false) {
+            delete $scope.folderExpanded[folderName];
+        } else {
+            $scope.folderExpanded[folderName] = false;
+        }
+        var folderByName = _getFolderByName();
+        $scope.displayFolderRows = _buildDisplayFolderRows($scope.displayFolders, folderByName);
+    };
+
+    $scope.isFolderRowExpanded = function(folderName) {
+        return $scope.folderExpanded[folderName] !== false;
+    };
+
+    $scope.getFolderRowLabel = function(folder, depth) {
+        if (!folder) return '';
+        var dn = folder.display_name || folder.name || '';
+        if (depth <= 0) return dn;
+        var sep = _folderDelimiterFromList();
+        var idx = dn.lastIndexOf(sep);
+        if (idx >= 0) return dn.slice(idx + sep.length);
+        return dn;
+    };
+
+    $scope.applyFolderLayout = function() {
+        if (!$scope.folders || $scope.folders.length === 0) {
+            $scope.displayFolders = [];
+            $scope.displayFolderRows = [];
+            return;
+        }
+
+        var folderByName = _getFolderByName();
+        var normalizedOrder = _normalizeFolderOrder(folderByName);
+        var mode = _getSpecialDisplayMode();
+
+        var specialNames = _getSpecialFolderNames(folderByName, normalizedOrder);
+        var specialSet = {};
+        for (var i = 0; i < specialNames.length; i++) specialSet[specialNames[i]] = true;
+
+        var displayNames = [];
+        if (mode === 'top') {
+            // Special section at top, others follow in normalized order.
+            displayNames = specialNames.slice();
+            for (var j = 0; j < normalizedOrder.length; j++) {
+                var n = normalizedOrder[j];
+                if (!specialSet[n]) displayNames.push(n);
+            }
+        } else {
+            // Fully interleaved order.
+            displayNames = normalizedOrder.slice();
+        }
+
+        $scope.displayFolders = displayNames.map(function(n) { return folderByName[n]; }).filter(function(x) { return !!x; });
+
+        // Ensure currentFolder is valid.
+        var found = false;
+        for (var k = 0; k < displayNames.length; k++) {
+            if (displayNames[k] === $scope.currentFolder) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            var mappings = _getFolderMappings();
+            var mappedInbox = mappings.inbox || 'INBOX';
+            if (folderByName[mappedInbox]) {
+                $scope.currentFolder = mappedInbox;
+            } else if (displayNames.length > 0) {
+                $scope.currentFolder = displayNames[0];
+            }
+        }
+        $scope.ensureFolderAncestorsExpanded($scope.currentFolder);
+        $scope.displayFolderRows = _buildDisplayFolderRows($scope.displayFolders, folderByName);
+    };
+
+    // React to settings changes without requiring a full reload.
+    $scope.$watch('wmSettings.folderSettings.folderMappings', function() {
+        if ($scope.folders && $scope.folders.length > 0) {
+            $scope.applyFolderLayout();
+            var mappings = _getFolderMappings();
+            if (mappings && mappings.inbox && ($scope.folders || []).some(function(f) { return f && f.name === mappings.inbox; })) {
+                $scope.currentFolder = mappings.inbox;
+                if ($scope.viewMode === 'list' || $scope.viewMode === 'read') {
+                    $scope.loadMessages();
+                }
+            }
+        }
+    }, true);
+    $scope.$watch('wmSettings.folderSettings.specialDisplayMode', function() {
+        if ($scope.folders && $scope.folders.length > 0) {
+            $scope.applyFolderLayout();
+        }
+    });
+
+    function _updateFolderOrderAfterDrag(draggedName, targetName) {
+        if (!draggedName || !targetName || draggedName === targetName) return;
+        var folderByName = _getFolderByName();
+        if (!folderByName[draggedName] || !folderByName[targetName]) return;
+
+        var normalizedOrder = _normalizeFolderOrder(folderByName);
+        var mode = _getSpecialDisplayMode();
+
+        // Determine special membership.
+        var specialNames = _getSpecialFolderNames(folderByName, normalizedOrder);
+        var specialSet = {};
+        for (var i = 0; i < specialNames.length; i++) specialSet[specialNames[i]] = true;
+
+        var newOrder = [];
+        if (mode === 'interleaved') {
+            newOrder = normalizedOrder.slice();
+            var fromIdx = newOrder.indexOf(draggedName);
+            var toIdx = newOrder.indexOf(targetName);
+            if (fromIdx < 0 || toIdx < 0) return;
+            newOrder.splice(fromIdx, 1);
+            // If removing dragged element shifts indices, recompute target index.
+            toIdx = newOrder.indexOf(targetName);
+            newOrder.splice(toIdx, 0, draggedName);
+        } else {
+            // top mode: reorder within the same group (special vs other)
+            var draggedIsSpecial = !!specialSet[draggedName];
+            var targetIsSpecial = !!specialSet[targetName];
+            if (draggedIsSpecial !== targetIsSpecial) return;
+
+            var specialOrdered = [];
+            var otherOrdered = [];
+            for (var j = 0; j < normalizedOrder.length; j++) {
+                var n = normalizedOrder[j];
+                if (specialSet[n]) specialOrdered.push(n);
+                else otherOrdered.push(n);
+            }
+
+            if (draggedIsSpecial) {
+                var group = specialOrdered.slice();
+                var fromIdx2 = group.indexOf(draggedName);
+                var toIdx2 = group.indexOf(targetName);
+                if (fromIdx2 < 0 || toIdx2 < 0) return;
+                group.splice(fromIdx2, 1);
+                toIdx2 = group.indexOf(targetName);
+                group.splice(toIdx2, 0, draggedName);
+                newOrder = group.concat(otherOrdered);
+            } else {
+                var group2 = otherOrdered.slice();
+                var fromIdx3 = group2.indexOf(draggedName);
+                var toIdx3 = group2.indexOf(targetName);
+                if (fromIdx3 < 0 || toIdx3 < 0) return;
+                group2.splice(fromIdx3, 1);
+                toIdx3 = group2.indexOf(targetName);
+                group2.splice(toIdx3, 0, draggedName);
+                newOrder = specialOrdered.concat(group2);
+            }
+        }
+
+        if (!$scope.wmSettings.folderSettings) $scope.wmSettings.folderSettings = {};
+        $scope.wmSettings.folderSettings.folderOrder = newOrder;
+        $scope.folderLayoutDirty = true;
+        $scope.applyFolderLayout();
+    }
+
+    /** Persist folder layout only (silent on success). */
+    $scope.persistFolderLayoutSettings = function(silent) {
+        if (!$scope.wmSettings || !$scope.wmSettings.folderSettings) return;
+        apiCall('/webmail/api/saveSettings', {
+            folderSettings: angular.copy($scope.wmSettings.folderSettings)
+        }, function(data) {
+            if (data.status === 1) {
+                $scope.folderLayoutDirty = false;
+                if (!silent) {
+                    notify('Folder layout saved.');
+                }
+            } else if (!silent) {
+                notify(data.error_message || 'Could not save folder layout.', 'error');
+            }
+        }, function() {
+            if (!silent) {
+                notify('Could not save folder layout.', 'error');
+            }
+        });
+    };
+
+    $scope.onFolderDragStart = function(folderName) {
+        if (!_getEnableDragDrop()) return;
+        $scope.draggingFolder = folderName;
+        $scope.dragOverFolder = null;
+    };
+
+    $scope.onFolderDragOver = function(evt, targetFolderName) {
+        if (!_getEnableDragDrop()) return;
+        evt.preventDefault();
+        if (!$scope.draggingFolder || $scope.draggingFolder === targetFolderName) {
+            $scope.dragOverFolder = null;
+            return;
+        }
+
+        // In top mode, only allow drops within the same group.
+        var mode = _getSpecialDisplayMode();
+        if (mode === 'top') {
+            var folderByName = _getFolderByName();
+            var normalizedOrder = _normalizeFolderOrder(folderByName);
+            var specialNames = _getSpecialFolderNames(folderByName, normalizedOrder);
+            var specialSet = {};
+            for (var i = 0; i < specialNames.length; i++) specialSet[specialNames[i]] = true;
+
+            var draggedIsSpecial = !!specialSet[$scope.draggingFolder];
+            var targetIsSpecial = !!specialSet[targetFolderName];
+            if (draggedIsSpecial !== targetIsSpecial) {
+                $scope.dragOverFolder = null;
+                return;
+            }
+        }
+        $scope.dragOverFolder = targetFolderName;
+    };
+
+    $scope.onFolderDrop = function(evt, targetFolderName) {
+        if (!_getEnableDragDrop()) return;
+        evt.preventDefault();
+        if (!$scope.draggingFolder) return;
+        _updateFolderOrderAfterDrag($scope.draggingFolder, targetFolderName);
+        $scope.persistFolderLayoutSettings(true);
+        $scope.draggingFolder = null;
+        $scope.dragOverFolder = null;
+    };
+
+    $scope.onFolderDragEnd = function() {
+        $scope.draggingFolder = null;
+        $scope.dragOverFolder = null;
+    };
+
     $scope.selectFolder = function(name) {
+        $scope.ensureFolderAncestorsExpanded(name);
         $scope.currentFolder = name;
         $scope.currentPage = 1;
         $scope.openMsg = null;
         $scope.viewMode = 'list';
         $scope.searchQuery = '';
+        $scope.messageListSearchActive = false;
+        var folderByName = _getFolderByName();
+        $scope.displayFolderRows = _buildDisplayFolderRows($scope.displayFolders, folderByName);
         $scope.loadMessages();
     };
 
+    $scope.getFolderDisplayName = function(folderName) {
+        if (!folderName) return '';
+        var list = $scope.folders || [];
+        for (var i = 0; i < list.length; i++) {
+            if (list[i] && list[i].name === folderName) {
+                return list[i].display_name || list[i].name || folderName;
+            }
+        }
+        return folderName;
+    };
+
     $scope.getFolderIcon = function(folder) {
+        // Prefer semantic mapping selected in Settings.
+        var mappings = (($scope.wmSettings || {}).folderSettings || {}).folderMappings || {};
+        var name = folder.name || '';
+        if (mappings.inbox && name === mappings.inbox) return 'fa-inbox';
+        if ((mappings.spam && name === mappings.spam) || (mappings.junk_e_mail && name === mappings.junk_e_mail)) return 'fa-ban';
+        if (mappings.drafts && name === mappings.drafts) return 'fa-file';
+        if ((mappings.trash && name === mappings.trash) || (mappings.deleted_items && name === mappings.deleted_items)) return 'fa-trash';
+
         // Use folder_type from backend if available (mapped from Dovecot folder names)
         var ftype = folder.folder_type || '';
         if (ftype === 'inbox') return 'fa-inbox';
@@ -303,25 +1117,89 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($
         return 'fa-folder';
     };
 
-    $scope.createFolder = function() {
-        var name = prompt('Folder name:');
-        if (!name) return;
-        // Dovecot namespace: prefix with INBOX. and use . as separator
+    $scope.canDeleteFolder = function(folder) {
+        if (!folder || !folder.name) return false;
+        return !WM_FOLDER_PROTECTED[folder.name];
+    };
+
+    $scope.openDeleteFolderConfirm = function(folder) {
+        if (!$scope.canDeleteFolder(folder)) return;
+        $scope.folderPendingDelete = folder;
+        $scope.showDeleteFolderDialog = true;
+    };
+
+    $scope.cancelDeleteFolderDialog = function() {
+        $scope.showDeleteFolderDialog = false;
+        $scope.folderPendingDelete = null;
+    };
+
+    $scope.confirmDeleteFolder = function() {
+        var folder = $scope.folderPendingDelete;
+        if (!folder || !$scope.canDeleteFolder(folder)) {
+            $scope.cancelDeleteFolderDialog();
+            return;
+        }
+        apiCall('/webmail/api/deleteFolder', {name: folder.name}, function(data) {
+            if (data.status === 1) {
+                $scope.cancelDeleteFolderDialog();
+                if ($scope.currentFolder === folder.name) {
+                    $scope.currentFolder = 'INBOX';
+                    $scope.viewMode = 'list';
+                }
+                $scope.loadFolders();
+                notify('Folder deleted.');
+            } else {
+                notify(data.error_message || 'Failed to delete folder.', 'error');
+            }
+        }, function(err) {
+            notify('Failed to delete folder.', 'error');
+            console.error('deleteFolder:', err);
+        });
+    };
+
+    $scope.openNewFolderDialog = function() {
+        $scope.newFolderNameInput = '';
+        $scope.showNewFolderDialog = true;
+        $timeout(function() {
+            var el = document.getElementById('wm-new-folder-input');
+            if (el) {
+                el.focus();
+            }
+        }, 150);
+    };
+
+    $scope.cancelNewFolderDialog = function() {
+        $scope.showNewFolderDialog = false;
+        $scope.newFolderNameInput = '';
+    };
+
+    $scope.submitNewFolderDialog = function() {
+        var name = ($scope.newFolderNameInput || '').trim();
+        if (!name) {
+            notify('Type a folder name in the box, then click Create.', 'error');
+            return;
+        }
         if (name.indexOf('INBOX.') !== 0) {
             name = 'INBOX.' + name;
         }
         apiCall('/webmail/api/createFolder', {name: name}, function(data) {
             if (data.status === 1) {
+                $scope.showNewFolderDialog = false;
+                $scope.newFolderNameInput = '';
                 $scope.loadFolders();
                 notify('Folder created.');
             } else {
-                notify(data.error_message, 'error');
+                notify(data.error_message || 'Failed to create folder.', 'error');
             }
+        }, function(err) {
+            notify('Failed to create folder.', 'error');
+            console.error('createFolder:', err);
         });
     };
 
-    // ── Messages ─────────────────────────────────────────────
+    // --- Messages ---
     $scope.loadMessages = function() {
+        $scope.messageListSearchActive = false;
         $scope.loading = true;
         apiCall('/webmail/api/listMessages', {
             folder: $scope.currentFolder,
@@ -357,34 +1235,34 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($
     };
 
     $scope.searchMessages = function() {
-        if (!$scope.searchQuery) {
+        var q = ($scope.searchQuery || '').trim();
+        if (!q) {
+            $scope.messageListSearchActive = false;
             $scope.loadMessages();
             return;
         }
+        var scopeParam = $scope.messageSearchScope === '__all__' ? 'all' : 'folder';
+        var folderParam = $scope.messageSearchScope === '__all__'
+            ? $scope.currentFolder
+            : $scope.messageSearchScope;
         $scope.loading = true;
         apiCall('/webmail/api/searchMessages', {
-            folder: $scope.currentFolder,
-            query: $scope.searchQuery
+            query: q,
+            scope: scopeParam,
+            folder: folderParam
         }, function(data) {
             $scope.loading = false;
-            if (data.status === 1 && data.uids && data.uids.length > 0) {
-                // Fetch the found messages by their UIDs
-                apiCall('/webmail/api/listMessages', {
-                    folder: $scope.currentFolder,
-                    page: 1,
-                    perPage: data.uids.length,
-                    uids: data.uids
-                }, function(msgData) {
-                    if (msgData.status === 1) {
-                        $scope.messages = msgData.messages;
-                        $scope.totalMessages = msgData.total;
-                        $scope.totalPages = msgData.pages;
-                    }
-                });
-            } else if (data.status === 1) {
-                $scope.messages = [];
-                $scope.totalMessages = 0;
-                $scope.totalPages = 1;
+            if (data.status !== 1) {
+                notify(data.error_message || 'Search failed.', 'error');
+                return;
+            }
+            $scope.messageListSearchActive = true;
+            $scope.messages = data.messages || [];
+            $scope.totalMessages = $scope.messages.length;
+            $scope.totalPages = 1;
+            $scope.currentPage = 1;
+            $scope.selectAll = false;
+            if ($scope.messages.length === 0) {
                 notify('No messages found.', 'info');
             }
         }, function() {
@@ -394,12 +1272,14 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($
 
     // ── Open/Read Message ────────────────────────────────────
     $scope.openMessage = function(msg) {
+        var folder = (msg && msg.folder) ? msg.folder : $scope.currentFolder;
         apiCall('/webmail/api/getMessage', {
-            folder: $scope.currentFolder,
+            folder: folder,
             uid: msg.uid
         }, function(data) {
             if (data.status === 1) {
                 $scope.openMsg = data.message;
+                $scope.openMsg.folder = folder;
                 var html = data.message.body_html || '';
                 var text = data.message.body_text || '';
                 // Use sanitized HTML from backend, or escape plain text
@@ -415,7 +1295,7 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($
                 if (!msg.is_read) {
                     msg.is_read = true;
                     $scope.folders.forEach(function(f) {
-                        if (f.name === $scope.currentFolder && f.unread_count > 0) {
+                        if (f.name === folder && f.unread_count > 0) {
                             f.unread_count--;
                         }
                     });
@@ -546,6 +1426,11 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($
 
     $scope.sendMessage = function() {
         $scope.updateComposeBody();
+        var rcpt = countValidRecipients($scope.compose.to, $scope.compose.cc, $scope.compose.bcc);
+        if (rcpt < 1) {
+            notify('Enter at least one full email address (e.g. user@hotmail.com). "Test" or a name alone is not a valid address. Use the full address in To, Cc, or Bcc.', 'error');
+            return;
+        }
         $scope.sending = true;
         stopDraftAutoSave();
 
@@ -628,69 +1513,194 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($
         $scope.messages.forEach(function(m) { m.selected = $scope.selectAll; });
     };
 
-    function getSelectedUids() {
-        return $scope.messages.filter(function(m) { return m.selected; }).map(function(m) { return m.uid; });
+    function selectedUidsByFolder() {
+        var map = {};
+        $scope.messages.forEach(function(m) {
+            if (!m.selected) return;
+            var f = m.folder || $scope.currentFolder;
+            if (!map[f]) map[f] = [];
+            map[f].push(m.uid);
+        });
+        return map;
+    }
+
+    function refreshListAfterBulk() {
+        if ($scope.messageListSearchActive && ($scope.searchQuery || '').trim()) {
+            $scope.searchMessages();
+        } else {
+            $scope.loadMessages();
+        }
+        $scope.loadFolders();
+    }
+
+    $scope.getDragMessageItemsForMove = function(primaryMsg) {
+        var selected = ($scope.messages || []).filter(function(m) { return m.selected; });
+        var list = selected.length ? selected : (primaryMsg ? [primaryMsg] : []);
+        var out = [];
+        for (var i = 0; i < list.length; i++) {
+            var m = list[i];
+            if (!m || m.uid == null || m.uid === '') continue;
+            out.push({ folder: m.folder || $scope.currentFolder, uid: String(m.uid) });
+        }
+        return out;
+    };
+
+    $scope.onMailItemsDragStart = function() {
+        $scope.draggingMailItems = true;
+    };
+
+    $scope.onMailItemsDragEnd = function() {
+        $scope.draggingMailItems = false;
+        $scope.dragOverFolder = null;
+    };
+
+    $scope.onMessageDragOverFolder = function(name) {
+        $scope.dragOverFolder = name;
+    };
+
+    $scope.onMessagesDropOnFolder = function(items, targetFolder) {
+        $scope.dragOverFolder = null;
+        $scope.draggingMailItems = false;
+        if (!targetFolder || !items || !items.length) return;
+        var map = {};
+        for (var j = 0; j < items.length; j++) {
+            var it = items[j];
+            if (!it || it.uid == null || it.uid === '' || !it.folder) continue;
+            if (it.folder === targetFolder) continue;
+            if (!map[it.folder]) map[it.folder] = [];
+            map[it.folder].push(String(it.uid));
+        }
+        var keys = Object.keys(map);
+        if (keys.length === 0) {
+            notify('Messages are already in that folder.', 'info');
+            return;
+        }
+        var state = { pending: keys.length, err: false };
+        function finishMoves() {
+            state.pending--;
+            if (state.pending > 0) return;
+            if (!state.err) {
+                notify('Message(s) moved.', 'success');
+            } else {
+                notify('Some messages could not be moved.', 'error');
+            }
+            refreshListAfterBulk();
+        }
+        keys.forEach(function(fld) {
+            apiCall('/webmail/api/moveMessages', {
+                folder: fld,
+                uids: map[fld],
+                targetFolder: targetFolder
+            }, function(data) {
+                if (!data || data.status !== 1) {
+                    state.err = true;
+                }
+                finishMoves();
+            }, function() {
+                state.err = true;
+                finishMoves();
+            });
+        });
+    };
+
+    function bulkApiPerFolder(path, extra, done) {
+        var map = selectedUidsByFolder();
+        var keys = Object.keys(map);
+        if (keys.length === 0) {
+            if (done) done();
+            return;
+        }
+        var pending = keys.length;
+        keys.forEach(function(fld) {
+            var payload = angular.extend({folder: fld, uids: map[fld]}, extra || {});
+            apiCall('/webmail/api/' + path, payload, function(data) {
+                if (!data || data.status !== 1) {
+                    notify(data && data.error_message ? data.error_message : 'Action failed.', 'error');
+                }
+                pending--;
+                if (pending <= 0 && done) done();
+            }, function() {
+                pending--;
+                if (pending <= 0 && done) done();
+            });
+        });
     }
 
     $scope.bulkDelete = function() {
-        var uids = getSelectedUids();
-        if (uids.length === 0) return;
-        apiCall('/webmail/api/deleteMessages', {folder: $scope.currentFolder, uids: uids}, function(data) {
-            if (data.status === 1) {
-                $scope.loadMessages();
-                $scope.loadFolders();
-            }
+        var map = selectedUidsByFolder();
+        var n = Object.keys(map).reduce(function(acc, k) { return acc + map[k].length; }, 0);
+        if (n === 0) return;
+        bulkApiPerFolder('deleteMessages', {}, function() {
+            refreshListAfterBulk();
         });
     };
 
     $scope.bulkMarkRead = function() {
-        var uids = getSelectedUids();
-        if (uids.length === 0) return;
-        apiCall('/webmail/api/markRead', {folder: $scope.currentFolder, uids: uids}, function() {
-            $scope.loadMessages();
-            $scope.loadFolders();
+        var map = selectedUidsByFolder();
+        var n = Object.keys(map).reduce(function(acc, k) { return acc + map[k].length; }, 0);
+        if (n === 0) return;
+        bulkApiPerFolder('markRead', {}, function() {
+            refreshListAfterBulk();
         });
     };
 
     $scope.bulkMarkUnread = function() {
-        var uids = getSelectedUids();
-        if (uids.length === 0) return;
-        apiCall('/webmail/api/markUnread', {folder: $scope.currentFolder, uids: uids}, function() {
-            $scope.loadMessages();
-            $scope.loadFolders();
+        var map = selectedUidsByFolder();
+        var n = Object.keys(map).reduce(function(acc, k) { return acc + map[k].length; }, 0);
+        if (n === 0) return;
+        bulkApiPerFolder('markUnread', {}, function() {
+            refreshListAfterBulk();
         });
     };
 
     $scope.bulkMove = function() {
-        var uids = getSelectedUids();
-        if (uids.length === 0 || !$scope.moveTarget) return;
-        apiCall('/webmail/api/moveMessages', {
-            folder: $scope.currentFolder,
-            uids: uids,
-            targetFolder: $scope.moveTarget.name || $scope.moveTarget
-        }, function(data) {
-            if (data.status === 1) {
-                $scope.showMoveDropdown = false;
-                $scope.moveTarget = '';
-                $scope.loadMessages();
-                $scope.loadFolders();
-            }
+        if (!$scope.moveTarget) return;
+        var map = selectedUidsByFolder();
+        var n = Object.keys(map).reduce(function(acc, k) { return acc + map[k].length; }, 0);
+        if (n === 0) return;
+        var targetFolder = $scope.moveTarget.name || $scope.moveTarget;
+        var keys = Object.keys(map);
+        var pending = keys.length;
+        keys.forEach(function(fld) {
+            apiCall('/webmail/api/moveMessages', {
+                folder: fld,
+                uids: map[fld],
+                targetFolder: targetFolder
+            }, function(data) {
+                if (!data || data.status !== 1) {
+                    notify(data && data.error_message ? data.error_message : 'Move failed.', 'error');
+                }
+                pending--;
+                if (pending <= 0) {
+                    $scope.showMoveDropdown = false;
+                    $scope.moveTarget = '';
+                    refreshListAfterBulk();
+                }
+            }, function() {
+                pending--;
+                if (pending <= 0) {
+                    $scope.showMoveDropdown = false;
+                    $scope.moveTarget = '';
+                    refreshListAfterBulk();
+                }
+            });
         });
     };
 
     $scope.toggleFlag = function(msg) {
-        apiCall('/webmail/api/markFlagged', {folder: $scope.currentFolder, uids: [msg.uid]}, function() {
+        var fld = msg.folder || $scope.currentFolder;
+        apiCall('/webmail/api/markFlagged', {folder: fld, uids: [msg.uid]}, function() {
             msg.is_flagged = !msg.is_flagged;
         });
     };
 
     $scope.deleteMsg = function(msg) {
-        apiCall('/webmail/api/deleteMessages', {folder: $scope.currentFolder, uids: [msg.uid]}, function(data) {
+        var fld = (msg && msg.folder) ? msg.folder : $scope.currentFolder;
+        apiCall('/webmail/api/deleteMessages', {folder: fld, uids: [msg.uid]}, function(data) {
             if (data.status === 1) {
                 $scope.openMsg = null;
                 $scope.viewMode = 'list';
-                $scope.loadMessages();
-                $scope.loadFolders();
+                refreshListAfterBulk();
             }
         });
     };
@@ -701,7 +1711,11 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($
         form.method = 'POST';
         form.action = '/webmail/api/getAttachment';
         form.target = '_blank';
-        var fields = {folder: $scope.currentFolder, uid: $scope.openMsg.uid, partId: att.part_id};
+        var fields = {
+            folder: $scope.openMsg.folder || $scope.currentFolder,
+            uid: $scope.openMsg.uid,
+            partId: att.part_id
+        };
         fields['csrfmiddlewaretoken'] = getCookie('csrftoken');
         for (var key in fields) {
             var input = document.createElement('input');
@@ -729,9 +1743,33 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($
     $scope.loadContacts = function() {
         apiCall('/webmail/api/listContacts', {}, function(data) {
             if (data.status === 1) {
-                $scope.contacts = data.contacts;
-                $scope.filteredContacts = data.contacts;
+                $scope.contacts = data.contacts || [];
+                $scope.filteredContacts = data.contacts || [];
+                $scope.filterContacts();
+            } else {
+                $scope.contacts = [];
+                $scope.filteredContacts = [];
+                notify(data.error_message || 'Could not load contacts.', 'error');
             }
+        }, function(err) {
+            $scope.contacts = [];
+            $scope.filteredContacts = [];
+            notify('Could not load contacts.', 'error');
+            console.error('listContacts error:', err);
+        });
+    };
+
+    $scope.importContactsFromSnappymail = function() {
+        apiCall('/webmail/api/importContactsFromSnappymail', {}, function(data) {
+            if (data.status === 1) {
+                notify('Contacts imported from SnappyMail (found: ' + (data.total_found || 0) + ').');
+                $scope.loadContacts();
+            } else {
+                notify(data.error_message || 'Failed to import contacts.', 'error');
+            }
+        }, function(err) {
+            notify('Failed to import contacts.', 'error');
+            console.error('importContactsFromSnappymail error:', err);
         });
     };
 
@@ -801,8 +1839,29 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($
     $scope.loadRules = function() {
         apiCall('/webmail/api/listRules', {}, function(data) {
             if (data.status === 1) {
-                $scope.sieveRules = data.rules;
+                $scope.sieveRules = data.rules || [];
+            } else {
+                $scope.sieveRules = [];
+                notify(data.error_message || 'Could not load mail rules.', 'error');
             }
+        }, function(err) {
+            $scope.sieveRules = [];
+            notify('Could not load mail rules.', 'error');
+            console.error('listRules error:', err);
+        });
+    };
+
+    $scope.importRulesFromSnappymail = function() {
+        apiCall('/webmail/api/importRulesFromSnappymail', {}, function(data) {
+            if (data.status === 1) {
+                notify('SnappyMail rules imported.');
+                $scope.loadRules();
+            } else {
+                notify(data.error_message || 'Failed to import rules.', 'error');
+            }
+        }, function(err) {
+            notify('Failed to import rules.', 'error');
+            console.error('importRulesFromSnappymail error:', err);
         });
     };
 
@@ -855,8 +1914,14 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', function($
         apiCall('/webmail/api/getSettings', {}, function(data) {
             if (data.status === 1) {
                 $scope.wmSettings = data.settings;
+                if (!$scope.wmSettings.folderSettings) {
+                    $scope.wmSettings.folderSettings = {folderMappings: {}, folderOrder: [], specialDisplayMode: 'top', enableDragDrop: true};
+                }
                 if ($scope.wmSettings.messagesPerPage) {
                     $scope.perPage = parseInt($scope.wmSettings.messagesPerPage);
+                }
+                if ($scope.folders && $scope.folders.length > 0 && typeof $scope.applyFolderLayout === 'function') {
+                    $scope.applyFolderLayout();
                 }
             }
         });

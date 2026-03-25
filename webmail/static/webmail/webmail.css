@@ -51,16 +51,47 @@
     overflow: hidden;
 }
 
-/* Sidebar */
+/* Sidebar (width overridden via ng-style when sidebarResizeEnabled) */
 .wm-sidebar {
     width: 220px;
     min-width: 220px;
+    max-width: 100%;
     background: var(--bg-secondary);
-    border-right: 1px solid var(--border-color);
+    border-right: none;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
     padding: 12px 0;
+    flex-shrink: 0;
+}
+
+.wm-sidebar-resizer {
+    width: 6px;
+    flex-shrink: 0;
+    cursor: col-resize;
+    background: transparent;
+    border-right: 1px solid var(--border-color);
+    align-self: stretch;
+    margin: 0 -3px 0 -3px;
+    padding: 0;
+    z-index: 5;
+    touch-action: none;
+    transition: background 0.15s ease;
+}
+
+.wm-sidebar-resizer:hover,
+.wm-sidebar-resizer:focus {
+    background: rgba(108, 92, 231, 0.18);
+    outline: none;
+}
+
+body.wm-resizing-sidebar {
+    cursor: col-resize !important;
+    user-select: none !important;
+}
+
+body.wm-resizing-sidebar * {
+    cursor: col-resize !important;
 }
 
 .wm-compose-btn {
@@ -91,12 +122,40 @@
 .wm-folder-item {
     display: flex;
     align-items: center;
-    padding: 8px 16px;
+    padding: 8px 12px 8px 8px;
     cursor: pointer;
     color: var(--text-secondary);
     font-size: 14px;
     transition: all 0.15s;
-    gap: 10px;
+    gap: 6px;
+}
+
+.wm-folder-chevron {
+    flex-shrink: 0;
+    width: 22px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+}
+
+.wm-folder-chevron:hover {
+    color: var(--accent-color);
+    background: var(--bg-primary);
+}
+
+.wm-folder-chevron-spacer {
+    width: 22px;
+    flex-shrink: 0;
+    display: inline-block;
 }
 
 .wm-folder-item:hover {
@@ -108,6 +167,18 @@
     background: var(--bg-primary);
     color: var(--accent-color);
     font-weight: 600;
+}
+
+.wm-folder-item.dragging {
+    opacity: 0.6;
+    background: rgba(108,92,231,0.08);
+    color: var(--text-primary);
+    cursor: move;
+}
+
+.wm-folder-item.drag-over {
+    outline: 2px dashed var(--accent-color);
+    outline-offset: -2px;
 }
 
 .wm-folder-item i {
@@ -132,6 +203,29 @@
     font-weight: 600;
     min-width: 20px;
     text-align: center;
+}
+
+.wm-folder-delete-btn {
+    flex-shrink: 0;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+    opacity: 0.85;
+    z-index: 2;
+}
+
+.wm-folder-item:hover .wm-folder-delete-btn {
+    opacity: 1;
+}
+
+.wm-folder-delete-btn:hover {
+    color: #dc2626;
+    background: rgba(220, 38, 38, 0.12);
 }
 
 .wm-sidebar-divider {
@@ -174,6 +268,96 @@
     text-align: center;
 }
 
+button.wm-nav-link.wm-nav-btn {
+    font-family: inherit;
+    width: 100%;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 0;
+}
+
+button.wm-nav-link.wm-nav-btn:hover,
+button.wm-nav-link.wm-nav-btn:focus {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+/* New-folder modal */
+.wm-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 1040;
+}
+
+.wm-modal {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1050;
+    min-width: 320px;
+    max-width: 96vw;
+    padding: 20px 22px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+}
+
+.wm-modal h4 {
+    margin: 0 0 10px;
+    font-size: 17px;
+    color: var(--text-primary);
+}
+
+.wm-modal-hint {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin: 0 0 12px;
+    line-height: 1.45;
+}
+
+.wm-modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 16px;
+    flex-wrap: wrap;
+}
+
+.wm-modal-emphasis {
+    color: var(--text-primary);
+    font-size: 15px;
+    word-break: break-word;
+}
+
+.wm-modal-warning {
+    color: #b45309;
+}
+
+.wm-modal-confirm-delete .btn-danger {
+    background: #dc2626;
+    border-color: #dc2626;
+    color: #fff;
+}
+
+.wm-modal-confirm-delete .btn-danger:hover {
+    background: #b91c1c;
+    border-color: #b91c1c;
+    color: #fff;
+}
+
+.wm-field-hint {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 6px;
+    line-height: 1.35;
+}
+
 /* Message List Column */
 .wm-message-list {
     width: 380px;
@@ -189,6 +373,21 @@
     padding: 10px 12px;
     border-bottom: 1px solid var(--border-color);
     gap: 8px;
+    align-items: stretch;
+    flex-wrap: wrap;
+}
+
+.wm-search-scope {
+    flex: 0 0 auto;
+    min-width: 7.5rem;
+    max-width: 10.5rem;
+    padding: 6px 8px;
+    font-size: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    cursor: pointer;
 }
 
 .wm-search-input {
@@ -294,10 +493,19 @@
     align-items: center;
     padding: 10px 12px;
     border-bottom: 1px solid var(--border-color);
-    cursor: pointer;
+    cursor: grab;
     gap: 8px;
     transition: background 0.1s;
     font-size: 13px;
+}
+
+.wm-msg-row:active {
+    cursor: grabbing;
+}
+
+.wm-msg-row .wm-checkbox-label,
+.wm-msg-row .wm-star-btn {
+    cursor: pointer;
 }
 
 .wm-msg-row:hover {
@@ -347,6 +555,22 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     color: var(--text-secondary);
+}
+
+.wm-msg-folder-pill {
+    display: inline-block;
+    vertical-align: middle;
+    max-width: 7rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--accent-color);
+    background: rgba(108, 92, 231, 0.12);
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-right: 6px;
 }
 
 .wm-msg-date {
@@ -829,6 +1053,9 @@
 @media (max-width: 768px) {
     .wm-layout {
         flex-direction: column;
+    }
+    .wm-sidebar-resizer {
+        display: none !important;
     }
     .wm-sidebar {
         width: 100%;
