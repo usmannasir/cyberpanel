@@ -921,7 +921,7 @@ class Upgrade:
                     else:
                         Upgrade.stdOut(f"Downloaded successfully ({file_size / 1024:.2f} KB)", 0)
 
-                    # Verify checksum if provided
+                    # Verify checksum if provided (skip when empty — e.g. cyberpanel_ols 2.7.x module without published hash)
                     if expected_sha256:
                         Upgrade.stdOut("Verifying checksum...", 0)
                         import hashlib
@@ -979,9 +979,9 @@ class Upgrade:
             OLS_BINARY_URL = config['url']
             OLS_BINARY_SHA256 = config['sha256']
             MODULE_URL = config['module_url']
-            MODULE_SHA256 = config['module_sha256']
+            MODULE_SHA256 = (config.get('module_sha256') or '').strip() or None
             MODSEC_URL = config.get('modsec_url')
-            MODSEC_SHA256 = config.get('modsec_sha256')
+            MODSEC_SHA256 = (config.get('modsec_sha256') or '').strip() or None
             OLS_BINARY_PATH = "/usr/local/lsws/bin/openlitespeed"
             MODULE_PATH = "/usr/local/lsws/modules/cyberpanel_ols.so"
             MODSEC_PATH = "/usr/local/lsws/modules/mod_security.so"
@@ -1032,9 +1032,9 @@ class Upgrade:
                     pass
                 return True  # Not fatal, continue with standard OLS
 
-            # Download module with checksum verification (if available)
+            # Download cyberpanel_ols module (checksum optional — v2.7.x may ship without published hash)
             module_downloaded = False
-            if MODULE_URL and MODULE_SHA256:
+            if MODULE_URL:
                 if not Upgrade.downloadCustomBinary(MODULE_URL, tmp_module, MODULE_SHA256):
                     Upgrade.stdOut("ERROR: Failed to download or verify module", 0)
                     Upgrade.stdOut("Continuing with standard OLS", 0)
@@ -1046,7 +1046,7 @@ class Upgrade:
             # Download compatible ModSecurity if existing ModSecurity is installed
             # This prevents ABI incompatibility crashes (Signal 11/SIGSEGV)
             modsec_downloaded = False
-            if os.path.exists(MODSEC_PATH) and MODSEC_URL and MODSEC_SHA256:
+            if os.path.exists(MODSEC_PATH) and MODSEC_URL:
                 Upgrade.stdOut("Existing ModSecurity detected - downloading compatible version...", 0)
                 if Upgrade.downloadCustomBinary(MODSEC_URL, tmp_modsec, MODSEC_SHA256):
                     modsec_downloaded = True
@@ -1061,7 +1061,7 @@ class Upgrade:
             try:
                 # Make binary executable before moving
                 os.chmod(tmp_binary, 0o755)
-                
+
                 # Final compatibility test before installation
                 if not Upgrade.testBinaryExecution(tmp_binary):
                     Upgrade.stdOut("ERROR: Final binary compatibility test failed", 0)
@@ -1069,20 +1069,20 @@ class Upgrade:
                     try:
                         if os.path.exists(tmp_binary):
                             os.remove(tmp_binary)
-                    except:
+                    except Exception:
                         pass
                     return True  # Not fatal, continue with standard OLS
-                
+
                 shutil.move(tmp_binary, OLS_BINARY_PATH)
+                os.chmod(OLS_BINARY_PATH, 0o755)
                 Upgrade.stdOut("Installed OpenLiteSpeed binary", 0)
             except Exception as e:
                 Upgrade.stdOut(f"ERROR: Failed to install binary: {e}", 0)
-                # Try to restore backup if installation failed
                 try:
                     if os.path.exists(f"{backup_dir}/openlitespeed.backup"):
                         shutil.copy2(f"{backup_dir}/openlitespeed.backup", OLS_BINARY_PATH)
                         Upgrade.stdOut("Restored original binary from backup", 0)
-                except:
+                except Exception:
                     pass
                 return False
 
@@ -1107,9 +1107,36 @@ class Upgrade:
                     Upgrade.stdOut(f"WARNING: Failed to install ModSecurity: {e}", 0)
                     # Non-fatal, continue
 
-            # Verify installation
+            # Verify installation - test binary before restart
             if os.path.exists(OLS_BINARY_PATH):
                 if not module_downloaded or os.path.exists(MODULE_PATH):
+                    Upgrade.stdOut("Verifying new binary...", 0)
+                    try:
+                        result = subprocess.run(
+                            [OLS_BINARY_PATH, '-v'],
+                            capture_output=True,
+                            text=True,
+                            timeout=10
+                        )
+                        if result.returncode != 0:
+                            raise Exception(f"Binary test failed with exit code {result.returncode}")
+
+                        version_output = result.stdout if result.stdout else result.stderr
+                        if 'LiteSpeed' in version_output or 'OpenLiteSpeed' in version_output:
+                            Upgrade.stdOut("Binary version check passed", 0)
+                        else:
+                            Upgrade.stdOut("WARNING: Could not verify binary version", 0)
+                    except subprocess.TimeoutExpired:
+                        Upgrade.stdOut("WARNING: Binary version check timed out", 0)
+                    except Exception as e:
+                        Upgrade.stdOut(f"ERROR: Binary verification failed: {e}", 0)
+                        Upgrade.stdOut("Initiating auto-rollback...", 0)
+                        if Upgrade.rollbackOLSBinary(backup_dir, OLS_BINARY_PATH, MODULE_PATH if module_downloaded else None):
+                            Upgrade.stdOut("Rollback completed successfully", 0)
+                        else:
+                            Upgrade.stdOut("WARNING: Rollback may have failed", 0)
+                        return False
+
                     Upgrade.stdOut("=" * 50, 0)
                     Upgrade.stdOut("Custom Binaries Installed Successfully", 0)
                     Upgrade.stdOut("Features enabled:", 0)
@@ -1122,7 +1149,6 @@ class Upgrade:
                     Upgrade.stdOut("=" * 50, 0)
                     # Configure module after installation
                     Upgrade.configureCustomModule()
-                    # Enable Auto-SSL if not already configured
                     conf_path = '/usr/local/lsws/conf/httpd_config.conf'
                     try:
                         with open(conf_path, 'r') as f:
@@ -1142,12 +1168,52 @@ class Upgrade:
                     return True
 
             Upgrade.stdOut("ERROR: Installation verification failed", 0)
+            if Upgrade.rollbackOLSBinary(backup_dir, OLS_BINARY_PATH, MODULE_PATH if module_downloaded else None):
+                Upgrade.stdOut("Rollback completed successfully", 0)
             return False
 
         except Exception as msg:
             Upgrade.stdOut(f"ERROR: {msg} [installCustomOLSBinaries]", 0)
             Upgrade.stdOut("Continuing with standard OLS", 0)
             return True  # Non-fatal error, continue
+
+    @staticmethod
+    def rollbackOLSBinary(backup_dir, binary_path, module_path=None):
+        """Rollback OpenLiteSpeed binary to previous version from backup"""
+        try:
+            Upgrade.stdOut("Rolling back to previous binary...", 0)
+
+            backup_binary = os.path.join(backup_dir, "openlitespeed.backup")
+
+            if os.path.exists(backup_binary):
+                Upgrade.stdOut("Stopping OpenLiteSpeed for rollback...", 0)
+                subprocess.run(['/usr/local/lsws/bin/lswsctrl', 'stop'],
+                               capture_output=True, timeout=30)
+
+                shutil.copy2(backup_binary, binary_path)
+                os.chmod(binary_path, 0o755)
+                Upgrade.stdOut(f"Restored binary from {backup_binary}", 0)
+
+                Upgrade.stdOut("Starting OpenLiteSpeed after rollback...", 0)
+                subprocess.run(['/usr/local/lsws/bin/lswsctrl', 'start'],
+                               capture_output=True, timeout=30)
+
+                import time
+                time.sleep(3)
+
+                result = subprocess.run(['pgrep', '-f', 'openlitespeed'],
+                                        capture_output=True)
+                if result.returncode == 0:
+                    Upgrade.stdOut("OpenLiteSpeed started successfully after rollback", 0)
+                    return True
+                Upgrade.stdOut("WARNING: OpenLiteSpeed may not have started after rollback", 0)
+                return True
+            Upgrade.stdOut(f"ERROR: Backup not found at {backup_binary}", 0)
+            return False
+
+        except Exception as e:
+            Upgrade.stdOut(f"ERROR during rollback: {e}", 0)
+            return False
 
     @staticmethod
     def configureCustomModule():
@@ -1970,8 +2036,93 @@ $cfg['Servers'][$i]['port'] = '3306';
                         `completed_at` datetime(6) DEFAULT NULL,
                         KEY `ai_scanner_scheduled_executions_scheduled_scan_id_idx` (`scheduled_scan_id`),
                         KEY `ai_scanner_scheduled_executions_execution_time_idx` (`execution_time` DESC),
-                        CONSTRAINT `ai_scanner_scheduled_executions_scheduled_scan_id_fk` FOREIGN KEY (`scheduled_scan_id`) 
+                        CONSTRAINT `ai_scanner_scheduled_executions_scheduled_scan_id_fk` FOREIGN KEY (`scheduled_scan_id`)
                         REFERENCES `ai_scanner_scheduled_scans` (`id`) ON DELETE CASCADE
+                    )
+                ''')
+            except:
+                pass
+
+            # AI Scanner File Operation Audit Tables
+            try:
+                cursor.execute('''
+                    CREATE TABLE `scanner_file_operations` (
+                        `id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY,
+                        `scan_id` varchar(255) NOT NULL,
+                        `operation` varchar(20) NOT NULL,
+                        `file_path` varchar(500) NOT NULL,
+                        `backup_path` varchar(500) DEFAULT NULL,
+                        `success` bool NOT NULL DEFAULT 0,
+                        `error_message` longtext DEFAULT NULL,
+                        `ip_address` varchar(45) DEFAULT NULL,
+                        `user_agent` varchar(255) DEFAULT NULL,
+                        `created_at` datetime(6) NOT NULL,
+                        KEY `scanner_file_operations_scan_id_idx` (`scan_id`),
+                        KEY `scanner_file_operations_created_at_idx` (`created_at`),
+                        KEY `scanner_file_operations_scan_created_idx` (`scan_id`, `created_at`)
+                    )
+                ''')
+            except:
+                pass
+
+            try:
+                cursor.execute('''
+                    CREATE TABLE `scanner_api_rate_limits` (
+                        `id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY,
+                        `scan_id` varchar(255) NOT NULL,
+                        `endpoint` varchar(100) NOT NULL,
+                        `request_count` integer NOT NULL DEFAULT 0,
+                        `last_request_at` datetime(6) NOT NULL,
+                        UNIQUE KEY `scanner_api_rate_limits_scan_endpoint_unique` (`scan_id`, `endpoint`),
+                        KEY `scanner_api_rate_limits_scan_endpoint_idx` (`scan_id`, `endpoint`)
+                    )
+                ''')
+            except:
+                pass
+
+            # CyberMail Email Delivery Tables
+            try:
+                cursor.execute('''
+                    CREATE TABLE `cybermail_accounts` (
+                        `id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY,
+                        `admin_id` integer NOT NULL UNIQUE,
+                        `platform_account_id` integer DEFAULT NULL,
+                        `api_key` varchar(255) NOT NULL DEFAULT '',
+                        `email` varchar(255) NOT NULL DEFAULT '',
+                        `plan_name` varchar(100) NOT NULL DEFAULT 'Free',
+                        `plan_slug` varchar(50) NOT NULL DEFAULT 'free',
+                        `emails_per_month` integer NOT NULL DEFAULT 15000,
+                        `is_connected` bool NOT NULL DEFAULT 0,
+                        `relay_enabled` bool NOT NULL DEFAULT 0,
+                        `smtp_credential_id` integer DEFAULT NULL,
+                        `smtp_username` varchar(255) NOT NULL DEFAULT '',
+                        `smtp_host` varchar(255) NOT NULL DEFAULT 'mail.cyberpersons.com',
+                        `smtp_port` integer NOT NULL DEFAULT 587,
+                        `created_at` datetime(6) NOT NULL,
+                        `updated_at` datetime(6) NOT NULL,
+                        CONSTRAINT `cybermail_accounts_admin_id_fk` FOREIGN KEY (`admin_id`)
+                        REFERENCES `loginSystem_administrator` (`id`) ON DELETE CASCADE
+                    )
+                ''')
+            except:
+                pass
+
+            try:
+                cursor.execute('''
+                    CREATE TABLE `cybermail_domains` (
+                        `id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY,
+                        `account_id` integer NOT NULL,
+                        `domain` varchar(255) NOT NULL DEFAULT '',
+                        `platform_domain_id` integer DEFAULT NULL,
+                        `status` varchar(50) NOT NULL DEFAULT 'pending',
+                        `spf_verified` bool NOT NULL DEFAULT 0,
+                        `dkim_verified` bool NOT NULL DEFAULT 0,
+                        `dmarc_verified` bool NOT NULL DEFAULT 0,
+                        `dns_configured` bool NOT NULL DEFAULT 0,
+                        `created_at` datetime(6) NOT NULL,
+                        KEY `cybermail_domains_account_id_idx` (`account_id`),
+                        CONSTRAINT `cybermail_domains_account_id_fk` FOREIGN KEY (`account_id`)
+                        REFERENCES `cybermail_accounts` (`id`) ON DELETE CASCADE
                     )
                 ''')
             except:
@@ -2728,6 +2879,45 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
             except:
                 pass
 
+            query = """CREATE TABLE IF NOT EXISTS `e_server_settings` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `plus_addressing_enabled` tinyint(1) NOT NULL DEFAULT 0,
+  `plus_addressing_delimiter` varchar(1) NOT NULL DEFAULT '+',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"""
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = """CREATE TABLE IF NOT EXISTS `e_plus_override` (
+  `domain_id` varchar(50) NOT NULL,
+  `enabled` tinyint(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`domain_id`),
+  CONSTRAINT `fk_plus_override_domain` FOREIGN KEY (`domain_id`) REFERENCES `e_domains` (`domain`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"""
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = """CREATE TABLE IF NOT EXISTS `e_pattern_forwarding` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `domain_id` varchar(50) NOT NULL,
+  `pattern` varchar(255) NOT NULL,
+  `destination` varchar(255) NOT NULL,
+  `pattern_type` varchar(20) NOT NULL DEFAULT 'wildcard',
+  `priority` int(11) NOT NULL DEFAULT 100,
+  `enabled` tinyint(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id`),
+  KEY `fk_pattern_domain` (`domain_id`),
+  CONSTRAINT `fk_pattern_domain` FOREIGN KEY (`domain_id`) REFERENCES `e_domains` (`domain`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"""
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
             try:
                 connection.close()
             except:
@@ -3085,12 +3275,322 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
             except:
                 pass
 
+            ## Resource Limits columns for cgroups v2 integration
+            query = "ALTER TABLE packages_package ADD COLUMN memoryLimitMB INT DEFAULT 1024;"
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = "ALTER TABLE packages_package ADD COLUMN cpuCores INT DEFAULT 1;"
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = "ALTER TABLE packages_package ADD COLUMN ioLimitMBPS INT DEFAULT 10;"
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = "ALTER TABLE packages_package ADD COLUMN inodeLimit INT DEFAULT 400000;"
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = "ALTER TABLE packages_package ADD COLUMN maxConnections INT DEFAULT 10;"
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = "ALTER TABLE packages_package ADD COLUMN procSoftLimit INT DEFAULT 400;"
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = "ALTER TABLE packages_package ADD COLUMN procHardLimit INT DEFAULT 500;"
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
             try:
                 connection.close()
             except:
                 pass
         except:
             pass
+
+    @staticmethod
+    def setupSieve():
+        """Enable Sieve plugin and ManageSieve for email filtering (idempotent)"""
+        try:
+            if not os.path.exists('/etc/dovecot/dovecot.conf'):
+                Upgrade.stdOut("Dovecot not installed, skipping Sieve setup.", 0)
+                return
+
+            ## Ensure cyrus-sasl-plain is installed (needed for SMTP relay on RHEL/Alma/CentOS)
+            if os.path.exists('/etc/redhat-release'):
+                command = 'dnf install -y cyrus-sasl-plain'
+                ProcessUtilities.executioner(command)
+
+            import re
+
+            dovecot_conf = '/etc/dovecot/dovecot.conf'
+            with open(dovecot_conf, 'r') as f:
+                content = f.read()
+
+            changed = False
+
+            # Add sieve to protocols if missing
+            protocols_match = re.search(r'^protocols\s*=\s*(.+)$', content, re.MULTILINE)
+            if protocols_match and 'sieve' not in protocols_match.group(1):
+                content = content.replace(protocols_match.group(0),
+                    protocols_match.group(0) + ' sieve')
+                changed = True
+
+            # Add sieve plugin to protocol lda mail_plugins if missing
+            lda_match = re.search(r'(protocol lda\s*\{[^}]*mail_plugins\s*=\s*)([^\n]+)', content)
+            if lda_match and 'sieve' not in lda_match.group(2):
+                content = content.replace(lda_match.group(0),
+                    lda_match.group(1) + lda_match.group(2).rstrip() + ' sieve')
+                changed = True
+
+            # Add lda_mailbox_autocreate/autosubscribe for sieve fileinto
+            if 'lda_mailbox_autocreate' not in content:
+                lda_plugins = re.search(r'(protocol lda\s*\{[^}]*mail_plugins\s*=[^\n]+\n)', content)
+                if lda_plugins:
+                    content = content.replace(lda_plugins.group(0),
+                        lda_plugins.group(0) +
+                        '    lda_mailbox_autocreate = yes\n    lda_mailbox_autosubscribe = yes\n')
+                    changed = True
+
+            # Add sieve storage settings to plugin section
+            if 'sieve_dir' not in content:
+                plugin_match = re.search(r'(plugin\s*\{[^}]*)(})', content)
+                if plugin_match:
+                    content = content.replace(plugin_match.group(0),
+                        plugin_match.group(1) +
+                        '\n  sieve = ~/sieve/.dovecot.sieve\n  sieve_dir = ~/sieve\n\n' +
+                        plugin_match.group(2))
+                    changed = True
+
+            if changed:
+                with open(dovecot_conf, 'w') as f:
+                    f.write(content)
+
+            # Fix dovecot-sql.conf.ext to include home directory for sieve storage
+            sql_conf = '/etc/dovecot/dovecot-sql.conf.ext'
+            if os.path.exists(sql_conf):
+                with open(sql_conf, 'r') as f:
+                    sql_content = f.read()
+                if 'as home' not in sql_content and 'user_query' in sql_content:
+                    sql_content = re.sub(
+                        r"(user_query\s*=\s*SELECT\s+'5000'\s+as\s+uid,\s+'5000'\s+as\s+gid,\s+mail)\s+(FROM\s+e_users\s+WHERE\s+email='%u';)",
+                        r"\1, CONCAT('/home/vmail/', SUBSTRING_INDEX(email, '@', -1), '/', SUBSTRING_INDEX(email, '@', 1)) as home \2",
+                        sql_content)
+                    with open(sql_conf, 'w') as f:
+                        f.write(sql_content)
+
+            # Write ManageSieve config if not properly configured
+            managesieve_conf = '/etc/dovecot/conf.d/20-managesieve.conf'
+            write_managesieve = True
+            if os.path.exists(managesieve_conf):
+                with open(managesieve_conf, 'r') as f:
+                    existing = f.read()
+                if 'inet_listener sieve' in existing and 'service managesieve' in existing:
+                    write_managesieve = False
+
+            if write_managesieve:
+                os.makedirs('/etc/dovecot/conf.d', exist_ok=True)
+                with open(managesieve_conf, 'w') as f:
+                    f.write("""protocols = $protocols sieve
+
+service managesieve-login {
+  inet_listener sieve {
+    port = 4190
+  }
+}
+
+service managesieve {
+  process_limit = 256
+}
+
+protocol sieve {
+  managesieve_notify_capability = mailto
+  managesieve_sieve_capability = fileinto reject envelope encoded-character vacation subaddress comparator-i;ascii-numeric relational regex imap4flags copy include variables body enotify environment mailbox date index ihave duplicate mime foreverypart extracttext
+}
+""")
+
+            # Install sieve packages if missing
+            if os.path.exists('/etc/lsb-release') or os.path.exists('/etc/debian_version'):
+                Upgrade.executioner('apt-get install -y dovecot-sieve dovecot-managesieved', 'Install Sieve packages', 0)
+            else:
+                Upgrade.executioner('yum install -y dovecot-pigeonhole', 'Install Sieve packages', 0)
+
+            # Open firewall port
+            try:
+                from plogical.firewallUtilities import FirewallUtilities
+                FirewallUtilities.addSieveFirewallRule()
+            except:
+                pass
+
+            subprocess.call(['systemctl', 'restart', 'dovecot'])
+            Upgrade.stdOut("Sieve setup complete!", 0)
+
+        except BaseException as msg:
+            Upgrade.stdOut("setupSieve error: " + str(msg), 0)
+
+    @staticmethod
+    def setupWebmail():
+        """Set up Dovecot master user and webmail config for SSO (idempotent)"""
+        try:
+            # Skip if no mail server installed
+            if not os.path.exists('/etc/dovecot/dovecot.conf'):
+                Upgrade.stdOut("Dovecot not installed, skipping webmail setup.", 0)
+                return
+
+            # Always run migrations and dovecot.conf patching even if conf exists
+            already_configured = os.path.exists('/etc/cyberpanel/webmail.conf') and \
+                                 os.path.exists('/etc/dovecot/master-users')
+
+            if not already_configured:
+                Upgrade.stdOut("Setting up webmail master user for SSO...", 0)
+
+                from plogical.randomPassword import generate_pass
+
+                master_password = generate_pass(32)
+
+                # Hash the password using doveadm
+                result = subprocess.run(
+                    ['doveadm', 'pw', '-s', 'SHA512-CRYPT', '-p', master_password],
+                    capture_output=True, text=True
+                )
+                if result.returncode != 0:
+                    Upgrade.stdOut("doveadm pw failed: " + result.stderr, 0)
+                    return
+
+                password_hash = result.stdout.strip()
+
+                # Write /etc/dovecot/master-users
+                with open('/etc/dovecot/master-users', 'w') as f:
+                    f.write('cyberpanel_master:' + password_hash + '\n')
+                os.chmod('/etc/dovecot/master-users', 0o600)
+                subprocess.call(['chown', 'dovecot:dovecot', '/etc/dovecot/master-users'])
+
+                # Write /etc/cyberpanel/webmail.conf
+                webmail_conf = {
+                    'master_user': 'cyberpanel_master',
+                    'master_password': master_password
+                }
+                with open('/etc/cyberpanel/webmail.conf', 'w') as f:
+                    json.dump(webmail_conf, f)
+                os.chmod('/etc/cyberpanel/webmail.conf', 0o600)
+                subprocess.call(['chown', 'cyberpanel:cyberpanel', '/etc/cyberpanel/webmail.conf'])
+
+            # Patch dovecot.conf if master user config not present
+            dovecot_conf_path = '/etc/dovecot/dovecot.conf'
+            with open(dovecot_conf_path, 'r') as f:
+                dovecot_content = f.read()
+
+            if 'auth_master_user_separator' not in dovecot_content:
+                master_block = """auth_master_user_separator = *
+
+passdb {
+    driver = passwd-file
+    master = yes
+    args = /etc/dovecot/master-users
+    result_success = continue
+}
+
+"""
+                dovecot_content = dovecot_content.replace(
+                    'passdb {',
+                    master_block + 'passdb {',
+                    1  # Only replace the first occurrence
+                )
+                with open(dovecot_conf_path, 'w') as f:
+                    f.write(dovecot_content)
+
+            # Run webmail migrations
+            Upgrade.executioner(
+                'python /usr/local/CyberCP/manage.py makemigrations webmail',
+                'Webmail makemigrations', shell=True
+            )
+            Upgrade.executioner(
+                'python /usr/local/CyberCP/manage.py migrate',
+                'Webmail migrate', shell=True
+            )
+
+            # Fix webmail.conf ownership for lscpd (may be wrong on existing installs)
+            if os.path.exists('/etc/cyberpanel/webmail.conf'):
+                subprocess.call(['chown', 'cyberpanel:cyberpanel', '/etc/cyberpanel/webmail.conf'])
+                os.chmod('/etc/cyberpanel/webmail.conf', 0o600)
+
+            # Restart Dovecot
+            subprocess.call(['systemctl', 'restart', 'dovecot'])
+
+            Upgrade.stdOut("Webmail master user setup complete!", 0)
+
+        except BaseException as msg:
+            Upgrade.stdOut("setupWebmail error: " + str(msg), 0)
+
+    @staticmethod
+    def fixMailTLS():
+        """Ensure Postfix/Dovecot TLS cert files exist at expected paths.
+
+        On Ubuntu, the install creates dirs at /etc/pki/dovecot/ but never
+        copies the self-signed certs there. This breaks STARTTLS and prevents
+        external mail servers (Gmail, etc.) from delivering inbound mail.
+        """
+        try:
+            cert_path = '/etc/pki/dovecot/certs/dovecot.pem'
+            key_path = '/etc/pki/dovecot/private/dovecot.pem'
+
+            # Skip if certs already exist
+            if os.path.exists(cert_path) and os.path.exists(key_path):
+                return
+
+            # Skip if no mail server
+            if not os.path.exists('/etc/dovecot/dovecot.conf'):
+                return
+
+            Upgrade.stdOut("Fixing mail TLS certificates...", 0)
+
+            os.makedirs('/etc/pki/dovecot/certs', exist_ok=True)
+            os.makedirs('/etc/pki/dovecot/private', exist_ok=True)
+
+            # Prefer existing Dovecot self-signed certs
+            if os.path.exists('/etc/dovecot/cert.pem') and os.path.exists('/etc/dovecot/key.pem'):
+                import shutil
+                shutil.copy2('/etc/dovecot/cert.pem', cert_path)
+                shutil.copy2('/etc/dovecot/key.pem', key_path)
+            else:
+                # Generate a new self-signed cert
+                hostname = ProcessUtilities.outputExecutioner(
+                    'hostname').strip() or 'localhost'
+                subprocess.call([
+                    'openssl', 'req', '-x509', '-nodes', '-days', '3650',
+                    '-newkey', 'rsa:2048',
+                    '-subj', '/CN=%s' % hostname,
+                    '-keyout', key_path,
+                    '-out', cert_path
+                ])
+
+            os.chmod(cert_path, 0o644)
+            os.chmod(key_path, 0o600)
+
+            # Restart Postfix to pick up the certs
+            subprocess.call(['systemctl', 'restart', 'postfix'])
+
+            Upgrade.stdOut("Mail TLS certificates fixed.", 0)
+
+        except BaseException as msg:
+            Upgrade.stdOut("fixMailTLS error: " + str(msg), 0)
 
     @staticmethod
     def manageServiceMigrations():
@@ -5898,8 +6398,8 @@ slowlog = /var/log/php{version}-fpm-slow.log
                     return 0
                 selected_php = '83'
             
-            # Remove existing PHP symlink if it exists
-            if os.path.exists('/usr/bin/php'):
+            # Remove existing PHP symlink if it exists (os.path.lexists catches broken symlinks too)
+            if os.path.lexists('/usr/bin/php'):
                 os.remove('/usr/bin/php')
 
             # Create symlink to selected PHP version
@@ -5946,7 +6446,7 @@ slowlog = /var/log/php{version}-fpm-slow.log
         ## Add LSPHP7.4 TO LSWS Ent configs
 
         if not os.path.exists('/usr/local/lsws/bin/openlitespeed'):
-
+            # This is Enterprise LSWS
             if os.path.exists('httpd_config.xml'):
                 os.remove('httpd_config.xml')
 
@@ -5954,6 +6454,66 @@ slowlog = /var/log/php{version}-fpm-slow.log
             Upgrade.executioner(command, command, 0)
             # os.remove('/usr/local/lsws/conf/httpd_config.xml')
             # shutil.copy('httpd_config.xml', '/usr/local/lsws/conf/httpd_config.xml')
+        else:
+            # This is OpenLiteSpeed - install/upgrade custom binaries
+            Upgrade.stdOut("Detected OpenLiteSpeed installation", 0)
+            Upgrade.stdOut("Installing/upgrading custom binaries with .htaccess PHP config support...", 0)
+
+            # Install custom binaries
+            if Upgrade.installCustomOLSBinaries():
+                # Configure the custom module
+                Upgrade.configureCustomModule()
+
+                # Enable Auto-SSL if not already configured
+                conf_path = '/usr/local/lsws/conf/httpd_config.conf'
+                try:
+                    import re
+                    with open(conf_path, 'r') as f:
+                        content = f.read()
+                    if 'autoSSL' not in content:
+                        content = re.sub(
+                            r'(adminEmails\s+\S+)',
+                            r'\1\nautoSSL                   1\nacmeEmail                 admin@cyberpanel.net',
+                            content,
+                            count=1
+                        )
+                        with open(conf_path, 'w') as f:
+                            f.write(content)
+                        Upgrade.stdOut("Auto-SSL enabled in httpd_config.conf", 0)
+                except Exception as e:
+                    Upgrade.stdOut(f"WARNING: Could not enable Auto-SSL: {e}", 0)
+
+                # Restart OpenLiteSpeed to apply changes and verify it started
+                Upgrade.stdOut("Restarting OpenLiteSpeed...", 0)
+                command = '/usr/local/lsws/bin/lswsctrl restart'
+                Upgrade.executioner(command, 'Restart OpenLiteSpeed', 0)
+
+                # Verify OLS started successfully after restart
+                import time
+                time.sleep(5)  # Give OLS time to start
+
+                result = subprocess.run(['pgrep', '-f', 'openlitespeed'],
+                                        capture_output=True)
+                if result.returncode != 0:
+                    Upgrade.stdOut("WARNING: OpenLiteSpeed may not have started after upgrade!", 0)
+                    Upgrade.stdOut("Attempting auto-rollback...", 0)
+
+                    # Find the most recent backup directory
+                    backup_base = '/usr/local/lsws'
+                    backups = [d for d in os.listdir(backup_base) if d.startswith('backup-')]
+                    if backups:
+                        backups.sort(reverse=True)  # Most recent first
+                        latest_backup = os.path.join(backup_base, backups[0])
+                        if Upgrade.rollbackOLSBinary(latest_backup, '/usr/local/lsws/bin/openlitespeed'):
+                            Upgrade.stdOut("Auto-rollback completed successfully", 0)
+                        else:
+                            Upgrade.stdOut("ERROR: Auto-rollback failed! Manual intervention may be required.", 0)
+                    else:
+                        Upgrade.stdOut("ERROR: No backup found for rollback!", 0)
+                else:
+                    Upgrade.stdOut("OpenLiteSpeed restarted successfully", 0)
+            else:
+                Upgrade.stdOut("Custom binary installation failed, continuing with upgrade...", 0)
 
         Upgrade.updateRepoURL()
 
@@ -6048,6 +6608,9 @@ slowlog = /var/log/php{version}-fpm-slow.log
         Upgrade.containerMigrations()
         Upgrade.manageServiceMigrations()
         Upgrade.firewallMigrations()
+        Upgrade.fixMailTLS()
+        Upgrade.setupWebmail()
+        Upgrade.setupSieve()
         Upgrade.enableServices()
 
         # Apply AlmaLinux 9 fixes before other installations

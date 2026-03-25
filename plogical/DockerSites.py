@@ -911,41 +911,59 @@ services:
 
     ##### N8N Container
 
-    def check_container_health(self, container_name, max_retries=3, delay=80):
+    def check_container_health(self, service_name, max_retries=3, delay=80):
         """
         Check if a container is running, accepting healthy, unhealthy, and starting states
         Total wait time will be 4 minutes (3 retries * 80 seconds)
+
+        Uses fuzzy matching to find containers since Docker Compose naming varies by version:
+        - Docker Compose v1: project_service_1 (underscores)
+        - Docker Compose v2: project-service-1 (hyphens)
         """
         try:
-            # Format container name to match Docker's naming convention
-            formatted_name = f"{self.data['ServiceName']}-{container_name}-1"
-            logging.writeToFile(f'Checking container health for: {formatted_name}')
-            
+            logging.writeToFile(f'Checking container health for service: {service_name}')
+
             for attempt in range(max_retries):
                 client = docker.from_env()
-                container = client.containers.get(formatted_name)
-                
+
+                # Find container by searching all containers for a name containing the service name
+                # This handles both v1 (underscores) and v2 (hyphens) naming conventions
+                all_containers = client.containers.list(all=True)
+                container = None
+
+                # Normalize service name for matching (handle both - and _)
+                service_pattern = service_name.lower().replace(' ', '').replace('-', '').replace('_', '')
+
+                for c in all_containers:
+                    container_pattern = c.name.lower().replace('-', '').replace('_', '')
+                    if service_pattern in container_pattern:
+                        container = c
+                        logging.writeToFile(f'Found matching container: {c.name} for service: {service_name}')
+                        break
+
+                if container is None:
+                    logging.writeToFile(f'No container found matching service: {service_name}, attempt {attempt + 1}/{max_retries}')
+                    time.sleep(delay)
+                    continue
+
                 if container.status == 'running':
                     health = container.attrs.get('State', {}).get('Health', {}).get('Status')
-                    
+
                     # Accept healthy, unhealthy, and starting states as long as container is running
                     if health in ['healthy', 'unhealthy', 'starting'] or health is None:
-                        logging.writeToFile(f'Container {formatted_name} is running with status: {health}')
+                        logging.writeToFile(f'Container {container.name} is running with health status: {health}')
                         return True
                     else:
                         health_logs = container.attrs.get('State', {}).get('Health', {}).get('Log', [])
                         if health_logs:
                             last_log = health_logs[-1]
                             logging.writeToFile(f'Container health check failed: {last_log.get("Output", "")}')
-                
-                logging.writeToFile(f'Container {formatted_name} status: {container.status}, health: {health}, attempt {attempt + 1}/{max_retries}')
+
+                logging.writeToFile(f'Container {container.name} status: {container.status}, health: {health}, attempt {attempt + 1}/{max_retries}')
                 time.sleep(delay)
-                
+
             return False
-            
-        except docker.errors.NotFound:
-            logging.writeToFile(f'Container {formatted_name} not found')
-            return False
+
         except Exception as e:
             logging.writeToFile(f'Error checking container health: {str(e)}')
             return False
@@ -1068,12 +1086,39 @@ services:
             logging.writeToFile(f"Cleanup failed: {str(e)}")
             return False
 
+    def find_container_by_service(self, service_name):
+        """
+        Find a container by service name using fuzzy matching.
+        Returns the container object or None if not found.
+        """
+        try:
+            client = docker.from_env()
+            all_containers = client.containers.list(all=True)
+
+            # Normalize service name for matching
+            service_pattern = service_name.lower().replace(' ', '').replace('-', '').replace('_', '')
+
+            for c in all_containers:
+                container_pattern = c.name.lower().replace('-', '').replace('_', '')
+                if service_pattern in container_pattern:
+                    return c
+            return None
+        except Exception as e:
+            logging.writeToFile(f'Error finding container: {str(e)}')
+            return None
+
     def monitor_deployment(self):
         try:
-            # Format container names
-            n8n_container_name = f"{self.data['ServiceName']}-{self.data['ServiceName']}-1"
-            db_container_name = f"{self.data['ServiceName']}-{self.data['ServiceName']}-db-1"
-            
+            # Find containers dynamically using fuzzy matching
+            n8n_container = self.find_container_by_service(self.data['ServiceName'])
+            db_container = self.find_container_by_service(f"{self.data['ServiceName']}-db")
+
+            if not n8n_container or not db_container:
+                raise DockerDeploymentError("Could not find n8n or database containers")
+
+            n8n_container_name = n8n_container.name
+            db_container_name = db_container.name
+
             logging.writeToFile(f'Monitoring containers: {n8n_container_name} and {db_container_name}')
 
             # Check container health
@@ -1081,7 +1126,7 @@ services:
             result, status = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
             # Only raise error if container is exited
-            if "exited" in status:
+            if "exited" in status.lower():
                 # Get container logs
                 command = f"docker logs {n8n_container_name}"
                 result, logs = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
@@ -1096,19 +1141,16 @@ services:
                 # Check if database container is ready
                 command = f"docker exec {db_container_name} pg_isready -U postgres"
                 result, output = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-                
+
                 if "accepting connections" in output:
                     db_ready = True
                     break
-                
-                # Check container status
-                command = f"docker inspect --format='{{{{.State.Status}}}}' {db_container_name}"
-                result, db_status = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-                
-                # Only raise error if database container is in a failed state
-                if db_status == 'exited':
-                    raise DockerDeploymentError(f"Database container is in {db_status} state")
-                
+
+                # Refresh container status
+                db_container = self.find_container_by_service(f"{self.data['ServiceName']}-db")
+                if db_container and db_container.status == 'exited':
+                    raise DockerDeploymentError(f"Database container exited")
+
                 retry_count += 1
                 time.sleep(2)
                 logging.writeToFile(f'Waiting for database to be ready, attempt {retry_count}/{max_retries}')
@@ -1117,13 +1159,11 @@ services:
                 raise DockerDeploymentError("Database failed to become ready within timeout period")
 
             # Check n8n container status
-            command = f"docker inspect --format='{{{{.State.Status}}}}' {n8n_container_name}"
-            result, n8n_status = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-            
-            # Only raise error if n8n container is in a failed state
-            if n8n_status == 'exited':
-                raise DockerDeploymentError(f"n8n container is in {n8n_status} state")
+            n8n_container = self.find_container_by_service(self.data['ServiceName'])
+            if n8n_container and n8n_container.status == 'exited':
+                raise DockerDeploymentError(f"n8n container exited")
 
+            n8n_status = n8n_container.status if n8n_container else 'unknown'
             logging.writeToFile(f'Deployment monitoring completed successfully. n8n status: {n8n_status}, database ready: {db_ready}')
             return True
 

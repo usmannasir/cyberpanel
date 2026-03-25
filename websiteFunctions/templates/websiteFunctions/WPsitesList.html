@@ -22,7 +22,7 @@
             $scope.isAdmin = $scope.debug.is_admin;
             $scope.wpSitesCount = $scope.debug.wp_sites_count;
             $scope.currentPage = 1;
-            $scope.recordsToShow = 10;
+            $scope.recordsToShow = 50; // Default to 50 items
             $scope.expandedSites = {}; // Track which sites are expanded
             $scope.currentWP = null; // Store current WordPress site for password protection
 
@@ -792,11 +792,9 @@
                     <div style="flex: 1;">
                         <input ng-model="searchText" placeholder="Search by title or URL..." class="form-control">
                     </div>
-                    <div style="width: 120px;">
-                        <select ng-model="recordsToShow" class="form-control" ng-change="updatePagination()">
-                            <option>10</option>
-                            <option>50</option>
-                            <option>100</option>
+                    <div style="width: 150px;">
+                        <select ng-model="recordsToShow" class="form-control" ng-change="updatePagination()"
+                                ng-options="option.value as option.label for option in [{value: 10, label: '10 items'}, {value: 50, label: '50 items'}, {value: 100, label: '100 items'}]">
                         </select>
                     </div>
                 </div>

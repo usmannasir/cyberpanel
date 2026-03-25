@@ -280,57 +280,51 @@ class InstallCyberPanel:
             logging.InstallLog.writeToFile(str(msg) + " [detectArchitecture]")
             return False
 
-    def detectBinarySuffix(self):
-        """Detect which binary suffix to use based on OS distribution
-        Returns 'ubuntu' for Ubuntu/Debian systems
-        Returns 'rhel8' for RHEL/AlmaLinux/Rocky 8.x systems
-        Returns 'rhel9' for RHEL/AlmaLinux/Rocky 9.x systems
-        """
+    def detectPlatform(self):
+        """Detect OS platform for binary selection (rhel8, rhel9, ubuntu)."""
         try:
-            # Check /etc/os-release first for more accurate detection
             if os.path.exists('/etc/os-release'):
                 with open('/etc/os-release', 'r') as f:
-                    os_release = f.read().lower()
-
-                # Check for Ubuntu/Debian FIRST
-                if 'ubuntu' in os_release or 'debian' in os_release:
+                    content = f.read()
+                content_lower = content.lower()
+                if 'ubuntu' in content_lower or 'debian' in content_lower:
                     return 'ubuntu'
 
-                # Check for RHEL-based distributions and extract version
-                if any(x in os_release for x in ['almalinux', 'rocky', 'rhel', 'centos stream']):
-                    # Extract version number
-                    for line in os_release.split('\n'):
-                        if 'version_id' in line:
-                            version = line.split('=')[1].strip('"').split('.')[0]
-                            if version == '9':
-                                return 'rhel9'
-                            elif version == '8':
-                                return 'rhel8'
-                    # Default to rhel9 if version extraction fails
-                    return 'rhel9'
+            if os.path.exists('/etc/lsb-release'):
+                with open('/etc/lsb-release', 'r') as f:
+                    lsb = f.read()
+                    if 'Ubuntu' in lsb or 'ubuntu' in lsb:
+                        return 'ubuntu'
 
-            # Fallback: Use distro variable
-            # Ubuntu/Debian → ubuntu suffix
+            if os.path.exists('/etc/os-release'):
+                with open('/etc/os-release', 'r') as f:
+                    content = f.read().lower()
+
+                    if 'version="8.' in content or 'version_id="8.' in content:
+                        if any(distro in content for distro in ['red hat', 'almalinux', 'rocky', 'cloudlinux', 'centos']):
+                            return 'rhel8'
+
+                    for ver in ('9.', '10.'):
+                        if f'version="{ver}' in content or f'version_id="{ver}' in content:
+                            if any(distro in content for distro in ['red hat', 'almalinux', 'rocky', 'cloudlinux', 'centos']):
+                                return 'rhel9'
+
             if self.distro == ubuntu:
                 return 'ubuntu'
-
-            # CentOS 8+/AlmaLinux/Rocky/OpenEuler → rhel9 by default
-            elif self.distro == cent8 or self.distro == openeuler:
+            if self.distro == centos:
+                return 'ubuntu'
+            if self.distro == cent8:
+                return 'rhel8'
+            if self.distro == openeuler:
                 return 'rhel9'
 
-            # CentOS 7 → ubuntu suffix (uses libcrypt.so.1)
-            elif self.distro == centos:
-                return 'ubuntu'
-
-            # Default to ubuntu for unknown distros
-            else:
-                InstallCyberPanel.stdOut("Unknown OS distribution, defaulting to Ubuntu binaries", 1)
-                return 'ubuntu'
+            InstallCyberPanel.stdOut("WARNING: Could not detect platform, defaulting to rhel9", 1)
+            return 'rhel9'
 
         except Exception as msg:
-            logging.InstallLog.writeToFile(str(msg) + " [detectBinarySuffix]")
-            InstallCyberPanel.stdOut("Error detecting OS, defaulting to Ubuntu binaries", 1)
-            return 'ubuntu'
+            logging.InstallLog.writeToFile(str(msg) + " [detectPlatform]")
+            InstallCyberPanel.stdOut(f"ERROR detecting platform: {msg}, defaulting to rhel9", 1)
+            return 'rhel9'
 
     def downloadCustomBinary(self, url, destination):
         """Download custom binary file"""
@@ -446,24 +440,32 @@ class InstallCyberPanel:
                 InstallCyberPanel.stdOut("Standard OLS will be used", 1)
                 return True  # Not a failure, just skip
 
-            # Detect OS and select appropriate binary suffix
-            binary_suffix = self.detectBinarySuffix()
-            InstallCyberPanel.stdOut(f"Detected OS type: using '{binary_suffix}' binaries", 1)
+            platform = self.detectPlatform()
+            InstallCyberPanel.stdOut(f"Detected platform: {platform}", 1)
 
-            # URLs for custom binaries with OS-specific paths
-            BASE_URL = "https://cyberpanel.net/binaries"
+            BINARY_CONFIGS = {
+                'rhel8': {
+                    'url': 'https://cyberpanel.net/openlitespeed-2.4.4-x86_64-rhel8',
+                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.0-x86_64-rhel8.so',
+                },
+                'rhel9': {
+                    'url': 'https://cyberpanel.net/openlitespeed-2.4.4-x86_64-rhel9',
+                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.0-x86_64-rhel9.so',
+                },
+                'ubuntu': {
+                    'url': 'https://cyberpanel.net/openlitespeed-2.4.4-x86_64-ubuntu',
+                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.0-x86_64-ubuntu.so',
+                }
+            }
 
-            # Set URLs based on OS type
-            if binary_suffix == 'rhel8':
-                OLS_BINARY_URL = f"{BASE_URL}/rhel8/openlitespeed-phpconfig-x86_64-rhel8"
-                MODULE_URL = f"{BASE_URL}/rhel8/cyberpanel_ols_x86_64_rhel8.so"
-            elif binary_suffix == 'rhel9':
-                OLS_BINARY_URL = f"{BASE_URL}/rhel9/openlitespeed-phpconfig-x86_64-rhel"
-                MODULE_URL = f"{BASE_URL}/rhel9/cyberpanel_ols_x86_64_rhel.so"
-            else:  # ubuntu
-                OLS_BINARY_URL = f"{BASE_URL}/ubuntu/openlitespeed-phpconfig-x86_64-ubuntu"
-                MODULE_URL = f"{BASE_URL}/ubuntu/cyberpanel_ols_x86_64_ubuntu.so"
+            config = BINARY_CONFIGS.get(platform)
+            if not config:
+                InstallCyberPanel.stdOut(f"ERROR: No binaries available for platform {platform}", 1)
+                InstallCyberPanel.stdOut("Skipping custom binary installation", 1)
+                return True
 
+            OLS_BINARY_URL = config['url']
+            MODULE_URL = config.get('module_url') or ''
             OLS_BINARY_PATH = "/usr/local/lsws/bin/openlitespeed"
             MODULE_PATH = "/usr/local/lsws/modules/cyberpanel_ols.so"
 
@@ -490,13 +492,17 @@ class InstallCyberPanel:
             if not self.downloadCustomBinary(OLS_BINARY_URL, tmp_binary):
                 InstallCyberPanel.stdOut("ERROR: Failed to download OLS binary", 1)
                 InstallCyberPanel.stdOut("Continuing with standard OLS", 1)
-                return True  # Not fatal, continue with standard OLS
+                return True
 
-            # Download module
-            if not self.downloadCustomBinary(MODULE_URL, tmp_module):
-                InstallCyberPanel.stdOut("ERROR: Failed to download module", 1)
-                InstallCyberPanel.stdOut("Continuing with standard OLS", 1)
-                return True  # Not fatal, continue with standard OLS
+            module_downloaded = False
+            if MODULE_URL:
+                if not self.downloadCustomBinary(MODULE_URL, tmp_module):
+                    InstallCyberPanel.stdOut("ERROR: Failed to download module", 1)
+                    InstallCyberPanel.stdOut("Continuing with standard OLS", 1)
+                    return True
+                module_downloaded = True
+            else:
+                InstallCyberPanel.stdOut("Note: No CyberPanel module for this platform", 1)
 
             # Install OpenLiteSpeed binary
             InstallCyberPanel.stdOut("Installing custom binaries...", 1)
@@ -510,43 +516,42 @@ class InstallCyberPanel:
                 logging.InstallLog.writeToFile(str(e) + " [installCustomOLSBinaries - binary install]")
                 return False
 
-            # Install module
-            try:
-                os.makedirs(os.path.dirname(MODULE_PATH), exist_ok=True)
-                shutil.move(tmp_module, MODULE_PATH)
-                os.chmod(MODULE_PATH, 0o644)
-                InstallCyberPanel.stdOut("Installed CyberPanel module", 1)
-            except Exception as e:
-                InstallCyberPanel.stdOut(f"ERROR: Failed to install module: {e}", 1)
-                logging.InstallLog.writeToFile(str(e) + " [installCustomOLSBinaries - module install]")
+            if module_downloaded:
+                try:
+                    os.makedirs(os.path.dirname(MODULE_PATH), exist_ok=True)
+                    shutil.move(tmp_module, MODULE_PATH)
+                    os.chmod(MODULE_PATH, 0o644)
+                    InstallCyberPanel.stdOut("Installed CyberPanel module", 1)
+                except Exception as e:
+                    InstallCyberPanel.stdOut(f"ERROR: Failed to install module: {e}", 1)
+                    logging.InstallLog.writeToFile(str(e) + " [installCustomOLSBinaries - module install]")
+                    return False
+
+            if not os.path.exists(OLS_BINARY_PATH):
+                InstallCyberPanel.stdOut("ERROR: Installation verification failed - OLS binary not found", 1)
+                return False
+            if module_downloaded and not os.path.exists(MODULE_PATH):
+                InstallCyberPanel.stdOut("ERROR: Installation verification failed - module not found", 1)
                 return False
 
-            # Verify installation files exist
-            if not (os.path.exists(OLS_BINARY_PATH) and os.path.exists(MODULE_PATH)):
-                InstallCyberPanel.stdOut("ERROR: Installation verification failed - files not found", 1)
-                return False
-
-            # Verify binary compatibility
             if not self.verifyCustomBinary(OLS_BINARY_PATH):
                 InstallCyberPanel.stdOut("ERROR: Custom binary verification failed", 1)
                 InstallCyberPanel.stdOut("This usually means wrong binary type for your OS", 1)
-
-                # Rollback to original binary
                 if os.path.exists(backup_dir):
                     self.rollbackCustomBinary(backup_dir, OLS_BINARY_PATH, MODULE_PATH)
                     InstallCyberPanel.stdOut("Continuing with standard OLS", 1)
                 else:
                     InstallCyberPanel.stdOut("WARNING: Cannot rollback, no backup found", 1)
+                return True
 
-                return True  # Non-fatal, continue with standard OLS
-
-            # Success!
             InstallCyberPanel.stdOut("=" * 50, 1)
             InstallCyberPanel.stdOut("Custom Binaries Installed Successfully", 1)
             InstallCyberPanel.stdOut("Features enabled:", 1)
-            InstallCyberPanel.stdOut("  - Apache-style .htaccess support", 1)
-            InstallCyberPanel.stdOut("  - php_value/php_flag directives", 1)
-            InstallCyberPanel.stdOut("  - Enhanced header control", 1)
+            InstallCyberPanel.stdOut("  - Static-linked cross-platform binary", 1)
+            if module_downloaded:
+                InstallCyberPanel.stdOut("  - Apache-style .htaccess support", 1)
+                InstallCyberPanel.stdOut("  - php_value/php_flag directives", 1)
+                InstallCyberPanel.stdOut("  - Enhanced header control", 1)
             InstallCyberPanel.stdOut(f"Backup: {backup_dir}", 1)
             InstallCyberPanel.stdOut("=" * 50, 1)
             return True
@@ -609,6 +614,25 @@ module cyberpanel_ols {
 
             # Configure the custom module
             self.configureCustomModule()
+
+            try:
+                import re
+                conf_path = '/usr/local/lsws/conf/httpd_config.conf'
+                if os.path.exists(conf_path):
+                    with open(conf_path, 'r') as f:
+                        content = f.read()
+                    if 'autoSSL' not in content:
+                        content = re.sub(
+                            r'(adminEmails\s+\S+)',
+                            r'\1\nautoSSL                   1\nacmeEmail                 admin@cyberpanel.net',
+                            content,
+                            count=1
+                        )
+                        with open(conf_path, 'w') as f:
+                            f.write(content)
+                        InstallCyberPanel.stdOut("Auto-SSL enabled in httpd_config.conf", 1)
+            except Exception as e:
+                InstallCyberPanel.stdOut(f"WARNING: Could not enable Auto-SSL: {e}", 1)
 
         else:
             try:
@@ -776,23 +800,135 @@ module cyberpanel_ols {
         """Install Sieve (Dovecot Sieve) for email filtering on all OS variants"""
         try:
             InstallCyberPanel.stdOut("Installing Sieve (Dovecot Sieve) for email filtering...", 1)
-            
+
             if self.distro == ubuntu:
                 # Install dovecot-sieve and dovecot-managesieved
                 self.install_package('dovecot-sieve dovecot-managesieved')
             else:
                 # For CentOS/AlmaLinux/OpenEuler
                 self.install_package('dovecot-pigeonhole')
-            
+
+            # Write ManageSieve config
+            managesieve_conf = '/etc/dovecot/conf.d/20-managesieve.conf'
+            os.makedirs('/etc/dovecot/conf.d', exist_ok=True)
+            with open(managesieve_conf, 'w') as f:
+                f.write("""protocols = $protocols sieve
+
+service managesieve-login {
+  inet_listener sieve {
+    port = 4190
+  }
+}
+
+service managesieve {
+  process_limit = 256
+}
+
+protocol sieve {
+  managesieve_notify_capability = mailto
+  managesieve_sieve_capability = fileinto reject envelope encoded-character vacation subaddress comparator-i;ascii-numeric relational regex imap4flags copy include variables body enotify environment mailbox date index ihave duplicate mime foreverypart extracttext
+}
+""")
+
             # Add Sieve port 4190 to firewall
-            from plogical.firewallUtilities import FirewallUtilities
-            FirewallUtilities.addSieveFirewallRule()
-            
+            try:
+                import firewall.core.fw as fw
+                subprocess.call(['firewall-cmd', '--permanent', '--add-port=4190/tcp'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                subprocess.call(['firewall-cmd', '--reload'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            except Exception:
+                # firewalld may not be available, try ufw
+                subprocess.call(['ufw', 'allow', '4190/tcp'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
             InstallCyberPanel.stdOut("Sieve successfully installed and configured!", 1)
             return 1
-            
+
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [installSieve]")
+            return 0
+
+    @staticmethod
+    def setupWebmail():
+        """Set up Dovecot master user and webmail config for SSO"""
+        try:
+            # Skip if dovecot not installed
+            if not os.path.exists('/etc/dovecot/dovecot.conf'):
+                InstallCyberPanel.stdOut("Dovecot not installed, skipping webmail setup.", 1)
+                return 1
+
+            # Skip if already configured
+            if os.path.exists('/etc/cyberpanel/webmail.conf') and os.path.exists('/etc/dovecot/master-users'):
+                InstallCyberPanel.stdOut("Webmail master user already configured.", 1)
+                return 1
+
+            InstallCyberPanel.stdOut("Setting up webmail master user for SSO...", 1)
+
+            import secrets, string
+            chars = string.ascii_letters + string.digits
+            master_password = ''.join(secrets.choice(chars) for _ in range(32))
+
+            # Hash the password using doveadm
+            result = subprocess.run(
+                ['doveadm', 'pw', '-s', 'SHA512-CRYPT', '-p', master_password],
+                capture_output=True, text=True
+            )
+            if result.returncode != 0:
+                logging.InstallLog.writeToFile('[ERROR] doveadm pw failed: ' + result.stderr + " [setupWebmail]")
+                return 0
+
+            password_hash = result.stdout.strip()
+
+            # Write /etc/dovecot/master-users
+            with open('/etc/dovecot/master-users', 'w') as f:
+                f.write('cyberpanel_master:' + password_hash + '\n')
+            os.chmod('/etc/dovecot/master-users', 0o600)
+            subprocess.call(['chown', 'dovecot:dovecot', '/etc/dovecot/master-users'])
+
+            # Ensure /etc/cyberpanel/ exists
+            os.makedirs('/etc/cyberpanel', exist_ok=True)
+
+            # Write /etc/cyberpanel/webmail.conf
+            import json as json_module
+            webmail_conf = {
+                'master_user': 'cyberpanel_master',
+                'master_password': master_password
+            }
+            with open('/etc/cyberpanel/webmail.conf', 'w') as f:
+                json_module.dump(webmail_conf, f)
+            os.chmod('/etc/cyberpanel/webmail.conf', 0o600)
+            subprocess.call(['chown', 'cyberpanel:cyberpanel', '/etc/cyberpanel/webmail.conf'])
+
+            # Patch dovecot.conf if master passdb block missing
+            dovecot_conf_path = '/etc/dovecot/dovecot.conf'
+            with open(dovecot_conf_path, 'r') as f:
+                dovecot_content = f.read()
+
+            if 'auth_master_user_separator' not in dovecot_content:
+                master_block = """auth_master_user_separator = *
+
+passdb {
+    driver = passwd-file
+    master = yes
+    args = /etc/dovecot/master-users
+    result_success = continue
+}
+
+"""
+                dovecot_content = dovecot_content.replace(
+                    'passdb {',
+                    master_block + 'passdb {',
+                    1
+                )
+                with open(dovecot_conf_path, 'w') as f:
+                    f.write(dovecot_content)
+
+            # Restart Dovecot to pick up changes
+            subprocess.call(['systemctl', 'restart', 'dovecot'])
+
+            InstallCyberPanel.stdOut("Webmail master user setup complete!", 1)
+            return 1
+
+        except BaseException as msg:
+            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [setupWebmail]")
             return 0
 
     def installMySQL(self, mysql):
@@ -1435,6 +1571,8 @@ def Main(cwd, mysql, distro, ent, serial=None, port="8090", ftp=None, dns=None, 
 
     logging.InstallLog.writeToFile('Installing Sieve for email filtering..,55')
     installer.installSieve()
+
+    ## setupWebmail is called later, after Dovecot is installed (see install.py)
 
     logging.InstallLog.writeToFile('Installing MySQL,60')
     installer.installMySQL(mysql)

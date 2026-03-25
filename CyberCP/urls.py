@@ -80,6 +80,8 @@ urlpatterns = [
     path('CloudLinux/', include('CLManager.urls')),
     path('IncrementalBackups/', include('IncBackups.urls')),
     path('aiscanner/', include('aiScanner.urls')),
+    path('webmail/', include('webmail.urls')),
+    path('emailDelivery/', include('emailDelivery.urls')),
     # path('Terminal/', include('WebTerminal.urls')),
     path('', include('loginSystem.urls')),
 ]

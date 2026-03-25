@@ -23,7 +23,7 @@ Fast • Secure • Scalable — Simplify hosting management with style.
 
 * ⚡ **Performance first** — OpenLiteSpeed + HTTP/3 + LSCache
 * 🔒 **Security by default** — Auto SSL, FirewallD integration, 2FA, brute-force protection
-* 📧 **Integrated mail** — Postfix, Dovecot, SnappyMail
+* 📧 **Integrated mail** — Postfix, Dovecot, panel webmail (SSO/Sieve), SnappyMail
 * 🗂 **Backups & restore** — One-click snapshots and rollbacks
 * 👨‍💻 **Developer friendly** — Git manager, REST API, staging, PHP version switcher
 
@@ -48,7 +48,7 @@ Fast • Secure • Scalable — Simplify hosting management with style.
 **Email & DNS**
 
 * Postfix + Dovecot
-* SnappyMail webmail
+* Panel webmail + SnappyMail
 * DNS (PowerDNS) with easy zone management
 
 **Developer & Automation**

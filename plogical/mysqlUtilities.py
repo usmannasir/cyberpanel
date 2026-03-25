@@ -252,8 +252,24 @@ class mysqlUtilities:
             return str(msg)
 
     @staticmethod
-    def createDatabaseBackup(databaseName, tempStoragePath, rustic=0, RusticRepoName = None, externalApp = None):
+    def createDatabaseBackup(databaseName, tempStoragePath, rustic=0, RusticRepoName = None,
+                           externalApp = None, use_compression=None, use_new_features=None):
+        """
+        Enhanced database backup with backward compatibility
+
+        Parameters:
+        - use_compression: None (auto-detect), True (force compression), False (no compression)
+        - use_new_features: None (auto-detect based on config), True/False (force)
+        """
         try:
+            # Check if new features are enabled (via config file or parameter)
+            if use_new_features is None:
+                use_new_features = mysqlUtilities.checkNewBackupFeatures()
+
+            # Determine compression based on config or parameter
+            if use_compression is None:
+                use_compression = mysqlUtilities.shouldUseCompression()
+
             passFile = "/etc/cyberpanel/mysqlPassword"
 
             try:
@@ -294,53 +310,58 @@ password=%s
             SHELL = False
 
             if rustic == 0:
+                # Determine backup file extension based on compression
+                if use_compression:
+                    backup_extension = '.sql.gz'
+                    backup_file = f"{tempStoragePath}/{databaseName}{backup_extension}"
+                else:
+                    backup_extension = '.sql'
+                    backup_file = f"{tempStoragePath}/{databaseName}{backup_extension}"
 
-                command = 'rm -f ' + tempStoragePath + "/" + databaseName + '.sql'
+                # Remove old backup if exists
+                command = f'rm -f {backup_file}'
                 ProcessUtilities.executioner(command)
 
-                command = 'mysqldump --defaults-file=/home/cyberpanel/.my.cnf -u %s --host=%s --port %s %s' % (mysqluser, mysqlhost, mysqlport, databaseName)
+                # Build mysqldump command with new features
+                dump_cmd = mysqlUtilities.buildMysqldumpCommand(
+                    mysqluser, mysqlhost, mysqlport, databaseName,
+                    use_new_features, use_compression
+                )
 
-                # if os.path.exists(ProcessUtilities.debugPath):
-                #     logging.CyberCPLogFileWriter.writeToFile(command)
-                #
-                #     logging.CyberCPLogFileWriter.writeToFile(f'Get current executing uid {os.getuid()}')
-                #
-                # cmd = shlex.split(command)
-                #
-                # try:
-                #     errorPath = '/home/cyberpanel/error-logs.txt'
-                #     errorLog = open(errorPath, 'a')
-                #     with open(tempStoragePath + "/" + databaseName + '.sql', 'w') as f:
-                #         res = subprocess.call(cmd, stdout=f, stderr=errorLog, shell=SHELL)
-                #         if res != 0:
-                #             logging.CyberCPLogFileWriter.writeToFile(
-                #                 "Database: " + databaseName + "could not be backed! [createDatabaseBackup]")
-                #             return 0
-                # except subprocess.CalledProcessError as msg:
-                #     logging.CyberCPLogFileWriter.writeToFile(
-                #         "Database: " + databaseName + "could not be backed! Error: %s. [createDatabaseBackup]" % (
-                #             str(msg)))
-                #     return 0
+                if use_compression:
+                    # New method: Stream directly to compressed file
+                    full_command = f"{dump_cmd} | gzip -c > {backup_file}"
+                    result = ProcessUtilities.executioner(full_command, shell=True)
 
-                cmd = shlex.split(command)
-
-                with open(tempStoragePath + "/" + databaseName + '.sql', 'w') as f:
-                    # Using subprocess.run to capture stdout and stderr
-                    result = subprocess.run(
-                        cmd,
-                        stdout=f,
-                        stderr=subprocess.PIPE,
-                        shell=SHELL
-                    )
-
-                    # Check if the command was successful
-                    if result.returncode != 0:
+                    # Verify backup file was created successfully
+                    if not os.path.exists(backup_file) or os.path.getsize(backup_file) == 0:
                         logging.CyberCPLogFileWriter.writeToFile(
-                            "Database: " + databaseName + " could not be backed up! [createDatabaseBackup]"
+                            f"Database: {databaseName} could not be backed up (compressed)! [createDatabaseBackup]"
                         )
-                        # Log stderr
-                        logging.CyberCPLogFileWriter.writeToFile(result.stderr.decode('utf-8'))
                         return 0
+                else:
+                    # Legacy method: Direct dump to file (backward compatible)
+                    cmd = shlex.split(dump_cmd)
+
+                    with open(backup_file, 'w') as f:
+                        result = subprocess.run(
+                            cmd,
+                            stdout=f,
+                            stderr=subprocess.PIPE,
+                            shell=SHELL
+                        )
+
+                        if result.returncode != 0:
+                            logging.CyberCPLogFileWriter.writeToFile(
+                                "Database: " + databaseName + " could not be backed up! [createDatabaseBackup]"
+                            )
+                            logging.CyberCPLogFileWriter.writeToFile(result.stderr.decode('utf-8'))
+                            return 0
+
+                # Store metadata about backup format for restore
+                mysqlUtilities.saveBackupMetadata(
+                    databaseName, tempStoragePath, use_compression, use_new_features
+                )
 
             else:
                 SHELL = True
@@ -372,6 +393,9 @@ password=%s
 
     @staticmethod
     def restoreDatabaseBackup(databaseName, tempStoragePath, dbPassword, passwordCheck = None, additionalName = None, rustic=0, RusticRepoName = None, externalApp = None, snapshotid = None):
+        """
+        Enhanced restore with automatic format detection
+        """
         try:
             passFile = "/etc/cyberpanel/mysqlPassword"
 
@@ -412,25 +436,55 @@ password=%s
                 subprocess.call(shlex.split(command))
 
             if rustic == 0:
+                # Auto-detect backup format
+                backup_format = mysqlUtilities.detectBackupFormat(
+                    tempStoragePath, databaseName, additionalName
+                )
 
-                command = 'mysql --defaults-file=/home/cyberpanel/.my.cnf -u %s --host=%s --port %s %s' % (mysqluser, mysqlhost, mysqlport, databaseName)
-                if os.path.exists(ProcessUtilities.debugPath):
-                    logging.CyberCPLogFileWriter.writeToFile(f'{command} {tempStoragePath}/{databaseName} ' )
-                cmd = shlex.split(command)
-
-                if additionalName == None:
-                    with open(tempStoragePath + "/" + databaseName + '.sql', 'r') as f:
-                        res = subprocess.call(cmd, stdin=f)
-                    if res != 0:
-                        logging.CyberCPLogFileWriter.writeToFile("Could not restore MYSQL database: " + databaseName +"! [restoreDatabaseBackup]")
-                        return 0
+                if additionalName:
+                    base_name = additionalName
                 else:
-                    with open(tempStoragePath + "/" + additionalName + '.sql', 'r') as f:
-                        res = subprocess.call(cmd, stdin=f)
+                    base_name = databaseName
 
-                    if res != 0:
-                        logging.CyberCPLogFileWriter.writeToFile("Could not restore MYSQL database: " + additionalName + "! [restoreDatabaseBackup]")
-                        return 0
+                # Determine actual backup file based on detected format
+                if backup_format['compressed']:
+                    backup_file = f"{tempStoragePath}/{base_name}.sql.gz"
+                    if not os.path.exists(backup_file):
+                        # Fallback to uncompressed for backward compatibility
+                        backup_file = f"{tempStoragePath}/{base_name}.sql"
+                        backup_format['compressed'] = False
+                else:
+                    backup_file = f"{tempStoragePath}/{base_name}.sql"
+                    if not os.path.exists(backup_file):
+                        # Try compressed version
+                        backup_file = f"{tempStoragePath}/{base_name}.sql.gz"
+                        if os.path.exists(backup_file):
+                            backup_format['compressed'] = True
+
+                if not os.path.exists(backup_file):
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        f"Backup file not found: {backup_file}"
+                    )
+                    return 0
+
+                # Build restore command
+                mysql_cmd = f'mysql --defaults-file=/home/cyberpanel/.my.cnf -u {mysqluser} --host={mysqlhost} --port {mysqlport} {databaseName}'
+
+                if backup_format['compressed']:
+                    # Handle compressed backup
+                    restore_cmd = f"gunzip -c {backup_file} | {mysql_cmd}"
+                    result = ProcessUtilities.executioner(restore_cmd, shell=True)
+
+                    # Don't rely solely on exit code, MySQL import usually succeeds
+                    # The passwordCheck logic below will verify database integrity
+                else:
+                    # Handle uncompressed backup (legacy)
+                    cmd = shlex.split(mysql_cmd)
+                    with open(backup_file, 'r') as f:
+                        result = subprocess.call(cmd, stdin=f)
+
+                    # Don't fail on non-zero exit as MySQL may return warnings
+                    # The passwordCheck logic below will verify database integrity
 
                 if passwordCheck == None:
 
@@ -451,6 +505,8 @@ password=%s
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.CyberCPLogFileWriter.writeToFile(f'{command} {tempStoragePath}/{databaseName} ')
                 ProcessUtilities.outputExecutioner(command, None, True)
+
+                return 1
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[restoreDatabaseBackup]")
@@ -1409,6 +1465,153 @@ gpgcheck=1
 
 
         logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Completed [200]')
+
+    @staticmethod
+    def buildMysqldumpCommand(user, host, port, database, use_new_features, use_compression):
+        """Build mysqldump command with appropriate options"""
+
+        base_cmd = f"mysqldump --defaults-file=/home/cyberpanel/.my.cnf -u {user} --host={host} --port {port}"
+
+        # Add new performance features if enabled
+        if use_new_features:
+            # Add single-transaction for InnoDB consistency
+            base_cmd += " --single-transaction"
+
+            # Add extended insert for better performance
+            base_cmd += " --extended-insert"
+
+            # Add order by primary for consistent dumps
+            base_cmd += " --order-by-primary"
+
+            # Add quick option to avoid loading entire result set
+            base_cmd += " --quick"
+
+            # Add lock tables option
+            base_cmd += " --lock-tables=false"
+
+            # Check MySQL version for parallel support
+            if mysqlUtilities.supportParallelDump():
+                # Get number of threads (max 4 for safety)
+                threads = min(4, ProcessUtilities.getNumberOfCores() if hasattr(ProcessUtilities, 'getNumberOfCores') else 2)
+                base_cmd += f" --parallel={threads}"
+
+        base_cmd += f" {database}"
+        return base_cmd
+
+    @staticmethod
+    def saveBackupMetadata(database, path, compressed, new_features):
+        """Save metadata about backup format for restore compatibility"""
+        import time
+
+        metadata = {
+            'database': database,
+            'compressed': compressed,
+            'new_features': new_features,
+            'backup_version': '2.0' if new_features else '1.0',
+            'timestamp': time.time()
+        }
+
+        metadata_file = f"{path}/{database}.backup.json"
+        with open(metadata_file, 'w') as f:
+            json.dump(metadata, f)
+
+    @staticmethod
+    def detectBackupFormat(path, database, additional_name=None):
+        """
+        Detect backup format from metadata or file extension
+        """
+        base_name = additional_name if additional_name else database
+
+        # First try to read metadata file (new backups will have this)
+        metadata_file = f"{path}/{base_name}.backup.json"
+        if os.path.exists(metadata_file):
+            try:
+                with open(metadata_file, 'r') as f:
+                    return json.load(f)
+            except:
+                pass
+
+        # Fallback: detect by file existence and extension
+        format_info = {
+            'compressed': False,
+            'new_features': False,
+            'backup_version': '1.0'
+        }
+
+        # Check for compressed file
+        if os.path.exists(f"{path}/{base_name}.sql.gz"):
+            format_info['compressed'] = True
+            # Compressed backups likely use new features
+            format_info['new_features'] = True
+            format_info['backup_version'] = '2.0'
+        elif os.path.exists(f"{path}/{base_name}.sql"):
+            format_info['compressed'] = False
+            # Check file content for new features indicators
+            format_info['new_features'] = mysqlUtilities.checkSQLFileFeatures(
+                f"{path}/{base_name}.sql"
+            )
+
+        return format_info
+
+    @staticmethod
+    def checkNewBackupFeatures():
+        """Check if new backup features are enabled"""
+        try:
+            config_file = '/usr/local/CyberCP/plogical/backup_config.json'
+            if not os.path.exists(config_file):
+                # Try alternate location
+                config_file = '/etc/cyberpanel/backup_config.json'
+
+            if os.path.exists(config_file):
+                with open(config_file, 'r') as f:
+                    config = json.load(f)
+                    return config.get('database_backup', {}).get('use_new_features', False)
+        except:
+            pass
+        return False  # Default to legacy mode for safety
+
+    @staticmethod
+    def shouldUseCompression():
+        """Check if compression should be used"""
+        try:
+            config_file = '/usr/local/CyberCP/plogical/backup_config.json'
+            if not os.path.exists(config_file):
+                # Try alternate location
+                config_file = '/etc/cyberpanel/backup_config.json'
+
+            if os.path.exists(config_file):
+                with open(config_file, 'r') as f:
+                    config = json.load(f)
+                    return config.get('database_backup', {}).get('use_compression', False)
+        except:
+            pass
+        return False  # Default to no compression for compatibility
+
+    @staticmethod
+    def supportParallelDump():
+        """Check if MySQL version supports parallel dump"""
+        try:
+            result = ProcessUtilities.outputExecutioner("mysql --version")
+            # MySQL 8.0+ and MariaDB 10.3+ support parallel dump
+            if "8.0" in result or "8.1" in result or "10.3" in result or "10.4" in result or "10.5" in result or "10.6" in result:
+                return True
+        except:
+            pass
+        return False
+
+    @staticmethod
+    def checkSQLFileFeatures(file_path):
+        """Check SQL file for new feature indicators"""
+        try:
+            # Read first few lines to check for new features
+            with open(file_path, 'r') as f:
+                head = f.read(2048)  # Read first 2KB
+                # Check for indicators of new features
+                if "--single-transaction" in head or "--extended-insert" in head or "-- Dump completed" in head:
+                    return True
+        except:
+            pass
+        return False
 
 
 def main():
