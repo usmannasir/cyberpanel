@@ -53,6 +53,20 @@ _default_origins = [
 # Merge environment and default origins, avoiding duplicates
 CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(_csrf_origins_list + _default_origins))
 
+# Optional file: one trusted origin per line (e.g. https://203.0.113.1:2087) for IP:port panel access.
+# Create /etc/cyberpanel/csrf_trusted_origins on the server if JSON POSTs get 403 CSRF when using HTTPS by IP.
+_csrf_trusted_origins_file = '/etc/cyberpanel/csrf_trusted_origins'
+if os.path.isfile(_csrf_trusted_origins_file):
+    try:
+        with open(_csrf_trusted_origins_file, 'r', encoding='utf-8', errors='replace') as _csrf_f:
+            for _csrf_line in _csrf_f:
+                _csrf_line = _csrf_line.strip()
+                if _csrf_line and not _csrf_line.startswith('#'):
+                    if _csrf_line not in CSRF_TRUSTED_ORIGINS:
+                        CSRF_TRUSTED_ORIGINS.append(_csrf_line)
+    except OSError:
+        pass
+
 # Application definition
 
 INSTALLED_APPS = [
