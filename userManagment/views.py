@@ -4,6 +4,7 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.db import models
+from django.views.decorators.csrf import ensure_csrf_cookie
 from loginSystem.views import loadLoginPage
 from loginSystem.models import Administrator, ACL
 import json
@@ -50,24 +51,31 @@ def viewProfile(request):
     return proc.render()
 
 
+@ensure_csrf_cookie
 def createUser(request):
     userID = request.session['userID']
     currentACL = ACLManager.loadedACL(userID)
 
     if currentACL['admin'] == 1:
         aclNames = ACLManager.unFileteredACLs()
+        default_acl = aclNames[0] if aclNames else 'user'
         proc = httpProc(request, 'userManagment/createUser.html',
-                        {'aclNames': aclNames, 'securityLevels': SecurityLevel.list()})
+                        {'aclNames': aclNames, 'default_acl_name': default_acl,
+                         'securityLevels': SecurityLevel.list()})
         return proc.render()
     elif currentACL['changeUserACL'] == 1:
         aclNames = ACLManager.unFileteredACLs()
+        default_acl = aclNames[0] if aclNames else 'user'
         proc = httpProc(request, 'userManagment/createUser.html',
-                        {'aclNames': aclNames, 'securityLevels': SecurityLevel.list()})
+                        {'aclNames': aclNames, 'default_acl_name': default_acl,
+                         'securityLevels': SecurityLevel.list()})
         return proc.render()
     elif currentACL['createNewUser'] == 1:
         aclNames = ['user']
+        default_acl = 'user'
         proc = httpProc(request, 'userManagment/createUser.html',
-                        {'aclNames': aclNames, 'securityLevels': SecurityLevel.list()})
+                        {'aclNames': aclNames, 'default_acl_name': default_acl,
+                         'securityLevels': SecurityLevel.list()})
         return proc.render()
     else:
         return ACLManager.loadError()
@@ -213,8 +221,18 @@ def submitUserCreation(request):
             email = data['email']
             userName = data['userName']
             password = data['password']
-            websitesLimit = data['websitesLimit']
-            selectedACL = data['selectedACL']
+            try:
+                websitesLimit = int(data['websitesLimit'])
+            except (KeyError, TypeError, ValueError):
+                websitesLimit = 0
+            selectedACL = data.get('selectedACL')
+            if selectedACL is None or (isinstance(selectedACL, str) and not selectedACL.strip()):
+                data_ret = {'status': 0, 'createStatus': 0,
+                            'error_message': 'Please select an access control list (ACL).'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data, content_type='application/json')
+            if isinstance(selectedACL, str):
+                selectedACL = selectedACL.strip()
             selectedHomeDirectory = data.get('selectedHomeDirectory', '')
 
             if ACLManager.CheckRegEx("^[\w'\-,.][^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]]{2,}$", firstName) == 0:

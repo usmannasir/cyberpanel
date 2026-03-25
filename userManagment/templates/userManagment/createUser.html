@@ -283,9 +283,11 @@
                 <div class="form-col-6">
                     <div class="form-group">
                         <label class="form-label">{% trans "Access Control List (ACL)" %}</label>
-                        <select ng-model="selectedACL" class="form-control">
+                        {# ng-init: Angular otherwise leaves selectedACL undefined until user picks an option, so POST omits ACL and user creation fails. #}
+                        <select ng-model="selectedACL" class="form-control"
+                                ng-init="selectedACL = selectedACL || '{{ default_acl_name|escapejs }}'">
                             {% for items in aclNames %}
-                                <option>{{ items }}</option>
+                                <option value="{{ items|escape }}">{{ items }}</option>
                             {% endfor %}
                         </select>
                         <p class="help-text">{% trans "Select the permission set for this user" %}</p>

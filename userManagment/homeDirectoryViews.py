@@ -174,7 +174,9 @@ def getUserHomeDirectories(request):
         userID = request.session['userID']
         currentACL = ACLManager.loadedACL(userID)
         
-        if currentACL['admin'] != 1 and currentACL['createNewUser'] != 1:
+        # Same visibility as create user page: admins, ACL editors, and users allowed to create accounts
+        if (currentACL['admin'] != 1 and currentACL['createNewUser'] != 1
+                and currentACL.get('changeUserACL', 0) != 1):
             return JsonResponse({'status': 0, 'error_message': 'Unauthorized access'})
         
         # Get active home directories (tables home_directories / user_home_mappings may not exist yet)
