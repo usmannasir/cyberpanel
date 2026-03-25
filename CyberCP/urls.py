@@ -43,10 +43,10 @@ except (ModuleNotFoundError, ImportError, AttributeError):
         path('emailMarketing/', RedirectView.as_view(url='/plugins/installed?view=store', permanent=False), name='emailMarketing')
     )
 
+# URL order matches CyberPanel v2.4.5 (usmannasir/cyberpanel): base → loginSystem → packages… → webmail/emailDelivery.
+# STATIC_ROOT / PUBLIC_ROOT routes stay first so /static/, /snappymail/, /phpmyadmin/ work when the panel is served by Django/lscpd.
 urlpatterns = [
-    # Serve static files first (before catch-all routes)
     re_path(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
-    # Serve SnappyMail and phpMyAdmin from public directory (fixes 404 when panel is served by Django/lscpd on :2087/:8090)
     re_path(r'^snappymail/?$', RedirectView.as_view(url='/snappymail/index.php', permanent=False)),
     re_path(r'^snappymail/(?P<path>.*)$', serve, {'document_root': os.path.join(settings.PUBLIC_ROOT, 'snappymail')}),
     re_path(r'^phpmyadmin/?$', RedirectView.as_view(url='/phpmyadmin/index.php', permanent=False)),
@@ -54,6 +54,7 @@ urlpatterns = [
     path('base/', include('baseTemplate.urls')),
     path('imunifyav/', firewall_views.imunifyAV, name='imunifyav_root'),
     path('ImunifyAV/', firewall_views.imunifyAV, name='imunifyav_root_legacy'),
+    path('', include('loginSystem.urls')),
     path('packages/', include('packages.urls')),
     path('websites/', include('websiteFunctions.urls')),
     path('tuning/', include('tuning.urls')),
@@ -71,17 +72,18 @@ urlpatterns = [
     path('api/', include('api.urls')),
     path('filemanager/', include('filemanager.urls')),
     path('emailPremium/', include('emailPremium.urls')),
-    *_optional_email_marketing,
     path('manageservices/', include('manageServices.urls')),
     path('plugins/', include('pluginHolder.urls')),
+    *_optional_email_marketing,
     path('cloudAPI/', include('cloudAPI.urls')),
     path('docker/', include('dockerManager.urls')),
     path('container/', include('containerization.urls')),
     path('CloudLinux/', include('CLManager.urls')),
     path('IncrementalBackups/', include('IncBackups.urls')),
     path('aiscanner/', include('aiScanner.urls')),
+    path('webmail', RedirectView.as_view(url='/webmail/', permanent=True)),
     path('webmail/', include('webmail.urls')),
+    path('emailDelivery', RedirectView.as_view(url='/emailDelivery/', permanent=True)),
     path('emailDelivery/', include('emailDelivery.urls')),
     # path('Terminal/', include('WebTerminal.urls')),
-    path('', include('loginSystem.urls')),
 ]
