@@ -1979,7 +1979,11 @@ app.controller('listTableUsers', function ($scope, $http) {
 
     var UserToDelete;
 
-    $scope.populateCurrentRecords = function () {
+    /**
+     * Reload the user table from the server.
+     * @param {boolean} [suppressSuccessNotify=false] - When true, no success toast (avoids double popups after delete/edit/suspend when the caller already notified).
+     */
+    $scope.populateCurrentRecords = function (suppressSuccessNotify) {
         $scope.cyberpanelLoading = false;
 
         url = "/users/fetchTableUsers";
@@ -2003,11 +2007,13 @@ app.controller('listTableUsers', function ($scope, $http) {
 
                 $scope.records = JSON.parse(response.data.data);
 
-                safePNotify({
-                    title: 'Success!',
-                    text: 'Users successfully fetched!',
-                    type: 'success'
-                });
+                if (!suppressSuccessNotify) {
+                    safePNotify({
+                        title: 'Success!',
+                        text: 'Users successfully fetched!',
+                        type: 'success'
+                    });
+                }
 
             } else {
                 safePNotify({
@@ -2029,7 +2035,8 @@ app.controller('listTableUsers', function ($scope, $http) {
         }
 
     };
-    $scope.populateCurrentRecords();
+    /* Initial load: silent (no "fetched" toast on every page open) */
+    $scope.populateCurrentRecords(true);
 
 
     $scope.deleteUserInitial = function (name){
@@ -2059,7 +2066,7 @@ app.controller('listTableUsers', function ($scope, $http) {
         function ListInitialDatas(response) {
             $scope.cyberpanelLoading = true;
             if (response.data.deleteStatus === 1) {
-                $scope.populateCurrentRecords();
+                $scope.populateCurrentRecords(true);
                 hideModalById('deleteModal');
                 safePNotify({
                     title: 'Success!',
@@ -2123,7 +2130,7 @@ app.controller('listTableUsers', function ($scope, $http) {
         function ListInitialDatas(response) {
 
             if (response.data.status === 1) {
-                $scope.populateCurrentRecords();
+                $scope.populateCurrentRecords(true);
                 hideModalById('editModal');
                 safePNotify({
                     title: 'Success!',
@@ -2177,7 +2184,7 @@ app.controller('listTableUsers', function ($scope, $http) {
             $scope.cyberpanelLoading = true;
 
             if (response.data.status === 1) {
-                $scope.populateCurrentRecords();
+                $scope.populateCurrentRecords(true);
                 hideModalById('editModal');
                 safePNotify({
                     title: 'Success!',
@@ -2231,7 +2238,7 @@ app.controller('listTableUsers', function ($scope, $http) {
         function ListInitialDatas(response) {
             $scope.cyberpanelLoading = true;
             if (response.data.status === 1) {
-                $scope.populateCurrentRecords();
+                $scope.populateCurrentRecords(true);
                 safePNotify({
                     title: 'Success!',
                     text: 'Action successfully started.',
