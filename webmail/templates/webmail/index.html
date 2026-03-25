@@ -2,6 +2,11 @@
 {% load i18n %}
 {% load static %}
 {% block title %}{% trans "Webmail - CyberPanel" %}{% endblock %}
+{% block header_scripts %}
+{{ block.super }}
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+{% endblock %}
 {% block content %}
 
 <link rel="stylesheet" href="{% static 'webmail/webmail.css' %}">
@@ -497,9 +502,10 @@
             <!-- Settings View -->
             <div ng-if="viewMode === 'settings'" class="wm-settings-view">
                 <div class="wm-section-header">
-                    <h3>{% trans "Settings" %}</h3>
+                    <h3>{% trans "Settings" %} <span style="font-size:11px;font-weight:600;color:var(--text-secondary);">(UI build 2026-03-26 · Spam-only map · Sent row)</span></h3>
                 </div>
-                <div class="wm-settings-form">
+                <div class="wm-settings-form" data-webmail-folder-mapping-ui="v5-spam-only">
+                    <!-- webmail-settings-ui:v5 no Junk-E-mail mapping row; only Spam maps junk/spam -->
                     <div class="wm-field">
                         <label>{% trans "Display Name" %}</label>
                         <input type="text" ng-model="wmSettings.displayName" class="form-control">
@@ -555,23 +561,8 @@
                             </select>
                         </div>
                         <div class="wm-field">
-                            <label>{% trans "Spam" %}</label>
-                            <select ng-model="wmSettings.folderSettings.folderMappings.spam" class="form-control">
-                                <option ng-repeat="f in folders" value="{$ f.name $}">{$ f.display_name || f.name $}</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="wm-field-row">
-                        <div class="wm-field">
-                            <label>{% trans "Deleted Items" %}</label>
-                            <select ng-model="wmSettings.folderSettings.folderMappings.deleted_items" class="form-control">
-                                <option ng-repeat="f in folders" value="{$ f.name $}">{$ f.display_name || f.name $}</option>
-                            </select>
-                        </div>
-                        <div class="wm-field">
-                            <label>{% trans "Junk E-mail" %}</label>
-                            <select ng-model="wmSettings.folderSettings.folderMappings.junk_e_mail" class="form-control">
+                            <label>{% trans "Sent" %}</label>
+                            <select ng-model="wmSettings.folderSettings.folderMappings.sent" class="form-control">
                                 <option ng-repeat="f in folders" value="{$ f.name $}">{$ f.display_name || f.name $}</option>
                             </select>
                         </div>
@@ -585,10 +576,40 @@
                             </select>
                         </div>
                         <div class="wm-field">
+                            <label>{% trans "Spam" %}</label>
+                            <select ng-model="wmSettings.folderSettings.folderMappings.spam" class="form-control">
+                                <option ng-repeat="f in folders" value="{$ f.name $}">{$ f.display_name || f.name $}</option>
+                            </select>
+                            <div style="font-size:11px; color:var(--text-secondary); margin-top:6px; line-height:1.35;">
+                                {% trans "Maps your spam/junk mailbox to Spam in the sidebar. Folder names in the list come from the mail server." %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="wm-field-row">
+                        <div class="wm-field">
+                            <label>{% trans "Deleted Items" %}</label>
+                            <select ng-model="wmSettings.folderSettings.folderMappings.deleted_items" class="form-control">
+                                <option ng-repeat="f in folders" value="{$ f.name $}">{$ f.display_name || f.name $}</option>
+                            </select>
+                        </div>
+                        <div class="wm-field">
                             <label>{% trans "Trash" %}</label>
                             <select ng-model="wmSettings.folderSettings.folderMappings.trash" class="form-control">
                                 <option ng-repeat="f in folders" value="{$ f.name $}">{$ f.display_name || f.name $}</option>
                             </select>
+                        </div>
+                    </div>
+
+                    <div class="wm-field-row">
+                        <div class="wm-field">
+                            <label>{% trans "Archive" %}</label>
+                            <select ng-model="wmSettings.folderSettings.folderMappings.archive" class="form-control">
+                                <option ng-repeat="f in folders" value="{$ f.name $}">{$ f.display_name || f.name $}</option>
+                            </select>
+                        </div>
+                        <div class="wm-field" style="font-size:12px; color:var(--text-secondary); padding-top:28px; line-height:1.35;">
+                            {% trans "There is only one junk/spam mapping above (Spam). Trash/Deleted Items can differ between clients." %}
                         </div>
                     </div>
 
@@ -616,6 +637,6 @@
     </div>
 </div>
 
-<script src="{% static 'webmail/webmail.js' %}?v=16"></script>
+<script src="{% static 'webmail/webmail.js' %}?v=26"></script>
 
 {% endblock %}

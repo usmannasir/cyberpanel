@@ -291,6 +291,18 @@ class WebmailManager:
         protected.update(set(IMAPClient.SPECIAL_FOLDERS.values()))
         if name in protected:
             return self._error('Cannot delete system folder.')
+        nl = (name or '').lower()
+        if any((p or '').lower() == nl for p in protected):
+            return self._error('Cannot delete system folder.')
+        # Match UI/backend folder_type (Spam, Trash, Junk E-mail variants, etc.)
+        try:
+            _imap_ty = IMAPClient.__new__(IMAPClient)
+            if _imap_ty._folder_type(name) in (
+                'inbox', 'sent', 'drafts', 'trash', 'junk', 'archive',
+            ):
+                return self._error('Cannot delete system folder.')
+        except Exception:
+            pass
         try:
             with self._get_imap() as imap:
                 if imap.delete_folder(name):

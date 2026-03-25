@@ -9,7 +9,11 @@ from .webmailManager import WebmailManager
 def loadWebmail(request):
     try:
         wm = WebmailManager(request)
-        return wm.loadWebmail()
+        response = wm.loadWebmail()
+        # Always fetch fresh HTML (avoid stale shell w/ old folder-mapping UI).
+        response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response['Pragma'] = 'no-cache'
+        return response
     except KeyError:
         return redirect(loadLoginPage)
 
