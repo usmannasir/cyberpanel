@@ -2078,7 +2078,7 @@ def plugin_settings_proxy(request, plugin_name):
                 # Common ones are:
                 # - settings(request)
                 # - settings_view(request)  (used by multiple first-party plugins)
-                for candidate in ('settings', 'settings_view'):
+                for candidate in ('settings', 'settings_view', 'settings_simple', 'unified_settings'):
                     settings_view = getattr(views_mod, candidate, None)
                     if callable(settings_view):
                         return settings_view(request)
