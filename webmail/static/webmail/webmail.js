@@ -456,14 +456,16 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$document
             specialDisplayMode: 'top',
             folderMappings: {
                 inbox: 'INBOX',
+                sent: 'INBOX.Sent',
                 spam: 'INBOX.Junk E-mail',
                 deleted_items: 'INBOX.Deleted Items',
                 junk_e_mail: 'INBOX.Junk E-mail',
                 drafts: 'INBOX.Drafts',
-                trash: 'INBOX.Deleted Items'
+                trash: 'INBOX.Deleted Items',
+                archive: 'INBOX.Archive'
             },
             folderOrder: [],
-            specialOrder: ['inbox', 'spam', 'deleted_items', 'junk_e_mail', 'drafts', 'trash'],
+            specialOrder: ['inbox', 'sent', 'drafts', 'spam', 'trash', 'archive'],
             enableDragDrop: true
         }
     };
@@ -524,8 +526,10 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$document
             if (data.status === 1) {
                 $scope.currentEmail = data.email;
                 $scope.managedAccounts = data.accounts || [];
-                $scope.loadSettings();
-                $scope.loadFolders();
+                // Load folder role mappings before listing folders so "At top" uses saved specialOrder.
+                $scope.loadSettings(function() {
+                    $scope.loadFolders();
+                });
             } else {
                 notify(data.error_message || 'No email accounts found. Create an email account first or use the standalone login.', 'error');
             }
@@ -549,8 +553,9 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$document
 
         apiCall('/webmail/api/switchAccount', {email: newEmail}, function(data) {
             if (data.status === 1) {
-                $scope.loadSettings();
-                $scope.loadFolders();
+                $scope.loadSettings(function() {
+                    $scope.loadFolders();
+                });
             } else {
                 notify(data.error_message || 'Failed to switch account', 'error');
                 console.error('switchAccount failed:', data);
@@ -669,10 +674,99 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$document
         return enabled === undefined ? true : !!enabled;
     }
 
+    /**
+     * Default IMAP names when a semantic key has no mapping (SnappyMail-style order).
+     * Order follows typical clients: Inbox, Sent, Drafts, Junk/Spam, Trash, Archive.
+     */
+    var WM_SPECIAL_KEY_DEFAULT_FOLDERS = {
+        inbox: 'INBOX',
+        sent: 'INBOX.Sent',
+        drafts: 'INBOX.Drafts',
+        spam: 'INBOX.Junk E-mail',
+        deleted_items: 'INBOX.Deleted Items',
+        junk_e_mail: 'INBOX.Junk E-mail',
+        trash: 'INBOX.Deleted Items',
+        archive: 'INBOX.Archive'
+    };
+
+    /**
+     * Per-settings-key candidate IMAP names (first existing wins). Handles Spam vs Junk E-mail,
+     * Trash vs Deleted Items, and non–CyberPanel defaults.
+     */
+    var WM_SPECIAL_ROLE_CANDIDATES = {
+        inbox: ['INBOX'],
+        sent: ['INBOX.Sent', 'Sent', 'INBOX.Sent Items', 'Sent Items'],
+        drafts: ['INBOX.Drafts', 'Drafts'],
+        spam: [
+            'INBOX.Junk E-mail', 'Junk E-mail', 'INBOX.junk', 'INBOX.spam', 'INBOX.Spam',
+            'Spam', 'Junk', 'junk', 'INBOX.Junk', 'Junk Mail'
+        ],
+        deleted_items: ['INBOX.Deleted Items', 'Deleted Items', 'INBOX.Trash', 'Trash', 'Bin', 'Deleted'],
+        junk_e_mail: [
+            'INBOX.Junk E-mail', 'Junk E-mail', 'INBOX.junk', 'INBOX.spam', 'INBOX.Spam',
+            'Spam', 'Junk', 'junk', 'INBOX.Junk', 'Junk Mail'
+        ],
+        trash: ['INBOX.Deleted Items', 'Deleted Items', 'INBOX.Trash', 'Trash', 'Bin', 'Deleted'],
+        archive: ['INBOX.Archive', 'Archive', 'Archive-Mail']
+    };
+
+    /** Resolve IMAP folder key regardless of INBOX.Spam vs INBOX.spam vs stored mapping case. */
+    function _folderNameMatch(folderByName, want) {
+        if (!want || !folderByName) return null;
+        if (folderByName[want]) return want;
+        var wl = String(want).toLowerCase();
+        for (var k in folderByName) {
+            if (!Object.prototype.hasOwnProperty.call(folderByName, k)) continue;
+            if (String(k).toLowerCase() === wl) return k;
+        }
+        return null;
+    }
+
+    function _pickFolderForRole(key, mappings, folderByName) {
+        var mapped = mappings[key];
+        if (mapped) {
+            var mhit = _folderNameMatch(folderByName, mapped);
+            if (mhit) return mhit;
+        }
+        var cands = WM_SPECIAL_ROLE_CANDIDATES[key];
+        if (cands) {
+            for (var ci = 0; ci < cands.length; ci++) {
+                var chit = _folderNameMatch(folderByName, cands[ci]);
+                if (chit) return chit;
+            }
+        }
+        var fb = WM_SPECIAL_KEY_DEFAULT_FOLDERS[key];
+        if (fb) {
+            var fhit = _folderNameMatch(folderByName, fb);
+            if (fhit) return fhit;
+        }
+        return null;
+    }
+
+    function _folderTypeOf(name, folderByName) {
+        var f = folderByName[name];
+        return (f && f.folder_type) ? f.folder_type : 'folder';
+    }
+
+    function _specialCoversType(specialSet, folderByName, ftype) {
+        if (!ftype || ftype === 'folder') {
+            return false;
+        }
+        for (var sn in specialSet) {
+            if (!Object.prototype.hasOwnProperty.call(specialSet, sn)) {
+                continue;
+            }
+            if (_folderTypeOf(sn, folderByName) === ftype) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     function _getSpecialOrderKeys() {
         var keys = (($scope.wmSettings || {}).folderSettings || {}).specialOrder;
         if (!keys || !Array.isArray(keys) || keys.length === 0) {
-            return ['inbox', 'spam', 'deleted_items', 'junk_e_mail', 'drafts', 'trash'];
+            return ['inbox', 'sent', 'drafts', 'spam', 'trash', 'archive'];
         }
         return keys;
     }
@@ -796,30 +890,39 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$document
         return result;
     }
 
+    /**
+     * Build the "special" sidebar block in strict specialOrder key order.
+     * Do not re-sort by IMAP listing order (that pushed Trash/Junk out of the SnappyMail-style top block).
+     */
     function _getSpecialFolderNames(folderByName, normalizedOrder) {
         var mappings = _getFolderMappings();
         var specialKeys = _getSpecialOrderKeys();
         var specialNamesInKeyOrder = [];
         var seen = {};
+        var junkSlotFilled = false;
+        var trashSlotFilled = false;
         for (var i = 0; i < specialKeys.length; i++) {
             var key = specialKeys[i];
-            var mapped = mappings[key];
-            if (mapped && folderByName[mapped] && !seen[mapped]) {
-                seen[mapped] = true;
-                specialNamesInKeyOrder.push(mapped);
+            if ((key === 'junk_e_mail' || key === 'spam') && junkSlotFilled) {
+                continue;
+            }
+            if ((key === 'trash' || key === 'deleted_items') && trashSlotFilled) {
+                continue;
+            }
+            var picked = _pickFolderForRole(key, mappings, folderByName);
+            if (!picked || seen[picked]) {
+                continue;
+            }
+            seen[picked] = true;
+            specialNamesInKeyOrder.push(picked);
+            var ftPick = _folderTypeOf(picked, folderByName);
+            if (key === 'junk_e_mail' || key === 'spam' || ftPick === 'junk') {
+                junkSlotFilled = true;
+            }
+            if (key === 'trash' || key === 'deleted_items' || ftPick === 'trash') {
+                trashSlotFilled = true;
             }
         }
-
-        // If we have a stored order, keep special ordering consistent with it.
-        var indexMap = {};
-        for (var j = 0; j < normalizedOrder.length; j++) {
-            indexMap[normalizedOrder[j]] = j;
-        }
-        specialNamesInKeyOrder.sort(function(a, b) {
-            var ia = (indexMap[a] !== undefined) ? indexMap[a] : 999999;
-            var ib = (indexMap[b] !== undefined) ? indexMap[b] : 999999;
-            return ia - ib;
-        });
         return specialNamesInKeyOrder;
     }
 
@@ -855,7 +958,17 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$document
     $scope.getFolderRowLabel = function(folder, depth) {
         if (!folder) return '';
         var dn = folder.display_name || folder.name || '';
-        if (depth <= 0) return dn;
+        if (depth <= 0) {
+            var maps = _getFolderMappings();
+            var nm = folder.name || '';
+            if (maps.inbox && nm === maps.inbox) return 'Inbox';
+            if (maps.sent && nm === maps.sent) return 'Sent';
+            if (maps.drafts && nm === maps.drafts) return 'Drafts';
+            if ((maps.spam && nm === maps.spam) || (maps.junk_e_mail && nm === maps.junk_e_mail)) return 'Spam';
+            if ((maps.trash && nm === maps.trash) || (maps.deleted_items && nm === maps.deleted_items)) return 'Trash';
+            if (maps.archive && nm === maps.archive) return 'Archive';
+            return dn;
+        }
         var sep = _folderDelimiterFromList();
         var idx = dn.lastIndexOf(sep);
         if (idx >= 0) return dn.slice(idx + sep.length);
@@ -883,7 +996,14 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$document
             displayNames = specialNames.slice();
             for (var j = 0; j < normalizedOrder.length; j++) {
                 var n = normalizedOrder[j];
-                if (!specialSet[n]) displayNames.push(n);
+                if (specialSet[n]) {
+                    continue;
+                }
+                var ft = _folderTypeOf(n, folderByName);
+                if (_specialCoversType(specialSet, folderByName, ft)) {
+                    continue;
+                }
+                displayNames.push(n);
             }
         } else {
             // Fully interleaved order.
@@ -933,9 +1053,9 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$document
     });
 
     function _updateFolderOrderAfterDrag(draggedName, targetName) {
-        if (!draggedName || !targetName || draggedName === targetName) return;
+        if (!draggedName || !targetName || draggedName === targetName) return false;
         var folderByName = _getFolderByName();
-        if (!folderByName[draggedName] || !folderByName[targetName]) return;
+        if (!folderByName[draggedName] || !folderByName[targetName]) return false;
 
         var normalizedOrder = _normalizeFolderOrder(folderByName);
         var mode = _getSpecialDisplayMode();
@@ -950,7 +1070,7 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$document
             newOrder = normalizedOrder.slice();
             var fromIdx = newOrder.indexOf(draggedName);
             var toIdx = newOrder.indexOf(targetName);
-            if (fromIdx < 0 || toIdx < 0) return;
+            if (fromIdx < 0 || toIdx < 0) return false;
             newOrder.splice(fromIdx, 1);
             // If removing dragged element shifts indices, recompute target index.
             toIdx = newOrder.indexOf(targetName);
@@ -959,7 +1079,7 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$document
             // top mode: reorder within the same group (special vs other)
             var draggedIsSpecial = !!specialSet[draggedName];
             var targetIsSpecial = !!specialSet[targetName];
-            if (draggedIsSpecial !== targetIsSpecial) return;
+            if (draggedIsSpecial !== targetIsSpecial) return false;
 
             var specialOrdered = [];
             var otherOrdered = [];
@@ -973,7 +1093,7 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$document
                 var group = specialOrdered.slice();
                 var fromIdx2 = group.indexOf(draggedName);
                 var toIdx2 = group.indexOf(targetName);
-                if (fromIdx2 < 0 || toIdx2 < 0) return;
+                if (fromIdx2 < 0 || toIdx2 < 0) return false;
                 group.splice(fromIdx2, 1);
                 toIdx2 = group.indexOf(targetName);
                 group.splice(toIdx2, 0, draggedName);
@@ -982,7 +1102,7 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$document
                 var group2 = otherOrdered.slice();
                 var fromIdx3 = group2.indexOf(draggedName);
                 var toIdx3 = group2.indexOf(targetName);
-                if (fromIdx3 < 0 || toIdx3 < 0) return;
+                if (fromIdx3 < 0 || toIdx3 < 0) return false;
                 group2.splice(fromIdx3, 1);
                 toIdx3 = group2.indexOf(targetName);
                 group2.splice(toIdx3, 0, draggedName);
@@ -990,13 +1110,27 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$document
             }
         }
 
-        if (!$scope.wmSettings.folderSettings) $scope.wmSettings.folderSettings = {};
+        if (!$scope.wmSettings) {
+            $scope.wmSettings = {};
+        }
+        if (!$scope.wmSettings.folderSettings) {
+            $scope.wmSettings.folderSettings = {
+                folderMappings: {},
+                folderOrder: [],
+                specialDisplayMode: 'top',
+                enableDragDrop: true
+            };
+        }
         $scope.wmSettings.folderSettings.folderOrder = newOrder;
         $scope.folderLayoutDirty = true;
         $scope.applyFolderLayout();
+        $timeout(function() {
+            $scope.persistFolderLayoutSettings(true);
+        }, 0);
+        return true;
     }
 
-    /** Persist folder layout only (silent on success). */
+    /** Persist folder layout only (silent on success unless silent is false). Errors are always reported. */
     $scope.persistFolderLayoutSettings = function(silent) {
         if (!$scope.wmSettings || !$scope.wmSettings.folderSettings) return;
         apiCall('/webmail/api/saveSettings', {
@@ -1007,13 +1141,11 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$document
                 if (!silent) {
                     notify('Folder layout saved.');
                 }
-            } else if (!silent) {
+            } else {
                 notify(data.error_message || 'Could not save folder layout.', 'error');
             }
         }, function() {
-            if (!silent) {
-                notify('Could not save folder layout.', 'error');
-            }
+            notify('Could not save folder layout.', 'error');
         });
     };
 
@@ -1055,7 +1187,6 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$document
         evt.preventDefault();
         if (!$scope.draggingFolder) return;
         _updateFolderOrderAfterDrag($scope.draggingFolder, targetFolderName);
-        $scope.persistFolderLayoutSettings(true);
         $scope.draggingFolder = null;
         $scope.dragOverFolder = null;
     };
@@ -1083,7 +1214,7 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$document
         var list = $scope.folders || [];
         for (var i = 0; i < list.length; i++) {
             if (list[i] && list[i].name === folderName) {
-                return list[i].display_name || list[i].name || folderName;
+                return $scope.getFolderRowLabel(list[i], 0);
             }
         }
         return folderName;
@@ -1094,7 +1225,7 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$document
         var mappings = (($scope.wmSettings || {}).folderSettings || {}).folderMappings || {};
         var name = folder.name || '';
         if (mappings.inbox && name === mappings.inbox) return 'fa-inbox';
-        if ((mappings.spam && name === mappings.spam) || (mappings.junk_e_mail && name === mappings.junk_e_mail)) return 'fa-ban';
+        if ((mappings.spam && name === mappings.spam) || (mappings.junk_e_mail && name === mappings.junk_e_mail)) return 'fa-exclamation-triangle';
         if (mappings.drafts && name === mappings.drafts) return 'fa-file';
         if ((mappings.trash && name === mappings.trash) || (mappings.deleted_items && name === mappings.deleted_items)) return 'fa-trash';
 
@@ -1104,7 +1235,7 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$document
         if (ftype === 'sent') return 'fa-paper-plane';
         if (ftype === 'drafts') return 'fa-file';
         if (ftype === 'trash') return 'fa-trash';
-        if (ftype === 'junk') return 'fa-ban';
+        if (ftype === 'junk') return 'fa-exclamation-triangle';
         if (ftype === 'archive') return 'fa-box-archive';
         // Fallback to name-based detection
         var n = (folder.display_name || folder.name || '').toLowerCase();
@@ -1112,14 +1243,33 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$document
         if (n.indexOf('sent') >= 0) return 'fa-paper-plane';
         if (n.indexOf('draft') >= 0) return 'fa-file';
         if (n.indexOf('deleted') >= 0 || n.indexOf('trash') >= 0) return 'fa-trash';
-        if (n.indexOf('junk') >= 0 || n.indexOf('spam') >= 0) return 'fa-ban';
+        if (n.indexOf('junk') >= 0 || n.indexOf('spam') >= 0) return 'fa-exclamation-triangle';
         if (n.indexOf('archive') >= 0) return 'fa-box-archive';
         return 'fa-folder';
     };
 
     $scope.canDeleteFolder = function(folder) {
         if (!folder || !folder.name) return false;
-        return !WM_FOLDER_PROTECTED[folder.name];
+        var ftype = folder.folder_type || '';
+        if (['inbox', 'sent', 'drafts', 'trash', 'junk', 'archive'].indexOf(ftype) >= 0) {
+            return false;
+        }
+        var maps = _getFolderMappings();
+        var n = folder.name;
+        var nl = n.toLowerCase();
+        var roleKeys = ['inbox', 'sent', 'drafts', 'spam', 'junk_e_mail', 'trash', 'deleted_items', 'archive'];
+        for (var ri = 0; ri < roleKeys.length; ri++) {
+            var mv = maps[roleKeys[ri]];
+            if (mv && String(mv).toLowerCase() === nl) {
+                return false;
+            }
+        }
+        for (var pk in WM_FOLDER_PROTECTED) {
+            if (WM_FOLDER_PROTECTED[pk] && String(pk).toLowerCase() === nl) {
+                return false;
+            }
+        }
+        return true;
     };
 
     $scope.openDeleteFolderConfirm = function(folder) {
@@ -1910,12 +2060,16 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$document
     };
 
     // ── Settings ─────────────────────────────────────────────
-    $scope.loadSettings = function() {
+    $scope.loadSettings = function(done) {
         apiCall('/webmail/api/getSettings', {}, function(data) {
             if (data.status === 1) {
                 $scope.wmSettings = data.settings;
                 if (!$scope.wmSettings.folderSettings) {
                     $scope.wmSettings.folderSettings = {folderMappings: {}, folderOrder: [], specialDisplayMode: 'top', enableDragDrop: true};
+                }
+                var fm = $scope.wmSettings.folderSettings.folderMappings;
+                if (fm && fm.spam) {
+                    fm.junk_e_mail = fm.spam;
                 }
                 if ($scope.wmSettings.messagesPerPage) {
                     $scope.perPage = parseInt($scope.wmSettings.messagesPerPage);
@@ -1924,15 +2078,26 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$document
                     $scope.applyFolderLayout();
                 }
             }
+            if (typeof done === 'function') {
+                $timeout(function() { done(); }, 0);
+            }
         });
     };
 
     $scope.saveSettings = function() {
+        var fm = ($scope.wmSettings || {}).folderSettings;
+        fm = fm && fm.folderMappings;
+        if (fm && fm.spam) {
+            fm.junk_e_mail = fm.spam;
+        }
         apiCall('/webmail/api/saveSettings', $scope.wmSettings, function(data) {
             if (data.status === 1) {
                 notify('Settings saved.');
                 if ($scope.wmSettings.messagesPerPage) {
                     $scope.perPage = parseInt($scope.wmSettings.messagesPerPage);
+                }
+                if ($scope.folders && $scope.folders.length > 0 && typeof $scope.applyFolderLayout === 'function') {
+                    $scope.applyFolderLayout();
                 }
             } else {
                 notify(data.error_message, 'error');

@@ -96,12 +96,39 @@ class IMAPClient:
         return folder_name
 
     def _folder_type(self, folder_name):
-        """Identify special folder type for UI icon mapping."""
+        """Identify special folder type for UI (icons, sidebar grouping).
+
+        CyberPanel/Dovecot uses INBOX.* names; accounts may also use Spam, Trash, etc.
+        """
+        fn = (folder_name or '').strip()
+        if not fn:
+            return 'folder'
         for ftype, fname in self.SPECIAL_FOLDERS.items():
-            if folder_name == fname:
+            if fn == fname:
                 return ftype
-        if folder_name == 'INBOX':
+        if fn == 'INBOX':
             return 'inbox'
+
+        tail = fn[len(self.NS_PREFIX):] if fn.startswith(self.NS_PREFIX) else fn
+        tl = tail.strip().lower()
+
+        if tl in ('sent',):
+            return 'sent'
+        if tl in ('drafts',):
+            return 'drafts'
+        if tl in ('archive',):
+            return 'archive'
+        junk_tails = (
+            'junk e-mail', 'junk email', 'junk-mail', 'junk mail', 'junk',
+            'spam', 'bulk mail', 'bulk',
+        )
+        if tl in junk_tails or tl.endswith('.spam'):
+            return 'junk'
+        trash_tails = (
+            'deleted items', 'trash', 'bin', 'deleted messages',
+        )
+        if tl in trash_tails:
+            return 'trash'
         return 'folder'
 
     def list_folders(self):
