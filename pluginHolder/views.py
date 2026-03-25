@@ -12,6 +12,7 @@ import json
 from datetime import datetime, timedelta
 from xml.etree import ElementTree
 from plogical.httpProc import httpProc
+from plogical.plugin_acl import user_can_manage_plugins, deny_plugin_manage_json_response
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import sys
 import urllib.request
@@ -206,7 +207,7 @@ def _set_plugin_state(plugin_name, enabled):
 def help_page(request):
     """Display plugin development help page"""
     mailUtilities.checkHome()
-    proc = httpProc(request, 'pluginHolder/help.html', {}, 'admin')
+    proc = httpProc(request, 'pluginHolder/help.html', {}, 'managePlugins')
     return proc.render()
 
 def installed(request):
@@ -611,7 +612,7 @@ def installed(request):
     proc = httpProc(request, 'pluginHolder/plugins.html',
                     {'plugins': pluginList, 'error_plugins': errorPlugins, 
                      'installed_count': installed_count, 'active_count': active_count,
-                     'cache_expiry_timestamp': cache_expiry_timestamp}, 'admin')
+                     'cache_expiry_timestamp': cache_expiry_timestamp}, 'managePlugins')
     return proc.render()
 
 @csrf_exempt
@@ -619,6 +620,8 @@ def installed(request):
 def install_plugin(request, plugin_name):
     """Install a plugin"""
     try:
+        if not user_can_manage_plugins(request):
+            return deny_plugin_manage_json_response(request)
         # Check if plugin source exists (in any configured source path)
         pluginSource = _get_plugin_source_path(plugin_name)
         if not pluginSource:
@@ -724,6 +727,8 @@ def install_plugin(request, plugin_name):
 def uninstall_plugin(request, plugin_name):
     """Uninstall a plugin - but keep source files and settings"""
     try:
+        if not user_can_manage_plugins(request):
+            return deny_plugin_manage_json_response(request)
         # Check if plugin is installed
         pluginInstalled = '/usr/local/CyberCP/' + plugin_name
         if not os.path.exists(pluginInstalled):
@@ -778,6 +783,8 @@ def uninstall_plugin(request, plugin_name):
 def enable_plugin(request, plugin_name):
     """Enable a plugin"""
     try:
+        if not user_can_manage_plugins(request):
+            return deny_plugin_manage_json_response(request)
         # Check if plugin is installed
         pluginInstalled = '/usr/local/CyberCP/' + plugin_name
         if not os.path.exists(pluginInstalled):
@@ -810,6 +817,8 @@ def enable_plugin(request, plugin_name):
 def disable_plugin(request, plugin_name):
     """Disable a plugin"""
     try:
+        if not user_can_manage_plugins(request):
+            return deny_plugin_manage_json_response(request)
         # Check if plugin is installed
         pluginInstalled = '/usr/local/CyberCP/' + plugin_name
         if not os.path.exists(pluginInstalled):
@@ -1394,6 +1403,8 @@ def _fetch_plugins_from_github():
 def fetch_plugin_store(request):
     """Fetch plugins from the plugin store with caching"""
     try:
+        if not user_can_manage_plugins(request):
+            return deny_plugin_manage_json_response(request)
         mailUtilities.checkHome()
     except Exception as e:
         logging.writeToFile(f"fetch_plugin_store: checkHome failed: {str(e)}")
@@ -1461,6 +1472,8 @@ def upgrade_plugin(request, plugin_name):
     mailUtilities.checkHome()
     
     try:
+        if not user_can_manage_plugins(request):
+            return deny_plugin_manage_json_response(request)
         # Check if plugin is installed
         pluginInstalled = '/usr/local/CyberCP/' + plugin_name
         if not os.path.exists(pluginInstalled):
@@ -1623,6 +1636,8 @@ def get_plugin_backups(request, plugin_name):
     mailUtilities.checkHome()
     
     try:
+        if not user_can_manage_plugins(request):
+            return deny_plugin_manage_json_response(request)
         backups = _get_plugin_backups(plugin_name)
         return JsonResponse({
             'success': True,
@@ -1643,6 +1658,8 @@ def revert_plugin(request, plugin_name):
     mailUtilities.checkHome()
     
     try:
+        if not user_can_manage_plugins(request):
+            return deny_plugin_manage_json_response(request)
         # Get backup path from request
         data = json.loads(request.body)
         backup_path = data.get('backup_path')
@@ -1707,6 +1724,8 @@ def install_from_store(request, plugin_name):
     mailUtilities.checkHome()
     
     try:
+        if not user_can_manage_plugins(request):
+            return deny_plugin_manage_json_response(request)
         # Check if already installed
         pluginInstalled = '/usr/local/CyberCP/' + plugin_name
         if os.path.exists(pluginInstalled):
@@ -1888,6 +1907,8 @@ def install_from_store(request, plugin_name):
 def debug_loaded_plugins(request):
     """Return which plugins have URL routes loaded and which failed (for diagnosing 404s)."""
     try:
+        if not user_can_manage_plugins(request):
+            return deny_plugin_manage_json_response(request)
         import pluginHolder.urls as urls_mod
         loaded = list(getattr(urls_mod, '_loaded_plugins', []))
         failed = dict(getattr(urls_mod, '_failed_plugins', {}))
@@ -1909,6 +1930,9 @@ def plugin_settings_proxy(request, plugin_name):
     the plugin was installed after the worker started (dynamic URL list is built at import time).
     """
     mailUtilities.checkHome()
+    if not user_can_manage_plugins(request):
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden('You are not authorized to manage plugins.')
     plugin_path = '/usr/local/CyberCP/' + plugin_name
     urls_py = os.path.join(plugin_path, 'urls.py')
     if not plugin_name or not os.path.isdir(plugin_path) or not os.path.exists(urls_py):
@@ -1945,7 +1969,7 @@ def plugin_help(request, plugin_name):
     if not os.path.exists(plugin_path) or not os.path.exists(meta_xml_path):
         proc = httpProc(request, 'pluginHolder/plugin_not_found.html', {
             'plugin_name': plugin_name
-        }, 'admin')
+        }, 'managePlugins')
         return proc.render()
     
     # Parse meta.xml
@@ -1967,7 +1991,7 @@ def plugin_help(request, plugin_name):
         logging.writeToFile(f"Error parsing meta.xml for {plugin_name}: {str(e)}")
         proc = httpProc(request, 'pluginHolder/plugin_not_found.html', {
             'plugin_name': plugin_name
-        }, 'admin')
+        }, 'managePlugins')
         return proc.render()
     
     # Look for help content files (README.md, CHANGELOG.md, HELP.md, etc.)
@@ -2118,7 +2142,7 @@ def plugin_help(request, plugin_name):
         'help_content': help_content,
     }
     
-    proc = httpProc(request, 'pluginHolder/plugin_help.html', context, 'admin')
+    proc = httpProc(request, 'pluginHolder/plugin_help.html', context, 'managePlugins')
     return proc.render()
 
 @csrf_exempt
@@ -2140,6 +2164,8 @@ def check_plugin_subscription(request, plugin_name):
         }
     """
     try:
+        if not user_can_manage_plugins(request):
+            return deny_plugin_manage_json_response(request)
         # Check if user is authenticated
         if not request.user or not request.user.is_authenticated:
             return JsonResponse({
