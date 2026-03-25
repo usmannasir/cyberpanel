@@ -125,6 +125,30 @@ def _get_plugin_source_path(plugin_name):
             return path
     return None
 
+def _get_local_plugin_meta_modify_date(plugin_name):
+    """
+    Compute plugin modify date from local meta.xml file timestamps.
+    This avoids per-plugin GitHub commits API calls while still providing
+    a useful "Modify date" column in the plugin store UI.
+    """
+    candidate_paths = []
+
+    installed_meta = os.path.join('/usr/local/CyberCP', plugin_name, 'meta.xml')
+    candidate_paths.append(installed_meta)
+
+    for base in PLUGIN_SOURCE_PATHS:
+        candidate_paths.append(os.path.join(base, plugin_name, 'meta.xml'))
+
+    for meta_path in candidate_paths:
+        try:
+            if os.path.exists(meta_path) and os.path.isfile(meta_path):
+                modify_time = os.path.getmtime(meta_path)
+                return datetime.fromtimestamp(modify_time).strftime('%Y-%m-%d %H:%M:%S')
+        except Exception:
+            continue
+
+    return 'N/A'
+
 def _ensure_plugin_meta_xml(plugin_name):
     """
     If plugin is installed (directory exists) but meta.xml is missing,
@@ -1373,10 +1397,11 @@ def _fetch_plugins_from_github():
                 # Parse meta.xml
                 root = ElementTree.fromstring(meta_xml_content)
                 
-                # Performance: do not call GitHub commits API per plugin.
-                # We keep modify_date/freshness badge as safe defaults so the UI still renders.
-                modify_date = 'N/A'
-                freshness = None
+                # Performance: avoid per-plugin GitHub commits API calls.
+                # Instead, compute modify_date from local meta.xml timestamps
+                # (installed meta.xml if present, otherwise plugin source meta.xml).
+                modify_date = _get_local_plugin_meta_modify_date(plugin_name)
+                freshness = _get_freshness_badge(modify_date)
                 
                 # Extract paid plugin information
                 paid_elem = root.find('paid')
