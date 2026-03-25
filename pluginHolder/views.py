@@ -2074,9 +2074,14 @@ def plugin_settings_proxy(request, plugin_name):
 
             try:
                 views_mod = importlib.import_module(plugin_name + '.views')
-                settings_view = getattr(views_mod, 'settings', None)
-                if callable(settings_view):
-                    return settings_view(request)
+                # Different plugins use different view function names.
+                # Common ones are:
+                # - settings(request)
+                # - settings_view(request)  (used by multiple first-party plugins)
+                for candidate in ('settings', 'settings_view'):
+                    settings_view = getattr(views_mod, candidate, None)
+                    if callable(settings_view):
+                        return settings_view(request)
             except ModuleNotFoundError as e:
                 last_err = str(e)
                 continue
