@@ -3,7 +3,7 @@
 
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
-from django.db import models
+from django.db import models, IntegrityError
 from django.views.decorators.csrf import ensure_csrf_cookie
 from loginSystem.views import loadLoginPage
 from loginSystem.models import Administrator, ACL
@@ -257,7 +257,13 @@ def submitUserCreation(request):
             except:
                 securityLevel = 'HIGH'
 
-            selectedACL = ACL.objects.get(name=selectedACL)
+            try:
+                selectedACL = ACL.objects.get(name=selectedACL)
+            except ACL.DoesNotExist:
+                data_ret = {'status': 0, 'createStatus': 0,
+                            'error_message': 'The selected access level (ACL) was not found. Refresh the page and try again.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data, content_type='application/json')
 
             if selectedACL.adminStatus == 1:
                 type = 1
@@ -343,34 +349,43 @@ def submitUserCreation(request):
             # Handle home directory assignment
             from .homeDirectoryManager import HomeDirectoryManager
             from .models import HomeDirectory, UserHomeMapping
-            
-            if selectedHomeDirectory:
-                # Use selected home directory
+
+            # Always resolve home_dir after home_path. Previously, if selectedHomeDirectory was set but
+            # the row was missing (DoesNotExist), we set home_path but left home_dir undefined and
+            # UserHomeMapping.objects.create() raised UnboundLocalError → "Failed to create user account".
+            home_dir = None
+            if selectedHomeDirectory not in (None, '', 0, '0', 'false', 'null'):
                 try:
-                    home_dir = HomeDirectory.objects.get(id=selectedHomeDirectory)
-                    home_path = home_dir.path
-                except HomeDirectory.DoesNotExist:
+                    hid = int(str(selectedHomeDirectory).strip())
+                    if hid > 0:
+                        home_dir = HomeDirectory.objects.get(id=hid)
+                        home_path = home_dir.path
+                    else:
+                        home_path = HomeDirectoryManager.getBestHomeDirectory()
+                except (ValueError, TypeError, HomeDirectory.DoesNotExist):
                     home_path = HomeDirectoryManager.getBestHomeDirectory()
             else:
-                # Auto-select best home directory
                 home_path = HomeDirectoryManager.getBestHomeDirectory()
+
+            if home_dir is None:
                 try:
                     home_dir = HomeDirectory.objects.get(path=home_path)
                 except HomeDirectory.DoesNotExist:
-                    # Create home directory entry if it doesn't exist
                     home_dir = HomeDirectory.objects.create(
-                        name=home_path.split('/')[-1],
+                        name=(home_path.split('/')[-1] or 'home'),
                         path=home_path,
                         is_active=True,
                         is_default=(home_path == '/home')
                     )
-            
+                except HomeDirectory.MultipleObjectsReturned:
+                    home_dir = HomeDirectory.objects.filter(path=home_path).order_by('id').first()
+
             # Create user directory
             if HomeDirectoryManager.createUserDirectory(userName, home_path):
-                # Create user-home mapping
-                UserHomeMapping.objects.create(
+                # Create user-home mapping (ignore duplicate if re-run)
+                UserHomeMapping.objects.get_or_create(
                     user=newAdmin,
-                    home_directory=home_dir
+                    defaults={'home_directory': home_dir}
                 )
             else:
                 # Log error but don't fail user creation
@@ -382,11 +397,23 @@ def submitUserCreation(request):
             final_json = json.dumps(data_ret)
             return HttpResponse(final_json, content_type='application/json')
 
+        except IntegrityError as e:
+            secure_log_error(e, 'submitUserCreation', request.session.get('userID', 'Unknown'))
+            data_ret = {
+                'status': 0,
+                'createStatus': 0,
+                'error_message': 'That username is already in use. Choose a different username.',
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data, content_type='application/json')
+
         except Exception as e:
             secure_log_error(e, 'submitUserCreation', request.session.get('userID', 'Unknown'))
             data_ret = secure_error_response(e, 'Failed to create user account')
+            if isinstance(data_ret, dict):
+                data_ret['createStatus'] = 0
             json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
+            return HttpResponse(json_data, content_type='application/json')
 
     except KeyError:
         data_ret = {'status': 0, 'createStatus': 0, 'error_message': "Not logged in as admin", }
