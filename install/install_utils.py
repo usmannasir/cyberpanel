@@ -5,6 +5,7 @@ This module contains shared functions used by both install.py and installCyberPa
 """
 
 import os
+import glob
 import sys
 import time
 import logging
@@ -674,6 +675,61 @@ def generate_random_string(length=32, include_special=False):
     if include_special:
         alphabet += string.punctuation
     return ''.join(secrets.choice(alphabet) for _ in range(length))
+
+
+
+def strip_mariadb_maxscale_apt_repos():
+    """
+    MariaDB mariadb_repo_setup adds MaxScale apt repo; Ubuntu noble has no Release (GH usmannasir/cyberpanel#1740).
+    """
+    slist = '/etc/apt/sources.list.d'
+    try:
+        if not os.path.isdir(slist):
+            return
+        for pattern in (
+            'mariadb-maxscale*.list', 'mariadb-maxscale*.sources',
+            '*maxscale*.list', '*maxscale*.sources',
+        ):
+            for fp in glob.glob(os.path.join(slist, pattern)):
+                try:
+                    os.remove(fp)
+                except OSError:
+                    pass
+        for fp in glob.glob(os.path.join(slist, 'mariadb*.list')):
+            try:
+                with open(fp, 'r', encoding='utf-8', errors='replace') as handle:
+                    lines = handle.readlines()
+                new_lines = [
+                    ln for ln in lines
+                    if 'maxscale' not in ln.lower()
+                    and 'dlm.mariadb.com/repo/maxscale' not in ln
+                ]
+                if new_lines != lines:
+                    with open(fp, 'w', encoding='utf-8') as handle:
+                        handle.writelines(new_lines)
+            except OSError:
+                pass
+        for fp in glob.glob(os.path.join(slist, 'mariadb*.sources')):
+            try:
+                with open(fp, 'r', encoding='utf-8', errors='replace') as handle:
+                    content = handle.read()
+                if 'maxscale' not in content.lower() and 'dlm.mariadb.com/repo/maxscale' not in content:
+                    continue
+                blocks = content.split('\n\n')
+                kept = []
+                for block in blocks:
+                    bl = block.lower()
+                    if 'maxscale' in bl or 'dlm.mariadb.com/repo/maxscale' in block:
+                        continue
+                    kept.append(block)
+                new_content = '\n\n'.join(kept)
+                if new_content.strip() != content.strip():
+                    with open(fp, 'w', encoding='utf-8') as handle:
+                        handle.write(new_content)
+            except OSError:
+                pass
+    except Exception:
+        pass
 
 
 def writeToFile(message):

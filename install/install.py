@@ -236,6 +236,11 @@ class preFlightsChecks:
         os_info = self.detect_os_info()
         return os_info['name'] == 'almalinux' and os_info['major_version'] == 9
 
+    def is_almalinux10(self):
+        """Check if running on AlmaLinux 10 (GH usmannasir/cyberpanel#1736)"""
+        os_info = self.detect_os_info()
+        return os_info['name'] == 'almalinux' and os_info['major_version'] == 10
+
     def is_ubuntu(self):
         """Check if running on Ubuntu"""
         os_info = self.detect_os_info()
@@ -651,6 +656,34 @@ class preFlightsChecks:
         except Exception as e:
             self.stdOut(f"Error applying AlmaLinux 9 MariaDB fixes: {str(e)}", 0)
 
+    def fix_almalinux10_mariadb(self):
+        """EPEL/CRB + MariaDB official repo for AlmaLinux 10 (installer prereqs, GH #1736)."""
+        if not self.is_almalinux10():
+            return
+        try:
+            self.stdOut("Applying AlmaLinux 10 MariaDB / repo fixes...", 1)
+            for cmd, desc in (
+                ("dnf install -y epel-release", "EPEL"),
+                ("dnf config-manager --set-enabled crb 2>/dev/null || dnf config-manager --set-enabled powertools 2>/dev/null || true", "CRB/PowerTools"),
+                ("dnf install -y htop 2>/dev/null || true", "htop"),
+            ):
+                self.call(cmd, self.distro, desc, desc, 1, 0, os.EX_OSERR)
+            for cmd, desc in (
+                ("dnf config-manager --disable mariadb-maxscale 2>/dev/null || true", "disable maxscale"),
+                ("rm -f /etc/yum.repos.d/mariadb-maxscale.repo /etc/yum.repos.d/mariadb-maxscale.repo.rpmnew 2>/dev/null || true", "remove maxscale repo files"),
+            ):
+                self.call(cmd, self.distro, desc, desc, 1, 0, os.EX_OSERR)
+            self.stdOut("Setting up MariaDB official repository (11.8 LTS, EL10)...", 1)
+            cmd = "curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version='11.8'"
+            self.call(cmd, self.distro, cmd, cmd, 1, 0, os.EX_OSERR)
+            self.call("dnf config-manager --disable mariadb-maxscale 2>/dev/null || true", self.distro, "disable maxscale after setup", "disable maxscale after setup", 1, 0, os.EX_OSERR)
+            self.stdOut("Installing MariaDB packages from MariaDB.org repo...", 1)
+            pkgs = "MariaDB-server MariaDB-client MariaDB-backup MariaDB-devel"
+            self.call(f"dnf install -y --nobest {pkgs}", self.distro, "MariaDB packages", "MariaDB packages", 1, 0, os.EX_OSERR)
+            self.stdOut("AlmaLinux 10 MariaDB fixes applied successfully", 1)
+        except Exception as e:
+            self.stdOut(f"Error applying AlmaLinux 10 MariaDB fixes: {str(e)}", 0)
+
     def install_package_with_fallbacks(self, package_name, dev_package_name=None):
         """Install package with comprehensive fallback methods for AlmaLinux 9.6+"""
         try:
@@ -826,7 +859,11 @@ class preFlightsChecks:
                 universal_fixes = UniversalOSFixes()
                 if universal_fixes.run_comprehensive_setup():
                     self.stdOut("Universal OS fixes applied successfully", 1)
-                    return True
+                    os_i = self.detect_os_info()
+                    if os_i.get('name') == 'almalinux' and os_i.get('major_version') == 10:
+                        self.stdOut("AlmaLinux 10: running legacy RHEL integration steps after universal fixes...", 1)
+                    else:
+                        return True
                 else:
                     self.stdOut("Universal OS fixes failed, falling back to legacy fixes...", 1)
             except ImportError:
@@ -842,6 +879,8 @@ class preFlightsChecks:
             for fix in fixes_needed:
                 if fix == 'mariadb' and self.is_almalinux9():
                     self.fix_almalinux9_mariadb()
+                elif fix == 'mariadb' and self.is_almalinux10():
+                    self.fix_almalinux10_mariadb()
                 elif fix == 'ubuntu_specific' and self.is_ubuntu():
                     self.fix_ubuntu_specific()
                 elif fix == 'debian_specific' and self.is_debian():
@@ -886,6 +925,11 @@ class preFlightsChecks:
 
                     # Check for version 9.x
                     if 'version="9.' in content or 'version_id="9.' in content:
+                        if any(distro in content for distro in ['red hat', 'almalinux', 'rocky', 'cloudlinux', 'centos']):
+                            return 'rhel9'
+
+                    # EL10: use rhel9 OLS/custom binaries until el10-specific builds ship (GLIBC-compatible)
+                    if 'version="10.' in content or 'version_id="10.' in content or 'version_id="10"' in content:
                         if any(distro in content for distro in ['red hat', 'almalinux', 'rocky', 'cloudlinux', 'centos']):
                             return 'rhel9'
 
@@ -1711,6 +1755,11 @@ module cyberpanel_ols {
                 if result.returncode != 0:
                     logging.InstallLog.writeToFile(f"Failed to setup MariaDB repository: {result.stderr}")
                     return False
+                try:
+                    import install_utils
+                    install_utils.strip_mariadb_maxscale_apt_repos()
+                except Exception:
+                    pass
                 
                 command = 'DEBIAN_FRONTEND=noninteractive apt-get update -y'
                 result = subprocess.run(command, shell=True, capture_output=True, universal_newlines=True)
