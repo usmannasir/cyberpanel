@@ -2106,7 +2106,8 @@ def plugin_settings_proxy(request, plugin_name):
                 for candidate in ('settings', 'settings_view', 'settings_simple', 'unified_settings'):
                     settings_view = getattr(views_mod, candidate, None)
                     if callable(settings_view):
-                        return settings_view(request)
+                        response = settings_view(request)
+                        return _inject_activation_store_hook(response, plugin_name)
             except ModuleNotFoundError as e:
                 last_err = str(e)
                 continue
@@ -2121,6 +2122,84 @@ def plugin_settings_proxy(request, plugin_name):
     if os.path.isdir(installed_plugin_path):
         return HttpResponseNotFound('Plugin settings not available (incomplete installation).')
     return HttpResponseNotFound('Plugin not found.')
+
+
+def _inject_activation_store_hook(response, plugin_name):
+    """
+    Tiny safety hook for plugin settings pages:
+    if a plugin activation request succeeds client-side, persist the key in
+    CyberPanel DB via /plugins/api/store-activation/<plugin>/.
+    """
+    try:
+        content_type = (response.get('Content-Type', '') or '').lower()
+        if 'text/html' not in content_type:
+            return response
+        body = response.content.decode('utf-8', errors='ignore')
+        hook_script = """
+<script>
+(function () {
+  if (window.__cpActivationStoreHookInstalled) return;
+  window.__cpActivationStoreHookInstalled = true;
+  var pluginName = %s;
+  function getCsrfToken() {
+    var m = document.cookie.match(/(?:^|; )csrftoken=([^;]+)/);
+    return m ? decodeURIComponent(m[1]) : '';
+  }
+  function tryParseBody(body) {
+    if (!body || typeof body !== 'string') return '';
+    try {
+      var obj = JSON.parse(body);
+      if (obj && typeof obj.activation_key === 'string') return obj.activation_key.trim();
+    } catch (e) {}
+    var rx = /activation_key\\s*[:=]\\s*["']?([A-Za-z0-9\\-_.]{6,})/i;
+    var m = body.match(rx);
+    return m ? m[1] : '';
+  }
+  async function persistActivationKey(activationKey) {
+    if (!activationKey) return;
+    try {
+      await window.__cpOriginalFetch('/plugins/api/store-activation/' + encodeURIComponent(pluginName) + '/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCsrfToken()
+        },
+        body: JSON.stringify({ activation_key: activationKey })
+      });
+    } catch (e) {}
+  }
+  if (!window.fetch) return;
+  window.__cpOriginalFetch = window.fetch.bind(window);
+  window.fetch = async function(input, init) {
+    var url = (typeof input === 'string') ? input : ((input && input.url) || '');
+    var body = init && init.body ? String(init.body) : '';
+    var activationKey = tryParseBody(body);
+    var resp = await window.__cpOriginalFetch(input, init);
+    try {
+      var looksLikeActivation = /activate|activation|activate_key/i.test(url || '');
+      if (!looksLikeActivation) return resp;
+      var clone = resp.clone();
+      var ct = (clone.headers.get('content-type') || '').toLowerCase();
+      if (ct.indexOf('application/json') === -1) return resp;
+      var data = await clone.json();
+      var ok = !!(data && (data.has_access === true || data.status === 1 || data.success === true));
+      if (ok && activationKey) {
+        persistActivationKey(activationKey);
+      }
+    } catch (e) {}
+    return resp;
+  };
+})();
+</script>
+""" % json.dumps(plugin_name)
+        if '</body>' in body:
+            body = body.replace('</body>', hook_script + '</body>')
+        else:
+            body += hook_script
+        response.content = body.encode('utf-8')
+        return response
+    except Exception:
+        return response
 
 
 def plugin_help(request, plugin_name):
