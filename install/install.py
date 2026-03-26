@@ -666,6 +666,7 @@ class preFlightsChecks:
                 ("dnf install -y epel-release", "EPEL"),
                 ("dnf config-manager --set-enabled crb 2>/dev/null || dnf config-manager --set-enabled powertools 2>/dev/null || true", "CRB/PowerTools"),
                 ("dnf install -y htop 2>/dev/null || true", "htop"),
+                ("dnf install -y libxcrypt-compat 2>/dev/null || true", "libxcrypt-compat for lscpd"),
             ):
                 self.call(cmd, self.distro, desc, desc, 1, 0, os.EX_OSERR)
             for cmd, desc in (
@@ -4995,6 +4996,21 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
                         result = open('/etc/lsb-release', 'r').read()
                         if result.find('22.04') > -1 or result.find('24.04') > -1:
                             lscpdSelection = 'lscpd.0.4.0'
+                    # AlmaLinux/RHEL 9 and 10: lscpd.0.4.0 (el9 binary on el10; origin/v2.4.5)
+                    try:
+                        cl_al_ver = FetchCloudLinuxAlmaVersionVersion()
+                        if cl_al_ver in ('al-93', 'al-100'):
+                            lscpdSelection = 'lscpd.0.4.0'
+                    except Exception:
+                        pass
+                    if os.path.exists('/etc/os-release'):
+                        with open('/etc/os-release', 'r') as f:
+                            osrel = f.read()
+                        if (('VERSION_ID="9"' in osrel or 'VERSION_ID="10"' in osrel or
+                             'VERSION_ID="9.' in osrel or 'VERSION_ID="10.' in osrel) and
+                                ('AlmaLinux' in osrel or 'Rocky' in osrel or 'Red Hat' in osrel or
+                                 'CentOS' in osrel)):
+                            lscpdSelection = 'lscpd.0.4.0'
                 else:
                     lscpdSelection = 'lscpd.aarch64'
 
@@ -5005,6 +5021,12 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
                     result = open('/etc/lsb-release', 'r').read()
                     if result.find('22.04') > -1 or result.find('24.04') > -1:
                         lscpdSelection = 'lscpd.0.4.0'
+                try:
+                    cl_al_ver = FetchCloudLinuxAlmaVersionVersion()
+                    if cl_al_ver in ('al-93', 'al-100'):
+                        lscpdSelection = 'lscpd.0.4.0'
+                except Exception:
+                    pass
 
 
             command = f'cp -f /usr/local/CyberCP/{lscpdSelection} /usr/local/lscp/bin/{lscpdSelection}'
@@ -5401,8 +5423,18 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
 
             ##
 
+            command = 'systemctl daemon-reload'
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             command = 'systemctl start lscpd'
-            # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            ret = preFlightsChecks.call(command, self.distro, command, command, 0, 0, os.EX_OSERR)
+            if ret != 0:
+                preFlightsChecks.stdOut("LSCPD start failed, reloading systemd and retrying...")
+                logging.InstallLog.writeToFile("LSCPD first start failed, retrying after daemon-reload")
+                preFlightsChecks.call('systemctl daemon-reload', self.distro, 'daemon-reload', 'daemon-reload', 1, 0, os.EX_OSERR)
+                ret = preFlightsChecks.call('systemctl start lscpd', self.distro, 'systemctl start lscpd', 'systemctl start lscpd', 0, 0, os.EX_OSERR)
+            if ret != 0:
+                preFlightsChecks.stdOut("[WARNING] LSCPD may not have started. Run: systemctl status lscpd")
+                logging.InstallLog.writeToFile("[WARNING] LSCPD start failed after retry - run systemctl status lscpd")
 
             preFlightsChecks.stdOut("LSCPD Daemon Set!")
 

@@ -2,6 +2,17 @@
 # install/venvsetup part 4 – after_install
 
 after_install() {
+# Robust lscpd restart (origin/v2.4.5 e49ed16f; EL9/10)
+_restart_lscpd_safe() {
+	systemctl daemon-reload 2>/dev/null || true
+	systemctl restart lscpd 2>/dev/null || true
+	if ! systemctl is-active --quiet lscpd 2>/dev/null; then
+		systemctl daemon-reload
+		systemctl restart lscpd
+	fi
+	systemctl restart fastapi_ssh_server 2>/dev/null || true
+}
+
 if [ ! -d "/var/lib/php" ]; then
 	mkdir /var/lib/php
 fi
@@ -51,7 +62,7 @@ fi
 
 safe_pip_install "pip3.6" "requirements.txt" "--ignore-installed"
 pip3.6 install python-dotenv 2>/dev/null || echo "⚠️  python-dotenv (after_install) skipped or failed"
-systemctl restart lscpd
+_restart_lscpd_safe
 fi
 
 for version in $(ls /usr/local/lsws | grep lsphp); 
@@ -113,7 +124,7 @@ ELAPSED="$(($SECONDS / 3600)) hrs $((($SECONDS / 60) % 60)) min $(($SECONDS % 60
 MYSQLPASSWD=$(cat /etc/cyberpanel/mysqlPassword)
 echo "$ADMIN_PASS" > /etc/cyberpanel/adminPass
 /usr/local/CyberPanel/bin/python2 /usr/local/CyberCP/plogical/adminPass.py --password $ADMIN_PASS
-systemctl restart lscpd
+_restart_lscpd_safe
 systemctl restart lsws
 echo "/usr/local/CyberPanel/bin/python2 /usr/local/CyberCP/plogical/adminPass.py --password \"\$@\"" > /usr/bin/adminPass
 echo "systemctl restart lscpd" >> /usr/bin/adminPass
