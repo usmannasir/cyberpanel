@@ -650,8 +650,13 @@ def installed(request):
     for p in pluginList:
         logging.writeToFile(f"  - {p.get('plugin_dir')}: installed={p.get('installed')}, enabled={p.get('enabled')}")
 
-    # Get cache expiry timestamp for display (will be converted to local time in browser)
+    # Get cache expiry timestamp for display (browser formats this as nb-NO)
     cache_expiry_timestamp, _ = _get_cache_expiry_time()
+    cache_expired = _is_cache_expired(cache_expiry_timestamp)
+    refresh_started = False
+    if cache_expired:
+        # If cache is stale while on Installed page, trigger best-effort background refresh.
+        refresh_started = _try_start_plugin_store_refresh_background()
     
     # Sort plugins A-Å by name (case-insensitive) for Grid and Table view
     pluginList.sort(key=lambda p: (p.get('name') or '').lower())
@@ -671,9 +676,11 @@ def installed(request):
         pass
 
     proc = httpProc(request, 'pluginHolder/plugins.html',
-                    {'plugins': pluginList, 'error_plugins': errorPlugins, 
+                    {'plugins': pluginList, 'error_plugins': errorPlugins,
                      'installed_count': installed_count, 'active_count': active_count,
-                     'cache_expiry_timestamp': cache_expiry_timestamp}, 'managePlugins')
+                     'cache_expiry_timestamp': cache_expiry_timestamp,
+                     'cache_expired': cache_expired,
+                     'cache_refresh_started': refresh_started}, 'managePlugins')
     return proc.render()
 
 @csrf_exempt
@@ -945,6 +952,16 @@ def _get_cache_expiry_time():
     except Exception as e:
         logging.writeToFile(f"Error getting cache expiry time: {str(e)}")
         return None, None
+
+
+def _is_cache_expired(expiry_timestamp):
+    """Return True if provided cache expiry timestamp is in the past."""
+    try:
+        if not expiry_timestamp:
+            return False
+        return float(expiry_timestamp) <= time.time()
+    except Exception:
+        return False
 
 def _get_cached_plugins(allow_expired=False):
     """Get plugins from cache if available and not expired
