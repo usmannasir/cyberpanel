@@ -104,6 +104,7 @@ urlpatterns = [
     path('api/revert/<str:plugin_name>/', views.revert_plugin, name='revert_plugin'),
     path('api/debug-plugins/', views.debug_loaded_plugins, name='debug_loaded_plugins'),
     path('api/check-subscription/<str:plugin_name>/', views.check_plugin_subscription, name='check_plugin_subscription'),
+    path('api/store-activation/<str:plugin_name>/', views.store_plugin_activation_key, name='store_plugin_activation_key'),
     path('<str:plugin_name>/settings/', views.plugin_settings_proxy, name='plugin_settings_proxy'),
     path('<str:plugin_name>/help/', views.plugin_help, name='plugin_help'),
 ]
