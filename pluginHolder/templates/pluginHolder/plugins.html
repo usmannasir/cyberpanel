@@ -3278,8 +3278,8 @@ function updateCacheExpiryTime() {
 
         if (expired) {
             expiryElement.textContent = refreshStarted
-                ? ('Utlopt (' + formatted + ') - oppdaterer i bakgrunnen')
-                : ('Utlopt (' + formatted + ')');
+                ? ('Expired (' + formatted + ') - updating in background')
+                : ('Expired (' + formatted + ')');
         } else {
             expiryElement.textContent = formatted;
         }
