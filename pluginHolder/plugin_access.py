@@ -133,6 +133,43 @@ def verify_saved_activation_key(plugin_name, user_identity, activation_key):
         logging.writeToFile('plugin_access.verify_saved_activation_key failed: %s' % str(e))
         return False
 
+
+def _resolve_identity_for_request(request):
+    """
+    CyberPanel often authenticates via session userID (not Django auth user).
+    Prefer Administrator email when available, otherwise username.
+    """
+    candidates = []
+    try:
+        if getattr(request, 'user', None) and request.user.is_authenticated:
+            u = request.user
+            email = getattr(u, 'email', None) or ''
+            if email:
+                candidates.append(email)
+            uname = getattr(u, 'username', None) or ''
+            if uname:
+                candidates.append(uname)
+    except Exception:
+        pass
+    try:
+        uid = request.session.get('userID') if hasattr(request, 'session') else None
+        if uid:
+            from loginSystem.models import Administrator
+            admin = Administrator.objects.filter(pk=uid).only('email', 'userName').first()
+            if admin:
+                if getattr(admin, 'email', '') and str(admin.email).lower() != 'none':
+                    candidates.append(str(admin.email))
+                if getattr(admin, 'userName', ''):
+                    candidates.append(str(admin.userName))
+    except Exception:
+        pass
+    for item in candidates:
+        item = (item or '').strip()
+        if item:
+            return item.lower()
+    return ''
+
+
 def check_plugin_access(request, plugin_name, plugin_meta=None):
     """
     Check if user has access to a plugin
@@ -166,21 +203,7 @@ def check_plugin_access(request, plugin_name, plugin_meta=None):
     if not plugin_meta or not plugin_meta.get('is_paid', False):
         return default_response
     
-    # Plugin is paid - check Patreon membership
-    if not request.user or not request.user.is_authenticated:
-        return {
-            'has_access': False,
-            'is_paid': True,
-            'message': 'Please log in to access this plugin',
-            'patreon_url': plugin_meta.get('patreon_url')
-        }
-    
-    # Get user email
-    user_email = getattr(request.user, 'email', None)
-    if not user_email:
-        # Try to get from username or other fields
-        user_email = getattr(request.user, 'username', '')
-    
+    user_email = _resolve_identity_for_request(request)
     if not user_email:
         return {
             'has_access': False,
