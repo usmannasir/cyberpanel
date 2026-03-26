@@ -5,7 +5,133 @@ Checks if user has access to paid plugins
 """
 
 from .patreon_verifier import PatreonVerifier
-import logging
+import hashlib
+from django.db import connection
+from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+
+
+def _normalize_identity(value):
+    if not value:
+        return ''
+    return str(value).strip().lower()
+
+
+def _hash_activation_key(raw_key):
+    return hashlib.sha256(raw_key.encode('utf-8')).hexdigest()
+
+
+def _ensure_activation_table():
+    """
+    Create table on-demand so upgrade paths without Django migrations are safe.
+    """
+    sql = """
+    CREATE TABLE IF NOT EXISTS plugin_activation_keys (
+        id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+        plugin_name VARCHAR(191) NOT NULL,
+        user_identity VARCHAR(191) NOT NULL,
+        activation_key_hash CHAR(64) NOT NULL,
+        key_last4 VARCHAR(4) NOT NULL DEFAULT '',
+        source VARCHAR(50) NOT NULL DEFAULT 'manual',
+        is_active TINYINT(1) NOT NULL DEFAULT 1,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        UNIQUE KEY uniq_plugin_identity (plugin_name, user_identity),
+        KEY idx_identity (user_identity),
+        KEY idx_plugin (plugin_name)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(sql)
+
+
+def save_activation_key(plugin_name, user_identity, activation_key, source='manual'):
+    """
+    Persist activation key hash in MariaDB (upsert by plugin_name + user_identity).
+    """
+    plugin_name = _normalize_identity(plugin_name)
+    user_identity = _normalize_identity(user_identity)
+    activation_key = str(activation_key or '').strip()
+    if not plugin_name or not user_identity or not activation_key:
+        return False
+
+    try:
+        _ensure_activation_table()
+        key_hash = _hash_activation_key(activation_key)
+        key_last4 = activation_key[-4:] if len(activation_key) >= 4 else activation_key
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO plugin_activation_keys
+                    (plugin_name, user_identity, activation_key_hash, key_last4, source, is_active)
+                VALUES (%s, %s, %s, %s, %s, 1)
+                ON DUPLICATE KEY UPDATE
+                    activation_key_hash = VALUES(activation_key_hash),
+                    key_last4 = VALUES(key_last4),
+                    source = VALUES(source),
+                    is_active = 1
+                """,
+                [plugin_name, user_identity, key_hash, key_last4, source]
+            )
+        return True
+    except Exception as e:
+        logging.writeToFile('plugin_access.save_activation_key failed: %s' % str(e))
+        return False
+
+
+def has_saved_activation(plugin_name, user_identity):
+    plugin_name = _normalize_identity(plugin_name)
+    user_identity = _normalize_identity(user_identity)
+    if not plugin_name or not user_identity:
+        return False
+
+    try:
+        _ensure_activation_table()
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT 1
+                FROM plugin_activation_keys
+                WHERE plugin_name = %s
+                  AND user_identity = %s
+                  AND is_active = 1
+                LIMIT 1
+                """,
+                [plugin_name, user_identity]
+            )
+            return cursor.fetchone() is not None
+    except Exception as e:
+        logging.writeToFile('plugin_access.has_saved_activation failed: %s' % str(e))
+        return False
+
+
+def verify_saved_activation_key(plugin_name, user_identity, activation_key):
+    plugin_name = _normalize_identity(plugin_name)
+    user_identity = _normalize_identity(user_identity)
+    activation_key = str(activation_key or '').strip()
+    if not plugin_name or not user_identity or not activation_key:
+        return False
+
+    try:
+        _ensure_activation_table()
+        key_hash = _hash_activation_key(activation_key)
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT 1
+                FROM plugin_activation_keys
+                WHERE plugin_name = %s
+                  AND user_identity = %s
+                  AND activation_key_hash = %s
+                  AND is_active = 1
+                LIMIT 1
+                """,
+                [plugin_name, user_identity, key_hash]
+            )
+            return cursor.fetchone() is not None
+    except Exception as e:
+        logging.writeToFile('plugin_access.verify_saved_activation_key failed: %s' % str(e))
+        return False
 
 def check_plugin_access(request, plugin_name, plugin_meta=None):
     """
@@ -63,7 +189,16 @@ def check_plugin_access(request, plugin_name, plugin_meta=None):
             'patreon_url': plugin_meta.get('patreon_url')
         }
     
-    # Check Patreon membership
+    # First allow DB-backed activation keys (survives upgrades)
+    if has_saved_activation(plugin_name, user_email):
+        return {
+            'has_access': True,
+            'is_paid': True,
+            'message': 'Access granted',
+            'patreon_url': None
+        }
+
+    # Fallback to Patreon membership
     verifier = PatreonVerifier()
     has_membership = verifier.check_membership_cached(user_email)
     

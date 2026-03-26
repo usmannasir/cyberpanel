@@ -2322,10 +2322,11 @@ def plugin_help(request, plugin_name):
     return proc.render()
 
 @csrf_exempt
-@require_http_methods(["GET"])
+@require_http_methods(["GET", "POST"])
 def check_plugin_subscription(request, plugin_name):
     """
-    API endpoint to check if user has Patreon subscription for a paid plugin
+    API endpoint to check plugin premium access.
+    Supports optional activation key save/verify to persist entitlement in MariaDB.
     
     Args:
         request: Django request object
@@ -2353,10 +2354,46 @@ def check_plugin_subscription(request, plugin_name):
             }, status=401)
         
         # Load plugin metadata
-        from .plugin_access import check_plugin_access, _load_plugin_meta
+        from .plugin_access import (
+            check_plugin_access,
+            _load_plugin_meta,
+            save_activation_key,
+            verify_saved_activation_key
+        )
         
         plugin_meta = _load_plugin_meta(plugin_name)
         
+        user_email = getattr(request.user, 'email', None) or getattr(request.user, 'username', '')
+        activation_key = ''
+        if request.method == 'POST':
+            try:
+                payload = json.loads(request.body.decode('utf-8') or '{}')
+            except Exception:
+                payload = {}
+            activation_key = str(payload.get('activation_key', '')).strip()
+            if activation_key and user_email:
+                # If key is already known for this user/plugin -> immediate access
+                if verify_saved_activation_key(plugin_name, user_email, activation_key):
+                    return JsonResponse({
+                        'success': True,
+                        'has_access': True,
+                        'is_paid': bool(plugin_meta and plugin_meta.get('is_paid', False)),
+                        'message': 'Access granted',
+                        'patreon_url': None,
+                        'activation_saved': True
+                    })
+                # Save submitted key as persistent entitlement (admin-managed workflow)
+                saved = save_activation_key(plugin_name, user_email, activation_key, source='plugin_settings')
+                if saved:
+                    return JsonResponse({
+                        'success': True,
+                        'has_access': True,
+                        'is_paid': bool(plugin_meta and plugin_meta.get('is_paid', False)),
+                        'message': 'Activation key saved',
+                        'patreon_url': None,
+                        'activation_saved': True
+                    })
+
         # Check access
         access_result = check_plugin_access(request, plugin_name, plugin_meta)
         
@@ -2365,7 +2402,8 @@ def check_plugin_subscription(request, plugin_name):
             'has_access': access_result['has_access'],
             'is_paid': access_result['is_paid'],
             'message': access_result['message'],
-            'patreon_url': access_result.get('patreon_url')
+            'patreon_url': access_result.get('patreon_url'),
+            'activation_saved': access_result['has_access'] and access_result['is_paid']
         })
         
     except Exception as e:
@@ -2374,6 +2412,42 @@ def check_plugin_subscription(request, plugin_name):
             'success': False,
             'has_access': False,
             'is_paid': False,
-            'message': f'Error checking subscription: {str(e)}',
+            'message': 'Error checking subscription',
             'patreon_url': None
         }, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def store_plugin_activation_key(request, plugin_name):
+    """
+    Store activation key in MariaDB so upgrades do not lose premium entitlement.
+    """
+    try:
+        if not user_can_manage_plugins(request):
+            return deny_plugin_manage_json_response(request)
+        if not request.user or not request.user.is_authenticated:
+            return JsonResponse({'success': False, 'message': 'Authentication required'}, status=401)
+
+        try:
+            payload = json.loads(request.body.decode('utf-8') or '{}')
+        except Exception:
+            payload = {}
+
+        activation_key = str(payload.get('activation_key', '')).strip()
+        if not activation_key:
+            return JsonResponse({'success': False, 'message': 'activation_key is required'}, status=400)
+
+        user_email = getattr(request.user, 'email', None) or getattr(request.user, 'username', '')
+        if not user_email:
+            return JsonResponse({'success': False, 'message': 'Unable to determine user identity'}, status=400)
+
+        from .plugin_access import save_activation_key
+        ok = save_activation_key(plugin_name, user_email, activation_key, source='api')
+        if not ok:
+            return JsonResponse({'success': False, 'message': 'Failed to persist activation key'}, status=500)
+
+        return JsonResponse({'success': True, 'message': 'Activation key saved'})
+    except Exception as e:
+        logging.writeToFile('store_plugin_activation_key failed for %s: %s' % (plugin_name, str(e)))
+        return JsonResponse({'success': False, 'message': 'Internal server error'}, status=500)
