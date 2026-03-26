@@ -38,6 +38,7 @@ def get_Ubuntu_code_name():
         return "xenial"
 
 
+
 # Using shared function from install_utils
 FetchCloudLinuxAlmaVersionVersion = install_utils.FetchCloudLinuxAlmaVersionVersion
 
@@ -996,9 +997,11 @@ deb [arch=amd64,arm64,ppc64el,s390x signed-by=/usr/share/keyrings/mariadb-keyrin
                     
                     install_utils.writeToFile("Manual MariaDB repository configuration completed.")
 
+            # GH #1740: strip broken MaxScale apt entries after mariadb_repo_setup (noble/jammy+)
+            if get_Ubuntu_release() > 21.00:
+                install_utils.strip_mariadb_maxscale_apt_repos()
 
-
-            command = 'DEBIAN_FRONTEND=noninteractive apt-get update -y'
+            command = 'DEBIAN_FRONTEND=noninteractive apt-get update -y' 
             install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
 
