@@ -33,6 +33,7 @@ PLUGIN_STORE_CACHE_FILE = os.path.join(PLUGIN_STORE_CACHE_DIR, 'plugins_cache.js
 PLUGIN_STORE_CACHE_DURATION = 3600  # Base cache duration: 1 hour (3600 seconds)
 PLUGIN_STORE_CACHE_RANDOM_OFFSET = 600  # Random offset: ±10 minutes (600 seconds) to prevent simultaneous requests
 PLUGIN_STORE_REFRESH_LOCK_FILE = os.path.join(PLUGIN_STORE_CACHE_DIR, 'plugins_cache_refresh.lock')
+PLUGIN_STORE_REFRESH_LOCK_STALE_SECONDS = 900  # 15 minutes; remove leftover lock if stuck
 GITHUB_REPO_API = 'https://api.github.com/repos/master3395/cyberpanel-plugins/contents'
 GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/master3395/cyberpanel-plugins/main'
 GITHUB_COMMITS_API = 'https://api.github.com/repos/master3395/cyberpanel-plugins/commits'
@@ -1045,6 +1046,22 @@ def _try_start_plugin_store_refresh_background():
     lock_path = PLUGIN_STORE_REFRESH_LOCK_FILE
     try:
         _ensure_cache_dir()
+
+        # If a previous refresh crashed and left the lock behind, remove it
+        # so background refresh can resume. This is critical for hourly updates.
+        try:
+            if os.path.exists(lock_path):
+                age_s = time.time() - os.path.getmtime(lock_path)
+                if age_s > PLUGIN_STORE_REFRESH_LOCK_STALE_SECONDS:
+                    try:
+                        os.remove(lock_path)
+                        logging.writeToFile(
+                            f"Removed stale plugin store refresh lock (age: {age_s:.0f}s)"
+                        )
+                    except Exception:
+                        pass
+        except Exception:
+            pass
 
         # Try to acquire a file lock so multiple workers don't stampede GitHub.
         try:
