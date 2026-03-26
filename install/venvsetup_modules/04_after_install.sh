@@ -50,6 +50,7 @@ EOF
 fi
 
 safe_pip_install "pip3.6" "requirements.txt" "--ignore-installed"
+pip3.6 install python-dotenv 2>/dev/null || echo "⚠️  python-dotenv (after_install) skipped or failed"
 systemctl restart lscpd
 fi
 
