@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.shortcuts import render, redirect
-from django.http import JsonResponse
+from django.http import JsonResponse, StreamingHttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from plogical.mailUtilities import mailUtilities
@@ -2441,6 +2441,7 @@ def plugin_settings_proxy(request, plugin_name):
                     settings_view = getattr(views_mod, candidate, None)
                     if callable(settings_view):
                         response = settings_view(request)
+                        response = _inject_plugin_settings_back_bar(response)
                         return _inject_activation_store_hook(response, plugin_name)
             except ModuleNotFoundError as e:
                 last_err = str(e)
@@ -2456,6 +2457,53 @@ def plugin_settings_proxy(request, plugin_name):
     if os.path.isdir(installed_plugin_path):
         return HttpResponseNotFound('Plugin settings not available (incomplete installation).')
     return HttpResponseNotFound('Plugin not found.')
+
+
+def _inject_plugin_settings_back_bar(response):
+    """
+    Add a consistent 'Back to installed Plugins' link at the top of proxied plugin
+    settings HTML so users need not use the sidebar. Only touches HTML responses.
+    """
+    try:
+        if isinstance(response, StreamingHttpResponse):
+            return response
+        content_type = (response.get('Content-Type', '') or '').lower()
+        if 'text/html' not in content_type:
+            return response
+        if not getattr(response, 'content', None):
+            return response
+        body = response.content.decode('utf-8', errors='ignore')
+        if not body.strip():
+            return response
+        from django.utils.html import escape
+        from django.utils.translation import gettext as _
+
+        if 'cp-plugin-settings-back' in body:
+            return response
+        label = escape(str(_('Back to installed Plugins')))
+        back_html = (
+            '<div id="cp-plugin-settings-back" style="margin:0;padding:10px 16px;'
+            'background:linear-gradient(90deg,#f1f5f9,#e8eef5);border-bottom:1px solid #cbd5e1;'
+            'font-size:14px;line-height:1.4;position:relative;z-index:10000;">'
+            '<a href="/plugins/installed" id="cp-plugin-settings-back-link" '
+            'style="display:inline-flex;align-items:center;gap:8px;color:#1e293b;font-weight:600;'
+            'text-decoration:none;">'
+            '<span aria-hidden="true" style="font-size:1.1em;">←</span><span>' + label + '</span></a></div>'
+        )
+        if re.search(r'<body[^>]*>', body, flags=re.IGNORECASE):
+            body = re.sub(
+                r'(<body[^>]*>)',
+                r'\1' + back_html,
+                body,
+                count=1,
+                flags=re.IGNORECASE,
+            )
+        else:
+            body = back_html + body
+        response.content = body.encode('utf-8')
+        return response
+    except Exception:
+        return response
 
 
 def _inject_activation_store_hook(response, plugin_name):
