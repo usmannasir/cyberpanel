@@ -1151,6 +1151,17 @@
         transform: translateY(-1px);
         box-shadow: 0 4px 8px rgba(220,53,69,0.3);
     }
+
+    .btn-delete-source {
+        background: #b45309;
+        color: white;
+    }
+
+    .btn-delete-source:hover:not(:disabled) {
+        background: #92400e;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(180, 83, 9, 0.35);
+    }
     
     .btn-activate {
         background: #28a745;
@@ -1506,6 +1517,11 @@
                                 <button class="btn-action btn-install btn-small" onclick="installPlugin('{{ plugin.plugin_dir }}')">
                                     <i class="fas fa-download"></i> {% trans "Install" %}
                                 </button>
+                                {% if plugin.has_local_source %}
+                                <button type="button" class="btn-action btn-delete-source btn-small" data-plugin-dir="{{ plugin.plugin_dir }}" onclick="deletePluginLocalSource('{{ plugin.plugin_dir }}')">
+                                    <i class="fas fa-folder-minus"></i> {% trans "Delete local copy" %}
+                                </button>
+                                {% endif %}
                             {% endif %}
                         </div>
                         {% if not plugin.builtin %}
@@ -1599,6 +1615,11 @@
                                             <button class="btn-action btn-install" onclick="installPlugin('{{ plugin.plugin_dir }}')">
                                                 <i class="fas fa-download"></i> {% trans "Install" %}
                                             </button>
+                                            {% if plugin.has_local_source %}
+                                            <button type="button" class="btn-action btn-delete-source" data-plugin-dir="{{ plugin.plugin_dir }}" onclick="deletePluginLocalSource('{{ plugin.plugin_dir }}')">
+                                                <i class="fas fa-folder-minus"></i> {% trans "Delete local copy" %}
+                                            </button>
+                                            {% endif %}
                                         {% endif %}
                                     </div>
                                 </td>
@@ -2287,9 +2308,14 @@ function displayStorePlugins() {
             }
         } else {
             // Show Install button
-            actionHtml = `<button class="btn-action btn-install" onclick="installFromStore('${plugin.plugin_dir}')">
+            actionHtml = `<button class="btn-action btn-install" onclick="installFromStore('${escapeHtml(plugin.plugin_dir)}')">
                 <i class="fas fa-download"></i> Install
             </button>`;
+            if (plugin.has_local_source && !plugin.builtin) {
+                actionHtml += ` <button type="button" class="btn-action btn-delete-source" onclick="deletePluginLocalSource('${escapeHtml(plugin.plugin_dir)}')">
+                    <i class="fas fa-folder-minus"></i> Delete local copy
+                </button>`;
+            }
         }
         
         // Help column - always use consistent help URL
@@ -3015,6 +3041,82 @@ function revertPlugin(pluginName, backupPath) {
             btn.innerHTML = originalText;
         }
     });
+}
+
+function deletePluginLocalSource(pluginName) {
+    const msg1 =
+        'Permanently delete the local copy of "' + pluginName + '" on this server?\n\n' +
+        'Use this only after Uninstall, if you want a clean reinstall from the Plugin Store.\n' +
+        'This removes the plugin folder under the local source paths (not /usr/local/CyberCP).\n' +
+        'This cannot be undone.';
+    if (!confirm(msg1)) {
+        return;
+    }
+    if (!confirm('Final confirmation: delete all local source files for "' + pluginName + '"?')) {
+        return;
+    }
+    let btn = null;
+    try {
+        if (typeof event !== 'undefined' && event && event.target) {
+            btn = event.target.closest('.btn-delete-source') || event.target;
+        }
+    } catch (e) {
+        btn = null;
+    }
+    const originalText = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+    }
+    fetch('/plugins/api/delete-source/' + encodeURIComponent(pluginName) + '/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+        },
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.success) {
+                if (typeof PNotify !== 'undefined') {
+                    new PNotify({
+                        title: 'Deleted',
+                        text: data.message || 'Local plugin files removed.',
+                        type: 'success',
+                    });
+                }
+                setTimeout(() => location.reload(), 800);
+            } else {
+                if (typeof PNotify !== 'undefined') {
+                    new PNotify({
+                        title: 'Delete failed',
+                        text: data.error || 'Could not delete local copy',
+                        type: 'error',
+                    });
+                } else {
+                    alert('Error: ' + (data.error || 'Could not delete local copy'));
+                }
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            }
+        })
+        .catch((error) => {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({
+                    title: 'Error',
+                    text: 'Delete failed: ' + error.message,
+                    type: 'error',
+                });
+            } else {
+                alert('Error: Delete failed — ' + error.message);
+            }
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        });
 }
 
 function uninstallPlugin(pluginName) {

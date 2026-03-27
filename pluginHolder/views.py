@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import shlex
 import json
+import re
 from datetime import datetime, timedelta
 from xml.etree import ElementTree
 from plogical.httpProc import httpProc
@@ -124,6 +125,20 @@ RESERVED_PLUGIN_DIRS = frozenset([
     'pluginInstaller', 'serverLogs', 'serverStatus', 's3Backups', 'tuning', 'userManagment',
     'websiteFunctions', 'aiScanner', 'dns', 'help', 'installed',
 ])
+
+
+def _is_safe_plugin_store_name(plugin_name):
+    """Reject path traversal and reserved/core names for plugin directory identifiers."""
+    if not plugin_name or not isinstance(plugin_name, str):
+        return False
+    if len(plugin_name) > 128:
+        return False
+    if plugin_name in BUILTIN_PLUGINS or plugin_name in RESERVED_PLUGIN_DIRS:
+        return False
+    if '..' in plugin_name or '/' in plugin_name or '\\' in plugin_name:
+        return False
+    return bool(re.match(r'^[A-Za-z][A-Za-z0-9_]*$', plugin_name))
+
 
 def _find_plugin_prefix_in_archive(namelist, plugin_name):
     """
@@ -699,6 +714,14 @@ def installed(request):
         # If cache is stale while on Installed page, trigger best-effort background refresh.
         refresh_started = _try_start_plugin_store_refresh_background()
     
+    # Local source copy under PLUGIN_SOURCE_PATHS (for "delete local copy" after uninstall)
+    for p in pluginList:
+        pd = p.get('plugin_dir')
+        if pd:
+            p['has_local_source'] = _get_plugin_source_path(pd) is not None
+        else:
+            p['has_local_source'] = False
+
     # Sort plugins A-Å by name (case-insensitive) for Grid and Table view
     pluginList.sort(key=lambda p: (p.get('name') or '').lower())
     
@@ -886,6 +909,107 @@ def uninstall_plugin(request, plugin_name):
             'success': False,
             'error': str(e)
         }, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def delete_plugin_source(request, plugin_name):
+    """
+    Remove local plugin source under PLUGIN_SOURCE_PATHS after uninstall, so the Plugin Store
+    can reinstall cleanly. Does not touch /usr/local/CyberCP (must uninstall first).
+    """
+    try:
+        if not user_can_manage_plugins(request):
+            return deny_plugin_manage_json_response(request)
+        if not _is_safe_plugin_store_name(plugin_name):
+            return JsonResponse({
+                'success': False,
+                'error': 'Invalid or reserved plugin name.',
+            }, status=400)
+
+        plugin_installed = '/usr/local/CyberCP/' + plugin_name
+        if os.path.exists(plugin_installed):
+            return JsonResponse({
+                'success': False,
+                'error': (
+                    'This plugin is still installed. Uninstall it first, then delete the local copy '
+                    'if you want a clean reinstall from the Plugin Store.'
+                ),
+            }, status=400)
+
+        removed_paths = []
+        for base in PLUGIN_SOURCE_PATHS:
+            if not base or not os.path.isdir(base):
+                continue
+            candidate = os.path.join(base, plugin_name)
+            try:
+                candidate_real = os.path.realpath(candidate)
+                base_real = os.path.realpath(base)
+                if not candidate_real.startswith(base_real + os.sep) and candidate_real != base_real:
+                    logging.writeToFile(
+                        'delete_plugin_source: skipped path outside base (symlink?): %s' % candidate
+                    )
+                    continue
+            except Exception:
+                continue
+            if not os.path.isdir(candidate):
+                continue
+            meta = os.path.join(candidate, 'meta.xml')
+            if not os.path.isfile(meta):
+                continue
+            try:
+                shutil.rmtree(candidate)
+                removed_paths.append(candidate)
+            except Exception as rm_exc:
+                logging.writeToFile(
+                    'delete_plugin_source: failed to remove %s: %s' % (candidate, str(rm_exc))
+                )
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Could not remove local folder: %s' % candidate,
+                }, status=500)
+
+        if not removed_paths:
+            return JsonResponse({
+                'success': False,
+                'error': (
+                    'No local plugin copy found under %s. Nothing to delete.'
+                    % ', '.join(PLUGIN_SOURCE_PATHS)
+                ),
+            }, status=404)
+
+        try:
+            pluginInstaller.informCyberPanelRemoval(plugin_name)
+        except Exception:
+            pass
+
+        try:
+            state_file = _get_plugin_state_file(plugin_name)
+            if os.path.isfile(state_file):
+                os.remove(state_file)
+        except Exception:
+            pass
+
+        try:
+            _invalidate_plugin_store_cache()
+        except Exception:
+            pass
+
+        logging.writeToFile(
+            'delete_plugin_source: removed %s paths for %s: %s'
+            % (len(removed_paths), plugin_name, removed_paths)
+        )
+        return JsonResponse({
+            'success': True,
+            'message': 'Local plugin files removed. You can install again from the Plugin Store.',
+        })
+    except Exception as e:
+        logging.writeToFile('Error delete_plugin_source %s: %s' % (plugin_name, str(e)))
+        return JsonResponse({
+            'success': False,
+            'error': str(e),
+        }, status=500)
+
 
 @csrf_exempt
 @require_http_methods(["POST"])
@@ -1487,6 +1611,9 @@ def _enrich_store_plugins(plugins):
             plugin['enabled'] = False
             plugin['update_available'] = False
             plugin['installed_version'] = None
+
+        plugin['has_local_source'] = _get_plugin_source_path(plugin_dir) is not None
+        plugin['builtin'] = plugin_dir in BUILTIN_PLUGINS
         
         # Ensure is_paid field exists and is properly set (default to False if not set or invalid)
         # Handle all possible cases: missing, None, empty string, string values, boolean
