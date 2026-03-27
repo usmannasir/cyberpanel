@@ -33,6 +33,7 @@ PLUGIN_STORE_CACHE_FILE = os.path.join(PLUGIN_STORE_CACHE_DIR, 'plugins_cache.js
 PLUGIN_STORE_CACHE_DURATION = 3600  # Base cache duration: 1 hour (3600 seconds)
 PLUGIN_STORE_CACHE_RANDOM_OFFSET = 600  # Random offset: ±10 minutes (600 seconds) to prevent simultaneous requests
 PLUGIN_STORE_REFRESH_LOCK_FILE = os.path.join(PLUGIN_STORE_CACHE_DIR, 'plugins_cache_refresh.lock')
+PLUGIN_STORE_REFRESH_LOCK_STALE_SECONDS = 900  # 15 minutes; remove leftover lock if stuck
 GITHUB_REPO_API = 'https://api.github.com/repos/master3395/cyberpanel-plugins/contents'
 GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/master3395/cyberpanel-plugins/main'
 GITHUB_COMMITS_API = 'https://api.github.com/repos/master3395/cyberpanel-plugins/commits'
@@ -46,6 +47,42 @@ PLUGIN_SOURCE_PATHS = ['/home/cyberpanel/plugins', '/home/cyberpanel-plugins']
 # Builtin/core plugins that are part of CyberPanel (not user-installable plugins)
 # These plugins show "Built-in" badge and only Settings button (no Deactivate/Uninstall)
 BUILTIN_PLUGINS = frozenset(['emailMarketing', 'emailPremium'])
+
+
+def _resolve_logged_in_plugin_identity(request):
+    """
+    CyberPanel often authenticates via session userID (not Django auth user).
+    Use Administrator email when available, otherwise username.
+    """
+    candidates = []
+    try:
+        if getattr(request, 'user', None) and request.user.is_authenticated:
+            u = request.user
+            email = getattr(u, 'email', None) or ''
+            if email:
+                candidates.append(email)
+            uname = getattr(u, 'username', None) or ''
+            if uname:
+                candidates.append(uname)
+    except Exception:
+        pass
+    try:
+        uid = request.session.get('userID') if hasattr(request, 'session') else None
+        if uid:
+            from loginSystem.models import Administrator
+            admin = Administrator.objects.filter(pk=uid).only('email', 'userName').first()
+            if admin:
+                if getattr(admin, 'email', '') and str(admin.email).lower() != 'none':
+                    candidates.append(str(admin.email))
+                if getattr(admin, 'userName', ''):
+                    candidates.append(str(admin.userName))
+    except Exception:
+        pass
+    for item in candidates:
+        item = (item or '').strip()
+        if item:
+            return item.lower()
+    return ''
 
 
 def _install_plugin_compat(plugin_name, zip_path_abs):
@@ -125,11 +162,10 @@ def _get_plugin_source_path(plugin_name):
             return path
     return None
 
-def _get_local_plugin_meta_modify_date(plugin_name):
+def _get_local_plugin_meta_modify_pair(plugin_name):
     """
-    Compute plugin modify date from local meta.xml file timestamps.
-    This avoids per-plugin GitHub commits API calls while still providing
-    a useful "Modify date" column in the plugin store UI.
+    Return (modify_date string server-local, unix seconds) from first found meta.xml.
+    Unix seconds represent the same instant everywhere; UI formats in browser timezone.
     """
     candidate_paths = []
 
@@ -143,11 +179,39 @@ def _get_local_plugin_meta_modify_date(plugin_name):
         try:
             if os.path.exists(meta_path) and os.path.isfile(meta_path):
                 modify_time = os.path.getmtime(meta_path)
-                return datetime.fromtimestamp(modify_time).strftime('%Y-%m-%d %H:%M:%S')
+                return (
+                    datetime.fromtimestamp(modify_time).strftime('%Y-%m-%d %H:%M:%S'),
+                    int(modify_time),
+                )
         except Exception:
             continue
 
-    return 'N/A'
+    return ('N/A', None)
+
+
+def _get_local_plugin_meta_modify_date(plugin_name):
+    """
+    Compute plugin modify date from local meta.xml file timestamps.
+    This avoids per-plugin GitHub commits API calls while still providing
+    a useful "Modify date" column in the plugin store UI.
+    """
+    return _get_local_plugin_meta_modify_pair(plugin_name)[0]
+
+
+def _apply_modify_date_from_meta_path(data_dict, meta_xml_path):
+    """Set modify_date, modify_timestamp, freshness_badge on plugin data dict."""
+    modify_date = 'N/A'
+    modify_timestamp = None
+    try:
+        if meta_xml_path and os.path.exists(meta_xml_path):
+            modify_time = os.path.getmtime(meta_xml_path)
+            modify_date = datetime.fromtimestamp(modify_time).strftime('%Y-%m-%d %H:%M:%S')
+            modify_timestamp = int(modify_time)
+    except Exception:
+        pass
+    data_dict['modify_date'] = modify_date
+    data_dict['modify_timestamp'] = modify_timestamp
+    data_dict['freshness_badge'] = _get_freshness_badge(modify_date)
 
 def _ensure_plugin_meta_xml(plugin_name):
     """
@@ -365,16 +429,7 @@ def installed(request):
                 
                 # Get modify date from local file (fast, no API calls)
                 # GitHub commit dates are fetched in the plugin store, not here to avoid timeouts
-                modify_date = 'N/A'
-                try:
-                    if os.path.exists(metaXmlPath):
-                        modify_time = os.path.getmtime(metaXmlPath)
-                        modify_date = datetime.fromtimestamp(modify_time).strftime('%Y-%m-%d %H:%M:%S')
-                except Exception:
-                    modify_date = 'N/A'
-                
-                data['modify_date'] = modify_date
-                data['freshness_badge'] = _get_freshness_badge(modify_date)
+                _apply_modify_date_from_meta_path(data, metaXmlPath)
                 
                 # Extract settings URL or main URL for "Manage" button
                 settings_url_elem = root.find('settings_url')
@@ -500,16 +555,7 @@ def installed(request):
                 data['patreon_url'] = None
                 
                 # Get modify date from installed location
-                modify_date = 'N/A'
-                try:
-                    if os.path.exists(metaXmlPath):
-                        modify_time = os.path.getmtime(metaXmlPath)
-                        modify_date = datetime.fromtimestamp(modify_time).strftime('%Y-%m-%d %H:%M:%S')
-                except Exception:
-                    modify_date = 'N/A'
-                
-                data['modify_date'] = modify_date
-                data['freshness_badge'] = _get_freshness_badge(modify_date)
+                _apply_modify_date_from_meta_path(data, metaXmlPath)
                 
                 # Extract settings URL or main URL
                 settings_url_elem = root.find('settings_url')
@@ -602,12 +648,7 @@ def installed(request):
                 'manage_url': f'/plugins/{plugin_name}/',
                 'author': root.find('author').text if root.find('author') is not None and root.find('author').text else 'Unknown',
             }
-            try:
-                modify_time = os.path.getmtime(meta_xml_path)
-                data['modify_date'] = datetime.fromtimestamp(modify_time).strftime('%Y-%m-%d %H:%M:%S')
-            except Exception:
-                data['modify_date'] = 'N/A'
-            data['freshness_badge'] = _get_freshness_badge(data['modify_date'])
+            _apply_modify_date_from_meta_path(data, meta_xml_path)
             paid_elem = root.find('paid')
             if paid_elem is not None and paid_elem.text and paid_elem.text.lower() == 'true':
                 data['is_paid'] = True
@@ -650,8 +691,13 @@ def installed(request):
     for p in pluginList:
         logging.writeToFile(f"  - {p.get('plugin_dir')}: installed={p.get('installed')}, enabled={p.get('enabled')}")
 
-    # Get cache expiry timestamp for display (will be converted to local time in browser)
+    # Get cache expiry timestamp for display (browser formats this as nb-NO)
     cache_expiry_timestamp, _ = _get_cache_expiry_time()
+    cache_expired = _is_cache_expired(cache_expiry_timestamp)
+    refresh_started = False
+    if cache_expired:
+        # If cache is stale while on Installed page, trigger best-effort background refresh.
+        refresh_started = _try_start_plugin_store_refresh_background()
     
     # Sort plugins A-Å by name (case-insensitive) for Grid and Table view
     pluginList.sort(key=lambda p: (p.get('name') or '').lower())
@@ -671,9 +717,11 @@ def installed(request):
         pass
 
     proc = httpProc(request, 'pluginHolder/plugins.html',
-                    {'plugins': pluginList, 'error_plugins': errorPlugins, 
+                    {'plugins': pluginList, 'error_plugins': errorPlugins,
                      'installed_count': installed_count, 'active_count': active_count,
-                     'cache_expiry_timestamp': cache_expiry_timestamp}, 'managePlugins')
+                     'cache_expiry_timestamp': cache_expiry_timestamp,
+                     'cache_expired': cache_expired,
+                     'cache_refresh_started': refresh_started}, 'managePlugins')
     return proc.render()
 
 @csrf_exempt
@@ -946,6 +994,16 @@ def _get_cache_expiry_time():
         logging.writeToFile(f"Error getting cache expiry time: {str(e)}")
         return None, None
 
+
+def _is_cache_expired(expiry_timestamp):
+    """Return True if provided cache expiry timestamp is in the past."""
+    try:
+        if not expiry_timestamp:
+            return False
+        return float(expiry_timestamp) <= time.time()
+    except Exception:
+        return False
+
 def _get_cached_plugins(allow_expired=False):
     """Get plugins from cache if available and not expired
     
@@ -1028,6 +1086,22 @@ def _try_start_plugin_store_refresh_background():
     lock_path = PLUGIN_STORE_REFRESH_LOCK_FILE
     try:
         _ensure_cache_dir()
+
+        # If a previous refresh crashed and left the lock behind, remove it
+        # so background refresh can resume. This is critical for hourly updates.
+        try:
+            if os.path.exists(lock_path):
+                age_s = time.time() - os.path.getmtime(lock_path)
+                if age_s > PLUGIN_STORE_REFRESH_LOCK_STALE_SECONDS:
+                    try:
+                        os.remove(lock_path)
+                        logging.writeToFile(
+                            f"Removed stale plugin store refresh lock (age: {age_s:.0f}s)"
+                        )
+                    except Exception:
+                        pass
+        except Exception:
+            pass
 
         # Try to acquire a file lock so multiple workers don't stampede GitHub.
         try:
@@ -1116,32 +1190,127 @@ def _get_installed_version(plugin_dir, plugin_install_dir):
     
     return None
 
+
+def _parse_version_from_meta_xml_bytes(content):
+    """Return <version> text from meta.xml bytes, or None."""
+    if not content:
+        return None
+    try:
+        if isinstance(content, bytes):
+            content = content.decode('utf-8', errors='replace')
+        root = ElementTree.fromstring(content)
+        ve = root.find('version')
+        if ve is not None and ve.text:
+            return ve.text.strip()
+    except Exception as e:
+        logging.writeToFile('Parse meta.xml version: %s' % str(e))
+    return None
+
+
+def _read_version_from_plugin_zip(zip_path, plugin_name):
+    """Read version from plugin_name/meta.xml inside the plugin ZIP (upgrade archive)."""
+    import zipfile
+    inner = '%s/meta.xml' % plugin_name
+    try:
+        with zipfile.ZipFile(zip_path, 'r') as zf:
+            names = zf.namelist()
+            target = inner if inner in names else None
+            if target is None:
+                in_lower = inner.lower()
+                for n in names:
+                    if n.lower() == in_lower:
+                        target = n
+                        break
+            if not target:
+                return None
+            return _parse_version_from_meta_xml_bytes(zf.read(target))
+    except Exception as e:
+        logging.writeToFile('read_version_from_plugin_zip: %s' % str(e))
+        return None
+
+
+def _write_meta_xml_from_plugin_zip(zip_path, plugin_name, plugin_install_dir='/usr/local/CyberCP'):
+    """Restore meta.xml on disk from the upgrade ZIP (fallback if sync/CDN overwrote with stale data)."""
+    import zipfile
+    inner = '%s/meta.xml' % plugin_name
+    try:
+        with zipfile.ZipFile(zip_path, 'r') as zf:
+            names = zf.namelist()
+            target = inner if inner in names else None
+            if target is None:
+                in_lower = inner.lower()
+                for n in names:
+                    if n.lower() == in_lower:
+                        target = n
+                        break
+            if not target:
+                return False
+            data = zf.read(target)
+        meta_path = os.path.join(plugin_install_dir, plugin_name, 'meta.xml')
+        d = os.path.dirname(meta_path)
+        if d and not os.path.exists(d):
+            os.makedirs(d, mode=0o755, exist_ok=True)
+        with open(meta_path, 'wb') as f:
+            f.write(data)
+            f.flush()
+            if hasattr(os, 'fsync'):
+                try:
+                    os.fsync(f.fileno())
+                except Exception:
+                    pass
+        logging.writeToFile('Restored %s/meta.xml from upgrade ZIP' % plugin_name)
+        return True
+    except Exception as e:
+        logging.writeToFile('_write_meta_xml_from_plugin_zip: %s' % str(e))
+        return False
+
+
+def _invalidate_plugin_store_cache():
+    """Remove store cache so grid / upgrades-available refreshes installed vs store versions."""
+    try:
+        _ensure_cache_dir()
+        if os.path.isfile(PLUGIN_STORE_CACHE_FILE):
+            os.remove(PLUGIN_STORE_CACHE_FILE)
+            logging.writeToFile('Plugin store cache invalidated after upgrade')
+    except Exception as e:
+        logging.writeToFile('Could not invalidate plugin store cache: %s' % str(e))
+
+
 def _sync_meta_xml_from_github(plugin_name, plugin_install_dir='/usr/local/CyberCP'):
     """
     Fetch meta.xml from GitHub raw (main) and overwrite installed meta.xml.
-    Ensures installed version matches store even when archive ZIP is cached/stale.
-    Verifies write by re-reading version. Returns True if synced and version readable, False otherwise.
+    Never overwrites with an *older* <version> than already on disk (stale raw.githubusercontent CDN).
     """
-    meta_url = f'{GITHUB_RAW_BASE}/{plugin_name}/meta.xml'
+    meta_url = '%s/%s/meta.xml?t=%s' % (GITHUB_RAW_BASE, plugin_name, int(time.time()))
     meta_path = os.path.join(plugin_install_dir, plugin_name, 'meta.xml')
     for attempt in (1, 2):
         try:
-            req = urllib.request.Request(meta_url, headers={'User-Agent': 'CyberPanel-Plugin-Store/1.0'})
+            req = urllib.request.Request(
+                meta_url,
+                headers={'User-Agent': 'CyberPanel-Plugin-Store/1.0', 'Cache-Control': 'no-cache'},
+            )
             with urllib.request.urlopen(req, timeout=15) as resp:
                 content = resp.read()
             if not content:
                 if attempt == 2:
                     logging.writeToFile(f"Sync meta.xml for {plugin_name}: empty response from GitHub")
                 continue
+            remote_ver = _parse_version_from_meta_xml_bytes(content)
+            current_ver = _get_installed_version(plugin_name, plugin_install_dir)
+            if current_ver and remote_ver and _compare_versions(remote_ver, current_ver) < 0:
+                logging.writeToFile(
+                    "Skip meta.xml sync for %s: remote %s older than installed %s (CDN/stale raw)"
+                    % (plugin_name, remote_ver, current_ver)
+                )
+                return False
             with open(meta_path, 'wb') as f:
                 f.write(content)
                 f.flush()
                 if hasattr(os, 'fsync'):
                     try:
-                        f.fsync()
+                        os.fsync(f.fileno())
                     except Exception:
                         pass
-            # Verify we can read version back (ensures file is valid and readable)
             ver = _get_installed_version(plugin_name, plugin_install_dir)
             if ver:
                 logging.writeToFile(f"Synced meta.xml for {plugin_name} from GitHub raw (version {ver})")
@@ -1400,7 +1569,7 @@ def _fetch_plugins_from_github():
                 # Performance: avoid per-plugin GitHub commits API calls.
                 # Instead, compute modify_date from local meta.xml timestamps
                 # (installed meta.xml if present, otherwise plugin source meta.xml).
-                modify_date = _get_local_plugin_meta_modify_date(plugin_name)
+                modify_date, modify_timestamp = _get_local_plugin_meta_modify_pair(plugin_name)
                 freshness = _get_freshness_badge(modify_date)
                 
                 # Extract paid plugin information
@@ -1439,6 +1608,7 @@ def _fetch_plugins_from_github():
                     'github_url': f'https://github.com/master3395/cyberpanel-plugins/tree/main/{plugin_name}',
                     'about_url': f'https://github.com/master3395/cyberpanel-plugins/tree/main/{plugin_name}',
                     'modify_date': modify_date,
+                    'modify_timestamp': modify_timestamp,
                     'freshness_badge': freshness,
                     'is_paid': is_paid,
                     'patreon_tier': patreon_tier,
@@ -1677,6 +1847,12 @@ def upgrade_plugin(request, plugin_name):
             zip_path_abs = os.path.abspath(zip_path)
             if not os.path.exists(zip_path_abs):
                 raise Exception(f'Zip file not found: {zip_path_abs}')
+
+            expected_from_zip = _read_version_from_plugin_zip(zip_path_abs, plugin_name)
+            if expected_from_zip:
+                logging.writeToFile(
+                    'Plugin %s: version in upgrade archive meta.xml: %s' % (plugin_name, expected_from_zip)
+                )
             
             logging.writeToFile(f"Upgrading plugin using pluginInstaller (zip={zip_path_abs})")
             
@@ -1698,18 +1874,43 @@ def upgrade_plugin(request, plugin_name):
             if not os.path.exists(pluginInstalled):
                 raise Exception(f'Plugin upgrade failed: {pluginInstalled} does not exist after upgrade')
             
-            # Sync meta.xml from GitHub raw so version matches store (archive ZIP can be cached/stale)
+            # Sync meta.xml from GitHub raw (never downgrades vs disk — avoids stale CDN on raw.githubusercontent.com)
             _sync_meta_xml_from_github(plugin_name, '/usr/local/CyberCP')
             new_version = _get_installed_version(plugin_name, '/usr/local/CyberCP')
-            # If version unchanged, meta sync may have failed (e.g. network); retry once
             if new_version == installed_version:
                 logging.writeToFile(f"Plugin {plugin_name}: version unchanged after first meta sync, retrying sync")
                 _sync_meta_xml_from_github(plugin_name, '/usr/local/CyberCP')
                 new_version = _get_installed_version(plugin_name, '/usr/local/CyberCP')
-            if new_version == installed_version:
-                logging.writeToFile(f"Plugin {plugin_name}: version still {installed_version} after upgrade; meta.xml may not have been updated from GitHub")
-            
-            logging.writeToFile(f"Plugin {plugin_name} upgraded successfully from {installed_version} to {new_version}")
+            if (
+                new_version == installed_version
+                and expected_from_zip
+                and installed_version
+                and _compare_versions(expected_from_zip, installed_version) > 0
+            ):
+                logging.writeToFile(
+                    'Plugin %s: forcing meta.xml from upgrade ZIP (archive says %s, disk still %s)'
+                    % (plugin_name, expected_from_zip, installed_version)
+                )
+                _write_meta_xml_from_plugin_zip(zip_path_abs, plugin_name, '/usr/local/CyberCP')
+                new_version = _get_installed_version(plugin_name, '/usr/local/CyberCP')
+            if (
+                new_version == installed_version
+                and expected_from_zip
+                and installed_version
+                and _compare_versions(expected_from_zip, installed_version) > 0
+            ):
+                err = (
+                    'Upgrade did not update version on disk (still %s; archive has %s). '
+                    'Check ownership of /usr/local/CyberCP/%s and CyberPanel logs.'
+                    % (installed_version, expected_from_zip, plugin_name)
+                )
+                logging.writeToFile('Plugin %s: %s' % (plugin_name, err))
+                return JsonResponse({'success': False, 'error': err}, status=500)
+
+            _invalidate_plugin_store_cache()
+            logging.writeToFile(
+                'Plugin %s upgraded successfully from %s to %s' % (plugin_name, installed_version, new_version)
+            )
             
             backup_message = ''
             if backup_path:
@@ -2106,7 +2307,8 @@ def plugin_settings_proxy(request, plugin_name):
                 for candidate in ('settings', 'settings_view', 'settings_simple', 'unified_settings'):
                     settings_view = getattr(views_mod, candidate, None)
                     if callable(settings_view):
-                        return settings_view(request)
+                        response = settings_view(request)
+                        return _inject_activation_store_hook(response, plugin_name)
             except ModuleNotFoundError as e:
                 last_err = str(e)
                 continue
@@ -2121,6 +2323,84 @@ def plugin_settings_proxy(request, plugin_name):
     if os.path.isdir(installed_plugin_path):
         return HttpResponseNotFound('Plugin settings not available (incomplete installation).')
     return HttpResponseNotFound('Plugin not found.')
+
+
+def _inject_activation_store_hook(response, plugin_name):
+    """
+    Tiny safety hook for plugin settings pages:
+    if a plugin activation request succeeds client-side, persist the key in
+    CyberPanel DB via /plugins/api/store-activation/<plugin>/.
+    """
+    try:
+        content_type = (response.get('Content-Type', '') or '').lower()
+        if 'text/html' not in content_type:
+            return response
+        body = response.content.decode('utf-8', errors='ignore')
+        hook_script = """
+<script>
+(function () {
+  if (window.__cpActivationStoreHookInstalled) return;
+  window.__cpActivationStoreHookInstalled = true;
+  var pluginName = %s;
+  function getCsrfToken() {
+    var m = document.cookie.match(/(?:^|; )csrftoken=([^;]+)/);
+    return m ? decodeURIComponent(m[1]) : '';
+  }
+  function tryParseBody(body) {
+    if (!body || typeof body !== 'string') return '';
+    try {
+      var obj = JSON.parse(body);
+      if (obj && typeof obj.activation_key === 'string') return obj.activation_key.trim();
+    } catch (e) {}
+    var rx = /activation_key\\s*[:=]\\s*["']?([A-Za-z0-9\\-_.]{6,})/i;
+    var m = body.match(rx);
+    return m ? m[1] : '';
+  }
+  async function persistActivationKey(activationKey) {
+    if (!activationKey) return;
+    try {
+      await window.__cpOriginalFetch('/plugins/api/store-activation/' + encodeURIComponent(pluginName) + '/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCsrfToken()
+        },
+        body: JSON.stringify({ activation_key: activationKey })
+      });
+    } catch (e) {}
+  }
+  if (!window.fetch) return;
+  window.__cpOriginalFetch = window.fetch.bind(window);
+  window.fetch = async function(input, init) {
+    var url = (typeof input === 'string') ? input : ((input && input.url) || '');
+    var body = init && init.body ? String(init.body) : '';
+    var activationKey = tryParseBody(body);
+    var resp = await window.__cpOriginalFetch(input, init);
+    try {
+      var looksLikeActivation = /activate|activation|activate_key/i.test(url || '');
+      if (!looksLikeActivation) return resp;
+      var clone = resp.clone();
+      var ct = (clone.headers.get('content-type') || '').toLowerCase();
+      if (ct.indexOf('application/json') === -1) return resp;
+      var data = await clone.json();
+      var ok = !!(data && (data.has_access === true || data.status === 1 || data.success === true));
+      if (ok && activationKey) {
+        persistActivationKey(activationKey);
+      }
+    } catch (e) {}
+    return resp;
+  };
+})();
+</script>
+""" % json.dumps(plugin_name)
+        if '</body>' in body:
+            body = body.replace('</body>', hook_script + '</body>')
+        else:
+            body += hook_script
+        response.content = body.encode('utf-8')
+        return response
+    except Exception:
+        return response
 
 
 def plugin_help(request, plugin_name):
@@ -2322,10 +2602,11 @@ def plugin_help(request, plugin_name):
     return proc.render()
 
 @csrf_exempt
-@require_http_methods(["GET"])
+@require_http_methods(["GET", "POST"])
 def check_plugin_subscription(request, plugin_name):
     """
-    API endpoint to check if user has Patreon subscription for a paid plugin
+    API endpoint to check plugin premium access.
+    Supports optional activation key save/verify to persist entitlement in MariaDB.
     
     Args:
         request: Django request object
@@ -2342,21 +2623,56 @@ def check_plugin_subscription(request, plugin_name):
     try:
         if not user_can_manage_plugins(request):
             return deny_plugin_manage_json_response(request)
-        # Check if user is authenticated
-        if not request.user or not request.user.is_authenticated:
+        
+        # Load plugin metadata
+        from .plugin_access import (
+            check_plugin_access,
+            _load_plugin_meta,
+            save_activation_key,
+            verify_saved_activation_key
+        )
+        
+        plugin_meta = _load_plugin_meta(plugin_name)
+        
+        user_email = _resolve_logged_in_plugin_identity(request)
+        if not user_email:
             return JsonResponse({
                 'success': False,
                 'has_access': False,
                 'is_paid': False,
-                'message': 'Please log in to check subscription status',
+                'message': 'Unable to determine user identity',
                 'patreon_url': None
-            }, status=401)
-        
-        # Load plugin metadata
-        from .plugin_access import check_plugin_access, _load_plugin_meta
-        
-        plugin_meta = _load_plugin_meta(plugin_name)
-        
+            }, status=400)
+        activation_key = ''
+        if request.method == 'POST':
+            try:
+                payload = json.loads(request.body.decode('utf-8') or '{}')
+            except Exception:
+                payload = {}
+            activation_key = str(payload.get('activation_key', '')).strip()
+            if activation_key and user_email:
+                # If key is already known for this user/plugin -> immediate access
+                if verify_saved_activation_key(plugin_name, user_email, activation_key):
+                    return JsonResponse({
+                        'success': True,
+                        'has_access': True,
+                        'is_paid': bool(plugin_meta and plugin_meta.get('is_paid', False)),
+                        'message': 'Access granted',
+                        'patreon_url': None,
+                        'activation_saved': True
+                    })
+                # Save submitted key as persistent entitlement (admin-managed workflow)
+                saved = save_activation_key(plugin_name, user_email, activation_key, source='plugin_settings')
+                if saved:
+                    return JsonResponse({
+                        'success': True,
+                        'has_access': True,
+                        'is_paid': bool(plugin_meta and plugin_meta.get('is_paid', False)),
+                        'message': 'Activation key saved',
+                        'patreon_url': None,
+                        'activation_saved': True
+                    })
+
         # Check access
         access_result = check_plugin_access(request, plugin_name, plugin_meta)
         
@@ -2365,7 +2681,8 @@ def check_plugin_subscription(request, plugin_name):
             'has_access': access_result['has_access'],
             'is_paid': access_result['is_paid'],
             'message': access_result['message'],
-            'patreon_url': access_result.get('patreon_url')
+            'patreon_url': access_result.get('patreon_url'),
+            'activation_saved': access_result['has_access'] and access_result['is_paid']
         })
         
     except Exception as e:
@@ -2374,6 +2691,40 @@ def check_plugin_subscription(request, plugin_name):
             'success': False,
             'has_access': False,
             'is_paid': False,
-            'message': f'Error checking subscription: {str(e)}',
+            'message': 'Error checking subscription',
             'patreon_url': None
         }, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def store_plugin_activation_key(request, plugin_name):
+    """
+    Store activation key in MariaDB so upgrades do not lose premium entitlement.
+    """
+    try:
+        if not user_can_manage_plugins(request):
+            return deny_plugin_manage_json_response(request)
+
+        try:
+            payload = json.loads(request.body.decode('utf-8') or '{}')
+        except Exception:
+            payload = {}
+
+        activation_key = str(payload.get('activation_key', '')).strip()
+        if not activation_key:
+            return JsonResponse({'success': False, 'message': 'activation_key is required'}, status=400)
+
+        user_email = _resolve_logged_in_plugin_identity(request)
+        if not user_email:
+            return JsonResponse({'success': False, 'message': 'Unable to determine user identity'}, status=400)
+
+        from .plugin_access import save_activation_key
+        ok = save_activation_key(plugin_name, user_email, activation_key, source='api')
+        if not ok:
+            return JsonResponse({'success': False, 'message': 'Failed to persist activation key'}, status=500)
+
+        return JsonResponse({'success': True, 'message': 'Activation key saved'})
+    except Exception as e:
+        logging.writeToFile('store_plugin_activation_key failed for %s: %s' % (plugin_name, str(e)))
+        return JsonResponse({'success': False, 'message': 'Internal server error'}, status=500)

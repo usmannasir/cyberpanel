@@ -31,6 +31,11 @@ class DatabaseManager:
         return proc.render()
 
     def phpMyAdmin(self, request = None, userID = None):
+        try:
+            from plogical.phpmyadmin_utils import ensure_phpmyadmin_signin_bridge
+            ensure_phpmyadmin_signin_bridge()
+        except BaseException:
+            pass
         template = 'databases/phpMyAdmin.html'
         proc = httpProc(request, template, None, 'createDatabase')
         return proc.render()

@@ -59,6 +59,35 @@ class pluginInstaller:
         return os.path.exists(pluginHome + '/enable_migrations')
 
     @staticmethod
+    def shouldApplyPluginDatabaseMigrations(pluginName: str) -> bool:
+        """
+        Run Django migrations when the plugin opts in (enable_migrations file)
+        or when a migrations/ package with real migration modules is shipped.
+        """
+        if pluginInstaller.migrationsEnabled(pluginName):
+            return True
+        mig_dir = '/usr/local/CyberCP/' + pluginName + '/migrations'
+        if not os.path.isdir(mig_dir):
+            return False
+        try:
+            for fn in os.listdir(mig_dir):
+                if fn.endswith('.py') and fn != '__init__.py':
+                    return True
+        except OSError:
+            return False
+        return False
+
+    @staticmethod
+    def _manage_python_executable():
+        for candidate in ('/usr/local/CyberCP/bin/python', '/usr/local/CyberCP/bin/python3'):
+            try:
+                if os.path.isfile(candidate) and os.access(candidate, os.X_OK):
+                    return candidate
+            except OSError:
+                continue
+        return 'python3'
+
+    @staticmethod
     def _write_lines_to_protected_file(target_path, lines):
         """
         Write UTF-8 lines to a file. Core panel files are often root:root 644; the panel
@@ -338,12 +367,31 @@ class pluginInstaller:
     @staticmethod
     def installMigrations(pluginName):
         currentDir = os.getcwd()
-        os.chdir('/usr/local/CyberCP')
-        command = "python3 /usr/local/CyberCP/manage.py makemigrations %s" % pluginName
-        subprocess.call(shlex.split(command))
-        command = "python3 /usr/local/CyberCP/manage.py migrate %s" % pluginName
-        subprocess.call(shlex.split(command))
-        os.chdir(currentDir)
+        manage_py = '/usr/local/CyberCP/manage.py'
+        py = pluginInstaller._manage_python_executable()
+        try:
+            os.chdir('/usr/local/CyberCP')
+            mk = subprocess.call(
+                [py, manage_py, 'makemigrations', pluginName],
+                stdin=subprocess.DEVNULL,
+            )
+            if mk != 0:
+                pluginInstaller.stdOut(
+                    'makemigrations %s exited %s (ok if no model changes)' % (pluginName, mk)
+                )
+            mig = subprocess.call(
+                [py, manage_py, 'migrate', pluginName, '--noinput'],
+                stdin=subprocess.DEVNULL,
+            )
+            if mig != 0:
+                pluginInstaller.stdOut(
+                    'migrate %s exited %s — check CyberPanel logs and DB permissions' % (pluginName, mig)
+                )
+        finally:
+            try:
+                os.chdir(currentDir)
+            except OSError:
+                pass
 
 
     @staticmethod
@@ -427,12 +475,14 @@ class pluginInstaller:
 
             ##
 
-            if pluginInstaller.migrationsEnabled(pluginName):
-                pluginInstaller.stdOut('Running Migrations..')
+            if pluginInstaller.shouldApplyPluginDatabaseMigrations(pluginName):
+                pluginInstaller.stdOut('Running database migrations for %s..' % pluginName)
                 pluginInstaller.installMigrations(pluginName)
-                pluginInstaller.stdOut('Migrations Completed..')
+                pluginInstaller.stdOut('Database migrations step finished for %s.' % pluginName)
             else:
-                pluginInstaller.stdOut('Migrations not enabled, add file \'enable_migrations\' to plugin to enable')
+                pluginInstaller.stdOut(
+                    'No plugin migrations to apply (no migrations/ package and no enable_migrations marker).'
+                )
 
             ##
 
@@ -625,8 +675,11 @@ class pluginInstaller:
     def removeMigrations(pluginName):
         currentDir = os.getcwd()
         os.chdir('/usr/local/CyberCP')
-        command = "python3 /usr/local/CyberCP/manage.py migrate %s zero" % pluginName
-        subprocess.call(shlex.split(command))
+        py = pluginInstaller._manage_python_executable()
+        subprocess.call(
+            [py, '/usr/local/CyberCP/manage.py', 'migrate', pluginName, 'zero', '--noinput'],
+            stdin=subprocess.DEVNULL,
+        )
         os.chdir(currentDir)
 
     @staticmethod
@@ -640,12 +693,12 @@ class pluginInstaller:
 
             ##
 
-            if pluginInstaller.migrationsEnabled(pluginName):
-                pluginInstaller.stdOut('Removing migrations..')
+            if pluginInstaller.shouldApplyPluginDatabaseMigrations(pluginName):
+                pluginInstaller.stdOut('Reverting database migrations for %s..' % pluginName)
                 pluginInstaller.removeMigrations(pluginName)
-                pluginInstaller.stdOut('Migrations removed..')
+                pluginInstaller.stdOut('Database migrations reverted for %s.' % pluginName)
             else:
-                pluginInstaller.stdOut('Migrations not enabled, add file \'enable_migrations\' to plugin to enable')
+                pluginInstaller.stdOut('Skipping migrate zero (no migrations package / marker).')
 
             ##
 

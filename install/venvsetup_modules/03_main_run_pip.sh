@@ -68,6 +68,8 @@ rm -rf requirements.txt
 wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/1.8.0/requirments.txt
 # Install packages with robust error handling to prevent broken pipe errors
 safe_pip_install "pip" "requirements.txt" "--ignore-installed"
+# python-dotenv for Django .env loading (upstream f3437739; critical on some AlmaLinux 8 venvs)
+pip install python-dotenv 2>/dev/null || echo "⚠️  python-dotenv install skipped or failed"
 fi
 
 if [[ $DEV == "ON" ]] ; then
@@ -100,6 +102,7 @@ EOF
 	fi
 	
 	safe_pip_install "pip3.6" "requirements.txt" "--ignore-installed"
+	pip3.6 install python-dotenv 2>/dev/null || echo "⚠️  python-dotenv (pip3.6) install skipped or failed"
 fi
 
 if [ -f requirements.txt ] && [ -d cyberpanel ] ; then

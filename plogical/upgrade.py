@@ -1388,7 +1388,7 @@ $cfg['Servers'][$i]['port'] = '3306';
                 writeToFile.writelines("$cfg['TempDir'] = '/usr/local/CyberCP/public/phpmyadmin/tmp';\n")
                 writeToFile.close()
 
-            os.mkdir('/usr/local/CyberCP/public/phpmyadmin/tmp')
+            os.makedirs('/usr/local/CyberCP/public/phpmyadmin/tmp', exist_ok=True)
 
             if saved_signon and os.path.isfile(tmp_signon):
                 shutil.copy2(tmp_signon, os.path.join(pma_dir, 'phpmyadminsignin.php'))
@@ -1416,6 +1416,12 @@ $cfg['Servers'][$i]['port'] = '3306';
             Upgrade.executioner_silent(command, 'chown phpMyAdmin')
             command = 'chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin/tmp'
             Upgrade.executioner_silent(command, 'chown phpMyAdmin tmp')
+
+            try:
+                from plogical.phpmyadmin_utils import ensure_phpmyadmin_signin_bridge
+                ensure_phpmyadmin_signin_bridge()
+            except Exception:
+                pass
 
             os.chdir(cwd)
 
