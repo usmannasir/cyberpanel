@@ -743,8 +743,55 @@ class pluginInstaller:
 
     @staticmethod
     def restartGunicorn():
-        command = 'systemctl restart lscpd'
-        ProcessUtilities.normalExecutioner(command)
+        """
+        Reload lscpd so Django reloads pluginHolder.urls and INSTALLED_APPS sync.
+        When the panel runs as non-root, plain systemctl often fails; try sudo -n then systemctl.
+        """
+        try:
+            is_root = os.geteuid() == 0
+        except AttributeError:
+            is_root = True
+
+        if is_root:
+            candidates = [['systemctl', 'restart', 'lscpd']]
+        else:
+            # Prefer non-interactive sudo (NOPASSWD in sudoers); avoid bare sudo — it can hang on password.
+            candidates = [
+                ['sudo', '-n', 'systemctl', 'restart', 'lscpd'],
+                ['systemctl', 'restart', 'lscpd'],
+            ]
+
+        last_detail = None
+        for cmd in candidates:
+            try:
+                proc = subprocess.run(
+                    cmd,
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    timeout=120,
+                    text=True,
+                )
+                if proc.returncode == 0:
+                    pluginInstaller.stdOut('lscpd restarted (%s)' % ' '.join(cmd))
+                    return
+                err = (proc.stderr or proc.stdout or '').strip()
+                last_detail = 'rc=%s %s' % (proc.returncode, err[:400])
+            except subprocess.TimeoutExpired:
+                last_detail = 'timeout after 120s for %s' % ' '.join(cmd)
+            except Exception as exc:
+                last_detail = str(exc)[:400]
+
+        msg = 'pluginInstaller.restartGunicorn: failed to restart lscpd. %s. Run as root or grant NOPASSWD: sudo systemctl restart lscpd' % (
+            last_detail or 'no details'
+        )
+        pluginInstaller.stdOut(msg)
+        try:
+            from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as cp_log
+
+            cp_log.writeToFile(msg)
+        except Exception:
+            pass
 
 
 
