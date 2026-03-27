@@ -330,11 +330,17 @@ def versionManagment(request):
     if not on_dev_branch and notechk and _version_compare(currentVersion, latestVersion) > 0:
         notechk = False
     elif notechk:
-        # Dev branch: always use usmannasir v2.5.5-dev as canonical "latest"
-        # Forks: use usmannasir for Latest Commit so all dev users compare to same upstream
+        # Dev branch: official remote compares to usmannasir/cyberpanel; forks compare to their own GitHub repo
         fetch_branch = branch_ref if (is_usmannasir or on_dev_branch) else None
         if fetch_branch:
-            u = "https://api.github.com/repos/usmannasir/cyberpanel/commits?sha=%s" % fetch_branch
+            u = None
+            if on_dev_branch and not is_usmannasir:
+                m = re.search(r'github\.com[:/]([^/]+)/([^/]+?)(?:\.git)?$', (remote_out or '').strip())
+                if m:
+                    owner, repo = m.group(1), m.group(2).rstrip('.git')
+                    u = "https://api.github.com/repos/%s/%s/commits?sha=%s" % (owner, repo, fetch_branch)
+            if u is None:
+                u = "https://api.github.com/repos/usmannasir/cyberpanel/commits?sha=%s" % fetch_branch
             logging.CyberCPLogFileWriter.writeToFile(u)
             try:
                 r = requests.get(u, timeout=10)
