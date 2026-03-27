@@ -95,6 +95,11 @@ urlpatterns = [
     path('help/', views.help_page, name='help'),
     path('api/install/<str:plugin_name>/', views.install_plugin, name='install_plugin'),
     path('api/uninstall/<str:plugin_name>/', views.uninstall_plugin, name='uninstall_plugin'),
+    path(
+        'api/delete-source/<str:plugin_name>/',
+        views.delete_plugin_source,
+        name='delete_plugin_source',
+    ),
     path('api/enable/<str:plugin_name>/', views.enable_plugin, name='enable_plugin'),
     path('api/disable/<str:plugin_name>/', views.disable_plugin, name='disable_plugin'),
     path('api/store/plugins/', views.fetch_plugin_store, name='fetch_plugin_store'),
