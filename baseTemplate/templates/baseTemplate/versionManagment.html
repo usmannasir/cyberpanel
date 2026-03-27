@@ -341,7 +341,12 @@
                 </span>
             </div>
             {% endif %}
-            {% if local_behind_official and not Notecheck %}
+            {% if show_fork_block and fork_drift_upstream %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                <span>{% trans "Info: Your fork branch tip on GitHub differs from the official upstream tip on the same branch. That is normal if you have not merged upstream yet." %}</span>
+            </div>
+            {% elif local_behind_official and not Notecheck %}
             <div class="alert alert-info">
                 <i class="fas fa-info-circle"></i>
                 <span>{% trans "Your commit differs from the latest on the official CyberPanel repository (usmannasir/cyberpanel). This is informational if you intentionally track a fork." %}</span>
@@ -419,17 +424,13 @@
                 </div>
                 {% endif %}
 
-                {% if on_dev_branch %}
+                {% if upstream_commit %}
                 <div class="version-meta-row">
                     <span class="version-meta-row-label">{% trans "Official upstream (usmannasir/cyberpanel) — latest on GitHub" %}</span>
                     <span class="version-meta-row-value">
-                        {% if upstream_commit %}
                         <code class="version-sha" title="{{ upstream_commit }}">{{ upstream_commit_short }}</code>
                         {% if upstream_commit_url %}
                         <a href="{{ upstream_commit_url }}" target="_blank" rel="noopener noreferrer">{% trans "View commit" %}</a>
-                        {% endif %}
-                        {% else %}
-                        {% trans "Unavailable" %} (API)
                         {% endif %}
                     </span>
                 </div>
