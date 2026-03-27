@@ -3986,7 +3986,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             writeToFile.close()
 
-            os.mkdir('/usr/local/CyberCP/public/phpmyadmin/tmp')
+            os.makedirs('/usr/local/CyberCP/public/phpmyadmin/tmp', exist_ok=True)
 
             command = 'chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin'
             preFlightsChecks.call(command, self.distro, '[chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin]',
