@@ -325,6 +325,14 @@ def versionManagment(request):
     remote_cmd = 'git -C /usr/local/CyberCP remote get-url origin 2>/dev/null || true'
     remote_out = ProcessUtilities.outputExecutioner(remote_cmd)
     is_usmannasir = 'usmannasir/cyberpanel' in (remote_out or '')
+    github_owner, github_repo = None, None
+    m_remote = re.search(r'github\.com[:/]([^/]+)/([^/]+?)(?:\.git)?$', (remote_out or '').strip())
+    if m_remote:
+        github_owner = m_remote.group(1)
+        github_repo = m_remote.group(2).rstrip('.git')
+        remote_display = '%s/%s' % (github_owner, github_repo)
+    else:
+        remote_display = ((remote_out or '').strip() or '')
 
     # Stable: newer than cyberpanel.net = up to date; dev: compare commits
     if not on_dev_branch and notechk and _version_compare(currentVersion, latestVersion) > 0:
@@ -365,10 +373,53 @@ def versionManagment(request):
                 except (requests.RequestException, IndexError, KeyError):
                     pass
 
+    # Fork remote tip for UI (empty when origin is official).
+    fork_remote_commit = latestcomit if (latestcomit and not is_usmannasir) else ''
+
+    upstream_commit = ''
+    if on_dev_branch:
+        up_url = "https://api.github.com/repos/usmannasir/cyberpanel/commits?sha=%s" % branch_ref
+        logging.CyberCPLogFileWriter.writeToFile(up_url)
+        try:
+            up_r = requests.get(up_url, timeout=10)
+            up_r.raise_for_status()
+            upstream_commit = up_r.json()[0]['sha']
+        except (requests.RequestException, IndexError, KeyError) as e:
+            logging.CyberCPLogFileWriter.writeToFile('[versionManagment] upstream GitHub API failed: %s' % str(e))
+
+    def _short_sha(commit_hash):
+        if not commit_hash or len(commit_hash) < 7:
+            return commit_hash or ''
+        return commit_hash[:7]
+
+    fork_commit_url = ''
+    if github_owner and github_repo and fork_remote_commit:
+        fork_commit_url = 'https://github.com/%s/%s/commit/%s' % (
+            github_owner, github_repo, fork_remote_commit)
+    upstream_commit_url = ''
+    if upstream_commit:
+        upstream_commit_url = 'https://github.com/usmannasir/cyberpanel/commit/%s' % upstream_commit
+
+    local_behind_official = bool(
+        on_dev_branch and Currentcomt and upstream_commit and Currentcomt != upstream_commit)
+    notecheck_compare_remote = 'usmannasir/cyberpanel' if is_usmannasir else remote_display
+
     template = 'baseTemplate/versionManagment.html'
-    finalData = {'build': currentBuild, 'currentVersion': currentVersion, 'latestVersion': latestVersion,
-                 'latestBuild': latestBuild, 'latestcomit': latestcomit, "Currentcomt": Currentcomt,
-                 "Notecheck": notechk}
+    finalData = {
+        'build': currentBuild, 'currentVersion': currentVersion, 'latestVersion': latestVersion,
+        'latestBuild': latestBuild, 'latestcomit': latestcomit, 'Currentcomt': Currentcomt,
+        'Notecheck': notechk, 'branch_ref': branch_ref, 'remote_display': remote_display,
+        'is_usmannasir': is_usmannasir, 'fork_remote_commit': fork_remote_commit,
+        'upstream_commit': upstream_commit, 'fork_commit_url': fork_commit_url,
+        'upstream_commit_url': upstream_commit_url,
+        'Currentcomt_short': _short_sha(Currentcomt),
+        'latestcomit_short': _short_sha(latestcomit),
+        'fork_remote_commit_short': _short_sha(fork_remote_commit),
+        'upstream_commit_short': _short_sha(upstream_commit),
+        'local_behind_official': local_behind_official,
+        'notecheck_compare_remote': notecheck_compare_remote,
+        'on_dev_branch': on_dev_branch,
+    }
 
     proc = httpProc(request, template, finalData, 'versionManagement')
     return proc.render()

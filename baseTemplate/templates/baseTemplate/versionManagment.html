@@ -165,6 +165,72 @@
             font-weight: 600;
         }
         
+        .alert-info {
+            background: var(--bg-hover, #eef0ff);
+            border: 1px solid var(--border-color, #c7c9f0);
+            color: var(--text-primary, #2f3640);
+        }
+        
+        .alert-info a {
+            color: var(--accent-color, #5b5fcf);
+            font-weight: 600;
+        }
+        
+        .version-section {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary, #2f3640);
+        }
+        
+        .version-section:first-of-type {
+            margin-top: 0;
+        }
+        
+        .version-meta-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+            margin-bottom: 14px;
+            padding: 12px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color, #e8e9ff);
+            background: var(--bg-hover, #f8f9ff);
+        }
+        
+        .version-meta-row-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary, #8893a7);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .version-meta-row-value {
+            font-size: 14px;
+            color: var(--text-primary, #2f3640);
+            word-break: break-word;
+            line-height: 1.5;
+        }
+        
+        .version-meta-row-value code,
+        .version-sha {
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 13px;
+            background: var(--bg-secondary, white);
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color, #e8e9ff);
+        }
+        
+        .version-meta-row-value a {
+            font-weight: 600;
+            color: var(--accent-color, #5b5fcf);
+            margin-left: 4px;
+        }
+        
         /* Info grid */
         .info-grid {
             display: grid;
@@ -269,7 +335,16 @@
             {% if Notecheck %}
             <div class="alert alert-warning">
                 <i class="fas fa-exclamation-triangle"></i>
-                <span>{% trans "Note: Latest commit does not match, please upgrade CyberPanel." %} <a href="https://cyberpanel.net/KnowledgeBase/home/upgrading-cyberpanel/">Learn how to upgrade CyberPanel.</a></span>
+                <span>
+                    {% blocktrans with cmp=notecheck_compare_remote %}Note: The current commit does not match the latest commit on {{ cmp }}. Please upgrade CyberPanel.{% endblocktrans %}
+                    <a href="https://cyberpanel.net/KnowledgeBase/home/upgrading-cyberpanel/" target="_blank" rel="noopener noreferrer">{% trans "Learn how to upgrade CyberPanel." %}</a>
+                </span>
+            </div>
+            {% endif %}
+            {% if local_behind_official and not Notecheck %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                <span>{% trans "Your commit differs from the latest on the official CyberPanel repository (usmannasir/cyberpanel). This is informational if you intentionally track a fork." %}</span>
             </div>
             {% endif %}
 
@@ -294,8 +369,9 @@
             </div>
 
             <div class="content-card">
-                <h2 class="card-title">Version Information</h2>
+                <h2 class="card-title">{% trans "Version Information" %}</h2>
                 
+                <p class="version-section">{% trans "This installation" %}</p>
                 <div class="info-grid">
                     <div class="info-item">
                         <span class="info-label">{% trans "Current Version" %}</span>
@@ -306,22 +382,65 @@
                         <span class="info-value">{{ build }}</span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">{% trans "Current Commit" %}</span>
-                        <span class="info-value">{{ Currentcomt }}</span>
+                        <span class="info-label">{% trans "Current commit" %}</span>
+                        <span class="info-value" title="{{ Currentcomt }}">
+                            {% if Currentcomt_short %}<code class="version-sha">{{ Currentcomt_short }}</code>{% else %}—{% endif %}
+                        </span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">{% trans "Latest Version" %}</span>
+                        <span class="info-label">{% trans "Published latest version" %}</span>
                         <span class="info-value">{{ latestVersion }}</span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">{% trans "Latest Build" %}</span>
+                        <span class="info-label">{% trans "Published latest build" %}</span>
                         <span class="info-value">{{ latestBuild }}</span>
                     </div>
-                    <div class="info-item">
-                        <span class="info-label">{% trans "Latest Commit" %}</span>
-                        <span class="info-value">{{ latestcomit }}</span>
-                    </div>
                 </div>
+
+                <p class="version-section">{% trans "Git remotes and branch tips" %}</p>
+                <div class="version-meta-row">
+                    <span class="version-meta-row-label">{% trans "Origin (git remote)" %}</span>
+                    <span class="version-meta-row-value">{{ remote_display|default:"—" }}</span>
+                </div>
+                <div class="version-meta-row">
+                    <span class="version-meta-row-label">{% trans "Tracking branch" %}</span>
+                    <span class="version-meta-row-value"><code class="version-sha">{{ branch_ref }}</code></span>
+                </div>
+
+                {% if fork_remote_commit %}
+                <div class="version-meta-row">
+                    <span class="version-meta-row-label">{% trans "Your fork — latest on GitHub" %}</span>
+                    <span class="version-meta-row-value">
+                        <code class="version-sha" title="{{ fork_remote_commit }}">{{ fork_remote_commit_short }}</code>
+                        {% if fork_commit_url %}
+                        <a href="{{ fork_commit_url }}" target="_blank" rel="noopener noreferrer">{% trans "View commit" %}</a>
+                        {% endif %}
+                    </span>
+                </div>
+                {% endif %}
+
+                {% if on_dev_branch %}
+                <div class="version-meta-row">
+                    <span class="version-meta-row-label">{% trans "Official upstream (usmannasir/cyberpanel) — latest on GitHub" %}</span>
+                    <span class="version-meta-row-value">
+                        {% if upstream_commit %}
+                        <code class="version-sha" title="{{ upstream_commit }}">{{ upstream_commit_short }}</code>
+                        {% if upstream_commit_url %}
+                        <a href="{{ upstream_commit_url }}" target="_blank" rel="noopener noreferrer">{% trans "View commit" %}</a>
+                        {% endif %}
+                        {% else %}
+                        {% trans "Unavailable" %} (API)
+                        {% endif %}
+                    </span>
+                </div>
+                {% elif latestcomit and not fork_remote_commit and not on_dev_branch %}
+                <div class="version-meta-row">
+                    <span class="version-meta-row-label">{% trans "Latest commit on origin (comparison)" %}</span>
+                    <span class="version-meta-row-value">
+                        <code class="version-sha" title="{{ latestcomit }}">{{ latestcomit_short }}</code>
+                    </span>
+                </div>
+                {% endif %}
             </div>
 
             <div class="content-card" ng-hide="upgradelogBox">
