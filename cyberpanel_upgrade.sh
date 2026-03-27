@@ -102,6 +102,15 @@ Pre_Upgrade_Setup_Repository
 Pre_Upgrade_Setup_Git_URL
 Pre_Upgrade_Required_Components
 Main_Upgrade
-Sync_CyberCP_To_Latest
+CYBERPANEL_GIT_SYNC_OK=0
+if Sync_CyberCP_To_Latest; then
+  CYBERPANEL_GIT_SYNC_OK=1
+else
+  echo -e "\e[31m[$(date +"%Y-%m-%d %H:%M:%S")] ERROR: Git sync of /usr/local/CyberCP to origin/$Branch_Name failed. Panel code may be outdated. See /var/log/cyberpanel_upgrade_debug.log and /etc/cyberpanel/last_git_sync_failed\e[0m" | tee -a /var/log/cyberpanel_upgrade_debug.log
+fi
+export CYBERPANEL_GIT_SYNC_OK
 Post_Upgrade_System_Tweak
 Post_Install_Display_Final_Info
+if [[ "$CYBERPANEL_GIT_SYNC_OK" -ne 1 ]]; then
+  exit 1
+fi
