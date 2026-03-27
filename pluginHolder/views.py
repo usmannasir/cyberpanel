@@ -162,11 +162,10 @@ def _get_plugin_source_path(plugin_name):
             return path
     return None
 
-def _get_local_plugin_meta_modify_date(plugin_name):
+def _get_local_plugin_meta_modify_pair(plugin_name):
     """
-    Compute plugin modify date from local meta.xml file timestamps.
-    This avoids per-plugin GitHub commits API calls while still providing
-    a useful "Modify date" column in the plugin store UI.
+    Return (modify_date string server-local, unix seconds) from first found meta.xml.
+    Unix seconds represent the same instant everywhere; UI formats in browser timezone.
     """
     candidate_paths = []
 
@@ -180,11 +179,39 @@ def _get_local_plugin_meta_modify_date(plugin_name):
         try:
             if os.path.exists(meta_path) and os.path.isfile(meta_path):
                 modify_time = os.path.getmtime(meta_path)
-                return datetime.fromtimestamp(modify_time).strftime('%Y-%m-%d %H:%M:%S')
+                return (
+                    datetime.fromtimestamp(modify_time).strftime('%Y-%m-%d %H:%M:%S'),
+                    int(modify_time),
+                )
         except Exception:
             continue
 
-    return 'N/A'
+    return ('N/A', None)
+
+
+def _get_local_plugin_meta_modify_date(plugin_name):
+    """
+    Compute plugin modify date from local meta.xml file timestamps.
+    This avoids per-plugin GitHub commits API calls while still providing
+    a useful "Modify date" column in the plugin store UI.
+    """
+    return _get_local_plugin_meta_modify_pair(plugin_name)[0]
+
+
+def _apply_modify_date_from_meta_path(data_dict, meta_xml_path):
+    """Set modify_date, modify_timestamp, freshness_badge on plugin data dict."""
+    modify_date = 'N/A'
+    modify_timestamp = None
+    try:
+        if meta_xml_path and os.path.exists(meta_xml_path):
+            modify_time = os.path.getmtime(meta_xml_path)
+            modify_date = datetime.fromtimestamp(modify_time).strftime('%Y-%m-%d %H:%M:%S')
+            modify_timestamp = int(modify_time)
+    except Exception:
+        pass
+    data_dict['modify_date'] = modify_date
+    data_dict['modify_timestamp'] = modify_timestamp
+    data_dict['freshness_badge'] = _get_freshness_badge(modify_date)
 
 def _ensure_plugin_meta_xml(plugin_name):
     """
@@ -402,16 +429,7 @@ def installed(request):
                 
                 # Get modify date from local file (fast, no API calls)
                 # GitHub commit dates are fetched in the plugin store, not here to avoid timeouts
-                modify_date = 'N/A'
-                try:
-                    if os.path.exists(metaXmlPath):
-                        modify_time = os.path.getmtime(metaXmlPath)
-                        modify_date = datetime.fromtimestamp(modify_time).strftime('%Y-%m-%d %H:%M:%S')
-                except Exception:
-                    modify_date = 'N/A'
-                
-                data['modify_date'] = modify_date
-                data['freshness_badge'] = _get_freshness_badge(modify_date)
+                _apply_modify_date_from_meta_path(data, metaXmlPath)
                 
                 # Extract settings URL or main URL for "Manage" button
                 settings_url_elem = root.find('settings_url')
@@ -537,16 +555,7 @@ def installed(request):
                 data['patreon_url'] = None
                 
                 # Get modify date from installed location
-                modify_date = 'N/A'
-                try:
-                    if os.path.exists(metaXmlPath):
-                        modify_time = os.path.getmtime(metaXmlPath)
-                        modify_date = datetime.fromtimestamp(modify_time).strftime('%Y-%m-%d %H:%M:%S')
-                except Exception:
-                    modify_date = 'N/A'
-                
-                data['modify_date'] = modify_date
-                data['freshness_badge'] = _get_freshness_badge(modify_date)
+                _apply_modify_date_from_meta_path(data, metaXmlPath)
                 
                 # Extract settings URL or main URL
                 settings_url_elem = root.find('settings_url')
@@ -639,12 +648,7 @@ def installed(request):
                 'manage_url': f'/plugins/{plugin_name}/',
                 'author': root.find('author').text if root.find('author') is not None and root.find('author').text else 'Unknown',
             }
-            try:
-                modify_time = os.path.getmtime(meta_xml_path)
-                data['modify_date'] = datetime.fromtimestamp(modify_time).strftime('%Y-%m-%d %H:%M:%S')
-            except Exception:
-                data['modify_date'] = 'N/A'
-            data['freshness_badge'] = _get_freshness_badge(data['modify_date'])
+            _apply_modify_date_from_meta_path(data, meta_xml_path)
             paid_elem = root.find('paid')
             if paid_elem is not None and paid_elem.text and paid_elem.text.lower() == 'true':
                 data['is_paid'] = True
@@ -1186,32 +1190,127 @@ def _get_installed_version(plugin_dir, plugin_install_dir):
     
     return None
 
+
+def _parse_version_from_meta_xml_bytes(content):
+    """Return <version> text from meta.xml bytes, or None."""
+    if not content:
+        return None
+    try:
+        if isinstance(content, bytes):
+            content = content.decode('utf-8', errors='replace')
+        root = ElementTree.fromstring(content)
+        ve = root.find('version')
+        if ve is not None and ve.text:
+            return ve.text.strip()
+    except Exception as e:
+        logging.writeToFile('Parse meta.xml version: %s' % str(e))
+    return None
+
+
+def _read_version_from_plugin_zip(zip_path, plugin_name):
+    """Read version from plugin_name/meta.xml inside the plugin ZIP (upgrade archive)."""
+    import zipfile
+    inner = '%s/meta.xml' % plugin_name
+    try:
+        with zipfile.ZipFile(zip_path, 'r') as zf:
+            names = zf.namelist()
+            target = inner if inner in names else None
+            if target is None:
+                in_lower = inner.lower()
+                for n in names:
+                    if n.lower() == in_lower:
+                        target = n
+                        break
+            if not target:
+                return None
+            return _parse_version_from_meta_xml_bytes(zf.read(target))
+    except Exception as e:
+        logging.writeToFile('read_version_from_plugin_zip: %s' % str(e))
+        return None
+
+
+def _write_meta_xml_from_plugin_zip(zip_path, plugin_name, plugin_install_dir='/usr/local/CyberCP'):
+    """Restore meta.xml on disk from the upgrade ZIP (fallback if sync/CDN overwrote with stale data)."""
+    import zipfile
+    inner = '%s/meta.xml' % plugin_name
+    try:
+        with zipfile.ZipFile(zip_path, 'r') as zf:
+            names = zf.namelist()
+            target = inner if inner in names else None
+            if target is None:
+                in_lower = inner.lower()
+                for n in names:
+                    if n.lower() == in_lower:
+                        target = n
+                        break
+            if not target:
+                return False
+            data = zf.read(target)
+        meta_path = os.path.join(plugin_install_dir, plugin_name, 'meta.xml')
+        d = os.path.dirname(meta_path)
+        if d and not os.path.exists(d):
+            os.makedirs(d, mode=0o755, exist_ok=True)
+        with open(meta_path, 'wb') as f:
+            f.write(data)
+            f.flush()
+            if hasattr(os, 'fsync'):
+                try:
+                    os.fsync(f.fileno())
+                except Exception:
+                    pass
+        logging.writeToFile('Restored %s/meta.xml from upgrade ZIP' % plugin_name)
+        return True
+    except Exception as e:
+        logging.writeToFile('_write_meta_xml_from_plugin_zip: %s' % str(e))
+        return False
+
+
+def _invalidate_plugin_store_cache():
+    """Remove store cache so grid / upgrades-available refreshes installed vs store versions."""
+    try:
+        _ensure_cache_dir()
+        if os.path.isfile(PLUGIN_STORE_CACHE_FILE):
+            os.remove(PLUGIN_STORE_CACHE_FILE)
+            logging.writeToFile('Plugin store cache invalidated after upgrade')
+    except Exception as e:
+        logging.writeToFile('Could not invalidate plugin store cache: %s' % str(e))
+
+
 def _sync_meta_xml_from_github(plugin_name, plugin_install_dir='/usr/local/CyberCP'):
     """
     Fetch meta.xml from GitHub raw (main) and overwrite installed meta.xml.
-    Ensures installed version matches store even when archive ZIP is cached/stale.
-    Verifies write by re-reading version. Returns True if synced and version readable, False otherwise.
+    Never overwrites with an *older* <version> than already on disk (stale raw.githubusercontent CDN).
     """
-    meta_url = f'{GITHUB_RAW_BASE}/{plugin_name}/meta.xml'
+    meta_url = '%s/%s/meta.xml?t=%s' % (GITHUB_RAW_BASE, plugin_name, int(time.time()))
     meta_path = os.path.join(plugin_install_dir, plugin_name, 'meta.xml')
     for attempt in (1, 2):
         try:
-            req = urllib.request.Request(meta_url, headers={'User-Agent': 'CyberPanel-Plugin-Store/1.0'})
+            req = urllib.request.Request(
+                meta_url,
+                headers={'User-Agent': 'CyberPanel-Plugin-Store/1.0', 'Cache-Control': 'no-cache'},
+            )
             with urllib.request.urlopen(req, timeout=15) as resp:
                 content = resp.read()
             if not content:
                 if attempt == 2:
                     logging.writeToFile(f"Sync meta.xml for {plugin_name}: empty response from GitHub")
                 continue
+            remote_ver = _parse_version_from_meta_xml_bytes(content)
+            current_ver = _get_installed_version(plugin_name, plugin_install_dir)
+            if current_ver and remote_ver and _compare_versions(remote_ver, current_ver) < 0:
+                logging.writeToFile(
+                    "Skip meta.xml sync for %s: remote %s older than installed %s (CDN/stale raw)"
+                    % (plugin_name, remote_ver, current_ver)
+                )
+                return False
             with open(meta_path, 'wb') as f:
                 f.write(content)
                 f.flush()
                 if hasattr(os, 'fsync'):
                     try:
-                        f.fsync()
+                        os.fsync(f.fileno())
                     except Exception:
                         pass
-            # Verify we can read version back (ensures file is valid and readable)
             ver = _get_installed_version(plugin_name, plugin_install_dir)
             if ver:
                 logging.writeToFile(f"Synced meta.xml for {plugin_name} from GitHub raw (version {ver})")
@@ -1470,7 +1569,7 @@ def _fetch_plugins_from_github():
                 # Performance: avoid per-plugin GitHub commits API calls.
                 # Instead, compute modify_date from local meta.xml timestamps
                 # (installed meta.xml if present, otherwise plugin source meta.xml).
-                modify_date = _get_local_plugin_meta_modify_date(plugin_name)
+                modify_date, modify_timestamp = _get_local_plugin_meta_modify_pair(plugin_name)
                 freshness = _get_freshness_badge(modify_date)
                 
                 # Extract paid plugin information
@@ -1509,6 +1608,7 @@ def _fetch_plugins_from_github():
                     'github_url': f'https://github.com/master3395/cyberpanel-plugins/tree/main/{plugin_name}',
                     'about_url': f'https://github.com/master3395/cyberpanel-plugins/tree/main/{plugin_name}',
                     'modify_date': modify_date,
+                    'modify_timestamp': modify_timestamp,
                     'freshness_badge': freshness,
                     'is_paid': is_paid,
                     'patreon_tier': patreon_tier,
@@ -1747,6 +1847,12 @@ def upgrade_plugin(request, plugin_name):
             zip_path_abs = os.path.abspath(zip_path)
             if not os.path.exists(zip_path_abs):
                 raise Exception(f'Zip file not found: {zip_path_abs}')
+
+            expected_from_zip = _read_version_from_plugin_zip(zip_path_abs, plugin_name)
+            if expected_from_zip:
+                logging.writeToFile(
+                    'Plugin %s: version in upgrade archive meta.xml: %s' % (plugin_name, expected_from_zip)
+                )
             
             logging.writeToFile(f"Upgrading plugin using pluginInstaller (zip={zip_path_abs})")
             
@@ -1768,18 +1874,43 @@ def upgrade_plugin(request, plugin_name):
             if not os.path.exists(pluginInstalled):
                 raise Exception(f'Plugin upgrade failed: {pluginInstalled} does not exist after upgrade')
             
-            # Sync meta.xml from GitHub raw so version matches store (archive ZIP can be cached/stale)
+            # Sync meta.xml from GitHub raw (never downgrades vs disk — avoids stale CDN on raw.githubusercontent.com)
             _sync_meta_xml_from_github(plugin_name, '/usr/local/CyberCP')
             new_version = _get_installed_version(plugin_name, '/usr/local/CyberCP')
-            # If version unchanged, meta sync may have failed (e.g. network); retry once
             if new_version == installed_version:
                 logging.writeToFile(f"Plugin {plugin_name}: version unchanged after first meta sync, retrying sync")
                 _sync_meta_xml_from_github(plugin_name, '/usr/local/CyberCP')
                 new_version = _get_installed_version(plugin_name, '/usr/local/CyberCP')
-            if new_version == installed_version:
-                logging.writeToFile(f"Plugin {plugin_name}: version still {installed_version} after upgrade; meta.xml may not have been updated from GitHub")
-            
-            logging.writeToFile(f"Plugin {plugin_name} upgraded successfully from {installed_version} to {new_version}")
+            if (
+                new_version == installed_version
+                and expected_from_zip
+                and installed_version
+                and _compare_versions(expected_from_zip, installed_version) > 0
+            ):
+                logging.writeToFile(
+                    'Plugin %s: forcing meta.xml from upgrade ZIP (archive says %s, disk still %s)'
+                    % (plugin_name, expected_from_zip, installed_version)
+                )
+                _write_meta_xml_from_plugin_zip(zip_path_abs, plugin_name, '/usr/local/CyberCP')
+                new_version = _get_installed_version(plugin_name, '/usr/local/CyberCP')
+            if (
+                new_version == installed_version
+                and expected_from_zip
+                and installed_version
+                and _compare_versions(expected_from_zip, installed_version) > 0
+            ):
+                err = (
+                    'Upgrade did not update version on disk (still %s; archive has %s). '
+                    'Check ownership of /usr/local/CyberCP/%s and CyberPanel logs.'
+                    % (installed_version, expected_from_zip, plugin_name)
+                )
+                logging.writeToFile('Plugin %s: %s' % (plugin_name, err))
+                return JsonResponse({'success': False, 'error': err}, status=500)
+
+            _invalidate_plugin_store_cache()
+            logging.writeToFile(
+                'Plugin %s upgraded successfully from %s to %s' % (plugin_name, installed_version, new_version)
+            )
             
             backup_message = ''
             if backup_path:
