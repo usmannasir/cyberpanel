@@ -2396,8 +2396,8 @@
                 {% endif %}
             </div>
         {% endif %}
-        {% if admin or managePlugins %}
-            {% if managePlugins and not admin %}
+        {% if show_plugins_menu %}
+            {% if grant_only_lpma_sidebar or managePlugins and not admin %}
             <div class="section-header">{% trans "PLUGINS" %}</div>
             {% endif %}
             <a href="#" class="menu-item" onclick="toggleSubmenu('plugins-submenu', this); return false;">
@@ -2408,12 +2408,19 @@
                 <i class="fas fa-chevron-right chevron"></i>
             </a>
             <div id="plugins-submenu" class="submenu">
+                {% if show_plugin_management_links %}
                 <a href="{% url 'installed' %}" class="menu-item">
                     <span>Installed</span>
                 </a>
                 <a href="{% url 'installed' %}?view=store" class="menu-item">
                     <span>{% trans "Plugin Store" %}</span>
                 </a>
+                {% endif %}
+                {% if show_lpma_sidebar_link %}
+                <a href="{{ lpma_sidebar_url }}" class="menu-item">
+                    <span>{% trans "Limited phpMyAdmin" %}</span>
+                </a>
+                {% endif %}
             </div>
         {% endif %}
     </div>
