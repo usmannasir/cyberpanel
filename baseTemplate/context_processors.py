@@ -103,3 +103,83 @@ def dns_static_context(request):
     return {
         'DNS_STATIC_VERSION': version
     }
+
+
+def plugin_sidebar_context(request):
+    """
+    Sidebar Plugins menu: Installed / Plugin Store (ACL), Limited phpMyAdmin link
+    for admins, plugin managers, or cpuser grantees; grant-only users see LPMA only.
+    """
+    defaults = {
+        'lpma_plugin_installed': False,
+        'lpma_has_cpuser_grant': False,
+        'show_plugin_management_links': False,
+        'show_lpma_sidebar_link': False,
+        'show_plugins_menu': False,
+        'grant_only_lpma_sidebar': False,
+        'plugin_sidebar_extra_links': [],
+        'lpma_sidebar_url': '/plugins/limitedPhpmyAdmin/',
+    }
+    try:
+        if 'userID' not in request.session:
+            return defaults
+        uid = request.session['userID']
+        from plogical.acl import ACLManager
+
+        acl = ACLManager.loadedACL(uid)
+        admin = bool(acl.get('admin'))
+        manage_plugins = bool(acl.get('managePlugins'))
+        show_plugin_management_links = admin or manage_plugins
+
+        lpma_plugin_installed = os.path.isdir('/usr/local/CyberCP/limitedPhpmyAdmin')
+
+        lpma_has_cpuser_grant = False
+        if lpma_plugin_installed:
+            try:
+                from django.apps import apps
+
+                if apps.is_installed('limitedPhpmyAdmin'):
+                    from limitedPhpmyAdmin.models import LimitedPhpmyAdminGrant
+
+                    lpma_has_cpuser_grant = LimitedPhpmyAdminGrant.objects.filter(
+                        enabled=True,
+                        subject_type='cpuser',
+                        administrator_id=uid,
+                    ).exists()
+            except Exception:
+                lpma_has_cpuser_grant = False
+
+        show_lpma_sidebar_link = lpma_plugin_installed and (
+            show_plugin_management_links or lpma_has_cpuser_grant
+        )
+        show_plugins_menu = show_plugin_management_links or (
+            lpma_has_cpuser_grant and lpma_plugin_installed
+        )
+        grant_only_lpma_sidebar = (
+            lpma_has_cpuser_grant and lpma_plugin_installed and not show_plugin_management_links
+        )
+
+        extra = []
+        if show_lpma_sidebar_link:
+            extra.append(
+                {
+                    'url': '/plugins/limitedPhpmyAdmin/',
+                    'label_key': 'limited_phpmyadmin_sidebar',
+                }
+            )
+
+        defaults.update(
+            {
+                'lpma_plugin_installed': lpma_plugin_installed,
+                'lpma_has_cpuser_grant': lpma_has_cpuser_grant,
+                'show_plugin_management_links': show_plugin_management_links,
+                'show_lpma_sidebar_link': show_lpma_sidebar_link,
+                'show_plugins_menu': show_plugins_menu,
+                'grant_only_lpma_sidebar': grant_only_lpma_sidebar,
+                'plugin_sidebar_extra_links': extra,
+                'lpma_sidebar_url': '/plugins/limitedPhpmyAdmin/',
+            }
+        )
+        return defaults
+    except Exception:
+        return defaults

@@ -159,6 +159,7 @@ TEMPLATES = [
                 'baseTemplate.context_processors.notification_preferences_context',
                 'baseTemplate.context_processors.firewall_static_context',
                 'baseTemplate.context_processors.dns_static_context',
+                'baseTemplate.context_processors.plugin_sidebar_context',
             ],
         },
     },
