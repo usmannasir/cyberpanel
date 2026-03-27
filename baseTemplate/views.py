@@ -55,6 +55,34 @@ def _version_compare(a, b):
     return 0
 
 
+def _parse_github_origin(remote_out):
+    """Return (owner, repo) or (None, None) if unparseable."""
+    if not remote_out:
+        return None, None
+    m = re.search(r'github\.com[:/]([^/]+)/([^/]+?)(?:\.git)?$', remote_out.strip())
+    if not m:
+        return None, None
+    owner, repo = m.group(1), m.group(2).rstrip('.git')
+    return owner, repo
+
+
+def _github_branch_tip_sha(owner, repo, branch_ref):
+    """First commit SHA on branch via GitHub API, or empty string on failure."""
+    try:
+        u = 'https://api.github.com/repos/%s/%s/commits?sha=%s' % (owner, repo, branch_ref)
+        r = requests.get(u, timeout=10)
+        r.raise_for_status()
+        data = r.json()
+        if not data:
+            return ''
+        sha = data[0].get('sha', '') or ''
+        return sha
+    except (requests.RequestException, IndexError, KeyError, TypeError) as e:
+        logging.CyberCPLogFileWriter.writeToFile(
+            '[versionManagment] GitHub API %s/%s @%s failed: %s' % (owner, repo, branch_ref, str(e)))
+        return ''
+
+
 @ensure_csrf_cookie
 def renderBase(request):
     template = 'baseTemplate/homePage.html'
@@ -67,49 +95,8 @@ def renderBase(request):
 
 @ensure_csrf_cookie
 def versionManagement(request):
-    currentVersion = VERSION
-    currentBuild = str(BUILD)
-
-    getVersion = requests.get('https://cyberpanel.net/version.txt')
-    latest = getVersion.json()
-    latestVersion = latest['version']
-    latestBuild = latest['build']
-    branch_ref = 'v%s.%s' % (latestVersion, latestBuild)
-
-    notechk = True
-    Currentcomt = ''
-    latestcomit = ''
-
-    if _version_compare(currentVersion, latestVersion) > 0:
-        notechk = False
-    else:
-        remote_cmd = 'git -C /usr/local/CyberCP remote get-url origin 2>/dev/null || true'
-        remote_out = ProcessUtilities.outputExecutioner(remote_cmd)
-        is_usmannasir = 'usmannasir/cyberpanel' in (remote_out or '')
-
-        if is_usmannasir:
-            u = "https://api.github.com/repos/usmannasir/cyberpanel/commits?sha=%s" % branch_ref
-            logging.CyberCPLogFileWriter.writeToFile(u)
-            try:
-                r = requests.get(u, timeout=10)
-                r.raise_for_status()
-                latestcomit = r.json()[0]['sha']
-            except (requests.RequestException, IndexError, KeyError) as e:
-                logging.CyberCPLogFileWriter.writeToFile('[versionManagement] GitHub API failed: %s' % str(e))
-            head_cmd = 'git -C /usr/local/CyberCP rev-parse HEAD 2>/dev/null || true'
-            Currentcomt = ProcessUtilities.outputExecutioner(head_cmd).rstrip('\n')
-            if latestcomit and Currentcomt == latestcomit:
-                notechk = False
-        else:
-            notechk = False
-
-    template = 'baseTemplate/versionManagment.html'
-    finalData = {'build': currentBuild, 'currentVersion': currentVersion, 'latestVersion': latestVersion,
-                 'latestBuild': latestBuild, 'latestcomit': latestcomit, "Currentcomt": Currentcomt,
-                 "Notecheck": notechk}
-
-    proc = httpProc(request, template, finalData, 'versionManagement')
-    return proc.render()
+    """Legacy entrypoint; same UI as versionManagment (URLs use versionManagment)."""
+    return versionManagment(request)
 
 
 @ensure_csrf_cookie
@@ -297,6 +284,13 @@ def versionManagment(request):
     latestcomit = ''
     latestVersion = '0'
     latestBuild = '0'
+    upstream_latest_sha = ''
+    fork_latest_sha = ''
+    show_fork_block = False
+    fork_display = ''
+    fork_commit_url = ''
+    upstream_commit_url = ''
+    fork_drift_upstream = False
 
     on_dev_branch = (currentVersion == '2.5.5' and currentBuild == 'dev')
 
@@ -311,114 +305,108 @@ def versionManagment(request):
         if on_dev_branch:
             latestVersion, latestBuild = '2.5.5', 'dev'
 
-    # Dev branch: compare against v2.5.5-dev, show dev version info
     if on_dev_branch:
         branch_ref = 'v2.5.5-dev'
         latestVersion, latestBuild = '2.5.5', 'dev'
     else:
         branch_ref = 'v%s.%s' % (latestVersion, latestBuild)
 
-    # Always fetch local HEAD for display
     head_cmd = 'git -C /usr/local/CyberCP rev-parse HEAD 2>/dev/null || true'
     Currentcomt = (ProcessUtilities.outputExecutioner(head_cmd) or '').rstrip('\n')
 
     remote_cmd = 'git -C /usr/local/CyberCP remote get-url origin 2>/dev/null || true'
-    remote_out = ProcessUtilities.outputExecutioner(remote_cmd)
-    is_usmannasir = 'usmannasir/cyberpanel' in (remote_out or '')
-    github_owner, github_repo = None, None
-    m_remote = re.search(r'github\.com[:/]([^/]+)/([^/]+?)(?:\.git)?$', (remote_out or '').strip())
-    if m_remote:
-        github_owner = m_remote.group(1)
-        github_repo = m_remote.group(2).rstrip('.git')
-        remote_display = '%s/%s' % (github_owner, github_repo)
+    remote_out = (ProcessUtilities.outputExecutioner(remote_cmd) or '')
+    origin_owner, origin_repo = _parse_github_origin(remote_out)
+    if origin_owner and origin_repo:
+        remote_display = '%s/%s' % (origin_owner, origin_repo)
+        is_official = (origin_owner.lower() == 'usmannasir' and origin_repo.lower() == 'cyberpanel')
+        show_fork_block = not is_official
+        if show_fork_block:
+            fork_display = remote_display
     else:
-        remote_display = ((remote_out or '').strip() or '')
+        remote_display = (remote_out.strip() or '—')
+        logging.CyberCPLogFileWriter.writeToFile(
+            '[versionManagment] Unparseable git origin, upstream-only UI: %s'
+            % (remote_out[:200] if remote_out else '(empty)'))
+        show_fork_block = False
 
-    # Stable: newer than cyberpanel.net = up to date; dev: compare commits
+    upstream_latest_sha = _github_branch_tip_sha('usmannasir', 'cyberpanel', branch_ref)
+    latestcomit = upstream_latest_sha
+    if upstream_latest_sha:
+        upstream_commit_url = 'https://github.com/usmannasir/cyberpanel/commit/%s' % upstream_latest_sha
+
+    if show_fork_block and origin_owner and origin_repo:
+        fork_latest_sha = _github_branch_tip_sha(origin_owner, origin_repo, branch_ref)
+        if fork_latest_sha:
+            fork_commit_url = 'https://github.com/%s/%s/commit/%s' % (
+                origin_owner, origin_repo, fork_latest_sha)
+
+    if (fork_latest_sha and upstream_latest_sha and fork_latest_sha != upstream_latest_sha):
+        fork_drift_upstream = True
+
     if not on_dev_branch and notechk and _version_compare(currentVersion, latestVersion) > 0:
         notechk = False
     elif notechk:
-        # Dev branch: official remote compares to usmannasir/cyberpanel; forks compare to their own GitHub repo
-        fetch_branch = branch_ref if (is_usmannasir or on_dev_branch) else None
-        if fetch_branch:
-            u = None
-            if on_dev_branch and not is_usmannasir:
-                m = re.search(r'github\.com[:/]([^/]+)/([^/]+?)(?:\.git)?$', (remote_out or '').strip())
-                if m:
-                    owner, repo = m.group(1), m.group(2).rstrip('.git')
-                    u = "https://api.github.com/repos/%s/%s/commits?sha=%s" % (owner, repo, fetch_branch)
-            if u is None:
-                u = "https://api.github.com/repos/usmannasir/cyberpanel/commits?sha=%s" % fetch_branch
-            logging.CyberCPLogFileWriter.writeToFile(u)
-            try:
-                r = requests.get(u, timeout=10)
-                r.raise_for_status()
-                latestcomit = r.json()[0]['sha']
-                if Currentcomt and latestcomit and Currentcomt == latestcomit:
-                    notechk = False
-            except (requests.RequestException, IndexError, KeyError) as e:
-                logging.CyberCPLogFileWriter.writeToFile('[versionManagment] GitHub API failed: %s' % str(e))
-        elif not on_dev_branch:
-            # Stable fork: fetch from fork's branch
-            m = re.search(r'github\.com[:/]([^/]+)/([^/]+?)(?:\.git)?$', (remote_out or '').strip())
-            if m:
-                owner, repo = m.group(1), m.group(2).rstrip('.git')
-                try:
-                    u = "https://api.github.com/repos/%s/%s/commits?sha=%s" % (owner, repo, branch_ref)
-                    r = requests.get(u, timeout=10)
-                    r.raise_for_status()
-                    latestcomit = r.json()[0]['sha']
-                    if Currentcomt and latestcomit and Currentcomt == latestcomit:
-                        notechk = False
-                except (requests.RequestException, IndexError, KeyError):
-                    pass
+        cur = (Currentcomt or '').strip().lower()
+        if show_fork_block:
+            fk = (fork_latest_sha or '').strip().lower()
+            up = (upstream_latest_sha or '').strip().lower()
+            if fk:
+                notechk = not (bool(cur) and cur == fk)
+            elif up:
+                notechk = not (bool(cur) and cur == up)
+            else:
+                notechk = False
+        else:
+            up = (upstream_latest_sha or '').strip().lower()
+            if up:
+                notechk = not (bool(cur) and cur == up)
+            else:
+                notechk = False
 
-    # Fork remote tip for UI (empty when origin is official).
-    fork_remote_commit = latestcomit if (latestcomit and not is_usmannasir) else ''
-
-    upstream_commit = ''
-    if on_dev_branch:
-        up_url = "https://api.github.com/repos/usmannasir/cyberpanel/commits?sha=%s" % branch_ref
-        logging.CyberCPLogFileWriter.writeToFile(up_url)
-        try:
-            up_r = requests.get(up_url, timeout=10)
-            up_r.raise_for_status()
-            upstream_commit = up_r.json()[0]['sha']
-        except (requests.RequestException, IndexError, KeyError) as e:
-            logging.CyberCPLogFileWriter.writeToFile('[versionManagment] upstream GitHub API failed: %s' % str(e))
+    is_usmannasir = not show_fork_block
+    fork_remote_commit = fork_latest_sha if show_fork_block else ''
+    upstream_commit = upstream_latest_sha
+    notecheck_compare_remote = fork_display if show_fork_block else 'usmannasir/cyberpanel'
+    local_behind_official = bool(
+        on_dev_branch and Currentcomt and upstream_commit and Currentcomt != upstream_commit)
 
     def _short_sha(commit_hash):
         if not commit_hash or len(commit_hash) < 7:
             return commit_hash or ''
         return commit_hash[:7]
 
-    fork_commit_url = ''
-    if github_owner and github_repo and fork_remote_commit:
-        fork_commit_url = 'https://github.com/%s/%s/commit/%s' % (
-            github_owner, github_repo, fork_remote_commit)
-    upstream_commit_url = ''
-    if upstream_commit:
-        upstream_commit_url = 'https://github.com/usmannasir/cyberpanel/commit/%s' % upstream_commit
-
-    local_behind_official = bool(
-        on_dev_branch and Currentcomt and upstream_commit and Currentcomt != upstream_commit)
-    notecheck_compare_remote = 'usmannasir/cyberpanel' if is_usmannasir else remote_display
-
     template = 'baseTemplate/versionManagment.html'
     finalData = {
-        'build': currentBuild, 'currentVersion': currentVersion, 'latestVersion': latestVersion,
-        'latestBuild': latestBuild, 'latestcomit': latestcomit, 'Currentcomt': Currentcomt,
-        'Notecheck': notechk, 'branch_ref': branch_ref, 'remote_display': remote_display,
-        'is_usmannasir': is_usmannasir, 'fork_remote_commit': fork_remote_commit,
-        'upstream_commit': upstream_commit, 'fork_commit_url': fork_commit_url,
+        'build': currentBuild,
+        'currentVersion': currentVersion,
+        'latestVersion': latestVersion,
+        'latestBuild': latestBuild,
+        'latestcomit': latestcomit,
+        'Currentcomt': Currentcomt,
+        'Notecheck': notechk,
+        'show_fork_block': show_fork_block,
+        'tracking_branch': branch_ref,
+        'branch_ref': branch_ref,
+        'fork_display': fork_display,
+        'fork_latest_sha': fork_latest_sha,
+        'upstream_latest_sha': upstream_latest_sha,
+        'fork_commit_url': fork_commit_url,
         'upstream_commit_url': upstream_commit_url,
+        'fork_drift_upstream': fork_drift_upstream,
+        'remote_display': remote_display,
+        'is_usmannasir': is_usmannasir,
+        'fork_remote_commit': fork_remote_commit,
+        'upstream_commit': upstream_commit,
+        'notecheck_compare_remote': notecheck_compare_remote,
+        'local_behind_official': local_behind_official,
+        'on_dev_branch': on_dev_branch,
         'Currentcomt_short': _short_sha(Currentcomt),
         'latestcomit_short': _short_sha(latestcomit),
         'fork_remote_commit_short': _short_sha(fork_remote_commit),
         'upstream_commit_short': _short_sha(upstream_commit),
-        'local_behind_official': local_behind_official,
-        'notecheck_compare_remote': notecheck_compare_remote,
-        'on_dev_branch': on_dev_branch,
+        'fork_latest_sha_short': _short_sha(fork_latest_sha),
+        'upstream_latest_sha_short': _short_sha(upstream_latest_sha),
     }
 
     proc = httpProc(request, template, finalData, 'versionManagement')
