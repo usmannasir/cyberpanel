@@ -2009,6 +2009,12 @@ def revert_plugin(request, plugin_name):
         
         # Restore from backup
         if _restore_plugin_from_backup(plugin_name, backup_path):
+            try:
+                pluginInstaller.restartGunicorn()
+            except Exception as re:
+                logging.writeToFile(
+                    'revert_plugin: restartGunicorn after restore failed (non-fatal): %s' % str(re)
+                )
             return JsonResponse({
                 'success': True,
                 'message': f'Plugin {plugin_name} reverted successfully to version {backup_version}'
