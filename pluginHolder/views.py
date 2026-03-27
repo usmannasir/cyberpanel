@@ -2481,16 +2481,26 @@ def _inject_plugin_settings_back_bar(response):
         if 'cp-plugin-settings-back' in body:
             return response
         label = escape(str(_('Back to installed Plugins')))
+        # Inside #main-content only: avoids full-viewport strip over the sidebar (baseTemplate uses
+        # #sidebar + #main-content { margin-left: 260px; }).
         back_html = (
-            '<div id="cp-plugin-settings-back" style="margin:0;padding:10px 16px;'
-            'background:linear-gradient(90deg,#f1f5f9,#e8eef5);border-bottom:1px solid #cbd5e1;'
-            'font-size:14px;line-height:1.4;position:relative;z-index:10000;">'
+            '<div id="cp-plugin-settings-back" style="margin:0 0 16px 0;padding:10px 16px;'
+            'background:linear-gradient(90deg,#f1f5f9,#e8eef5);border:1px solid #cbd5e1;border-radius:8px;'
+            'font-size:14px;line-height:1.4;position:relative;max-width:100%;box-sizing:border-box;">'
             '<a href="/plugins/installed" id="cp-plugin-settings-back-link" '
             'style="display:inline-flex;align-items:center;gap:8px;color:#1e293b;font-weight:600;'
             'text-decoration:none;">'
             '<span aria-hidden="true" style="font-size:1.1em;">←</span><span>' + label + '</span></a></div>'
         )
-        if re.search(r'<body[^>]*>', body, flags=re.IGNORECASE):
+        main_content_m = re.search(
+            r'(<div\s+id\s*=\s*["\']main-content["\'][^>]*>)',
+            body,
+            flags=re.IGNORECASE,
+        )
+        if main_content_m:
+            pos = main_content_m.end()
+            body = body[:pos] + back_html + body[pos:]
+        elif re.search(r'<body[^>]*>', body, flags=re.IGNORECASE):
             body = re.sub(
                 r'(<body[^>]*>)',
                 r'\1' + back_html,
