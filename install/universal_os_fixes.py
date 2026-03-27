@@ -487,6 +487,12 @@ class UniversalOSFixes:
                 ]
             
             subprocess.run(' '.join(cmd), shell=True, check=True)
+            if os_id in ['ubuntu', 'debian']:
+                try:
+                    import install_utils
+                    install_utils.strip_mariadb_maxscale_apt_repos()
+                except Exception:
+                    pass
             self.logger.info("MariaDB repository setup completed")
             return True
             

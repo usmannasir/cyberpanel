@@ -257,6 +257,11 @@ def generateAccess(request):
 @csrf_exempt
 def fetchDetailsPHPMYAdmin(request):
     try:
+        try:
+            from plogical.phpmyadmin_utils import ensure_phpmyadmin_signin_bridge
+            ensure_phpmyadmin_signin_bridge()
+        except BaseException:
+            pass
 
         userID = request.session['userID']
         admin = Administrator.objects.get(id=userID)

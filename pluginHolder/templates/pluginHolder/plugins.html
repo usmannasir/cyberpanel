@@ -1695,8 +1695,8 @@
                             <thead>
                                 <tr>
                                     <th>{% trans "Plugin Name" %}</th>
-                                    <th>{% trans "New Version" %}</th>
                                     <th>{% trans "Your Version" %}</th>
+                                    <th>{% trans "New Version" %}</th>
                                     <th>{% trans "Date" %}</th>
                                     <th>{% trans "Status / Action" %}</th>
                                 </tr>
@@ -1737,7 +1737,7 @@
                             <strong>{% trans "Cache Information:" %}</strong>
                             {% trans "Plugin store data is cached for 1 hour to improve performance and reduce GitHub API rate limits. New plugins may take up to 1 hour to appear after being published." %}
                             {% if cache_expiry_timestamp %}
-                                <br><strong>{% trans "Next cache update:" %}</strong> <span id="cacheExpiryTime" style="font-family: monospace;" data-timestamp="{{ cache_expiry_timestamp }}">{% trans "Calculating..." %}</span>
+                                <br><strong>{% trans "Next cache update:" %}</strong> <span id="cacheExpiryTime" style="font-family: monospace;" data-timestamp="{{ cache_expiry_timestamp }}" data-expired="{% if cache_expired %}1{% else %}0{% endif %}" data-refresh-started="{% if cache_refresh_started %}1{% else %}0{% endif %}">{% trans "Calculating..." %}</span>
                             {% endif %}
                         </p>
                         <p class="warning-text">
@@ -1850,7 +1850,7 @@
 </div>
 
 <script>
-// Cache-busting version: 2026-02-15-v1 - Grid/Table: collapsible Category Filter (like A-Å in store)
+// Cache-busting version: 2026-03-27-v2 - Modify date: browser-local via modify_timestamp + nb-NO style
 let storePlugins = [];
 let currentFilter = 'all';
 let currentCategory = 'all';
@@ -2013,11 +2013,11 @@ function displayUpgradesAvailable() {
         const name = escapeHtml(plugin.name || plugin.plugin_dir || '');
         const newVer = escapeHtml(plugin.version || '');
         const yourVer = escapeHtml(plugin.installed_version || 'Unknown');
-        const date = escapeHtml(plugin.modify_date || '');
+        const date = formatPluginModifyDateDisplay(plugin);
         const curVer = (plugin.installed_version || 'Unknown').replace(/'/g, '&#39;');
         const nVer = (plugin.version || 'Unknown').replace(/'/g, '&#39;');
         const actionHtml = '<button type="button" class="btn-action btn-upgrade" data-plugin-dir="' + dir + '" data-current-version="' + escapeHtml(curVer) + '" data-new-version="' + escapeHtml(nVer) + '" onclick="upgradePlugin(this.getAttribute(\'data-plugin-dir\'), this.getAttribute(\'data-current-version\'), this.getAttribute(\'data-new-version\'))"><i class="fas fa-arrow-up"></i> Upgrade</button>';
-        html += '<tr><td><strong>' + name + '</strong></td><td>' + newVer + '</td><td>' + yourVer + '</td><td>' + date + '</td><td>' + actionHtml + '</td></tr>';
+        html += '<tr><td><strong>' + name + '</strong></td><td>' + yourVer + '</td><td>' + newVer + '</td><td>' + date + '</td><td>' + actionHtml + '</td></tr>';
     });
     tbody.innerHTML = html;
 }
@@ -2109,12 +2109,70 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-function getFreshnessBadgeHtml(freshnessFromApi, modifyDate) {
+/**
+ * Format meta.xml mtime for display: browser timezone + locale (nb-NO style DD.MM.YYYY, 24h).
+ * Uses modify_timestamp (Unix sec) from API when present; else legacy modify_date string.
+ */
+function formatPluginModifyDateDisplay(plugin) {
+    if (!plugin) return '';
+    const rawTs = plugin.modify_timestamp;
+    if (rawTs !== null && rawTs !== undefined && rawTs !== '') {
+        const sec = Number(rawTs);
+        if (!isNaN(sec)) {
+            const d = new Date(sec * 1000);
+            if (!isNaN(d.getTime())) {
+                const loc = (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : 'nb-NO';
+                try {
+                    const s = d.toLocaleString(loc, {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hourCycle: 'h23',
+                    });
+                    return escapeHtml(s);
+                } catch (e) {
+                    try {
+                        return escapeHtml(d.toLocaleString('nb-NO', {
+                            day: '2-digit', month: '2-digit', year: 'numeric',
+                            hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
+                        }));
+                    } catch (e2) {
+                        /* fall through */
+                    }
+                }
+            }
+        }
+    }
+    return escapeHtml(plugin.modify_date || '');
+}
+
+function getFreshnessBadgeHtml(freshnessFromApi, modifyDate, modifyTimestamp) {
     // Use API data if available
     if (freshnessFromApi && freshnessFromApi.badge && freshnessFromApi.class) {
         return `<br><span class="${escapeHtml(freshnessFromApi.class)}" title="${escapeHtml(freshnessFromApi.title || '')}">${escapeHtml(freshnessFromApi.badge)}</span>`;
     }
-    // Compute from modify_date (for cached data without freshness_badge)
+    // Compute from instant when we have Unix timestamp (correct vs browser)
+    if (modifyTimestamp !== null && modifyTimestamp !== undefined && modifyTimestamp !== '') {
+        const sec = Number(modifyTimestamp);
+        if (!isNaN(sec)) {
+            const d = new Date(sec * 1000);
+            if (!isNaN(d.getTime())) {
+                const daysAgo = Math.floor((Date.now() - d.getTime()) / (24 * 60 * 60 * 1000));
+                if (daysAgo <= 90) {
+                    return '<br><span class="freshness-badge-new" title="This plugin was released/updated within the last 3 months">NEW</span>';
+                } else if (daysAgo <= 365) {
+                    return '<br><span class="freshness-badge-stable" title="This plugin was updated within the last year">Stable</span>';
+                } else if (daysAgo < 730) {
+                    return '<br><span class="freshness-badge-unstable" title="This plugin has not been updated in over 1 year">Unstable</span>';
+                }
+                return '<br><span class="freshness-badge-stale" title="This plugin has not been updated in over 2 years">STALE</span>';
+            }
+        }
+    }
+    // Compute from modify_date (for cached data without freshness_badge or timestamp)
     if (!modifyDate || modifyDate === 'N/A') return '';
     try {
         const m = modifyDate.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/);
@@ -2247,10 +2305,12 @@ function displayStorePlugins() {
         </a>`;
         
         // Modify Date column - show N/A for store plugins (they're from GitHub, not local)
-        const modifyDateHtml = plugin.modify_date ? `<small style="color: var(--text-secondary, #64748b);">${escapeHtml(plugin.modify_date)}</small>` : '<small style="color: var(--text-secondary, #64748b);">N/A</small>';
+        const modifyDateHtml = (plugin.modify_timestamp != null || (plugin.modify_date && plugin.modify_date !== 'N/A'))
+            ? `<small style="color: var(--text-secondary, #64748b);">${formatPluginModifyDateDisplay(plugin)}</small>`
+            : '<small style="color: var(--text-secondary, #64748b);">N/A</small>';
         
         // Freshness badge (NEW/Stable/STALE) - use API data or compute from modify_date
-        const freshnessBadgeHtml = getFreshnessBadgeHtml(plugin.freshness_badge || null, plugin.modify_date);
+        const freshnessBadgeHtml = getFreshnessBadgeHtml(plugin.freshness_badge || null, plugin.modify_date, plugin.modify_timestamp);
         
         // Pricing badge - ALWAYS show a badge (default to Free if is_paid is missing/undefined/null)
         // Version: 2026-01-25-v4 - Normalize is_paid to handle all possible values
@@ -3250,8 +3310,8 @@ function updateCacheExpiryTime() {
             return;
         }
         
-        // Get user's locale preferences
-        const locale = navigator.language || navigator.userLanguage || 'en-US';
+        // Always use Norwegian format for NO-facing UI: DD.MM.YYYY kl. HH:MM
+        const locale = 'nb-NO';
         const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
         
         // Format date and time according to user's locale
@@ -3264,7 +3324,6 @@ function updateCacheExpiryTime() {
         const timeOptions = {
             hour: '2-digit',
             minute: '2-digit',
-            second: '2-digit',
             hour12: false
         };
         
@@ -3273,11 +3332,18 @@ function updateCacheExpiryTime() {
         const timeStr = expiryDate.toLocaleTimeString(locale, timeOptions);
         
         // Combine with timezone abbreviation
-        const formatted = dateStr + ' ' + timeStr;
-        
-        // Display with timezone info
-        expiryElement.textContent = formatted;
-        expiryElement.title = 'Local time: ' + formatted + ' | Timezone: ' + timezone;
+        const formatted = dateStr + ' kl. ' + timeStr;
+        const expired = expiryElement.getAttribute('data-expired') === '1';
+        const refreshStarted = expiryElement.getAttribute('data-refresh-started') === '1';
+
+        if (expired) {
+            expiryElement.textContent = refreshStarted
+                ? ('Expired (' + formatted + ') - updating in background')
+                : ('Expired (' + formatted + ')');
+        } else {
+            expiryElement.textContent = formatted;
+        }
+        expiryElement.title = 'Lokal tid: ' + formatted + ' | Tidssone: ' + timezone;
     } catch (e) {
         console.error('Error formatting cache expiry time:', e);
         expiryElement.textContent = 'Error calculating time';

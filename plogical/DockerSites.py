@@ -308,9 +308,8 @@ extprocessor docker{port} {{
                 logging.writeToFile("Context already exists, skipping...")
                 return True
 
-            # Add proxy context with proper headers for n8n
-            # NOTE: Do NOT include "RequestHeader set Origin" - OpenLiteSpeed cannot override
-            # browser Origin headers, which is why NODE_ENV=development is required
+            # Add proxy context with proper headers for n8n (OLS adds X-Forwarded-*; Origin set for n8n)
+            # NOTE: OpenLiteSpeed cannot override browser Origin headers; NODE_ENV=development may be required
             proxy_context = f'''
 
 # N8N Proxy Configuration
@@ -321,10 +320,7 @@ context / {{
   websocket               1
 
   extraHeaders            <<<END_extraHeaders
-  RequestHeader set X-Forwarded-For $ip
-  RequestHeader set X-Forwarded-Proto https
-  RequestHeader set X-Forwarded-Host "{domain}"
-  RequestHeader set Host "{domain}"
+  RequestHeader set Origin "https://{domain}"
   END_extraHeaders
 }}
 '''
@@ -1421,7 +1417,8 @@ services:
                 'N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS': 'true',
                 'DB_POSTGRESDB_SCHEMA': 'public',
                 'N8N_PROTOCOL': 'https',
-                'N8N_SECURE_COOKIE': 'true'
+                'N8N_SECURE_COOKIE': 'true',
+                'N8N_PROXY_HOPS': '1'
             }
         }
 
