@@ -4577,17 +4577,22 @@ class Migration(migrations.Migration):
             # Change to parent directory
             os.chdir('/usr/local')
 
-            # Remove old CyberCP directory
+            # Remove old CyberCP directory (quarantine if rmtree fails — e.g. busy files)
             if os.path.exists('CyberCP'):
                 Upgrade.stdOut("Removing old CyberCP directory...")
                 try:
                     shutil.rmtree('CyberCP')
                     Upgrade.stdOut("Old CyberCP directory removed successfully.")
-                except Exception as e:
-                    Upgrade.stdOut(f"Error removing CyberCP directory: {str(e)}")
-                    # Try to restore backup if removal fails
-                    Upgrade.restoreCriticalFiles(backup_dir, backed_up_files)
-                    return 0, 'Failed to remove old CyberCP directory'
+                except OSError as e:
+                    Upgrade.stdOut("rmtree failed (%s); quarantining old CyberCP..." % str(e))
+                    quarantine = '/usr/local/CyberCP.legacy.%s' % int(time.time())
+                    try:
+                        shutil.move('CyberCP', quarantine)
+                        Upgrade.stdOut("Moved old tree to %s" % quarantine)
+                    except OSError as e2:
+                        Upgrade.stdOut(f"Error removing or moving CyberCP directory: {str(e2)}")
+                        Upgrade.restoreCriticalFiles(backup_dir, backed_up_files)
+                        return 0, 'Failed to remove or quarantine old CyberCP directory'
 
             # Clone the new repository (use CYBERPANEL_GIT_USER for fork, e.g. master3395)
             git_user = os.environ.get('CYBERPANEL_GIT_USER', 'master3395')
@@ -4612,10 +4617,15 @@ class Migration(migrations.Migration):
                 if os.path.exists('CyberCP'):
                     try:
                         shutil.rmtree('CyberCP')
-                    except Exception as e:
-                        Upgrade.stdOut("Error removing CyberCP: %s" % str(e))
-                        Upgrade.restoreCriticalFiles(backup_dir, backed_up_files)
-                        return 0, 'Failed to remove CyberCP for upstream clone'
+                    except OSError as e:
+                        Upgrade.stdOut("rmtree failed (%s); quarantining..." % str(e))
+                        quarantine = '/usr/local/CyberCP.legacy.%s' % int(time.time())
+                        try:
+                            shutil.move('CyberCP', quarantine)
+                        except OSError as e2:
+                            Upgrade.stdOut("Error removing CyberCP: %s" % str(e2))
+                            Upgrade.restoreCriticalFiles(backup_dir, backed_up_files)
+                            return 0, 'Failed to remove CyberCP for upstream clone'
                 command = 'git clone https://github.com/%s/cyberpanel CyberCP' % upstream_user
                 if not Upgrade.executioner(command, command, 1):
                     Upgrade.restoreCriticalFiles(backup_dir, backed_up_files)
@@ -6581,7 +6591,31 @@ slowlog = /var/log/php{version}-fpm-slow.log
         # execPath = execPath + " removeCSF"
         # Upgrade.executioner(execPath, 'fix csf if there', 0)
 
-        Upgrade.downloadAndUpgrade(versionNumbring, branch)
+        clone_attempts = int(os.environ.get('CYBERPANEL_UPGRADE_CLONE_ATTEMPTS', '2'))
+        if clone_attempts < 1:
+            clone_attempts = 1
+        download_ok = False
+        download_err = None
+        for attempt in range(1, clone_attempts + 1):
+            ok, download_err = Upgrade.downloadAndUpgrade(versionNumbring, branch)
+            if ok:
+                download_ok = True
+                break
+            Upgrade.stdOut(
+                'downloadAndUpgrade failed (attempt %d/%d): %s'
+                % (attempt, clone_attempts, download_err or 'unknown'), 0)
+            if attempt < clone_attempts:
+                Upgrade.stdOut('Retrying full CyberPanel tree replacement in 5 seconds...', 0)
+                time.sleep(5)
+        if not download_ok:
+            Upgrade.stdOut(
+                'CRITICAL: CyberPanel code update failed after %d attempt(s): %s. '
+                'The panel was not replaced with the new branch. Check logs and disk permissions on /usr/local.'
+                % (clone_attempts, download_err or 'unknown'), 0)
+            if Upgrade.SoftUpgrade == 0:
+                Upgrade.executioner('systemctl start lscpd', 'Start LSCPD after failed code update', 0)
+            sys.exit(1)
+
         versionNumbring = Upgrade.downloadLink()
         Upgrade.download_install_phpmyadmin()
         Upgrade.downoad_and_install_raindloop()
