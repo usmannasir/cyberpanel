@@ -38,8 +38,13 @@ class secMiddleware:
         import re
         webhook_pattern = re.compile(r'^/websites/[^/]+/(webhook|gitNotify)/?$')
         
-        if pathActual == "/backup/localInitiate" or  pathActual == '/' or pathActual == '/verifyLogin' or pathActual == '/logout' or pathActual.startswith('/api')\
-                or webhook_pattern.match(pathActual) or pathActual.startswith('/cloudAPI') or pathActual.startswith('/static/'):
+        # Public one-time phpMyAdmin launch links (limitedPhpmyAdmin plugin); must work when admin is logged out.
+        _lpma_public_launch = pathActual.startswith('/plugins/limitedPhpmyAdmin/launch/')
+        _lpma_pma_signon = pathActual == '/phpmyadmin/phpmyadminsignin.php'
+
+        if pathActual == "/backup/localInitiate" or pathActual == '/' or pathActual == '/verifyLogin' or pathActual == '/logout' or pathActual.startswith('/api')\
+                or webhook_pattern.match(pathActual) or pathActual.startswith('/cloudAPI') or pathActual.startswith('/static/')\
+                or _lpma_public_launch or _lpma_pma_signon:
             pass
         else:
             # Session check logging removed
@@ -105,6 +110,11 @@ class secMiddleware:
                 # Webhook URLs are: /websites/<domain>/webhook or /websites/<domain>/gitNotify
                 # Use the same webhook pattern defined above
                 if webhook_pattern.match(pathActual):
+                    response = self.get_response(request)
+                    return response
+
+                # phpMyAdmin sign-on POST carries MySQL password; skip character filter (may contain $ ( ) etc.).
+                if pathActual == '/phpmyadmin/phpmyadminsignin.php':
                     response = self.get_response(request)
                     return response
 
