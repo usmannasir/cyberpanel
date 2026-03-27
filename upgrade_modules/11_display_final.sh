@@ -22,7 +22,12 @@ _b "  ▒▒▒▒▒▒▒▒▒    ▒▒▒▒▒███ ▒▒▒▒▒▒
 _b "              ███ ▒███"
 _b "             ▒▒██████"
 _b "              ▒▒▒▒▒▒"
-_b "                    *** UPGRADE COMPLETED SUCCESSFULLY! ***"
+if [[ "${CYBERPANEL_GIT_SYNC_OK:-1}" -eq 1 ]]; then
+  _b "                    *** UPGRADE COMPLETED SUCCESSFULLY! ***"
+else
+  _b "     *** UPGRADE FINISHED BUT GIT SYNC FAILED - /usr/local/CyberCP MAY BE OUTDATED ***"
+  _b "     See /var/log/cyberpanel_upgrade_debug.log  (exit code will be non-zero)"
+fi
 _b ""
 _bl
 

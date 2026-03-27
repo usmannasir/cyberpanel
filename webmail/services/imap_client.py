@@ -98,7 +98,9 @@ class IMAPClient:
     def _folder_type(self, folder_name):
         """Identify special folder type for UI (icons, sidebar grouping).
 
-        CyberPanel/Dovecot uses INBOX.* names; accounts may also use Spam, Trash, etc.
+        CyberPanel/Dovecot uses INBOX.* names, but some accounts also have
+        INBOX.spam, Trash, Archive, etc. Classify those so they are not treated
+        as generic user folders.
         """
         fn = (folder_name or '').strip()
         if not fn:
