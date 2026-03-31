@@ -1,6 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
-<title id="title">RabbitMQ</title>
-<desc id="desc">RabbitMQ application icon</desc>
-<rect width="512" height="512" rx="96" fill="#ff6600"/>
-<path d="M118 154h102v66H118zm0 92h102v66H118zm0 92h102v66H118zm136-184h102v66H254zm0 92h102v66H254zm0 92h102v66H254zm136-184h4c18 0 32 14 32 32v216c0 18-14 32-32 32h-4V154z" fill="#fff"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect x="0" y="0" width="512" height="512" rx="96" ry="96" fill="#ff6600"/>
+
+  <rect x="112" y="144" width="104" height="72" fill="#ffffff"/>
+  <rect x="112" y="236" width="104" height="72" fill="#ffffff"/>
+  <rect x="112" y="328" width="104" height="72" fill="#ffffff"/>
+
+  <rect x="244" y="144" width="104" height="72" fill="#ffffff"/>
+  <rect x="244" y="236" width="104" height="72" fill="#ffffff"/>
+  <rect x="244" y="328" width="104" height="72" fill="#ffffff"/>
+
+  <path d="M388 144h8c17.7 0 32 14.3 32 32v192c0 17.7-14.3 32-32 32h-8V144z" fill="#ffffff"/>
 </svg>
