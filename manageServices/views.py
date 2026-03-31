@@ -297,7 +297,7 @@ def manageApplications(request):
                      'installed': installed}
     redis = {'image': '/static/manageServices/images/redis.png', 'name': 'Redis',
              'installed': rInstalled}
-    rabbitmq = {'image': '/static/manageServices/images/rabbitmq.svg', 'name': 'RabbitMQ',
+    rabbitmq = {'image': '/static/manageServices/images/rabbitmq-logo.svg', 'name': 'RabbitMQ',
                 'installed': rmqInstalled}
     services.append(elasticSearch)
     services.append(redis)
