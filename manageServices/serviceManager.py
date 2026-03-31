@@ -304,6 +304,72 @@ type=rpm-md
                                                   "Redis successfully removed.[200]\n", 1)
         return 0
 
+    @staticmethod
+    def InstallRabbitMQ():
+        statusFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
+
+        try:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                command = 'yum install rabbitmq-server -y'
+                ServerStatusUtil.executioner(command, statusFile)
+            else:
+                command = 'DEBIAN_FRONTEND=noninteractive apt-get install rabbitmq-server -y'
+                ServerStatusUtil.executioner(command, statusFile)
+
+            command = 'systemctl enable rabbitmq-server'
+            ServerStatusUtil.executioner(command, statusFile)
+
+            command = 'systemctl start rabbitmq-server'
+            ServerStatusUtil.executioner(command, statusFile)
+
+            command = 'touch /home/cyberpanel/rabbitmq'
+            ServerStatusUtil.executioner(command, statusFile)
+
+            logging.CyberCPLogFileWriter.statusWriter(
+                ServerStatusUtil.lswsInstallStatusPath,
+                "RabbitMQ successfully installed.[200]\n", 1
+            )
+            return 0
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.statusWriter(
+                ServerStatusUtil.lswsInstallStatusPath,
+                "RabbitMQ installation failed: %s.[500]\n" % (str(msg)), 0
+            )
+            return 1
+
+    @staticmethod
+    def RemoveRabbitMQ():
+        statusFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
+
+        try:
+            command = 'systemctl stop rabbitmq-server'
+            ServerStatusUtil.executioner(command, statusFile)
+
+            command = 'systemctl disable rabbitmq-server'
+            ServerStatusUtil.executioner(command, statusFile)
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                command = 'yum erase rabbitmq-server -y'
+                ServerStatusUtil.executioner(command, statusFile)
+            else:
+                command = 'DEBIAN_FRONTEND=noninteractive apt-get remove rabbitmq-server -y'
+                ServerStatusUtil.executioner(command, statusFile)
+
+            command = 'rm -f /home/cyberpanel/rabbitmq'
+            ServerStatusUtil.executioner(command, statusFile)
+
+            logging.CyberCPLogFileWriter.statusWriter(
+                ServerStatusUtil.lswsInstallStatusPath,
+                "RabbitMQ successfully removed.[200]\n", 1
+            )
+            return 0
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.statusWriter(
+                ServerStatusUtil.lswsInstallStatusPath,
+                "RabbitMQ removal failed: %s.[500]\n" % (str(msg)), 0
+            )
+            return 1
+
 def main():
 
     parser = argparse.ArgumentParser(description='CyberPanel Application Manager')
@@ -320,6 +386,10 @@ def main():
         ServiceManager.InstallRedis()
     elif args["function"] == "RemoveRedis":
         ServiceManager.RemoveRedis()
+    elif args["function"] == "InstallRabbitMQ":
+        ServiceManager.InstallRabbitMQ()
+    elif args["function"] == "RemoveRabbitMQ":
+        ServiceManager.RemoveRabbitMQ()
 
 
 

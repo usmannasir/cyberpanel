@@ -276,6 +276,7 @@ def manageApplications(request):
 
     esPath = '/home/cyberpanel/elasticsearch'
     rPath = '/home/cyberpanel/redis'
+    rmqPath = '/home/cyberpanel/rabbitmq'
 
     if os.path.exists(esPath):
         installed = 'Installed'
@@ -287,12 +288,20 @@ def manageApplications(request):
     else:
         rInstalled = 'Not-Installed'
 
+    if os.path.exists(rmqPath):
+        rmqInstalled = 'Installed'
+    else:
+        rmqInstalled = 'Not-Installed'
+
     elasticSearch = {'image': '/static/manageServices/images/elastic-search.png', 'name': 'Elasticsearch',
                      'installed': installed}
     redis = {'image': '/static/manageServices/images/redis.png', 'name': 'Redis',
              'installed': rInstalled}
+    rabbitmq = {'image': '/static/manageServices/images/rabbitmq.svg', 'name': 'RabbitMQ',
+                'installed': rmqInstalled}
     services.append(elasticSearch)
     services.append(redis)
+    services.append(rabbitmq)
 
     proc = httpProc(request, 'manageServices/applications.html',
                     {'services': services}, 'admin')
@@ -323,6 +332,15 @@ def removeInstall(request):
                     command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --function InstallRedis'
                 else:
                     command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --function RemoveRedis'
+            elif appName == 'RabbitMQ':
+                if status == 'Installing':
+                    command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --function InstallRabbitMQ'
+                else:
+                    command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --function RemoveRabbitMQ'
+            else:
+                data_ret = {'status': 0, 'error_message': 'Unknown application selected.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
             ProcessUtilities.popenExecutioner(command)
             data_ret = {'status': 1}
