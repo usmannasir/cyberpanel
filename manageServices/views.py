@@ -5,6 +5,7 @@ import plogical.CyberCPLogFileWriter as logging
 from loginSystem.views import loadLoginPage
 import os
 import json
+import shlex
 
 from plogical.httpProc import httpProc
 from plogical.mailUtilities import mailUtilities
@@ -12,6 +13,11 @@ from plogical.acl import ACLManager
 from .models import PDNSStatus, SlaveServers
 from .serviceManager import ServiceManager
 from plogical.processUtilities import ProcessUtilities
+from .application_detection import managed_apps_os_support
+from .application_page_meta import (
+    build_manage_applications_page_data,
+    get_application_meta_response_dict,
+)
 # Create your views here.
 
 def managePowerDNS(request):
@@ -270,42 +276,56 @@ def saveStatus(request):
         return HttpResponse(json_data)
 
 def manageApplications(request):
-    services = []
+    services, application_meta_bootstrap_json = build_manage_applications_page_data(
+        '8', '3'
+    )
 
-    ## ElasticSearch
-
-    esPath = '/home/cyberpanel/elasticsearch'
-    rPath = '/home/cyberpanel/redis'
-    rmqPath = '/home/cyberpanel/rabbitmq'
-
-    if os.path.exists(esPath):
-        installed = 'Installed'
-    else:
-        installed = 'Not-Installed'
-
-    if os.path.exists(rPath):
-        rInstalled = 'Installed'
-    else:
-        rInstalled = 'Not-Installed'
-
-    if os.path.exists(rmqPath):
-        rmqInstalled = 'Installed'
-    else:
-        rmqInstalled = 'Not-Installed'
-
-    elasticSearch = {'image': '/static/manageServices/images/elastic-search.png', 'name': 'Elasticsearch',
-                     'installed': installed}
-    redis = {'image': '/static/manageServices/images/redis.png', 'name': 'Redis',
-             'installed': rInstalled}
-    rabbitmq = {'image': '/static/manageServices/images/rabbitmq-logo.svg', 'name': 'RabbitMQ',
-                'installed': rmqInstalled}
-    services.append(elasticSearch)
-    services.append(redis)
-    services.append(rabbitmq)
-
-    proc = httpProc(request, 'manageServices/applications.html',
-                    {'services': services}, 'admin')
+    proc = httpProc(
+        request,
+        'manageServices/applications.html',
+        {
+            'services': services,
+            'application_meta_bootstrap_json': application_meta_bootstrap_json,
+        },
+        'admin',
+    )
     return proc.render()
+
+
+def applicationMeta(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] != 1:
+            return ACLManager.loadErrorJson()
+
+        data = {}
+        if request.method == 'POST':
+            data = json.loads(request.body)
+
+        requested_major = str(data.get('esMajor', '8'))
+        if requested_major not in ('7', '8', '9'):
+            requested_major = '8'
+
+        requested_rmq_stream = str(data.get('rabbitmqStream', '3')).strip()
+        if requested_rmq_stream not in ('3', '4'):
+            requested_rmq_stream = '3'
+
+        response_data = get_application_meta_response_dict(
+            requested_major, requested_rmq_stream
+        )
+
+        return HttpResponse(
+            json.dumps(response_data, ensure_ascii=False),
+            content_type='application/json; charset=utf-8',
+        )
+
+    except BaseException as msg:
+        return HttpResponse(
+            json.dumps({'status': 0, 'error_message': str(msg)}, ensure_ascii=False),
+            content_type='application/json; charset=utf-8',
+        )
 
 def removeInstall(request):
     try:
@@ -321,22 +341,59 @@ def removeInstall(request):
 
             status = data['status']
             appName = data['appName']
+            version = str(data.get('version', 'latest')).strip() or 'latest'
+            esMajor = str(data.get('esMajor', '8')).strip() or '8'
+            if esMajor not in ('7', '8', '9'):
+                esMajor = '8'
+            rabbitmqStream = str(data.get('rabbitmqStream', '3')).strip() or '3'
+            if rabbitmqStream not in ('3', '4'):
+                rabbitmqStream = '3'
+            confirmAction = bool(data.get('confirmAction', False))
+
+            support = managed_apps_os_support()
+            if not support['supported']:
+                data_ret = {'status': 0, 'error_message': support['reason']}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            if status in ('Removing', 'Upgrading') and not confirmAction:
+                data_ret = {'status': 0, 'error_message': 'Action confirmation is required.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
             if appName == 'Elasticsearch':
                 if status == 'Installing':
-                    command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --function InstallElasticSearch'
+                    command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --app Elasticsearch --action install --version {0} --esMajor {1}'.format(
+                        shlex.quote(version), shlex.quote(esMajor)
+                    )
+                elif status == 'Upgrading':
+                    command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --app Elasticsearch --action upgrade --version {0} --esMajor {1}'.format(
+                        shlex.quote(version), shlex.quote(esMajor)
+                    )
                 else:
-                    command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --function RemoveElasticSearch'
+                    command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --app Elasticsearch --action remove'
             elif appName == 'Redis':
                 if status == 'Installing':
-                    command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --function InstallRedis'
+                    command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --app Redis --action install --version {0}'.format(
+                        shlex.quote(version)
+                    )
+                elif status == 'Upgrading':
+                    command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --app Redis --action upgrade --version {0}'.format(
+                        shlex.quote(version)
+                    )
                 else:
-                    command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --function RemoveRedis'
+                    command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --app Redis --action remove'
             elif appName == 'RabbitMQ':
                 if status == 'Installing':
-                    command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --function InstallRabbitMQ'
+                    command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --app RabbitMQ --action install --version {0} --rabbitmqStream {1}'.format(
+                        shlex.quote(version), shlex.quote(rabbitmqStream)
+                    )
+                elif status == 'Upgrading':
+                    command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --app RabbitMQ --action upgrade --version {0} --rabbitmqStream {1}'.format(
+                        shlex.quote(version), shlex.quote(rabbitmqStream)
+                    )
                 else:
-                    command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --function RemoveRabbitMQ'
+                    command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --app RabbitMQ --action remove'
             else:
                 data_ret = {'status': 0, 'error_message': 'Unknown application selected.'}
                 json_data = json.dumps(data_ret)

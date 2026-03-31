@@ -1,6 +1,10 @@
+import os
 import os.path
 import sys
 import django
+repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if repo_root not in sys.path:
+    sys.path.append(repo_root)
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
@@ -12,6 +16,10 @@ import argparse
 from serverStatus.serverStatusUtil import ServerStatusUtil
 from plogical import CyberCPLogFileWriter as logging
 import subprocess
+from manageServices.application_detection import managed_apps_os_support
+from manageServices import application_elasticsearch
+from manageServices import application_redis
+from manageServices import application_rabbitmq
 
 class ServiceManager:
 
@@ -142,254 +150,114 @@ autosecondary=yes
             Supermasters(ip=self.extraArgs['masterServerIP'], nameserver=self.extraArgs['slaveServerNS'], account='').save()
 
     @staticmethod
-    def InstallElasticSearch():
+    def InstallElasticSearch(version='latest', esMajor='8'):
+        return application_elasticsearch.install(version=version, es_major=esMajor)
 
-        statusFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
-
-        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-            command = 'rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch'
-            ServerStatusUtil.executioner(command, statusFile)
-
-            repoPath = '/etc/yum.repos.d/elasticsearch.repo'
-
-            content = '''
-[elasticsearch]
-name=Elasticsearch repository for 7.x packages
-baseurl=https://artifacts.elastic.co/packages/7.x/yum
-gpgcheck=1
-gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
-enabled=0
-autorefresh=1
-type=rpm-md
-'''
-
-            writeToFile = open(repoPath, 'w')
-            writeToFile.write(content)
-            writeToFile.close()
-
-            command = 'yum install --enablerepo=elasticsearch elasticsearch -y'
-            ServerStatusUtil.executioner(command, statusFile)
-        else:
-            command = 'wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -'
-            subprocess.call(command, shell=True)
-
-            command = 'apt-get install apt-transport-https -y'
-            ServerStatusUtil.executioner(command, statusFile)
-
-            command = 'echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-7.x.list'
-            subprocess.call(command, shell=True)
-
-            command = 'apt-get update -y'
-            ServerStatusUtil.executioner(command, statusFile)
-
-            command = 'apt-get install elasticsearch -y'
-            ServerStatusUtil.executioner(command, statusFile)
-
-        ### Tmp folder configurations
-
-        command = 'mkdir -p /home/elasticsearch/tmp'
-        ServerStatusUtil.executioner(command, statusFile)
-
-        command = 'chown elasticsearch:elasticsearch /home/elasticsearch/tmp'
-        ServerStatusUtil.executioner(command, statusFile)
-
-        jvmOptions = '/etc/elasticsearch/jvm.options'
-
-        writeToFile = open(jvmOptions, 'a')
-        writeToFile.write('-Djava.io.tmpdir=/home/elasticsearch/tmp\n')
-        writeToFile.close()
-
-        command = 'systemctl enable elasticsearch'
-        ServerStatusUtil.executioner(command, statusFile)
-
-        command = 'systemctl start elasticsearch'
-        ServerStatusUtil.executioner(command, statusFile)
-
-        command = 'touch /home/cyberpanel/elasticsearch'
-        ServerStatusUtil.executioner(command, statusFile)
-
-
-
-        logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
-                                                      "Packages successfully installed.[200]\n", 1)
-        return 0
+    @staticmethod
+    def UpgradeElasticSearch(version='latest', esMajor='8'):
+        return application_elasticsearch.upgrade(version=version, es_major=esMajor)
 
     @staticmethod
     def RemoveElasticSearch():
-
-        statusFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
-
-        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-            command = 'rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch'
-            ServerStatusUtil.executioner(command, statusFile)
-
-            repoPath = '/etc/yum.repos.d/elasticsearch.repo'
-
-            try:
-                os.remove(repoPath)
-            except:
-                pass
-
-            command = 'yum erase elasticsearch -y'
-            ServerStatusUtil.executioner(command, statusFile)
-        else:
-
-            try:
-                os.remove('/etc/apt/sources.list.d/elastic-7.x.list')
-            except:
-                pass
-
-
-            command = 'apt-get remove elasticsearch -y'
-            ServerStatusUtil.executioner(command, statusFile)
-
-        ### Tmp folder configurations
-
-        command = 'rm -rf /home/elasticsearch/tmp'
-        ServerStatusUtil.executioner(command, statusFile)
-
-
-        command = 'rm -f /home/cyberpanel/elasticsearch'
-        ServerStatusUtil.executioner(command, statusFile)
-
-        logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
-                                                  "ElasticSearch successfully removed.[200]\n", 1)
-        return 0
+        return application_elasticsearch.remove()
 
     @staticmethod
-    def InstallRedis():
+    def InstallRedis(version='latest'):
+        return application_redis.install(version=version)
 
-        statusFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
-
-        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-            command = 'yum install redis -y'
-            ServerStatusUtil.executioner(command, statusFile)
-        else:
-
-            command = 'DEBIAN_FRONTEND=noninteractive apt-get install redis-server -y'
-            ServerStatusUtil.executioner(command, statusFile)
-
-
-        command = 'systemctl enable redis'
-        ServerStatusUtil.executioner(command, statusFile)
-
-        command = 'systemctl start redis'
-        ServerStatusUtil.executioner(command, statusFile)
-
-        command = 'touch /home/cyberpanel/redis'
-        ServerStatusUtil.executioner(command, statusFile)
-
-        logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
-                                                  "Redis successfully installed.[200]\n", 1)
-        return 0
+    @staticmethod
+    def UpgradeRedis(version='latest'):
+        return application_redis.upgrade(version=version)
 
     @staticmethod
     def RemoveRedis():
-
-        statusFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
-
-        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-            command = 'yum erase redis -y'
-            ServerStatusUtil.executioner(command, statusFile)
-        else:
-
-            command = 'apt-get remove redis-server -y'
-            ServerStatusUtil.executioner(command, statusFile)
-
-
-        command = 'rm -f /home/cyberpanel/redis'
-        ServerStatusUtil.executioner(command, statusFile)
-
-        logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
-                                                  "Redis successfully removed.[200]\n", 1)
-        return 0
+        return application_redis.remove()
 
     @staticmethod
-    def InstallRabbitMQ():
-        statusFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
+    def InstallRabbitMQ(version='latest', stream='3'):
+        return application_rabbitmq.install(version=version, stream=stream)
 
-        try:
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                command = 'yum install rabbitmq-server -y'
-                ServerStatusUtil.executioner(command, statusFile)
-            else:
-                command = 'DEBIAN_FRONTEND=noninteractive apt-get install rabbitmq-server -y'
-                ServerStatusUtil.executioner(command, statusFile)
-
-            command = 'systemctl enable rabbitmq-server'
-            ServerStatusUtil.executioner(command, statusFile)
-
-            command = 'systemctl start rabbitmq-server'
-            ServerStatusUtil.executioner(command, statusFile)
-
-            command = 'touch /home/cyberpanel/rabbitmq'
-            ServerStatusUtil.executioner(command, statusFile)
-
-            logging.CyberCPLogFileWriter.statusWriter(
-                ServerStatusUtil.lswsInstallStatusPath,
-                "RabbitMQ successfully installed.[200]\n", 1
-            )
-            return 0
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.statusWriter(
-                ServerStatusUtil.lswsInstallStatusPath,
-                "RabbitMQ installation failed: %s.[500]\n" % (str(msg)), 0
-            )
-            return 1
+    @staticmethod
+    def UpgradeRabbitMQ(version='latest', stream='3'):
+        return application_rabbitmq.upgrade(version=version, stream=stream)
 
     @staticmethod
     def RemoveRabbitMQ():
-        statusFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
-
-        try:
-            command = 'systemctl stop rabbitmq-server'
-            ServerStatusUtil.executioner(command, statusFile)
-
-            command = 'systemctl disable rabbitmq-server'
-            ServerStatusUtil.executioner(command, statusFile)
-
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                command = 'yum erase rabbitmq-server -y'
-                ServerStatusUtil.executioner(command, statusFile)
-            else:
-                command = 'DEBIAN_FRONTEND=noninteractive apt-get remove rabbitmq-server -y'
-                ServerStatusUtil.executioner(command, statusFile)
-
-            command = 'rm -f /home/cyberpanel/rabbitmq'
-            ServerStatusUtil.executioner(command, statusFile)
-
-            logging.CyberCPLogFileWriter.statusWriter(
-                ServerStatusUtil.lswsInstallStatusPath,
-                "RabbitMQ successfully removed.[200]\n", 1
-            )
-            return 0
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.statusWriter(
-                ServerStatusUtil.lswsInstallStatusPath,
-                "RabbitMQ removal failed: %s.[500]\n" % (str(msg)), 0
-            )
-            return 1
+        return application_rabbitmq.remove()
 
 def main():
 
     parser = argparse.ArgumentParser(description='CyberPanel Application Manager')
     parser.add_argument('--function', help='Function')
-
+    parser.add_argument('--app', help='Application name')
+    parser.add_argument('--action', help='Action to run: install|remove|upgrade')
+    parser.add_argument('--version', default='latest', help='Target package version or latest')
+    parser.add_argument('--esMajor', default='8', help='Elasticsearch major stream (7|8|9)')
+    parser.add_argument('--rabbitmqStream', default='3', help='RabbitMQ major stream (3|4)')
 
     args = vars(parser.parse_args())
 
+    support = managed_apps_os_support()
+    if not support['supported']:
+        logging.CyberCPLogFileWriter.statusWriter(
+            ServerStatusUtil.lswsInstallStatusPath,
+            support['reason'] + '\n',
+            1
+        )
+        return
+
     if args["function"] == "InstallElasticSearch":
-        ServiceManager.InstallElasticSearch()
+        ServiceManager.InstallElasticSearch(version=args.get('version', 'latest'), esMajor=args.get('esMajor', '8'))
+    elif args["function"] == "UpgradeElasticSearch":
+        ServiceManager.UpgradeElasticSearch(version=args.get('version', 'latest'), esMajor=args.get('esMajor', '8'))
     elif args["function"] == "RemoveElasticSearch":
         ServiceManager.RemoveElasticSearch()
     elif args["function"] == "InstallRedis":
-        ServiceManager.InstallRedis()
+        ServiceManager.InstallRedis(version=args.get('version', 'latest'))
+    elif args["function"] == "UpgradeRedis":
+        ServiceManager.UpgradeRedis(version=args.get('version', 'latest'))
     elif args["function"] == "RemoveRedis":
         ServiceManager.RemoveRedis()
     elif args["function"] == "InstallRabbitMQ":
-        ServiceManager.InstallRabbitMQ()
+        ServiceManager.InstallRabbitMQ(
+            version=args.get('version', 'latest'),
+            stream=args.get('rabbitmqStream', '3'),
+        )
+    elif args["function"] == "UpgradeRabbitMQ":
+        ServiceManager.UpgradeRabbitMQ(
+            version=args.get('version', 'latest'),
+            stream=args.get('rabbitmqStream', '3'),
+        )
     elif args["function"] == "RemoveRabbitMQ":
         ServiceManager.RemoveRabbitMQ()
+    elif args.get("app") and args.get("action"):
+        app_name = args.get("app")
+        action = args.get("action").lower()
+        version = args.get("version", "latest")
+        es_major = args.get("esMajor", "8")
+        rmq_stream = args.get("rabbitmqStream", "3")
+
+        if app_name == 'Elasticsearch':
+            if action == 'install':
+                ServiceManager.InstallElasticSearch(version=version, esMajor=es_major)
+            elif action == 'upgrade':
+                ServiceManager.UpgradeElasticSearch(version=version, esMajor=es_major)
+            elif action == 'remove':
+                ServiceManager.RemoveElasticSearch()
+        elif app_name == 'Redis':
+            if action == 'install':
+                ServiceManager.InstallRedis(version=version)
+            elif action == 'upgrade':
+                ServiceManager.UpgradeRedis(version=version)
+            elif action == 'remove':
+                ServiceManager.RemoveRedis()
+        elif app_name == 'RabbitMQ':
+            if action == 'install':
+                ServiceManager.InstallRabbitMQ(version=version, stream=rmq_stream)
+            elif action == 'upgrade':
+                ServiceManager.UpgradeRabbitMQ(version=version, stream=rmq_stream)
+            elif action == 'remove':
+                ServiceManager.RemoveRabbitMQ()
 
 
 

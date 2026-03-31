@@ -2329,9 +2329,6 @@
                 <a href="{% url 'aiScannerHome' %}" class="menu-item">
                     <span>AI Scanner</span>
                 </a>
-                <a href="#" class="menu-item" onclick="loadSecurityManagement(); return false;">
-                    <span>Security Management</span>
-                </a>
             </div>
             
             <a href="#" class="menu-item" onclick="toggleSubmenu('mail-settings-submenu', this); return false;">
@@ -2507,7 +2504,7 @@
     <script src="{% static 'serverStatus/serverStatus.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'firewall/firewall.js' %}?v={{ CP_VERSION }}&fw={{ FIREWALL_STATIC_VERSION|default:CP_VERSION }}&cb=4" data-cfasync="false"></script>
     <script src="{% static 'emailPremium/emailPremium.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
-    <script src="{% static 'manageServices/manageServices.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
+    <script src="{% static 'manageServices/manageServices.js' %}?v={{ CP_VERSION }}&msModal=20260401d" data-cfasync="false"></script>
     <script src="{% static 'CLManager/CLManager.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     
     <!-- Scripts -->
@@ -2953,9 +2950,6 @@
             });
         }
         
-        function loadSecurityManagement() {
-            window.open('{% url "securityManagementPage" %}', '_blank');
-        }
     </script>
     
     {% block footer_scripts %}{% endblock %}

@@ -3,6 +3,7 @@
 
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
+from django.utils.translation import gettext as _
 from django.db import models
 from django.db.utils import IntegrityError, ProgrammingError, OperationalError
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -765,9 +766,17 @@ def createACLFunc(request):
         if currentACL['admin'] == 1:
             data = json.loads(request.body)
 
+            acl_name_raw = data.get('aclName', '') or ''
+            acl_name = str(acl_name_raw).strip()
+            if not acl_name:
+                msg = str(_('Please enter a name for this ACL.'))
+                err_body = {'status': 0, 'error_message': msg, 'errorMessage': msg}
+                return HttpResponse(json.dumps(err_body), content_type='application/json')
+            data['aclName'] = acl_name
+
             ## Version Management
 
-            if data['makeAdmin']:
+            if data.get('makeAdmin'):
                 data['adminStatus'] = 1
             else:
                 data['adminStatus'] = 0
