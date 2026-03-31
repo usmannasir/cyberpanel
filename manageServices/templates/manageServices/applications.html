@@ -260,8 +260,113 @@
     
     .modal-body {
         padding: 25px;
+        /* Theme may set light text globally; native <select>/<option> must stay dark-on-light. */
+        color: var(--text-primary, #2f3640);
     }
-    
+
+    .applications-container .modal-body select.form-control {
+        color: #0f172a;
+        background-color: #ffffff;
+    }
+
+    .applications-container .modal-body select.form-control option {
+        color: #0f172a;
+        background-color: #ffffff;
+    }
+
+    .applications-container #settings .modal-body .manage-apps-version-select {
+        color: #0f172a;
+        background-color: #ffffff;
+    }
+
+    .applications-container #settings .modal-body .manage-apps-version-select option {
+        color: #0f172a;
+        background-color: #f8fafc;
+    }
+
+    /* Native <select> open state is OS-drawn; use a custom list so version text is always readable. */
+    .manage-apps-version-picker {
+        border: 1px solid #94a3b8;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #ffffff;
+        margin-top: 6px;
+    }
+
+    .manage-apps-version-current {
+        padding: 10px 12px;
+        background: #e2e8f0;
+        color: #0f172a;
+        font-size: 14px;
+        font-weight: 600;
+        border-bottom: 1px solid #94a3b8;
+    }
+
+    .manage-apps-version-rows {
+        max-height: 240px;
+        overflow-y: auto;
+        background: #ffffff;
+    }
+
+    .manage-apps-version-row {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 10px 14px;
+        margin: 0;
+        border: 0;
+        border-bottom: 1px solid #e2e8f0;
+        background: #ffffff !important;
+        color: #0f172a !important;
+        font-size: 14px;
+        line-height: 1.35;
+        cursor: pointer;
+        -webkit-text-fill-color: #0f172a;
+    }
+
+    /* Only one row should read as "selected"; non-active rows stay white unless hover/focus. */
+    .manage-apps-version-rows button.manage-apps-version-row:not(.is-active) {
+        background: #ffffff !important;
+    }
+
+    .manage-apps-version-rows button.manage-apps-version-row:not(.is-active):hover,
+    .manage-apps-version-rows button.manage-apps-version-row:not(.is-active):focus {
+        background: #f1f5f9 !important;
+        color: #0f172a !important;
+        -webkit-text-fill-color: #0f172a;
+        outline: none;
+    }
+
+    .manage-apps-version-rows button.manage-apps-version-row.is-active,
+    .manage-apps-version-rows button.manage-apps-version-row.is-active:hover,
+    .manage-apps-version-rows button.manage-apps-version-row.is-active:focus {
+        background: #c7d2fe !important;
+        color: #1e1b4b !important;
+        -webkit-text-fill-color: #1e1b4b;
+        font-weight: 600;
+        outline: none;
+    }
+
+    .manage-apps-version-row:last-child {
+        border-bottom: 0;
+    }
+
+    /* Win over theme + .ng-binding readability rules (must stay dark on white row). */
+    .applications-container #settings .modal-body .manage-apps-version-row.ng-binding {
+        color: #0f172a !important;
+        -webkit-text-fill-color: #0f172a !important;
+    }
+
+    [data-theme="dark"] .applications-container #settings .modal-body .manage-apps-version-row.ng-binding {
+        color: #0f172a !important;
+        -webkit-text-fill-color: #0f172a !important;
+    }
+
+    .applications-container #settings .modal-body .manage-apps-version-row.ng-binding.is-active {
+        color: #1e1b4b !important;
+        -webkit-text-fill-color: #1e1b4b !important;
+    }
+
     .install-log {
         background: var(--bg-secondary, #f8f9ff);
         border: 1px solid var(--border-color, #e8e9ff);
@@ -358,6 +463,7 @@
 
 <div class="applications-wrapper">
     <div class="applications-container" ng-controller="manageApplications">
+        <script type="application/json" id="manageApplicationsMetaBootstrap">{{ application_meta_bootstrap_json|safe }}</script>
         <!-- Page Header -->
         <div class="page-header">
             <h1>
@@ -373,7 +479,7 @@
         <div class="content-section">
             <h2 class="section-title">
                 {% trans "Available Applications" %}
-                <span ng-hide="cyberpanelLoading" class="loading-spinner"></span>
+                <span ng-cloak ng-hide="cyberpanelLoading" class="loading-spinner"></span>
             </h2>
 
             {% if services %}
@@ -397,6 +503,21 @@
                                 {% trans "Not Installed" %}
                             </span>
                             {% endif %}
+                            <div ng-if="findAppMeta('{{ service.name }}').installed && findAppMeta('{{ service.name }}').updateAvailable" style="margin-top: 8px;">
+                                <span class="app-status" style="background:#dbeafe;color:#1e40af;font-size:12px;padding:4px 10px;border-radius:6px;display:inline-flex;align-items:center;gap:6px;">
+                                    <i class="fas fa-arrow-circle-up"></i>
+                                    {% trans "Update available" %}
+                                </span>
+                            </div>
+                            {% if service.installedVersion %}
+                            <div style="font-size: 12px; margin-top: 8px; color: #64748b;">
+                                {% trans "Installed Version" %}: {{ service.installedVersion }}
+                            </div>
+                            {% else %}
+                            <div style="font-size: 12px; margin-top: 8px; color: #64748b;" ng-if="findAppMeta('{{ service.name }}').installedVersion">
+                                {% trans "Installed Version" %}: {$ findAppMeta('{{ service.name }}').installedVersion $}
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                     
@@ -413,25 +534,29 @@
                     </div>
                     
                     <div class="app-actions">
-                        {% if service.installed == 'Installed' %}
-                        <button type="button" 
-                                class="action-btn remove" 
-                                data-toggle="modal" 
-                                data-target="#settings"
-                                ng-click="removeInstall('{{ service.name }}', 'Removing')">
-                            <i class="fas fa-trash-alt"></i>
-                            {% trans "Remove" %}
-                        </button>
-                        {% else %}
-                        <button type="button" 
-                                class="action-btn install" 
-                                data-toggle="modal" 
-                                data-target="#settings"
-                                ng-click="removeInstall('{{ service.name }}', 'Installing')">
+                        <button type="button"
+                                class="action-btn install"
+                                {% if service.installed == 'Installed' %}style="display:none;"{% endif %}
+                                ng-click="openApplicationsModal('{{ service.name }}', 'Installing')">
                             <i class="fas fa-download"></i>
                             {% trans "Install" %}
                         </button>
-                        {% endif %}
+
+                        <button type="button" 
+                                class="action-btn remove" 
+                                {% if service.installed != 'Installed' %}style="display:none;"{% endif %}
+                                ng-click="openApplicationsModal('{{ service.name }}', 'Removing', '{{ service.installedVersion|escapejs }}')">
+                            <i class="fas fa-trash-alt"></i>
+                            {% trans "Remove" %}
+                        </button>
+
+                        <button type="button" 
+                                class="action-btn install" 
+                                {% if service.installed != 'Installed' %}style="display:none;"{% endif %}
+                                ng-click="openApplicationsModal('{{ service.name }}', 'Upgrading', '{{ service.installedVersion|escapejs }}')">
+                            <i class="fas fa-exchange-alt"></i>
+                            {% trans "Change version" %}
+                        </button>
                     </div>
                 </div>
                 {% endfor %}
@@ -453,12 +578,87 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h4 class="modal-title">
-                            {$ status $} {$ appName $}
-                            <span ng-hide="cyberpanelLoading" class="loading-spinner"></span>
+                            <span ng-if="status == 'Installing'">{% trans "Installing" %}</span>
+                            <span ng-if="status == 'Removing'">{% trans "Removing" %}</span>
+                            <span ng-if="status == 'Upgrading'">{% trans "Change version" %}</span>
+                            {$ appName $}
+                            <span ng-cloak ng-show="appsMetaRefreshing || !cyberpanelLoading" class="loading-spinner"></span>
                         </h4>
                         <button type="button" class="close" data-dismiss="modal">&times;</button>
                     </div>
                     <div class="modal-body">
+                        <div style="margin-bottom: 10px;" ng-if="status == 'Installing' || status == 'Upgrading'">
+                            <label style="color: #0f172a;">{% trans "Version" %}</label>
+                            <div class="manage-apps-version-picker">
+                                <div class="manage-apps-version-current">
+                                    {% trans "Selected" %}: <span>{$ versionLabel(selectedVersion) $}</span>
+                                </div>
+                                <div class="manage-apps-version-rows">
+                                    <button type="button"
+                                            class="manage-apps-version-row"
+                                            ng-repeat="v in selectedVersions track by versionTrackId($index, v)"
+                                            ng-class="{'is-active': selectedVersionRowIndex === $index}"
+                                            ng-click="selectManagedAppVersion($index, v, $event)">{$ versionLabel(v) $}</button>
+                                </div>
+                            </div>
+                            <p style="margin-top: 8px; font-size: 12px; color: #475569;" ng-if="status == 'Upgrading'">
+                                {% trans "There is no separate Downgrade button: pick any version lower than your current one in this list to downgrade (the installer allows package downgrades when needed)." %}
+                            </p>
+                            <p style="margin-top: 6px; font-size: 12px; color: #b45309;" ng-if="status == 'Upgrading' && repoShowsOnlyOneStream">
+                                {% trans "Only one package version is visible from your enabled repositories, so there may be nothing older to select. Older builds often require archive or vault repositories for your OS, or another distro major that still publishes them." %}
+                            </p>
+                        </div>
+                        <div style="margin-bottom: 10px; font-size: 13px; color: #64748b;" ng-if="status == 'Upgrading' && selectedCurrentVersion">
+                            {% trans "Current Version" %}: {$ selectedCurrentVersion $}
+                        </div>
+                        <div style="margin-bottom: 10px; padding: 8px 10px; background: #f8fafc; border-radius: 6px; font-size: 12px; color: #475569;"
+                             ng-if="status == 'Upgrading'">
+                            {% trans "A backup of application data is created automatically before upgrading or downgrading. Data is merged into the new version after packages install; the backup is removed only after a successful start." %}
+                        </div>
+                        <div style="margin-bottom: 10px;" ng-if="appName == 'Elasticsearch' && (status == 'Installing' || status == 'Upgrading')">
+                            <label style="color: #0f172a;">{% trans "Elasticsearch Major" %}</label>
+                            <div class="manage-apps-version-picker">
+                                <div class="manage-apps-version-current">{% trans "Major" %}: <span ng-bind="selectedEsMajor"></span></div>
+                                <div class="manage-apps-version-rows">
+                                    <button type="button" class="manage-apps-version-row" ng-class="{'is-active': selectedEsMajor === '7'}" ng-click="selectedEsMajor = '7'; refreshMeta()">7</button>
+                                    <button type="button" class="manage-apps-version-row" ng-class="{'is-active': selectedEsMajor === '8'}" ng-click="selectedEsMajor = '8'; refreshMeta()">8</button>
+                                    <button type="button" class="manage-apps-version-row" ng-class="{'is-active': selectedEsMajor === '9'}" ng-click="selectedEsMajor = '9'; refreshMeta()">9</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 10px;" ng-if="appName == 'RabbitMQ' && (status == 'Installing' || status == 'Upgrading')">
+                            <label style="color: #0f172a;">{% trans "RabbitMQ major line" %}</label>
+                            <div class="manage-apps-version-picker">
+                                <div class="manage-apps-version-current">{% trans "Stream" %}: <span ng-bind="selectedRabbitmqStream === '4' ? '4.x' : '3.x'"></span></div>
+                                <div class="manage-apps-version-rows">
+                                    <button type="button" class="manage-apps-version-row" ng-class="{'is-active': selectedRabbitmqStream === '3'}" ng-click="selectedRabbitmqStream = '3'; refreshMeta()">3.x ({% trans "maintenance" %})</button>
+                                    <button type="button" class="manage-apps-version-row" ng-class="{'is-active': selectedRabbitmqStream === '4'}" ng-click="selectedRabbitmqStream = '4'; refreshMeta()">4.x</button>
+                                </div>
+                            </div>
+                            <p style="margin-top: 8px; font-size: 12px; color: #64748b;">
+                                {% trans "Uses Team RabbitMQ Packagecloud repos; 4.x requires a compatible Erlang (OTP 26+). The installer will try to align Erlang when needed." %}
+                            </p>
+                        </div>
+                        <div style="margin-bottom: 10px; padding: 10px 12px; background: #f0f9ff; border-radius: 8px; font-size: 13px; color: #1e3a5f; border: 1px solid #bae6fd;"
+                             ng-if="(status == 'Installing' || status == 'Upgrading') && findAppMeta(appName).crossBranchUpdateSuggested">
+                            <i class="fas fa-info-circle"></i>
+                            {% trans "A newer release is available on another version line. Change the major/stream above, pick a version, then run a version change (upgrade or downgrade)." %}
+                            <span ng-if="findAppMeta(appName).latestOverall"> {$ findAppMeta(appName).latestOverall $}</span>
+                        </div>
+                        <div style="margin-bottom: 10px;" ng-if="status == 'Removing' || status == 'Upgrading'">
+                            <label>
+                                <input type="checkbox" ng-model="confirmAction">
+                                <span ng-if="status == 'Removing'">{% trans "Confirm Remove" %}</span>
+                                <span ng-if="status == 'Upgrading'">{% trans "Confirm version change" %}</span>
+                            </label>
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <button type="button" class="btn btn-primary" ng-click="runAction()">
+                                <span ng-if="status == 'Installing'">{% trans "Start Install" %}</span>
+                                <span ng-if="status == 'Removing'">{% trans "Start Remove" %}</span>
+                                <span ng-if="status == 'Upgrading'">{% trans "Start version change" %}</span>
+                            </button>
+                        </div>
                         <div class="install-log">
                             <textarea ng-model="requestData" rows="15" class="log-textarea" readonly></textarea>
                         </div>
@@ -469,6 +669,4 @@
     </div>
 </div>
 
-<!-- Manage Applications JS -->
-<script src="{% static 'manageServices/manageServices.js' %}"></script>
 {% endblock %}

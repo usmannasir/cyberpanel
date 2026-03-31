@@ -10,5 +10,6 @@ urlpatterns = [
     path('saveStatus', views.saveStatus, name='saveStatus'),
 
     path('manageApplications', views.manageApplications, name='manageApplications'),
+    path('applicationMeta', views.applicationMeta, name='applicationMeta'),
     path('removeInstall', views.removeInstall, name='removeInstall'),
 ]

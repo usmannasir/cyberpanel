@@ -215,13 +215,6 @@ urlpatterns = [
     path('getBandwidthResetLogs', views.getBandwidthResetLogs, name='getBandwidthResetLogs'),
     path('scheduleBandwidthReset', views.scheduleBandwidthReset, name='scheduleBandwidthReset'),
 
-    # Security Management
-    path('securityManagement', views.securityManagementPage, name='securityManagementPage'),
-
-    # IP Blocking
-    path('blockIPAddress', views.blockIPAddress, name='blockIPAddress'),
-    path('unblockIPAddress', views.unblockIPAddress, name='unblockIPAddress'),
-    path('getBlockedIPs', views.getBlockedIPs, name='getBlockedIPs'),
     path('checkIPStatus', views.checkIPStatus, name='checkIPStatus'),
 
     # Catch all for domains (must be last)
