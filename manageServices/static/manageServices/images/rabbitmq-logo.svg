@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="500"
+   height="500"
+   viewBox="0 0 132.29167 132.29166"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.3 (0e150ed6c4, 2023-07-21)"
+   sodipodi:docname="logo-rabbitmq.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="0.7338665"
+     inkscape:cx="-150.57235"
+     inkscape:cy="293.65014"
+     inkscape:window-width="1916"
+     inkscape:window-height="1029"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-76.200105,-115.62292)">
+    <g
+       id="g1"
+       transform="matrix(3.3139169,0,0,3.3139169,76.216727,114.23118)"
+       style="stroke-width:0.0798401">
+      <path
+         class="cls-2"
+         d="M 39.42,17.37 H 26.65 a 1.59,1.59 0 0 1 -1.6,-1.6 V 3 A 1.59,1.59 0 0 0 23.45,1.41 H 18.67 A 1.59,1.59 0 0 0 17.07,3 v 12.77 a 1.59,1.59 0 0 1 -1.6,1.6 h -4.78 a 1.59,1.59 0 0 1 -1.6,-1.6 V 3 A 1.59,1.59 0 0 0 7.49,1.4 H 2.7 A 1.59,1.59 0 0 0 1.11,3 v 36.72 a 1.59,1.59 0 0 0 1.6,1.6 h 36.71 a 1.59,1.59 0 0 0 1.6,-1.6 V 19 a 1.59,1.59 0 0 0 -1.6,-1.63 z M 33,30.93 a 2.39,2.39 0 0 1 -2.39,2.4 h -3.2 a 2.39,2.39 0 0 1 -2.39,-2.4 v -3.19 a 2.39,2.39 0 0 1 2.39,-2.4 h 3.2 a 2.39,2.39 0 0 1 2.39,2.4 z"
+         transform="translate(-1.11,-0.98)"
+         id="path10"
+         style="fill:#ff6600;stroke-width:0.0798401" />
+    </g>
+  </g>
+</svg>
