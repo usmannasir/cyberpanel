@@ -405,6 +405,8 @@
                             {% trans "A distributed, RESTful search and analytics engine capable of addressing a growing number of use cases." %}
                         {% elif service.name == 'Redis' %}
                             {% trans "An in-memory data structure store, used as a database, cache, and message broker." %}
+                        {% elif service.name == 'RabbitMQ' %}
+                            {% trans "A reliable message broker for asynchronous processing, queueing, and service-to-service communication." %}
                         {% else %}
                             {% trans "Powerful application for your server infrastructure." %}
                         {% endif %}

@@ -6250,6 +6250,31 @@ vmail
         command = 'systemctl enable redis'
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
+    def installRabbitMQ(self):
+        rabbitMQMarker = '/home/cyberpanel/rabbitmq'
+
+        # Keep optional installer idempotent for reruns/retries.
+        if os.path.exists(rabbitMQMarker):
+            preFlightsChecks.stdOut("RabbitMQ marker already exists, skipping optional RabbitMQ installation.")
+            return
+
+        if self.distro == ubuntu or self.distro == debian12:
+            command = 'DEBIAN_FRONTEND=noninteractive apt install rabbitmq-server -y'
+        elif self.distro == centos:
+            command = 'yum install rabbitmq-server -y'
+        else:
+            command = 'dnf install rabbitmq-server -y'
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+        command = 'systemctl enable rabbitmq-server'
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+        command = 'systemctl start rabbitmq-server'
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+        writeToFile = open(rabbitMQMarker, 'w')
+        writeToFile.close()
+
     def disablePackegeUpdates(self):
         if self.distro == centos:
             mainConfFile = '/etc/yum.conf'
@@ -6752,6 +6777,7 @@ def main():
     parser.add_argument('--serial', help='Install LS Ent or OpenLiteSpeed')
     parser.add_argument('--port', help='LSCPD Port')
     parser.add_argument('--redis', help='vHosts on Redis - Requires LiteSpeed Enterprise')
+    parser.add_argument('--rabbitmq', help='Enable optional RabbitMQ installation.')
     parser.add_argument('--remotemysql', help='Opt to choose local or remote MySQL')
     parser.add_argument('--mysqlhost', help='MySQL host if remote is chosen.')
     parser.add_argument('--mysqldb', help='MySQL DB if remote is chosen.')
@@ -7019,6 +7045,9 @@ def main():
 
     if args.redis is not None:
         checks.installRedis()
+
+    if args.rabbitmq is not None and str(args.rabbitmq).upper() == 'ON':
+        checks.installRabbitMQ()
 
     if args.powerdns is not None:
         checks.enableDisableDNS(args.powerdns.lower())
