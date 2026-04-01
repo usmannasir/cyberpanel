@@ -193,7 +193,7 @@ def main():
     parser.add_argument('--action', help='Action to run: install|remove|upgrade')
     parser.add_argument('--version', default='latest', help='Target package version or latest')
     parser.add_argument('--esMajor', default='8', help='Elasticsearch major stream (7|8|9)')
-    parser.add_argument('--rabbitmqStream', default='3', help='RabbitMQ major stream (3|4)')
+    parser.add_argument('--rabbitmqStream', default='4', help='RabbitMQ major stream (3|4)')
 
     args = vars(parser.parse_args())
 
@@ -221,12 +221,12 @@ def main():
     elif args["function"] == "InstallRabbitMQ":
         ServiceManager.InstallRabbitMQ(
             version=args.get('version', 'latest'),
-            stream=args.get('rabbitmqStream', '3'),
+            stream=args.get('rabbitmqStream', '4'),
         )
     elif args["function"] == "UpgradeRabbitMQ":
         ServiceManager.UpgradeRabbitMQ(
             version=args.get('version', 'latest'),
-            stream=args.get('rabbitmqStream', '3'),
+            stream=args.get('rabbitmqStream', '4'),
         )
     elif args["function"] == "RemoveRabbitMQ":
         ServiceManager.RemoveRabbitMQ()
@@ -235,7 +235,7 @@ def main():
         action = args.get("action").lower()
         version = args.get("version", "latest")
         es_major = args.get("esMajor", "8")
-        rmq_stream = args.get("rabbitmqStream", "3")
+        rmq_stream = args.get("rabbitmqStream", "4")
 
         if app_name == 'Elasticsearch':
             if action == 'install':

@@ -43,6 +43,55 @@ def is_debian_family():
     return os.path.exists('/etc/debian_version') or os.path.exists('/etc/lsb-release')
 
 
+def rhel_major_from_os_release():
+    """
+    RHEL-family OS major version (8, 9, 10, …) from /etc/os-release (or redhat-release).
+    Returns None for Debian/Ubuntu or if the OS cannot be classified as RHEL-like.
+    Used to align Packagecloud Yum baseurls (el/8 vs el/9) with the running system.
+    """
+    if is_debian_family():
+        return None
+    os_release = '/etc/os-release'
+    version_id = None
+    platform_id = None
+    if os.path.exists(os_release):
+        try:
+            with open(os_release, 'r', encoding='utf-8', errors='replace') as fh:
+                for line in fh:
+                    line = line.strip()
+                    if line.startswith('VERSION_ID='):
+                        version_id = line.split('=', 1)[1].strip().strip('"').strip("'")
+                    elif line.startswith('PLATFORM_ID='):
+                        platform_id = line.split('=', 1)[1].strip().strip('"').strip("'")
+        except Exception:
+            pass
+    if version_id:
+        match = re.match(r'^(\d+)', version_id)
+        if match:
+            major = int(match.group(1))
+            if 6 <= major <= 15:
+                return major
+    if platform_id:
+        match = re.search(r'el(\d+)', platform_id, re.IGNORECASE)
+        if match:
+            major = int(match.group(1))
+            if 6 <= major <= 15:
+                return major
+    redhat_release = '/etc/redhat-release'
+    if os.path.exists(redhat_release):
+        try:
+            with open(redhat_release, 'r', encoding='utf-8', errors='replace') as fh:
+                txt = fh.read()
+            match = re.search(r'release\s+(\d+)', txt, re.IGNORECASE)
+            if match:
+                major = int(match.group(1))
+                if 6 <= major <= 15:
+                    return major
+        except Exception:
+            pass
+    return None
+
+
 def is_centos7():
     release_paths = ['/etc/centos-release', '/etc/redhat-release', '/etc/os-release']
     text_blob = ''

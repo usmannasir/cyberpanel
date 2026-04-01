@@ -4,6 +4,8 @@ import json
 import threading
 import time
 
+from django.utils.translation import gettext as _
+
 from .application_detection import detect_app_state, managed_apps_os_support
 from .application_versions import get_available_versions, version_compare
 
@@ -46,16 +48,16 @@ def _page_meta_cache_put(cache_key, services, meta_json):
         )
 
 
-def build_manage_applications_page_data(es_major='8', rabbitmq_stream='3'):
+def build_manage_applications_page_data(es_major='8', rabbitmq_stream='4'):
     """
     Build `services` for card HTML and a JSON-serializable bootstrap matching
-    /manageservices/applicationMeta shape (default ES major 8, RMQ stream 3).
+    /manageservices/applicationMeta shape (default ES major 8, RMQ stream 4).
     """
     services = []
     bootstrap_apps = []
     support = managed_apps_os_support()
     major = str(es_major).strip() if str(es_major).strip() in ('7', '8', '9') else '8'
-    rmq = str(rabbitmq_stream).strip() if str(rabbitmq_stream).strip() in ('3', '4') else '3'
+    rmq = str(rabbitmq_stream).strip() if str(rabbitmq_stream).strip() in ('3', '4') else '4'
     cache_key = 'major:{0}|rmq:{1}|support:{2}'.format(
         major, rmq, 1 if support.get('supported') else 0
     )
@@ -87,7 +89,16 @@ def build_manage_applications_page_data(es_major='8', rabbitmq_stream='3'):
 
         installed_version = state['installedVersion']
         if installed_version and installed_version not in versions:
-            versions = [installed_version] + versions
+            prepend_installed = True
+            if app_name == 'RabbitMQ':
+                from manageServices.application_rabbitmq_repo import (
+                    filter_versions_for_stream,
+                )
+                prepend_installed = bool(
+                    filter_versions_for_stream([installed_version], rmq)
+                )
+            if prepend_installed:
+                versions = [installed_version] + versions
 
         ref_latest = latest_global or latest_branch
         update_available = bool(
@@ -96,6 +107,24 @@ def build_manage_applications_page_data(es_major='8', rabbitmq_stream='3'):
             and ref_latest
             and version_compare(installed_version, ref_latest) < 0
         )
+
+        rabbitmq_versions_hint = ''
+        if app_name == 'RabbitMQ' and not versions:
+            if rmq == '4':
+                rabbitmq_versions_hint = _(
+                    'Your OS is not unsupported: upstream RabbitMQ publishes 4.x RPMs suitable for '
+                    'RHEL/Alma/Rocky 8 and 9 (RPM filenames may still contain el8; that is normal). '
+                    'If this list stays empty, repository metadata may not expose 4.x to dnf yet—'
+                    'refresh metadata (dnf makecache -y) or install the official .rpm from rabbitmq.com. '
+                    'Check with: dnf repoquery rabbitmq-server --available --show-duplicates '
+                    '(4.x lines look like rabbitmq-server-0:4.x.y-1.el8.noarch — search for :4., not a space after the colon).'
+                )
+            else:
+                rabbitmq_versions_hint = _(
+                    'No 3.x builds were returned for this stream after refreshing Team RabbitMQ repos. '
+                    'This is usually metadata or repo state—not OS support. Try: dnf makecache -y, '
+                    'then dnf repoquery rabbitmq-server --available --show-duplicates.'
+                )
 
         bootstrap_apps.append({
             'name': app_name,
@@ -110,6 +139,7 @@ def build_manage_applications_page_data(es_major='8', rabbitmq_stream='3'):
             'adopted': bool(state['installed'] and not state['markerExists']),
             'major': major if app_name == 'Elasticsearch' else '',
             'rabbitmqStream': rmq if app_name == 'RabbitMQ' else '',
+            'rabbitmqVersionsHint': rabbitmq_versions_hint,
         })
 
     bootstrap = {'status': 1, 'apps': bootstrap_apps}
@@ -118,7 +148,7 @@ def build_manage_applications_page_data(es_major='8', rabbitmq_stream='3'):
     return services, meta_json
 
 
-def get_application_meta_response_dict(es_major='8', rabbitmq_stream='3'):
+def get_application_meta_response_dict(es_major='8', rabbitmq_stream='4'):
     """
     JSON payload for POST /manageservices/applicationMeta.
     Reuses the same TTL cache as the Manage Applications HTML bootstrap so
@@ -126,7 +156,7 @@ def get_application_meta_response_dict(es_major='8', rabbitmq_stream='3'):
     """
     support = managed_apps_os_support()
     major = str(es_major).strip() if str(es_major).strip() in ('7', '8', '9') else '8'
-    rmq = str(rabbitmq_stream).strip() if str(rabbitmq_stream).strip() in ('3', '4') else '3'
+    rmq = str(rabbitmq_stream).strip() if str(rabbitmq_stream).strip() in ('3', '4') else '4'
     cache_key = 'major:{0}|rmq:{1}|support:{2}'.format(
         major, rmq, 1 if support.get('supported') else 0
     )
