@@ -587,7 +587,44 @@
                         <button type="button" class="close" data-dismiss="modal">&times;</button>
                     </div>
                     <div class="modal-body">
-                        <div style="margin-bottom: 10px;" ng-if="status == 'Installing' || status == 'Upgrading'">
+                        <div style="margin-bottom: 10px;" ng-if="appName == 'Elasticsearch' && (status == 'Installing' || status == 'Upgrading')">
+                            <label style="color: #0f172a;">{% trans "Elasticsearch Major" %}</label>
+                            <div class="manage-apps-version-picker">
+                                <div class="manage-apps-version-current">{% trans "Major" %}:
+                                    <span ng-if="esMajorChosen" ng-bind="selectedEsMajor"></span>
+                                    <span ng-if="!esMajorChosen">{% trans "Select a major below — versions load after you choose." %}</span>
+                                </div>
+                                <div class="manage-apps-version-rows">
+                                    <button type="button" class="manage-apps-version-row" ng-class="{'is-active': esMajorChosen && selectedEsMajor === '7'}" ng-click="chooseEsMajor('7')">7</button>
+                                    <button type="button" class="manage-apps-version-row" ng-class="{'is-active': esMajorChosen && selectedEsMajor === '8'}" ng-click="chooseEsMajor('8')">8</button>
+                                    <button type="button" class="manage-apps-version-row" ng-class="{'is-active': esMajorChosen && selectedEsMajor === '9'}" ng-click="chooseEsMajor('9')">9</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 10px;" ng-if="appName == 'RabbitMQ' && (status == 'Installing' || status == 'Upgrading')">
+                            <label style="color: #0f172a;">{% trans "RabbitMQ major line" %}</label>
+                            <div class="manage-apps-version-picker">
+                                <div class="manage-apps-version-current">{% trans "Stream" %}:
+                                    <span ng-if="rabbitmqBranchChosen && selectedRabbitmqStream === '4'">4.x</span>
+                                    <span ng-if="rabbitmqBranchChosen && selectedRabbitmqStream === '3'">3.x ({% trans "maintenance" %})</span>
+                                    <span ng-if="!rabbitmqBranchChosen">{% trans "Select a stream below — versions load after you choose." %}</span>
+                                </div>
+                                <div class="manage-apps-version-rows">
+                                    <button type="button" class="manage-apps-version-row" ng-class="{'is-active': rabbitmqBranchChosen && selectedRabbitmqStream === '4'}" ng-click="chooseRabbitmqStream('4')">4.x</button>
+                                    <button type="button" class="manage-apps-version-row" ng-class="{'is-active': rabbitmqBranchChosen && selectedRabbitmqStream === '3'}" ng-click="chooseRabbitmqStream('3')">3.x ({% trans "maintenance" %})</button>
+                                </div>
+                            </div>
+                            <p style="margin-top: 8px; font-size: 12px; color: #64748b;">
+                                {% trans "Uses Team RabbitMQ Packagecloud repos; 4.x requires a compatible Erlang (OTP 26+). The installer will try to align Erlang when needed." %}
+                                {% trans "Upstream RPMs may be named el8 but are still supported on AlmaLinux/RHEL/Rocky 9." %}
+                            </p>
+                            <div style="margin-top: 10px; padding: 10px 12px; background: #fff7ed; border-radius: 8px; font-size: 12px; color: #9a3412; border: 1px solid #fed7aa;"
+                                 ng-if="rabbitmqBranchChosen && findAppMeta('RabbitMQ').rabbitmqVersionsHint">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span ng-bind="findAppMeta('RabbitMQ').rabbitmqVersionsHint"></span>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 10px;" ng-if="(status == 'Installing' || status == 'Upgrading') && (appName != 'RabbitMQ' || rabbitmqBranchChosen) && (appName != 'Elasticsearch' || esMajorChosen)">
                             <label style="color: #0f172a;">{% trans "Version" %}</label>
                             <div class="manage-apps-version-picker">
                                 <div class="manage-apps-version-current">
@@ -615,30 +652,6 @@
                              ng-if="status == 'Upgrading'">
                             {% trans "A backup of application data is created automatically before upgrading or downgrading. Data is merged into the new version after packages install; the backup is removed only after a successful start." %}
                         </div>
-                        <div style="margin-bottom: 10px;" ng-if="appName == 'Elasticsearch' && (status == 'Installing' || status == 'Upgrading')">
-                            <label style="color: #0f172a;">{% trans "Elasticsearch Major" %}</label>
-                            <div class="manage-apps-version-picker">
-                                <div class="manage-apps-version-current">{% trans "Major" %}: <span ng-bind="selectedEsMajor"></span></div>
-                                <div class="manage-apps-version-rows">
-                                    <button type="button" class="manage-apps-version-row" ng-class="{'is-active': selectedEsMajor === '7'}" ng-click="selectedEsMajor = '7'; refreshMeta()">7</button>
-                                    <button type="button" class="manage-apps-version-row" ng-class="{'is-active': selectedEsMajor === '8'}" ng-click="selectedEsMajor = '8'; refreshMeta()">8</button>
-                                    <button type="button" class="manage-apps-version-row" ng-class="{'is-active': selectedEsMajor === '9'}" ng-click="selectedEsMajor = '9'; refreshMeta()">9</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div style="margin-bottom: 10px;" ng-if="appName == 'RabbitMQ' && (status == 'Installing' || status == 'Upgrading')">
-                            <label style="color: #0f172a;">{% trans "RabbitMQ major line" %}</label>
-                            <div class="manage-apps-version-picker">
-                                <div class="manage-apps-version-current">{% trans "Stream" %}: <span ng-bind="selectedRabbitmqStream === '4' ? '4.x' : '3.x'"></span></div>
-                                <div class="manage-apps-version-rows">
-                                    <button type="button" class="manage-apps-version-row" ng-class="{'is-active': selectedRabbitmqStream === '3'}" ng-click="selectedRabbitmqStream = '3'; refreshMeta()">3.x ({% trans "maintenance" %})</button>
-                                    <button type="button" class="manage-apps-version-row" ng-class="{'is-active': selectedRabbitmqStream === '4'}" ng-click="selectedRabbitmqStream = '4'; refreshMeta()">4.x</button>
-                                </div>
-                            </div>
-                            <p style="margin-top: 8px; font-size: 12px; color: #64748b;">
-                                {% trans "Uses Team RabbitMQ Packagecloud repos; 4.x requires a compatible Erlang (OTP 26+). The installer will try to align Erlang when needed." %}
-                            </p>
-                        </div>
                         <div style="margin-bottom: 10px; padding: 10px 12px; background: #f0f9ff; border-radius: 8px; font-size: 13px; color: #1e3a5f; border: 1px solid #bae6fd;"
                              ng-if="(status == 'Installing' || status == 'Upgrading') && findAppMeta(appName).crossBranchUpdateSuggested">
                             <i class="fas fa-info-circle"></i>
@@ -647,7 +660,8 @@
                         </div>
                         <div style="margin-bottom: 10px;" ng-if="status == 'Removing' || status == 'Upgrading'">
                             <label>
-                                <input type="checkbox" ng-model="confirmAction">
+                                {# ng-if creates a child scope; bind to parent so runAction() sees the same flag #}
+                                <input type="checkbox" ng-model="$parent.confirmAction">
                                 <span ng-if="status == 'Removing'">{% trans "Confirm Remove" %}</span>
                                 <span ng-if="status == 'Upgrading'">{% trans "Confirm version change" %}</span>
                             </label>

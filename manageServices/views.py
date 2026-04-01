@@ -277,7 +277,7 @@ def saveStatus(request):
 
 def manageApplications(request):
     services, application_meta_bootstrap_json = build_manage_applications_page_data(
-        '8', '3'
+        '8', '4'
     )
 
     proc = httpProc(
@@ -308,9 +308,9 @@ def applicationMeta(request):
         if requested_major not in ('7', '8', '9'):
             requested_major = '8'
 
-        requested_rmq_stream = str(data.get('rabbitmqStream', '3')).strip()
+        requested_rmq_stream = str(data.get('rabbitmqStream', '4')).strip()
         if requested_rmq_stream not in ('3', '4'):
-            requested_rmq_stream = '3'
+            requested_rmq_stream = '4'
 
         response_data = get_application_meta_response_dict(
             requested_major, requested_rmq_stream
@@ -345,9 +345,9 @@ def removeInstall(request):
             esMajor = str(data.get('esMajor', '8')).strip() or '8'
             if esMajor not in ('7', '8', '9'):
                 esMajor = '8'
-            rabbitmqStream = str(data.get('rabbitmqStream', '3')).strip() or '3'
+            rabbitmqStream = str(data.get('rabbitmqStream', '4')).strip() or '4'
             if rabbitmqStream not in ('3', '4'):
-                rabbitmqStream = '3'
+                rabbitmqStream = '4'
             confirmAction = bool(data.get('confirmAction', False))
 
             support = managed_apps_os_support()

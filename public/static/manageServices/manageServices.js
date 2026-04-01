@@ -477,6 +477,26 @@ app.controller('manageApplications', function ($scope, $http, $timeout, $window)
         return out;
     }
 
+    function versionMatchesRabbitmqStream(ver, stream) {
+        var s = String(stream || '4').trim();
+        var t = normalizeVersionToken(ver);
+        if (!t || t === 'latest') {
+            return false;
+        }
+        var m = /^(\d+)\./.exec(t);
+        return !!(m && m[1] === s);
+    }
+
+    function versionMatchesEsMajor(ver, major) {
+        var mjr = String(major || '8').trim();
+        var t = normalizeVersionToken(ver);
+        if (!t || t === 'latest') {
+            return false;
+        }
+        var m = /^(\d+)\./.exec(t);
+        return !!(m && m[1] === mjr);
+    }
+
     $scope.versionLabel = function (v) {
         if (v === 'latest') {
             return 'latest';
@@ -535,7 +555,8 @@ app.controller('manageApplications', function ($scope, $http, $timeout, $window)
                     crossBranchUpdateSuggested: !!meta.crossBranchUpdateSuggested,
                     versions: vers,
                     latestAvailable: meta.latestAvailable || '',
-                    latestOverall: meta.latestOverall || ''
+                    latestOverall: meta.latestOverall || '',
+                    rabbitmqVersionsHint: meta.rabbitmqVersionsHint || ''
                 };
             });
         } catch (ignore) {
@@ -581,9 +602,32 @@ app.controller('manageApplications', function ($scope, $http, $timeout, $window)
         }
     };
     $scope.selectedEsMajor = '8';
-    $scope.selectedRabbitmqStream = '3';
+    $scope.selectedRabbitmqStream = '4';
+    /** RabbitMQ: 4.x is default for new installs (metadata prefetched). Upgrade may require picking stream if version line is unknown. ES major still user-picked before version list loads. */
+    $scope.rabbitmqBranchChosen = false;
+    $scope.esMajorChosen = false;
     $scope.confirmAction = false;
     $scope.selectedCurrentVersion = '';
+
+    $scope.chooseRabbitmqStream = function (stream) {
+        var s = String(stream || '4').trim();
+        if (s !== '3' && s !== '4') {
+            s = '4';
+        }
+        $scope.selectedRabbitmqStream = s;
+        $scope.rabbitmqBranchChosen = true;
+        $scope.refreshMeta();
+    };
+
+    $scope.chooseEsMajor = function (major) {
+        var m = String(major || '8').trim();
+        if (m !== '7' && m !== '8' && m !== '9') {
+            m = '8';
+        }
+        $scope.selectedEsMajor = m;
+        $scope.esMajorChosen = true;
+        $scope.refreshMeta();
+    };
 
     /**
      * When the install/upgrade modal is open, re-apply version list from latest applicationMeta.
@@ -596,13 +640,35 @@ app.controller('manageApplications', function ($scope, $http, $timeout, $window)
         if ($scope.appName !== 'Elasticsearch' && $scope.appName !== 'Redis' && $scope.appName !== 'RabbitMQ') {
             return;
         }
+        if ($scope.appName === 'RabbitMQ' && !$scope.rabbitmqBranchChosen) {
+            $scope.selectedVersions = ['latest'];
+            $scope.selectedVersion = 'latest';
+            $scope.repoShowsOnlyOneStream = false;
+            $scope.recalcSelectedVersionRowIndex();
+            return;
+        }
+        if ($scope.appName === 'Elasticsearch' && !$scope.esMajorChosen) {
+            $scope.selectedVersions = ['latest'];
+            $scope.selectedVersion = 'latest';
+            $scope.repoShowsOnlyOneStream = false;
+            $scope.recalcSelectedVersionRowIndex();
+            return;
+        }
         var meta = $scope.findAppMeta($scope.appName);
         var vers = sanitizeVersionsArray((meta && meta.versions) ? meta.versions : []);
         $scope.selectedVersions = ['latest'].concat(vers);
         var curRaw = (meta && meta.installedVersion) ? meta.installedVersion : ($scope.selectedCurrentVersion || '');
         var cur = normalizeVersionToken(curRaw) || String(curRaw || '').trim();
         if (cur && $scope.selectedVersions.indexOf(cur) === -1) {
-            $scope.selectedVersions.push(cur);
+            var allowCur = true;
+            if ($scope.appName === 'RabbitMQ') {
+                allowCur = versionMatchesRabbitmqStream(cur, $scope.selectedRabbitmqStream);
+            } else if ($scope.appName === 'Elasticsearch') {
+                allowCur = versionMatchesEsMajor(cur, $scope.selectedEsMajor);
+            }
+            if (allowCur) {
+                $scope.selectedVersions.push(cur);
+            }
         }
         if (cur) {
             $scope.selectedCurrentVersion = cur;
@@ -646,6 +712,16 @@ app.controller('manageApplications', function ($scope, $http, $timeout, $window)
                 (payload.apps || []).forEach(function (app) {
                     appMap[app.name] = app;
                 });
+                var esMetaResp = appMap['Elasticsearch'];
+                var rmqMetaResp = appMap['RabbitMQ'];
+                var respEsMaj = String(esMetaResp && esMetaResp.major != null ? esMetaResp.major : '').trim();
+                if (respEsMaj && respEsMaj !== String($scope.selectedEsMajor || '8').trim()) {
+                    return;
+                }
+                var respRmqStream = String(rmqMetaResp && rmqMetaResp.rabbitmqStream != null ? rmqMetaResp.rabbitmqStream : '').trim();
+                if (respRmqStream && respRmqStream !== String($scope.selectedRabbitmqStream || '4').trim()) {
+                    return;
+                }
                 $scope.apps = $scope.apps.map(function (baseApp) {
                     var meta = appMap[baseApp.name] || {};
                     var vers = meta.versions;
@@ -662,7 +738,8 @@ app.controller('manageApplications', function ($scope, $http, $timeout, $window)
                         crossBranchUpdateSuggested: !!meta.crossBranchUpdateSuggested,
                         versions: vers,
                         latestAvailable: meta.latestAvailable || '',
-                        latestOverall: meta.latestOverall || ''
+                        latestOverall: meta.latestOverall || '',
+                        rabbitmqVersionsHint: meta.rabbitmqVersionsHint || ''
                     };
                 });
                 $scope.syncModalVersionLists();
@@ -700,6 +777,13 @@ app.controller('manageApplications', function ($scope, $http, $timeout, $window)
                 $scope.selectedRabbitmqStream = '4';
             } else if (effectiveInstalled && /^3\./.test(effectiveInstalled)) {
                 $scope.selectedRabbitmqStream = '3';
+            } else if (status === 'Installing') {
+                $scope.selectedRabbitmqStream = '4';
+            }
+            if (status === 'Upgrading' && effectiveInstalled) {
+                if (/^4\./.test(effectiveInstalled) || /^3\./.test(effectiveInstalled)) {
+                    $scope.rabbitmqBranchChosen = true;
+                }
             }
         }
 
@@ -715,13 +799,17 @@ app.controller('manageApplications', function ($scope, $http, $timeout, $window)
         }
 
         $scope.selectedVersions = ['latest'];
-        var svcVers = sanitizeVersionsArray(service.versions || []);
-        if (svcVers.length > 0) {
-            $scope.selectedVersions = ['latest'].concat(svcVers);
-        }
-        var curPick = normalizeVersionToken(effectiveInstalled) || effectiveInstalled;
-        if (curPick && $scope.selectedVersions.indexOf(curPick) === -1) {
-            $scope.selectedVersions.push(curPick);
+        var deferVersionList = (service.name === 'RabbitMQ' && !$scope.rabbitmqBranchChosen)
+            || (service.name === 'Elasticsearch' && !$scope.esMajorChosen);
+        if (!deferVersionList) {
+            var svcVers = sanitizeVersionsArray(service.versions || []);
+            if (svcVers.length > 0) {
+                $scope.selectedVersions = ['latest'].concat(svcVers);
+            }
+            var curPick = normalizeVersionToken(effectiveInstalled) || effectiveInstalled;
+            if (curPick && $scope.selectedVersions.indexOf(curPick) === -1) {
+                $scope.selectedVersions.push(curPick);
+            }
         }
         $scope.selectedVersion = 'latest';
         $scope.requestData = '';
@@ -729,7 +817,11 @@ app.controller('manageApplications', function ($scope, $http, $timeout, $window)
         var realVers = ($scope.selectedVersions || []).filter(function (v) {
             return v && v !== 'latest';
         });
-        $scope.repoShowsOnlyOneStream = ($scope.status === 'Upgrading' && realVers.length <= 1);
+        if (deferVersionList) {
+            $scope.repoShowsOnlyOneStream = false;
+        } else {
+            $scope.repoShowsOnlyOneStream = ($scope.status === 'Upgrading' && realVers.length <= 1);
+        }
         $scope.recalcSelectedVersionRowIndex();
     };
 
@@ -775,44 +867,28 @@ app.controller('manageApplications', function ($scope, $http, $timeout, $window)
             }
         };
         if (needMeta) {
-            // applicationMeta uses selectedRabbitmqStream / selectedEsMajor. If the user left
-            // 4.x selected earlier, the first POST would ask for 4.x while the node is on 3.x —
-            // filtered versions come back empty and the Version dropdown shows only "latest".
-            var bootVer = (bootstrapInstalledVersion !== undefined && bootstrapInstalledVersion !== null)
-                ? String(bootstrapInstalledVersion).trim()
-                : '';
-            if (!bootVer && appName) {
-                var metaEarly = $scope.findAppMeta(appName);
-                if (metaEarly && metaEarly.installedVersion) {
-                    bootVer = String(metaEarly.installedVersion).trim();
-                }
-            }
-            if (appName === 'RabbitMQ' && bootVer) {
-                if (/^4\./.test(bootVer)) {
+            if (appName === 'RabbitMQ') {
+                if (status === 'Installing') {
                     $scope.selectedRabbitmqStream = '4';
-                } else if (/^3\./.test(bootVer)) {
-                    $scope.selectedRabbitmqStream = '3';
+                    $scope.rabbitmqBranchChosen = true;
+                } else {
+                    $scope.rabbitmqBranchChosen = false;
                 }
             }
-            if (appName === 'Elasticsearch' && bootVer) {
-                var biv = bootVer;
-                if (/^9\./.test(biv)) {
-                    $scope.selectedEsMajor = '9';
-                } else if (/^8\./.test(biv)) {
-                    $scope.selectedEsMajor = '8';
-                } else if (/^7\./.test(biv)) {
-                    $scope.selectedEsMajor = '7';
-                }
+            if (appName === 'Elasticsearch') {
+                $scope.esMajorChosen = false;
             }
-            // Open immediately with bootstrap / in-memory meta; refresh in background.
-            // Blocking on applicationMeta made "Change version" feel frozen (dnf/repoquery).
+            // RabbitMQ install: default 4.x stream and prefetch metadata. Upgrade: pick stream from installed version.
+            // Elasticsearch: still wait for user major. Redis refreshes on open.
             $scope.appName = appName;
             $scope.status = status;
             $scope.prepareActionByName(appName, status, bootstrapInstalledVersion);
             showModal();
-            $timeout(function () {
-                $scope.refreshMeta();
-            }, 0);
+            if (appName === 'Redis' || (appName === 'RabbitMQ' && $scope.rabbitmqBranchChosen)) {
+                $timeout(function () {
+                    $scope.refreshMeta();
+                }, 0);
+            }
         } else {
             $scope.prepareActionByName(appName, status, bootstrapInstalledVersion);
             showModal();
@@ -833,6 +909,22 @@ app.controller('manageApplications', function ($scope, $http, $timeout, $window)
             });
             return;
         }
+        if (appName === 'RabbitMQ' && (status === 'Installing' || status === 'Upgrading') && !$scope.rabbitmqBranchChosen) {
+            new PNotify({
+                title: 'Stream required',
+                text: 'Choose RabbitMQ 4.x or 3.x above to load versions for that line.',
+                type: 'warning'
+            });
+            return;
+        }
+        if (appName === 'Elasticsearch' && (status === 'Installing' || status === 'Upgrading') && !$scope.esMajorChosen) {
+            new PNotify({
+                title: 'Major version required',
+                text: 'Choose Elasticsearch major (7, 8, or 9) above to load versions for that line.',
+                type: 'warning'
+            });
+            return;
+        }
         $scope.status = status;
         $scope.appName = appName;
 
@@ -845,7 +937,7 @@ app.controller('manageApplications', function ($scope, $http, $timeout, $window)
             status: status,
             version: $scope.selectedVersion || 'latest',
             esMajor: $scope.selectedEsMajor || '8',
-            rabbitmqStream: $scope.selectedRabbitmqStream || '3',
+            rabbitmqStream: $scope.selectedRabbitmqStream || '4',
             confirmAction: $scope.confirmAction === true
         };
 
@@ -931,6 +1023,15 @@ app.controller('manageApplications', function ($scope, $http, $timeout, $window)
 
     // Do not fetch package metadata on page load; it can block workers under DNF load.
     // Metadata is fetched on-demand when opening install/version-change modals.
+
+    if (typeof window.jQuery !== 'undefined' && jQuery.fn.on) {
+        jQuery('#settings').on('hidden.bs.modal', function () {
+            $scope.$evalAsync(function () {
+                $scope.rabbitmqBranchChosen = false;
+                $scope.esMajorChosen = false;
+            });
+        });
+    }
 
 });
 
