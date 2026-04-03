@@ -772,9 +772,28 @@ class ContainerManager(multi.Thread):
             end = start + items_per_page
             page_containers = all_containers[start:end]
 
+            client = docker.from_env()
             rows = []
             for items in page_containers:
-                rows.append({'name': items.name, 'admin': items.admin.userName, 'tag': items.tag, 'image': items.image})
+                disp_image = items.image
+                disp_tag = items.tag
+                try:
+                    running = client.containers.get(items.name)
+                    cfg_ref = running.attrs.get('Config', {}).get('Image') or ''
+                    if cfg_ref and '@' not in cfg_ref:
+                        if ':' in cfg_ref:
+                            disp_image, disp_tag = cfg_ref.rsplit(':', 1)
+                        else:
+                            disp_image, disp_tag = cfg_ref, 'latest'
+                    elif running.image and running.image.tags:
+                        ref = running.image.tags[0]
+                        if ':' in ref:
+                            disp_image, disp_tag = ref.rsplit(':', 1)
+                        else:
+                            disp_image, disp_tag = ref, 'latest'
+                except Exception:
+                    pass
+                rows.append({'name': items.name, 'admin': items.admin.userName, 'tag': disp_tag, 'image': disp_image})
             json_data = json.dumps(rows)
 
             final_dic = {
@@ -2346,15 +2365,28 @@ class ContainerManager(multi.Thread):
             client = docker.from_env()
             dockerAPI = docker.APIClient()
             
-            containerName = data['containerName']
-            newImage = data['newImage']
-            newTag = data.get('newTag', 'latest')
+            # UI (dockerManager.js) sends "name"; older callers may use "containerName"
+            containerName = (data.get('containerName') or data.get('name') or '').strip()
+            if not containerName:
+                data_ret = {'updateContainerStatus': 0, 'error_message': 'Container name is required'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            newImage = (data.get('newImage') or '').strip()
+            newTag = (data.get('newTag') or 'latest').strip() or 'latest'
             
             # Get the current container
             try:
                 currentContainer = client.containers.get(containerName)
             except docker.errors.NotFound:
-                data_ret = {'updateContainerStatus': 0, 'error_message': f'Container {containerName} not found'}
+                data_ret = {
+                    'updateContainerStatus': 0,
+                    'error_message': (
+                        f'Container {containerName} not found. '
+                        'If you clicked Update twice, wait for the first request to finish; '
+                        'do not start another update until you see success or failure.'
+                    ),
+                }
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
             except Exception as e:
@@ -2365,6 +2397,19 @@ class ContainerManager(multi.Thread):
             # Get container configuration for recreation
             containerConfig = currentContainer.attrs['Config']
             hostConfig = currentContainer.attrs['HostConfig']
+
+            # If no new image specified, use current image repository (same as first updateContainer implementation)
+            if not newImage:
+                current_image = containerConfig.get('Image', '') or ''
+                if ':' in current_image:
+                    newImage = current_image.split(':')[0]
+                else:
+                    newImage = current_image
+                    newTag = 'latest'
+            if not newImage:
+                data_ret = {'updateContainerStatus': 0, 'error_message': 'Could not determine image name for update'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
             
             # Extract volumes for data preservation
             volumes = {}
@@ -2399,6 +2444,20 @@ class ContainerManager(multi.Thread):
             if memory_limit > 0:
                 memory_limit = memory_limit // 1048576  # Convert bytes to MB
 
+            image_name = f"{newImage}:{newTag}"
+
+            # Pull BEFORE stop/remove so a slow/failed pull never leaves the container deleted
+            # (double-clicks or retries would otherwise see "container not found").
+            try:
+                logging.CyberCPLogFileWriter.writeToFile(f'Pulling new image {image_name} (container still running)')
+                client.images.pull(newImage, tag=newTag)
+                logging.CyberCPLogFileWriter.writeToFile(f'Successfully pulled image {image_name}')
+            except Exception as e:
+                logging.CyberCPLogFileWriter.writeToFile(f'Error pulling image {newImage}:{newTag}: {str(e)}')
+                data_ret = {'updateContainerStatus': 0, 'error_message': f'Error pulling new image: {str(e)}'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
             # Stop the current container
             try:
                 if currentContainer.status == 'running':
@@ -2417,18 +2476,6 @@ class ContainerManager(multi.Thread):
             except Exception as e:
                 logging.CyberCPLogFileWriter.writeToFile(f'Error removing old container {containerName}: {str(e)}')
                 data_ret = {'updateContainerStatus': 0, 'error_message': f'Error removing old container: {str(e)}'}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-            # Pull the new image
-            try:
-                image_name = f"{newImage}:{newTag}"
-                logging.CyberCPLogFileWriter.writeToFile(f'Pulling new image {image_name}')
-                client.images.pull(newImage, tag=newTag)
-                logging.CyberCPLogFileWriter.writeToFile(f'Successfully pulled image {image_name}')
-            except Exception as e:
-                logging.CyberCPLogFileWriter.writeToFile(f'Error pulling image {newImage}:{newTag}: {str(e)}')
-                data_ret = {'updateContainerStatus': 0, 'error_message': f'Error pulling new image: {str(e)}'}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
@@ -2475,12 +2522,27 @@ class ContainerManager(multi.Thread):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
+            # Sync DB — container list UI reads image/tag from Containers model, not Docker
+            try:
+                container_record = Containers.objects.get(name=containerName)
+                container_record.image = newImage
+                container_record.tag = newTag
+                container_record.cid = newContainer.short_id
+                container_record.save()
+            except Containers.DoesNotExist:
+                pass
+            except Exception as db_err:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    f'updateContainer DB sync failed for {containerName}: {db_err}'
+                )
+
             # Log successful update
             logging.CyberCPLogFileWriter.writeToFile(f'Successfully updated container {containerName} to image {image_name}')
             
             data_ret = {
-                'updateContainerStatus': 1, 
+                'updateContainerStatus': 1,
                 'error_message': 'None',
+                'new_image': image_name,
                 'message': f'Container {containerName} successfully updated to {image_name}'
             }
             json_data = json.dumps(data_ret)

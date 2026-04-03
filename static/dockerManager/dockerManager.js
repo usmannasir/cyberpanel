@@ -974,6 +974,15 @@ app.controller('listContainers', function ($scope, $http) {
             return;
         }
 
+        if ($scope.dockerUpdateInProgress) {
+            new PNotify({
+                title: 'Update in progress',
+                text: 'Wait until the current update finishes before starting another.',
+                type: 'warning'
+            });
+            return;
+        }
+
         // If no new image specified, use current image
         if (!$scope.newImage) {
             $scope.newImage = $scope.currentImage;
@@ -1000,8 +1009,17 @@ app.controller('listContainers', function ($scope, $http) {
                 history: false
             }
         })).get().on('pnotify.confirm', function () {
+            var dockerUpdateNotificationId = null;
+            $scope.dockerUpdateInProgress = true;
             $('#imageLoading').show();
             $("#updateContainer").modal("hide");
+
+            if (typeof window.cpDockerUpdateNotifyStart === 'function') {
+                dockerUpdateNotificationId = window.cpDockerUpdateNotifyStart(
+                    $scope.updateContainerName,
+                    $scope.newImage + ':' + $scope.newTag
+                );
+            }
 
             url = "/docker/updateContainer";
             var data = {
@@ -1020,15 +1038,27 @@ app.controller('listContainers', function ($scope, $http) {
 
             function ListInitialData(response) {
                 console.log(response);
+                $scope.dockerUpdateInProgress = false;
                 $('#imageLoading').hide();
 
-                if (response.data.updateContainerStatus === 1) {
+                var ok = response.data && response.data.updateContainerStatus === 1;
+                var imgLabel = ok
+                    ? (response.data.new_image || response.data.message || 'Updated')
+                    : (response.data && response.data.error_message ? response.data.error_message : 'Update failed');
+
+                if (typeof window.cpDockerUpdateNotifyEnd === 'function' && dockerUpdateNotificationId) {
+                    window.cpDockerUpdateNotifyEnd(dockerUpdateNotificationId, ok, imgLabel);
+                }
+
+                if (ok) {
                     new PNotify({
                         title: 'Container Updated Successfully',
-                        text: `Container updated to ${response.data.new_image}`,
+                        text: 'Container updated to ' + (response.data.new_image || response.data.message || 'new image'),
                         type: 'success'
                     });
-                    location.reload();
+                    setTimeout(function () {
+                        location.reload();
+                    }, 2200);
                 } else {
                     new PNotify({
                         title: 'Update Failed',
@@ -1039,7 +1069,11 @@ app.controller('listContainers', function ($scope, $http) {
             }
 
             function cantLoadInitialData(response) {
+                $scope.dockerUpdateInProgress = false;
                 $('#imageLoading').hide();
+                if (typeof window.cpDockerUpdateNotifyEnd === 'function' && dockerUpdateNotificationId) {
+                    window.cpDockerUpdateNotifyEnd(dockerUpdateNotificationId, false, 'Could not connect to server');
+                }
                 new PNotify({
                     title: 'Update Failed',
                     text: 'Could not connect to server',

@@ -371,6 +371,17 @@ class pluginInstaller:
         py = pluginInstaller._manage_python_executable()
         try:
             os.chdir('/usr/local/CyberCP')
+            try:
+                from plogical import pluginMigrationSQL as _pmig
+            except ImportError:
+                _pmig = None
+
+            def _mig_log(msg):
+                pluginInstaller.stdOut(msg)
+
+            if _pmig is not None:
+                _pmig.ensure_login_system_migrations_applied(_mig_log)
+
             mk = subprocess.call(
                 [py, manage_py, 'makemigrations', pluginName],
                 stdin=subprocess.DEVNULL,
@@ -379,14 +390,59 @@ class pluginInstaller:
                 pluginInstaller.stdOut(
                     'makemigrations %s exited %s (ok if no model changes)' % (pluginName, mk)
                 )
-            mig = subprocess.call(
+            proc = subprocess.run(
                 [py, manage_py, 'migrate', pluginName, '--noinput'],
+                cwd='/usr/local/CyberCP',
                 stdin=subprocess.DEVNULL,
+                capture_output=True,
+                text=True,
+                timeout=600,
             )
-            if mig != 0:
+            if proc.returncode != 0:
+                err_tail = (proc.stderr or proc.stdout or '').strip()[:900]
                 pluginInstaller.stdOut(
-                    'migrate %s exited %s — check CyberPanel logs and DB permissions' % (pluginName, mig)
+                    'migrate %s exited %s — %s'
+                    % (pluginName, proc.returncode, err_tail or 'no stderr')
                 )
+                if _pmig is not None:
+                    pluginInstaller.stdOut(
+                        'Attempting SQL + migrate --fake fallback for %s..' % pluginName
+                    )
+                    if _pmig.apply_pending_migrations_via_sql_and_fake(pluginName, _mig_log):
+                        pluginInstaller.stdOut('SQL migration fallback succeeded for %s; re-running migrate..' % pluginName)
+                        proc2 = subprocess.run(
+                            [py, manage_py, 'migrate', pluginName, '--noinput'],
+                            cwd='/usr/local/CyberCP',
+                            stdin=subprocess.DEVNULL,
+                            capture_output=True,
+                            text=True,
+                            timeout=600,
+                        )
+                        if proc2.returncode != 0:
+                            pluginInstaller.stdOut(
+                                'migrate %s still failed after SQL fallback (rc=%s): %s'
+                                % (
+                                    pluginName,
+                                    proc2.returncode,
+                                    (proc2.stderr or proc2.stdout or '')[:600],
+                                )
+                            )
+                        else:
+                            pluginInstaller.stdOut('migrate %s completed after SQL fallback.' % pluginName)
+                    else:
+                        pluginInstaller.stdOut(
+                            'SQL migration fallback failed for %s — check DB user, mariadb client, and logs.'
+                            % pluginName
+                        )
+                try:
+                    from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as _cp_log
+
+                    _cp_log.writeToFile(
+                        'pluginInstaller.installMigrations %s: migrate rc=%s %s'
+                        % (pluginName, proc.returncode, err_tail[:400])
+                    )
+                except Exception:
+                    pass
         finally:
             try:
                 os.chdir(currentDir)
@@ -674,13 +730,53 @@ class pluginInstaller:
     @staticmethod
     def removeMigrations(pluginName):
         currentDir = os.getcwd()
-        os.chdir('/usr/local/CyberCP')
-        py = pluginInstaller._manage_python_executable()
-        subprocess.call(
-            [py, '/usr/local/CyberCP/manage.py', 'migrate', pluginName, 'zero', '--noinput'],
-            stdin=subprocess.DEVNULL,
-        )
-        os.chdir(currentDir)
+        try:
+            os.chdir('/usr/local/CyberCP')
+            py = pluginInstaller._manage_python_executable()
+            try:
+                from plogical import pluginMigrationSQL as _pmig
+            except ImportError:
+                _pmig = None
+
+            def _mig_log(msg):
+                pluginInstaller.stdOut(msg)
+
+            if _pmig is not None:
+                _pmig.ensure_login_system_migrations_applied(_mig_log)
+
+            proc = subprocess.run(
+                [py, '/usr/local/CyberCP/manage.py', 'migrate', pluginName, 'zero', '--noinput'],
+                cwd='/usr/local/CyberCP',
+                stdin=subprocess.DEVNULL,
+                capture_output=True,
+                text=True,
+                timeout=600,
+            )
+            if proc.returncode != 0:
+                err_tail = (proc.stderr or proc.stdout or '').strip()[:900]
+                pluginInstaller.stdOut(
+                    'migrate %s zero exited %s — %s'
+                    % (pluginName, proc.returncode, err_tail or 'no stderr')
+                )
+                if _pmig is not None:
+                    pluginInstaller.stdOut(
+                        'Attempting DROP TABLE + django_migrations cleanup for %s..' % pluginName
+                    )
+                    _pmig.drop_plugin_tables_and_migration_rows(pluginName, _mig_log)
+                try:
+                    from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as _cp_log
+
+                    _cp_log.writeToFile(
+                        'pluginInstaller.removeMigrations %s: zero rc=%s %s'
+                        % (pluginName, proc.returncode, err_tail[:400])
+                    )
+                except Exception:
+                    pass
+        finally:
+            try:
+                os.chdir(currentDir)
+            except OSError:
+                pass
 
     @staticmethod
     def removePlugin(pluginName):

@@ -2242,15 +2242,6 @@ def bandwidthManagementPage(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-def securityManagementPage(request):
-    """Render the Security Management page."""
-    try:
-        userID = request.session['userID']
-        proc = httpProc(request, 'websiteFunctions/securityManagement.html', {}, 'admin')
-        return proc.render()
-    except KeyError:
-        return redirect(loadLoginPage)
-
 def getFTPQuotaStatus(request):
     try:
         userID = request.session['userID']
@@ -2305,31 +2296,6 @@ def scheduleBandwidthReset(request):
         userID = request.session['userID']
         wm = WebsiteManager()
         return wm.scheduleBandwidthReset(userID, request.POST)
-    except KeyError:
-        return redirect(loadLoginPage)
-
-# IP Blocking Views
-def blockIPAddress(request):
-    try:
-        userID = request.session['userID']
-        wm = WebsiteManager()
-        return wm.blockIPAddress(userID, request.POST)
-    except KeyError:
-        return redirect(loadLoginPage)
-
-def unblockIPAddress(request):
-    try:
-        userID = request.session['userID']
-        wm = WebsiteManager()
-        return wm.unblockIPAddress(userID, request.POST)
-    except KeyError:
-        return redirect(loadLoginPage)
-
-def getBlockedIPs(request):
-    try:
-        userID = request.session['userID']
-        wm = WebsiteManager()
-        return wm.getBlockedIPs(userID, request.POST)
     except KeyError:
         return redirect(loadLoginPage)
 

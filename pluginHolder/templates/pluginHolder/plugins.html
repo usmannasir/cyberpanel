@@ -1378,6 +1378,9 @@
                                     <button type="button" class="sort-btn filter-btn" data-filter="active" id="installedFilterBtnActive" onclick="setInstalledFilter('active')" title="{% trans 'Show only active (enabled) plugins' %}">
                                         <i class="fas fa-power-off"></i> <span class="filter-btn-label">{% trans "Active only" %}</span>
                                     </button>
+                                    <button type="button" class="sort-btn filter-btn" data-filter="premium" id="installedFilterBtnPremium" onclick="setInstalledFilter('premium')" title="{% trans 'Show only premium (paid) plugins' %}">
+                                        <i class="fas fa-crown"></i> <span class="filter-btn-label">{% trans "Premium" %}</span>
+                                    </button>
                                 </div>
                             </div>
                             <div class="installed-sort-row">
@@ -1414,7 +1417,7 @@
             <!-- Grid View -->
             <div id="gridView" class="plugins-grid">
                 {% for plugin in plugins %}
-                <div class="plugin-card" data-plugin-name="{{ plugin.name }}" data-plugin-desc="{{ plugin.desc }}" data-plugin-type="{{ plugin.type }}" data-modify-date="{{ plugin.modify_date|default:'0000-00-00 00:00:00' }}" data-installed="{{ plugin.installed|yesno:'true,false' }}" data-enabled="{{ plugin.enabled|yesno:'true,false' }}">
+                <div class="plugin-card" data-plugin-name="{{ plugin.name }}" data-plugin-desc="{{ plugin.desc }}" data-plugin-type="{{ plugin.type }}" data-modify-date="{{ plugin.modify_date|default:'0000-00-00 00:00:00' }}" data-installed="{{ plugin.installed|yesno:'true,false' }}" data-enabled="{{ plugin.enabled|yesno:'true,false' }}" data-is-paid="{% if plugin.is_paid|default:False|default_if_none:False %}true{% else %}false{% endif %}">
                     <div class="plugin-header">
                         <div class="plugin-icon">
                             {% if plugin.type|lower == "security" %}
@@ -1561,7 +1564,7 @@
                         </thead>
                         <tbody>
                             {% for plugin in plugins %}
-                            <tr data-plugin-name="{{ plugin.name }}" data-plugin-desc="{{ plugin.desc }}" data-plugin-type="{{ plugin.type }}" data-modify-date="{{ plugin.modify_date|default:'0000-00-00 00:00:00' }}" data-installed="{{ plugin.installed|yesno:'true,false' }}" data-enabled="{{ plugin.enabled|yesno:'true,false' }}">
+                            <tr data-plugin-name="{{ plugin.name }}" data-plugin-desc="{{ plugin.desc }}" data-plugin-type="{{ plugin.type }}" data-modify-date="{{ plugin.modify_date|default:'0000-00-00 00:00:00' }}" data-installed="{{ plugin.installed|yesno:'true,false' }}" data-enabled="{{ plugin.enabled|yesno:'true,false' }}" data-is-paid="{% if plugin.is_paid|default:False|default_if_none:False %}true{% else %}false{% endif %}">
                                 <td>
                                     <strong>{{ plugin.name }}</strong>
                                     {% if plugin.freshness_badge %}
@@ -1871,15 +1874,127 @@
 </div>
 
 <script>
-// Cache-busting version: 2026-03-27-v2 - Modify date: browser-local via modify_timestamp + nb-NO style
+// Cache-busting version: 28.03.2026-v3 - Hash sync for installed filters (#grid?show=premium&sort=…)
 let storePlugins = [];
 let currentFilter = 'all';
 let currentCategory = 'all';
 let currentSearchQuery = '';
 let isSettingHash = false; // Flag to prevent infinite loops
 let currentInstalledSort = 'name-asc'; // name-asc, name-desc, type, date-desc, date-asc
-let currentInstalledFilter = 'all';    // all, installed, active
+let currentInstalledFilter = 'all';    // all, installed, active, premium
 let currentInstalledCategory = 'all';  // all, Utility, Security, ...
+let applyingInstalledHash = false;
+let installedSearchHashDebounce = null;
+
+var INSTALLED_HASH_VALID_VIEWS = ['grid', 'table', 'upgrades', 'store'];
+var INSTALLED_HASH_SHOW_VALUES = { all: 1, installed: 1, active: 1, premium: 1 };
+var INSTALLED_HASH_SORT_VALUES = { 'name-asc': 1, 'name-desc': 1, 'type': 1, 'date-desc': 1, 'date-asc': 1 };
+
+function parsePluginsHashFragment(raw) {
+    raw = (raw || '').trim();
+    var empty = { view: 'grid', show: 'all', sort: 'name-asc', cat: 'all', q: '' };
+    if (!raw) return empty;
+    var qIdx = raw.indexOf('?');
+    var viewPart = (qIdx >= 0 ? raw.slice(0, qIdx) : raw).trim();
+    var qs = qIdx >= 0 ? raw.slice(qIdx + 1) : '';
+    var view = viewPart || 'grid';
+    if (INSTALLED_HASH_VALID_VIEWS.indexOf(view) === -1) {
+        view = 'grid';
+        qs = '';
+    }
+    var params = new URLSearchParams(qs);
+    var show = params.get('show') || 'all';
+    var sort = params.get('sort') || 'name-asc';
+    var cat = params.get('cat') || 'all';
+    var q = params.get('q') || '';
+    if (!INSTALLED_HASH_SHOW_VALUES[show]) show = 'all';
+    if (!INSTALLED_HASH_SORT_VALUES[sort]) sort = 'name-asc';
+    return { view: view, show: show, sort: sort, cat: cat, q: q };
+}
+
+function buildPluginsHashString(view) {
+    if (view === 'store' || view === 'upgrades') {
+        return '#' + view;
+    }
+    var parts = [];
+    if (currentInstalledFilter && currentInstalledFilter !== 'all') {
+        parts.push('show=' + encodeURIComponent(currentInstalledFilter));
+    }
+    if (currentInstalledSort && currentInstalledSort !== 'name-asc') {
+        parts.push('sort=' + encodeURIComponent(currentInstalledSort));
+    }
+    if (currentInstalledCategory && currentInstalledCategory !== 'all') {
+        parts.push('cat=' + encodeURIComponent(currentInstalledCategory));
+    }
+    var qEl = document.getElementById('installedPluginSearchInput');
+    var qv = qEl && qEl.value ? String(qEl.value).trim() : '';
+    if (qv) parts.push('q=' + encodeURIComponent(qv));
+    if (parts.length) return '#' + view + '?' + parts.join('&');
+    return '#' + view;
+}
+
+function getCurrentInstalledGridOrTableView() {
+    var gv = document.getElementById('gridView');
+    var tv = document.getElementById('tableView');
+    if (gv && gv.style.display === 'grid') return 'grid';
+    if (tv && tv.style.display === 'block') return 'table';
+    return null;
+}
+
+function updateInstalledPluginsHashIfNeeded() {
+    if (applyingInstalledHash) return;
+    var v = getCurrentInstalledGridOrTableView();
+    if (!v) return;
+    isSettingHash = true;
+    var h = buildPluginsHashString(v);
+    var newUrl = window.location.pathname + window.location.search + h;
+    if (window.history && window.history.replaceState) {
+        window.history.replaceState(null, '', newUrl);
+    } else {
+        window.location.hash = h.replace(/^#/, '');
+    }
+    setTimeout(function() { isSettingHash = false; }, 100);
+}
+
+function scheduleInstalledSearchHashUpdate() {
+    if (installedSearchHashDebounce) clearTimeout(installedSearchHashDebounce);
+    installedSearchHashDebounce = setTimeout(function() {
+        installedSearchHashDebounce = null;
+        updateInstalledPluginsHashIfNeeded();
+    }, 450);
+}
+
+function applyInstalledStateFromHash(parsed) {
+    if (!parsed || (parsed.view !== 'grid' && parsed.view !== 'table')) return;
+    applyingInstalledHash = true;
+    try {
+        currentInstalledFilter = parsed.show;
+        currentInstalledSort = parsed.sort;
+        currentInstalledCategory = parsed.cat;
+        var inp = document.getElementById('installedPluginSearchInput');
+        if (inp) {
+            inp.value = parsed.q;
+            var clr = document.getElementById('installedPluginSearchClear');
+            if (clr) clr.style.display = parsed.q ? 'block' : 'none';
+        }
+        var bar = document.getElementById('installedSortFilterBar');
+        if (bar) {
+            bar.querySelectorAll('.filter-btn').forEach(function(btn) {
+                btn.classList.toggle('active', (btn.getAttribute('data-filter') || '') === currentInstalledFilter);
+            });
+        }
+        if (typeof updateInstalledSortButtons === 'function') updateInstalledSortButtons();
+        if (typeof doApplyInstalledSort === 'function') doApplyInstalledSort();
+        document.querySelectorAll('.installed-category-btn').forEach(function(btn) {
+            btn.classList.toggle('active', (btn.getAttribute('data-category') || '') === currentInstalledCategory);
+        });
+        if (typeof filterInstalledPlugins === 'function') filterInstalledPlugins();
+    } catch (e) {
+        console.warn('applyInstalledStateFromHash', e);
+    } finally {
+        applyingInstalledHash = false;
+    }
+}
 
 // Get CSRF cookie helper function
 function getCookie(name) {
@@ -1909,17 +2024,13 @@ function toggleView(view, updateHash = true) {
     // Update URL hash only if explicitly requested (user clicked a button, not initial load)
     if (updateHash) {
         isSettingHash = true;
-        const hash = '#' + view;
-        // Use replaceState to update URL - this updates the hash without triggering hashchange event
+        const hash = buildPluginsHashString(view);
         if (window.history && window.history.replaceState) {
-            // Get current pathname and preserve it, just update the hash
             const newUrl = window.location.pathname + window.location.search + hash;
             window.history.replaceState(null, null, newUrl);
         } else {
-            // Fallback for older browsers - this will trigger hashchange but we have the flag
-            window.location.hash = hash;
+            window.location.hash = hash.replace(/^#/, '');
         }
-        // Reset flag after a short delay
         setTimeout(() => { isSettingHash = false; }, 100);
     }
     
@@ -2434,6 +2545,7 @@ function setInstalledFilter(filter) {
     try {
         filterInstalledPlugins();
     } catch (e) { console.warn('setInstalledFilter: filterInstalledPlugins', e); }
+    updateInstalledPluginsHashIfNeeded();
 }
 
 function filterInstalledPlugins() {
@@ -2446,10 +2558,11 @@ function filterInstalledPlugins() {
     const noResultsTable = document.getElementById('installedPluginsNoResultsTable');
     if (!gridView && !tableView) return;
     var visibleCount = 0;
-    function matchesFilter(installed, enabled) {
+    function matchesFilter(installed, enabled, isPaid) {
         if (filter === 'all') return true;
         if (filter === 'installed') return installed === 'true';
         if (filter === 'active') return installed === 'true' && enabled === 'true';
+        if (filter === 'premium') return isPaid === 'true';
         return true;
     }
     var cat = (typeof currentInstalledCategory !== 'undefined' ? currentInstalledCategory : 'all');
@@ -2468,7 +2581,8 @@ function filterInstalledPlugins() {
             var searchMatch = terms.length === 0 || terms.every(function(term) { return combined.indexOf(term) !== -1; });
             var installed = card.getAttribute('data-installed') || 'false';
             var enabled = card.getAttribute('data-enabled') || 'false';
-            var filterMatch = matchesFilter(installed, enabled);
+            var isPaid = card.getAttribute('data-is-paid') || 'false';
+            var filterMatch = matchesFilter(installed, enabled, isPaid);
             var categoryMatch = matchesCategory(card.getAttribute('data-plugin-type'));
             var show = searchMatch && filterMatch && categoryMatch;
             card.style.display = show ? '' : 'none';
@@ -2488,7 +2602,8 @@ function filterInstalledPlugins() {
                 var searchMatch = terms.length === 0 || terms.every(function(term) { return combined.indexOf(term) !== -1; });
                 var installed = row.getAttribute('data-installed') || 'false';
                 var enabled = row.getAttribute('data-enabled') || 'false';
-                var filterMatch = matchesFilter(installed, enabled);
+                var isPaid = row.getAttribute('data-is-paid') || 'false';
+                var filterMatch = matchesFilter(installed, enabled, isPaid);
                 var categoryMatch = matchesCategory(row.getAttribute('data-plugin-type'));
                 var show = searchMatch && filterMatch && categoryMatch;
                 row.style.display = show ? '' : 'none';
@@ -2514,6 +2629,7 @@ function clearInstalledPluginSearch() {
         filterInstalledPlugins();
         input.focus();
     }
+    updateInstalledPluginsHashIfNeeded();
 }
 
 function toggleInstalledSort(field) {
@@ -2526,6 +2642,7 @@ function toggleInstalledSort(field) {
     }
     updateInstalledSortButtons();
     doApplyInstalledSort();
+    updateInstalledPluginsHashIfNeeded();
 }
 
 function updateInstalledSortButtons() {
@@ -2624,6 +2741,7 @@ function filterByCategoryInstalled(category, evt) {
         });
     }
     try { filterInstalledPlugins(); } catch (e) { console.warn('filterByCategoryInstalled', e); }
+    updateInstalledPluginsHashIfNeeded();
 }
 
 function upgradePlugin(pluginName, currentVersion, newVersion) {
@@ -3490,6 +3608,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     installedSearchClearBtn.style.display = this.value.trim() ? 'block' : 'none';
                 }
                 filterInstalledPlugins();
+                scheduleInstalledSearchHashUpdate();
             });
             installedSearchInput.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
@@ -3499,22 +3618,21 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        // Check URL hash for view preference
-        const hash = window.location.hash.substring(1); // Remove #
+        // URL hash: #grid | #table | #store | #upgrades, optional ?show=&sort=&cat=&q= for grid/table
+        const hashRaw = window.location.hash.substring(1);
+        const parsedHash = parsePluginsHashFragment(hashRaw);
         const validViews = ['grid', 'table', 'upgrades', 'store'];
         
-        // Check if view elements exist before calling toggleView
         const gridView = document.getElementById('gridView');
         const tableView = document.getElementById('tableView');
         const storeView = document.getElementById('storeView');
         const upgradesViewEl = document.getElementById('upgradesView');
         
-        // Only proceed if all view elements exist (plugins are installed)
         if (gridView && tableView && storeView) {
-            let initialView = 'grid'; // Default
-            if (validViews.includes(hash)) {
-                initialView = hash;
-            } else {
+            let initialView = 'grid';
+            if (hashRaw.length > 0 && validViews.indexOf(parsedHash.view) !== -1) {
+                initialView = parsedHash.view;
+            } else if (hashRaw.length === 0) {
                 if (gridView.children.length > 0) {
                     initialView = 'grid';
                 } else {
@@ -3522,9 +3640,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             
-            const hadHash = hash.length > 0;
+            const hadHash = hashRaw.length > 0;
             try {
-                toggleView(initialView, hadHash);
+                if (initialView === 'grid' || initialView === 'table') {
+                    currentInstalledFilter = parsedHash.show;
+                    currentInstalledSort = parsedHash.sort;
+                    currentInstalledCategory = parsedHash.cat;
+                    var insPre = document.getElementById('installedPluginSearchInput');
+                    var clrPre = document.getElementById('installedPluginSearchClear');
+                    if (insPre) {
+                        insPre.value = parsedHash.q;
+                        if (clrPre) clrPre.style.display = parsedHash.q ? 'block' : 'none';
+                    }
+                }
+                toggleView(initialView, false);
+                if (initialView === 'grid' || initialView === 'table') {
+                    applyInstalledStateFromHash(parsedHash);
+                }
+                if (hadHash && (initialView === 'grid' || initialView === 'table' || initialView === 'upgrades' || initialView === 'store')) {
+                    updateInstalledPluginsHashIfNeeded();
+                }
             } catch (e) {
                 console.warn('plugins: toggleView on load failed', e);
                 if (storeView) storeView.style.display = 'block';
@@ -3549,17 +3684,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Handle hash changes (back/forward browser buttons)
 window.addEventListener('hashchange', function() {
-    // Prevent infinite loops when we programmatically set the hash
     if (isSettingHash) {
         return;
     }
-    
-    const hash = window.location.hash.substring(1);
-    const validViews = ['grid', 'table', 'store'];
-    
-    if (validViews.includes(hash)) {
-        // Don't update hash again since it's already set (user navigated via browser)
-        toggleView(hash, false);
+    const raw = window.location.hash.substring(1);
+    const parsed = parsePluginsHashFragment(raw);
+    var validViews = ['grid', 'table', 'upgrades', 'store'];
+    if (validViews.indexOf(parsed.view) !== -1) {
+        toggleView(parsed.view, false);
+        if (parsed.view === 'grid' || parsed.view === 'table') {
+            applyInstalledStateFromHash(parsed);
+        }
     }
 });
 </script>

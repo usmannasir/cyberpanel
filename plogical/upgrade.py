@@ -4435,6 +4435,86 @@ class Migration(migrations.Migration):
             pass
 
     @staticmethod
+    def rabbitMQMigrations():
+        marker_path = '/home/cyberpanel/rabbitmq'
+        rabbitmq_service_files = [
+            '/usr/lib/systemd/system/rabbitmq-server.service',
+            '/lib/systemd/system/rabbitmq-server.service'
+        ]
+        rabbitmq_binary_paths = [
+            '/usr/sbin/rabbitmq-server',
+            '/usr/lib/rabbitmq/bin/rabbitmq-server'
+        ]
+
+        try:
+            rabbitmq_installed = any(os.path.exists(path) for path in rabbitmq_service_files + rabbitmq_binary_paths)
+
+            if rabbitmq_installed:
+                if not os.path.exists(marker_path):
+                    writeToFile = open(marker_path, 'w+')
+                    writeToFile.close()
+                    Upgrade.stdOut('RabbitMQ detected during upgrade. Marker file created.', 0)
+
+                Upgrade.executioner('systemctl enable rabbitmq-server', 'Enable RabbitMQ service', 0)
+                Upgrade.executioner('systemctl start rabbitmq-server', 'Start RabbitMQ service', 0)
+            else:
+                if os.path.exists(marker_path):
+                    os.remove(marker_path)
+                    Upgrade.stdOut('RabbitMQ marker removed because service is not installed.', 0)
+        except BaseException as msg:
+            Upgrade.stdOut('RabbitMQ migration failed: ' + str(msg), 0)
+
+    @staticmethod
+    def redisMigrations():
+        marker_path = '/home/cyberpanel/redis'
+        redis_binary = '/usr/bin/redis-server'
+        redis_service_files = [
+            '/usr/lib/systemd/system/redis.service',
+            '/lib/systemd/system/redis.service'
+        ]
+
+        try:
+            redis_installed = os.path.exists(redis_binary) or any(os.path.exists(path) for path in redis_service_files)
+            if redis_installed:
+                if not os.path.exists(marker_path):
+                    writeToFile = open(marker_path, 'w+')
+                    writeToFile.close()
+                    Upgrade.stdOut('Redis detected during upgrade. Marker file created.', 0)
+                Upgrade.executioner('systemctl enable redis', 'Enable Redis service', 0)
+                Upgrade.executioner('systemctl start redis', 'Start Redis service', 0)
+            else:
+                if os.path.exists(marker_path):
+                    os.remove(marker_path)
+                    Upgrade.stdOut('Redis marker removed because service is not installed.', 0)
+        except BaseException as msg:
+            Upgrade.stdOut('Redis migration failed: ' + str(msg), 0)
+
+    @staticmethod
+    def elasticSearchMigrations():
+        marker_path = '/home/cyberpanel/elasticsearch'
+        es_binary = '/usr/share/elasticsearch/bin/elasticsearch'
+        es_service_files = [
+            '/usr/lib/systemd/system/elasticsearch.service',
+            '/lib/systemd/system/elasticsearch.service'
+        ]
+
+        try:
+            es_installed = os.path.exists(es_binary) or any(os.path.exists(path) for path in es_service_files)
+            if es_installed:
+                if not os.path.exists(marker_path):
+                    writeToFile = open(marker_path, 'w+')
+                    writeToFile.close()
+                    Upgrade.stdOut('Elasticsearch detected during upgrade. Marker file created.', 0)
+                Upgrade.executioner('systemctl enable elasticsearch', 'Enable Elasticsearch service', 0)
+                Upgrade.executioner('systemctl start elasticsearch', 'Start Elasticsearch service', 0)
+            else:
+                if os.path.exists(marker_path):
+                    os.remove(marker_path)
+                    Upgrade.stdOut('Elasticsearch marker removed because service is not installed.', 0)
+        except BaseException as msg:
+            Upgrade.stdOut('Elasticsearch migration failed: ' + str(msg), 0)
+
+    @staticmethod
     def backupCriticalFiles():
         """Backup all critical configuration files before upgrade"""
         import tempfile
@@ -6652,6 +6732,9 @@ slowlog = /var/log/php{version}-fpm-slow.log
         Upgrade.setupWebmail()
         Upgrade.setupSieve()
         Upgrade.enableServices()
+        Upgrade.elasticSearchMigrations()
+        Upgrade.redisMigrations()
+        Upgrade.rabbitMQMigrations()
 
         # Apply AlmaLinux 9 fixes before other installations
         Upgrade.fix_almalinux9_mariadb()
