@@ -799,7 +799,9 @@ app.controller('manageApplications', function ($scope, $http, $timeout, $window)
         }
 
         $scope.selectedVersions = ['latest'];
-        var deferVersionList = (service.name === 'RabbitMQ' && !$scope.rabbitmqBranchChosen)
+        // RabbitMQ upgrade: bootstrap meta is often stream 4; stream follows installed line — do not
+        // reuse service.versions until refreshMeta returns for selectedRabbitmqStream (avoids mismatched list).
+        var deferVersionList = (service.name === 'RabbitMQ' && (!$scope.rabbitmqBranchChosen || status === 'Upgrading'))
             || (service.name === 'Elasticsearch' && !$scope.esMajorChosen);
         if (!deferVersionList) {
             var svcVers = sanitizeVersionsArray(service.versions || []);
