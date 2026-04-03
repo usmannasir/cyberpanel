@@ -848,9 +848,20 @@ app.controller('createACLCTRL', function ($scope, $http) {
 
         var url = "/users/createACLFunc";
 
+        var aclNameTrimmed = ($scope.aclName !== undefined && $scope.aclName !== null) ? String($scope.aclName).trim() : '';
+        if (!aclNameTrimmed) {
+            $scope.aclLoading = true;
+            safePNotify({
+                title: 'Error!',
+                text: 'Please enter a name for this ACL.',
+                type: 'error'
+            });
+            return;
+        }
+
         var data = {
 
-            aclName: $scope.aclName,
+            aclName: aclNameTrimmed,
             makeAdmin: $scope.makeAdmin,
 
             //
@@ -943,10 +954,10 @@ app.controller('createACLCTRL', function ($scope, $http) {
                     type: 'success'
                 });
             } else {
-
+                var errText = (response.data && (response.data.errorMessage || response.data.error_message)) ? (response.data.errorMessage || response.data.error_message) : 'Unknown error';
                 safePNotify({
                     title: 'Error!',
-                    text: response.data.errorMessage,
+                    text: errText,
                     type: 'error'
                 });
 
