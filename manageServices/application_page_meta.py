@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Server-side metadata for Manage Applications page (version lists in HTML)."""
 import json
+import os
 import threading
 import time
 
@@ -15,56 +16,67 @@ _APP_IMAGES = {
     'RabbitMQ': '/static/manageServices/images/rabbitmq-logo.svg',
 }
 
-_PAGE_META_TTL_SECONDS = 20
-_PAGE_META_CACHE = {}
-_PAGE_META_LOCK = threading.Lock()
+# Cache only repoquery/dnf-backed version lists (slow). Install state is always refreshed.
+# Override with CYBERCP_MANAGED_APPS_VERSIONS_INVENTORY_TTL (seconds), default 3600 (1 hour).
+_VERSIONS_INVENTORY_TTL_SECONDS = int(
+    os.environ.get('CYBERCP_MANAGED_APPS_VERSIONS_INVENTORY_TTL', '3600')
+)
+_VERSIONS_INVENTORY_CACHE = {}
+_VERSIONS_INVENTORY_LOCK = threading.Lock()
 
 
-def _page_meta_cache_get(cache_key):
+def _versions_inventory_cache_get(cache_key):
     now = time.time()
-    with _PAGE_META_LOCK:
-        item = _PAGE_META_CACHE.get(cache_key)
+    with _VERSIONS_INVENTORY_LOCK:
+        item = _VERSIONS_INVENTORY_CACHE.get(cache_key)
         if not item:
             return None
-        ts, payload = item
-        if now - ts > _PAGE_META_TTL_SECONDS:
+        ts, inventory = item
+        if now - ts > _VERSIONS_INVENTORY_TTL_SECONDS:
             try:
-                del _PAGE_META_CACHE[cache_key]
+                del _VERSIONS_INVENTORY_CACHE[cache_key]
             except Exception:
                 pass
             return None
-        services, meta_json = payload
-        return list(services), str(meta_json)
+        return {k: list(v) for k, v in inventory.items()}
 
 
-def _page_meta_cache_put(cache_key, services, meta_json):
-    with _PAGE_META_LOCK:
-        # Keep cache tiny (we only have a handful of key combos).
-        if len(_PAGE_META_CACHE) > 12:
-            _PAGE_META_CACHE.clear()
-        _PAGE_META_CACHE[cache_key] = (
-            time.time(),
-            (list(services), str(meta_json)),
-        )
+def _versions_inventory_cache_put(cache_key, inventory):
+    with _VERSIONS_INVENTORY_LOCK:
+        if len(_VERSIONS_INVENTORY_CACHE) > 16:
+            _VERSIONS_INVENTORY_CACHE.clear()
+        snap = {k: list(v) for k, v in (inventory or {}).items()}
+        _VERSIONS_INVENTORY_CACHE[cache_key] = (time.time(), snap)
 
 
-def build_manage_applications_page_data(es_major='8', rabbitmq_stream='4'):
-    """
-    Build `services` for card HTML and a JSON-serializable bootstrap matching
-    /manageservices/applicationMeta shape (default ES major 8, RMQ stream 4).
-    """
-    services = []
-    bootstrap_apps = []
-    support = managed_apps_os_support()
-    major = str(es_major).strip() if str(es_major).strip() in ('7', '8', '9') else '8'
-    rmq = str(rabbitmq_stream).strip() if str(rabbitmq_stream).strip() in ('3', '4') else '4'
-    cache_key = 'major:{0}|rmq:{1}|support:{2}'.format(
-        major, rmq, 1 if support.get('supported') else 0
-    )
+def _cold_fetch_version_inventory(major, rmq, support):
+    """Populate version lists from package managers (DNF/apt); can take many seconds."""
+    inv = {}
+    if not support.get('supported'):
+        for app_name in ('Elasticsearch', 'Redis', 'RabbitMQ'):
+            inv[app_name] = []
+        return inv
+    for app_name in ('Elasticsearch', 'Redis', 'RabbitMQ'):
+        try:
+            inv[app_name] = get_available_versions(app_name, major, rmq)
+        except BaseException:
+            inv[app_name] = []
+    return inv
 
-    cached = _page_meta_cache_get(cache_key)
+
+def _resolve_version_inventory(cache_key, major, rmq, support):
+    cached = _versions_inventory_cache_get(cache_key)
     if cached is not None:
         return cached
+    inv = _cold_fetch_version_inventory(major, rmq, support)
+    _versions_inventory_cache_put(cache_key, inv)
+    return inv
+
+
+def _assemble_manage_applications_payload(major, rmq, support, version_inv):
+    """Build services + bootstrap JSON from fresh install state and cached (or new) version lists."""
+    services = []
+    bootstrap_apps = []
 
     for app_name in ('Elasticsearch', 'Redis', 'RabbitMQ'):
         state = detect_app_state(app_name)
@@ -75,17 +87,12 @@ def build_manage_applications_page_data(es_major='8', rabbitmq_stream='4'):
             'installedVersion': state.get('installedVersion', ''),
         })
 
-        versions = []
+        versions = list(version_inv.get(app_name) or [])
         latest_branch = ''
         latest_global = ''
-        if support['supported']:
-            try:
-                versions = get_available_versions(app_name, major, rmq)
-            except BaseException:
-                versions = []
-            if versions:
-                latest_branch = versions[0]
-                latest_global = latest_branch
+        if versions:
+            latest_branch = versions[0]
+            latest_global = latest_branch
 
         installed_version = state['installedVersion']
         if installed_version and installed_version not in versions:
@@ -144,15 +151,16 @@ def build_manage_applications_page_data(es_major='8', rabbitmq_stream='4'):
 
     bootstrap = {'status': 1, 'apps': bootstrap_apps}
     meta_json = json.dumps(bootstrap, ensure_ascii=False)
-    _page_meta_cache_put(cache_key, services, meta_json)
     return services, meta_json
 
 
-def get_application_meta_response_dict(es_major='8', rabbitmq_stream='4'):
+def build_manage_applications_page_data(es_major='8', rabbitmq_stream='4'):
     """
-    JSON payload for POST /manageservices/applicationMeta.
-    Reuses the same TTL cache as the Manage Applications HTML bootstrap so
-    modal refresh hits warm cache after a page load (or prior request).
+    Build `services` for card HTML and a JSON-serializable bootstrap matching
+    /manageservices/applicationMeta shape (default ES major 8, RMQ stream 4).
+
+    Version lists are cached for _VERSIONS_INVENTORY_TTL_SECONDS to avoid repeated
+    DNF/repoquery on every page view; install status is always detected live.
     """
     support = managed_apps_os_support()
     major = str(es_major).strip() if str(es_major).strip() in ('7', '8', '9') else '8'
@@ -161,12 +169,20 @@ def get_application_meta_response_dict(es_major='8', rabbitmq_stream='4'):
         major, rmq, 1 if support.get('supported') else 0
     )
 
-    cached = _page_meta_cache_get(cache_key)
-    if cached is not None:
-        _services, meta_json = cached
-    else:
-        _services, meta_json = build_manage_applications_page_data(major, rmq)
+    version_inv = _resolve_version_inventory(cache_key, major, rmq, support)
+    return _assemble_manage_applications_payload(major, rmq, support, version_inv)
 
+
+def get_application_meta_response_dict(es_major='8', rabbitmq_stream='4'):
+    """
+    JSON payload for POST /manageservices/applicationMeta.
+    Shares the same version-list inventory cache as the Manage Applications HTML bootstrap.
+    """
+    support = managed_apps_os_support()
+    major = str(es_major).strip() if str(es_major).strip() in ('7', '8', '9') else '8'
+    rmq = str(rabbitmq_stream).strip() if str(rabbitmq_stream).strip() in ('3', '4') else '4'
+
+    _, meta_json = build_manage_applications_page_data(major, rmq)
     payload = json.loads(meta_json)
     return {
         'status': 1,

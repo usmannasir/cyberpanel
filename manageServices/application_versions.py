@@ -17,8 +17,9 @@ _VERSION_CACHE = {}
 _VERSION_CACHE_LOCK = threading.Lock()
 _DNF_COLD_FETCH_LOCK = threading.Lock()
 
-# Seconds; override with CYBERCP_MANAGED_APPS_VERSION_CACHE_TTL if needed
-_CACHE_TTL_SEC = int(os.environ.get('CYBERCP_MANAGED_APPS_VERSION_CACHE_TTL', '300'))
+# Seconds; override with CYBERCP_MANAGED_APPS_VERSION_CACHE_TTL if needed.
+# Default 3600 matches Manage Applications version-inventory TTL (reduces DNF after cache expiry).
+_CACHE_TTL_SEC = int(os.environ.get('CYBERCP_MANAGED_APPS_VERSION_CACHE_TTL', '3600'))
 
 
 def _version_cache_key(app_name, es_major, rabbitmq_stream):
