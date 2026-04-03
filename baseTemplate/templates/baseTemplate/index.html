@@ -410,6 +410,63 @@
             text-decoration: underline;
             color: #3730a3 !important;
         }
+
+        /* Ephemeral notifications (e.g. Docker update progress) */
+        .notification-center-item-ephemeral {
+            border-color: #c7d2fe;
+            background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+        }
+        .notification-center-progress-track {
+            height: 8px;
+            border-radius: 999px;
+            background: #e5e7eb;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+        .notification-center-progress-bar {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #4f46e5, #6366f1);
+            transition: width 0.35s ease;
+        }
+        .notification-center-progress-bar.indeterminate {
+            width: 35% !important;
+            animation: cp-nc-progress-indet 1.2s ease-in-out infinite;
+        }
+        .notification-center-progress-bar.success {
+            width: 100% !important;
+            background: linear-gradient(90deg, #16a34a, #22c55e);
+            animation: none;
+        }
+        .notification-center-progress-bar.error {
+            width: 100% !important;
+            background: linear-gradient(90deg, #dc2626, #ef4444);
+            animation: none;
+        }
+        @keyframes cp-nc-progress-indet {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(280%); }
+        }
+        .notification-center-ephemeral-dismiss {
+            margin-top: 0.75rem;
+            font-size: 0.8rem;
+            color: #6b7280;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            text-decoration: underline;
+        }
+        .notification-center-ephemeral-dismiss:hover { color: #111827; }
+        .notification-center-btn.has-active-operation {
+            animation: cp-nc-bell-pulse 1.5s ease-in-out infinite;
+            border-color: #6366f1;
+            color: #4f46e5;
+        }
+        @keyframes cp-nc-bell-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.35); }
+            50% { box-shadow: 0 0 0 6px rgba(79, 70, 229, 0); }
+        }
         
         /* Sidebar */
         #sidebar {
@@ -2504,7 +2561,7 @@
     <script src="{% static 'serverStatus/serverStatus.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     <script src="{% static 'firewall/firewall.js' %}?v={{ CP_VERSION }}&fw={{ FIREWALL_STATIC_VERSION|default:CP_VERSION }}&cb=4" data-cfasync="false"></script>
     <script src="{% static 'emailPremium/emailPremium.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
-    <script src="{% static 'manageServices/manageServices.js' %}?v={{ CP_VERSION }}&msModal=20260402c" data-cfasync="false"></script>
+    <script src="{% static 'manageServices/manageServices.js' %}?v={{ CP_VERSION }}&msModal=20260402d" data-cfasync="false"></script>
     <script src="{% static 'CLManager/CLManager.js' %}?v={{ CP_VERSION }}" data-cfasync="false"></script>
     
     <!-- Scripts -->
@@ -2750,6 +2807,93 @@
             }
             return false;
         }
+
+        window.__cpEphemeralNotifications = window.__cpEphemeralNotifications || [];
+
+        function cpEscapeHtmlNC(str) {
+            if (str == null || str === '') return '';
+            var div = document.createElement('div');
+            div.textContent = String(str);
+            return div.innerHTML;
+        }
+
+        function cpEscapeAttrNC(s) {
+            return String(s || '')
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
+        function renderEphemeralNotificationsHTML() {
+            var items = window.__cpEphemeralNotifications || [];
+            return items.map(function(notif) {
+                var nameEsc = cpEscapeHtmlNC(notif.containerName);
+                var imgEsc = cpEscapeHtmlNC(notif.imageRef);
+                var idAttr = cpEscapeAttrNC(notif.id);
+                var textHtml = '';
+                var barHtml = '';
+                if (notif.state === 'running') {
+                    textHtml = '<p style="margin:0 0 0.5rem 0">Updating <strong>' + nameEsc + '</strong> to <code style="font-size:0.9em">' + imgEsc + '</code>. Pulling image and recreating the container — you can leave this tab open.</p>';
+                    barHtml = '<div class="notification-center-progress-track"><div class="notification-center-progress-bar indeterminate"></div></div>';
+                } else if (notif.state === 'done_ok') {
+                    textHtml = '<p style="margin:0 0 0.5rem 0"><strong>' + nameEsc + '</strong> updated successfully.</p><p style="margin:0;color:#15803d;font-size:0.9em">' + cpEscapeHtmlNC(notif.resultMessage) + '</p>';
+                    barHtml = '<div class="notification-center-progress-track"><div class="notification-center-progress-bar success"></div></div>';
+                } else {
+                    textHtml = '<p style="margin:0 0 0.5rem 0">Update failed for <strong>' + nameEsc + '</strong>.</p><p style="margin:0;color:#b91c1c;font-size:0.9em">' + cpEscapeHtmlNC(notif.resultMessage) + '</p>';
+                    barHtml = '<div class="notification-center-progress-track"><div class="notification-center-progress-bar error"></div></div>';
+                }
+                return '<div class="notification-center-item notification-center-item-ephemeral" data-ephemeral-id="' + idAttr + '">' +
+                    '<div class="notification-center-item-title"><i class="fab fa-docker"></i><span>Docker update</span></div>' +
+                    '<div class="notification-center-item-text" style="margin-bottom:0">' + textHtml + '</div>' +
+                    barHtml +
+                    '<button type="button" class="notification-center-ephemeral-dismiss" data-cp-ephemeral-dismiss="' + idAttr + '">Dismiss</button>' +
+                    '</div>';
+            }).join('');
+        }
+
+        window.cpDismissEphemeralNotification = function(id) {
+            window.__cpEphemeralNotifications = (window.__cpEphemeralNotifications || []).filter(function(n) { return n.id !== id; });
+            var stillRunning = (window.__cpEphemeralNotifications || []).some(function(n) { return n.state === 'running'; });
+            var btn = document.getElementById('notification-center-btn');
+            if (btn && !stillRunning) btn.classList.remove('has-active-operation');
+            loadNotificationCenter();
+        };
+
+        window.cpDockerUpdateNotifyStart = function(containerName, imageRef) {
+            window.__cpEphemeralNotifications = window.__cpEphemeralNotifications || [];
+            var id = 'docker-update-' + Date.now() + '-' + Math.random().toString(36).slice(2, 9);
+            window.__cpEphemeralNotifications.unshift({
+                id: id,
+                kind: 'docker-update',
+                containerName: String(containerName || ''),
+                imageRef: String(imageRef || ''),
+                state: 'running',
+                resultMessage: ''
+            });
+            var dd = document.getElementById('notification-center-dropdown');
+            if (dd) dd.classList.add('show');
+            var bell = document.getElementById('notification-center-btn');
+            if (bell) bell.classList.add('has-active-operation');
+            loadNotificationCenter();
+            return id;
+        };
+
+        window.cpDockerUpdateNotifyEnd = function(nid, ok, message) {
+            window.__cpEphemeralNotifications = window.__cpEphemeralNotifications || [];
+            var n = null;
+            for (var i = 0; i < window.__cpEphemeralNotifications.length; i++) {
+                if (window.__cpEphemeralNotifications[i].id === nid) { n = window.__cpEphemeralNotifications[i]; break; }
+            }
+            if (!n) return;
+            n.state = ok ? 'done_ok' : 'done_err';
+            n.resultMessage = message ? String(message) : (ok ? 'Done.' : 'Unknown error.');
+            var stillRunning = window.__cpEphemeralNotifications.some(function(x) { return x.state === 'running'; });
+            var btn = document.getElementById('notification-center-btn');
+            if (btn && !stillRunning) btn.classList.remove('has-active-operation');
+            loadNotificationCenter();
+        };
+
         function toggleNotificationCenter() {
             const dropdown = document.getElementById('notification-center-dropdown');
             if (dropdown) {
@@ -2779,10 +2923,10 @@
                   learnMoreLink: 'https://cyberpanel.net/cyberpanel-htaccess-module',
                   dismissed: isNotificationDismissed('htaccess-notification') }
             ];
-            if (notifications.length === 0) {
-                list.innerHTML = '<div class="notification-center-empty">No notifications available</div>';
-            } else {
-                list.innerHTML = notifications.map(notif => {
+            const ephemeralHtml = renderEphemeralNotificationsHTML();
+            let staticHtml = '';
+            if (notifications.length > 0) {
+                staticHtml = notifications.map(notif => {
                     let linkIcon = notif.linkText.includes('Configure') ? '<i class="fas fa-cog"></i>' :
                         notif.linkText.includes('Start') ? '<i class="fas fa-rocket"></i>' :
                         (notif.linkText.includes('View') || notif.linkText.includes('Details')) ? '<i class="fas fa-external-link-alt"></i>' : '<i class="fas fa-arrow-right"></i>';
@@ -2802,7 +2946,14 @@
                     </div>`;
                 }).join('');
             }
-            const activeCount = notifications.filter(n => !n.dismissed).length;
+            if (!ephemeralHtml && !staticHtml) {
+                list.innerHTML = '<div class="notification-center-empty">No notifications available</div>';
+            } else {
+                list.innerHTML = ephemeralHtml + staticHtml;
+            }
+            const staticActive = notifications.filter(n => !n.dismissed).length;
+            const runningEphem = (window.__cpEphemeralNotifications || []).filter(function(n) { return n.state === 'running'; }).length;
+            const activeCount = staticActive + runningEphem;
             const badge = document.getElementById('notification-badge');
             if (badge) {
                 badge.textContent = activeCount;
@@ -2819,6 +2970,16 @@
         
         // Check all notification statuses when page loads
         document.addEventListener('DOMContentLoaded', function() {
+            var ncList = document.getElementById('notification-center-list');
+            if (ncList) {
+                ncList.addEventListener('click', function(ev) {
+                    var dismissBtn = ev.target.closest('[data-cp-ephemeral-dismiss]');
+                    if (dismissBtn && window.cpDismissEphemeralNotification) {
+                        var eid = dismissBtn.getAttribute('data-cp-ephemeral-dismiss');
+                        if (eid) window.cpDismissEphemeralNotification(eid);
+                    }
+                });
+            }
             loadNotificationCenter();
             checkBackupStatus();
             // Optional: open notification dropdown for testing (e.g. ?showNotifications=1)
