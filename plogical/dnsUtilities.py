@@ -985,12 +985,25 @@ class DNS:
                 # Get all DNS records for this zone
                 try:
                     dns_records = cf.zones.dns_records.get(zone_id)
-                    # For subdomains, only delete records that match this subdomain (name can be "status" or "status.newstargeted.com")
+                    # For subdomains, delete the FQDN and any deeper names (mail.sub, www.sub, _dmarc.sub, etc.)
                     if is_subdomain:
-                        subdomain_label = domainName.split('.')[0]
+                        base_fqdn = domainName.rstrip('.').lower()
+                        zone_fqdn = (zone_name or '').rstrip('.').lower()
+
+                        def record_to_fqdn(record_name):
+                            n = (record_name or '').rstrip('.').lower()
+                            if not zone_fqdn:
+                                return n
+                            if n == zone_fqdn or n.endswith('.' + zone_fqdn):
+                                return n
+                            return ('%s.%s' % (n, zone_fqdn)).rstrip('.')
+
                         def record_matches(r):
-                            n = (r.get('name') or '').rstrip('.')
-                            return n == domainName or n == subdomain_label
+                            fqdn = record_to_fqdn(r.get('name') or '')
+                            if fqdn == base_fqdn:
+                                return True
+                            return fqdn.endswith('.' + base_fqdn)
+
                         to_delete = [r for r in dns_records if record_matches(r)]
                     else:
                         to_delete = list(dns_records)
