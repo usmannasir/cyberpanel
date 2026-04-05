@@ -883,6 +883,7 @@ context /.well-known/acme-challenge {
                         if result.returncode == 0:
                             # Step 3: Install the certificate to the desired location
                             install_command = acmePath + " --install-cert -d " + virtualHostName \
+                                            + ' --ecc' \
                                             + ' --cert-file ' + existingCertPath + '/cert.pem' \
                                             + ' --key-file ' + existingCertPath + '/privkey.pem' \
                                             + ' --fullchain-file ' + existingCertPath + '/fullchain.pem'
@@ -940,6 +941,7 @@ context /.well-known/acme-challenge {
                     if result.returncode == 0:
                         # Step 2: Install the certificate to the desired location
                         install_command = acmePath + " --install-cert -d " + virtualHostName \
+                                        + ' --ecc' \
                                         + ' --cert-file ' + existingCertPath + '/cert.pem' \
                                         + ' --key-file ' + existingCertPath + '/privkey.pem' \
                                         + ' --fullchain-file ' + existingCertPath + '/fullchain.pem'
@@ -960,6 +962,77 @@ context /.well-known/acme-challenge {
         except Exception as e:
             logging.CyberCPLogFileWriter.writeToFile(str(e))
             return 0
+
+
+def _ssl_resolve_acme_webroot(sslpath):
+    """Match obtainSSLForADomain webroot selection for HTTP-01 (child domains / custom docroot)."""
+    default_webroot = '/usr/local/lsws/Example/html'
+    if sslpath and str(sslpath).strip():
+        webroot = str(sslpath).strip().rstrip('/')
+        if webroot != default_webroot and os.path.isdir(webroot):
+            return webroot
+    return default_webroot
+
+
+def _ssl_privkey_is_ecdsa(privkey_path):
+    """True if privkey is ECDSA (CyberPanel acme.sh -k ec-256); False for legacy RSA."""
+    if not os.path.exists(privkey_path):
+        return True
+    try:
+        try:
+            proc = subprocess.run(
+                ['openssl', 'ec', '-in', privkey_path, '-noout'],
+                capture_output=True, text=True, timeout=15,
+            )
+        except TypeError:
+            proc = subprocess.run(
+                ['openssl', 'ec', '-in', privkey_path, '-noout'],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                universal_newlines=True, timeout=15,
+            )
+        return proc.returncode == 0
+    except BaseException as exc:
+        try:
+            logging.CyberCPLogFileWriter.writeToFile(
+                '_ssl_privkey_is_ecdsa: %s, assuming ECDSA' % (str(exc),))
+        except BaseException:
+            pass
+        return True
+
+
+def _ssl_acme_deploy_to_live(acmePath, domain, use_ecc):
+    """Run acme.sh --install-cert so renewed certs are copied to /etc/letsencrypt/live/."""
+    live_dir = '/etc/letsencrypt/live/' + domain
+    if not os.path.exists(live_dir):
+        subprocess.call(shlex.split('mkdir -p ' + live_dir))
+    install_command = acmePath + ' --install-cert -d ' + shlex.quote(domain)
+    if use_ecc:
+        install_command += ' --ecc'
+    install_command += (
+        ' --cert-file ' + live_dir + '/cert.pem'
+        ' --key-file ' + live_dir + '/privkey.pem'
+        ' --fullchain-file ' + live_dir + '/fullchain.pem'
+    )
+    try:
+        install_result = subprocess.run(
+            install_command, capture_output=True, text=True, shell=True)
+    except TypeError:
+        install_result = subprocess.run(
+            install_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            universal_newlines=True, shell=True)
+    if install_result.returncode != 0:
+        err = ''
+        try:
+            err = (install_result.stderr or install_result.stdout or '').strip()
+        except BaseException:
+            err = ''
+        logging.CyberCPLogFileWriter.writeToFile(
+            'acme.sh install-cert failed for %s (exit %s): %s' % (
+                domain, install_result.returncode, err[:2000]))
+        return False
+    logging.CyberCPLogFileWriter.writeToFile(
+        'Deployed renewed certificate to %s via acme.sh install-cert' % (live_dir,), 0)
+    return True
 
 
 def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=False):
@@ -992,6 +1065,13 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
                 command = f'{acmePath} --update-account --accountemail {adminEmail}'
                 subprocess.call(command, shell=True)
 
+                webroot = _ssl_resolve_acme_webroot(sslpath)
+                logging.CyberCPLogFileWriter.writeToFile(
+                    f'ACME renew webroot for {domain}: {webroot}', 0)
+
+                privkey_path = '/etc/letsencrypt/live/' + domain + '/privkey.pem'
+                use_ecc = _ssl_privkey_is_ecdsa(privkey_path)
+
                 # Build domain list for renewal
                 renewal_domains = f'-d {domain}'
                 if not isHostname and sslUtilities.checkDNSRecords(f'www.{domain}'):
@@ -1001,10 +1081,17 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
                 if is_expired:
                     logging.CyberCPLogFileWriter.writeToFile(
                         f"Certificate is expired, using --issue --force for {domain}")
-                    command = f'{acmePath} --issue {renewal_domains} --webroot /usr/local/lsws/Example/html --force'
+                    key_opt = ' -k ec-256' if use_ecc else ''
+                    command = (
+                        f'{acmePath} --issue {renewal_domains} -w {shlex.quote(webroot)}'
+                        f'{key_opt} --force'
+                    )
                 else:
-                    # Try to renew with explicit webroot
-                    command = f'{acmePath} --renew {renewal_domains} --webroot /usr/local/lsws/Example/html --force'
+                    ecc_opt = ' --ecc' if use_ecc else ''
+                    command = (
+                        f'{acmePath} --renew {renewal_domains} -w {shlex.quote(webroot)}'
+                        f'{ecc_opt} --force'
+                    )
 
                 try:
                     result = subprocess.run(command, capture_output=True, text=True, shell=True)
@@ -1015,7 +1102,10 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
 
                 if result.returncode == 0:
                     logging.CyberCPLogFileWriter.writeToFile(f"Successfully renewed SSL for {domain}")
-                    if sslUtilities.installSSLForDomain(domain, adminEmail) == 1:
+                    if not _ssl_acme_deploy_to_live(acmePath, domain, use_ecc):
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            f'install-cert after renew failed for {domain}; will try full obtain path', 1)
+                    elif sslUtilities.installSSLForDomain(domain, adminEmail) == 1:
                         return [1, "SSL successfully renewed"]
                 else:
                     # Parse ACME error details
