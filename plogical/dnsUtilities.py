@@ -889,7 +889,7 @@ class DNS:
                         for zone in sorted(zones, key=lambda v: v['name']):
                             zone = zone['id']
 
-                            DNS.createDNSRecordCloudFlare(cf, zone, name, type, value, ttl, priority)
+                            DNS.createDNSRecordCloudFlare(cf, zone, name, type, value, priority, ttl)
 
                     except CloudFlare.exceptions.CloudFlareAPIError as e:
                         logging.CyberCPLogFileWriter.writeToFile(str(e))
