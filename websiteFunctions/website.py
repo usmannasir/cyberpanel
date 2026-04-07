@@ -2487,11 +2487,34 @@ Require valid-user
                        + " --openBasedir " + str(data['openBasedir']) + ' --path ' + path + ' --websiteOwner ' \
                        + admin.userName + ' --tempStatusPath ' + tempStatusPath + " --apache " + apacheBackend + f' --aliasDomain {str(alias)}'
 
-            ProcessUtilities.popenExecutioner(execPath)
-            time.sleep(2)
+            create_result = subprocess.run(execPath, shell=True, capture_output=True, text=True, timeout=1800)
+            st = ''
+            try:
+                if os.path.isfile(tempStatusPath):
+                    with open(tempStatusPath, 'r', encoding='utf-8', errors='replace') as sf:
+                        st = sf.read().strip()
+            except BaseException:
+                st = ''
+            out = (create_result.stdout or '').strip()
+            last_line = out.split('\n')[-1] if out else ''
+            cli_ok = last_line.startswith('1,')
+            cli_fail = last_line.startswith('0,')
+            status_ok = ('Domain successfully created.' in st and '[200]' in st)
+            status_fail = ('[404]' in st)
 
-            data_ret = {'status': 1, 'createWebSiteStatus': 1, 'error_message': "None",
-                        'tempStatusPath': tempStatusPath}
+            if create_result.returncode == 0 and (cli_ok or status_ok) and not status_fail:
+                data_ret = {'status': 1, 'createWebSiteStatus': 1, 'error_message': "None",
+                            'tempStatusPath': tempStatusPath}
+            else:
+                err_msg = 'Child domain creation failed.'
+                if cli_fail and len(last_line) > 2:
+                    err_msg = last_line.split(',', 1)[1].strip() or err_msg
+                elif st:
+                    err_msg = st.replace('. [404]', '').strip() or err_msg
+                elif create_result.stderr and create_result.stderr.strip():
+                    err_msg = create_result.stderr.strip()[:500]
+                data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': err_msg[:2000],
+                            'tempStatusPath': tempStatusPath}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 

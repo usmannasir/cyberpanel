@@ -396,8 +396,9 @@ class ApacheVhost:
             logging.writeToFile(str(msg))
 
     @staticmethod
-    def perHostVirtualConfOLS(vhFile, administratorEmail):
-        # General Configurations tab
+    def perHostVirtualConfOLS(vhFile, administratorEmail, documentRoot=None):
+        # General Configurations tab. Child domains use vhRoot=master path in olsChildMainConf, so docRoot
+        # must be the real document root (not $VH_ROOT/public_html) for content and ACME HTTP-01.
         try:
             confFile = open(vhFile, "w+")
             virtualHostName = vhFile.split('/')[6]
@@ -405,6 +406,13 @@ class ApacheVhost:
             currentConf = vhostConfs.OLSLBConf
             currentConf = currentConf.replace('{adminEmails}', administratorEmail)
             currentConf = currentConf.replace('{domain}', virtualHostName)
+            if documentRoot:
+                root = documentRoot.rstrip('/')
+                currentConf = currentConf.replace('{olsDocRoot}', root)
+                currentConf = currentConf.replace('{olsAcmeChallengeRoot}', root + '/.well-known/acme-challenge')
+            else:
+                currentConf = currentConf.replace('{olsDocRoot}', '$VH_ROOT/public_html')
+                currentConf = currentConf.replace('{olsAcmeChallengeRoot}', '$VH_ROOT/public_html/.well-known/acme-challenge')
 
             confFile.write(currentConf)
             confFile.close()
