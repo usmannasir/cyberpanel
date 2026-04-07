@@ -343,7 +343,7 @@ retryTimeout            0
 respBuffer              0
 }
 """
-    OLSLBConf = """docRoot                   $VH_ROOT/public_html
+    OLSLBConf = """docRoot                   {olsDocRoot}
 vhDomain                  $VH_NAME
 vhAliases                 www.$VH_NAME
 adminEmails               {adminEmails}
@@ -371,7 +371,7 @@ accesslog $VH_ROOT/logs/$VH_NAME.access_log {
 }
 
 context /.well-known/acme-challenge {
-  location                $VH_ROOT/public_html/.well-known/acme-challenge
+  location                {olsAcmeChallengeRoot}
   allowBrowse             1
 
   rewrite  {

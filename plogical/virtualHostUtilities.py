@@ -1843,11 +1843,7 @@ local_name %s {
                     raise BaseException(retValues[1])
 
             ## Now restart litespeed after initial configurations are done
-
-            if LimitsCheck:
-                website = ChildDomains(master=master, domain=virtualHostName, path=path, phpSelection=phpVersion,
-                                       ssl=ssl, alais=alias)
-                website.save()
+            ## ChildDomains row is saved only after SSL/Apache succeed (avoids orphan DB rows on failure)
 
             if ssl == 1:
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating SSL..,50')
@@ -1883,7 +1879,7 @@ local_name %s {
                     if result[0] == 0:
                         raise BaseException(result[1])
                     else:
-                        ApacheVhost.perHostVirtualConfOLS(completePathToConfigFile, master.adminEmail)
+                        ApacheVhost.perHostVirtualConfOLS(completePathToConfigFile, master.adminEmail, path)
                         installUtilities.installUtilities.reStartLiteSpeed()
                         php = PHPManager.getPHPString(phpVersion)
 
@@ -1900,10 +1896,20 @@ local_name %s {
                 if dkimCheck == 1:
                     DNS.createDKIMRecords(virtualHostName)
 
+            if LimitsCheck:
+                website = ChildDomains(master=master, domain=virtualHostName, path=path, phpSelection=phpVersion,
+                                       ssl=ssl, alais=alias)
+                website.save()
+
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Domain successfully created. [200]')
             return 1, "None"
 
         except BaseException as msg:
+            try:
+                if ChildDomains.objects.filter(domain=virtualHostName).exists():
+                    ChildDomains.objects.filter(domain=virtualHostName).delete()
+            except BaseException:
+                pass
             if ACLManager.FindIfChild() == 0:
                 numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
                 vhost.deleteCoreConf(virtualHostName, numberOfWebsites)
@@ -1981,11 +1987,11 @@ local_name %s {
                 if child:
                     # Handle None values for child domains
                     admin_email = website.master.adminEmail if website.master.adminEmail else website.master.admin.email
-                    ApacheVhost.perHostVirtualConfOLS(completePathToConfigFile, admin_email)
+                    ApacheVhost.perHostVirtualConfOLS(completePathToConfigFile, admin_email, website.path)
                 else:
                     # Handle None values for main domains
                     admin_email = website.adminEmail if website.adminEmail else website.admin.email
-                    ApacheVhost.perHostVirtualConfOLS(completePathToConfigFile, admin_email)
+                    ApacheVhost.perHostVirtualConfOLS(completePathToConfigFile, admin_email, None)
 
                 if child:
                     # Handle None values for child domains
@@ -2423,9 +2429,14 @@ def main():
         except:
             aliasDomain = 0
 
-        virtualHostUtilities.createDomain(args.masterDomain, args.virtualHostName, args.phpVersion, args.path,
-                                          int(args.ssl), dkimCheck, openBasedir, args.websiteOwner, apache,
-                                          tempStatusPath, 1, aliasDomain)
+        ret = virtualHostUtilities.createDomain(args.masterDomain, args.virtualHostName, args.phpVersion, args.path,
+                                                int(args.ssl), dkimCheck, openBasedir, args.websiteOwner, apache,
+                                                tempStatusPath, 1, aliasDomain)
+        if ret[0] == 1:
+            print("1," + str(ret[1]))
+            sys.exit(0)
+        print("0," + str(ret[1]))
+        sys.exit(1)
     elif args.function == "issueSSL":
         virtualHostUtilities.issueSSL(args.virtualHostName, args.path, args.administratorEmail)
     elif args.function == "issueSSLv2":
