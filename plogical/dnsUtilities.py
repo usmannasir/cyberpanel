@@ -326,7 +326,9 @@ class DNS:
                     #                  auth=1)
                     # record.save()
 
-                    DNS.createDNSRecord(zone, "_dmarc." + topLevelDomain, "TXT", "v=DMARC1; p=none;", 0, 3600)
+                    # Apex DMARC: do not auto-add p=none here — use one TXT at _dmarc.<apex> in Cloudflare/DNS
+                    # to avoid conflicting duplicate DMARC records (invalid per RFC 7489).
+                    # DNS.createDNSRecord(zone, "_dmarc." + topLevelDomain, "TXT", "v=DMARC1; p=none;", 0, 3600)
 
                     # record = Records(domainOwner=zone,
                     #                  domain_id=zone.id,
@@ -489,7 +491,9 @@ class DNS:
                     #                  auth=1)
                     # record.save()
 
-                    DNS.createDNSRecord(zone, "_dmarc." + topLevelDomain, "TXT", "v=DMARC1; p=none;", 0, 3600)
+                    # Apex DMARC: do not auto-add p=none here — use one TXT at _dmarc.<apex> in Cloudflare/DNS
+                    # to avoid conflicting duplicate DMARC records (invalid per RFC 7489).
+                    # DNS.createDNSRecord(zone, "_dmarc." + topLevelDomain, "TXT", "v=DMARC1; p=none;", 0, 3600)
 
                     # record = Records(domainOwner=zone,
                     #                  domain_id=zone.id,
@@ -585,7 +589,9 @@ class DNS:
                 #                  auth=1)
                 # record.save()
 
-                DNS.createDNSRecord(zone, "_dmarc." + actualSubDomain, "TXT", "v=DMARC1; p=none;", 0, 3600)
+                # Do not auto-create subdomain _dmarc: one organizational policy at _dmarc.<apex> is enough for
+                # typical setups; avoids dozens of p=none records and Cloudflare clutter.
+                # DNS.createDNSRecord(zone, "_dmarc." + actualSubDomain, "TXT", "v=DMARC1; p=none;", 0, 3600)
 
                 # record = Records(domainOwner=zone,
                 #                  domain_id=zone.id,
