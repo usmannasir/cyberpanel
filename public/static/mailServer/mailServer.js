@@ -1345,3 +1345,488 @@ app.controller('listEmails', function ($scope, $http) {
 
 
 /* Java script code for List Emails Ends here */
+
+/* Java script code for EmailLimitsNew */
+app.controller('EmailLimitsNew', function ($scope, $http) {
+
+    $scope.creationBox = true;
+    $scope.emailDetails = true;
+    $scope.forwardLoading = false;
+    $scope.forwardError = true;
+    $scope.forwardSuccess = true;
+    $scope.couldNotConnect = true;
+    $scope.notifyBox = true;
+
+    $scope.showEmailDetails = function () {
+
+        $scope.creationBox = true;
+        $scope.emailDetails = true;
+        $scope.forwardLoading = true;
+        $scope.forwardError = true;
+        $scope.forwardSuccess = true;
+        $scope.couldNotConnect = true;
+        $scope.notifyBox = true;
+
+        var url = "/email/getEmailsForDomain";
+
+        var data = {
+            domain: $scope.emailDomain
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+
+            if (response.data.fetchStatus === 1) {
+
+                $scope.emails = JSON.parse(response.data.data);
+
+                $scope.creationBox = true;
+                $scope.emailDetails = false;
+                $scope.forwardLoading = false;
+                $scope.forwardError = true;
+                $scope.forwardSuccess = true;
+                $scope.couldNotConnect = true;
+                $scope.notifyBox = false;
+
+            } else {
+                $scope.creationBox = true;
+                $scope.emailDetails = true;
+                $scope.forwardLoading = false;
+                $scope.forwardError = false;
+                $scope.forwardSuccess = true;
+                $scope.couldNotConnect = true;
+                $scope.notifyBox = false;
+
+                $scope.errorMessage = response.data.error_message;
+            }
+        }
+
+        function cantLoadInitialDatas() {
+            $scope.creationBox = true;
+            $scope.emailDetails = true;
+            $scope.forwardLoading = false;
+            $scope.forwardError = true;
+            $scope.forwardSuccess = true;
+            $scope.couldNotConnect = false;
+            $scope.notifyBox = false;
+        }
+    };
+
+    $scope.selectForwardingEmail = function () {
+        $scope.creationBox = false;
+        $scope.emailDetails = false;
+        $scope.forwardLoading = false;
+        $scope.forwardError = true;
+        $scope.forwardSuccess = true;
+        $scope.couldNotConnect = true;
+        $scope.notifyBox = true;
+    };
+
+    $scope.fetchCurrentLimits = function () {
+        var url = "/email/fetchCurrentLimits";
+        var data = {
+            emailAddress: $scope.emailAddress
+        };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(function (response) {
+            if (response.data.fetchStatus === 1) {
+                $scope.currentEmailLimit = response.data.emailLimit || 3072;
+                $scope.currentEmailAllowed = response.data.allowedPCT || 100;
+                $scope.newEmailLimit = $scope.currentEmailLimit;
+                $scope.newEmailAllowed = $scope.currentEmailAllowed;
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message || 'Could not fetch current limits.',
+                    type: 'error'
+                });
+            }
+        }, function () {
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server.',
+                type: 'error'
+            });
+        });
+    };
+
+    $scope.saveEmailLimits = function () {
+        var url = "/email/saveEmailLimits";
+        var data = {
+            emailAddress: $scope.emailAddress,
+            emailLimit: $scope.newEmailLimit,
+            allowedPCT: $scope.newEmailAllowed
+        };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(function (response) {
+            if (response.data.saveStatus === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: response.data.message || 'Limits saved successfully.',
+                    type: 'success'
+                });
+                $scope.showEmailDetails();
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message || 'Failed to save limits.',
+                    type: 'error'
+                });
+            }
+        }, function () {
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server.',
+                type: 'error'
+            });
+        });
+    };
+});
+/* Java script for EmailLimitsNew */
+
+/* Catch-All Email Controller */
+app.controller('catchAllEmail', function ($scope, $http) {
+    $scope.configBox = true;
+    $scope.loading = false;
+    $scope.errorBox = true;
+    $scope.successBox = true;
+    $scope.couldNotConnect = true;
+    $scope.notifyBox = true;
+    $scope.currentConfigured = false;
+    $scope.enabled = true;
+
+    $scope.fetchConfig = function () {
+        if (!$scope.selectedDomain) {
+            $scope.configBox = true;
+            return;
+        }
+        $scope.loading = true;
+        $scope.configBox = true;
+        $scope.notifyBox = true;
+
+        var url = "/email/fetchCatchAllConfig";
+        var data = { domain: $scope.selectedDomain };
+        var config = { headers: { 'X-CSRFToken': getCookie('csrftoken') } };
+
+        $http.post(url, data, config).then(function (response) {
+            $scope.loading = false;
+            if (response.data.fetchStatus === 1) {
+                $scope.configBox = false;
+                if (response.data.configured === 1) {
+                    $scope.currentConfigured = true;
+                    $scope.currentDestination = response.data.destination;
+                    $scope.currentEnabled = response.data.enabled;
+                    $scope.destination = response.data.destination;
+                    $scope.enabled = response.data.enabled;
+                } else {
+                    $scope.currentConfigured = false;
+                    $scope.destination = '';
+                    $scope.enabled = true;
+                }
+            } else {
+                $scope.errorBox = false;
+                $scope.notifyBox = false;
+                $scope.errorMessage = response.data.error_message;
+            }
+        }, function () {
+            $scope.loading = false;
+            $scope.couldNotConnect = false;
+            $scope.notifyBox = false;
+        });
+    };
+
+    $scope.saveConfig = function () {
+        if (!$scope.destination) {
+            $scope.errorBox = false;
+            $scope.notifyBox = false;
+            $scope.errorMessage = 'Please enter a destination email address';
+            return;
+        }
+
+        $scope.loading = true;
+        $scope.notifyBox = true;
+
+        var url = "/email/saveCatchAllConfig";
+        var data = {
+            domain: $scope.selectedDomain,
+            destination: $scope.destination,
+            enabled: $scope.enabled
+        };
+        var config = { headers: { 'X-CSRFToken': getCookie('csrftoken') } };
+
+        $http.post(url, data, config).then(function (response) {
+            $scope.loading = false;
+            if (response.data.saveStatus === 1) {
+                $scope.successBox = false;
+                $scope.notifyBox = false;
+                $scope.successMessage = response.data.message;
+                $scope.currentConfigured = true;
+                $scope.currentDestination = $scope.destination;
+                $scope.currentEnabled = $scope.enabled;
+            } else {
+                $scope.errorBox = false;
+                $scope.notifyBox = false;
+                $scope.errorMessage = response.data.error_message;
+            }
+        }, function () {
+            $scope.loading = false;
+            $scope.couldNotConnect = false;
+            $scope.notifyBox = false;
+        });
+    };
+
+    $scope.deleteConfig = function () {
+        if (!confirm('Are you sure you want to remove the catch-all configuration?')) {
+            return;
+        }
+
+        $scope.loading = true;
+        $scope.notifyBox = true;
+
+        var url = "/email/deleteCatchAllConfig";
+        var data = { domain: $scope.selectedDomain };
+        var config = { headers: { 'X-CSRFToken': getCookie('csrftoken') } };
+
+        $http.post(url, data, config).then(function (response) {
+            $scope.loading = false;
+            if (response.data.deleteStatus === 1) {
+                $scope.successBox = false;
+                $scope.notifyBox = false;
+                $scope.successMessage = response.data.message;
+                $scope.currentConfigured = false;
+                $scope.destination = '';
+                $scope.enabled = true;
+            } else {
+                $scope.errorBox = false;
+                $scope.notifyBox = false;
+                $scope.errorMessage = response.data.error_message;
+            }
+        }, function () {
+            $scope.loading = false;
+            $scope.couldNotConnect = false;
+            $scope.notifyBox = false;
+        });
+    };
+});
+
+/* Plus-Addressing Controller */
+app.controller('plusAddressing', function ($scope, $http) {
+    $scope.loading = true;
+    $scope.globalEnabled = false;
+    $scope.delimiter = '+';
+    $scope.domainEnabled = true;
+    $scope.globalNotifyBox = true;
+    $scope.globalErrorBox = true;
+    $scope.globalSuccessBox = true;
+    $scope.domainNotifyBox = true;
+    $scope.domainErrorBox = true;
+    $scope.domainSuccessBox = true;
+
+    var url = "/email/fetchPlusAddressingConfig";
+    var config = { headers: { 'X-CSRFToken': getCookie('csrftoken') } };
+
+    $http.post(url, {}, config).then(function (response) {
+        $scope.loading = false;
+        if (response.data.fetchStatus === 1) {
+            $scope.globalEnabled = response.data.globalEnabled;
+            $scope.delimiter = response.data.delimiter || '+';
+        }
+    }, function () {
+        $scope.loading = false;
+    });
+
+    $scope.saveGlobalSettings = function () {
+        $scope.loading = true;
+        $scope.globalNotifyBox = true;
+
+        var saveUrl = "/email/savePlusAddressingGlobal";
+        var data = {
+            enabled: $scope.globalEnabled,
+            delimiter: $scope.delimiter
+        };
+        var saveConfig = { headers: { 'X-CSRFToken': getCookie('csrftoken') } };
+
+        $http.post(saveUrl, data, saveConfig).then(function (response) {
+            $scope.loading = false;
+            if (response.data.saveStatus === 1) {
+                $scope.globalSuccessBox = false;
+                $scope.globalNotifyBox = false;
+                $scope.globalSuccessMessage = response.data.message;
+            } else {
+                $scope.globalErrorBox = false;
+                $scope.globalNotifyBox = false;
+                $scope.globalErrorMessage = response.data.error_message;
+            }
+        }, function () {
+            $scope.loading = false;
+            $scope.globalErrorBox = false;
+            $scope.globalNotifyBox = false;
+            $scope.globalErrorMessage = 'Could not connect to server';
+        });
+    };
+
+    $scope.saveDomainSettings = function () {
+        if (!$scope.selectedDomain) {
+            return;
+        }
+
+        $scope.domainNotifyBox = true;
+
+        var saveDomainUrl = "/email/savePlusAddressingDomain";
+        var data = {
+            domain: $scope.selectedDomain,
+            enabled: $scope.domainEnabled
+        };
+        var saveDomainConfig = { headers: { 'X-CSRFToken': getCookie('csrftoken') } };
+
+        $http.post(saveDomainUrl, data, saveDomainConfig).then(function (response) {
+            if (response.data.saveStatus === 1) {
+                $scope.domainSuccessBox = false;
+                $scope.domainNotifyBox = false;
+                $scope.domainSuccessMessage = response.data.message;
+            } else {
+                $scope.domainErrorBox = false;
+                $scope.domainNotifyBox = false;
+                $scope.domainErrorMessage = response.data.error_message;
+            }
+        }, function () {
+            $scope.domainErrorBox = false;
+            $scope.domainNotifyBox = false;
+            $scope.domainErrorMessage = 'Could not connect to server';
+        });
+    };
+});
+
+/* Pattern Forwarding Controller */
+app.controller('patternForwarding', function ($scope, $http) {
+    $scope.configBox = true;
+    $scope.loading = false;
+    $scope.errorBox = true;
+    $scope.successBox = true;
+    $scope.couldNotConnect = true;
+    $scope.notifyBox = true;
+    $scope.rules = [];
+    $scope.patternType = 'wildcard';
+    $scope.priority = 100;
+
+    $scope.fetchRules = function () {
+        if (!$scope.selectedDomain) {
+            $scope.configBox = true;
+            return;
+        }
+
+        $scope.loading = true;
+        $scope.configBox = true;
+        $scope.notifyBox = true;
+
+        var url = "/email/fetchPatternRules";
+        var data = { domain: $scope.selectedDomain };
+        var config = { headers: { 'X-CSRFToken': getCookie('csrftoken') } };
+
+        $http.post(url, data, config).then(function (response) {
+            $scope.loading = false;
+            if (response.data.fetchStatus === 1) {
+                $scope.configBox = false;
+                $scope.rules = response.data.rules;
+            } else {
+                $scope.errorBox = false;
+                $scope.notifyBox = false;
+                $scope.errorMessage = response.data.error_message;
+            }
+        }, function () {
+            $scope.loading = false;
+            $scope.couldNotConnect = false;
+            $scope.notifyBox = false;
+        });
+    };
+
+    $scope.createRule = function () {
+        if (!$scope.pattern || !$scope.destination) {
+            $scope.errorBox = false;
+            $scope.notifyBox = false;
+            $scope.errorMessage = 'Please enter both pattern and destination';
+            return;
+        }
+
+        $scope.loading = true;
+        $scope.notifyBox = true;
+
+        var createUrl = "/email/createPatternRule";
+        var data = {
+            domain: $scope.selectedDomain,
+            pattern: $scope.pattern,
+            destination: $scope.destination,
+            pattern_type: $scope.patternType,
+            priority: $scope.priority
+        };
+        var createConfig = { headers: { 'X-CSRFToken': getCookie('csrftoken') } };
+
+        $http.post(createUrl, data, createConfig).then(function (response) {
+            $scope.loading = false;
+            if (response.data.createStatus === 1) {
+                $scope.successBox = false;
+                $scope.notifyBox = false;
+                $scope.successMessage = response.data.message;
+                $scope.pattern = '';
+                $scope.destination = '';
+                $scope.fetchRules();
+            } else {
+                $scope.errorBox = false;
+                $scope.notifyBox = false;
+                $scope.errorMessage = response.data.error_message;
+            }
+        }, function () {
+            $scope.loading = false;
+            $scope.couldNotConnect = false;
+            $scope.notifyBox = false;
+        });
+    };
+
+    $scope.deleteRule = function (ruleId) {
+        if (!confirm('Are you sure you want to delete this forwarding rule?')) {
+            return;
+        }
+
+        $scope.loading = true;
+        $scope.notifyBox = true;
+
+        var deleteUrl = "/email/deletePatternRule";
+        var data = { ruleId: ruleId };
+        var deleteConfig = { headers: { 'X-CSRFToken': getCookie('csrftoken') } };
+
+        $http.post(deleteUrl, data, deleteConfig).then(function (response) {
+            $scope.loading = false;
+            if (response.data.deleteStatus === 1) {
+                $scope.successBox = false;
+                $scope.notifyBox = false;
+                $scope.successMessage = response.data.message;
+                $scope.fetchRules();
+            } else {
+                $scope.errorBox = false;
+                $scope.notifyBox = false;
+                $scope.errorMessage = response.data.error_message;
+            }
+        }, function () {
+            $scope.loading = false;
+            $scope.couldNotConnect = false;
+            $scope.notifyBox = false;
+        });
+    };
+});
