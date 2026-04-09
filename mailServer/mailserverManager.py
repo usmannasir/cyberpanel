@@ -12,6 +12,7 @@ sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 from django.http import HttpResponse
+from django.db import connection
 try:
     from .models import Domains,EUsers
     from loginSystem.views import loadLoginPage
@@ -44,6 +45,57 @@ import bcrypt
 import threading as multi
 import argparse
 
+
+
+
+def _ensure_email_filter_tables():
+    """Create catch-all/plus/pattern email feature tables if missing."""
+    create_statements = [
+        """CREATE TABLE IF NOT EXISTS `e_catchall` (
+  `domain_id` varchar(50) NOT NULL,
+  `destination` varchar(255) NOT NULL,
+  `enabled` tinyint(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`domain_id`),
+  KEY `idx_e_catchall_domain_id` (`domain_id`)
+) ENGINE=InnoDB""",
+        """CREATE TABLE IF NOT EXISTS `e_server_settings` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `plus_addressing_enabled` tinyint(1) NOT NULL DEFAULT 0,
+  `plus_addressing_delimiter` varchar(1) NOT NULL DEFAULT '+',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB""",
+        """CREATE TABLE IF NOT EXISTS `e_plus_override` (
+  `domain_id` varchar(50) NOT NULL,
+  `enabled` tinyint(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`domain_id`),
+  KEY `idx_e_plus_override_domain_id` (`domain_id`)
+) ENGINE=InnoDB""",
+        """CREATE TABLE IF NOT EXISTS `e_pattern_forwarding` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `domain_id` varchar(50) NOT NULL,
+  `pattern` varchar(255) NOT NULL,
+  `destination` varchar(255) NOT NULL,
+  `pattern_type` varchar(20) NOT NULL DEFAULT 'wildcard',
+  `priority` int(11) NOT NULL DEFAULT 100,
+  `enabled` tinyint(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id`),
+  KEY `idx_e_pattern_forwarding_domain_id` (`domain_id`)
+) ENGINE=InnoDB"""
+    ]
+
+    try:
+        with connection.cursor() as cursor:
+            for query in create_statements:
+                cursor.execute(query)
+            cursor.execute(
+                """INSERT INTO `e_server_settings` (`id`, `plus_addressing_enabled`, `plus_addressing_delimiter`)
+                   SELECT 1, 0, '+'
+                   WHERE NOT EXISTS (SELECT 1 FROM `e_server_settings` WHERE `id` = 1)"""
+            )
+        return True, ''
+    except BaseException as msg:
+        logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [_ensure_email_filter_tables]')
+        return False, 'Email feature tables are missing and could not be created automatically. Please run CyberPanel upgrade or apply DB migration.'
 
 def _get_email_limits_controller_js():
     """Return EmailLimitsNew controller JS: from file or hardcoded fallback so it always works."""
@@ -2084,6 +2136,12 @@ protocol sieve {
             if ACLManager.currentContextPermission(currentACL, 'emailForwarding') == 0:
                 return ACLManager.loadErrorJson('fetchStatus', 0)
 
+            ok, schemaErr = _ensure_email_filter_tables()
+            if not ok:
+                data_ret = {'status': 0, 'fetchStatus': 0, 'error_message': schemaErr}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
             data = json.loads(self.request.body)
             domain = data['domain']
 
@@ -2131,6 +2189,12 @@ protocol sieve {
 
             if ACLManager.currentContextPermission(currentACL, 'emailForwarding') == 0:
                 return ACLManager.loadErrorJson('saveStatus', 0)
+
+            ok, schemaErr = _ensure_email_filter_tables()
+            if not ok:
+                data_ret = {'status': 0, 'saveStatus': 0, 'error_message': schemaErr}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
             data = json.loads(self.request.body)
             domain = data['domain']
@@ -2189,6 +2253,12 @@ protocol sieve {
 
             if ACLManager.currentContextPermission(currentACL, 'emailForwarding') == 0:
                 return ACLManager.loadErrorJson('deleteStatus', 0)
+
+            ok, schemaErr = _ensure_email_filter_tables()
+            if not ok:
+                data_ret = {'status': 0, 'deleteStatus': 0, 'error_message': schemaErr}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
             data = json.loads(self.request.body)
             domain = data['domain']
