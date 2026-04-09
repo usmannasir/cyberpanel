@@ -836,7 +836,16 @@ return custom_keywords
         from manageServices.serviceManager import ServiceManager
         try:
             ####Frist install redis
+            with open(mailUtilities.RspamdInstallLogPath, 'a') as lf:
+                lf.write(
+                    'Running InstallRedis() — this often takes 5–20 minutes (system packages). '
+                    'Progress from that step is not streamed here; the log continues after Redis finishes.\n'
+                )
+                lf.flush()
             ServiceManager.InstallRedis()
+            with open(mailUtilities.RspamdInstallLogPath, 'a') as lf:
+                lf.write('Redis step finished. Adding Rspamd repository and installing packages...\n')
+                lf.flush()
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
 
@@ -1115,10 +1124,11 @@ LogFile /var/log/clamav/clamav.log
 
             return 1
         except BaseException as msg:
-            writeToFile = open(mailUtilities.RspamdInstallLogPath, 'a')
-            writeToFile.writelines("Can not be installed.[404]\n")
-            writeToFile.close()
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installRspamd]")
+            err = str(msg)
+            with open(mailUtilities.RspamdInstallLogPath, 'a') as writeToFile:
+                writeToFile.write('Install failed: %s\n' % err.replace('\r', ' ').replace('\n', ' ')[:2000])
+                writeToFile.write('Can not be installed.[404]\n')
+            logging.CyberCPLogFileWriter.writeToFile(err + "[installRspamd]")
 
     @staticmethod
     def uninstallRspamd(install, rspamd):
