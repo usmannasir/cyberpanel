@@ -2878,8 +2878,8 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
   `destination` varchar(255) NOT NULL,
   `enabled` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`domain_id`),
-  CONSTRAINT `fk_catchall_domain` FOREIGN KEY (`domain_id`) REFERENCES `e_domains` (`domain`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"""
+  KEY `idx_e_catchall_domain_id` (`domain_id`)
+) ENGINE=InnoDB"""
             try:
                 cursor.execute(query)
             except:
@@ -2890,7 +2890,7 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
   `plus_addressing_enabled` tinyint(1) NOT NULL DEFAULT 0,
   `plus_addressing_delimiter` varchar(1) NOT NULL DEFAULT '+',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"""
+) ENGINE=InnoDB"""
             try:
                 cursor.execute(query)
             except:
@@ -2900,8 +2900,8 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
   `domain_id` varchar(50) NOT NULL,
   `enabled` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`domain_id`),
-  CONSTRAINT `fk_plus_override_domain` FOREIGN KEY (`domain_id`) REFERENCES `e_domains` (`domain`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"""
+  KEY `idx_e_plus_override_domain_id` (`domain_id`)
+) ENGINE=InnoDB"""
             try:
                 cursor.execute(query)
             except:
@@ -2916,11 +2916,18 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
   `priority` int(11) NOT NULL DEFAULT 100,
   `enabled` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`),
-  KEY `fk_pattern_domain` (`domain_id`),
-  CONSTRAINT `fk_pattern_domain` FOREIGN KEY (`domain_id`) REFERENCES `e_domains` (`domain`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"""
+  KEY `idx_e_pattern_forwarding_domain_id` (`domain_id`)
+) ENGINE=InnoDB"""
             try:
                 cursor.execute(query)
+            except:
+                pass
+
+            # Seed singleton row for global email settings if missing.
+            try:
+                cursor.execute("""INSERT INTO `e_server_settings` (`id`, `plus_addressing_enabled`, `plus_addressing_delimiter`)
+SELECT 1, 0, '+'
+WHERE NOT EXISTS (SELECT 1 FROM `e_server_settings` WHERE `id` = 1)""")
             except:
                 pass
 
