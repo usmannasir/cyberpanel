@@ -3,6 +3,8 @@ from loginSystem.models import Administrator
 
 
 class CyberMailAccount(models.Model):
+    # int(11) PK/FK to match legacy loginSystem_administrator.id (not DEFAULT_AUTO_FIELD BigAutoField)
+    id = models.AutoField(primary_key=True)
     admin = models.OneToOneField(Administrator, on_delete=models.CASCADE, related_name='cybermail_account')
     platform_account_id = models.IntegerField(null=True)
     api_key = models.CharField(max_length=255, blank=True)
@@ -27,6 +29,7 @@ class CyberMailAccount(models.Model):
 
 
 class CyberMailDomain(models.Model):
+    id = models.AutoField(primary_key=True)
     account = models.ForeignKey(CyberMailAccount, on_delete=models.CASCADE, related_name='domains')
     domain = models.CharField(max_length=255)
     platform_domain_id = models.IntegerField(null=True)
