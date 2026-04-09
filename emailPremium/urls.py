@@ -33,7 +33,8 @@ urlpatterns = [
     path('installMailScanner', views.installMailScanner, name='installMailScanner'),
     path('installStatusMailScanner', views.installStatusMailScanner, name='installStatusMailScanner'),
 
-    # Rspamd
+    # Rspamd (proxied controller UI — must stay above catch-all domain route)
+    re_path(r'^Rspamd/ui(?:/(?P<subpath>.*))?$', views.rspamd_ui_proxy, name='RspamdUI'),
     path('Rspamd', views.Rspamd, name='Rspamd'),
     path('installRspamd', views.installRspamd, name='installRspamd'),
     path('installStatusRspamd', views.installStatusRspamd, name='installStatusRspamd'),

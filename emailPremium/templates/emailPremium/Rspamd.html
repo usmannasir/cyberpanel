@@ -89,6 +89,15 @@
         flex-wrap: wrap;
         margin-bottom: 25px;
     }
+
+    /* Anchor styled as button (Open Web UI link) — same visual weight as <button class="action-btn"> */
+    .action-buttons a.action-btn {
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+        box-sizing: border-box;
+        vertical-align: middle;
+    }
     
     .action-btn {
         background: #5856d6;
@@ -636,7 +645,11 @@
         <div class="content-section">
             <h2 class="section-title">{% trans "Rspamd Management" %}</h2>
             <div class="action-buttons">
-                <button type="button" data-toggle="modal" data-target="#ViewRspamdlog" ng-click="FetchRspamdLog()" class="action-btn primary">
+                <a href="{{ rspamd_ui_url }}" target="_blank" rel="noopener noreferrer" class="action-btn primary">
+                    <i class="fas fa-window-maximize"></i>
+                    {% trans "Open Rspamd Web UI" %}
+                </a>
+                <button type="button" data-toggle="modal" data-target="#ViewRspamdlog" ng-click="FetchRspamdLog()" class="action-btn secondary">
                     <i class="fas fa-file-alt"></i>
                     {% trans "View Rspamd Logs" %}
                 </button>
@@ -649,6 +662,23 @@
                     {% trans "Uninstall Rspamd" %}
                 </button>
             </div>
+            <p style="color: var(--text-secondary, #64748b); font-size: 14px; margin-top: 16px; line-height: 1.6;">
+                {% trans "Opens the official Rspamd web interface in a new tab (path /emailPremium/Rspamd/ui/ — proxied through CyberPanel, admin session required)." %}
+            </p>
+        </div>
+
+        <div class="content-section">
+            <h2 class="section-title">{% trans "Alternative: SSH tunnel" %}</h2>
+            <p style="color: var(--text-secondary, #64748b); font-size: 14px; line-height: 1.6;">
+                {% trans "If the proxied UI misbehaves, connect to port 11334 on the server via SSH and use your local browser." %}
+            </p>
+            <pre style="background: var(--bg-secondary,#f8f9ff); padding: 12px; border-radius: 8px; font-size: 13px; overflow-x: auto; border: 1px solid var(--border-light, #e8e9ff);">ssh -N -L 11334:127.0.0.1:11334 root@{{ ipAddress }}</pre>
+            <p style="margin-top: 12px;">
+                <a href="http://127.0.0.1:11334/" target="_blank" rel="noopener noreferrer" class="action-btn secondary">
+                    <i class="fas fa-external-link-alt"></i>
+                    {% trans "Open Rspamd UI (when tunnel is active)" %}
+                </a>
+            </p>
         </div>
 
         <!-- ClamAV Configuration -->
