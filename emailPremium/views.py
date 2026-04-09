@@ -3,7 +3,7 @@ import os
 import time
 
 from django.shortcuts import redirect
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 
 from loginSystem.models import Administrator
 from mailServer.models import Domains, EUsers
@@ -1233,32 +1233,28 @@ def installStatusMailScanner(request):
 ###Rspamd
 
 def Rspamd(request):
-    url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
-    data = {
-        "name": "email-debugger",
-        "IP": ACLManager.GetServerIP()
-    }
+    """Rspamd UI — allow for any logged-in admin (do not require cloud addon permission)."""
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+        if currentACL['admin'] != 1:
+            return ACLManager.loadError()
+    except KeyError:
+        return redirect(loadLoginPage)
 
-    import requests
-    response = requests.post(url, data=json.dumps(data))
-    Status = response.json()['status']
+    checkIfRspamdInstalled = 0
 
-    if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
-        checkIfRspamdInstalled = 0
+    ipFile = "/etc/cyberpanel/machineIP"
+    f = open(ipFile)
+    ipData = f.read()
+    ipAddress = ipData.split('\n', 1)[0]
 
-        ipFile = "/etc/cyberpanel/machineIP"
-        f = open(ipFile)
-        ipData = f.read()
-        ipAddress = ipData.split('\n', 1)[0]
+    if mailUtilities.checkIfRspamdInstalled() == 1:
+        checkIfRspamdInstalled = 1
 
-        if mailUtilities.checkIfRspamdInstalled() == 1:
-            checkIfRspamdInstalled = 1
-
-        proc = httpProc(request, 'emailPremium/Rspamd.html',
-                        {'checkIfRspamdInstalled': checkIfRspamdInstalled, 'ipAddress': ipAddress}, 'admin')
-        return proc.render()
-    else:
-        return redirect("https://cyberpanel.net/cyberpanel-addons")
+    proc = httpProc(request, 'emailPremium/Rspamd.html',
+                    {'checkIfRspamdInstalled': checkIfRspamdInstalled, 'ipAddress': ipAddress}, 'admin')
+    return proc.render()
 
 def installRspamd(request):
     try:
@@ -1268,35 +1264,20 @@ def installRspamd(request):
         if currentACL['admin'] == 1:
             pass
         else:
-            return ACLManager.loadErrorJson()
+            return JsonResponse({'status': 0, 'error_message': 'Admin access required.'})
 
-        url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
-        data = {
-            "name": "email-debugger",
-            "IP": ACLManager.GetServerIP()
-        }
-
-        import requests
-        response = requests.post(url, data=json.dumps(data))
-        Status = response.json()['status']
-
-        if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
-            try:
-
-                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
-                execPath = execPath + " installRspamd"
-                ProcessUtilities.popenExecutioner(execPath)
-
-                final_json = json.dumps({'status': 1, 'error_message': "None"})
-                return HttpResponse(final_json)
-            except BaseException as msg:
-                final_dic = {'status': 0, 'error_message': str(msg)}
-                final_json = json.dumps(final_dic)
-                return HttpResponse(final_json)
+        try:
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+            execPath = execPath + " installRspamd"
+            ProcessUtilities.popenExecutioner(execPath)
+            return JsonResponse({'status': 1, 'error_message': 'None'})
+        except BaseException as msg:
+            return JsonResponse({'status': 0, 'error_message': str(msg)})
     except KeyError:
-        final_dic = {'status': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
-        final_json = json.dumps(final_dic)
-        return HttpResponse(final_json)
+        return JsonResponse({
+            'status': 0,
+            'error_message': 'Not Logged In, please refresh the page or login again.',
+        })
 
 def installStatusRspamd(request):
     try:
@@ -1310,8 +1291,15 @@ def installStatusRspamd(request):
         try:
             if request.method == 'POST':
 
-                command = "sudo cat " + mailUtilities.RspamdInstallLogPath
-                installStatus = ProcessUtilities.outputExecutioner(command)
+                if not os.path.isfile(mailUtilities.RspamdInstallLogPath):
+                    installStatus = (
+                        'Waiting for installation to start... '
+                        '(Progress file: /var/log/cyberpanel/rspamd-install.log — if this persists, '
+                        'click Install again or run as root: tail -f /var/log/cyberpanel/rspamd-install.log)\n'
+                    )
+                else:
+                    command = "sudo cat " + mailUtilities.RspamdInstallLogPath
+                    installStatus = ProcessUtilities.outputExecutioner(command)
 
                 if installStatus.find("[200]") > -1:
 
@@ -1365,19 +1353,8 @@ def fetchRspamdSettings(request):
         else:
             return ACLManager.loadErrorJson('fetchStatus', 0)
 
-        url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
-        data = {
-            "name": "email-debugger",
-            "IP": ACLManager.GetServerIP()
-        }
-
-        import requests
-        response = requests.post(url, data=json.dumps(data))
-        Status = response.json()['status']
-
-        if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
-            try:
-                if request.method == 'POST':
+        try:
+            if request.method == 'POST':
 
                     enabled = True
                     action = ''
@@ -1577,10 +1554,10 @@ def fetchRspamdSettings(request):
 
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
-            except BaseException as msg:
-                final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
-                final_json = json.dumps(final_dic)
-                return HttpResponse(final_json)
+        except BaseException as msg:
+            final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -1747,21 +1724,17 @@ def unistallRspamd(request):
             ProcessUtilities.popenExecutioner(execPath)
 
 
-            final_json = json.dumps({'status': 1, 'error_message': "None"})
-            return HttpResponse(final_json)
+            return JsonResponse({'status': 1, 'error_message': 'None'})
         except BaseException as msg:
-            final_dic = {'status': 0, 'error_message': str(msg)}
-            final_json = json.dumps(final_dic)
-            return HttpResponse(final_json)
+            return JsonResponse({'status': 0, 'error_message': str(msg)})
 
 
     except KeyError:
 
-        final_dic = {'status': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
-
-        final_json = json.dumps(final_dic)
-
-        return HttpResponse(final_json)
+        return JsonResponse({
+            'status': 0,
+            'error_message': 'Not Logged In, please refresh the page or login again.',
+        })
 
 def uninstallStatusRspamd(request):
     try:
@@ -1775,8 +1748,14 @@ def uninstallStatusRspamd(request):
         try:
             if request.method == 'POST':
 
-                command = "sudo cat " + mailUtilities.RspamdUnInstallLogPath
-                installStatus = ProcessUtilities.outputExecutioner(command)
+                if not os.path.isfile(mailUtilities.RspamdUnInstallLogPath):
+                    installStatus = (
+                        'Waiting for uninstall to start... '
+                        '(Progress file: /var/log/cyberpanel/rspamd-uninstall.log)\n'
+                    )
+                else:
+                    command = "sudo cat " + mailUtilities.RspamdUnInstallLogPath
+                    installStatus = ProcessUtilities.outputExecutioner(command)
 
                 if installStatus.find("[200]") > -1:
 

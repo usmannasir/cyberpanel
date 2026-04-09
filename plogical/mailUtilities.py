@@ -1,12 +1,13 @@
 import json
-import os,sys
+import os, sys
 import time
 
+# CyberPanel Django app "dns" must win over PyPI "dns" (dnspython). append() leaves site-packages first.
+_cybercp_root = '/usr/local/CyberCP'
+if _cybercp_root not in sys.path:
+    sys.path.insert(0, _cybercp_root)
+
 from django.http import HttpResponse
-
-
-
-sys.path.append('/usr/local/CyberCP')
 import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 try:
@@ -37,8 +38,10 @@ class mailUtilities:
 
     installLogPath = "/home/cyberpanel/openDKIMInstallLog"
     spamassassinInstallLogPath = "/home/cyberpanel/spamassassinInstallLogPath"
-    RspamdInstallLogPath = "/home/cyberpanel/RspamdInstallLogPath"
-    RspamdUnInstallLogPath = "/home/cyberpanel/RspamdUnInstallLogPath"
+    # Use /var/log (not /home/cyberpanel mode 0700) so lscpd workers can always write install progress.
+    rspamdLogDir = "/var/log/cyberpanel"
+    RspamdInstallLogPath = "/var/log/cyberpanel/rspamd-install.log"
+    RspamdUnInstallLogPath = "/var/log/cyberpanel/rspamd-uninstall.log"
     cyberPanelHome = "/home/cyberpanel"
     mailScannerInstallLogPath = "/home/cyberpanel/mailScannerInstallLogPath"
     RSpamdLogPath = '/var/log/rspamd/rspamd.log'
@@ -822,12 +825,16 @@ return custom_keywords
 
     @staticmethod
     def installRspamd(install, rspamd):
+        # Progress file before ServiceManager import (import can fail; panel polls this path).
+        os.makedirs(mailUtilities.rspamdLogDir, mode=0o755, exist_ok=True)
+        if not os.path.isdir(mailUtilities.cyberPanelHome):
+            os.makedirs(mailUtilities.cyberPanelHome, mode=0o750, exist_ok=True)
+        with open(mailUtilities.RspamdInstallLogPath, 'w') as lf:
+            lf.write('Starting Rspamd installation (preparing Redis and packages)...\n')
+            lf.flush()
+
         from manageServices.serviceManager import ServiceManager
         try:
-            if os.path.exists(mailUtilities.RspamdInstallLogPath):
-                os.remove(mailUtilities.RspamdInstallLogPath)
-
-
             ####Frist install redis
             ServiceManager.InstallRedis()
 
@@ -862,16 +869,18 @@ return custom_keywords
                 command = 'rpm --import https://rspamd.com/rpm-stable/gpg.key'
                 ProcessUtilities.normalExecutioner(command, True)
 
-                command = 'yum update'
+                command = 'dnf update -y'
                 ProcessUtilities.normalExecutioner(command, True)
 
-                command = 'sudo yum install rspamd clamav clamd clamav-update -y'
+                command = 'sudo dnf install -y rspamd clamav clamd clamav-update'
             else:
                 command = 'DEBIAN_FRONTEND=noninteractive apt-get install rspamd clamav clamav-daemon -y'
 
 
-            with open(mailUtilities.RspamdInstallLogPath, 'w') as f:
-                res = subprocess.call(command, stdout=f, shell=True)
+            with open(mailUtilities.RspamdInstallLogPath, 'a') as f:
+                f.write('\n--- Package install ---\n')
+                f.flush()
+                res = subprocess.call(command, stdout=f, stderr=f, shell=True)
 
 
             ###### makefile
@@ -1119,6 +1128,16 @@ LogFile /var/log/clamav/clamav.log
             if os.path.exists(mailUtilities.RspamdUnInstallLogPath):
                 os.remove(mailUtilities.RspamdUnInstallLogPath)
 
+            try:
+                os.makedirs(mailUtilities.rspamdLogDir, mode=0o755, exist_ok=True)
+                if not os.path.isdir(mailUtilities.cyberPanelHome):
+                    os.makedirs(mailUtilities.cyberPanelHome, mode=0o750, exist_ok=True)
+                with open(mailUtilities.RspamdUnInstallLogPath, 'w') as lf:
+                    lf.write('Starting Rspamd removal...\n')
+                    lf.flush()
+            except BaseException as log_err:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    str(log_err) + ' [uninstallRspamd init log]')
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 command = 'sudo yum remove rspamd clamav clamav-daemon -y'
@@ -1129,7 +1148,7 @@ LogFile /var/log/clamav/clamav.log
 
 
 
-            with open(mailUtilities.RspamdUnInstallLogPath, 'w') as f:
+            with open(mailUtilities.RspamdUnInstallLogPath, 'a') as f:
                 res = subprocess.call(cmd, stdout=f)
             if res == 1:
                 writeToFile = open(mailUtilities.RspamdUnInstallLogPath, 'a')
