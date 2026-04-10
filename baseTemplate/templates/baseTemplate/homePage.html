@@ -1080,7 +1080,7 @@
             <div ng-if="!loadingSSHLogins && sshLogins.length > 0" class="pagination-controls" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 16px; padding: 12px 0; border-top: 1px solid #e8e9ff;">
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <span style="color: #64748b; font-size: 13px;">Show</span>
-                    <select ng-model="sshLoginsPerPage" ng-change="sshLoginsChangePerPage()" style="padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: white;">
+                    <select ng-model="$parent.sshLoginsPerPage" ng-change="sshLoginsChangePerPage()" style="padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: white;">
                         <option ng-value="10">10</option>
                         <option ng-value="20">20</option>
                         <option ng-value="50">50</option>
@@ -1098,7 +1098,7 @@
                         <i class="fas fa-chevron-right"></i>
                     </button>
                     <span style="color: #64748b; font-size: 13px; margin-left: 8px;">Go to</span>
-                    <input type="number" min="1" ng-model="sshLoginsGoToPage" ng-keydown="$event.keyCode === 13 && sshLoginsGoToPageNumber()" style="width: 72px; padding: 6px 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px;" />
+                    <input type="number" min="1" ng-model="$parent.sshLoginsGoToPage" ng-keydown="($event.which === 13 || $event.keyCode === 13) && sshLoginsGoToPageNumber()" style="width: 72px; padding: 6px 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px;" />
                     <button ng-click="sshLoginsGoToPageNumber()" style="padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;">Go</button>
                 </div>
             </div>
@@ -1307,7 +1307,7 @@
             <div ng-if="!loadingSSHLogs && sshLogs.length > 0" class="pagination-controls" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 16px; padding: 12px 0; border-top: 1px solid #e8e9ff;">
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <span style="color: #64748b; font-size: 13px;">Show</span>
-                    <select ng-model="sshLogsPerPage" ng-change="sshLogsChangePerPage()" style="padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: white;">
+                    <select ng-model="$parent.sshLogsPerPage" ng-change="sshLogsChangePerPage()" style="padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: white;">
                         <option ng-value="10">10</option>
                         <option ng-value="25">25</option>
                         <option ng-value="50">50</option>
@@ -1325,7 +1325,7 @@
                         <i class="fas fa-chevron-right"></i>
                     </button>
                     <span style="color: #64748b; font-size: 13px; margin-left: 8px;">Go to</span>
-                    <input type="number" min="1" ng-model="sshLogsGoToPage" ng-keydown="$event.keyCode === 13 && sshLogsGoToPageNumber()" style="width: 72px; padding: 6px 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px;" />
+                    <input type="number" min="1" ng-model="$parent.sshLogsGoToPage" ng-keydown="($event.which === 13 || $event.keyCode === 13) && sshLogsGoToPageNumber()" style="width: 72px; padding: 6px 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px;" />
                     <button ng-click="sshLogsGoToPageNumber()" style="padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;">Go</button>
                 </div>
             </div>
