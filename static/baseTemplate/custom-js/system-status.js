@@ -1004,16 +1004,8 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
     $scope.topProcesses = [];
     $scope.loadingTopProcesses = true;
     $scope.errorTopProcesses = '';
-    /** When true, automatic Top Process refresh is stopped (user can read the table). */
-    $scope.topProcessPaused = false;
-    /**
-     * @param {boolean} silent If true, refresh rows in place without clearing the table (no loading spinner).
-     */
-    $scope.refreshTopProcesses = function(silent) {
-        silent = !!silent;
-        if (!silent) {
-            $scope.loadingTopProcesses = true;
-        }
+    $scope.refreshTopProcesses = function() {
+        $scope.loadingTopProcesses = true;
         var h = { headers: { 'X-CSRFToken': (typeof getCookie === 'function') ? getCookie('csrftoken') : '' } };
         $http.get('/base/getTopProcesses', h).then(function (response) {
             $scope.loadingTopProcesses = false;
@@ -1022,12 +1014,9 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             } else {
                 $scope.topProcesses = [];
             }
-            $scope.errorTopProcesses = '';
         }, function (err) {
             $scope.loadingTopProcesses = false;
-            if (!silent) {
-                $scope.errorTopProcesses = 'Failed to load top processes.';
-            }
+            $scope.errorTopProcesses = 'Failed to load top processes.';
         });
     };
 
@@ -1035,7 +1024,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
     $scope.sshLogins = [];
     $scope.sshLoginsPaginated = [];
     $scope.sshLoginsCurrentPage = 1;
-    $scope.sshLoginsPerPage = 3;
+    $scope.sshLoginsPerPage = 10;
     $scope.sshLoginsGoToPage = 1;
     $scope.loadingSSHLogins = true;
     $scope.errorSSHLogins = '';
@@ -1065,10 +1054,8 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             console.log('updateSSHLoginsPaginated: No data, cleared paginated array');
             return;
         }
-        var per = parseInt($scope.sshLoginsPerPage, 10) || 3;
-        $scope.sshLoginsPerPage = per;
-        var start = ($scope.sshLoginsCurrentPage - 1) * per;
-        var end = start + per;
+        var start = ($scope.sshLoginsCurrentPage - 1) * $scope.sshLoginsPerPage;
+        var end = start + $scope.sshLoginsPerPage;
         $scope.sshLoginsPaginated = $scope.sshLogins.slice(start, end);
         console.log('updateSSHLoginsPaginated: start=', start, 'end=', end, 'total=', $scope.sshLogins.length, 'paginated=', $scope.sshLoginsPaginated.length);
     };
@@ -1096,12 +1083,6 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
         } else {
             $scope.sshLoginsGoToPage = $scope.sshLoginsCurrentPage;
         }
-    };
-    $scope.sshLoginsChangePerPage = function() {
-        $scope.sshLoginsPerPage = parseInt($scope.sshLoginsPerPage, 10) || 3;
-        $scope.sshLoginsCurrentPage = 1;
-        $scope.sshLoginsGoToPage = 1;
-        $scope.updateSSHLoginsPaginated();
     };
 
     $scope.refreshSSHLogins = function() {
@@ -1134,7 +1115,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
     $scope.sshLogs = [];
     $scope.sshLogsPaginated = [];
     $scope.sshLogsCurrentPage = 1;
-    $scope.sshLogsPerPage = 3;
+    $scope.sshLogsPerPage = 10;
     $scope.sshLogsGoToPage = 1;
     $scope.loadingSSHLogs = true;
     $scope.errorSSHLogs = '';
@@ -1166,10 +1147,8 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             console.log('updateSSHLogsPaginated: No data, cleared paginated array');
             return;
         }
-        var per = parseInt($scope.sshLogsPerPage, 10) || 3;
-        $scope.sshLogsPerPage = per;
-        var start = ($scope.sshLogsCurrentPage - 1) * per;
-        var end = start + per;
+        var start = ($scope.sshLogsCurrentPage - 1) * $scope.sshLogsPerPage;
+        var end = start + $scope.sshLogsPerPage;
         $scope.sshLogsPaginated = $scope.sshLogs.slice(start, end);
         console.log('updateSSHLogsPaginated: start=', start, 'end=', end, 'total=', $scope.sshLogs.length, 'paginated=', $scope.sshLogsPaginated.length);
     };
@@ -1197,12 +1176,6 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
         } else {
             $scope.sshLogsGoToPage = $scope.sshLogsCurrentPage;
         }
-    };
-    $scope.sshLogsChangePerPage = function() {
-        $scope.sshLogsPerPage = parseInt($scope.sshLogsPerPage, 10) || 3;
-        $scope.sshLogsCurrentPage = 1;
-        $scope.sshLogsGoToPage = 1;
-        $scope.updateSSHLogsPaginated();
     };
 
     $scope.refreshSSHLogs = function() {
@@ -1688,47 +1661,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
     // For rate calculation
     var lastRx = null, lastTx = null, lastDiskRead = null, lastDiskWrite = null, lastCPU = null;
     var lastCPUTimes = null;
-    var pollInterval = 2000; // ms (charts / dashboard stats)
-    /** Top Process list: slower refresh, silent updates (no table flash). */
-    var topProcessPollIntervalMs = 10000;
-    var topProcessPollPromise = null;
-
-    function cancelTopProcessPoll() {
-        if (topProcessPollPromise) {
-            $timeout.cancel(topProcessPollPromise);
-            topProcessPollPromise = null;
-        }
-    }
-
-    function scheduleTopProcessPoll() {
-        cancelTopProcessPoll();
-        function tick() {
-            if ($scope.topProcessPaused) {
-                return;
-            }
-            topProcessPollPromise = $timeout(function() {
-                topProcessPollPromise = null;
-                if (!$scope.topProcessPaused) {
-                    $scope.refreshTopProcesses(true);
-                }
-                if (!$scope.topProcessPaused) {
-                    tick();
-                }
-            }, topProcessPollIntervalMs);
-        }
-        tick();
-    }
-
-    $scope.toggleTopProcessPause = function() {
-        $scope.topProcessPaused = !$scope.topProcessPaused;
-        if ($scope.topProcessPaused) {
-            cancelTopProcessPoll();
-        } else {
-            $scope.refreshTopProcesses(true);
-            scheduleTopProcessPoll();
-        }
-    };
-
+    var pollInterval = 2000; // ms
     var maxPoints = 30;
 
     // Expose so switchTab can create charts on first tab click if they weren't created at load
@@ -2251,6 +2184,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
 
     // Initial setup - fetch stats immediately
     pollDashboardStats();
+    $scope.refreshTopProcesses();
     $scope.refreshSSHLogins();
     $scope.refreshSSHLogs();
 
@@ -2268,17 +2202,16 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             $scope.hideSystemCharts = true;
         });
 
-        // Start polling for all stats (data feeds charts). Top Process is polled separately (slower, silent).
+        // Start polling for all stats (data feeds charts)
         function pollAll() {
             pollDashboardStats();
             pollTraffic();
             pollDiskIO();
             pollCPU();
+            $scope.refreshTopProcesses();
             $timeout(pollAll, pollInterval);
         }
         pollAll();
-
-        scheduleTopProcessPoll();
     }, 800);
 
     // SSH User Activity Modal

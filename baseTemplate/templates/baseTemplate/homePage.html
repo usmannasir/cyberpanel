@@ -1002,8 +1002,8 @@
                 <button class="activity-tab" onclick="switchTab('ssh-logs', this)">
                     <i class="fas fa-file-alt"></i>
                     <span>Recent SSH Logs</span>
-                    <span ng-if="actionableSecurityAlertCount() > 0" style="background: #dc2626; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 6px;" title="Actionable SSH security alerts (not log line count; tips excluded)">
-                        {$ actionableSecurityAlertCount() $}
+                    <span ng-if="securityAlerts.length > 0" style="background: #dc2626; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 6px;">
+                        {$ securityAlerts.length $}
                     </span>
                 </button>
                 <button class="activity-tab" onclick="switchTab('top-process', this)">
@@ -1046,7 +1046,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr ng-repeat="login in sshLoginsPaginated">
+                    <tr ng-repeat="login in sshLogins">
                         <td><strong>{$ login.user $}</strong></td>
                         <td><code style="background: #f0f0ff; padding: 2px 6px; border-radius: 4px; font-size: 11px;">{$ login.ip $}</code></td>
                         <td>
@@ -1080,28 +1080,22 @@
             <div ng-if="!loadingSSHLogins && sshLogins.length > 0" class="pagination-controls" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 16px; padding: 12px 0; border-top: 1px solid #e8e9ff;">
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <span style="color: #64748b; font-size: 13px;">Show</span>
-                    <select ng-model="$parent.sshLoginsPerPage" ng-change="sshLoginsChangePerPage()" style="padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: white;">
-                        <option ng-value="3">3</option>
-                        <option ng-value="5">5</option>
-                        <option ng-value="10">10</option>
-                        <option ng-value="20">20</option>
-                        <option ng-value="50">50</option>
-                        <option ng-value="100">100</option>
+                    <select ng-model="sshLoginsPerPage" ng-change="sshLoginsChangePerPage()" style="padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: white;">
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
                     </select>
                     <span style="color: #64748b; font-size: 13px;">per page</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="color: #64748b; font-size: 13px;">{$ getSSHLoginsStart() $}-{$ getSSHLoginsEnd() $} of {$ sshLogins.length $}</span>
-                    <button ng-click="sshLoginsPrevPage()" ng-disabled="sshLoginsCurrentPage <= 1" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="Previous">
+                    <span style="color: #64748b; font-size: 13px;">{$ (sshLoginsPage - 1) * sshLoginsPerPage + 1 $}-{$ (sshLoginsPage * sshLoginsPerPage > sshLoginsTotal ? sshLoginsTotal : sshLoginsPage * sshLoginsPerPage) $} of {$ sshLoginsTotal $}</span>
+                    <button ng-click="sshLoginsGoToPage(sshLoginsPage - 1)" ng-disabled="sshLoginsPage <= 1" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="Previous">
                         <i class="fas fa-chevron-left"></i>
                     </button>
-                    <span style="color: #64748b; font-size: 12px;">Page {$ sshLoginsCurrentPage $} / {$ getSSHLoginsTotalPages() || 1 $}</span>
-                    <button ng-click="sshLoginsNextPage()" ng-disabled="sshLoginsCurrentPage >= getSSHLoginsTotalPages()" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="Next">
+                    <button ng-click="sshLoginsGoToPage(sshLoginsPage + 1)" ng-disabled="sshLoginsPage >= sshLoginsTotalPages" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="Next">
                         <i class="fas fa-chevron-right"></i>
                     </button>
-                    <span style="color: #64748b; font-size: 13px; margin-left: 8px;">Go to</span>
-                    <input type="number" min="1" ng-model="$parent.sshLoginsGoToPage" ng-keydown="($event.which === 13 || $event.keyCode === 13) && sshLoginsGoToPageNumber()" style="width: 72px; padding: 6px 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px;" />
-                    <button ng-click="sshLoginsGoToPageNumber()" style="padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;">Go</button>
                 </div>
             </div>
             
@@ -1213,10 +1207,6 @@
                                 </div>
                                 <!-- Add to Firewall Button for all alerts with IP addresses -->
                                 <div ng-if="alert.details && (alert.details['IP Address'] || alert.details['Top IP'])" style="margin-top: 12px;">
-                                    <span ng-if="isSshWhitelisted(alert.details['IP Address'] || alert.details['Top IP'])" style="display: inline-flex; align-items: center; gap: 6px; color: #0ea5e9; font-size: 12px; font-weight: 600;">
-                                        <i class="fas fa-shield-alt"></i> Trusted IP — not shown as a threat and cannot be banned from here.
-                                    </span>
-                                    <span ng-if="!isSshWhitelisted(alert.details['IP Address'] || alert.details['Top IP'])">
                                     <button ng-click="blockIPAddress(alert.details['IP Address'] || alert.details['Top IP']); $event.stopPropagation()" 
                                             ng-disabled="blockingIP === (alert.details['IP Address'] || alert.details['Top IP'])"
                                             style="background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;"
@@ -1233,7 +1223,6 @@
                                     <span ng-if="blockedIPs && blockedIPs[alert.details['IP Address'] || alert.details['Top IP']]" 
                                           style="margin-left: 10px; color: #10b981; font-size: 12px; font-weight: 600;">
                                         <i class="fas fa-check-circle"></i> Blocked
-                                    </span>
                                     </span>
                                 </div>
                             </div>
@@ -1264,7 +1253,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr ng-repeat="log in sshLogsPaginated">
+                    <tr ng-repeat="log in sshLogs">
                         <td><strong>{$ log.timestamp $}</strong></td>
                         <td><code style="background: #f0f0ff; padding: 4px 8px; border-radius: 4px; font-size: 11px; display: inline-block; word-break: break-word; overflow-wrap: break-word;">{$ log.message $}</code></td>
                         <td>
@@ -1274,7 +1263,7 @@
                             <span ng-if="!log.ip_address" style="color: #8893a7;">-</span>
                         </td>
                         <td>
-                            <button ng-if="log.ip_address && blockingIP !== log.ip_address && !blockedIPs[log.ip_address] && !isSshWhitelisted(log.ip_address)" 
+                            <button ng-if="log.ip_address && blockingIP !== log.ip_address && !blockedIPs[log.ip_address]" 
                                     ng-click="banIPFromSSHLog(log.ip_address)"
                                     style="background: #dc2626; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"
                                     onmouseover="this.style.background='#b91c1c'" 
@@ -1294,11 +1283,6 @@
                                 <i class="fas fa-check-circle"></i>
                                 Banned
                             </span>
-                            <span ng-if="log.ip_address && isSshWhitelisted(log.ip_address)"
-                                  style="color: #0ea5e9; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
-                                <i class="fas fa-shield-alt"></i>
-                                Trusted
-                            </span>
                             <span ng-if="!log.ip_address" style="color: #8893a7; font-size: 11px;">-</span>
                         </td>
                     </tr>
@@ -1309,43 +1293,28 @@
             <div ng-if="!loadingSSHLogs && sshLogs.length > 0" class="pagination-controls" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 16px; padding: 12px 0; border-top: 1px solid #e8e9ff;">
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <span style="color: #64748b; font-size: 13px;">Show</span>
-                    <select ng-model="$parent.sshLogsPerPage" ng-change="sshLogsChangePerPage()" style="padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: white;">
-                        <option ng-value="3">3</option>
-                        <option ng-value="5">5</option>
-                        <option ng-value="10">10</option>
-                        <option ng-value="25">25</option>
-                        <option ng-value="50">50</option>
-                        <option ng-value="100">100</option>
+                    <select ng-model="sshLogsPerPage" ng-change="sshLogsChangePerPage()" style="padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: white;">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
                     </select>
                     <span style="color: #64748b; font-size: 13px;">per page</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="color: #64748b; font-size: 13px;">{$ getSSHLogsStart() $}-{$ getSSHLogsEnd() $} of {$ sshLogs.length $}</span>
-                    <button ng-click="sshLogsPrevPage()" ng-disabled="sshLogsCurrentPage <= 1" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="Previous">
+                    <span style="color: #64748b; font-size: 13px;">{$ (sshLogsPage - 1) * sshLogsPerPage + 1 $}-{$ (sshLogsPage * sshLogsPerPage > sshLogsTotal ? sshLogsTotal : sshLogsPage * sshLogsPerPage) $} of {$ sshLogsTotal $}</span>
+                    <button ng-click="sshLogsGoToPage(sshLogsPage - 1)" ng-disabled="sshLogsPage <= 1" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="Previous">
                         <i class="fas fa-chevron-left"></i>
                     </button>
-                    <span style="color: #64748b; font-size: 12px;">Page {$ sshLogsCurrentPage $} / {$ getSSHLogsTotalPages() || 1 $}</span>
-                    <button ng-click="sshLogsNextPage()" ng-disabled="sshLogsCurrentPage >= getSSHLogsTotalPages()" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="Next">
+                    <button ng-click="sshLogsGoToPage(sshLogsPage + 1)" ng-disabled="sshLogsPage >= sshLogsTotalPages" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="Next">
                         <i class="fas fa-chevron-right"></i>
                     </button>
-                    <span style="color: #64748b; font-size: 13px; margin-left: 8px;">Go to</span>
-                    <input type="number" min="1" ng-model="$parent.sshLogsGoToPage" ng-keydown="($event.which === 13 || $event.keyCode === 13) && sshLogsGoToPageNumber()" style="width: 72px; padding: 6px 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px;" />
-                    <button ng-click="sshLogsGoToPageNumber()" style="padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;">Go</button>
                 </div>
             </div>
         </div>
         
         <!-- Top Process Tab -->
         <div id="top-process" class="tab-content">
-            <div ng-if="!loadingTopProcesses" style="display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; padding: 4px 0;">
-                <span ng-if="topProcessPaused" style="font-size: 12px; color: #d97706; font-weight: 600;">
-                    <i class="fas fa-pause-circle"></i> Auto-refresh paused
-                </span>
-                <button type="button" ng-click="toggleTopProcessPause()" class="btn-primary" style="padding: 6px 14px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;">
-                    <i class="fas" ng-class="topProcessPaused ? 'fa-play' : 'fa-pause'"></i>
-                    <span>{$ topProcessPaused ? 'Resume updates' : 'Pause updates' $}</span>
-                </button>
-            </div>
             <div ng-if="loadingTopProcesses" style="text-align: center; padding: 20px; color: #8893a7;">
                 Loading top processes...
             </div>

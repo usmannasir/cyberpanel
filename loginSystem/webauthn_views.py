@@ -162,13 +162,6 @@ class WebAuthnAuthenticationComplete(WebAuthnAPIView):
                     if ip_addr.find(':') > -1:
                         ip_addr = ':'.join(ip_addr.split(':')[:3])
                     request.session['ipAddr'] = ip_addr
-                    try:
-                        from loginSystem.models import Administrator
-                        from plogical.sshSecurityWhitelistUtilities import SSHSecurityWhitelistUtilities
-                        adm = Administrator.objects.select_related('acl').get(pk=int(result['user_id']))
-                        SSHSecurityWhitelistUtilities.on_successful_panel_login(request, adm)
-                    except Exception:
-                        pass
                     redirect_url = data.get('redirect') or request.session.pop('webauthn_redirect', '/') or '/'
                     if '//' in redirect_url or not redirect_url.startswith('/'):
                         redirect_url = '/'
@@ -196,13 +189,6 @@ class WebAuthnAuthenticationComplete(WebAuthnAPIView):
                 if ip_addr.find(':') > -1:
                     ip_addr = ':'.join(ip_addr.split(':')[:3])
                 request.session['ipAddr'] = ip_addr
-                try:
-                    from loginSystem.models import Administrator
-                    from plogical.sshSecurityWhitelistUtilities import SSHSecurityWhitelistUtilities
-                    adm = Administrator.objects.select_related('acl').get(pk=int(result['user_id']))
-                    SSHSecurityWhitelistUtilities.on_successful_panel_login(request, adm)
-                except Exception:
-                    pass
                 logger.info(f"WebAuthn authentication successful for user ID: {result['user_id']}")
             return self.json_response(result)
 

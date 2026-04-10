@@ -188,59 +188,16 @@ class ProcessUtilities(multi.Thread):
                         return ProcessUtilities.ubuntu20
                     return ProcessUtilities.ubuntu
 
-                # Debian (no Ubuntu): use same apt paths as Ubuntu for CyberPanel mail stack
-                for _line in content.splitlines():
-                    _ls = _line.strip()
-                    if _ls.startswith('ID='):
-                        _id = _ls.split('=', 1)[1].strip().strip('"').lower()
-                        if _id == 'debian':
-                            return ProcessUtilities.ubuntu
-                        break
-
         # Check for RedHat-based distributions
         if os.path.exists(distroPathAlma):
             with open(distroPathAlma, 'r') as f:
                 content = f.read()
-                if any(x in content for x in ['CentOS Linux release 7', 'CentOS Linux release 8',
-                                            'CentOS Stream release 8', 'CentOS Stream release 9',
-                                            'AlmaLinux release 8', 'Rocky Linux release 8',
-                                            'Rocky Linux release 9', 'AlmaLinux release 9',
-                                            'CloudLinux release 9', 'CloudLinux release 8',
-                                            'AlmaLinux release 10', 'Rocky Linux release 10',
-                                            'Red Hat Enterprise Linux release 8',
-                                            'Red Hat Enterprise Linux release 9',
-                                            'Red Hat Enterprise Linux release 10']):
-                    if any(x in content for x in ['AlmaLinux release 9', 'Rocky Linux release 9',
-                                                  'AlmaLinux release 10', 'Rocky Linux release 10',
-                                                  'Red Hat Enterprise Linux release 9',
-                                                  'Red Hat Enterprise Linux release 10',
-                                                  'CentOS Stream release 9']):
+                if any(x in content for x in ['CentOS Linux release 8', 'AlmaLinux release 8', 'Rocky Linux release 8', 
+                                            'Rocky Linux release 9', 'AlmaLinux release 9', 'CloudLinux release 9', 
+                                            'CloudLinux release 8', 'AlmaLinux release 10']):
+                    if any(x in content for x in ['AlmaLinux release 9', 'Rocky Linux release 9', 'AlmaLinux release 10']):
                         ProcessUtilities.alma9check = 1
                     return ProcessUtilities.cent8
-
-        # Fallback: /etc/os-release for RHEL family (some minimal images lack redhat-release text we match)
-        if os.path.exists('/etc/os-release'):
-            try:
-                with open('/etc/os-release', 'r') as f:
-                    os_lines = f.read()
-                rid = ''
-                for line in os_lines.splitlines():
-                    if line.startswith('ID='):
-                        rid = line.split('=', 1)[1].strip().strip('"').lower()
-                        break
-                if rid in ('almalinux', 'rocky', 'centos', 'rhel', 'cloudlinux', 'eurolinux',
-                           'miraclelinux', 'openeuler', 'virtuozzo'):
-                    ver_id = ''
-                    for line in os_lines.splitlines():
-                        if line.startswith('VERSION_ID='):
-                            ver_id = line.split('=', 1)[1].strip().strip('"')
-                            break
-                    major = ver_id.split('.')[0] if ver_id else '8'
-                    if major in ('9', '10'):
-                        ProcessUtilities.alma9check = 1
-                    return ProcessUtilities.cent8
-            except OSError:
-                pass
 
         # Default to Ubuntu if no other distribution is detected
         return ProcessUtilities.ubuntu
