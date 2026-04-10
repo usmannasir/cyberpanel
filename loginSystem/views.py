@@ -145,6 +145,11 @@ def verifyLogin(request):
                     request.session['ipAddr'] = ipAddr
 
                 request.session.set_expiry(43200)
+                try:
+                    from plogical.sshSecurityWhitelistUtilities import SSHSecurityWhitelistUtilities
+                    SSHSecurityWhitelistUtilities.on_successful_panel_login(request, admin)
+                except Exception:
+                    pass
                 data = {'userID': admin.pk, 'loginStatus': 1, 'error_message': "None"}
                 json_data = json.dumps(data)
                 response.write(json_data)
