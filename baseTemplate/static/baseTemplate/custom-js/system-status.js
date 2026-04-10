@@ -1024,7 +1024,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
     $scope.sshLogins = [];
     $scope.sshLoginsPaginated = [];
     $scope.sshLoginsCurrentPage = 1;
-    $scope.sshLoginsPerPage = 10;
+    $scope.sshLoginsPerPage = 3;
     $scope.sshLoginsGoToPage = 1;
     $scope.loadingSSHLogins = true;
     $scope.errorSSHLogins = '';
@@ -1054,7 +1054,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             console.log('updateSSHLoginsPaginated: No data, cleared paginated array');
             return;
         }
-        var per = parseInt($scope.sshLoginsPerPage, 10) || 10;
+        var per = parseInt($scope.sshLoginsPerPage, 10) || 3;
         $scope.sshLoginsPerPage = per;
         var start = ($scope.sshLoginsCurrentPage - 1) * per;
         var end = start + per;
@@ -1087,7 +1087,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
         }
     };
     $scope.sshLoginsChangePerPage = function() {
-        $scope.sshLoginsPerPage = parseInt($scope.sshLoginsPerPage, 10) || 10;
+        $scope.sshLoginsPerPage = parseInt($scope.sshLoginsPerPage, 10) || 3;
         $scope.sshLoginsCurrentPage = 1;
         $scope.sshLoginsGoToPage = 1;
         $scope.updateSSHLoginsPaginated();
@@ -1123,7 +1123,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
     $scope.sshLogs = [];
     $scope.sshLogsPaginated = [];
     $scope.sshLogsCurrentPage = 1;
-    $scope.sshLogsPerPage = 10;
+    $scope.sshLogsPerPage = 3;
     $scope.sshLogsGoToPage = 1;
     $scope.loadingSSHLogs = true;
     $scope.errorSSHLogs = '';
@@ -1167,7 +1167,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             console.log('updateSSHLogsPaginated: No data, cleared paginated array');
             return;
         }
-        var per = parseInt($scope.sshLogsPerPage, 10) || 10;
+        var per = parseInt($scope.sshLogsPerPage, 10) || 3;
         $scope.sshLogsPerPage = per;
         var start = ($scope.sshLogsCurrentPage - 1) * per;
         var end = start + per;
@@ -1200,7 +1200,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
         }
     };
     $scope.sshLogsChangePerPage = function() {
-        $scope.sshLogsPerPage = parseInt($scope.sshLogsPerPage, 10) || 10;
+        $scope.sshLogsPerPage = parseInt($scope.sshLogsPerPage, 10) || 3;
         $scope.sshLogsCurrentPage = 1;
         $scope.sshLogsGoToPage = 1;
         $scope.updateSSHLogsPaginated();
