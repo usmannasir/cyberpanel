@@ -611,7 +611,7 @@
             <div ng-hide="RspamdNotifyBox">
                 <div ng-hide="failedToStartInallation" class="alert alert-danger">
                     <i class="fas fa-exclamation-circle alert-icon"></i>
-                    <span>{% trans "Failed to start installation. Error message:" %} {$ errorMessage $}</span>
+                    <span>{% trans "Failed to start installation. Error message:" %} <span ng-bind="errorMessage"></span></span>
                 </div>
 
                 <div ng-hide="couldNotConnect" class="alert alert-danger">
@@ -621,7 +621,7 @@
 
                 <div ng-hide="installationFailed" class="alert alert-danger">
                     <i class="fas fa-times-circle alert-icon"></i>
-                    <span>{% trans "Installation failed." %} {$ errorMessage $}</span>
+                    <span>{% trans "Installation failed." %} <span ng-bind="errorMessage"></span></span>
                 </div>
 
                 <div ng-hide="RspamdSuccessfullyInstalled" class="alert alert-success">
@@ -637,7 +637,7 @@
                     <h3 class="install-log-title">{% trans "Installation Progress" %}</h3>
                     <span ng-hide="RspamdLoading" class="loading-spinner"></span>
                 </div>
-                <textarea ng-model="requestData" rows="15" class="log-textarea" readonly>{{ requestData }}</textarea>
+                <textarea ng-model="requestData" rows="15" class="log-textarea" readonly></textarea>
             </div>
         </div>
         {% else %}
@@ -663,20 +663,20 @@
                 </button>
             </div>
             <p style="color: var(--text-secondary, #64748b); font-size: 14px; margin-top: 16px; line-height: 1.6;">
-                {% trans "Opens the official Rspamd web interface in a new tab (path /emailPremium/Rspamd/ui/ — proxied through CyberPanel, admin session required)." %}
+                {% trans "Opens the Rspamd controller UI over HTTPS using the same hostname and port as CyberPanel (path /emailPremium/Rspamd/ui/). Rspamd itself only speaks HTTP on 127.0.0.1:11334; the panel reverse-proxies it so you do not need https://YOUR_SERVER_IP:11334 (that URL is not served by Rspamd)." %}
             </p>
         </div>
 
         <div class="content-section">
             <h2 class="section-title">{% trans "Alternative: SSH tunnel" %}</h2>
             <p style="color: var(--text-secondary, #64748b); font-size: 14px; line-height: 1.6;">
-                {% trans "If the proxied UI misbehaves, connect to port 11334 on the server via SSH and use your local browser." %}
+                {% trans "If the proxied UI misbehaves, forward port 11334 to your machine and open the link below (HTTP on localhost only — not HTTPS)." %}
             </p>
             <pre style="background: var(--bg-secondary,#f8f9ff); padding: 12px; border-radius: 8px; font-size: 13px; overflow-x: auto; border: 1px solid var(--border-light, #e8e9ff);">ssh -N -L 11334:127.0.0.1:11334 root@{{ ipAddress }}</pre>
             <p style="margin-top: 12px;">
                 <a href="http://127.0.0.1:11334/" target="_blank" rel="noopener noreferrer" class="action-btn secondary">
                     <i class="fas fa-external-link-alt"></i>
-                    {% trans "Open Rspamd UI (when tunnel is active)" %}
+                    {% trans "Open Rspamd UI (when tunnel is active — http://127.0.0.1:11334/)" %}
                 </a>
             </p>
         </div>
@@ -772,7 +772,7 @@
                 <div style="margin-top: 20px;">
                     <div ng-hide="failedToSave" class="alert alert-danger">
                         <i class="fas fa-exclamation-circle alert-icon"></i>
-                        <span>{% trans "Failed to save RSPAMD configurations. Error message:" %} {$ errorMessage $}</span>
+                        <span>{% trans "Failed to save RSPAMD configurations. Error message:" %} <span ng-bind="errorMessage"></span></span>
                     </div>
 
                     <div ng-hide="successfullySaved" class="alert alert-success">
@@ -848,7 +848,7 @@
                 <div style="margin-top: 20px;">
                     <div ng-hide="ClamAVfailedToSave" class="alert alert-danger">
                         <i class="fas fa-exclamation-circle alert-icon"></i>
-                        <span>{% trans "Failed to save ClamAV configurations. Error message:" %} {$ errorMessage $}</span>
+                        <span>{% trans "Failed to save ClamAV configurations. Error message:" %} <span ng-bind="errorMessage"></span></span>
                     </div>
 
                     <div ng-hide="ClamAVsuccessfullySaved" class="alert alert-success">
@@ -906,7 +906,7 @@
                 <div style="margin-top: 20px;">
                     <div ng-hide="postfixfailedToSave" class="alert alert-danger">
                         <i class="fas fa-exclamation-circle alert-icon"></i>
-                        <span>{% trans "Failed to save Postfix configurations. Error message:" %} {$ errorMessage $}</span>
+                        <span>{% trans "Failed to save Postfix configurations. Error message:" %} <span ng-bind="errorMessage"></span></span>
                     </div>
 
                     <div ng-hide="postfixsuccessfullySaved" class="alert alert-success">
@@ -964,7 +964,7 @@
                 <div style="margin-top: 20px;">
                     <div ng-hide="RedisfailedToSave" class="alert alert-danger">
                         <i class="fas fa-exclamation-circle alert-icon"></i>
-                        <span>{% trans "Failed to save Redis configurations. Error message:" %} {$ errorMessage $}</span>
+                        <span>{% trans "Failed to save Redis configurations. Error message:" %} <span ng-bind="errorMessage"></span></span>
                     </div>
 
                     <div ng-hide="RedissuccessfullySaved" class="alert alert-success">
@@ -989,7 +989,7 @@
             <div ng-hide="uninstallRspamdNotifyBox">
                 <div ng-hide="failedToStartInallation" class="alert alert-danger">
                     <i class="fas fa-exclamation-circle alert-icon"></i>
-                    <span>{% trans "Failed to start uninstallation. Error message:" %} {$ errorMessage $}</span>
+                    <span>{% trans "Failed to start uninstallation. Error message:" %} <span ng-bind="errorMessage"></span></span>
                 </div>
 
                 <div ng-hide="couldNotConnect" class="alert alert-danger">
@@ -999,7 +999,7 @@
 
                 <div ng-hide="installationFailed" class="alert alert-danger">
                     <i class="fas fa-times-circle alert-icon"></i>
-                    <span>{% trans "Installation failed." %} {$ errorMessage $}</span>
+                    <span>{% trans "Installation failed." %} <span ng-bind="errorMessage"></span></span>
                 </div>
 
                 <div ng-hide="RspamdSuccessfullyInstalled" class="alert alert-success">
@@ -1015,7 +1015,7 @@
                     <h3 class="install-log-title">{% trans "Uninstallation Progress" %}</h3>
                     <span ng-hide="RspamdLoading" class="loading-spinner"></span>
                 </div>
-                <textarea ng-model="requestData" rows="15" class="log-textarea" readonly>{{ requestData }}</textarea>
+                <textarea ng-model="requestData" rows="15" class="log-textarea" readonly></textarea>
             </div>
         </div>
 
@@ -1052,7 +1052,7 @@
                         <button type="button" class="close" data-dismiss="modal">&times;</button>
                     </div>
                     <div class="modal-body">
-                        <textarea ng-model="RspamdlogsData" class="log-textarea" rows="20" readonly>{{ Rspamdlogs }}</textarea>
+                        <textarea ng-model="RspamdlogsData" class="log-textarea" rows="20" readonly></textarea>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="modal-btn secondary" data-dismiss="modal">

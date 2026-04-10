@@ -1244,16 +1244,28 @@ def Rspamd(request):
 
     checkIfRspamdInstalled = 0
 
-    ipFile = "/etc/cyberpanel/machineIP"
-    f = open(ipFile)
-    ipData = f.read()
-    ipAddress = ipData.split('\n', 1)[0]
+    ipAddress = '127.0.0.1'
+    try:
+        ipFile = "/etc/cyberpanel/machineIP"
+        with open(ipFile, 'r') as f:
+            ipData = f.read()
+        first_line = ipData.split('\n', 1)[0].strip()
+        if first_line:
+            ipAddress = first_line
+    except (OSError, IOError, IndexError):
+        pass
 
     if mailUtilities.checkIfRspamdInstalled() == 1:
         checkIfRspamdInstalled = 1
 
+    rspamd_ui_url = request.build_absolute_uri('/emailPremium/Rspamd/ui/')
+
     proc = httpProc(request, 'emailPremium/Rspamd.html',
-                    {'checkIfRspamdInstalled': checkIfRspamdInstalled, 'ipAddress': ipAddress}, 'admin')
+                    {
+                        'checkIfRspamdInstalled': checkIfRspamdInstalled,
+                        'ipAddress': ipAddress,
+                        'rspamd_ui_url': rspamd_ui_url,
+                    }, 'admin')
     return proc.render()
 
 def installRspamd(request):
