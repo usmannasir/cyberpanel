@@ -23,6 +23,8 @@ function getCookie(name) {
 app.controller('firewallController', function ($scope, $http, $timeout) {
 
     $scope.rulesLoading = true;
+    /** Incremented on each rules fetch; stale HTTP responses must not touch rulesLoading. */
+    var rulesFetchGen = 0;
     $scope.actionFailed = true;
     $scope.actionSuccess = true;
     $scope.showExportFormatModal = false;
@@ -554,7 +556,6 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
 
                 populateCurrentRecords();
 
-                $scope.rulesLoading = true;
                 $scope.actionFailed = true;
                 $scope.actionSuccess = true;
 
@@ -566,7 +567,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
             }
             else {
 
-                $scope.rulesLoading = true;
+                $scope.rulesLoading = false;
                 $scope.actionFailed = true;
                 $scope.actionSuccess = true;
 
@@ -582,7 +583,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
 
         function cantLoadInitialDatas(response) {
 
-            $scope.rulesLoading = true;
+            $scope.rulesLoading = false;
             $scope.actionFailed = true;
             $scope.actionSuccess = true;
 
@@ -596,8 +597,8 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
     };
 
     function populateCurrentRecords() {
-
-        $scope.rulesLoading = false;
+        var gen = ++rulesFetchGen;
+        $scope.rulesLoading = true;
         $scope.actionFailed = true;
         $scope.actionSuccess = true;
 
@@ -615,21 +616,44 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
         $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
         function ListInitialDatas(response) {
-            var res = (typeof response.data === 'string') ? (function() { try { return JSON.parse(response.data); } catch (e) { return {}; } })() : response.data;
-            if (res && res.fetchStatus === 1) {
-                $scope.rules = typeof res.data === 'string' ? JSON.parse(res.data) : (res.data || []);
-                $scope.rulesTotalCount = res.total_count != null ? res.total_count : ($scope.rules ? $scope.rules.length : 0);
-                $scope.rulesPage = Math.max(1, res.page != null ? res.page : 1);
-                $scope.rulesPageSize = res.page_size != null ? res.page_size : 10;
-                $scope.rulesLoading = true;
+            if (gen !== rulesFetchGen) {
+                return;
             }
-            else {
-                $scope.rulesLoading = true;
-                $scope.errorMessage = (res && res.error_message) ? res.error_message : '';
+            try {
+                var res = (typeof response.data === 'string') ? (function() { try { return JSON.parse(response.data); } catch (e) { return {}; } })() : response.data;
+                if (res && res.fetchStatus == 1) {
+                    var parsedRules = [];
+                    if (typeof res.data === 'string') {
+                        try {
+                            parsedRules = JSON.parse(res.data);
+                        } catch (parseErr) {
+                            parsedRules = [];
+                            $scope.errorMessage = (res && res.error_message) ? res.error_message : 'Invalid rules data';
+                        }
+                    } else {
+                        parsedRules = res.data || [];
+                    }
+                    $scope.rules = parsedRules;
+                    $scope.rulesTotalCount = res.total_count != null ? res.total_count : ($scope.rules ? $scope.rules.length : 0);
+                    $scope.rulesPage = Math.max(1, res.page != null ? res.page : 1);
+                    $scope.rulesPageSize = res.page_size != null ? res.page_size : 10;
+                } else {
+                    $scope.errorMessage = (res && res.error_message) ? res.error_message : '';
+                }
+            } catch (e) {
+                $scope.errorMessage = 'Could not load firewall rules.';
+            } finally {
+                if (gen === rulesFetchGen) {
+                    $scope.rulesLoading = false;
+                }
             }
         }
 
         function cantLoadInitialDatas(response) {
+            if (gen !== rulesFetchGen) {
+                return;
+            }
+            $scope.rulesLoading = false;
             $scope.couldNotConnect = false;
         }
     }
@@ -708,7 +732,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
             $scope.errorMessage = 'Port is required';
             return;
         }
-        $scope.rulesLoading = false;
+        $scope.rulesLoading = true;
         var url = '/firewall/modifyRule';
         var data = {
             id: d.id,
@@ -719,19 +743,19 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
         };
         var config = { headers: { 'X-CSRFToken': getCookie('csrftoken') } };
         $http.post(url, data, config).then(function(response) {
-            $scope.rulesLoading = true;
             if (response.data && response.data.status === 1) {
                 $scope.closeModifyRuleModal();
                 $scope.actionFailed = true;
                 $scope.actionSuccess = false;
                 populateCurrentRecords();
             } else {
+                $scope.rulesLoading = false;
                 $scope.actionFailed = false;
                 $scope.actionSuccess = true;
                 $scope.errorMessage = (response.data && response.data.error_message) || 'Modify failed';
             }
         }, function() {
-            $scope.rulesLoading = true;
+            $scope.rulesLoading = false;
             $scope.actionFailed = false;
             $scope.actionSuccess = true;
             $scope.errorMessage = 'Could not connect to server. Please refresh this page.';
@@ -740,7 +764,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
 
     $scope.deleteRule = function (id, proto, port, ruleIP) {
 
-        $scope.rulesLoading = false;
+        $scope.rulesLoading = true;
 
         url = "/firewall/deleteRule";
 
@@ -768,7 +792,6 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
 
 
                 populateCurrentRecords();
-                $scope.rulesLoading = true;
                 $scope.actionFailed = true;
                 $scope.actionSuccess = true;
 
@@ -780,7 +803,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
             }
             else {
 
-                $scope.rulesLoading = true;
+                $scope.rulesLoading = false;
                 $scope.actionFailed = true;
                 $scope.actionSuccess = true;
 
@@ -788,7 +811,6 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
                 $scope.ruleAdded = true;
                 $scope.couldNotConnect = true;
 
-                $scope.rulesLoading = true;
                 $scope.errorMessage = response.data.error_message;
 
 
@@ -798,7 +820,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
 
         function cantLoadInitialDatas(response) {
 
-            $scope.rulesLoading = true;
+            $scope.rulesLoading = false;
             $scope.actionFailed = true;
             $scope.actionSuccess = true;
 
@@ -845,7 +867,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
             if (response.data.reload_status == 1) {
 
 
-                $scope.rulesLoading = true;
+                $scope.rulesLoading = false;
                 $scope.actionFailed = true;
                 $scope.actionSuccess = false;
 
@@ -857,7 +879,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
             }
             else {
 
-                $scope.rulesLoading = true;
+                $scope.rulesLoading = false;
                 $scope.actionFailed = false;
                 $scope.actionSuccess = true;
 
@@ -874,7 +896,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
 
         function cantLoadInitialDatas(response) {
 
-            $scope.rulesLoading = true;
+            $scope.rulesLoading = false;
             $scope.actionFailed = true;
             $scope.actionSuccess = true;
 
@@ -920,7 +942,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
             if (response.data.start_status == 1) {
 
 
-                $scope.rulesLoading = true;
+                $scope.rulesLoading = false;
                 $scope.actionFailed = true;
                 $scope.actionSuccess = false;
 
@@ -936,7 +958,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
             }
             else {
 
-                $scope.rulesLoading = true;
+                $scope.rulesLoading = false;
                 $scope.actionFailed = false;
                 $scope.actionSuccess = true;
 
@@ -953,7 +975,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
 
         function cantLoadInitialDatas(response) {
 
-            $scope.rulesLoading = true;
+            $scope.rulesLoading = false;
             $scope.actionFailed = true;
             $scope.actionSuccess = true;
 
@@ -1000,7 +1022,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
             if (response.data.stop_status == 1) {
 
 
-                $scope.rulesLoading = true;
+                $scope.rulesLoading = false;
                 $scope.actionFailed = true;
                 $scope.actionSuccess = false;
 
@@ -1016,7 +1038,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
             }
             else {
 
-                $scope.rulesLoading = true;
+                $scope.rulesLoading = false;
                 $scope.actionFailed = false;
                 $scope.actionSuccess = true;
 
@@ -1033,7 +1055,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
 
         function cantLoadInitialDatas(response) {
 
-            $scope.rulesLoading = true;
+            $scope.rulesLoading = false;
             $scope.actionFailed = true;
             $scope.actionSuccess = true;
 
@@ -1497,6 +1519,8 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
             $scope.errorMessage = "Could not connect to server. Please refresh this page.";
         }
     }
+
+    $scope.populateCurrentRecords = populateCurrentRecords;
 
 });
 

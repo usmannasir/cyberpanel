@@ -23,6 +23,8 @@ function getCookie(name) {
 app.controller('firewallController', function ($scope, $http, $timeout) {
 
     $scope.rulesLoading = true;
+    /** Incremented on each rules fetch; stale HTTP responses must not touch rulesLoading. */
+    var rulesFetchGen = 0;
     $scope.actionFailed = true;
     $scope.actionSuccess = true;
     $scope.showExportFormatModal = false;
@@ -40,9 +42,12 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
     // Initialize rules array - prevents "Cannot read 'length' of undefined" when template evaluates rules.length before API loads
     $scope.rules = [];
     // Banned IPs variables – tab from hash so we stay on /firewall/ (avoids 404 on servers without /firewall/firewall-rules/)
+    /* Use window.location.hash only. Angular $location can disagree with the fragment on /firewall/#… and wrongly map to "rules". */
     function tabFromHash() {
-        var h = (window.location.hash || '').replace(/^#/, '');
-        return (h === 'banned-ips') ? 'banned' : 'rules';
+        var h = String(window.location.hash || '').replace(/^#/, '').toLowerCase();
+        if (h === 'banned-ips' || h === 'banned') return 'banned';
+        if (h === 'trusted-ips' || h === 'ssh-whitelist') return 'trusted';
+        return 'rules';
     }
     $scope.activeTab = tabFromHash();
     $scope.bannedIPs = [];  // Initialize as empty array
@@ -52,7 +57,9 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
         var tab = tabFromHash();
         if ($scope.activeTab !== tab) {
             $scope.activeTab = tab;
-            if (tab === 'banned') { populateBannedIPs(); } else { populateCurrentRecords(); }
+            if (tab === 'banned') { populateBannedIPs(); }
+            else if (tab === 'trusted') { populateTrustedSSHWhitelist(); }
+            else { populateCurrentRecords(); }
             if (!$scope.$$phase && !$scope.$root.$$phase) { $scope.$apply(); }
         }
     }
@@ -63,23 +70,51 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
         window.addEventListener('load', function() { $timeout(applyTabFromHash, 0); });
     }
 
-    // Sync tab with hash and load that tab's data on switch
-    $scope.setFirewallTab = function(tab) {
+    // Sync tab with hash and load that tab's data on switch (single source of truth from ng-click).
+    $scope.setFirewallTab = function(tab, $event) {
+        if ($event) {
+            try {
+                $event.stopPropagation();
+            } catch (ignoreErr) {}
+        }
         $timeout(function() {
             $scope.activeTab = tab;
-            window.location.hash = (tab === 'banned') ? '#banned-ips' : '#rules';
-            if (tab === 'banned') { populateBannedIPs(); } else { populateCurrentRecords(); }
+            function setHashIfNeeded(frag) {
+                try {
+                    if ((window.location.hash || '') === frag) {
+                        return;
+                    }
+                    var path = window.location.pathname + window.location.search + frag;
+                    if (window.history && typeof window.history.replaceState === 'function') {
+                        window.history.replaceState(null, '', path);
+                    } else {
+                        window.location.hash = frag;
+                    }
+                } catch (ignoreHash) {}
+            }
+            if (tab === 'banned') {
+                setHashIfNeeded('#banned-ips');
+                populateBannedIPs();
+            } else if (tab === 'trusted') {
+                setHashIfNeeded('#trusted-ips');
+                populateTrustedSSHWhitelist();
+            } else {
+                setHashIfNeeded('#rules');
+                populateCurrentRecords();
+            }
         }, 0);
     };
 
-    // Back/forward or direct hash change: sync tab and load its data
     function syncTabFromHash() {
         var tab = tabFromHash();
-        if ($scope.activeTab !== tab) {
-            $scope.activeTab = tab;
-            if (tab === 'banned') { populateBannedIPs(); } else { populateCurrentRecords(); }
-            if (!$scope.$$phase && !$scope.$root.$$phase) { $scope.$apply(); }
-        }
+        $scope.$evalAsync(function() {
+            if ($scope.activeTab !== tab) {
+                $scope.activeTab = tab;
+                if (tab === 'banned') { populateBannedIPs(); }
+                else if (tab === 'trusted') { populateTrustedSSHWhitelist(); }
+                else { populateCurrentRecords(); }
+            }
+        });
     }
     window.addEventListener('hashchange', syncTabFromHash);
     
@@ -108,6 +143,9 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
     $scope.banIP = '';
     $scope.banReason = '';
     $scope.banDuration = '24h';
+    $scope.trustedSSHWhitelist = [];
+    $scope.trustedForm = { ip: '', label: '' };
+    $scope.trustedSSHLoading = false;
     $scope.bannedIPSearch = '';
     $scope.searchBannedIPFilter = function(item) {
         var q = ($scope.bannedIPSearch || '').toLowerCase().trim();
@@ -142,6 +180,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
         $timeout(function() {
             try {
                 if (newVal === 'banned' && typeof populateBannedIPs === 'function') populateBannedIPs();
+                else if (newVal === 'trusted' && typeof populateTrustedSSHWhitelist === 'function') populateTrustedSSHWhitelist();
                 else if (newVal === 'rules' && typeof populateCurrentRecords === 'function') populateCurrentRecords();
             } catch (e) {}
         }, 0);
@@ -246,6 +285,156 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
             }
         );
     }
+
+    function populateTrustedSSHWhitelist() {
+        $scope.trustedSSHLoading = true;
+        var config = { headers: { 'X-CSRFToken': getCookie('csrftoken') || '' } };
+        $http.post('/base/sshSecurityWhitelistList', {}, config).then(
+            function(response) {
+                $scope.trustedSSHLoading = false;
+                var res = response.data;
+                if (typeof res === 'string') {
+                    try { res = JSON.parse(res); } catch (e) { res = {}; }
+                }
+                if (res && res.status === 1) {
+                    var ent = res.entries || [];
+                    $scope.trustedSSHWhitelist = ent.map(function(e) {
+                        return {
+                            ip: e.ip,
+                            label: e.label || '',
+                            updated: e.updated || 0,
+                            _l: e.label || '',
+                            _nip: ''
+                        };
+                    });
+                } else {
+                    $scope.trustedSSHWhitelist = [];
+                    var errMsg = (res && res.error) ? res.error : 'Could not load trusted IPs';
+                    if (typeof PNotify !== 'undefined') {
+                        new PNotify({ title: 'Trusted IPs', text: errMsg, type: 'error', delay: 6000 });
+                    }
+                }
+            },
+            function(error) {
+                $scope.trustedSSHLoading = false;
+                $scope.trustedSSHWhitelist = [];
+                var msg = (error.data && error.data.error) ? error.data.error : 'Request failed';
+                if (typeof PNotify !== 'undefined') {
+                    new PNotify({ title: 'Trusted IPs', text: msg, type: 'error', delay: 6000 });
+                }
+            }
+        );
+    }
+
+    $scope.populateTrustedSSHWhitelist = function() {
+        populateTrustedSSHWhitelist();
+    };
+
+    $scope.addTrustedSSHWhitelist = function() {
+        var ip = ($scope.trustedForm.ip || '').trim();
+        var label = ($scope.trustedForm.label || '').trim();
+        if (!ip) {
+            if (typeof PNotify !== 'undefined') {
+                new PNotify({ title: 'Trusted IPs', text: 'Enter an IP address', type: 'warning', delay: 5000 });
+            }
+            return;
+        }
+        var config = { headers: { 'X-CSRFToken': getCookie('csrftoken') || '' } };
+        $http.post('/base/sshSecurityWhitelistAdd', { ip: ip, label: label }, config).then(
+            function(response) {
+                var res = response.data;
+                if (typeof res === 'string') {
+                    try { res = JSON.parse(res); } catch (e) { res = {}; }
+                }
+                if (res && res.status === 1) {
+                    $scope.trustedForm.ip = '';
+                    $scope.trustedForm.label = '';
+                    populateTrustedSSHWhitelist();
+                    if (typeof PNotify !== 'undefined') {
+                        new PNotify({ title: 'Trusted IPs', text: 'IP added to trusted list', type: 'success', delay: 4000 });
+                    }
+                } else {
+                    var errAdd = (res && res.error) ? res.error : 'Failed to add';
+                    if (typeof PNotify !== 'undefined') {
+                        new PNotify({ title: 'Trusted IPs', text: errAdd, type: 'error', delay: 6000 });
+                    }
+                }
+            },
+            function(err) {
+                var em = (err.data && err.data.error) ? err.data.error : 'Request failed';
+                if (typeof PNotify !== 'undefined') {
+                    new PNotify({ title: 'Trusted IPs', text: em, type: 'error', delay: 6000 });
+                }
+            }
+        );
+    };
+
+    $scope.removeTrustedSSHWhitelist = function(ip) {
+        if (!ip) return;
+        var config = { headers: { 'X-CSRFToken': getCookie('csrftoken') || '' } };
+        $http.post('/base/sshSecurityWhitelistRemove', { ip: ip }, config).then(
+            function(response) {
+                var res = response.data;
+                if (typeof res === 'string') {
+                    try { res = JSON.parse(res); } catch (e) { res = {}; }
+                }
+                if (res && res.status === 1) {
+                    populateTrustedSSHWhitelist();
+                    if (typeof PNotify !== 'undefined') {
+                        new PNotify({ title: 'Trusted IPs', text: 'IP removed', type: 'success', delay: 4000 });
+                    }
+                } else {
+                    var errRm = (res && res.error) ? res.error : 'Failed to remove';
+                    if (typeof PNotify !== 'undefined') {
+                        new PNotify({ title: 'Trusted IPs', text: errRm, type: 'error', delay: 6000 });
+                    }
+                }
+            },
+            function(err) {
+                var em2 = (err.data && err.data.error) ? err.data.error : 'Request failed';
+                if (typeof PNotify !== 'undefined') {
+                    new PNotify({ title: 'Trusted IPs', text: em2, type: 'error', delay: 6000 });
+                }
+            }
+        );
+    };
+
+    $scope.saveTrustedSSHWhitelistRow = function(row) {
+        if (!row || !row.ip) return;
+        var payload = { ip: row.ip, label: row._l };
+        if (row._nip && String(row._nip).trim()) {
+            payload.new_ip = String(row._nip).trim();
+        }
+        var config = { headers: { 'X-CSRFToken': getCookie('csrftoken') || '' } };
+        $http.post('/base/sshSecurityWhitelistUpdate', payload, config).then(
+            function(response) {
+                var res = response.data;
+                if (typeof res === 'string') {
+                    try { res = JSON.parse(res); } catch (e) { res = {}; }
+                }
+                var ok = res && (res.status === 1 || res.status === '1');
+                if (ok) {
+                    populateTrustedSSHWhitelist();
+                    if (typeof PNotify !== 'undefined') {
+                        var unchanged = res.unchanged === true || res.unchanged === 'true' || res.unchanged === 1;
+                        var msgOk = (res.message && String(res.message).length) ? res.message : (unchanged ? 'No changes to save.' : 'Entry updated');
+                        new PNotify({ title: 'Trusted IPs', text: msgOk, type: unchanged ? 'info' : 'success', delay: 4000 });
+                    }
+                } else {
+                    var errUp = (res && res.error) ? res.error : 'Failed to update';
+                    if (typeof PNotify !== 'undefined') {
+                        new PNotify({ title: 'Trusted IPs', text: errUp, type: 'error', delay: 6000 });
+                    }
+                }
+            },
+            function(err) {
+                var em3 = (err.data && err.data.error) ? err.data.error : 'Request failed';
+                if (typeof PNotify !== 'undefined') {
+                    new PNotify({ title: 'Trusted IPs', text: em3, type: 'error', delay: 6000 });
+                }
+            }
+        );
+    };
     
     // Expose to scope for template access
     $scope.populateBannedIPs = function() {
@@ -301,7 +490,9 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
         window.__firewallLoadTab = function(tab) {
             $scope.$evalAsync(function() {
                 $scope.activeTab = tab;
-                if (tab === 'banned') { populateBannedIPs(); } else { populateCurrentRecords(); }
+                if (tab === 'banned') { populateBannedIPs(); }
+                else if (tab === 'trusted') { populateTrustedSSHWhitelist(); }
+                else { populateCurrentRecords(); }
             });
         };
     }
@@ -365,7 +556,6 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
 
                 populateCurrentRecords();
 
-                $scope.rulesLoading = true;
                 $scope.actionFailed = true;
                 $scope.actionSuccess = true;
 
@@ -377,7 +567,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
             }
             else {
 
-                $scope.rulesLoading = true;
+                $scope.rulesLoading = false;
                 $scope.actionFailed = true;
                 $scope.actionSuccess = true;
 
@@ -393,7 +583,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
 
         function cantLoadInitialDatas(response) {
 
-            $scope.rulesLoading = true;
+            $scope.rulesLoading = false;
             $scope.actionFailed = true;
             $scope.actionSuccess = true;
 
@@ -407,8 +597,8 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
     };
 
     function populateCurrentRecords() {
-
-        $scope.rulesLoading = false;
+        var gen = ++rulesFetchGen;
+        $scope.rulesLoading = true;
         $scope.actionFailed = true;
         $scope.actionSuccess = true;
 
@@ -426,21 +616,44 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
         $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
         function ListInitialDatas(response) {
-            var res = (typeof response.data === 'string') ? (function() { try { return JSON.parse(response.data); } catch (e) { return {}; } })() : response.data;
-            if (res && res.fetchStatus === 1) {
-                $scope.rules = typeof res.data === 'string' ? JSON.parse(res.data) : (res.data || []);
-                $scope.rulesTotalCount = res.total_count != null ? res.total_count : ($scope.rules ? $scope.rules.length : 0);
-                $scope.rulesPage = Math.max(1, res.page != null ? res.page : 1);
-                $scope.rulesPageSize = res.page_size != null ? res.page_size : 10;
-                $scope.rulesLoading = true;
+            if (gen !== rulesFetchGen) {
+                return;
             }
-            else {
-                $scope.rulesLoading = true;
-                $scope.errorMessage = (res && res.error_message) ? res.error_message : '';
+            try {
+                var res = (typeof response.data === 'string') ? (function() { try { return JSON.parse(response.data); } catch (e) { return {}; } })() : response.data;
+                if (res && res.fetchStatus == 1) {
+                    var parsedRules = [];
+                    if (typeof res.data === 'string') {
+                        try {
+                            parsedRules = JSON.parse(res.data);
+                        } catch (parseErr) {
+                            parsedRules = [];
+                            $scope.errorMessage = (res && res.error_message) ? res.error_message : 'Invalid rules data';
+                        }
+                    } else {
+                        parsedRules = res.data || [];
+                    }
+                    $scope.rules = parsedRules;
+                    $scope.rulesTotalCount = res.total_count != null ? res.total_count : ($scope.rules ? $scope.rules.length : 0);
+                    $scope.rulesPage = Math.max(1, res.page != null ? res.page : 1);
+                    $scope.rulesPageSize = res.page_size != null ? res.page_size : 10;
+                } else {
+                    $scope.errorMessage = (res && res.error_message) ? res.error_message : '';
+                }
+            } catch (e) {
+                $scope.errorMessage = 'Could not load firewall rules.';
+            } finally {
+                if (gen === rulesFetchGen) {
+                    $scope.rulesLoading = false;
+                }
             }
         }
 
         function cantLoadInitialDatas(response) {
+            if (gen !== rulesFetchGen) {
+                return;
+            }
+            $scope.rulesLoading = false;
             $scope.couldNotConnect = false;
         }
     }
@@ -519,7 +732,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
             $scope.errorMessage = 'Port is required';
             return;
         }
-        $scope.rulesLoading = false;
+        $scope.rulesLoading = true;
         var url = '/firewall/modifyRule';
         var data = {
             id: d.id,
@@ -530,19 +743,19 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
         };
         var config = { headers: { 'X-CSRFToken': getCookie('csrftoken') } };
         $http.post(url, data, config).then(function(response) {
-            $scope.rulesLoading = true;
             if (response.data && response.data.status === 1) {
                 $scope.closeModifyRuleModal();
                 $scope.actionFailed = true;
                 $scope.actionSuccess = false;
                 populateCurrentRecords();
             } else {
+                $scope.rulesLoading = false;
                 $scope.actionFailed = false;
                 $scope.actionSuccess = true;
                 $scope.errorMessage = (response.data && response.data.error_message) || 'Modify failed';
             }
         }, function() {
-            $scope.rulesLoading = true;
+            $scope.rulesLoading = false;
             $scope.actionFailed = false;
             $scope.actionSuccess = true;
             $scope.errorMessage = 'Could not connect to server. Please refresh this page.';
@@ -551,7 +764,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
 
     $scope.deleteRule = function (id, proto, port, ruleIP) {
 
-        $scope.rulesLoading = false;
+        $scope.rulesLoading = true;
 
         url = "/firewall/deleteRule";
 
@@ -579,7 +792,6 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
 
 
                 populateCurrentRecords();
-                $scope.rulesLoading = true;
                 $scope.actionFailed = true;
                 $scope.actionSuccess = true;
 
@@ -591,7 +803,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
             }
             else {
 
-                $scope.rulesLoading = true;
+                $scope.rulesLoading = false;
                 $scope.actionFailed = true;
                 $scope.actionSuccess = true;
 
@@ -599,7 +811,6 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
                 $scope.ruleAdded = true;
                 $scope.couldNotConnect = true;
 
-                $scope.rulesLoading = true;
                 $scope.errorMessage = response.data.error_message;
 
 
@@ -609,7 +820,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
 
         function cantLoadInitialDatas(response) {
 
-            $scope.rulesLoading = true;
+            $scope.rulesLoading = false;
             $scope.actionFailed = true;
             $scope.actionSuccess = true;
 
@@ -656,7 +867,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
             if (response.data.reload_status == 1) {
 
 
-                $scope.rulesLoading = true;
+                $scope.rulesLoading = false;
                 $scope.actionFailed = true;
                 $scope.actionSuccess = false;
 
@@ -668,7 +879,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
             }
             else {
 
-                $scope.rulesLoading = true;
+                $scope.rulesLoading = false;
                 $scope.actionFailed = false;
                 $scope.actionSuccess = true;
 
@@ -685,7 +896,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
 
         function cantLoadInitialDatas(response) {
 
-            $scope.rulesLoading = true;
+            $scope.rulesLoading = false;
             $scope.actionFailed = true;
             $scope.actionSuccess = true;
 
@@ -731,7 +942,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
             if (response.data.start_status == 1) {
 
 
-                $scope.rulesLoading = true;
+                $scope.rulesLoading = false;
                 $scope.actionFailed = true;
                 $scope.actionSuccess = false;
 
@@ -747,7 +958,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
             }
             else {
 
-                $scope.rulesLoading = true;
+                $scope.rulesLoading = false;
                 $scope.actionFailed = false;
                 $scope.actionSuccess = true;
 
@@ -764,7 +975,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
 
         function cantLoadInitialDatas(response) {
 
-            $scope.rulesLoading = true;
+            $scope.rulesLoading = false;
             $scope.actionFailed = true;
             $scope.actionSuccess = true;
 
@@ -811,7 +1022,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
             if (response.data.stop_status == 1) {
 
 
-                $scope.rulesLoading = true;
+                $scope.rulesLoading = false;
                 $scope.actionFailed = true;
                 $scope.actionSuccess = false;
 
@@ -827,7 +1038,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
             }
             else {
 
-                $scope.rulesLoading = true;
+                $scope.rulesLoading = false;
                 $scope.actionFailed = false;
                 $scope.actionSuccess = true;
 
@@ -844,7 +1055,7 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
 
         function cantLoadInitialDatas(response) {
 
-            $scope.rulesLoading = true;
+            $scope.rulesLoading = false;
             $scope.actionFailed = true;
             $scope.actionSuccess = true;
 
@@ -1308,6 +1519,8 @@ app.controller('firewallController', function ($scope, $http, $timeout) {
             $scope.errorMessage = "Could not connect to server. Please refresh this page.";
         }
     }
+
+    $scope.populateCurrentRecords = populateCurrentRecords;
 
 });
 
@@ -3254,18 +3467,20 @@ app.controller('litespeed_ent_conf', function ($scope, $http, $timeout, $window)
     function syncFirewallTabFromHash() {
         var nav = document.getElementById('firewall-tab-nav');
         if (!nav) return;
-        var h = (window.location.hash || '').replace(/^#/, '');
-        var tab = (h === 'banned-ips') ? 'banned' : 'rules';
+        var h = (window.location.hash || '').replace(/^#/, '').toLowerCase();
+        var tab = 'rules';
+        if (h === 'banned-ips' || h === 'banned') tab = 'banned';
+        else if (h === 'trusted-ips' || h === 'ssh-whitelist') tab = 'trusted';
         if (window.__firewallLoadTab) {
             try { window.__firewallLoadTab(tab); } catch (e) {}
         }
     }
 
+    /* Initial sync only — hashchange is handled by Angular syncTabFromHash in firewallController
+       (multiple listeners were racing and could reset #trusted-ips to #rules). */
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', syncFirewallTabFromHash);
     } else {
         syncFirewallTabFromHash();
     }
-    setTimeout(syncFirewallTabFromHash, 100);
-    window.addEventListener('hashchange', syncFirewallTabFromHash);
 })();
