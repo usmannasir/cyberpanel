@@ -1337,6 +1337,15 @@
         
         <!-- Top Process Tab -->
         <div id="top-process" class="tab-content">
+            <div ng-if="!loadingTopProcesses" style="display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; padding: 4px 0;">
+                <span ng-if="topProcessPaused" style="font-size: 12px; color: #d97706; font-weight: 600;">
+                    <i class="fas fa-pause-circle"></i> Auto-refresh paused
+                </span>
+                <button type="button" ng-click="toggleTopProcessPause()" class="btn-primary" style="padding: 6px 14px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="fas" ng-class="topProcessPaused ? 'fa-play' : 'fa-pause'"></i>
+                    <span>{$ topProcessPaused ? 'Resume updates' : 'Pause updates' $}</span>
+                </button>
+            </div>
             <div ng-if="loadingTopProcesses" style="text-align: center; padding: 20px; color: #8893a7;">
                 Loading top processes...
             </div>

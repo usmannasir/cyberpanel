@@ -1004,6 +1004,8 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
     $scope.topProcesses = [];
     $scope.loadingTopProcesses = true;
     $scope.errorTopProcesses = '';
+    /** When true, automatic Top Process refresh is stopped (user can read the table). */
+    $scope.topProcessPaused = false;
     /**
      * @param {boolean} silent If true, refresh rows in place without clearing the table (no loading spinner).
      */
@@ -1812,6 +1814,44 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
     var pollInterval = 2000; // ms (charts / dashboard stats)
     /** Top Process list: slower refresh, silent updates (no table flash). */
     var topProcessPollIntervalMs = 10000;
+    var topProcessPollPromise = null;
+
+    function cancelTopProcessPoll() {
+        if (topProcessPollPromise) {
+            $timeout.cancel(topProcessPollPromise);
+            topProcessPollPromise = null;
+        }
+    }
+
+    function scheduleTopProcessPoll() {
+        cancelTopProcessPoll();
+        function tick() {
+            if ($scope.topProcessPaused) {
+                return;
+            }
+            topProcessPollPromise = $timeout(function() {
+                topProcessPollPromise = null;
+                if (!$scope.topProcessPaused) {
+                    $scope.refreshTopProcesses(true);
+                }
+                if (!$scope.topProcessPaused) {
+                    tick();
+                }
+            }, topProcessPollIntervalMs);
+        }
+        tick();
+    }
+
+    $scope.toggleTopProcessPause = function() {
+        $scope.topProcessPaused = !$scope.topProcessPaused;
+        if ($scope.topProcessPaused) {
+            cancelTopProcessPoll();
+        } else {
+            $scope.refreshTopProcesses(true);
+            scheduleTopProcessPoll();
+        }
+    };
+
     var maxPoints = 30;
 
     // Expose so switchTab can create charts on first tab click if they weren't created at load
@@ -2361,12 +2401,6 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
         }
         pollAll();
 
-        function scheduleTopProcessPoll() {
-            $timeout(function() {
-                $scope.refreshTopProcesses(true);
-                scheduleTopProcessPoll();
-            }, topProcessPollIntervalMs);
-        }
         scheduleTopProcessPoll();
     }, 800);
 
