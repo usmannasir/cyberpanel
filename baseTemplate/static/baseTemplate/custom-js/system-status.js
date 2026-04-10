@@ -1121,6 +1121,18 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
     $scope.errorSSHLogs = '';
     $scope.securityAlerts = [];
     $scope.loadingSecurityAnalysis = false;
+    /** Tab badge: actionable alerts only (high/medium/low). Excludes informational SSH tips. */
+    $scope.actionableSecurityAlertCount = function () {
+        var list = $scope.securityAlerts || [];
+        var c = 0;
+        for (var i = 0; i < list.length; i++) {
+            var sev = (list[i] && list[i].severity) ? String(list[i].severity) : '';
+            if (sev !== 'info') {
+                c++;
+            }
+        }
+        return c;
+    };
 
     $scope.getSSHLogsTotalPages = function() {
         return Math.ceil($scope.sshLogs.length / $scope.sshLogsPerPage);
@@ -1215,6 +1227,114 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
     $scope.blockingIP = null;
     $scope.blockedIPs = {};
 
+    // SSH Security: trusted IPs (never blocked, excluded from analysis alerts)
+    // Use an object for ng-model: inputs live under ng-if child scopes; primitives would not update parent.
+    $scope.sshSecurityWhitelist = [];
+    $scope.sshWhitelistMap = {};
+    $scope.whitelistUi = { ip: '', label: '' };
+
+    $scope._syncWhitelistMap = function () {
+        $scope.sshWhitelistMap = {};
+        if ($scope.sshSecurityWhitelist && $scope.sshSecurityWhitelist.length) {
+            $scope.sshSecurityWhitelist.forEach(function (r) {
+                $scope.sshWhitelistMap[r.ip] = true;
+            });
+        }
+    };
+
+    $scope._decorateWhitelistEntries = function (entries) {
+        $scope.sshSecurityWhitelist = (entries || []).map(function (e) {
+            return {
+                ip: e.ip,
+                label: e.label || '',
+                updated: e.updated || 0,
+                _l: e.label || '',
+                _nip: ''
+            };
+        });
+        $scope._syncWhitelistMap();
+    };
+
+    $scope.isSshWhitelisted = function (ip) {
+        if (!ip) return false;
+        return !!$scope.sshWhitelistMap[String(ip).trim()];
+    };
+
+    $scope.loadSshSecurityWhitelist = function () {
+        var h = { headers: { 'X-CSRFToken': (typeof getCookie === 'function') ? getCookie('csrftoken') : '' } };
+        $http.post('/base/sshSecurityWhitelistList', {}, h).then(function (res) {
+            if (res.data && res.data.status === 1) {
+                $scope._decorateWhitelistEntries(res.data.entries);
+            }
+        });
+    };
+
+    $scope.addSshSecurityWhitelist = function () {
+        var ip = ($scope.whitelistUi && $scope.whitelistUi.ip || '').trim();
+        var label = ($scope.whitelistUi && $scope.whitelistUi.label || '').trim();
+        if (!ip) {
+            if (typeof PNotify !== 'undefined') { new PNotify({ title: 'Trusted IP', text: 'Enter an IP address', type: 'warning', delay: 4000 }); }
+            return;
+        }
+        var h = { headers: { 'X-CSRFToken': (typeof getCookie === 'function') ? getCookie('csrftoken') : '' } };
+        $http.post('/base/sshSecurityWhitelistAdd', { ip: ip, label: label }, h).then(function (res) {
+            if (res.data && res.data.status === 1) {
+                if ($scope.whitelistUi) {
+                    $scope.whitelistUi.ip = '';
+                    $scope.whitelistUi.label = '';
+                }
+                $scope._decorateWhitelistEntries(res.data.entries);
+                if (typeof PNotify !== 'undefined') { new PNotify({ title: 'Trusted IP', text: 'IP added to trusted list', type: 'success', delay: 4000 }); }
+                if ($scope.analyzeSSHSecurity) { $scope.analyzeSSHSecurity(); }
+            } else {
+                var err = (res.data && (res.data.error || res.data.message)) ? (res.data.error || res.data.message) : 'Failed to add';
+                if (typeof PNotify !== 'undefined') { new PNotify({ title: 'Error', text: err, type: 'error', delay: 6000 }); }
+            }
+        }, function (err) {
+            var msg = 'Request failed';
+            if (err.data && err.data.error) msg = err.data.error;
+            if (typeof PNotify !== 'undefined') { new PNotify({ title: 'Error', text: msg, type: 'error', delay: 6000 }); }
+        });
+    };
+
+    $scope.removeSshSecurityWhitelist = function (ip) {
+        if (!ip) return;
+        var h = { headers: { 'X-CSRFToken': (typeof getCookie === 'function') ? getCookie('csrftoken') : '' } };
+        $http.post('/base/sshSecurityWhitelistRemove', { ip: ip }, h).then(function (res) {
+            if (res.data && res.data.status === 1) {
+                $scope._decorateWhitelistEntries(res.data.entries);
+                if (typeof PNotify !== 'undefined') { new PNotify({ title: 'Trusted IP', text: 'IP removed from trusted list', type: 'success', delay: 4000 }); }
+                if ($scope.analyzeSSHSecurity) { $scope.analyzeSSHSecurity(); }
+            } else {
+                var err2 = (res.data && res.data.error) ? res.data.error : 'Failed to remove';
+                if (typeof PNotify !== 'undefined') { new PNotify({ title: 'Error', text: err2, type: 'error', delay: 6000 }); }
+            }
+        });
+    };
+
+    $scope.saveSshSecurityWhitelistRow = function (row) {
+        if (!row || !row.ip) return;
+        var payload = { ip: row.ip, label: row._l };
+        if (row._nip && String(row._nip).trim()) payload.new_ip = String(row._nip).trim();
+        var h = { headers: { 'X-CSRFToken': (typeof getCookie === 'function') ? getCookie('csrftoken') : '' } };
+        $http.post('/base/sshSecurityWhitelistUpdate', payload, h).then(function (res) {
+            var d = res.data || {};
+            var st = d.status === 1 || d.status === '1';
+            if (st) {
+                $scope._decorateWhitelistEntries(d.entries);
+                if (typeof PNotify !== 'undefined') {
+                    var unchanged = d.unchanged === true || d.unchanged === 'true' || d.unchanged === 1;
+                    var txt = (d.message && String(d.message).length) ? d.message : (unchanged ? 'No changes to save.' : 'Entry updated');
+                    new PNotify({ title: 'Trusted IP', text: txt, type: unchanged ? 'info' : 'success', delay: 4000 });
+                }
+                if ($scope.analyzeSSHSecurity) { $scope.analyzeSSHSecurity(); }
+            } else {
+                var err3 = d.error ? d.error : 'Failed to update';
+                if (typeof PNotify !== 'undefined') { new PNotify({ title: 'Error', text: err3, type: 'error', delay: 6000 }); }
+            }
+        });
+    };
+
     $scope.analyzeSSHSecurity = function() {
         $scope.loadingSecurityAnalysis = true;
         $scope.showAddonRequired = false;
@@ -1227,6 +1347,9 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                     $scope.securityAlerts = [];
                 } else if (response.data.status === 1) {
                     $scope.securityAlerts = response.data.alerts;
+                    if (response.data.whitelist_entries) {
+                        $scope._decorateWhitelistEntries(response.data.whitelist_entries);
+                    }
                     $scope.showAddonRequired = false;
                 }
             }

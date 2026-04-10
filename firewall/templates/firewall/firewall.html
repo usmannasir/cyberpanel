@@ -1257,14 +1257,18 @@
     </div>
 
     <!-- Tab Navigation: buttons with native fallback so clicks always work -->
-    <div class="tab-navigation" role="tablist" id="firewall-tab-nav">
-        <button type="button" class="tab-button" role="tab" data-tab="rules" title="{% trans 'Firewall Rules' %}" ng-class="{'tab-active': activeTab === 'rules'}" ng-click="setFirewallTab('rules')">
+    <div class="tab-navigation" id="firewall-tab-nav">
+        <button type="button" class="tab-button" data-tab="rules" title="{% trans 'Firewall Rules' %}" ng-class="{'tab-active': activeTab === 'rules'}" ng-click="setFirewallTab('rules', $event)">
             <i class="fas fa-list-alt"></i>
             {% trans "Firewall Rules" %}
         </button>
-        <button type="button" class="tab-button" role="tab" data-tab="banned" title="{% trans 'Banned IPs' %}" ng-class="{'tab-active': activeTab === 'banned'}" ng-click="setFirewallTab('banned')">
+        <button type="button" class="tab-button" data-tab="banned" title="{% trans 'Banned IPs' %}" ng-class="{'tab-active': activeTab === 'banned'}" ng-click="setFirewallTab('banned', $event)">
             <i class="fas fa-ban"></i>
             {% trans "Banned IPs" %}
+        </button>
+        <button type="button" class="tab-button" data-tab="trusted" title="{% trans 'SSH trusted IPs' %}" ng-class="{'tab-active': activeTab === 'trusted'}" ng-click="setFirewallTab('trusted', $event)">
+            <i class="fas fa-shield-alt"></i>
+            {% trans "SSH trusted IPs" %}
         </button>
     </div>
 
@@ -1768,13 +1772,75 @@
             </div>
         </div>
     </div>
+
+    <!-- SSH Security trusted IPs (same list as Dashboard → SSH Security Analysis) -->
+    <div class="banned-ips-panel trusted-ssh-panel" ng-show="activeTab === 'trusted'">
+        <div class="panel-header">
+            <div class="panel-title">
+                <div class="panel-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                {% trans "SSH trusted IPs (never block)" %}
+            </div>
+            <div ng-show="trustedSSHLoading" class="loading-spinner"></div>
+        </div>
+        <div style="padding: 0 2rem 1rem; color: var(--text-secondary, #64748b); font-size: 0.95rem; line-height: 1.5;">
+            {% trans "These addresses are skipped in SSH Security Analysis and cannot be added under Banned IPs. Use your home or office public IP to avoid accidental lockouts." %}
+        </div>
+        <div class="add-banned-section" style="padding-top: 0;">
+            <form class="banned-form" onsubmit="return false;">
+                <div class="form-group">
+                    <label class="form-label">{% trans "IP address" %}</label>
+                    <input type="text" class="form-control" ng-model="trustedForm.ip" placeholder="{% trans 'Public IPv4 / IPv6' %}" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{% trans "Label (optional)" %}</label>
+                    <input type="text" class="form-control" ng-model="trustedForm.label" placeholder="{% trans 'e.g. Home PC' %}" autocomplete="off">
+                </div>
+                <button type="button" ng-click="addTrustedSSHWhitelist()" class="btn-add" style="background: var(--primary, #5b5fcf);">
+                    <i class="fas fa-plus"></i>
+                    {% trans "Add trusted IP" %}
+                </button>
+            </form>
+        </div>
+        <div class="table-responsive" style="padding: 0 2rem 2rem;">
+            <table class="rules-table" ng-if="trustedSSHWhitelist.length > 0">
+                <thead>
+                    <tr>
+                        <th>{% trans "IP" %}</th>
+                        <th>{% trans "Label" %}</th>
+                        <th>{% trans "Replace IP (optional)" %}</th>
+                        <th>{% trans "Actions" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="row in trustedSSHWhitelist track by row.ip">
+                        <td><code>{$ row.ip $}</code></td>
+                        <td><input type="text" class="form-control" ng-model="row._l" style="min-width: 12rem;"></td>
+                        <td><input type="text" class="form-control" ng-model="row._nip" placeholder="{% trans 'New IP' %}" style="min-width: 10rem;"></td>
+                        <td>
+                            <button type="button" class="btn-modify" ng-click="saveTrustedSSHWhitelistRow(row)">
+                                <i class="fas fa-save"></i> {% trans "Save" %}
+                            </button>
+                            <button type="button" class="btn-delete" ng-click="removeTrustedSSHWhitelist(row.ip)">
+                                <i class="fas fa-times"></i> {% trans "Remove" %}
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div ng-if="!trustedSSHWhitelist || trustedSSHWhitelist.length === 0" class="empty-state" style="margin-top: 1rem;">
+                <i class="fas fa-user-shield empty-icon"></i>
+                <h3 class="empty-title">{% trans "No trusted IPs yet" %}</h3>
+                <p class="empty-text">{% trans "Add at least the public IP you use to manage this server." %}</p>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
 (function(){
-  var nav = document.getElementById('firewall-tab-nav');
-  if (!nav) return;
-
+  /* Bootstrapping only: race Angular controller init. Tab *clicks* use ng-click only (no duplicate nav listeners). */
   function loadTabViaAngularScope(tab) {
     if (!window.angular) return false;
     var container = document.querySelector('.modern-container[ng-controller="firewallController"]') || document.querySelector('.modern-container');
@@ -1785,6 +1851,7 @@
       scope.$evalAsync(function() {
         scope.activeTab = tab;
         if (tab === 'banned' && scope.populateBannedIPs) scope.populateBannedIPs();
+        else if (tab === 'trusted' && scope.populateTrustedSSHWhitelist) scope.populateTrustedSSHWhitelist();
         else if (tab === 'rules' && scope.populateCurrentRecords) scope.populateCurrentRecords();
       });
       return true;
@@ -1794,7 +1861,7 @@
   }
 
   function loadTab(tab) {
-    if (!tab || (tab !== 'rules' && tab !== 'banned')) return;
+    if (!tab || (tab !== 'rules' && tab !== 'banned' && tab !== 'trusted')) return;
     var done = false;
     if (window.__firewallLoadTab) {
       try { window.__firewallLoadTab(tab); done = true; } catch (e) {}
@@ -1811,38 +1878,18 @@
         if (window.__firewallLoadTab) { try { window.__firewallLoadTab(tab); } catch (e) {} }
         else { loadTabViaAngularScope(tab); }
       }, 200);
-      setTimeout(function() {
-        if (window.__firewallLoadTab) { try { window.__firewallLoadTab(tab); } catch (e) {} }
-        else { loadTabViaAngularScope(tab); }
-      }, 500);
     }
   }
 
-  function onTabButtonClick(btn) {
-    var tab = btn && btn.getAttribute('data-tab');
-    if (!tab) return;
-    window.location.hash = (tab === 'banned') ? '#banned-ips' : '#rules';
-    loadTab(tab);
-  }
-  nav.addEventListener('click', function(e) {
-    var btn = (e.target && e.target.closest) ? e.target.closest('.tab-button[data-tab]') : null;
-    if (btn && nav.contains(btn)) onTabButtonClick(btn);
-  }, false);
-  nav.addEventListener('mousedown', function(e) {
-    var btn = (e.target && e.target.closest) ? e.target.closest('.tab-button[data-tab]') : null;
-    if (btn && nav.contains(btn)) onTabButtonClick(btn);
-  }, false);
-
   function loadTabFromHash() {
-    var h = (window.location.hash || '').replace(/^#/, '');
-    var tab = (h === 'banned-ips') ? 'banned' : 'rules';
+    var h = (window.location.hash || '').replace(/^#/, '').toLowerCase();
+    var tab = 'rules';
+    if (h === 'banned-ips' || h === 'banned') tab = 'banned';
+    else if (h === 'trusted-ips' || h === 'ssh-whitelist') tab = 'trusted';
     loadTab(tab);
   }
-  var h = (window.location.hash || '').replace(/^#/, '');
-  if (h === 'banned-ips') loadTabFromHash();
-  window.addEventListener('hashchange', loadTabFromHash);
-  setTimeout(loadTabFromHash, 150);
-  setTimeout(loadTabFromHash, 500);
+  var h = (window.location.hash || '').replace(/^#/, '').toLowerCase();
+  if (h === 'banned-ips' || h === 'banned' || h === 'trusted-ips' || h === 'ssh-whitelist') loadTabFromHash();
 })();
 </script>
 

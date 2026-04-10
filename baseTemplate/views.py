@@ -861,6 +861,11 @@ def getRecentSSHLogins(request):
         lines = output.strip().split('\n')
         logins = []
         ip_cache = {}
+        try:
+            from plogical.sshSecurityWhitelistUtilities import SSHSecurityWhitelistUtilities
+            ssh_whitelist_ips = SSHSecurityWhitelistUtilities.ip_set()
+        except Exception:
+            ssh_whitelist_ips = set()
         for line in lines:
             if not line.strip() or any(x in line for x in ['reboot', 'system boot', 'wtmp begins']):
                 continue
@@ -928,6 +933,12 @@ def getRecentSSHLogins(request):
                 country, flag = 'IPv6', ''
             elif ip == '127.0.0.1' or ip == '::1':
                 country, flag = 'Local', ''
+            try:
+                ip_for_wl = SSHSecurityWhitelistUtilities.normalize_ip(ip)
+                if ip_for_wl and ip_for_wl in ssh_whitelist_ips:
+                    continue
+            except Exception:
+                pass
             logins.append({
                 'user': user,
                 'ip': ip,
@@ -986,6 +997,11 @@ def getRecentSSHLogs(request):
             output = ProcessUtilities.outputExecutioner(f'tail -n 500 {log_path}')
         except Exception as e:
             return HttpResponse(json.dumps({'error': f'Failed to read log: {str(e)}'}), content_type='application/json', status=500)
+        try:
+            from plogical.sshSecurityWhitelistUtilities import SSHSecurityWhitelistUtilities
+            ssh_whitelist_ips = SSHSecurityWhitelistUtilities.ip_set()
+        except Exception:
+            ssh_whitelist_ips = set()
         lines = output.split('\n')
         logs = []
         # IP address regex patterns (IPv4)
@@ -1015,6 +1031,12 @@ def getRecentSSHLogs(request):
                 if not ip_address and ip_matches:
                     ip_address = ip_matches[0]
             
+            try:
+                ip_wl = SSHSecurityWhitelistUtilities.normalize_ip(ip_address) if ip_address else ''
+                if ip_wl and ip_wl in ssh_whitelist_ips:
+                    continue
+            except Exception:
+                pass
             logs.append({
                 'timestamp': timestamp, 
                 'message': message, 
@@ -1185,10 +1207,21 @@ def analyzeSSHSecurity(request):
                     ip = match.group(1)
                     repeated_connections[ip] += 1
         
+        # Trusted IPs: never show block recommendations / never block via FirewallUtilities
+        from plogical.sshSecurityWhitelistUtilities import SSHSecurityWhitelistUtilities
+        try:
+            whitelist_entries = SSHSecurityWhitelistUtilities.load_entries()
+            wl_set = {e['ip'] for e in whitelist_entries}
+        except Exception:
+            whitelist_entries = []
+            wl_set = set()
+
         # Generate alerts based on analysis
-        
+
         # High severity: Brute force attacks
         for ip, count in failed_passwords.items():
+            if SSHSecurityWhitelistUtilities.normalized_ip_in_whitelist(ip, wl_set):
+                continue
             if count >= 10:
                 recommendation = f'Block this IP immediately:\nfirewall-cmd --permanent --add-rich-rule="rule family=ipv4 source address={ip} drop" && firewall-cmd --reload'
                 
@@ -1204,22 +1237,30 @@ def analyzeSSHSecurity(request):
                     'recommendation': recommendation
                 })
         
-        # High severity: Root login attempts
-        if root_login_attempts:
+        # High severity: Root login attempts (exclude trusted IPs)
+        root_login_attempts_filtered = [
+            r for r in root_login_attempts
+            if not SSHSecurityWhitelistUtilities.normalized_ip_in_whitelist(r['ip'], wl_set)
+        ]
+        if root_login_attempts_filtered:
+            unique_ips = set(r["ip"] for r in root_login_attempts_filtered)
+            top_ip = max(unique_ips, key=lambda x: sum(1 for r in root_login_attempts_filtered if r["ip"] == x))
             alerts.append({
                 'title': 'Root Login Attempts Detected',
-                'description': f'Direct root login attempts detected from {len(set(r["ip"] for r in root_login_attempts))} IP addresses. Root SSH access should be disabled.',
+                'description': f'Direct root login attempts detected from {len(unique_ips)} IP addresses. Root SSH access should be disabled.',
                 'severity': 'high',
                 'details': {
-                    'Unique IPs': len(set(r["ip"] for r in root_login_attempts)),
-                    'Total Attempts': len(root_login_attempts),
-                    'Top IP': max(set(r["ip"] for r in root_login_attempts), key=lambda x: sum(1 for r in root_login_attempts if r["ip"] == x))
+                    'Unique IPs': len(unique_ips),
+                    'Total Attempts': len(root_login_attempts_filtered),
+                    'Top IP': top_ip
                 },
                 'recommendation': 'Disable root SSH login by setting "PermitRootLogin no" in /etc/ssh/sshd_config'
             })
         
         # Medium severity: Dictionary attacks
         for ip, count in invalid_users.items():
+            if SSHSecurityWhitelistUtilities.normalized_ip_in_whitelist(ip, wl_set):
+                continue
             if count >= 5:
                 if firewall_cmd == 'csf':
                     recommendation = f'Consider blocking this IP:\ncsf -d {ip} "Dictionary attack - {count} invalid users"\n\nAlso configure CSF Login Failure Daemon (lfd) for automatic blocking.'
@@ -1240,6 +1281,8 @@ def analyzeSSHSecurity(request):
         
         # Medium severity: Port scanning
         for ip, count in port_scan_attempts.items():
+            if SSHSecurityWhitelistUtilities.normalized_ip_in_whitelist(ip, wl_set):
+                continue
             if count >= 3:
                 alerts.append({
                     'title': 'Port Scan Detected',
@@ -1255,6 +1298,8 @@ def analyzeSSHSecurity(request):
         
         # Low severity: Successful login after failures
         for ip, successes in successful_after_failures.items():
+            if SSHSecurityWhitelistUtilities.normalized_ip_in_whitelist(ip, wl_set):
+                continue
             if successes:
                 max_failures = max(s['failures'] for s in successes)
                 if max_failures >= 3:
@@ -1272,6 +1317,8 @@ def analyzeSSHSecurity(request):
         
         # High severity: Rapid connection attempts (DDoS/flooding)
         for ip, count in repeated_connections.items():
+            if SSHSecurityWhitelistUtilities.normalized_ip_in_whitelist(ip, wl_set):
+                continue
             if count >= 50:
                 if firewall_cmd == 'csf':
                     recommendation = f'Block this IP immediately to prevent resource exhaustion:\ncsf -d {ip} "SSH flooding - {count} connections"'
@@ -1348,11 +1395,136 @@ def analyzeSSHSecurity(request):
         
         return HttpResponse(json.dumps({
             'status': 1,
-            'alerts': alerts
+            'alerts': alerts,
+            'whitelist_entries': whitelist_entries,
         }), content_type='application/json')
         
     except Exception as e:
         return HttpResponse(json.dumps({'error': str(e)}), content_type='application/json', status=500)
+
+
+def _ssh_whitelist_acl(request):
+    """Return (user_id, error_response) or (user_id, None)."""
+    user_id = request.session.get('userID')
+    if not user_id:
+        return None, HttpResponse(json.dumps({'error': 'Not logged in'}), content_type='application/json', status=403)
+    currentACL = ACLManager.loadedACL(user_id)
+    if not currentACL.get('admin', 0):
+        return None, HttpResponse(json.dumps({'error': 'Admin only'}), content_type='application/json', status=403)
+    if not ACLManager.CheckForPremFeature('all'):
+        return None, HttpResponse(json.dumps({
+            'status': 0,
+            'error': 'SSH Security trusted IPs require the same access as SSH Security Analysis (addons).',
+        }), content_type='application/json', status=403)
+    return user_id, None
+
+
+@csrf_exempt
+@require_POST
+def sshSecurityWhitelistList(request):
+    try:
+        _, err = _ssh_whitelist_acl(request)
+        if err:
+            return err
+        from plogical.sshSecurityWhitelistUtilities import SSHSecurityWhitelistUtilities
+        try:
+            SSHSecurityWhitelistUtilities.ensure_cyberpanel_public_ip_whitelisted()
+        except Exception:
+            pass
+        entries = SSHSecurityWhitelistUtilities.load_entries()
+        return HttpResponse(json.dumps({
+            'status': 1,
+            'entries': entries,
+        }), content_type='application/json')
+    except Exception as e:
+        return HttpResponse(json.dumps({'status': 0, 'error': str(e)}), content_type='application/json', status=500)
+
+
+@csrf_exempt
+@require_POST
+def sshSecurityWhitelistAdd(request):
+    try:
+        _, err = _ssh_whitelist_acl(request)
+        if err:
+            return err
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+        except (json.JSONDecodeError, UnicodeDecodeError, AttributeError):
+            return HttpResponse(json.dumps({'status': 0, 'error': 'Invalid JSON'}), content_type='application/json', status=400)
+        ip = (data.get('ip') or '').strip()
+        label = (data.get('label') or '').strip()
+        from plogical.sshSecurityWhitelistUtilities import SSHSecurityWhitelistUtilities
+        ok, msg = SSHSecurityWhitelistUtilities.add_entry(ip, label)
+        if not ok:
+            return HttpResponse(json.dumps({'status': 0, 'error': msg}), content_type='application/json', status=400)
+        return HttpResponse(json.dumps({
+            'status': 1,
+            'message': 'Trusted IP added',
+            'ip': msg,
+            'entries': SSHSecurityWhitelistUtilities.load_entries(),
+        }), content_type='application/json')
+    except Exception as e:
+        return HttpResponse(json.dumps({'status': 0, 'error': str(e)}), content_type='application/json', status=500)
+
+
+@csrf_exempt
+@require_POST
+def sshSecurityWhitelistRemove(request):
+    try:
+        _, err = _ssh_whitelist_acl(request)
+        if err:
+            return err
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+        except (json.JSONDecodeError, UnicodeDecodeError, AttributeError):
+            return HttpResponse(json.dumps({'status': 0, 'error': 'Invalid JSON'}), content_type='application/json', status=400)
+        ip = (data.get('ip') or '').strip()
+        from plogical.sshSecurityWhitelistUtilities import SSHSecurityWhitelistUtilities
+        ok, msg = SSHSecurityWhitelistUtilities.remove_entry(ip)
+        if not ok:
+            return HttpResponse(json.dumps({'status': 0, 'error': msg}), content_type='application/json', status=400)
+        return HttpResponse(json.dumps({
+            'status': 1,
+            'message': 'Trusted IP removed',
+            'entries': SSHSecurityWhitelistUtilities.load_entries(),
+        }), content_type='application/json')
+    except Exception as e:
+        return HttpResponse(json.dumps({'status': 0, 'error': str(e)}), content_type='application/json', status=500)
+
+
+@csrf_exempt
+@require_POST
+def sshSecurityWhitelistUpdate(request):
+    try:
+        _, err = _ssh_whitelist_acl(request)
+        if err:
+            return err
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+        except (json.JSONDecodeError, UnicodeDecodeError, AttributeError):
+            return HttpResponse(json.dumps({'status': 0, 'error': 'Invalid JSON'}), content_type='application/json', status=400)
+        ip = (data.get('ip') or '').strip()
+        new_ip = data.get('new_ip')
+        if new_ip is not None:
+            new_ip = str(new_ip).strip() or None
+        label = data.get('label')
+        if label is not None:
+            label = str(label).strip()
+        from plogical.sshSecurityWhitelistUtilities import SSHSecurityWhitelistUtilities
+        ok, msg, unchanged = SSHSecurityWhitelistUtilities.update_entry(ip, new_ip=new_ip, label=label)
+        if not ok:
+            return HttpResponse(json.dumps({'status': 0, 'error': msg}), content_type='application/json', status=400)
+        message = 'No changes to save.' if unchanged else 'Trusted IP updated.'
+        return HttpResponse(json.dumps({
+            'status': 1,
+            'message': message,
+            'unchanged': bool(unchanged),
+            'ip': msg,
+            'entries': SSHSecurityWhitelistUtilities.load_entries(),
+        }), content_type='application/json')
+    except Exception as e:
+        return HttpResponse(json.dumps({'status': 0, 'error': str(e)}), content_type='application/json', status=500)
+
 
 @csrf_exempt
 @require_POST

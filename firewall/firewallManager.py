@@ -2337,6 +2337,18 @@ class FirewallManager:
                 final_dic = {'status': 0, 'error_message': 'Invalid IP address format', 'error': 'Invalid IP address format'}
                 return HttpResponse(json.dumps(final_dic), content_type='application/json')
 
+            try:
+                from plogical.sshSecurityWhitelistUtilities import SSHSecurityWhitelistUtilities
+                if SSHSecurityWhitelistUtilities.is_whitelisted(ip):
+                    final_dic = {
+                        'status': 0,
+                        'error_message': 'This IP is on the SSH Security trusted list and cannot be banned. Remove it from Trusted IPs first.',
+                        'error': 'SSH Security whitelist',
+                    }
+                    return HttpResponse(json.dumps(final_dic), content_type='application/json')
+            except Exception:
+                pass
+
             current_time = time.time()
             duration_map = {
                 '1h': 3600,

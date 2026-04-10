@@ -1002,8 +1002,8 @@
                 <button class="activity-tab" onclick="switchTab('ssh-logs', this)">
                     <i class="fas fa-file-alt"></i>
                     <span>Recent SSH Logs</span>
-                    <span ng-if="securityAlerts.length > 0" style="background: #dc2626; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 6px;">
-                        {$ securityAlerts.length $}
+                    <span ng-if="actionableSecurityAlertCount() > 0" style="background: #dc2626; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 6px;" title="Actionable SSH security alerts (not log line count; tips excluded)">
+                        {$ actionableSecurityAlertCount() $}
                     </span>
                 </button>
                 <button class="activity-tab" onclick="switchTab('top-process', this)">
@@ -1207,6 +1207,10 @@
                                 </div>
                                 <!-- Add to Firewall Button for all alerts with IP addresses -->
                                 <div ng-if="alert.details && (alert.details['IP Address'] || alert.details['Top IP'])" style="margin-top: 12px;">
+                                    <span ng-if="isSshWhitelisted(alert.details['IP Address'] || alert.details['Top IP'])" style="display: inline-flex; align-items: center; gap: 6px; color: #0ea5e9; font-size: 12px; font-weight: 600;">
+                                        <i class="fas fa-shield-alt"></i> Trusted IP — not shown as a threat and cannot be banned from here.
+                                    </span>
+                                    <span ng-if="!isSshWhitelisted(alert.details['IP Address'] || alert.details['Top IP'])">
                                     <button ng-click="blockIPAddress(alert.details['IP Address'] || alert.details['Top IP']); $event.stopPropagation()" 
                                             ng-disabled="blockingIP === (alert.details['IP Address'] || alert.details['Top IP'])"
                                             style="background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;"
@@ -1223,6 +1227,7 @@
                                     <span ng-if="blockedIPs && blockedIPs[alert.details['IP Address'] || alert.details['Top IP']]" 
                                           style="margin-left: 10px; color: #10b981; font-size: 12px; font-weight: 600;">
                                         <i class="fas fa-check-circle"></i> Blocked
+                                    </span>
                                     </span>
                                 </div>
                             </div>
@@ -1263,7 +1268,7 @@
                             <span ng-if="!log.ip_address" style="color: #8893a7;">-</span>
                         </td>
                         <td>
-                            <button ng-if="log.ip_address && blockingIP !== log.ip_address && !blockedIPs[log.ip_address]" 
+                            <button ng-if="log.ip_address && blockingIP !== log.ip_address && !blockedIPs[log.ip_address] && !isSshWhitelisted(log.ip_address)" 
                                     ng-click="banIPFromSSHLog(log.ip_address)"
                                     style="background: #dc2626; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"
                                     onmouseover="this.style.background='#b91c1c'" 
@@ -1282,6 +1287,11 @@
                                   style="color: #10b981; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
                                 <i class="fas fa-check-circle"></i>
                                 Banned
+                            </span>
+                            <span ng-if="log.ip_address && isSshWhitelisted(log.ip_address)"
+                                  style="color: #0ea5e9; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                                <i class="fas fa-shield-alt"></i>
+                                Trusted
                             </span>
                             <span ng-if="!log.ip_address" style="color: #8893a7; font-size: 11px;">-</span>
                         </td>
