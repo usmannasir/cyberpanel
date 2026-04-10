@@ -1004,8 +1004,14 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
     $scope.topProcesses = [];
     $scope.loadingTopProcesses = true;
     $scope.errorTopProcesses = '';
-    $scope.refreshTopProcesses = function() {
-        $scope.loadingTopProcesses = true;
+    /**
+     * @param {boolean} silent If true, refresh rows in place without clearing the table (no loading spinner).
+     */
+    $scope.refreshTopProcesses = function(silent) {
+        silent = !!silent;
+        if (!silent) {
+            $scope.loadingTopProcesses = true;
+        }
         var h = { headers: { 'X-CSRFToken': (typeof getCookie === 'function') ? getCookie('csrftoken') : '' } };
         $http.get('/base/getTopProcesses', h).then(function (response) {
             $scope.loadingTopProcesses = false;
@@ -1014,9 +1020,12 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             } else {
                 $scope.topProcesses = [];
             }
+            $scope.errorTopProcesses = '';
         }, function (err) {
             $scope.loadingTopProcesses = false;
-            $scope.errorTopProcesses = 'Failed to load top processes.';
+            if (!silent) {
+                $scope.errorTopProcesses = 'Failed to load top processes.';
+            }
         });
     };
 
@@ -1800,7 +1809,9 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
     // For rate calculation
     var lastRx = null, lastTx = null, lastDiskRead = null, lastDiskWrite = null, lastCPU = null;
     var lastCPUTimes = null;
-    var pollInterval = 2000; // ms
+    var pollInterval = 2000; // ms (charts / dashboard stats)
+    /** Top Process list: slower refresh, silent updates (no table flash). */
+    var topProcessPollIntervalMs = 10000;
     var maxPoints = 30;
 
     // Expose so switchTab can create charts on first tab click if they weren't created at load
@@ -2323,7 +2334,6 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
 
     // Initial setup - fetch stats immediately
     pollDashboardStats();
-    $scope.refreshTopProcesses();
     $scope.refreshSSHLogins();
     $scope.refreshSSHLogs();
 
@@ -2341,16 +2351,23 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             $scope.hideSystemCharts = true;
         });
 
-        // Start polling for all stats (data feeds charts)
+        // Start polling for all stats (data feeds charts). Top Process is polled separately (slower, silent).
         function pollAll() {
             pollDashboardStats();
             pollTraffic();
             pollDiskIO();
             pollCPU();
-            $scope.refreshTopProcesses();
             $timeout(pollAll, pollInterval);
         }
         pollAll();
+
+        function scheduleTopProcessPoll() {
+            $timeout(function() {
+                $scope.refreshTopProcesses(true);
+                scheduleTopProcessPoll();
+            }, topProcessPollIntervalMs);
+        }
+        scheduleTopProcessPoll();
     }, 800);
 
     // SSH User Activity Modal
