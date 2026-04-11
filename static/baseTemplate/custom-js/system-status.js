@@ -696,6 +696,12 @@ app.controller('versionManagment', function ($scope, $http, $timeout) {
                 $scope.updateStarted = false;
                 $scope.updateFinish = true;
                 $scope.couldNotConnect = true;
+                var startPct = (typeof response.data.progress !== 'undefined' && isFinite(response.data.progress))
+                    ? response.data.progress : 0;
+                var progEl = document.getElementById('upgradeProgressLog');
+                if (progEl) {
+                    progEl.innerText = 'Upgrade Progress: ' + startPct + '%';
+                }
                 getUpgradeStatus();
             } else {
                 $scope.updateError = false;
@@ -740,6 +746,12 @@ app.controller('versionManagment', function ($scope, $http, $timeout) {
         function ListInitialDatas(response) {
             console.log(response.data.upgradeLog);
 
+            var pct = (typeof response.data.progress !== 'undefined' && isFinite(response.data.progress))
+                ? response.data.progress : 0;
+            var progEl = document.getElementById('upgradeProgressLog');
+            if (progEl) {
+                progEl.innerText = 'Upgrade Progress: ' + pct + '%';
+            }
 
             if (response.data.upgradeStatus === 1) {
 
@@ -753,6 +765,9 @@ app.controller('versionManagment', function ($scope, $http, $timeout) {
                     $scope.updateStarted = true;
                     $scope.updateFinish = false;
                     $scope.couldNotConnect = true;
+                    if (progEl) {
+                        progEl.innerText = 'Upgrade Progress: 100%';
+                    }
 
                 } else {
                     $scope.upgradelogBox = false;

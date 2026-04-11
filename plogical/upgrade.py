@@ -325,6 +325,7 @@ class Upgrade:
     FromCloud = 0
     SnappyVersion = '2.38.2'
     LogPathNew = '/home/cyberpanel/upgrade_logs'
+    ProgressPathNew = '/home/cyberpanel/upgrade_progress'
     SoftUpgrade = 0
 
     AdminACL = '{"adminStatus":1, "versionManagement": 1, "createNewUser": 1, "listUsers": 1, "deleteUser":1 , "resellerCenter": 1, ' \
@@ -353,6 +354,40 @@ class Upgrade:
               '"dkimManager": 1, "createFTPAccount": 1, "deleteFTPAccount": 1, "listFTPAccounts": 1, "createBackup": 1,' \
               ' "restoreBackup": 0, "addDeleteDestinations": 0, "scheduleBackups": 0, "remoteBackups": 0, "googleDriveBackups": 1, "manageSSL": 1, ' \
               '"hostnameSSL": 0, "mailServerSSL": 0 }'
+
+    @staticmethod
+    def write_upgrade_progress(pct, monotonic=False):
+        """Persist 0–100 for Version Management polling; optional monotonic increase."""
+        try:
+            pct = int(pct)
+            pct = max(0, min(100, pct))
+            parent = os.path.dirname(Upgrade.ProgressPathNew)
+            if not os.path.isdir(parent):
+                os.makedirs(parent, mode=0o750, exist_ok=True)
+            if monotonic and os.path.isfile(Upgrade.ProgressPathNew):
+                try:
+                    with open(Upgrade.ProgressPathNew, 'r') as rf:
+                        cur = int(json.loads(rf.read()).get('pct', 0))
+                    pct = max(pct, cur)
+                except (ValueError, TypeError, json.JSONDecodeError, OSError):
+                    pass
+            with open(Upgrade.ProgressPathNew, 'w') as wf:
+                wf.write(json.dumps({'pct': pct}))
+        except (OSError, TypeError, ValueError):
+            pass
+
+    @staticmethod
+    def _upgrade_init_files_and_progress():
+        """Create log/progress files before first stdOut so UI polling never hits cat errors."""
+        try:
+            parent = '/home/cyberpanel'
+            if not os.path.isdir(parent):
+                os.makedirs(parent, mode=0o750, exist_ok=True)
+            with open(Upgrade.LogPathNew, 'a'):
+                pass
+            Upgrade.write_upgrade_progress(0)
+        except (OSError, TypeError, ValueError):
+            pass
 
     @staticmethod
     def FetchCloudLinuxAlmaVersionVersion():
@@ -446,6 +481,16 @@ class Upgrade:
         WriteToFile.write(("[" + time.strftime(
             "%m.%d.%Y_%H-%M-%S") + "] #########################################################################\n"))
         WriteToFile.close()
+
+        try:
+            if 'Upgrade Completed' in message:
+                Upgrade.write_upgrade_progress(100)
+            elif os.path.isfile(Upgrade.LogPathNew):
+                sz = os.path.getsize(Upgrade.LogPathNew)
+                est = min(92, 4 + int(sz / 6000))
+                Upgrade.write_upgrade_progress(est, monotonic=True)
+        except (OSError, TypeError, ValueError):
+            pass
 
         if do_exit:
 
@@ -6532,6 +6577,9 @@ slowlog = /var/log/php{version}-fpm-slow.log
             Upgrade.SoftUpgrade = 1
             branch = branch.split(',')[1]
 
+        Upgrade._upgrade_init_files_and_progress()
+        Upgrade.write_upgrade_progress(6)
+
         # Upgrade.stdOut("Upgrades are currently disabled")
         # return 0
 
@@ -6549,6 +6597,8 @@ slowlog = /var/log/php{version}-fpm-slow.log
             except Exception as e:
                 Upgrade.stdOut(f"Error getting installed packages: {str(e)}")
                 Upgrade.installedOutput = ""
+
+        Upgrade.write_upgrade_progress(12, monotonic=True)
 
         # command = 'systemctl stop cpssh'
         # Upgrade.executioner(command, 'fix csf if there', 0)
@@ -7151,6 +7201,11 @@ slowlog = /var/log/php{version}-fpm-slow.log
             time.sleep(30)
             if os.path.exists(Upgrade.LogPathNew):
                 os.remove(Upgrade.LogPathNew)
+            try:
+                if os.path.isfile(Upgrade.ProgressPathNew):
+                    os.remove(Upgrade.ProgressPathNew)
+            except OSError:
+                pass
 
     @staticmethod
     def fixApacheConfigurationOld():
