@@ -16,7 +16,9 @@ Pre_Upgrade_CentOS7_MySQL() {
     systemctl start mariadb 2>/dev/null || systemctl start mysql
     mariadb-upgrade --force -uroot -p"$MySQL_Password" 2>/dev/null || mysql_upgrade --force -uroot -p"$MySQL_Password" 2>/dev/null || true
   fi
-  mariadb -uroot -p"$MySQL_Password" -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '$MySQL_Password';flush privileges" 2>/dev/null || mysql -uroot -p"$MySQL_Password" -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '$MySQL_Password';flush privileges"
+  # Do not use IDENTIFIED BY here - it re-hashes the root password and can break apps that still use the old hash.
+  # Privileges only; leave the existing MariaDB root password unchanged.
+  mariadb -uroot -p"$MySQL_Password" -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION; FLUSH PRIVILEGES" 2>/dev/null || mysql -uroot -p"$MySQL_Password" -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION; FLUSH PRIVILEGES"
   Ensure_MariaDB_Client_No_SSL
 }
 
