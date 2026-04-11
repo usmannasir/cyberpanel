@@ -2,6 +2,26 @@
  * Created by usman on 6/22/18.
  */
 
+/* Ensure CyberCP Angular module exists (system-status.js normally sets window.app in <head>) */
+(function () {
+    if (typeof window === 'undefined' || typeof angular === 'undefined') {
+        return;
+    }
+    if (typeof window.app !== 'undefined' && window.app) {
+        return;
+    }
+    try {
+        window.app = angular.module('CyberCP');
+    } catch (e) {
+        try {
+            window.app = angular.module('CyberCP', []);
+        } catch (e2) {
+            return;
+        }
+    }
+})();
+var app = window.app;
+
 /* Java script code to list accounts */
 
 app.controller('listDomains', function ($scope, $http) {
@@ -678,7 +698,7 @@ app.controller('SpamAssassin', function ($scope, $http, $timeout, $window) {
     $scope.SpamAssassinLoading = true;
     $scope.failedToStartInallation = true;
     $scope.couldNotConnect = true;
-    $scope.SpamAssassinSuccessfullyInstalled = true;
+    $scope.RspamdSuccessfullyInstalled = true;
     $scope.installationFailed = true;
 
 
@@ -954,6 +974,1037 @@ app.controller('SpamAssassin', function ($scope, $http, $timeout, $window) {
 });
 
 /* Java script code for SpamAssassin */
+
+
+/* Rspamd start  */
+app.controller('Rspamd', function ($scope, $http, $timeout, $window) {
+    $scope.RspamdNotifyBox = true;
+    $scope.RspamdInstallBox = true;
+    $scope.RspamdLoading = true;
+    $scope.failedToStartInallation = true;
+    $scope.couldNotConnect = true;
+    $scope.RspamdSuccessfullyInstalled = true;
+    $scope.installationFailed = true;
+    $scope.failedToSave = true;
+    $scope.successfullySaved = true;
+    $scope.ActionValue = true;
+    $scope.installedrspamd = false;
+    $scope.uninstalldiv = true;
+    $scope.uninstallRspamdNotifyBox = true;
+    $scope.uninstallRspamdInstallBox = true;
+    $scope.uninstallbutton = true;
+
+
+    $scope.installRspamd = function () {
+
+        $scope.RspamdNotifyBox = true;
+        $scope.RspamdInstallBox = true;
+        $scope.RspamdLoading = false;
+        $scope.failedToStartInallation = true;
+        $scope.couldNotConnect = true;
+        $scope.RspamdSuccessfullyInstalled = true;
+        $scope.installationFailed = true;
+
+        var url = "/emailPremium/installRspamd";
+
+        var data = {};
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.status === 1) {
+
+                $scope.RspamdNotifyBox = true;
+                $scope.RspamdInstallBox = false;
+                $scope.RspamdLoading = false;
+                $scope.failedToStartInallation = true;
+                $scope.couldNotConnect = true;
+                $scope.RspamdSuccessfullyInstalled = true;
+                $scope.installationFailed = true;
+
+                getRequestStatus();
+
+            } else {
+                $scope.errorMessage = response.data.error_message;
+
+                $scope.RspamdNotifyBox = false;
+                $scope.RspamdInstallBox = true;
+                $scope.RspamdLoading = true;
+                $scope.failedToStartInallation = false;
+                $scope.couldNotConnect = true;
+                $scope.RspamdSuccessfullyInstalled = true;
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.RspamdNotifyBox = false;
+            $scope.RspamdInstallBox = false;
+            $scope.RspamdLoading = true;
+            $scope.failedToStartInallation = true;
+            $scope.couldNotConnect = false;
+            $scope.RspamdSuccessfullyInstalled = true;
+            $scope.installationFailed = true;
+        }
+
+    };
+
+    function getRequestStatus() {
+
+        $scope.RspamdNotifyBox = true;
+        $scope.RspamdInstallBox = false;
+        $scope.RspamdLoading = false;
+        $scope.failedToStartInallation = true;
+        $scope.couldNotConnect = true;
+        $scope.RspamdSuccessfullyInstalled = true;
+        $scope.installationFailed = true;
+
+        var url = "/emailPremium/installStatusRspamd";
+
+        var data = {};
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.abort === 0) {
+
+                $scope.RspamdNotifyBox = true;
+                $scope.RspamdInstallBox = false;
+                $scope.RspamdLoading = false;
+                $scope.failedToStartInallation = true;
+                $scope.couldNotConnect = true;
+                $scope.RspamdSuccessfullyInstalled = true;
+                $scope.installationFailed = true;
+
+                $scope.requestData = response.data.requestStatus;
+                $timeout(getRequestStatus, 1000);
+            } else {
+                // Notifications
+                $timeout.cancel();
+                $scope.RspamdNotifyBox = false;
+                $scope.RspamdInstallBox = false;
+                $scope.RspamdLoading = true;
+                $scope.failedToStartInallation = true;
+                $scope.couldNotConnect = true;
+
+                $scope.requestData = response.data.requestStatus;
+
+                if (response.data.installed === 0) {
+                    $scope.installationFailed = false;
+                    $scope.errorMessage = response.data.error_message;
+                } else {
+                    $scope.RspamdSuccessfullyInstalled = false;
+                    $timeout(function () {
+                        $window.location.reload();
+                    }, 3000);
+                }
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.RspamdNotifyBox = false;
+            $scope.RspamdInstallBox = false;
+            $scope.RspamdLoading = true;
+            $scope.failedToStartInallation = true;
+            $scope.couldNotConnect = false;
+            $scope.RspamdSuccessfullyInstalled = true;
+            $scope.installationFailed = true;
+
+
+        }
+
+    }
+
+    var antivirus_status = false;
+    var scan_mime_parts = false;
+    var log_clean = false;
+    var clamav_Debug = false;
+
+
+    $('#antivirus_status').change(function () {
+        antivirus_status = $(this).prop('checked');
+    });
+    $('#scan_mime_parts').change(function () {
+        scan_mime_parts = $(this).prop('checked');
+    });
+    $('#log_clean').change(function () {
+        log_clean = $(this).prop('checked');
+    });
+    $('#clamav_Debug').change(function () {
+        clamav_Debug = $(this).prop('checked');
+    });
+
+    // Only fetch settings if Rspamd is installed
+    // This will be called from the template when needed
+    // fetchRspamdSettings();
+
+    $scope.fetchRspamdSettings = function() {
+
+        $scope.RspamdLoading = false;
+
+        var url = "/emailPremium/fetchRspamdSettings";
+
+        var data = {};
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            $scope.RspamdLoading = true;
+            $scope.ActionValue = false;
+
+            if (response.data.fetchStatus === 1) {
+
+
+                if (response.data.installed === 1) {
+                    $scope.uninstallbutton = false;
+
+                    // Initialize toggles only if elements exist
+                    if ($('#antivirus_status').length) {
+                        if (response.data.enabled === true) {
+                            $('#antivirus_status').bootstrapToggle('on');
+                        } else if (response.data.enabled === false) {
+                            $('#antivirus_status').bootstrapToggle('off');
+                        }
+                    }
+                    if ($('#scan_mime_parts').length) {
+                        if (response.data.scan_mime_parts === true) {
+                            $('#scan_mime_parts').bootstrapToggle('on');
+                        } else if (response.data.scan_mime_parts === false) {
+                            $('#scan_mime_parts').bootstrapToggle('off');
+                        }
+                    }
+                    if ($('#log_clean').length) {
+                        if (response.data.log_clean === true) {
+                            $('#log_clean').bootstrapToggle('on');
+                        } else if (response.data.log_clean === false) {
+                            $('#log_clean').bootstrapToggle('off');
+                        }
+                    }
+                    if ($('#clamav_Debug').length) {
+                        if (response.data.clamav_Debug === true) {
+                            $('#clamav_Debug').bootstrapToggle('on');
+                        } else if (response.data.clamav_Debug === false) {
+                            $('#clamav_Debug').bootstrapToggle('off');
+                        }
+                    }
+
+                    $scope.max_size = response.data.max_Size;
+                    $scope.server = response.data.Server;
+                    $scope.CLAMAV_VIRUS = response.data.CLAMAV_VIRUS;
+                    $('#selctedaction').text(response.data.action);
+                    $scope.smtpd_milters = response.data.smtpd_milters;
+                    $scope.non_smtpd_milters = response.data.non_smtpd_milters;
+                    $scope.read_servers = response.data.read_servers;
+                    $scope.write_servers = response.data.write_servers;
+                    $scope.LogFile = response.data.LogFile;
+                    $scope.TCPAddr = response.data.TCPAddr;
+                    $scope.TCPSocket = response.data.TCPSocket;
+                    //     $scope.required_score = response.data.required_score;
+                    //
+                }
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.RspamdLoading = true;
+        }
+
+    };
+
+
+    $scope.saveRspamdConfigurations = function () {
+        $scope.failedToSave = true;
+        $scope.successfullySaved = true;
+        $scope.RspamdLoading = false;
+        $scope.couldNotConnect = true;
+        url = "/emailPremium/saveRspamdConfigurations";
+
+
+        var data = {
+            status: antivirus_status,
+            scan_mime_parts: scan_mime_parts,
+            log_clean: log_clean,
+            action_rspamd: $scope.action_rspamd,
+            max_size: $scope.max_size,
+            Rspamdserver: $scope.server,
+            CLAMAV_VIRUS: $scope.CLAMAV_VIRUS,
+
+        };
+        // console.log(data)
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        if ($scope.action_rspamd == undefined) {
+            alert('Please Select Action')
+            $scope.RspamdLoading = true;
+        } else {
+            $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+        }
+
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.saveStatus === 1) {
+
+                $scope.failedToSave = true;
+                $scope.successfullySaved = false;
+                $scope.RspamdLoading = true;
+                $scope.couldNotConnect = true;
+
+                location.reload();
+
+            } else {
+                $scope.errorMessage = response.data.error_message;
+
+                $scope.failedToSave = false;
+                $scope.successfullySaved = true;
+                $scope.RspamdLoading = true;
+                $scope.couldNotConnect = true;
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.failedToSave = true;
+            $scope.successfullySaved = true;
+            $scope.RspamdLoading = true;
+            $scope.couldNotConnect = false;
+        }
+    };
+
+
+    ///postfix;
+    $scope.postfixfailedToSave = true;
+    $scope.postfixsuccessfullySaved = true;
+    $scope.postfixcouldNotConnect = true;
+    $scope.postfixLoading = true;
+
+
+    $scope.savepostfixConfigurations = function () {
+        $scope.postfixLoading = false;
+        url = "/emailPremium/savepostfixConfigurations";
+        var data = {
+            smtpd_milters: $scope.smtpd_milters,
+            non_smtpd_milters: $scope.non_smtpd_milters,
+        };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.saveStatus === 1) {
+
+                $scope.postfixfailedToSave = true;
+                $scope.postfixsuccessfullySaved = false;
+                $scope.postfixLoading = true;
+                $scope.postfixcouldNotConnect = true;
+
+                location.reload();
+
+            } else {
+                $scope.errorMessage = response.data.error_message;
+
+                $scope.postfixfailedToSave = false;
+                $scope.postfixsuccessfullySaved = true;
+                $scope.postfixLoading = true;
+                $scope.postfixcouldNotConnect = true;
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.postfixfailedToSave = true;
+            $scope.postfixsuccessfullySaved = true;
+            $scope.postfixLoading = true;
+            $scope.postfixcouldNotConnect = false;
+        }
+    };
+
+
+    ////Redis
+    $scope.RedisfailedToSave = true;
+    $scope.RedissuccessfullySaved = true;
+    $scope.RediscouldNotConnect = true;
+    $scope.RedisLoading = true;
+
+    $scope.saveRedisConfigurations = function () {
+        $scope.RedisLoading = false;
+        url = "/emailPremium/saveRedisConfigurations";
+        var data = {
+            write_servers: $scope.write_servers,
+            read_servers: $scope.read_servers,
+        };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.saveStatus === 1) {
+
+                $scope.RedisfailedToSave = true;
+                $scope.RedissuccessfullySaved = false;
+                $scope.RedisLoading = true;
+                $scope.RediscouldNotConnect = true;
+
+                location.reload();
+
+            } else {
+                $scope.errorMessage = response.data.error_message;
+
+                $scope.RedisfailedToSave = false;
+                $scope.RedissuccessfullySaved = true;
+                $scope.RedisLoading = true;
+                $scope.RediscouldNotConnect = true;
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.RedisfailedToSave = true;
+            $scope.RedissuccessfullySaved = true;
+            $scope.RedisLoading = true;
+            $scope.RediscouldNotConnect = false;
+        }
+    };
+
+
+    ////uninstall
+
+    $scope.RspamduninstallLoading = true;
+    $scope.uninstallationProgress = true;
+    $scope.errorMessageBox = true;
+    $scope.uninstallsuccess = true;
+    $scope.couldNotConnect = true;
+
+
+    $scope.unistallRspamd = function () {
+        $('#UninstallRspamdmodal').modal('hide');
+        $scope.RspamdLoading = false;
+        $scope.uninstalldiv = false;
+        $scope.uninstallbutton = true;
+        $scope.installedrspamd = true;
+
+        var url = "/emailPremium/unistallRspamd";
+        var data = {};
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            console.log(response.data)
+
+            if (response.data.status === 1) {
+                console.log(response.data)
+
+                $scope.uninstallRspamdNotifyBox = true;
+                $scope.uninstallRspamdInstallBox = false;
+                $scope.RspamdLoading = false;
+                $scope.failedToStartInallation = true;
+                $scope.couldNotConnect = true;
+                $scope.RspamdSuccessfullyInstalled = true;
+                $scope.installationFailed = true;
+
+                getuninstallRequestStatus();
+
+            } else {
+                $scope.errorMessage = response.data.error_message;
+
+                $scope.uninstallRspamdNotifyBox = false;
+                $scope.uninstallRspamdInstallBox = true;
+                $scope.RspamdLoading = true;
+                $scope.failedToStartInallation = false;
+                $scope.couldNotConnect = true;
+                $scope.RspamdSuccessfullyInstalled = true;
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.uninstallRspamdNotifyBox = false;
+            $scope.uninstallRspamdInstallBox = false;
+            $scope.RspamdLoading = true;
+            $scope.failedToStartInallation = true;
+            $scope.couldNotConnect = false;
+            $scope.RspamdSuccessfullyInstalled = true;
+            $scope.installationFailed = true;
+        }
+    };
+
+    function getuninstallRequestStatus() {
+
+        $scope.uninstallRspamdNotifyBox = true;
+        $scope.uninstallRspamdInstallBox = false;
+        $scope.RspamdLoading = false;
+        $scope.failedToStartInallation = true;
+        $scope.couldNotConnect = true;
+        $scope.RspamdSuccessfullyInstalled = true;
+        $scope.installationFailed = true;
+
+        var url = "/emailPremium/uninstallStatusRspamd";
+
+        var data = {};
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.abort === 0) {
+
+                $scope.uninstallRspamdNotifyBox = true;
+                $scope.uninstallRspamdInstallBox = false;
+                $scope.RspamdLoading = false;
+                $scope.failedToStartInallation = true;
+                $scope.couldNotConnect = true;
+                $scope.RspamdSuccessfullyInstalled = true;
+                $scope.installationFailed = true;
+
+                $scope.requestData = response.data.requestStatus;
+                $timeout(getuninstallRequestStatus, 1000);
+            } else {
+                // Notifications
+                $timeout.cancel();
+                $scope.uninstallRspamdNotifyBox = false;
+                $scope.uninstallRspamdInstallBox = false;
+                $scope.RspamdLoading = true;
+                $scope.failedToStartInallation = true;
+                $scope.couldNotConnect = true;
+
+                $scope.requestData = response.data.requestStatus;
+
+                if (response.data.installed === 0) {
+                    $scope.installationFailed = false;
+                    $scope.errorMessage = response.data.error_message;
+                } else {
+                    $scope.RspamdSuccessfullyInstalled = false;
+                    $timeout(function () {
+                        location.reload();
+                    }, 3000);
+                }
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.uninstallRspamdNotifyBox = false;
+            $scope.uninstallRspamdInstallBox = false;
+            $scope.RspamdLoading = true;
+            $scope.failedToStartInallation = true;
+            $scope.couldNotConnect = false;
+            $scope.RspamdSuccessfullyInstalled = true;
+            $scope.installationFailed = true;
+
+
+        }
+
+    }
+
+
+    ///ClamAV config
+
+    $scope.CLamAVLoading = true;
+    $scope.ClamAVfailedToSave = true;
+    $scope.ClamAVsuccessfullySaved = true;
+    $scope.ClamAVcouldNotConnect = true;
+
+    $scope.saveclamavConfigurations = function () {
+        $scope.CLamAVLoading = false;
+        url = "/emailPremium/saveclamavConfigurations";
+        var data = {
+            LogFile: $scope.LogFile,
+            TCPAddr: $scope.TCPAddr,
+            TCPSocket: $scope.TCPSocket,
+            clamav_Debug: clamav_Debug
+        };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.saveStatus === 1) {
+
+                $scope.CLamAVfailedToSave = true;
+                $scope.CLamAVsuccessfullySaved = false;
+                $scope.CLamAVLoading = true;
+                $scope.CLamAVcouldNotConnect = true;
+
+                location.reload();
+
+            } else {
+                $scope.errorMessage = response.data.error_message;
+
+                $scope.CLamAVfailedToSave = false;
+                $scope.CLamAVsuccessfullySaved = true;
+                $scope.CLamAVLoading = true;
+                $scope.CLamAVcouldNotConnect = true;
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.CLamAVfailedToSave = true;
+            $scope.CLamAVsuccessfullySaved = true;
+            $scope.CLamAVLoading = true;
+            $scope.CLamAVcouldNotConnect = false;
+        }
+    };
+
+    $scope.FetchRspamdLog = function () {
+         url = "/emailPremium/FetchRspamdLog";
+        var data = {
+
+        };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+        function ListInitialDatas(response) {
+
+
+            if (response.data.status === 1) {
+
+                console.log(response.data)
+                $scope.RspamdlogsData = response.data.logsdata;
+
+            } else {
+
+               console.log( response.data.error_message)
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            console.log(response)
+        }
+    };
+
+
+    $scope.RestartRspamd = function () {
+
+        $scope.RspamdLoading = false;
+        url = "/emailPremium/RestartRspamd";
+        var data = {
+
+        };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+        function ListInitialDatas(response) {
+            $scope.RspamdLoading = true;
+            if (response.data.status === 1) {
+
+                console.log(response.data)
+                new PNotify({
+                    title: 'Success',
+                    text: 'SUccessfully Restarted.',
+                    type: 'success'
+                });
+
+            } else {
+
+               new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.RspamdLoading = true;
+             new PNotify({
+                    title: 'Error',
+                    text: 'Could not connect to server, please refresh this page.',
+                    type: 'error'
+                });
+        }
+    };
+
+
+});
+
+//// Email Debugger
+
+app.controller('EmailDebuuger', function ($scope, $http, $timeout, $window) {
+
+    $scope.cyberpanelLoading = true;
+    $scope.ExecutionStatus = true;
+    $scope.ReportStatus = true;
+
+
+    $scope.RunServerLevelEmailChecks = function () {
+         $scope.cyberpanelLoading = false;
+
+         var url = "/emailPremium/RunServerLevelEmailChecks";
+
+        var data = {};
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+
+        function ListInitialData(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+                statusFile = response.data.tempStatusPath;
+                reportFile = response.data.reportFile;
+                statusFunc();
+
+
+
+
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.cyberpanelLoading = true;
+
+            new PNotify({
+                    title: 'Error',
+                    text: 'Could not connect to server, please refresh this page.',
+                    type: 'error'
+                });
+        }
+    };
+
+    function statusFunc(){
+        $scope.cyberpanelLoading = false;
+         $scope.ExecutionStatus = false;
+        var url = "/emailPremium/statusFunc";
+
+        var data = {
+            statusFile: statusFile
+        };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+         $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+
+
+        function ListInitialData(response) {
+            if (response.data.status === 1) {
+                if (response.data.abort === 1) {
+                    $scope.functionProgress = {"width": "100%"};
+                    $scope.functionStatus = response.data.currentStatus;
+                    $scope.cyberpanelLoading = true;
+                    $scope.ReadReport();
+                    $timeout.cancel();
+                } else {
+                    $scope.functionProgress = {"width": response.data.installationProgress + "%"};
+                    $scope.functionStatus = response.data.currentStatus;
+                    $timeout(statusFunc, 3000);
+                }
+
+            } else {
+                $scope.cyberpanelLoading = true;
+                $scope.functionStatus = response.data.error_message;
+                $scope.functionProgress = {"width": response.data.installationProgress + "%"};
+                $timeout.cancel();
+            }
+
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.functionProgress = {"width": response.data.installationProgress + "%"};
+            $scope.functionStatus = 'Could not connect to server, please refresh this page.';
+            $timeout.cancel();
+        }
+    }
+
+     $scope.ReadReport = function () {
+
+        if (reportFile === 'none') {
+            return;
+        }
+
+        $scope.cyberpanelLoading = false;
+
+       var url = "/emailPremium/ReadReport";
+
+        var data = {
+            reportFile: reportFile
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+
+        function ListInitialData(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+                var reportResult = JSON.parse(response.data.reportContent);
+
+                if (reportResult.MailSSL === 1) {
+                    $scope.MailSSL = 'Issued and Valid';
+                } else {
+                    $scope.MailSSL = 'Not issued or expired.'
+                }
+                var report = response.data.report;
+
+                console.log(report);
+                $scope.Port25 = report.Port25;
+                $scope.Port587 = report.Port587;
+                $scope.Port465 = report.Port465;
+                $scope.Port110 = report.Port110;
+                $scope.Port143 = report.Port143;
+                $scope.Port993 = report.Port993;
+                $scope.Port995 = report.Port995;
+                //document.getElementById('MailSSLURL').href = 'https://' + report.serverHostName + ":" + report.port + '/cloudAPI/access?token=' + report.token + "&serverUserName=" + report.userName + '&redirect=/manageSSL/sslForMailServer';
+                document.getElementById('MailSSLURL').href = '/manageSSL/sslForMailServer';
+
+
+                $scope.ReportStatus = false;
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                    title: 'Error',
+                    text: 'Could not connect to server, please refresh this page.',
+                    type: 'error'
+                });
+        }
+
+
+    };
+
+    $scope.ResetEmailConfigurations = function () {
+         $scope.cyberpanelLoading = false;
+
+         var url = "/emailPremium/ResetEmailConfigurations";
+
+        var data = {};
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+
+        function ListInitialData(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+                statusFile = response.data.tempStatusPath;
+                reportFile = response.data.reportFile;
+                reportFile = 'none';
+                statusFunc();
+
+
+
+
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.cyberpanelLoading = true;
+
+            new PNotify({
+                    title: 'Error',
+                    text: 'Could not connect to server, please refresh this page.',
+                    type: 'error'
+                });
+        }
+    };
+
+});
+
+app.controller('emailDebuggerDomainLevel', function ($scope, $http, $timeout, $window) {
+    $scope.cyberpanelLoading = true;
+    $scope.ReportStatus = true;
+
+    $scope.debugEmailForSite = function () {
+        $scope.cyberpanelLoading = false;
+
+          url = "/emailPremium/debugEmailForSite";
+
+        var data = {
+            websiteName: $scope.websiteName
+        };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+
+
+        function ListInitialData(response) {
+            $scope.cyberpanelLoading = true;
+            $scope.status = response.data.status;
+            $scope.message = response.data.error_message;
+            $scope.ReportStatus = false;
+
+        }
+
+         function cantLoadInitialData(response) {
+            $scope.cyberhosting = true;
+             new PNotify({
+                    title: 'Operation Failed!',
+                    text: 'Could not connect to server, please refresh this page.',
+                    type: 'error'
+                });
+        }
+
+    };
+
+    $scope.fixMailSSL = function () {
+        $scope.cyberpanelLoading = false;
+         url = "/emailPremium/fixMailSSL";
+
+        var data = {
+            websiteName: $scope.websiteName
+        };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+
+        function ListInitialData(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+
+                   new PNotify({
+                    title: 'Success',
+                    text: 'Successfully fixed.',
+                    type: 'success'
+                });
+            } else {
+                 new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.cyberpanelLoading = true;
+             new PNotify({
+                    title: 'Operation Failed!',
+                    text: 'Could not connect to server, please refresh this page.',
+                    type: 'error'
+                });
+        }
+    };
+
+});
 
 /* Java script code for Email Policy Server */
 

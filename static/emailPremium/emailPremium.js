@@ -2,6 +2,26 @@
  * Created by usman on 6/22/18.
  */
 
+/* Ensure CyberCP Angular module exists (system-status.js normally sets window.app in <head>) */
+(function () {
+    if (typeof window === 'undefined' || typeof angular === 'undefined') {
+        return;
+    }
+    if (typeof window.app !== 'undefined' && window.app) {
+        return;
+    }
+    try {
+        window.app = angular.module('CyberCP');
+    } catch (e) {
+        try {
+            window.app = angular.module('CyberCP', []);
+        } catch (e2) {
+            return;
+        }
+    }
+})();
+var app = window.app;
+
 /* Java script code to list accounts */
 
 app.controller('listDomains', function ($scope, $http) {

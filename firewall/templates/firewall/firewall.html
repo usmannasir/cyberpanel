@@ -1475,8 +1475,8 @@
                 </div>
             </div>
             
-            <!-- Firewall Rules Pagination (show when there are rules or a total count) -->
-            <div class="pagination-bar" ng-if="(rules && rules.length > 0) || (rulesTotalCount > 0)">
+            <!-- Firewall Rules Pagination: use ng-show (not ng-if) so ng-model binds to firewallController; ng-if creates a child scope and breaks Per page / Go to page. -->
+            <div class="pagination-bar" ng-show="(rules && rules.length > 0) || (rulesTotalCount > 0)">
                 <div class="pagination-info">
                     <span>{% trans "Showing" %} {$ rulesRangeStart() || 0 $} – {$ rulesRangeEnd() || 0 $} {% trans "of" %} {$ rulesTotalCount || rules.length || 0 $}</span>
                     <span class="pagination-size">
@@ -1680,8 +1680,8 @@
                 </table>
             </div>
             
-            <!-- Banned IPs Pagination (show when there are rows or a total count) -->
-            <div class="pagination-bar" ng-if="(bannedIPs && bannedIPs.length > 0) || (bannedTotalCount > 0)">
+            <!-- Banned IPs Pagination: ng-show avoids child scope from ng-if (same ng-model issue as rules). -->
+            <div class="pagination-bar" ng-show="(bannedIPs && bannedIPs.length > 0) || (bannedTotalCount > 0)">
                 <div class="pagination-info">
                     <span>{% trans "Showing" %} {$ bannedRangeStart() || 0 $} – {$ bannedRangeEnd() || 0 $} {% trans "of" %} {$ bannedTotalCount || bannedIPs.length || 0 $}</span>
                     <span class="pagination-size banned-ips-per-page">

@@ -4839,6 +4839,13 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
             command = f'/usr/local/lsws/lsphp80/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
+            try:
+                from plogical.snappymail_plugin_utilities import install_and_enable_list_unsubscribe_header_plugin
+                if install_and_enable_list_unsubscribe_header_plugin():
+                    logging.InstallLog.writeToFile("SnappyMail list-unsubscribe-header plugin installed and enabled", 0)
+            except BaseException as plug_msg:
+                logging.InstallLog.writeToFile("Warning: list-unsubscribe SnappyMail plugin: " + str(plug_msg), 0)
+
 
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [downoad_and_install_snappymail]")

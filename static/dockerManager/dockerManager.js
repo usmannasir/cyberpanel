@@ -1389,6 +1389,8 @@ app.controller('viewContainer', function ($scope, $http, $interval, $timeout) {
     $scope.cName = "";
     $scope.status = "";
     $scope.savingSettings = false;
+    $scope.currentPorts = {};
+    $scope.initialPortsForSettings = {};
     $scope.loadingTop = false;
     $scope.statusInterval = null;
     $scope.statsInterval = null;
@@ -1398,7 +1400,37 @@ app.controller('viewContainer', function ($scope, $http, $interval, $timeout) {
     $scope.advancedEnvText = '';
     $scope.advancedEnvCount = 0;
     $scope.parsedEnvVars = {};
-    
+    /** Flat map from DB (container_port -> host_port), set from template ng-init */
+    $scope.serverPortMap = {};
+
+    $scope.initAngularPortsFromServer = function (obj) {
+        if (obj === undefined || obj === null) {
+            $scope.serverPortMap = {};
+            $scope.ports = {};
+            return;
+        }
+        if (angular.isString(obj)) {
+            try {
+                obj = angular.fromJson(obj);
+            } catch (e1) {
+                try {
+                    obj = JSON.parse(obj);
+                } catch (e2) {
+                    $scope.serverPortMap = {};
+                    $scope.ports = {};
+                    return;
+                }
+            }
+        }
+        if (!angular.isObject(obj)) {
+            $scope.serverPortMap = {};
+            $scope.ports = {};
+            return;
+        }
+        $scope.serverPortMap = obj;
+        $scope.ports = obj;
+    };
+
     // Auto-refresh status every 5 seconds
     $scope.startStatusMonitoring = function() {
         $scope.statusInterval = $interval(function() {
@@ -2028,6 +2060,13 @@ app.controller('viewContainer', function ($scope, $http, $interval, $timeout) {
         }
     };
 
+    /** Used after legacy port-update path; full page reload syncs Django-rendered state */
+    $scope.refreshContainerInfo = function () {
+        $timeout(function () {
+            window.location.reload();
+        }, 300);
+    };
+
     $scope.addVolField = function () {
         $scope.volList[$scope.volListNumber] = {'dest': '', 'src': ''};
         $scope.volListNumber = $scope.volListNumber + 1;
@@ -2038,6 +2077,15 @@ app.controller('viewContainer', function ($scope, $http, $interval, $timeout) {
     };
 
     $scope.saveSettings = function () {
+        if ($scope.portsDirty && $scope.portsDirty() && !$scope.envConfirmation) {
+            new PNotify({
+                title: 'Confirmation required',
+                text: 'Check the confirmation box to apply changes to ports, environment variables, or volumes (the container will be recreated).',
+                type: 'warning'
+            });
+            return;
+        }
+
         $('#containerSettingLoading').show();
         url = "/docker/saveContainerSettings";
         $scope.savingSettings = true;
@@ -2063,7 +2111,8 @@ app.controller('viewContainer', function ($scope, $http, $interval, $timeout) {
             envConfirmation: $scope.envConfirmation,
             envList: finalEnvList,
             volList: $scope.volList,
-            advancedEnvMode: $scope.advancedEnvMode
+            advancedEnvMode: $scope.advancedEnvMode,
+            ports: $scope.currentPorts || {}
         };
 
 
@@ -2088,6 +2137,7 @@ app.controller('viewContainer', function ($scope, $http, $interval, $timeout) {
                         title: 'Settings Saved',
                         type: 'success'
                     });
+                    $scope.initialPortsForSettings = angular.copy($scope.currentPorts || {});
                 }
             }
             else {
@@ -2213,22 +2263,55 @@ app.controller('viewContainer', function ($scope, $http, $interval, $timeout) {
         $("#commandModal").modal("show");
     };
 
-    // Port editing functionality
-    $scope.showPortEditModal = function() {
-        // Initialize current ports from container data
+    // Port editing (in Container Settings modal)
+    $scope.initSettingsPortsFromContainer = function () {
         $scope.currentPorts = {};
-        if ($scope.ports) {
-            for (var iport in $scope.ports) {
-                var eport = $scope.ports[iport];
-                if (eport && eport.length > 0) {
+        var src = $scope.serverPortMap && Object.keys($scope.serverPortMap).length
+            ? $scope.serverPortMap
+            : ($scope.ports || {});
+        if (src && typeof src === 'object') {
+            for (var iport in src) {
+                if (!Object.prototype.hasOwnProperty.call(src, iport)) {
+                    continue;
+                }
+                var eport = src[iport];
+                if (angular.isArray(eport) && eport.length > 0 && eport[0] && eport[0].HostPort) {
                     $scope.currentPorts[iport] = eport[0].HostPort;
+                } else if (eport !== undefined && eport !== null && eport !== '') {
+                    $scope.currentPorts[iport] = String(eport);
                 }
             }
         }
-        $("#portEditModal").modal("show");
+        $scope.initialPortsForSettings = angular.copy($scope.currentPorts);
     };
 
-    $scope.addNewPortMapping = function() {
+    $scope.portsJsonSnapshot = function (obj) {
+        if (!obj || typeof obj !== 'object') {
+            return '{}';
+        }
+        var keys = Object.keys(obj).sort();
+        var flat = {};
+        for (var i = 0; i < keys.length; i++) {
+            var k = keys[i];
+            var v = obj[k];
+            flat[k] = v === null || v === undefined ? '' : String(v);
+        }
+        return JSON.stringify(flat);
+    };
+
+    $scope.portsDirty = function () {
+        return $scope.portsJsonSnapshot($scope.currentPorts) !== $scope.portsJsonSnapshot($scope.initialPortsForSettings);
+    };
+
+    $scope.showPortEditModal = function () {
+        $scope.initSettingsPortsFromContainer();
+        $("#settings").modal("show");
+    };
+
+    $scope.addNewPortMapping = function () {
+        if (!$scope.envConfirmation) {
+            return;
+        }
         var containerPort = prompt('Enter container port (e.g., 80/tcp):');
         if (containerPort) {
             $scope.currentPorts[containerPort] = '';
@@ -2236,14 +2319,16 @@ app.controller('viewContainer', function ($scope, $http, $interval, $timeout) {
         }
     };
 
-    $scope.removePortMapping = function(containerPort) {
+    $scope.removePortMapping = function (containerPort) {
+        if (!$scope.envConfirmation) {
+            return;
+        }
         if (confirm('Are you sure you want to remove this port mapping?')) {
             delete $scope.currentPorts[containerPort];
         }
     };
 
-    $scope.updatePortMappings = function() {
-        $("#portEditLoading").show();
+    $scope.updatePortMappings = function () {
         $scope.updatingPorts = true;
 
         var url = "/docker/updateContainerPorts";
@@ -2259,18 +2344,16 @@ app.controller('viewContainer', function ($scope, $http, $interval, $timeout) {
         };
 
         $http.post(url, data, config).then(function(response) {
-            $("#portEditLoading").hide();
             $scope.updatingPorts = false;
 
             if (response.data.status === 1) {
-                $("#portEditModal").modal("hide");
-                // Refresh container status and ports
-                $scope.refreshContainerInfo();
+                $("#settings").modal("hide");
                 new PNotify({
                     title: 'Success',
                     text: 'Port mappings updated successfully',
                     type: 'success'
                 });
+                $scope.refreshContainerInfo();
             } else {
                 new PNotify({
                     title: 'Error',
@@ -2279,11 +2362,10 @@ app.controller('viewContainer', function ($scope, $http, $interval, $timeout) {
                 });
             }
         }, function(error) {
-            $("#portEditLoading").hide();
             $scope.updatingPorts = false;
             new PNotify({
                 title: 'Error',
-                text: 'Error updating port mappings: ' + error.data.error_message,
+                text: 'Error updating port mappings: ' + (error.data && error.data.error_message ? error.data.error_message : 'unknown'),
                 type: 'error'
             });
         });
@@ -2388,12 +2470,55 @@ app.controller('manageImages', function ($scope, $http) {
     $scope.showingSearch = false;
     $("#searchResult").hide();
 
+    function dockerHistoryFormatSize(raw) {
+        var n = parseInt(raw, 10);
+        if (isNaN(n) || n < 0) {
+            return (raw === undefined || raw === null) ? '' : String(raw);
+        }
+        if (n === 0) {
+            return '0 B';
+        }
+        var units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        var i = Math.min(Math.floor(Math.log(n) / Math.log(1024)), units.length - 1);
+        var v = n / Math.pow(1024, i);
+        var s = (i === 0) ? String(v) : (Math.round(v * 10) / 10).toFixed(1);
+        return s + ' ' + units[i];
+    }
+
+    function dockerHistoryFormatCreated(raw) {
+        if (raw === undefined || raw === null) {
+            return '';
+        }
+        var n = Number(raw);
+        if (isNaN(n)) {
+            return String(raw);
+        }
+        var sec = n;
+        if (n > 1e14) {
+            sec = Math.floor(n / 1e9);
+        } else if (n > 1e12) {
+            sec = Math.floor(n / 1e6);
+        }
+        var d = new Date(sec * 1000);
+        if (isNaN(d.getTime())) {
+            return String(raw);
+        }
+        return d.toISOString().replace('T', ' ').replace(/\.\d{3}Z$/, ' UTC');
+    }
+
+    function dockerHistoryEnrichLayer(h) {
+        var o = angular.extend({}, h);
+        o.SizeHuman = dockerHistoryFormatSize(h.Size);
+        o.CreatedDisplay = dockerHistoryFormatCreated(h.Created);
+        return o;
+    }
+
     $scope.pullImage = function (image, tag) {
         function ListInitialDatas(response) {
             if (response.data.installImageStatus === 1) {
                 new PNotify({
                     title: 'Image pulled successfully',
-                    text: 'Reloading...',
+                    text: 'Running containers keep the old image until you recreate them from Docker > Containers. Reloading…',
                     type: 'success'
                 });
                 location.reload()
@@ -2424,7 +2549,8 @@ app.controller('manageImages', function ($scope, $http) {
             url = "/docker/installImage";
             var data = {
                 image: image,
-                tag: tag
+                tag: tag,
+                force_update: true
             };
             var config = {
                 headers: {
@@ -2443,6 +2569,30 @@ app.controller('manageImages', function ($scope, $http) {
             });
         }
 
+    }
+
+    $scope.refreshLocalImage = function (rowId, imageName) {
+        var sel = document.getElementById(String(rowId));
+        if (!sel || sel.selectedIndex < 0) {
+            new PNotify({
+                title: 'Unable to complete request',
+                text: 'Please select a tag for this image',
+                type: 'info'
+            });
+            return;
+        }
+        var raw = sel.options[sel.selectedIndex].text;
+        if (!raw) {
+            new PNotify({
+                title: 'Unable to complete request',
+                text: 'Please select a tag for this image',
+                type: 'info'
+            });
+            return;
+        }
+        var li = raw.lastIndexOf(':');
+        var tag = li > -1 ? raw.substring(li + 1) : raw;
+        $scope.pullImage(imageName, tag);
     }
 
     $scope.searchImages = function () {
@@ -2580,7 +2730,8 @@ app.controller('manageImages', function ($scope, $http) {
 
     $scope.getHistory = function (counter) {
         $('#imageLoading').show();
-        var name = $("#" + counter).val()
+        var sel = $("#" + counter);
+        var name = (sel.find('option:selected').text() || sel.val() || '').trim();
 
         url = "/docker/getImageHistory";
 
@@ -2600,7 +2751,8 @@ app.controller('manageImages', function ($scope, $http) {
 
             if (response.data.imageHistoryStatus === 1) {
                 $('#history').modal('show');
-                $scope.historyList = response.data.history;
+                var raw = response.data.history || [];
+                $scope.historyList = raw.map(dockerHistoryEnrichLayer);
             }
             else {
                 new PNotify({

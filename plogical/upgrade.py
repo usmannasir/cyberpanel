@@ -1587,6 +1587,13 @@ $cfg['Servers'][$i]['port'] = '3306';
             command = f'/usr/local/lsws/lsphp83/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php'
             Upgrade.executioner_silent(command, 'verify certificate', 0)
 
+            try:
+                from plogical.snappymail_plugin_utilities import install_and_enable_list_unsubscribe_header_plugin
+                if install_and_enable_list_unsubscribe_header_plugin():
+                    Upgrade.stdOut("SnappyMail list-unsubscribe-header plugin installed and enabled", 0)
+            except BaseException as plug_msg:
+                Upgrade.stdOut("Warning: list-unsubscribe SnappyMail plugin: " + str(plug_msg), 0)
+
             # labsPath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
 
             #             labsData = """[labs]
