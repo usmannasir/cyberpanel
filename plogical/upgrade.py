@@ -166,110 +166,151 @@ except ImportError:
     print("WARNING: Cannot import CyberCP settings. Attempting recovery...")
     
     def recover_database_credentials():
-        """Attempt to recover or reset database credentials"""
-        
-        # First, ensure we have root MySQL password
+        """Recover CyberPanel DB credentials without changing passwords (upgrade policy).
+
+        Never drops or re-hashes the `cyberpanel`@`localhost` user or rotates passwords
+        unless CYBERPANEL_ALLOW_DB_CREDENTIAL_RESET=1 is set (legacy recovery only).
+        """
         if not os.path.exists('/etc/cyberpanel/mysqlPassword'):
             print("FATAL: Cannot find MySQL root password file at /etc/cyberpanel/mysqlPassword")
             print("Manual intervention required.")
             sys.exit(1)
-        
-        root_password = open('/etc/cyberpanel/mysqlPassword', 'r').read().strip()
+
+        def _read_mysql_root_password_file():
+            raw = open('/etc/cyberpanel/mysqlPassword', 'r').read().strip()
+            if raw.startswith('{') and raw.rstrip().endswith('}'):
+                try:
+                    data = json.loads(raw)
+                    for key in ('mysqlpassword', 'mysql_password', 'MYSQL_PASSWORD'):
+                        v = data.get(key)
+                        if v:
+                            return str(v).strip()
+                except Exception:
+                    pass
+            return raw
+
+        def _collect_integration_password_candidates():
+            """Passwords already stored in mail/FTP/DNS configs (same DB user)."""
+            found = []
+            def add(pw):
+                pw = (pw or '').strip()
+                if pw and pw not in found:
+                    found.append(pw)
+            patterns = [
+                ('/etc/pure-ftpd/pureftpd-mysql.conf', r'^MYSQLPassword\s+(\S+)'),
+                ('/etc/pure-ftpd/db/mysql.conf', r'^MYSQLPassword\s+(\S+)'),
+                ('/etc/pdns/pdns.conf', r'^gmysql-password=(\S+)'),
+                ('/etc/powerdns/pdns.conf', r'^gmysql-password=(\S+)'),
+                ('/etc/postfix/mysql-virtual_domains.cf', r'^password\s*=\s*(\S+)'),
+            ]
+            for fpath, pat in patterns:
+                if not os.path.isfile(fpath):
+                    continue
+                try:
+                    with open(fpath, 'r') as fh:
+                        for line in fh:
+                            m = re.match(pat, line.strip())
+                            if m:
+                                add(m.group(1))
+                                break
+                except Exception:
+                    pass
+            return found
+
+        def _try_cyberpanel_connect(pw):
+            try:
+                c = mysql.connect(host='localhost', user='cyberpanel', passwd=pw, db='cyberpanel')
+                c.close()
+                return True
+            except Exception:
+                return False
+
+        root_password = _read_mysql_root_password_file()
         cyberpanel_password = None
-        
-        # Try to read existing settings.py to get cyberpanel password
         settings_path = '/usr/local/CyberCP/CyberCP/settings.py'
+
         if os.path.exists(settings_path):
             try:
                 with open(settings_path, 'r') as f:
                     settings_content = f.read()
-                
-                import re
-                # Extract cyberpanel database password
                 db_pattern = r"'default':[^}]*'USER':\s*'cyberpanel'[^}]*'PASSWORD':\s*'([^']+)'"
                 match = re.search(db_pattern, settings_content, re.DOTALL)
-                
+                if not match:
+                    db_pattern2 = r'"USER":\s*"cyberpanel"[^}]*"PASSWORD":\s*"([^"]+)"'
+                    match = re.search(db_pattern2, settings_content, re.DOTALL)
                 if match:
                     cyberpanel_password = match.group(1)
                     print("Found existing cyberpanel password in settings.py")
-                    
-                    # Test if this password actually works
-                    try:
-                        test_conn = mysql.connect(host='localhost', user='cyberpanel', 
-                                                passwd=cyberpanel_password, db='cyberpanel')
-                        test_conn.close()
+                    if _try_cyberpanel_connect(cyberpanel_password):
                         print("Verified cyberpanel database credentials are valid")
-                    except:
-                        print("Found password in settings.py but it doesn't work, will reset")
+                    else:
+                        print("WARNING: Password from settings.py does not authenticate as cyberpanel@localhost.")
                         cyberpanel_password = None
             except Exception as e:
                 print("Could not extract password from settings.py: %s" % str(e))
-        
-        # If we couldn't get a working password, we need to reset it
-        if cyberpanel_password is None:
-            print("Resetting cyberpanel database user password...")
-            
-            # Check if we're on Ubuntu or CentOS
-            # On Ubuntu, cyberpanel uses root password; on CentOS, it uses a separate password
+
+        working_pw = None
+        if cyberpanel_password and _try_cyberpanel_connect(cyberpanel_password):
+            working_pw = cyberpanel_password
+        else:
+            for cand in _collect_integration_password_candidates():
+                if _try_cyberpanel_connect(cand):
+                    working_pw = cand
+                    print("Recovered working cyberpanel DB password from integration config (FTP/DNS/Postfix).")
+                    break
+        if working_pw:
+            cyberpanel_password = working_pw
+
+        allow_reset = os.environ.get('CYBERPANEL_ALLOW_DB_CREDENTIAL_RESET', '').strip() in ('1', 'true', 'yes', 'YES', 'TRUE')
+
+        if (not cyberpanel_password) or (not _try_cyberpanel_connect(cyberpanel_password)):
+            if not allow_reset:
+                print("FATAL: Cannot verify `cyberpanel` database credentials.")
+                print("CyberPanel upgrade will NOT reset MySQL passwords or drop the `cyberpanel` user (upgrade policy).")
+                print("Fix DATABASES['default']['PASSWORD'] in /usr/local/CyberCP/CyberCP/settings.py to match MariaDB,")
+                print("or align Pure-FTPd / PowerDNS / Postfix MySQL config passwords, then re-run the upgrade.")
+                print("Legacy auto-reset (old behaviour): export CYBERPANEL_ALLOW_DB_CREDENTIAL_RESET=1 and re-run (not recommended).")
+                sys.exit(1)
+
+            print("WARNING: CYBERPANEL_ALLOW_DB_CREDENTIAL_RESET=1 — performing legacy cyberpanel DB user reset...")
             if os.path.exists('/etc/lsb-release'):
-                # Ubuntu - use root password
                 cyberpanel_password = root_password
                 reset_to_root = True
             else:
-                # CentOS/others - generate new password
                 chars = string.ascii_letters + string.digits
                 cyberpanel_password = ''.join(random.choice(chars) for _ in range(14))
                 reset_to_root = False
-            
             try:
-                # Connect as root and reset cyberpanel user
                 conn = mysql.connect(host='localhost', user='root', passwd=root_password)
                 cursor = conn.cursor()
-                
-                # Check if cyberpanel database exists
                 cursor.execute("SHOW DATABASES LIKE 'cyberpanel'")
                 if not cursor.fetchone():
                     print("Creating cyberpanel database...")
                     cursor.execute("CREATE DATABASE IF NOT EXISTS cyberpanel")
-                
-                # Reset cyberpanel user - drop and recreate to ensure clean state
                 cursor.execute("DROP USER IF EXISTS 'cyberpanel'@'localhost'")
                 cursor.execute("CREATE USER 'cyberpanel'@'localhost' IDENTIFIED BY '%s'" % cyberpanel_password)
                 cursor.execute("GRANT ALL PRIVILEGES ON cyberpanel.* TO 'cyberpanel'@'localhost'")
                 cursor.execute("FLUSH PRIVILEGES")
-                
                 conn.close()
-                
                 if reset_to_root:
                     print("Reset cyberpanel user password to match root password (Ubuntu style)")
                 else:
                     print("Reset cyberpanel user with new generated password (CentOS style)")
-                
-                # Update all configuration files with the new password
                 print("Updating all service configuration files with new password...")
                 update_all_config_files_with_password(cyberpanel_password)
-                
-                # Restart affected services to pick up new configuration
                 print("Restarting affected services...")
                 restart_affected_services()
-                
-                # Save the password to a temporary file for the upgrade process
                 temp_pass_file = '/tmp/cyberpanel_recovered_password'
                 with open(temp_pass_file, 'w') as f:
                     f.write(cyberpanel_password)
                 os.chmod(temp_pass_file, 0o600)
                 print("Saved recovered password to temporary file")
-                
             except Exception as e:
                 print("Failed to reset cyberpanel database user: %s" % str(e))
-                print("Manual intervention required. Please run:")
-                print("  mariadb -u root -p")
-                print("  CREATE DATABASE IF NOT EXISTS cyberpanel;")
-                print("  GRANT ALL PRIVILEGES ON cyberpanel.* TO 'cyberpanel'@'localhost' IDENTIFIED BY 'your_password';")
-                print("  FLUSH PRIVILEGES;")
                 sys.exit(1)
-        
+
         return cyberpanel_password, root_password
+
     
     # Perform recovery
     cyberpanel_password, root_password = recover_database_credentials()
