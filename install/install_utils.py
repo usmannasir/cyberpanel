@@ -289,6 +289,88 @@ openeuler = 3
 debian12 = 4
 
 
+def get_lsphp_install_suffixes():
+    """
+    LiteSpeed lsphp* two-digit version suffixes to install for this OS (pre-repo check).
+    Mirrors the base list in plogical/upgrade.py get_available_php_versions() before
+    check_package_availability filtering.
+
+    Returns:
+        list[str]: e.g. ['74','80',...,'85'] on AlmaLinux 9+/10+ and modern EL9/Ubuntu24+/Debian13+,
+        or ['71',...,'85'] on older platforms where 7.1–7.3 packages exist.
+    """
+    long_list = ['71', '72', '73', '74', '80', '81', '82', '83', '84', '85']
+    short_list = ['74', '80', '81', '82', '83', '84', '85']
+
+    # AlmaLinux: explicit release file (matches upgrade.get_available_php_versions)
+    if exists('/etc/almalinux-release'):
+        try:
+            with open('/etc/almalinux-release', 'r') as f:
+                content = f.read().lower()
+            if 'release 9' in content or 'release 10' in content:
+                return list(short_list)
+        except (OSError, IOError, UnicodeError):
+            pass
+        return list(long_list)
+
+    # Other RHEL family (Rocky/RHEL/CentOS Stream) without almalinux-release: EL9+ uses short list
+    if exists('/etc/redhat-release'):
+        try:
+            with open('/etc/redhat-release', 'r') as f:
+                data = f.read().lower()
+            if (
+                'release 9' in data
+                or 'release 10' in data
+                or 'stream 9' in data
+                or 'stream 10' in data
+            ):
+                return list(short_list)
+        except (OSError, IOError, UnicodeError):
+            pass
+
+    # Ubuntu 24.04+ (upgrade: Ubuntu24 branch)
+    if exists('/etc/lsb-release'):
+        try:
+            with open('/etc/lsb-release', 'r') as f:
+                lsb = f.read()
+            if 'DISTRIB_ID=Ubuntu' in lsb:
+                for line in lsb.splitlines():
+                    if line.startswith('DISTRIB_RELEASE='):
+                        rel = line.split('=', 1)[1].strip().strip('"').strip("'")
+                        try:
+                            parts = rel.split('.')
+                            major = int(parts[0])
+                            minor = int(parts[1]) if len(parts) > 1 else 0
+                            if major > 24 or (major == 24 and minor >= 4):
+                                return list(short_list)
+                        except (ValueError, IndexError):
+                            pass
+                        break
+        except (OSError, IOError, UnicodeError):
+            pass
+
+    # Debian 13+ (trixie+): upgrade uses Debian13 for short list
+    if exists('/etc/os-release'):
+        try:
+            with open('/etc/os-release', 'r') as f:
+                osr = f.read()
+            osr_l = osr.lower().replace(' ', '')
+            if 'id=debian' in osr_l:
+                for line in osr.splitlines():
+                    if line.upper().startswith('VERSION_ID='):
+                        vid = line.split('=', 1)[1].strip().strip('"').strip("'")
+                        try:
+                            if int(vid.split('.')[0]) >= 13:
+                                return list(short_list)
+                        except (ValueError, IndexError):
+                            pass
+                        break
+        except (OSError, IOError, UnicodeError):
+            pass
+
+    return list(long_list)
+
+
 def get_distro():
     """
     Detect Linux distribution

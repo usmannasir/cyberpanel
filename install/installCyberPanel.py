@@ -755,18 +755,18 @@ module cyberpanel_ols {
         return self.reStartLiteSpeed()
 
     def installAllPHPVersions(self):
-        php_versions = ['71', '72', '73', '74', '80', '81', '82', '83', '84', '85']
-        
+        # OS-aligned matrix (same base list as upgrade.get_available_php_versions pre-filter)
+        php_versions = install_utils.get_lsphp_install_suffixes()
+
         if self.distro == ubuntu:
-            # Install base PHP 7.x packages
+            # Install base PHP 7.x packages (wildcard) plus explicit matrix suffixes
             command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install ' \
                       'lsphp7? lsphp7?-common lsphp7?-curl lsphp7?-dev lsphp7?-imap lsphp7?-intl lsphp7?-json ' \
                       'lsphp7?-ldap lsphp7?-mysql lsphp7?-opcache lsphp7?-pspell lsphp7?-recode ' \
                       'lsphp7?-sqlite3 lsphp7?-tidy'
             os.system(command)
-            
-            # Install PHP 8.x versions
-            for version in php_versions[4:]:  # 80, 81, 82, 83
+
+            for version in php_versions:
                 self.install_package(f'lsphp{version}*')
                 
         elif self.distro == centos:

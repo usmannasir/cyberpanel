@@ -5831,7 +5831,7 @@ milter_default_action = accept
 
             # Create symlink to the best available PHP version
             # Try to find and use the best available PHP version
-            # Priority: 85 (beta), 84, 83, 82, 81, 80, 74 (newest to oldest)
+            # Priority: 85, 84, 83, 82, 81, 80, 74 (newest to oldest)
             php_versions = ['85', '84', '83', '82', '81', '80', '74']
             php_symlink_source = None
             
@@ -5882,7 +5882,7 @@ milter_default_action = accept
                 logging.InstallLog.writeToFile("[setup_lsphp_symlink] Removed existing lsphp file/symlink")
 
             # Try to find and use the best available PHP version
-            # Priority: 85 (beta), 84, 83, 82, 81, 80, 74 (newest to oldest)
+            # Priority: 85, 84, 83, 82, 81, 80, 74 (newest to oldest)
             php_versions = ['85', '84', '83', '82', '81', '80', '74']
             lsphp_source = None
 

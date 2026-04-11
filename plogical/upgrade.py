@@ -5368,27 +5368,33 @@ echo $oConfig->Save() ? 'Done' : 'Error';
     @staticmethod
     def get_available_php_versions():
         """Get list of available PHP versions based on OS"""
-        # Check for AlmaLinux 9+ first
-        if os.path.exists('/etc/almalinux-release'):
-            try:
+        php_versions = ['71', '72', '73', '74', '80', '81', '82', '83', '84', '85']
+        try:
+            import importlib
+            import sys
+            _here = os.path.dirname(os.path.abspath(__file__))
+            for _root in (
+                os.path.join(os.path.dirname(_here), 'install'),
+                '/usr/local/CyberCP/install',
+                '/usr/local/CyberPanel/install',
+            ):
+                if os.path.isfile(os.path.join(_root, 'install_utils.py')) and _root not in sys.path:
+                    sys.path.insert(0, _root)
+            iu = importlib.import_module('install_utils')
+            if hasattr(iu, 'get_lsphp_install_suffixes'):
+                php_versions = iu.get_lsphp_install_suffixes()
+        except Exception:
+            pass
+
+        try:
+            if os.path.exists('/etc/almalinux-release'):
                 with open('/etc/almalinux-release', 'r') as f:
-                    content = f.read()
-                    if 'release 9' in content or 'release 10' in content:
-                        Upgrade.stdOut("AlmaLinux 9+ detected - checking available PHP versions", 1)
-                        # AlmaLinux 9+ doesn't have PHP 7.1, 7.2, 7.3
-                        php_versions = ['74', '80', '81', '82', '83', '84', '85']
-                    else:
-                        php_versions = ['71', '72', '73', '74', '80', '81', '82', '83', '84', '85']
-            except:
-                php_versions = ['71', '72', '73', '74', '80', '81', '82', '83', '84', '85']
-        else:
-            # Check other OS versions
-            os_info = Upgrade.findOperatingSytem()
-            if os_info in [Ubuntu24, CENTOS8, Debian13]:
-                php_versions = ['74', '80', '81', '82', '83', '84', '85']
-            else:
-                php_versions = ['71', '72', '73', '74', '80', '81', '82', '83', '84', '85']
-        
+                    _c = f.read().lower()
+                if 'release 9' in _c or 'release 10' in _c:
+                    Upgrade.stdOut("AlmaLinux 9+ detected - checking available PHP versions", 1)
+        except Exception:
+            pass
+
         # Check availability of each version
         available_versions = []
         for version in php_versions:
@@ -7278,7 +7284,7 @@ extprocessor proxyApacheBackendSSL {
                 Upgrade.executioner(command, f'Restart {apache_service}', 1)
                 
                 # 5. Fix PHP-FPM socket permissions and restart services
-                for version in ['5.4', '5.5', '5.6', '7.0', '7.1', '7.2', '7.3', '7.4', '8.0', '8.1', '8.2', '8.3']:
+                for version in ['5.4', '5.5', '5.6', '7.0', '7.1', '7.2', '7.3', '7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5']:
                     if Upgrade.FindOperatingSytem() in [CENTOS7, CENTOS8, openEuler20, openEuler22]:
                         php_service = f'php{version.replace(".", "")}-php-fpm'
                         socket_dir = '/var/run/php-fpm'
@@ -7960,11 +7966,11 @@ RewriteRule ^(.*)$ https://proxyApacheBackendSSL/$1 [P,L]
             
             # Restart PHP-FPM services
             if osType in [CENTOS7, CENTOS8, CloudLinux7, CloudLinux8]:
-                for version in ['54', '55', '56', '70', '71', '72', '73', '74', '80', '81', '82', '83', '84']:
+                for version in ['54', '55', '56', '70', '71', '72', '73', '74', '80', '81', '82', '83', '84', '85']:
                     command = f'systemctl restart php{version}-php-fpm'
                     Upgrade.executioner(command, command, 0, True)
             else:
-                for version in ['5.6', '7.0', '7.1', '7.2', '7.3', '7.4', '8.0', '8.1', '8.2', '8.3']:
+                for version in ['5.6', '7.0', '7.1', '7.2', '7.3', '7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5']:
                     command = f'systemctl restart php{version}-fpm'
                     Upgrade.executioner(command, command, 0, True)
             
