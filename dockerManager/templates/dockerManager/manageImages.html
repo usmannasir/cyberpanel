@@ -375,8 +375,20 @@
         padding: 1rem 2rem;
     }
     
+    .modal-dialog-history {
+        width: 96vw;
+        max-width: min(96vw, 1400px);
+        margin: 1.75rem auto;
+    }
+
+    .history-modal-scroll {
+        overflow-x: auto;
+        max-width: 100%;
+    }
+
     .history-table {
         width: 100%;
+        table-layout: fixed;
         background: var(--bg-hover, #f8f9ff);
         border-radius: 8px;
         overflow: hidden;
@@ -390,13 +402,74 @@
         color: var(--text-primary, #1e293b);
         font-size: 0.875rem;
     }
+
+    .history-table th.history-col-size {
+        text-align: right;
+        width: 9%;
+    }
+
+    .history-table th.history-col-created {
+        width: 14%;
+    }
+
+    .history-table th.history-col-comment {
+        width: 12%;
+    }
+
+    .history-table th.history-col-id {
+        width: 14%;
+    }
     
     .history-table td {
         padding: 0.75rem;
         color: var(--text-secondary, #64748b);
         font-size: 0.875rem;
         border-bottom: 1px solid var(--border-color, #e8e9ff);
-        word-break: break-all;
+        vertical-align: top;
+        word-break: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .history-table td.history-col-id {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        white-space: nowrap;
+        overflow-x: auto;
+        max-width: 0;
+    }
+
+    .history-table td.history-col-cmd {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 0.8125rem;
+    }
+
+    .history-layer-cmd {
+        margin: 0;
+        white-space: pre;
+        overflow: auto;
+        max-height: 14rem;
+        max-width: 100%;
+        background: var(--bg-primary, #fff);
+        border: 1px solid var(--border-color, #e8e9ff);
+        border-radius: 6px;
+        padding: 0.5rem 0.6rem;
+    }
+
+    .history-table td.history-col-created {
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .history-table td.history-col-comment {
+        overflow-x: auto;
+        max-width: 0;
+        font-size: 0.8125rem;
+    }
+
+    .history-table td.history-col-size {
+        white-space: nowrap;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     }
     
     @keyframes spin {
@@ -583,6 +656,11 @@
                             </td>
                             <td style="text-align: center;">
                                 <div class="action-buttons">
+                                    <button type="button" class="btn-primary" title="{% trans 'Pull latest from registry for the selected tag. Running containers are unchanged until recreated.' %}"
+                                            ng-click="refreshLocalImage({{ forloop.counter }}, '{{ image.name|escapejs }}')">
+                                        <i class="fas fa-sync-alt"></i>
+                                        {% trans "Refresh" %}
+                                    </button>
                                     <button class="btn-info" title="{% trans 'View History' %}" 
                                             ng-click="getHistory({{ forloop.counter }})">
                                         <i class="fas fa-history"></i>
@@ -603,7 +681,7 @@
 
     <!-- History Modal -->
     <div id="history" class="modal fade" role="dialog">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-lg modal-dialog-history">
             <div class="modal-content">
                 <div class="modal-header">
                     <h4 class="modal-title">
@@ -614,26 +692,28 @@
                             style="font-size: 1.5rem; background: transparent; border: none;">&times;</button>
                 </div>
                 <div class="modal-body">
+                    <div class="history-modal-scroll">
                     <table class="history-table">
                         <thead>
                             <tr>
-                                <th>{% trans "ID" %}</th>
+                                <th class="history-col-id">{% trans "ID" %}</th>
                                 <th>{% trans "Created By" %}</th>
-                                <th>{% trans "Created" %}</th>
-                                <th>{% trans "Comment" %}</th>
-                                <th>{% trans "Size" %}</th>
+                                <th class="history-col-created">{% trans "Created" %}</th>
+                                <th class="history-col-comment">{% trans "Comment" %}</th>
+                                <th class="history-col-size">{% trans "Size" %}</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr ng-repeat="history in historyList track by $index">
-                                <td ng-bind="history.Id"></td>
-                                <td ng-bind="history.CreatedBy"></td>
-                                <td ng-bind="history.Created"></td>
-                                <td ng-bind="history.Comment"></td>
-                                <td ng-bind="history.Size"></td>
+                                <td class="history-col-id" ng-bind="history.Id"></td>
+                                <td class="history-col-cmd"><pre class="history-layer-cmd" ng-bind="history.CreatedBy"></pre></td>
+                                <td class="history-col-created" ng-bind="history.CreatedDisplay"></td>
+                                <td class="history-col-comment" ng-bind="history.Comment"></td>
+                                <td class="history-col-size"><span ng-bind="history.SizeHuman"></span></td>
                             </tr>
                         </tbody>
                     </table>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn-secondary" data-dismiss="modal">

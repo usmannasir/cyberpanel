@@ -589,7 +589,7 @@
     }
 </style>
 
-<div class="modern-container" ng-controller="viewContainer">
+<div class="modern-container" ng-controller="viewContainer" ng-init='initAngularPortsFromServer({{ ports_json|safe }})'>
     <div class="page-header">
         <div class="container-header">
             <div class="container-icon-large">
@@ -738,7 +738,7 @@
                     <div class="action-text">{% trans "Remove" %}</div>
                 </div>
                 
-                <div class="action-btn" data-toggle="modal" data-target="#settings">
+                <div class="action-btn" data-toggle="modal" data-target="#settings" ng-click="initSettingsPortsFromContainer()">
                     <i class="fas fa-sliders-h action-icon" style="color: #6366f1;"></i>
                     <div class="action-text">{% trans "Settings" %}</div>
                 </div>
@@ -761,11 +761,6 @@
                         <div class="action-btn" ng-click="showCommandModal()" ng-disabled="status!='running'">
                             <i class="fas fa-code action-icon" style="color: #10b981;"></i>
                             <div class="action-text">{% trans "Run Command" %}</div>
-                        </div>
-                        
-                        <div class="action-btn" ng-click="showPortEditModal()" ng-disabled="status!='running'">
-                            <i class="fas fa-edit action-icon" style="color: #8b5cf6;"></i>
-                            <div class="action-text">{% trans "Edit Ports" %}</div>
                         </div>
             </div>
         </div>
@@ -827,6 +822,51 @@
                         </div>
 
                         <hr>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Port mappings" %}</label>
+                            <div class="col-sm-9">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i>
+                                    <strong>{% trans "Important:" %}</strong>
+                                    {% trans "Changing host ports requires checking the confirmation box below; the container will be recreated." %}
+                                </div>
+                                <div class="port-mapping-container">
+                                    <div ng-repeat="(containerPort, hostPort) in currentPorts" class="port-mapping-row" style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                                        <div style="flex: 1;">
+                                            <label style="font-weight: 600; color: #495057; margin-bottom: 0.25rem;">{% trans "Container Port" %}</label>
+                                            <input type="text" class="form-control" ng-model="containerPort" disabled style="font-family: monospace;">
+                                        </div>
+                                        <div style="color: #007bff; font-size: 1.25rem;">
+                                            <i class="fas fa-arrow-right"></i>
+                                        </div>
+                                        <div style="flex: 1;">
+                                            <label style="font-weight: 600; color: #495057; margin-bottom: 0.25rem;">{% trans "Host Port" %}</label>
+                                            <input type="number" class="form-control" ng-model="currentPorts[containerPort]"
+                                                   placeholder="{% trans 'e.g., 8080' %}" min="1024" max="65535" ng-disabled="!envConfirmation">
+                                        </div>
+                                        <div style="display: flex; align-items: center; height: 38px;">
+                                            <button type="button" class="btn btn-danger btn-sm" ng-click="removePortMapping(containerPort)"
+                                                    ng-show="Object.keys(currentPorts).length > 0" title="{% trans 'Remove port mapping' %}" ng-disabled="!envConfirmation">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div ng-show="Object.keys(currentPorts).length === 0" class="text-center text-muted" style="padding: 2rem;">
+                                        <i class="fas fa-info-circle fa-2x" style="margin-bottom: 1rem;"></i>
+                                        <p>{% trans "No port mappings configured" %}</p>
+                                    </div>
+                                </div>
+                                <div class="form-group" style="margin-top: 0.5rem;">
+                                    <button type="button" class="btn btn-primary" ng-click="addNewPortMapping()" ng-disabled="!envConfirmation">
+                                        <i class="fas fa-plus"></i>
+                                        {% trans "Add Port Mapping" %}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr>
                         
                         <div class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Environment Variables" %}</label>
@@ -834,7 +874,7 @@
                                 <div class="checkbox">
                                     <label>
                                         <input ng-model="envConfirmation" type="checkbox">
-                                        <strong>{% trans "I understand that editing ENV or Volumes will recreate the container" %}</strong>
+                                        <strong>{% trans "I understand that editing ENV, Volumes, or Ports will recreate the container" %}</strong>
                                     </label>
                                 </div>
                             </div>
@@ -856,10 +896,10 @@
                                         </p>
                                     </div>
                                     <div class="toggle-switch">
-                                        <label class="switch" style="position: relative; display: inline-block; width: 60px; height: 34px;">
-                                            <input type="checkbox" ng-model="advancedEnvMode" ng-change="toggleEnvMode()" style="opacity: 0; width: 0; height: 0;">
-                                            <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px;">
-                                                <span class="slider-thumb" style="position: absolute; content: ''; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></span>
+                                        <label class="switch cp-adv-env-switch" style="position: relative; display: inline-block; width: 60px; height: 34px;">
+                                            <input type="checkbox" ng-model="advancedEnvMode" ng-change="toggleEnvMode()">
+                                            <span class="slider cp-adv-env-slider">
+                                                <span class="slider-thumb cp-adv-env-thumb"></span>
                                             </span>
                                         </label>
                                     </div>
@@ -1246,77 +1286,6 @@
         </div>
     </div>
 
-    <!-- Port Editing Modal -->
-    <div id="portEditModal" class="modal fade" role="dialog">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h4 class="modal-title">
-                        <i class="fas fa-edit" style="margin-right: 0.5rem;"></i>
-                        {% trans "Edit Port Mappings" %}
-                    </h4>
-                    <button type="button" class="close" data-dismiss="modal" 
-                            style="font-size: 1.5rem; background: transparent; border: none;">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i>
-                        <strong>{% trans "Important:" %}</strong> {% trans "Editing port mappings will temporarily stop and recreate the container. Any unsaved data in the container may be lost." %}
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="control-label">
-                            <i class="fas fa-plug" style="margin-right: 0.5rem;"></i>
-                            {% trans "Port Mappings" %}
-                        </label>
-                        <div class="port-mapping-container">
-                            <div ng-repeat="(containerPort, hostPort) in currentPorts" class="port-mapping-row" style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
-                                <div style="flex: 1;">
-                                    <label style="font-weight: 600; color: #495057; margin-bottom: 0.25rem;">{% trans "Container Port" %}</label>
-                                    <input type="text" class="form-control" ng-model="containerPort" disabled style="font-family: monospace;">
-                                </div>
-                                <div style="color: #007bff; font-size: 1.25rem;">
-                                    <i class="fas fa-arrow-right"></i>
-                                </div>
-                                <div style="flex: 1;">
-                                    <label style="font-weight: 600; color: #495057; margin-bottom: 0.25rem;">{% trans "Host Port" %}</label>
-                                    <input type="number" class="form-control" ng-model="currentPorts[containerPort]" 
-                                           placeholder="{% trans 'e.g., 8080' %}" min="1024" max="65535">
-                                </div>
-                                <div style="display: flex; align-items: center; height: 38px;">
-                                    <button type="button" class="btn btn-danger btn-sm" ng-click="removePortMapping(containerPort)" 
-                                            ng-show="Object.keys(currentPorts).length > 1" title="{% trans 'Remove port mapping' %}">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            <div ng-show="Object.keys(currentPorts).length === 0" class="text-center text-muted" style="padding: 2rem;">
-                                <i class="fas fa-info-circle fa-2x" style="margin-bottom: 1rem;"></i>
-                                <p>{% trans "No port mappings configured" %}</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <button type="button" class="btn btn-primary" ng-click="addNewPortMapping()">
-                            <i class="fas fa-plus"></i>
-                            {% trans "Add Port Mapping" %}
-                        </button>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <img id="portEditLoading" src="/static/images/loading.gif" style="display: none;" class="loading-spinner">
-                    <button type="button" class="btn btn-primary" ng-disabled="updatingPorts" ng-click="updatePortMappings()">
-                        <i class="fas fa-save"></i> {% trans "Update Port Mappings" %}
-                    </button>
-                    <button type="button" class="btn btn-default" data-dismiss="modal">
-                        <i class="fas fa-times"></i> {% trans "Cancel" %}
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 <style>
@@ -1439,11 +1408,77 @@
     color: #495057;
 }
 
+.compose-benefits {
+    padding-bottom: 0.75rem;
+}
+
 .compose-actions {
-    margin-top: 1rem;
+    margin-top: 1.25rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(0, 123, 255, 0.15);
     display: flex;
     gap: 0.5rem;
     flex-wrap: wrap;
+}
+
+/* Container Settings modal: checkbox alignment + advanced mode switch */
+#settings .checkbox label {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    padding-left: 0;
+    cursor: pointer;
+    font-weight: normal;
+}
+
+#settings .checkbox label input[type="checkbox"] {
+    position: static !important;
+    margin-left: 0 !important;
+    margin-top: 0.2rem;
+    flex-shrink: 0;
+    width: auto;
+    height: auto;
+    opacity: 1;
+}
+
+#settings .cp-adv-env-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+    margin: 0;
+}
+
+#settings .cp-adv-env-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.3s;
+    border-radius: 34px;
+}
+
+#settings .cp-adv-env-thumb {
+    position: absolute;
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: #fff;
+    transition: 0.3s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+#settings .cp-adv-env-switch input:checked + .cp-adv-env-slider {
+    background-color: #6366f1;
+}
+
+#settings .cp-adv-env-switch input:checked + .cp-adv-env-slider .cp-adv-env-thumb {
+    left: calc(100% - 30px);
 }
 
 .compose-actions .btn {

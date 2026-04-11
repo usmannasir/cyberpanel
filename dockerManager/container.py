@@ -210,6 +210,9 @@ class ContainerManager(multi.Thread):
                 data['memoryUsage'] = 0
                 data['cpuUsage'] = 0
 
+            # JSON for Angular ng-init (flat map container_port -> host_port from DB)
+            data['ports_json'] = json.dumps(data.get('ports', {}))
+
             template = 'dockerManager/viewContainer.html'
             proc = httpProc(request, template, data, 'admin')
             return proc.render()
@@ -588,14 +591,21 @@ class ContainerManager(multi.Thread):
 
             image = data['image']
             tag = data['tag']
+            force_update = bool(data.get('force_update'))
 
-            try:
-                inspectImage = dockerAPI.inspect_image(image + ":" + tag)
-                data_ret = {'installImageStatus': 0, 'error_message': "Image already installed"}
+            if not self._validate_image_name(image):
+                data_ret = {'installImageStatus': 0, 'error_message': 'Invalid image name format'}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
-            except docker.errors.ImageNotFound:
-                pass
+
+            if not force_update:
+                try:
+                    inspectImage = dockerAPI.inspect_image(image + ":" + tag)
+                    data_ret = {'installImageStatus': 0, 'error_message': "Image already installed"}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+                except docker.errors.ImageNotFound:
+                    pass
 
             try:
                 image = client.images.pull(image, tag=tag)
@@ -636,14 +646,17 @@ class ContainerManager(multi.Thread):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            # Check if image already exists
-            try:
-                inspectImage = dockerAPI.inspect_image(image + ":" + tag)
-                data_ret = {'pullImageStatus': 0, 'error_message': "Image already exists locally"}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-            except docker.errors.ImageNotFound:
-                pass
+            force_update = bool(data.get('force_update'))
+
+            # Check if image already exists (skip when refreshing from registry)
+            if not force_update:
+                try:
+                    inspectImage = dockerAPI.inspect_image(image + ":" + tag)
+                    data_ret = {'pullImageStatus': 0, 'error_message': "Image already exists locally"}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+                except docker.errors.ImageNotFound:
+                    pass
 
             # Pull the image
             try:
@@ -1306,6 +1319,36 @@ class ContainerManager(multi.Thread):
             secure_log_error(e, 'container_operation')
             return 'Operation failed'
 
+    @staticmethod
+    def _normalize_ports_for_save(ports_raw):
+        """
+        Parse client-submitted port map for saveContainerSettings recreate.
+        Returns (True, dict) with container_port -> host_port (str),
+        (True, None) if ports_raw is None (caller should use DB),
+        or (False, error_message).
+        """
+        if ports_raw is None:
+            return True, None
+        if not isinstance(ports_raw, dict):
+            return False, 'Invalid ports payload'
+        out = {}
+        for ck, cv in ports_raw.items():
+            if not ck:
+                continue
+            ckey = str(ck).strip()
+            if not ckey:
+                continue
+            if cv in (None, '', 'null'):
+                continue
+            try:
+                hp = int(cv)
+            except (ValueError, TypeError):
+                return False, 'Invalid host port for %s' % ckey
+            if hp < 1024 or hp > 65535:
+                return False, 'Choose host port between 1024 and 65535'
+            out[ckey] = str(hp)
+        return True, out
+
     def saveContainerSettings(self, userID=None, data=None):
         try:
             name = data['name']
@@ -1375,6 +1418,15 @@ class ContainerManager(multi.Thread):
                         continue
                     volumes[volume['src']] = {'bind': volume['dest'],
                                               'mode': 'rw'}
+                ports_for_recreate = json.loads(con.ports)
+                if 'ports' in data and data.get('ports') is not None:
+                    ok_ports, norm_ports = self._normalize_ports_for_save(data.get('ports'))
+                    if not ok_ports:
+                        data_ret = {'saveSettingsStatus': 0, 'error_message': norm_ports}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
+                    if norm_ports is not None:
+                        ports_for_recreate = norm_ports
                 # Prepare data for recreate function
                 data = {
                     'name': name,
@@ -1382,7 +1434,7 @@ class ContainerManager(multi.Thread):
                     'image': con.image,
                     'tag': con.tag,
                     'env': envDict,
-                    'ports': json.loads(con.ports),
+                    'ports': ports_for_recreate,
                     'volumes': volumes,
                     'memory': con.memory
                 }
@@ -1395,6 +1447,7 @@ class ContainerManager(multi.Thread):
 
                 con.env = json.dumps(envDict)
                 con.volumes = json.dumps(volumes)
+                con.ports = json.dumps(ports_for_recreate)
             con.save()
 
             data_ret = {'saveSettingsStatus': 1, 'error_message': 'None'}
