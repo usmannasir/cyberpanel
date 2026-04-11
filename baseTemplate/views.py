@@ -432,7 +432,7 @@ def upgrade(request):
         background = ApplicationInstaller('UpgradeCP', extraArgs)
         background.start()
 
-        adminData = {"upgrade": 1}
+        adminData = {"upgrade": 1, "progress": 0}
         json_data = json.dumps(adminData)
         return HttpResponse(json_data)
 
@@ -440,6 +440,21 @@ def upgrade(request):
         adminData = {"upgrade": 1, "error_message": "Please login or refresh this page."}
         json_data = json.dumps(adminData)
         return HttpResponse(json_data)
+
+
+def _read_upgrade_progress_percent():
+    """Read JSON sidecar written by plogical.upgrade.Upgrade.write_upgrade_progress."""
+    try:
+        from plogical.upgrade import Upgrade
+        prog_path = getattr(Upgrade, 'ProgressPathNew', '/home/cyberpanel/upgrade_progress')
+        if os.path.isfile(prog_path):
+            with open(prog_path, 'r') as rf:
+                data = json.loads(rf.read())
+            v = int(data.get('pct', 0))
+            return max(0, min(100, v))
+    except (ValueError, TypeError, json.JSONDecodeError, OSError, KeyError):
+        pass
+    return 0
 
 
 def upgradeStatus(request):
@@ -456,28 +471,49 @@ def upgradeStatus(request):
                 from plogical.upgrade import Upgrade
 
                 path = Upgrade.LogPathNew
+                prog_path = getattr(Upgrade, 'ProgressPathNew', '/home/cyberpanel/upgrade_progress')
+                pct = _read_upgrade_progress_percent()
 
-                try:
-                    upgradeLog = ProcessUtilities.outputExecutioner(f'cat {path}')
-                except:
+                upgradeLog = None
+                if os.path.isfile(path):
+                    try:
+                        upgradeLog = ProcessUtilities.outputExecutioner(f'cat {path}')
+                    except BaseException:
+                        upgradeLog = None
+
+                if upgradeLog is None or not isinstance(upgradeLog, str):
+                    upgradeLog = None
+                elif upgradeLog.strip().startswith('cat:'):
+                    upgradeLog = None
+
+                if upgradeLog is None:
                     final_json = json.dumps({'finished': 0, 'upgradeStatus': 1,
                                              'error_message': "None",
-                                             'upgradeLog': "Upgrade Just started.."})
+                                             'upgradeLog': "Waiting for upgrade log…",
+                                             'progress': pct})
                     return HttpResponse(final_json)
 
                 if upgradeLog.find("Upgrade Completed") > -1:
 
                     command = f'rm -rf {path}'
                     ProcessUtilities.executioner(command)
+                    try:
+                        if os.path.isfile(prog_path):
+                            os.remove(prog_path)
+                    except OSError:
+                        pass
 
                     final_json = json.dumps({'finished': 1, 'upgradeStatus': 1,
                                              'error_message': "None",
-                                             'upgradeLog': upgradeLog})
+                                             'upgradeLog': upgradeLog,
+                                             'progress': 100})
                     return HttpResponse(final_json)
                 else:
+                    pct = _read_upgrade_progress_percent()
                     final_json = json.dumps({'finished': 0, 'upgradeStatus': 1,
                                              'error_message': "None",
-                                             'upgradeLog': upgradeLog})
+                                             'upgradeLog': upgradeLog,
+                                             'progress': pct})
                     return HttpResponse(final_json)
         except BaseException as msg:
             final_dic = {'upgradeStatus': 0, 'error_message': str(msg)}
