@@ -207,6 +207,11 @@ Requires a live CyberPanel + OLS installation.
 
 ---
 
+## Third-party notices
+
+Bundled components that use licenses other than CyberPanel's GPL-3.0 are listed in [docs/THIRD_PARTY_NOTICES.md](docs/THIRD_PARTY_NOTICES.md).
+
+
 ## Resources
 
 * Official site: [https://cyberpanel.net](https://cyberpanel.net)
