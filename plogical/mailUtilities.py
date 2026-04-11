@@ -211,13 +211,26 @@ class mailUtilities:
         command = f'chown lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/plugins/mailbox-detect/index.php'
         ProcessUtilities.executioner(command)
 
-        ### Enable plugins: merge mailbox-detect + bundled list-unsubscribe (preserve other plugins)
+        ### Enable plugins and enable mailbox creation plugin
 
-        from plogical.snappymail_plugin_utilities import merge_plugin_into_application_ini
-        from plogical.snappymail_plugin_utilities import install_and_enable_list_unsubscribe_header_plugin
+        labsDataLines = open(labsPath, 'r').readlines()
+        PluginsActivator = 0
+        WriteToFile = open(labsPath, 'w')
 
-        merge_plugin_into_application_ini(labsPath, 'mailbox-detect')
-        install_and_enable_list_unsubscribe_header_plugin()
+        for lines in labsDataLines:
+            if lines.find('[plugins]') > -1:
+                PluginsActivator = 1
+                WriteToFile.write(lines)
+            elif PluginsActivator and lines.find('enable = ') > -1:
+                WriteToFile.write(f'enable = On\n')
+            elif PluginsActivator and lines.find('enabled_list = ') > -1:
+                WriteToFile.write(f'enabled_list = "mailbox-detect"\n')
+            elif PluginsActivator == 1 and lines.find('[defaults]') > -1:
+                PluginsActivator = 0
+                WriteToFile.write(lines)
+            else:
+                WriteToFile.write(lines)
+        WriteToFile.close()
 
         ## enable auto create in the enabled plugin
         PluginsFilePath = '/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/plugin-mailbox-detect.json'
