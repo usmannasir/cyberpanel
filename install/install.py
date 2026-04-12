@@ -5498,6 +5498,14 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
             else:
                 cronPath = '/var/spool/cron/crontabs/root'
 
+            try:
+                if '/usr/local/CyberCP' not in sys.path:
+                    sys.path.insert(0, '/usr/local/CyberCP')
+                from plogical.cyberpanel_python import ensure_cyberpanel_bin_python_shim
+                ensure_cyberpanel_bin_python_shim()
+            except BaseException:
+                pass
+
             cronFile = open(cronPath, "w")
 
             # Randomize acme.sh and renew.py cron schedules to avoid traffic spikes to Let's Encrypt

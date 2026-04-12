@@ -3850,11 +3850,9 @@ passdb {
 
     @staticmethod
     def _python_for_manage():
-        """Resolve Python for manage.py (avoid FileNotFoundError when /usr/local/CyberPanel/bin/python missing)."""
-        for path in ('/usr/local/CyberPanel/bin/python', '/usr/local/CyberCP/bin/python', '/usr/bin/python3', '/usr/local/bin/python3'):
-            if path and os.path.isfile(path) and os.access(path, os.X_OK):
-                return path
-        return '/usr/bin/python3'
+        """Resolve Python for manage.py (avoid FileNotFoundError when venv python missing)."""
+        from plogical.cyberpanel_python import resolve_cyberpanel_python
+        return resolve_cyberpanel_python()
 
     @staticmethod
     def GeneralMigrations():
@@ -6231,6 +6229,12 @@ vmail
         if os.path.exists(cronPath):
             data = open(cronPath, 'r').read()
 
+            try:
+                from plogical.cyberpanel_python import ensure_cyberpanel_bin_python_shim
+                ensure_cyberpanel_bin_python_shim()
+            except BaseException:
+                pass
+
             if data.find('findBWUsage') == -1:
                 # Randomize acme.sh and renew.py cron schedules to avoid traffic spikes to Let's Encrypt
                 # Each installation gets a random day (0-6 Sun-Sat), hour, and minute to spread load
@@ -6290,6 +6294,11 @@ vmail
 
 
         else:
+            try:
+                from plogical.cyberpanel_python import ensure_cyberpanel_bin_python_shim
+                ensure_cyberpanel_bin_python_shim()
+            except BaseException:
+                pass
             # Randomize acme.sh and renew.py cron schedules to avoid traffic spikes to Let's Encrypt
             # Each installation gets a random day (0-6 Sun-Sat), hour, and minute to spread load
             acme_hour = random.randint(0, 23)
