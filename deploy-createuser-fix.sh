@@ -40,6 +40,10 @@ if [ -f "$CYBERCP_ROOT/manage.py" ]; then
     cd "$CYBERCP_ROOT"
     "$PYTHON" manage.py collectstatic --noinput --clear 2>&1 | tail -5
     echo "  collectstatic done."
+    if [ -x "$PYTHON" ] && [ -f "$CYBERCP_ROOT/plogical/panel_static_sync.py" ]; then
+        echo "  Syncing panel static for LiteSpeed (/public/static/)..."
+        "$PYTHON" "$CYBERCP_ROOT/plogical/panel_static_sync.py" || true
+    fi
 else
     echo "  No $CYBERCP_ROOT/manage.py found; skipping collectstatic."
 fi

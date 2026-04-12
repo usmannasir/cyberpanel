@@ -3527,6 +3527,21 @@ skip-ssl
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
         try:
+            if '/usr/local/CyberCP' not in sys.path:
+                sys.path.insert(0, '/usr/local/CyberCP')
+            from plogical import panel_static_sync
+
+            if not panel_static_sync.ensure_litespeed_panel_static_complete():
+                logging.InstallLog.writeToFile(
+                    "[WARNING] public/static/webmail/webmail.js missing after collectstatic; "
+                    "verify webmail static and LiteSpeed public/static."
+                )
+        except BaseException as sync_err:
+            logging.InstallLog.writeToFile(
+                "[WARNING] panel_static_sync after install (non-fatal): " + str(sync_err)
+            )
+
+        try:
             path = "/usr/local/CyberCP/version.txt"
             writeToFile = open(path, 'w')
             writeToFile.writelines('%s\n' % (VERSION))
@@ -4645,8 +4660,11 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
             if not os.path.exists("/usr/local/CyberCP/public"):
                 os.mkdir("/usr/local/CyberCP/public")
 
-            if os.path.exists("/usr/local/CyberCP/public/snappymail"):
+            # Require a real entrypoint — an empty or removed tree must be reinstalled.
+            if os.path.isfile("/usr/local/CyberCP/public/snappymail/index.php"):
                 return 0
+            if os.path.isdir("/usr/local/CyberCP/public/snappymail"):
+                shutil.rmtree("/usr/local/CyberCP/public/snappymail", ignore_errors=True)
 
             # Version: CLI override (--snappymail-version), then latest from API, else class default
             snappy_ver = getattr(preFlightsChecks, 'snappymail_version', None) or ''
