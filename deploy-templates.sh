@@ -47,6 +47,12 @@ if [ -f "$CYBERCP_ROOT/manage.py" ]; then
     [ -x "$PYTHON" ] || PYTHON="python3"
     echo "  Running collectstatic..."
     (cd "$CYBERCP_ROOT" && "$PYTHON" manage.py collectstatic --noinput --clear 2>&1) | tail -5
+    echo "  Syncing STATIC_ROOT -> public/static for LiteSpeed /static/ (webmail, etc.)..."
+    if [ -f "$CYBERCP_ROOT/plogical/panel_static_sync.py" ]; then
+        "$PYTHON" "$CYBERCP_ROOT/plogical/panel_static_sync.py" || echo "  (panel_static_sync exited non-zero — check public/static/webmail)"
+    else
+        echo "  (panel_static_sync.py not found — skip)"
+    fi
 fi
 
 echo "[$(date +%Y-%m-%d\ %H:%M:%S)] Templates deployed. Hard-refresh (Ctrl+F5) on Modify User / Create User / Login if needed."
