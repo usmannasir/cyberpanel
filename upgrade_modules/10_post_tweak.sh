@@ -72,6 +72,13 @@ if [[ "$Server_Country" = "CN" ]] ; then
 fi
 
 sed -i 's|python2|python|g' /usr/bin/adminPass
+if [[ -f /usr/bin/adminPass ]]; then
+  cat >/usr/bin/adminPass <<'EOF'
+/usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py --password "$@"
+systemctl restart lscpd
+echo "$@" > /etc/cyberpanel/adminPass
+EOF
+fi
 chmod 700 /usr/bin/adminPass
 
 rm -f /usr/bin/php

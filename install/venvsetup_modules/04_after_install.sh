@@ -123,7 +123,7 @@ DISK2=$(df -h | awk '$NF=="/"{printf "%d/%dGB (%s)\n", $3,$2,$5}')
 ELAPSED="$(($SECONDS / 3600)) hrs $((($SECONDS / 60) % 60)) min $(($SECONDS % 60)) sec"
 MYSQLPASSWD=$(cat /etc/cyberpanel/mysqlPassword)
 echo "$ADMIN_PASS" > /etc/cyberpanel/adminPass
-/usr/local/CyberPanel/bin/python2 /usr/local/CyberCP/plogical/adminPass.py --password $ADMIN_PASS
+/usr/local/CyberPanel/bin/python2 /usr/local/CyberCP/plogical/adminPass.py --password "$ADMIN_PASS"
 _restart_lscpd_safe
 systemctl restart lsws
 echo "/usr/local/CyberPanel/bin/python2 /usr/local/CyberCP/plogical/adminPass.py --password \"\$@\"" > /usr/bin/adminPass
