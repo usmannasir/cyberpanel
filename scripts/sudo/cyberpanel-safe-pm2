@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+
+import argparse
+import re
+import subprocess
+import sys
+
+
+PM2_BIN = "/usr/bin/pm2"
+SAFE_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9:_-]{0,127}$")
+
+
+def _require_name(value: str) -> str:
+    if not SAFE_NAME_RE.fullmatch(value):
+        raise argparse.ArgumentTypeError("Invalid process name.")
+    if value.lower() == "all":
+        raise argparse.ArgumentTypeError("Process name not allowed.")
+    return value
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        prog="cyberpanel-safe-pm2",
+        description="Allowlisted pm2 operations for sudo usage.",
+    )
+    parser.add_argument("command", choices=["status", "list", "jlist", "describe", "logs", "restart"])
+    parser.add_argument("name", nargs="?", type=_require_name)
+    parser.add_argument("--lines", type=int, default=200)
+    args = parser.parse_args()
+
+    lines = args.lines
+    if lines < 1:
+        lines = 1
+    if lines > 1000:
+        lines = 1000
+
+    cmd = [PM2_BIN, args.command]
+
+    if args.command in {"describe", "logs", "restart"}:
+        if not args.name:
+            parser.error("name is required for this command")
+        cmd.append(args.name)
+
+    if args.command == "logs":
+        cmd += ["--lines", str(lines), "--nostream"]
+
+    proc = subprocess.run(cmd, stdout=sys.stdout, stderr=sys.stderr)
+    return proc.returncode
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+

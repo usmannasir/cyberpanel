@@ -22,6 +22,7 @@ from plogical.virtualHostUtilities import virtualHostUtilities
 from random import randint
 from plogical.acl import ACLManager
 from plogical.processUtilities import ProcessUtilities
+import shlex
 from plogical.httpProc import httpProc
 from cloudAPI.cloudManager import CloudManager
 
@@ -1972,7 +1973,7 @@ def FetchRspamdLog(request):
 
         fileName = "/var/log/rspamd/rspamd.log"
         try:
-            command = "sudo tail -100 " + fileName
+            command = "sudo /usr/local/bin/cyberpanel-safe-tail --lines 100 --file " + shlex.quote(fileName)
             fewLinesOfLogFile = ProcessUtilities.outputExecutioner(command)
             status = {"status": 1, "logstatus": 1, "logsdata": fewLinesOfLogFile}
             final_json = json.dumps(status)
