@@ -9,6 +9,7 @@ from plogical.virtualHostUtilities import virtualHostUtilities
 from plogical.acl import ACLManager
 from plogical.processUtilities import ProcessUtilities
 import os
+import shlex
 # Create your views here.
 
 def logsHome(request):
@@ -74,7 +75,7 @@ def getLogsFromFile(request):
             fileName = "/home/cyberpanel/error-logs.txt"
 
         try:
-            command = "sudo tail -50 " + fileName
+            command = "sudo /usr/local/bin/cyberpanel-safe-tail --lines 50 --file " + shlex.quote(fileName)
             fewLinesOfLogFile = ProcessUtilities.outputExecutioner(command)
             status = {"status": 1, "logstatus": 1, "logsdata": fewLinesOfLogFile}
             final_json = json.dumps(status)

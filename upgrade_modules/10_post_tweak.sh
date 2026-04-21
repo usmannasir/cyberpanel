@@ -387,7 +387,11 @@ else
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] INFO: ensure_ftp_users_quota_columns.py not in CyberCP yet; run deploy-ftp-users-custom-quota-columns.sh after sync" | tee -a /var/log/cyberpanel_upgrade_debug.log
 fi
 
+# Harden lscpd sudo privileges (replace broad sudo access with allowlisted wrappers)
+if declare -f Post_Upgrade_LSCPD_Sudo_Hardening >/dev/null 2>&1; then
+  Post_Upgrade_LSCPD_Sudo_Hardening || true
+fi
+
 systemctl restart lscpd
 
 }
-

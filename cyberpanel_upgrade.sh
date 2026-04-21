@@ -39,12 +39,12 @@ else
   MOD_DIR="/tmp/cyberpanel_upgrade_modules_$$"
   mkdir -p "$MOD_DIR"
   BASE_URL="https://raw.githubusercontent.com/master3395/cyberpanel/${BRANCH_FOR_MODULES}/upgrade_modules"
-  for name in 00_common 01_variables 02_checks 03_mariadb 04_git_url 05_repository 06_components 07_branch_input 08_main_upgrade 09_sync 10_post_tweak 11_display_final; do
+  for name in 00_common 01_variables 02_checks 03_mariadb 04_git_url 05_repository 06_components 07_branch_input 08_main_upgrade 09_sync 10_post_tweak 10a_lscpd_sudo_hardening 11_display_final; do
     curl -sL -H 'Cache-Control: no-cache' "$BASE_URL/${name}.sh" -o "$MOD_DIR/${name}.sh" 2>/dev/null || true
   done
 fi
 
-for f in "$MOD_DIR"/00_common.sh "$MOD_DIR"/01_variables.sh "$MOD_DIR"/02_checks.sh "$MOD_DIR"/03_mariadb.sh "$MOD_DIR"/04_git_url.sh "$MOD_DIR"/05_repository.sh "$MOD_DIR"/06_components.sh "$MOD_DIR"/07_branch_input.sh "$MOD_DIR"/08_main_upgrade.sh "$MOD_DIR"/09_sync.sh "$MOD_DIR"/10_post_tweak.sh "$MOD_DIR"/11_display_final.sh; do
+for f in "$MOD_DIR"/00_common.sh "$MOD_DIR"/01_variables.sh "$MOD_DIR"/02_checks.sh "$MOD_DIR"/03_mariadb.sh "$MOD_DIR"/04_git_url.sh "$MOD_DIR"/05_repository.sh "$MOD_DIR"/06_components.sh "$MOD_DIR"/07_branch_input.sh "$MOD_DIR"/08_main_upgrade.sh "$MOD_DIR"/09_sync.sh "$MOD_DIR"/10_post_tweak.sh "$MOD_DIR"/10a_lscpd_sudo_hardening.sh "$MOD_DIR"/11_display_final.sh; do
   if [[ -f "$f" ]]; then
     # shellcheck source=upgrade_modules/00_common.sh
     source "$f"
