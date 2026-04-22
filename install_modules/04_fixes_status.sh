@@ -66,6 +66,98 @@ _print_cyberpanel_login_credentials() {
     echo ""
 }
 
+_ensure_webmail_static_under_public() {
+    local src="/usr/local/CyberCP/webmail/static/webmail"
+    local dst="/usr/local/CyberCP/public/static/webmail"
+
+    if [ -f "${dst}/webmail.js" ] && [ -f "${dst}/webmail.css" ]; then
+        return 0
+    fi
+
+    if [ -d "$src" ]; then
+        mkdir -p "$dst"
+        cp -a "${src}/." "$dst/" 2>/dev/null || true
+        chown -R lscpd:lscpd "$dst" 2>/dev/null || true
+        chmod 644 "${dst}/"*.js "${dst}/"*.css 2>/dev/null || true
+    fi
+}
+
+_ensure_snappymail_admin_password() {
+    local server_ip="$1"
+    local admin_password_plain="$2"
+    local cfg="/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/application.ini"
+    local phpbin=""
+
+    [ -f "$cfg" ] || return 0
+    [ -n "$admin_password_plain" ] || return 0
+
+    if ! grep -qE '^[[:space:]]*admin_password[[:space:]]*=[[:space:]]*\"\"[[:space:]]*$' "$cfg" 2>/dev/null; then
+        # Password already set (hashed). Still persist the plain password for the admin to retrieve.
+        :
+    else
+        if [ -x /usr/local/lsws/lsphp83/bin/php ]; then
+            phpbin="/usr/local/lsws/lsphp83/bin/php"
+        elif command -v php >/dev/null 2>&1; then
+            phpbin="$(command -v php)"
+        fi
+
+        if [ -n "$phpbin" ]; then
+            local hash=""
+            hash=$(PASS="$admin_password_plain" "$phpbin" -r 'echo password_hash(getenv("PASS"), PASSWORD_DEFAULT);' 2>/dev/null) || hash=""
+            if [ -n "$hash" ]; then
+                HASH="$hash" python3 - <<'PY' 2>/dev/null || true
+import os
+from pathlib import Path
+
+cfg = Path("/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/application.ini")
+hashv = os.environ.get("HASH", "")
+if not hashv:
+    raise SystemExit(0)
+
+lines = cfg.read_text(encoding="utf-8", errors="replace").splitlines(True)
+out = []
+for line in lines:
+    if line.strip().startswith("admin_password"):
+        out.append(f'admin_password = "{hashv}"\n')
+    else:
+        out.append(line)
+cfg.write_text("".join(out), encoding="utf-8")
+PY
+            fi
+        fi
+    fi
+
+    mkdir -p /etc/cyberpanel /root
+    printf '%s\n' "$admin_password_plain" > /etc/cyberpanel/snappymailAdminPass
+    chmod 600 /etc/cyberpanel/snappymailAdminPass 2>/dev/null || true
+
+    cat > /root/snappymail-admin-password.txt <<EOF
+url=https://${server_ip}:8090/snappymail/?admin
+username=admin
+password=${admin_password_plain}
+EOF
+    chmod 600 /root/snappymail-admin-password.txt 2>/dev/null || true
+}
+
+_print_snappymail_admin_credentials() {
+    local server_ip="$1"
+    local admin_password_plain="$2"
+
+    [ -n "$admin_password_plain" ] || return 0
+
+    echo ""
+    echo "==============================================================================================================="
+    echo "                               SNAPPYMAIL ADMIN PANEL CREDENTIALS"
+    echo "==============================================================================================================="
+    echo "  URL:      https://${server_ip}:8090/snappymail/?admin"
+    echo "  Username: admin"
+    echo "  Password: ${admin_password_plain}"
+    echo ""
+    echo "  Saved to: /root/snappymail-admin-password.txt"
+    echo "==============================================================================================================="
+    echo ""
+}
+
 apply_fixes() {
     echo ""
     echo "Applying post-installation configurations..."
@@ -236,6 +328,11 @@ show_status_summary() {
     admin_password=$(_get_cyberpanel_admin_password)
     _write_cyberpanel_admin_credentials "$server_ip" "$admin_password"
     _print_cyberpanel_login_credentials "$server_ip" "$admin_password"
+
+    # Fix missing /static/webmail/webmail.js and set SnappyMail admin password for /snappymail/?admin
+    _ensure_webmail_static_under_public
+    _ensure_snappymail_admin_password "$server_ip" "$admin_password"
+    _print_snappymail_admin_credentials "$server_ip" "$admin_password"
 
     echo ""
     echo "==============================================================================================================="
