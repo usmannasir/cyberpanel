@@ -1,22 +1,78 @@
 #!/usr/bin/env bash
 # CyberPanel install – apply_fixes, show_status_summary. Sourced by cyberpanel.sh.
 
+_get_cyberpanel_admin_password() {
+    local password=""
+
+    if [ -f "/root/.cyberpanel_password" ]; then
+        password=$(tr -d '\r\n' < /root/.cyberpanel_password 2>/dev/null)
+    fi
+
+    if [ -z "$password" ] && [ -f "/root/cyberpanel-admin-password.txt" ]; then
+        password=$(sed -n 's/^password=//p' /root/cyberpanel-admin-password.txt 2>/dev/null | tail -1 | tr -d '\r\n')
+    fi
+
+    if [ -z "$password" ] && [ -f "/etc/cyberpanel/adminPass" ]; then
+        password=$(tr -d '\r\n' < /etc/cyberpanel/adminPass 2>/dev/null)
+    fi
+
+    if [ -z "$password" ] && [ -f "/var/log/CyberPanel/install_output.log" ]; then
+        password=$(grep -E "Panel password:|Password:" /var/log/CyberPanel/install_output.log 2>/dev/null | tail -1 | awk '{print $NF}')
+    fi
+
+    if [ -z "$password" ]; then
+        password="1234567"
+    fi
+
+    printf '%s' "$password"
+}
+
+_write_cyberpanel_admin_credentials() {
+    local server_ip="$1"
+    local admin_password="$2"
+
+    mkdir -p /root /etc/cyberpanel
+    printf '%s\n' "$admin_password" > /root/.cyberpanel_password
+    printf '%s\n' "$admin_password" > /etc/cyberpanel/adminPass
+    chmod 600 /root/.cyberpanel_password /etc/cyberpanel/adminPass 2>/dev/null || true
+    if [ -n "$server_ip" ] && [ "$server_ip" != "your-server-ip" ]; then
+        printf 'https://%s:8090\n' "$server_ip" > /etc/cyberpanel/csrf_trusted_origins
+        chmod 600 /etc/cyberpanel/csrf_trusted_origins 2>/dev/null || true
+    fi
+
+    cat > /root/cyberpanel-admin-password.txt <<EOF
+url=https://${server_ip}:8090/
+username=admin
+password=${admin_password}
+EOF
+    chmod 600 /root/cyberpanel-admin-password.txt
+}
+
+_print_cyberpanel_login_credentials() {
+    local server_ip="$1"
+    local admin_password="$2"
+
+    echo ""
+    echo "==============================================================================================================="
+    echo "                                  CYBERPANEL LOGIN CREDENTIALS"
+    echo "==============================================================================================================="
+    echo "  URL:      https://${server_ip}:8090/"
+    echo "  Username: admin"
+    echo "  Password: ${admin_password}"
+    echo ""
+    echo "  Saved to: /root/cyberpanel-admin-password.txt"
+    echo "  Note: Browsers may warn about the default self-signed SSL certificate until you issue a valid certificate."
+    echo "==============================================================================================================="
+    echo ""
+}
+
 apply_fixes() {
     echo ""
     echo "Applying post-installation configurations..."
 
     # Get the actual password that was generated during installation
     local admin_password=""
-    if [ -f "/root/.cyberpanel_password" ]; then
-        admin_password=$(cat /root/.cyberpanel_password 2>/dev/null)
-    fi
-
-    # If no password was captured, use the default
-    if [ -z "$admin_password" ]; then
-        admin_password="1234567"
-        echo "$admin_password" > /root/.cyberpanel_password
-        chmod 600 /root/.cyberpanel_password
-    fi
+    admin_password=$(_get_cyberpanel_admin_password)
 
     # Fix database issues
     systemctl start mariadb 2>/dev/null || true
@@ -175,26 +231,11 @@ show_status_summary() {
     fi
 
     # Get the actual password that was set
-    local admin_password=""
-    local server_ip=$(curl -s ifconfig.me 2>/dev/null || echo "your-server-ip")
-
-    # Check if password was set in /root/.cyberpanel_password (if it exists)
-    if [ -f "/root/.cyberpanel_password" ]; then
-        admin_password=$(cat /root/.cyberpanel_password 2>/dev/null)
-    fi
-
-    # If we have a password, show access details
-    if [ -n "$admin_password" ]; then
-        echo ""
-        echo "Access Details:"
-        echo "  CyberPanel: https://$server_ip:8090"
-        echo "  Username: admin"
-        echo "  Password: $admin_password"
-        echo ""
-        echo "  OpenLiteSpeed: https://$server_ip:7080"
-        echo "  Username: admin"
-        echo "  Password: $admin_password"
-    fi
+    local server_ip=$(curl -4 -s ifconfig.me 2>/dev/null || curl -s ifconfig.me 2>/dev/null || echo "your-server-ip")
+    local admin_password
+    admin_password=$(_get_cyberpanel_admin_password)
+    _write_cyberpanel_admin_credentials "$server_ip" "$admin_password"
+    _print_cyberpanel_login_credentials "$server_ip" "$admin_password"
 
     echo ""
     echo "==============================================================================================================="

@@ -41,9 +41,10 @@ verify_installation() {
     if [ $issues -eq 0 ]; then
         echo ""
         echo "  🎉 Installation verification completed successfully!"
-        echo "  🌐 CyberPanel: https://$(curl -s ifconfig.me):8090 (admin/1234567)"
-        echo "  🌐 OpenLiteSpeed: https://$(curl -s ifconfig.me):7080 (admin/1234567)"
-        echo "  🔑 Both services use the same password for convenience"
+        server_ip=$(curl -4 -s ifconfig.me 2>/dev/null || curl -s ifconfig.me 2>/dev/null || echo "your-server-ip")
+        echo "  🌐 CyberPanel: https://${server_ip}:8090"
+        echo "  🌐 OpenLiteSpeed: https://${server_ip}:7080"
+        echo "  🔑 Login credentials are printed in the final summary and saved to /root/cyberpanel-admin-password.txt"
     else
         echo ""
         echo "  ⚠️  Installation completed with $issues issue(s)"
