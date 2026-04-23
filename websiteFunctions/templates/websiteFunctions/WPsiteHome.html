@@ -1343,31 +1343,39 @@
                             Database Information
                         </div>
                         <div id="databaseDetails">
-                            <p style="color: var(--text-secondary);">Loading database information...</p>
+                            <p id="databaseLoading" style="color: var(--text-secondary);">{% trans "Loading database information..." %}</p>
+                            <p id="databaseError" style="color: var(--danger, #c0392b); display: none;"></p>
+                            <table id="databaseInfoTable" class="table" style="display: none; max-width: 600px;">
+                                <tbody>
+                                    <tr>
+                                        <th style="width: 200px;">{% trans "Database Name" %}</th>
+                                        <td><code id="DB_Name"></code></td>
+                                    </tr>
+                                    <tr>
+                                        <th>{% trans "Database User" %}</th>
+                                        <td><code id="DB_User"></code></td>
+                                    </tr>
+                                    <tr>
+                                        <th>{% trans "Table Prefix" %}</th>
+                                        <td><code id="tableprefix"></code></td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 
                     <div class="wp-action-card">
                         <div class="action-card-title">
                             <i class="fas fa-tools"></i>
-                            Database Actions
+                            {% trans "Database Actions" %}
                         </div>
+                        <p style="color: var(--text-secondary); margin-bottom: 12px;">
+                            {% trans "Manage this database directly in phpMyAdmin (optimize, repair, export and more are available from there)." %}
+                        </p>
                         <div class="action-links-grid" style="max-width: 500px;">
                             <a href="/dataBases/phpMyAdmin" target="_blank">
                                 <i class="fas fa-external-link-alt"></i>
-                                Open phpMyAdmin
-                            </a>
-                            <a href="javascript:void(0);" ng-click="optimizeDatabase()">
-                                <i class="fas fa-compress"></i>
-                                Optimize Database
-                            </a>
-                            <a href="javascript:void(0);" ng-click="repairDatabase()">
-                                <i class="fas fa-wrench"></i>
-                                Repair Database
-                            </a>
-                            <a href="javascript:void(0);" ng-click="exportDatabase()">
-                                <i class="fas fa-download"></i>
-                                Export Database
+                                {% trans "Open phpMyAdmin" %}
                             </a>
                         </div>
                     </div>
