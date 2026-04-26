@@ -1033,6 +1033,31 @@
             <div ng-if="!loadingSSHLogins && sshLogins.length === 0" style="text-align: center; padding: 20px; color: #8893a7;">
                 No recent SSH logins found.
             </div>
+            <div ng-if="!loadingSSHLogins && sshLogins.length > 0" class="pagination-controls" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin: 16px 0 12px 0; padding: 12px 0; border-bottom: 1px solid #e8e9ff;">
+                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    <span style="color: #64748b; font-size: 13px;">Show</span>
+                    <select id="sshLoginsPerPageTop" ng-model="sshLoginsPerPage" ng-change="sshLoginsChangePerPage()" onchange="cyberPanelSetSSHLoginsPerPage(this.value)" style="padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: white;">
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    <span style="color: #64748b; font-size: 13px;">per page</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <span style="color: #64748b; font-size: 13px;">{$ getSSHLoginsStart() $}-{$ getSSHLoginsEnd() $} of {$ sshLogins.length $}</span>
+                    <label style="color: #64748b; font-size: 13px;">Go to page</label>
+                    <input id="sshLoginsGoToPageTop" type="number" min="1" max="{$ getSSHLoginsTotalPages() || 1 $}" ng-model="sshLoginsGoToPageInput" onkeydown="if(event.key==='Enter'){cyberPanelGoToSSHLoginsPage(this.value);}" style="width: 80px; padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: white;">
+                    <button id="sshLoginsGoToPageButtonTop" onclick="cyberPanelGoToSSHLoginsPage(document.getElementById('sshLoginsGoToPageTop').value)" ng-click="sshLoginsGoToPageNumber()" style="padding: 6px 12px; border: 1px solid #5b5fcf; border-radius: 6px; background: #5b5fcf; color: white; cursor: pointer; font-size: 13px;">Go</button>
+                    <button ng-click="sshLoginsPrevPage()" ng-disabled="sshLoginsCurrentPage <= 1" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="Previous">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button ng-click="sshLoginsNextPage()" ng-disabled="sshLoginsCurrentPage >= getSSHLoginsTotalPages()" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="Next">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
             <div class="activity-table-wrapper">
             <table class="activity-table records-table" ng-if="!loadingSSHLogins && sshLogins.length > 0">
                 <thead>
@@ -1046,7 +1071,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr ng-repeat="login in sshLogins">
+                    <tr ng-repeat="login in sshLoginsPaginated">
                         <td><strong>{$ login.user $}</strong></td>
                         <td><code style="background: #f0f0ff; padding: 2px 6px; border-radius: 4px; font-size: 11px;">{$ login.ip $}</code></td>
                         <td>
@@ -1078,9 +1103,10 @@
             
             <!-- SSH Logins Pagination -->
             <div ng-if="!loadingSSHLogins && sshLogins.length > 0" class="pagination-controls" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 16px; padding: 12px 0; border-top: 1px solid #e8e9ff;">
-                <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                     <span style="color: #64748b; font-size: 13px;">Show</span>
-                    <select ng-model="sshLoginsPerPage" ng-change="sshLoginsChangePerPage()" style="padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: white;">
+                    <select id="sshLoginsPerPageBottom" ng-model="sshLoginsPerPage" ng-change="sshLoginsChangePerPage()" onchange="cyberPanelSetSSHLoginsPerPage(this.value)" style="padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: white;">
+                        <option value="5">5</option>
                         <option value="10">10</option>
                         <option value="20">20</option>
                         <option value="50">50</option>
@@ -1088,12 +1114,15 @@
                     </select>
                     <span style="color: #64748b; font-size: 13px;">per page</span>
                 </div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="color: #64748b; font-size: 13px;">{$ (sshLoginsPage - 1) * sshLoginsPerPage + 1 $}-{$ (sshLoginsPage * sshLoginsPerPage > sshLoginsTotal ? sshLoginsTotal : sshLoginsPage * sshLoginsPerPage) $} of {$ sshLoginsTotal $}</span>
-                    <button ng-click="sshLoginsGoToPage(sshLoginsPage - 1)" ng-disabled="sshLoginsPage <= 1" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="Previous">
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <span style="color: #64748b; font-size: 13px;">{$ getSSHLoginsStart() $}-{$ getSSHLoginsEnd() $} of {$ sshLogins.length $}</span>
+                    <label style="color: #64748b; font-size: 13px;">Go to page</label>
+                    <input id="sshLoginsGoToPageBottom" type="number" min="1" max="{$ getSSHLoginsTotalPages() || 1 $}" ng-model="sshLoginsGoToPageInput" onkeydown="if(event.key==='Enter'){cyberPanelGoToSSHLoginsPage(this.value);}" style="width: 80px; padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: white;">
+                    <button id="sshLoginsGoToPageButtonBottom" onclick="cyberPanelGoToSSHLoginsPage(document.getElementById('sshLoginsGoToPageBottom').value)" ng-click="sshLoginsGoToPageNumber()" style="padding: 6px 12px; border: 1px solid #5b5fcf; border-radius: 6px; background: #5b5fcf; color: white; cursor: pointer; font-size: 13px;">Go</button>
+                    <button ng-click="sshLoginsPrevPage()" ng-disabled="sshLoginsCurrentPage <= 1" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="Previous">
                         <i class="fas fa-chevron-left"></i>
                     </button>
-                    <button ng-click="sshLoginsGoToPage(sshLoginsPage + 1)" ng-disabled="sshLoginsPage >= sshLoginsTotalPages" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="Next">
+                    <button ng-click="sshLoginsNextPage()" ng-disabled="sshLoginsCurrentPage >= getSSHLoginsTotalPages()" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="Next">
                         <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
@@ -1236,6 +1265,32 @@
                 </div>
             </div>
             
+            <div ng-if="!loadingSSHLogs && sshLogs.length > 0" class="pagination-controls" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin: 16px 0 12px 0; padding: 12px 0; border-bottom: 1px solid #e8e9ff;">
+                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    <span style="color: #64748b; font-size: 13px;">Show</span>
+                    <select id="sshLogsPerPageTop" ng-model="sshLogsPerPage" ng-change="sshLogsChangePerPage()" onchange="cyberPanelSetSSHLogsPerPage(this.value)" style="padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: white;">
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    <span style="color: #64748b; font-size: 13px;">per page</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <span style="color: #64748b; font-size: 13px;">{$ getSSHLogsStart() $}-{$ getSSHLogsEnd() $} of {$ sshLogs.length $}</span>
+                    <label style="color: #64748b; font-size: 13px;">Go to page</label>
+                    <input id="sshLogsGoToPageTop" type="number" min="1" max="{$ getSSHLogsTotalPages() || 1 $}" ng-model="sshLogsGoToPageInput" onkeydown="if(event.key==='Enter'){cyberPanelGoToSSHLogsPage(this.value);}" style="width: 80px; padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: white;">
+                    <button id="sshLogsGoToPageButtonTop" onclick="cyberPanelGoToSSHLogsPage(document.getElementById('sshLogsGoToPageTop').value)" ng-click="sshLogsGoToPageNumber()" style="padding: 6px 12px; border: 1px solid #5b5fcf; border-radius: 6px; background: #5b5fcf; color: white; cursor: pointer; font-size: 13px;">Go</button>
+                    <button ng-click="sshLogsPrevPage()" ng-disabled="sshLogsCurrentPage <= 1" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="Previous">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button ng-click="sshLogsNextPage()" ng-disabled="sshLogsCurrentPage >= getSSHLogsTotalPages()" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="Next">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+
             <!-- SSH Logs Table -->
             <div ng-if="loadingSSHLogs" style="text-align: center; padding: 20px; color: #8893a7;">
                 Loading SSH logs...
@@ -1253,7 +1308,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr ng-repeat="log in sshLogs">
+                    <tr ng-repeat="log in sshLogsPaginated">
                         <td><strong>{$ log.timestamp $}</strong></td>
                         <td><code style="background: #f0f0ff; padding: 4px 8px; border-radius: 4px; font-size: 11px; display: inline-block; word-break: break-word; overflow-wrap: break-word;">{$ log.message $}</code></td>
                         <td>
@@ -1291,9 +1346,10 @@
             
             <!-- SSH Logs Pagination -->
             <div ng-if="!loadingSSHLogs && sshLogs.length > 0" class="pagination-controls" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 16px; padding: 12px 0; border-top: 1px solid #e8e9ff;">
-                <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                     <span style="color: #64748b; font-size: 13px;">Show</span>
-                    <select ng-model="sshLogsPerPage" ng-change="sshLogsChangePerPage()" style="padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: white;">
+                    <select id="sshLogsPerPageBottom" ng-model="sshLogsPerPage" ng-change="sshLogsChangePerPage()" onchange="cyberPanelSetSSHLogsPerPage(this.value)" style="padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: white;">
+                        <option value="5">5</option>
                         <option value="10">10</option>
                         <option value="25">25</option>
                         <option value="50">50</option>
@@ -1301,12 +1357,15 @@
                     </select>
                     <span style="color: #64748b; font-size: 13px;">per page</span>
                 </div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="color: #64748b; font-size: 13px;">{$ (sshLogsPage - 1) * sshLogsPerPage + 1 $}-{$ (sshLogsPage * sshLogsPerPage > sshLogsTotal ? sshLogsTotal : sshLogsPage * sshLogsPerPage) $} of {$ sshLogsTotal $}</span>
-                    <button ng-click="sshLogsGoToPage(sshLogsPage - 1)" ng-disabled="sshLogsPage <= 1" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="Previous">
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <span style="color: #64748b; font-size: 13px;">{$ getSSHLogsStart() $}-{$ getSSHLogsEnd() $} of {$ sshLogs.length $}</span>
+                    <label style="color: #64748b; font-size: 13px;">Go to page</label>
+                    <input id="sshLogsGoToPageBottom" type="number" min="1" max="{$ getSSHLogsTotalPages() || 1 $}" ng-model="sshLogsGoToPageInput" onkeydown="if(event.key==='Enter'){cyberPanelGoToSSHLogsPage(this.value);}" style="width: 80px; padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: white;">
+                    <button id="sshLogsGoToPageButtonBottom" onclick="cyberPanelGoToSSHLogsPage(document.getElementById('sshLogsGoToPageBottom').value)" ng-click="sshLogsGoToPageNumber()" style="padding: 6px 12px; border: 1px solid #5b5fcf; border-radius: 6px; background: #5b5fcf; color: white; cursor: pointer; font-size: 13px;">Go</button>
+                    <button ng-click="sshLogsPrevPage()" ng-disabled="sshLogsCurrentPage <= 1" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="Previous">
                         <i class="fas fa-chevron-left"></i>
                     </button>
-                    <button ng-click="sshLogsGoToPage(sshLogsPage + 1)" ng-disabled="sshLogsPage >= sshLogsTotalPages" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="Next">
+                    <button ng-click="sshLogsNextPage()" ng-disabled="sshLogsCurrentPage >= getSSHLogsTotalPages()" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px;" title="Next">
                         <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
