@@ -170,31 +170,38 @@ WSGI_APPLICATION = 'CyberCP.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 # Prefer password from /etc/cyberpanel/mysqlPassword so panel stays in sync with CLI/install scripts.
-_def_mysql_pass = '1XTy1XOV0BZPnM'
+# Do not ship a default password. If env vars and password files are missing, DB access should fail closed.
+_def_mysql_pass = ''
+_def_mysql_root_pass = ''
 try:
     _mysql_pass_file = '/etc/cyberpanel/mysqlPassword'
     if os.path.exists(_mysql_pass_file):
         with open(_mysql_pass_file, 'r') as _f:
             _def_mysql_pass = (_f.read() or '').strip() or _def_mysql_pass
+
+    _mysql_root_pass_file = '/etc/cyberpanel/mysqlRootPassword'
+    if os.path.exists(_mysql_root_pass_file):
+        with open(_mysql_root_pass_file, 'r') as _f:
+            _def_mysql_root_pass = (_f.read() or '').strip() or _def_mysql_root_pass
 except Exception:
     pass
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'cyberpanel',
-        'USER': 'cyberpanel',
-        'PASSWORD': _def_mysql_pass,
-        'HOST': 'localhost',
-        'PORT': ''
+        'NAME': os.getenv('DB_NAME', 'cyberpanel'),
+        'USER': os.getenv('DB_USER', 'cyberpanel'),
+        'PASSWORD': os.getenv('DB_PASSWORD', _def_mysql_pass),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '3306'),
     },
     'rootdb': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'mysql',
-        'USER': 'root',
-        'PASSWORD': _def_mysql_pass,
-        'HOST': 'localhost',
-        'PORT': '',
+        'NAME': os.getenv('ROOT_DB_NAME', 'mysql'),
+        'USER': os.getenv('ROOT_DB_USER', 'root'),
+        'PASSWORD': os.getenv('ROOT_DB_PASSWORD', _def_mysql_root_pass or _def_mysql_pass),
+        'HOST': os.getenv('ROOT_DB_HOST', 'localhost'),
+        'PORT': os.getenv('ROOT_DB_PORT', '3306'),
     },
 }
 DATABASE_ROUTERS = ['backup.backupRouter.backupRouter']

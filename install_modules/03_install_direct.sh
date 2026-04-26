@@ -317,14 +317,19 @@ install_cyberpanel_direct_cont() {
     fi
     touch /tmp/cyberpanel_install_complete 2>/dev/null || true
 
-    local install_exit_code=${PIPESTATUS[0]}
-
     # Extract the generated password from the installation output
-    local generated_password=$(grep "Panel password:" /var/log/CyberPanel/install_output.log | awk '{print $NF}')
+    local generated_password=""
+    generated_password=$(grep -E "Panel password:|Password:" /var/log/CyberPanel/install_output.log 2>/dev/null | tail -1 | awk '{print $NF}')
+    if [ -z "$generated_password" ] && [ -f /etc/cyberpanel/adminPass ]; then
+        generated_password=$(tr -d '\r\n' < /etc/cyberpanel/adminPass 2>/dev/null)
+    fi
     if [ -n "$generated_password" ]; then
         echo "Captured CyberPanel password: $generated_password"
         echo "$generated_password" > /root/.cyberpanel_password
         chmod 600 /root/.cyberpanel_password
+        mkdir -p /etc/cyberpanel
+        echo "$generated_password" > /etc/cyberpanel/adminPass
+        chmod 600 /etc/cyberpanel/adminPass
     fi
     
     echo ""

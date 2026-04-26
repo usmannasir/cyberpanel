@@ -2980,7 +2980,13 @@ Require valid-user
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
             execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName " + websiteName
-            ProcessUtilities.popenExecutioner(execPath)
+            deleteStatus, deleteOutput = ProcessUtilities.outputExecutioner(execPath, retRequired=True)
+            if deleteStatus == 0:
+                errorMessage = "Not able to remove virtual host configuration."
+                if isinstance(deleteOutput, str) and deleteOutput.strip() != "":
+                    errorMessage = deleteOutput.strip().splitlines()[-1]
+                data_ret = {'status': 0, 'websiteDeleteStatus': 0, 'error_message': errorMessage}
+                return HttpResponse(json.dumps(data_ret))
 
             ### delete site from dgdrive backups
 
@@ -3032,7 +3038,13 @@ Require valid-user
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
             execPath = execPath + " deleteDomain --virtualHostName " + websiteName + ' --DeleteDocRoot %s' % (
                 str(DeleteDocRoot))
-            ProcessUtilities.outputExecutioner(execPath)
+            deleteStatus, deleteOutput = ProcessUtilities.outputExecutioner(execPath, retRequired=True)
+            if deleteStatus == 0:
+                errorMessage = "Not able to remove virtual host configuration."
+                if isinstance(deleteOutput, str) and deleteOutput.strip() != "":
+                    errorMessage = deleteOutput.strip().splitlines()[-1]
+                data_ret = {'status': 0, 'websiteDeleteStatus': 0, 'error_message': errorMessage}
+                return HttpResponse(json.dumps(data_ret))
 
             data_ret = {'status': 1, 'websiteDeleteStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)
@@ -9389,4 +9401,3 @@ StrictHostKeyChecking no
             }
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-

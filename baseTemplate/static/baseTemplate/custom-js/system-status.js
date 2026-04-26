@@ -1039,27 +1039,30 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
     $scope.sshLogins = [];
     $scope.sshLoginsPaginated = [];
     $scope.sshLoginsCurrentPage = 1;
-    $scope.sshLoginsPerPage = 10;
-    $scope.sshLoginsGoToPage = 1;
+    $scope.sshLoginsPerPage = 5;
+    $scope.sshLoginsGoToPageInput = 1;
     $scope.loadingSSHLogins = true;
     $scope.errorSSHLogins = '';
 
     $scope.getSSHLoginsTotalPages = function() {
-        return Math.ceil($scope.sshLogins.length / $scope.sshLoginsPerPage);
+        var perPage = Math.max(parseInt($scope.sshLoginsPerPage, 10) || 5, 1);
+        return Math.ceil(($scope.sshLogins || []).length / perPage);
     };
 
     $scope.getSSHLoginsStart = function() {
         if (!$scope.sshLogins || $scope.sshLogins.length === 0) {
             return 0;
         }
-        return ($scope.sshLoginsCurrentPage - 1) * $scope.sshLoginsPerPage + 1;
+        var perPage = Math.max(parseInt($scope.sshLoginsPerPage, 10) || 5, 1);
+        return ($scope.sshLoginsCurrentPage - 1) * perPage + 1;
     };
 
     $scope.getSSHLoginsEnd = function() {
         if (!$scope.sshLogins || $scope.sshLogins.length === 0) {
             return 0;
         }
-        var end = $scope.sshLoginsCurrentPage * $scope.sshLoginsPerPage;
+        var perPage = Math.max(parseInt($scope.sshLoginsPerPage, 10) || 5, 1);
+        var end = $scope.sshLoginsCurrentPage * perPage;
         return Math.min(end, $scope.sshLogins.length);
     };
 
@@ -1069,35 +1072,49 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             console.log('updateSSHLoginsPaginated: No data, cleared paginated array');
             return;
         }
-        var start = ($scope.sshLoginsCurrentPage - 1) * $scope.sshLoginsPerPage;
-        var end = start + $scope.sshLoginsPerPage;
+        var perPage = Math.max(parseInt($scope.sshLoginsPerPage, 10) || 5, 1);
+        var totalPages = $scope.getSSHLoginsTotalPages();
+        if ($scope.sshLoginsCurrentPage > totalPages) {
+            $scope.sshLoginsCurrentPage = totalPages || 1;
+        }
+        if ($scope.sshLoginsCurrentPage < 1) {
+            $scope.sshLoginsCurrentPage = 1;
+        }
+        $scope.sshLoginsGoToPageInput = $scope.sshLoginsCurrentPage;
+        var start = ($scope.sshLoginsCurrentPage - 1) * perPage;
+        var end = start + perPage;
         $scope.sshLoginsPaginated = $scope.sshLogins.slice(start, end);
         console.log('updateSSHLoginsPaginated: start=', start, 'end=', end, 'total=', $scope.sshLogins.length, 'paginated=', $scope.sshLoginsPaginated.length);
     };
 
     $scope.sshLoginsPrevPage = function() {
-        if ($scope.sshLoginsCurrentPage > 1) {
-            $scope.sshLoginsCurrentPage--;
-            $scope.updateSSHLoginsPaginated();
-        }
+        $scope.sshLoginsGoToPage($scope.sshLoginsCurrentPage - 1);
     };
 
     $scope.sshLoginsNextPage = function() {
-        if ($scope.sshLoginsCurrentPage < $scope.getSSHLoginsTotalPages()) {
-            $scope.sshLoginsCurrentPage++;
-            $scope.updateSSHLoginsPaginated();
-        }
+        $scope.sshLoginsGoToPage($scope.sshLoginsCurrentPage + 1);
     };
 
-    $scope.sshLoginsGoToPageNumber = function() {
-        var page = parseInt($scope.sshLoginsGoToPage);
+    $scope.sshLoginsChangePerPage = function() {
+        $scope.sshLoginsPerPage = Math.max(parseInt($scope.sshLoginsPerPage, 10) || 5, 1);
+        $scope.sshLoginsCurrentPage = 1;
+        $scope.sshLoginsGoToPageInput = 1;
+        $scope.updateSSHLoginsPaginated();
+    };
+
+    $scope.sshLoginsGoToPage = function(page) {
+        page = parseInt(page, 10);
         var totalPages = $scope.getSSHLoginsTotalPages();
         if (page >= 1 && page <= totalPages) {
             $scope.sshLoginsCurrentPage = page;
             $scope.updateSSHLoginsPaginated();
         } else {
-            $scope.sshLoginsGoToPage = $scope.sshLoginsCurrentPage;
+            $scope.sshLoginsGoToPageInput = $scope.sshLoginsCurrentPage;
         }
+    };
+
+    $scope.sshLoginsGoToPageNumber = function() {
+        $scope.sshLoginsGoToPage($scope.sshLoginsGoToPageInput);
     };
 
     $scope.refreshSSHLogins = function() {
@@ -1109,12 +1126,13 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             if (response.data && response.data.logins && Array.isArray(response.data.logins)) {
                 $scope.sshLogins = response.data.logins;
                 $scope.sshLoginsCurrentPage = 1;
-                $scope.sshLoginsGoToPage = 1;
+                $scope.sshLoginsGoToPageInput = 1;
                 $scope.updateSSHLoginsPaginated();
             } else {
                 console.warn('SSH Logins: No data or invalid format', response.data);
                 $scope.sshLogins = [];
                 $scope.sshLoginsPaginated = [];
+                $scope.sshLoginsGoToPageInput = 1;
             }
         }, function (err) {
             $scope.loadingSSHLogins = false;
@@ -1123,6 +1141,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             console.error('Failed to load SSH logins:', err);
             $scope.sshLogins = [];
             $scope.sshLoginsPaginated = [];
+            $scope.sshLoginsGoToPageInput = 1;
         });
     };
 
@@ -1130,29 +1149,32 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
     $scope.sshLogs = [];
     $scope.sshLogsPaginated = [];
     $scope.sshLogsCurrentPage = 1;
-    $scope.sshLogsPerPage = 10;
-    $scope.sshLogsGoToPage = 1;
+    $scope.sshLogsPerPage = 5;
+    $scope.sshLogsGoToPageInput = 1;
     $scope.loadingSSHLogs = true;
     $scope.errorSSHLogs = '';
     $scope.securityAlerts = [];
     $scope.loadingSecurityAnalysis = false;
 
     $scope.getSSHLogsTotalPages = function() {
-        return Math.ceil($scope.sshLogs.length / $scope.sshLogsPerPage);
+        var perPage = Math.max(parseInt($scope.sshLogsPerPage, 10) || 5, 1);
+        return Math.ceil(($scope.sshLogs || []).length / perPage);
     };
 
     $scope.getSSHLogsStart = function() {
         if (!$scope.sshLogs || $scope.sshLogs.length === 0) {
             return 0;
         }
-        return ($scope.sshLogsCurrentPage - 1) * $scope.sshLogsPerPage + 1;
+        var perPage = Math.max(parseInt($scope.sshLogsPerPage, 10) || 5, 1);
+        return ($scope.sshLogsCurrentPage - 1) * perPage + 1;
     };
 
     $scope.getSSHLogsEnd = function() {
         if (!$scope.sshLogs || $scope.sshLogs.length === 0) {
             return 0;
         }
-        var end = $scope.sshLogsCurrentPage * $scope.sshLogsPerPage;
+        var perPage = Math.max(parseInt($scope.sshLogsPerPage, 10) || 5, 1);
+        var end = $scope.sshLogsCurrentPage * perPage;
         return Math.min(end, $scope.sshLogs.length);
     };
 
@@ -1162,35 +1184,49 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             console.log('updateSSHLogsPaginated: No data, cleared paginated array');
             return;
         }
-        var start = ($scope.sshLogsCurrentPage - 1) * $scope.sshLogsPerPage;
-        var end = start + $scope.sshLogsPerPage;
+        var perPage = Math.max(parseInt($scope.sshLogsPerPage, 10) || 5, 1);
+        var totalPages = $scope.getSSHLogsTotalPages();
+        if ($scope.sshLogsCurrentPage > totalPages) {
+            $scope.sshLogsCurrentPage = totalPages || 1;
+        }
+        if ($scope.sshLogsCurrentPage < 1) {
+            $scope.sshLogsCurrentPage = 1;
+        }
+        $scope.sshLogsGoToPageInput = $scope.sshLogsCurrentPage;
+        var start = ($scope.sshLogsCurrentPage - 1) * perPage;
+        var end = start + perPage;
         $scope.sshLogsPaginated = $scope.sshLogs.slice(start, end);
         console.log('updateSSHLogsPaginated: start=', start, 'end=', end, 'total=', $scope.sshLogs.length, 'paginated=', $scope.sshLogsPaginated.length);
     };
 
     $scope.sshLogsPrevPage = function() {
-        if ($scope.sshLogsCurrentPage > 1) {
-            $scope.sshLogsCurrentPage--;
-            $scope.updateSSHLogsPaginated();
-        }
+        $scope.sshLogsGoToPage($scope.sshLogsCurrentPage - 1);
     };
 
     $scope.sshLogsNextPage = function() {
-        if ($scope.sshLogsCurrentPage < $scope.getSSHLogsTotalPages()) {
-            $scope.sshLogsCurrentPage++;
-            $scope.updateSSHLogsPaginated();
-        }
+        $scope.sshLogsGoToPage($scope.sshLogsCurrentPage + 1);
     };
 
-    $scope.sshLogsGoToPageNumber = function() {
-        var page = parseInt($scope.sshLogsGoToPage);
+    $scope.sshLogsChangePerPage = function() {
+        $scope.sshLogsPerPage = Math.max(parseInt($scope.sshLogsPerPage, 10) || 5, 1);
+        $scope.sshLogsCurrentPage = 1;
+        $scope.sshLogsGoToPageInput = 1;
+        $scope.updateSSHLogsPaginated();
+    };
+
+    $scope.sshLogsGoToPage = function(page) {
+        page = parseInt(page, 10);
         var totalPages = $scope.getSSHLogsTotalPages();
         if (page >= 1 && page <= totalPages) {
             $scope.sshLogsCurrentPage = page;
             $scope.updateSSHLogsPaginated();
         } else {
-            $scope.sshLogsGoToPage = $scope.sshLogsCurrentPage;
+            $scope.sshLogsGoToPageInput = $scope.sshLogsCurrentPage;
         }
+    };
+
+    $scope.sshLogsGoToPageNumber = function() {
+        $scope.sshLogsGoToPage($scope.sshLogsGoToPageInput);
     };
 
     $scope.refreshSSHLogs = function() {
@@ -1202,7 +1238,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             if (response.data && response.data.logs && Array.isArray(response.data.logs)) {
                 $scope.sshLogs = response.data.logs;
                 $scope.sshLogsCurrentPage = 1;
-                $scope.sshLogsGoToPage = 1;
+                $scope.sshLogsGoToPageInput = 1;
                 console.log('SSH Logs loaded:', $scope.sshLogs.length, 'items');
                 $scope.updateSSHLogsPaginated();
                 console.log('SSH Logs paginated:', $scope.sshLogsPaginated.length, 'items');
@@ -1212,6 +1248,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
                 console.warn('SSH Logs: No data or invalid format', response.data);
                 $scope.sshLogs = [];
                 $scope.sshLogsPaginated = [];
+                $scope.sshLogsGoToPageInput = 1;
             }
         }, function (err) {
             $scope.loadingSSHLogs = false;
@@ -1219,6 +1256,7 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
             $scope.errorSSHLogs = 'Failed to load SSH logs.';
             $scope.sshLogs = [];
             $scope.sshLogsPaginated = [];
+            $scope.sshLogsGoToPageInput = 1;
         });
     };
 
@@ -2674,3 +2712,132 @@ var dashboardStatsControllerFn = function ($scope, $http, $timeout) {
 };
 app.controller('dashboardStatsController', dashboardStatsControllerFn);
 app.controller('newDashboardStat', dashboardStatsControllerFn);
+
+window.cyberPanelGetDashboardScope = function() {
+    if (typeof angular === 'undefined' || !angular.element) {
+        return null;
+    }
+    var dashboardRoot = document.querySelector('.dashboard-container[ng-controller="dashboardStatsController"]') ||
+        document.querySelector('.dashboard-container[ng-controller="newDashboardStat"]') ||
+        document.querySelector('[ng-controller="dashboardStatsController"]') ||
+        document.querySelector('[ng-controller="newDashboardStat"]') ||
+        document.body;
+    if (!dashboardRoot) {
+        return null;
+    }
+    var scope = angular.element(dashboardRoot).scope();
+    return scope || null;
+};
+
+window.cyberPanelSetSSHLoginsPerPage = function(value) {
+    var scope = window.cyberPanelGetDashboardScope();
+    if (!scope) return;
+    scope.$apply(function() {
+        scope.sshLoginsPerPage = value;
+        if (typeof scope.sshLoginsChangePerPage === 'function') {
+            scope.sshLoginsChangePerPage();
+        }
+    });
+};
+
+window.cyberPanelGoToSSHLoginsPage = function(value) {
+    var scope = window.cyberPanelGetDashboardScope();
+    if (!scope) return;
+    scope.$apply(function() {
+        scope.sshLoginsGoToPageInput = value;
+        if (typeof scope.sshLoginsGoToPageNumber === 'function') {
+            scope.sshLoginsGoToPageNumber();
+        }
+    });
+};
+
+window.cyberPanelSetSSHLogsPerPage = function(value) {
+    var scope = window.cyberPanelGetDashboardScope();
+    if (!scope) return;
+    scope.$apply(function() {
+        scope.sshLogsPerPage = value;
+        if (typeof scope.sshLogsChangePerPage === 'function') {
+            scope.sshLogsChangePerPage();
+        }
+    });
+};
+
+window.cyberPanelGoToSSHLogsPage = function(value) {
+    var scope = window.cyberPanelGetDashboardScope();
+    if (!scope) return;
+    scope.$apply(function() {
+        scope.sshLogsGoToPageInput = value;
+        if (typeof scope.sshLogsGoToPageNumber === 'function') {
+            scope.sshLogsGoToPageNumber();
+        }
+    });
+};
+
+window.cyberPanelBindDashboardPaginationControls = function() {
+    function bindSelect(id, handler) {
+        var element = document.getElementById(id);
+        if (!element || element.__cyberPanelBound) {
+            return;
+        }
+        element.__cyberPanelBound = true;
+        element.addEventListener('change', function() {
+            handler(this.value);
+        });
+    }
+
+    function bindButton(id, handler) {
+        var element = document.getElementById(id);
+        if (!element || element.__cyberPanelBound) {
+            return;
+        }
+        element.__cyberPanelBound = true;
+        element.addEventListener('click', function(event) {
+            event.preventDefault();
+            handler();
+        });
+    }
+
+    function bindInput(id, handler) {
+        var element = document.getElementById(id);
+        if (!element || element.__cyberPanelBound) {
+            return;
+        }
+        element.__cyberPanelBound = true;
+        element.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                handler(this.value);
+            }
+        });
+    }
+
+    bindSelect('sshLoginsPerPageTop', window.cyberPanelSetSSHLoginsPerPage);
+    bindSelect('sshLoginsPerPageBottom', window.cyberPanelSetSSHLoginsPerPage);
+    bindInput('sshLoginsGoToPageTop', window.cyberPanelGoToSSHLoginsPage);
+    bindInput('sshLoginsGoToPageBottom', window.cyberPanelGoToSSHLoginsPage);
+    bindButton('sshLoginsGoToPageButtonTop', function() {
+        window.cyberPanelGoToSSHLoginsPage(document.getElementById('sshLoginsGoToPageTop').value);
+    });
+    bindButton('sshLoginsGoToPageButtonBottom', function() {
+        window.cyberPanelGoToSSHLoginsPage(document.getElementById('sshLoginsGoToPageBottom').value);
+    });
+
+    bindSelect('sshLogsPerPageTop', window.cyberPanelSetSSHLogsPerPage);
+    bindSelect('sshLogsPerPageBottom', window.cyberPanelSetSSHLogsPerPage);
+    bindInput('sshLogsGoToPageTop', window.cyberPanelGoToSSHLogsPage);
+    bindInput('sshLogsGoToPageBottom', window.cyberPanelGoToSSHLogsPage);
+    bindButton('sshLogsGoToPageButtonTop', function() {
+        window.cyberPanelGoToSSHLogsPage(document.getElementById('sshLogsGoToPageTop').value);
+    });
+    bindButton('sshLogsGoToPageButtonBottom', function() {
+        window.cyberPanelGoToSSHLogsPage(document.getElementById('sshLogsGoToPageBottom').value);
+    });
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        window.cyberPanelBindDashboardPaginationControls();
+    });
+} else {
+    window.cyberPanelBindDashboardPaginationControls();
+}

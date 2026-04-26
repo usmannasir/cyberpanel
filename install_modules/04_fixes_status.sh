@@ -1,22 +1,170 @@
 #!/usr/bin/env bash
 # CyberPanel install – apply_fixes, show_status_summary. Sourced by cyberpanel.sh.
 
+_get_cyberpanel_admin_password() {
+    local password=""
+
+    if [ -f "/root/.cyberpanel_password" ]; then
+        password=$(tr -d '\r\n' < /root/.cyberpanel_password 2>/dev/null)
+    fi
+
+    if [ -z "$password" ] && [ -f "/root/cyberpanel-admin-password.txt" ]; then
+        password=$(sed -n 's/^password=//p' /root/cyberpanel-admin-password.txt 2>/dev/null | tail -1 | tr -d '\r\n')
+    fi
+
+    if [ -z "$password" ] && [ -f "/etc/cyberpanel/adminPass" ]; then
+        password=$(tr -d '\r\n' < /etc/cyberpanel/adminPass 2>/dev/null)
+    fi
+
+    if [ -z "$password" ] && [ -f "/var/log/CyberPanel/install_output.log" ]; then
+        password=$(grep -E "Panel password:|Password:" /var/log/CyberPanel/install_output.log 2>/dev/null | tail -1 | awk '{print $NF}')
+    fi
+
+    if [ -z "$password" ]; then
+        password="1234567"
+    fi
+
+    printf '%s' "$password"
+}
+
+_write_cyberpanel_admin_credentials() {
+    local server_ip="$1"
+    local admin_password="$2"
+
+    mkdir -p /root /etc/cyberpanel
+    printf '%s\n' "$admin_password" > /root/.cyberpanel_password
+    printf '%s\n' "$admin_password" > /etc/cyberpanel/adminPass
+    chmod 600 /root/.cyberpanel_password /etc/cyberpanel/adminPass 2>/dev/null || true
+    if [ -n "$server_ip" ] && [ "$server_ip" != "your-server-ip" ]; then
+        printf 'https://%s:8090\n' "$server_ip" > /etc/cyberpanel/csrf_trusted_origins
+        chmod 600 /etc/cyberpanel/csrf_trusted_origins 2>/dev/null || true
+    fi
+
+    cat > /root/cyberpanel-admin-password.txt <<EOF
+url=https://${server_ip}:8090/
+username=admin
+password=${admin_password}
+EOF
+    chmod 600 /root/cyberpanel-admin-password.txt
+}
+
+_print_cyberpanel_login_credentials() {
+    local server_ip="$1"
+    local admin_password="$2"
+
+    echo ""
+    echo "==============================================================================================================="
+    echo "                                  CYBERPANEL LOGIN CREDENTIALS"
+    echo "==============================================================================================================="
+    echo "  URL:      https://${server_ip}:8090/"
+    echo "  Username: admin"
+    echo "  Password: ${admin_password}"
+    echo ""
+    echo "  Saved to: /root/cyberpanel-admin-password.txt"
+    echo "  Note: Browsers may warn about the default self-signed SSL certificate until you issue a valid certificate."
+    echo "==============================================================================================================="
+    echo ""
+}
+
+_ensure_webmail_static_under_public() {
+    local src="/usr/local/CyberCP/webmail/static/webmail"
+    local dst="/usr/local/CyberCP/public/static/webmail"
+
+    if [ -f "${dst}/webmail.js" ] && [ -f "${dst}/webmail.css" ]; then
+        return 0
+    fi
+
+    if [ -d "$src" ]; then
+        mkdir -p "$dst"
+        cp -a "${src}/." "$dst/" 2>/dev/null || true
+        chown -R lscpd:lscpd "$dst" 2>/dev/null || true
+        chmod 644 "${dst}/"*.js "${dst}/"*.css 2>/dev/null || true
+    fi
+}
+
+_ensure_snappymail_admin_password() {
+    local server_ip="$1"
+    local admin_password_plain="$2"
+    local cfg="/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/application.ini"
+    local phpbin=""
+
+    [ -f "$cfg" ] || return 0
+    [ -n "$admin_password_plain" ] || return 0
+
+    if ! grep -qE '^[[:space:]]*admin_password[[:space:]]*=[[:space:]]*\"\"[[:space:]]*$' "$cfg" 2>/dev/null; then
+        # Password already set (hashed). Still persist the plain password for the admin to retrieve.
+        :
+    else
+        if [ -x /usr/local/lsws/lsphp83/bin/php ]; then
+            phpbin="/usr/local/lsws/lsphp83/bin/php"
+        elif command -v php >/dev/null 2>&1; then
+            phpbin="$(command -v php)"
+        fi
+
+        if [ -n "$phpbin" ]; then
+            local hash=""
+            hash=$(PASS="$admin_password_plain" "$phpbin" -r 'echo password_hash(getenv("PASS"), PASSWORD_DEFAULT);' 2>/dev/null) || hash=""
+            if [ -n "$hash" ]; then
+                HASH="$hash" python3 - <<'PY' 2>/dev/null || true
+import os
+from pathlib import Path
+
+cfg = Path("/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/application.ini")
+hashv = os.environ.get("HASH", "")
+if not hashv:
+    raise SystemExit(0)
+
+lines = cfg.read_text(encoding="utf-8", errors="replace").splitlines(True)
+out = []
+for line in lines:
+    if line.strip().startswith("admin_password"):
+        out.append(f'admin_password = "{hashv}"\n')
+    else:
+        out.append(line)
+cfg.write_text("".join(out), encoding="utf-8")
+PY
+            fi
+        fi
+    fi
+
+    mkdir -p /etc/cyberpanel /root
+    printf '%s\n' "$admin_password_plain" > /etc/cyberpanel/snappymailAdminPass
+    chmod 600 /etc/cyberpanel/snappymailAdminPass 2>/dev/null || true
+
+    cat > /root/snappymail-admin-password.txt <<EOF
+url=https://${server_ip}:8090/snappymail/?admin
+username=admin
+password=${admin_password_plain}
+EOF
+    chmod 600 /root/snappymail-admin-password.txt 2>/dev/null || true
+}
+
+_print_snappymail_admin_credentials() {
+    local server_ip="$1"
+    local admin_password_plain="$2"
+
+    [ -n "$admin_password_plain" ] || return 0
+
+    echo ""
+    echo "==============================================================================================================="
+    echo "                               SNAPPYMAIL ADMIN PANEL CREDENTIALS"
+    echo "==============================================================================================================="
+    echo "  URL:      https://${server_ip}:8090/snappymail/?admin"
+    echo "  Username: admin"
+    echo "  Password: ${admin_password_plain}"
+    echo ""
+    echo "  Saved to: /root/snappymail-admin-password.txt"
+    echo "==============================================================================================================="
+    echo ""
+}
+
 apply_fixes() {
     echo ""
     echo "Applying post-installation configurations..."
 
     # Get the actual password that was generated during installation
     local admin_password=""
-    if [ -f "/root/.cyberpanel_password" ]; then
-        admin_password=$(cat /root/.cyberpanel_password 2>/dev/null)
-    fi
-
-    # If no password was captured, use the default
-    if [ -z "$admin_password" ]; then
-        admin_password="1234567"
-        echo "$admin_password" > /root/.cyberpanel_password
-        chmod 600 /root/.cyberpanel_password
-    fi
+    admin_password=$(_get_cyberpanel_admin_password)
 
     # Fix database issues
     systemctl start mariadb 2>/dev/null || true
@@ -175,26 +323,16 @@ show_status_summary() {
     fi
 
     # Get the actual password that was set
-    local admin_password=""
-    local server_ip=$(curl -s ifconfig.me 2>/dev/null || echo "your-server-ip")
+    local server_ip=$(curl -4 -s ifconfig.me 2>/dev/null || curl -s ifconfig.me 2>/dev/null || echo "your-server-ip")
+    local admin_password
+    admin_password=$(_get_cyberpanel_admin_password)
+    _write_cyberpanel_admin_credentials "$server_ip" "$admin_password"
+    _print_cyberpanel_login_credentials "$server_ip" "$admin_password"
 
-    # Check if password was set in /root/.cyberpanel_password (if it exists)
-    if [ -f "/root/.cyberpanel_password" ]; then
-        admin_password=$(cat /root/.cyberpanel_password 2>/dev/null)
-    fi
-
-    # If we have a password, show access details
-    if [ -n "$admin_password" ]; then
-        echo ""
-        echo "Access Details:"
-        echo "  CyberPanel: https://$server_ip:8090"
-        echo "  Username: admin"
-        echo "  Password: $admin_password"
-        echo ""
-        echo "  OpenLiteSpeed: https://$server_ip:7080"
-        echo "  Username: admin"
-        echo "  Password: $admin_password"
-    fi
+    # Fix missing /static/webmail/webmail.js and set SnappyMail admin password for /snappymail/?admin
+    _ensure_webmail_static_under_public
+    _ensure_snappymail_admin_password "$server_ip" "$admin_password"
+    _print_snappymail_admin_credentials "$server_ip" "$admin_password"
 
     echo ""
     echo "==============================================================================================================="

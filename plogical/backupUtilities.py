@@ -1053,7 +1053,7 @@ class backupUtilities:
 
                     result = mailUtilities.createEmailAccount(masterDomain, username, password, 'restore')
                     if result[0] == 0:
-                        raise BaseException(result[1])
+                        raise BaseException(f'Unable to restore {email}: {result[1]}')
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.statusWriter(status, "Error Message: " + str(
                     msg) + ". Not able to create email accounts, aborting. [671][5009]")
