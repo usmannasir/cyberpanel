@@ -2402,7 +2402,12 @@ def main():
         admin = Administrator.objects.get(userName=args.websiteOwner)
         virtualHostUtilities.setupAutoDiscover(1, '/home/cyberpanel/templogs', args.virtualHostName, admin)
     elif args.function == "deleteVirtualHostConfigurations":
-        vhost.deleteVirtualHostConfigurations(args.virtualHostName)
+        ret = vhost.deleteVirtualHostConfigurations(args.virtualHostName)
+        if ret == 1:
+            print("1,None")
+            sys.exit(0)
+        print("0,None")
+        sys.exit(1)
     elif args.function == "createDomain":
         try:
             dkimCheck = int(args.dkimCheck)

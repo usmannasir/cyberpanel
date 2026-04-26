@@ -261,7 +261,7 @@ class mailUtilities:
             finalEmailUsername = userName + "@" + domain
 
             if EUsers.objects.filter(email=finalEmailUsername).exists():
-                raise BaseException("This account already exists!")
+                raise BaseException("This account already exists: " + finalEmailUsername)
 
             ## Check for email limits.
 
