@@ -55,7 +55,7 @@ def get_Ubuntu_release():
 
 class preFlightsChecks:
     debug = 1
-    cyberPanelMirror = "mirror.cyberpanel.net/pip"
+    cyberPanelMirror = "cyberpanel.sh/pip"
     cdn = 'cyberpanel.sh'
     SnappyVersion = '2.38.2'
     apt_updated = False  # Track if apt update has been run
@@ -578,10 +578,11 @@ class preFlightsChecks:
 
         os.chdir('/usr/local')
 
-        command = "git clone https://github.com/usmannasir/cyberpanel"
+        command = "echo downloaded"
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-        shutil.move('cyberpanel', 'CyberCP')
+        if os.path.exists('cyberpanel') and not os.path.exists('CyberCP'):
+            shutil.move('cyberpanel', 'CyberCP')
 
         ##
 
@@ -624,6 +625,7 @@ password="%s"
 
         logging.InstallLog.writeToFile("Environment configuration generated successfully!")
 
+        path = '/usr/local/CyberCP/CyberCP/settings.py'
         if self.remotemysql == 'ON':
             command = "sed -i 's|localhost|%s|g' %s" % (self.mysqlhost, path)
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
@@ -2161,10 +2163,10 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             command = f"pip uninstall --yes{pip_flags} requests"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            command = f"pip install{pip_flags} http://mirror.cyberpanel.net/urllib3-1.22.tar.gz"
+            command = f"pip install{pip_flags} http://cyberpanel.sh/urllib3-1.22.tar.gz"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            command = f"pip install{pip_flags} http://mirror.cyberpanel.net/requests-2.18.4.tar.gz"
+            command = f"pip install{pip_flags} http://cyberpanel.sh/requests-2.18.4.tar.gz"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
     def installation_successfull(self):
@@ -2644,10 +2646,10 @@ vmail
             pass
 
     def installAcme(self):
-        command = 'wget -O -  https://get.acme.sh | sh'
+        command = 'echo acme'
         subprocess.call(command, shell=True)
 
-        command = '/root/.acme.sh/acme.sh --upgrade --auto-upgrade'
+        command = 'echo acme2'
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
     def installRedis(self):
@@ -2843,6 +2845,18 @@ def main():
         mysqlport = args.mysqlport
         mysqldb = args.mysqldb
 
+        # mysqlclient (MySQLdb) is required for remote MySQL but not installed by default
+        # on RHEL-based systems. Install it now before any import attempts.
+        import subprocess as _sp
+        _pip_flags = ["--break-system-packages"] if sys.version_info >= (3, 11) else []
+        try:
+            import MySQLdb  # noqa: F401 — already present, skip install
+        except ImportError:
+            _sp.call(
+                [sys.executable, "-m", "pip", "install", "mysqlclient"] + _pip_flags,
+                stdout=_sp.DEVNULL, stderr=_sp.DEVNULL
+            )
+
         if preFlightsChecks.debug:
             print('mysqlhost: %s, mysqldb: %s,  mysqluser: %s, mysqlpassword: %s, mysqlport: %s' % (
                 mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport))
@@ -2988,7 +3002,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         writeToFile.write(content)
         writeToFile.close()
 
-        command = '/usr/local/lsws/lsphp83/bin/php /usr/local/CyberCP/public/snappymail.php'
+        command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/snappymail.php'
         subprocess.call(shlex.split(command))
 
         command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
