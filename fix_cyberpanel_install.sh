@@ -58,9 +58,9 @@ else
     
     # Detect OS version and download appropriate requirements
     if grep -q "22.04" /etc/os-release || grep -q "VERSION_ID=\"9" /etc/os-release; then
-        wget -q -O /tmp/requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.4.4-dev/requirments.txt
+        wget -q -O /tmp/requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.4.5/requirments.txt
     else
-        wget -q -O /tmp/requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.4.4-dev/requirments-old.txt
+        wget -q -O /tmp/requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.4.5/requirments-old.txt
     fi
     
     # Upgrade pip first

@@ -21,7 +21,7 @@ CyberPanel now supports comprehensive resource limits for shared hosting environ
    - Ubuntu 20.04+, Debian 11+, CentOS Stream 9+, AlmaLinux 9+, Rocky Linux 9+
    - RHEL 8 family (RHEL 8, AlmaLinux 8, Rocky 8, CloudLinux 8) with cgroups v2 manually enabled
 
-2. **CyberPanel Version**: v2.4.4-dev or later
+2. **CyberPanel Version**: v2.4.5 or later
 
 3. **OpenLiteSpeed**: Installed and running
 

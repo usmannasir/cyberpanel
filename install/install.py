@@ -1018,10 +1018,10 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                     command = 'dnf --nogpg install -y https://mirror.ghettoforge.net/distributions/gf/gf-release-latest.gf.el8.noarch.rpm'
                     preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-                command = 'dnf install --enablerepo=gf-plus postfix3 postfix3-mysql -y'
+                command = 'dnf install --enablerepo=gf-plus postfix3 postfix3-mysql cyrus-sasl-plain -y'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
             elif self.distro == openeuler:
-                command = 'dnf install postfix -y'
+                command = 'dnf install postfix cyrus-sasl-plain -y'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             else:
@@ -1044,9 +1044,15 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             if self.distro == centos:
                 command = 'yum --enablerepo=gf-plus -y install dovecot23 dovecot23-mysql'
             elif self.distro == cent8:
-                command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql -y'
+                clAPVersion = FetchCloudLinuxAlmaVersionVersion()
+                type = clAPVersion.split('-')[0]
+                version = int(clAPVersion.split('-')[1])
+                if type == 'al' and version >= 90:
+                    command = 'dnf install -y dovecot dovecot-mysql'
+                else:
+                    command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql -y'
             elif self.distro == openeuler:
-                command = 'dnf install dovecot -y'
+                command = 'dnf install -y dovecot dovecot-mysql'
             else:
                 command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install dovecot-mysql dovecot-imapd dovecot-pop3d'
 
@@ -1394,6 +1400,16 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
                 command = "mkdir -p /etc/pki/dovecot/certs/"
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+                # Copy self-signed certs to where Postfix main.cf expects them
+                command = "cp /etc/dovecot/cert.pem /etc/pki/dovecot/certs/dovecot.pem"
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+                command = "cp /etc/dovecot/key.pem /etc/pki/dovecot/private/dovecot.pem"
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+                command = "chmod 600 /etc/pki/dovecot/private/dovecot.pem"
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
                 command = "mkdir -p /etc/opendkim/keys/"
@@ -2880,11 +2896,13 @@ def main():
         checks.install_postfix_dovecot()
         checks.setup_email_Passwords(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
         checks.setup_postfix_dovecot_config(mysql)
+        installCyberPanel.InstallCyberPanel.setupWebmail()
     else:
         if args.postfix == 'ON':
             checks.install_postfix_dovecot()
             checks.setup_email_Passwords(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
             checks.setup_postfix_dovecot_config(mysql)
+            installCyberPanel.InstallCyberPanel.setupWebmail()
 
     checks.install_unzip()
     checks.install_zip()

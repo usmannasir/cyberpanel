@@ -1,6 +1,6 @@
 {% load i18n %}
 {% get_current_language as LANGUAGE_CODE %}
-{% with CP_VERSION="2.4.4.1" %}
+{% with CP_VERSION="2.4.5" %}
 <!DOCTYPE html>
 <html lang="en" ng-app="CyberCP">
 <head>
@@ -1599,7 +1599,7 @@
                 </a>
                 {% endif %}
                 {% if admin or createEmail %}
-                <a href="/snappymail/index.php" class="menu-item" target="_blank" rel="noopener">
+                <a href="/webmail/" class="menu-item">
                     <span>Access Webmail</span>
                 </a>
                 {% endif %}
@@ -1937,8 +1937,12 @@
                 <a href="{% url 'Rspamd' %}" class="menu-item">
                     <span>RSPAMD</span>
                 </a>
+                <a href="{% url 'emailDeliveryHome' %}" class="menu-item">
+                    <span>Email Delivery</span>
+                    <span class="badge">NEW</span>
+                </a>
             </div>
-            
+
             <a href="#" class="menu-item" onclick="toggleSubmenu('manage-services-submenu', this); return false;">
                 <div class="icon-wrapper">
                     <i class="fas fa-folder-open"></i>

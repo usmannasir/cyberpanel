@@ -181,6 +181,29 @@ sh <(curl https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgr
 
 ---
 
+## 🧪 Testing
+
+CyberPanel includes an OLS feature test suite with 128 tests covering all custom OpenLiteSpeed features.
+
+### Running Tests
+
+```bash
+# On the target server, set up test data (once):
+bash tests/ols_test_setup.sh
+
+# Run the full 128-test suite:
+bash tests/ols_feature_tests.sh
+```
+
+### Test Coverage
+
+| Phase | Tests | Coverage |
+|-------|-------|----------|
+| Phase 1: Live Environment | 56 | Binary integrity, CyberPanel module, Auto-SSL, LE certificates, SSL listener auto-mapping, cert serving, HTTPS/HTTP, .htaccess processing, VHost config, origin headers, PHP config |
+| Phase 2: ReadApacheConf | 72 | Include/IncludeOptional, global tuning, listener creation, ProxyPass, IfModule, VHost creation, SSL dedup, Directory/Location blocks, PHP version detection, ScriptAlias, HTTP/HTTPS, process health, graceful restart |
+
+---
+
 ## 🔧 Troubleshooting
 
 ### **Common Issues & Solutions**

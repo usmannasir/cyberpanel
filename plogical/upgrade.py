@@ -735,28 +735,29 @@ class Upgrade:
 
             # Platform-specific URLs and checksums (OpenLiteSpeed v2.4.4 — all features config-driven, static linking)
             # Includes: PHPConfig API, Origin Header Forwarding, ReadApacheConf (with Portmap), Auto-SSL (ACME v2), ModSecurity ABI Compatibility
+            # Module rebuilt 2026-03-04: fix SIGSEGV crash in apply_headers() on error responses (4xx/5xx)
             BINARY_CONFIGS = {
                 'rhel8': {
                     'url': 'https://cyberpanel.net/openlitespeed-2.4.4-x86_64-rhel8',
-                    'sha256': '70002c488309c9ed650f3de2959bcf4db847b8204f6fe242e523523b621fd316',
+                    'sha256': 'd08512da7a77468c09d6161de858db60bcc29aed7ce0abf76dca1c72104dc485',
                     'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.4.4-x86_64-rhel8.so',
-                    'module_sha256': '27f7fbbb74e83c217708960d4b18e2732b0798beecba8ed6eac01509165cb432',
+                    'module_sha256': '3fd3bf6e2d50fe2e94e67fcf9f8ee24c4cc31b9edb641bee8c129cb316c3454a',
                     'modsec_url': 'https://cyberpanel.net/mod_security-2.4.4-x86_64-rhel8.so',
                     'modsec_sha256': 'bbbf003bdc7979b98f09b640dffe2cbbe5f855427f41319e4c121403c05837b2'
                 },
                 'rhel9': {
                     'url': 'https://cyberpanel.net/openlitespeed-2.4.4-x86_64-rhel9',
-                    'sha256': '4fed6d0c70b23ebb73efc6f17f2f2bb2afc84b23b36c02308b8b2fefc56a291c',
+                    'sha256': '418d2ea06e29c0f847a2e6cf01f7641d5fb72b65a04e27a8f6b3b54d673cc2df',
                     'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.4.4-x86_64-rhel9.so',
-                    'module_sha256': '50cb00fa2b8269ec9b0bf300f1b26d3b76d3791c1b022343e1290a0d25e7fda8',
+                    'module_sha256': '4863fc4c227e50e2d6ec5827aed3e1ad92e9be03a548b7aa1a8a4640853db399',
                     'modsec_url': 'https://cyberpanel.net/mod_security-2.4.4-x86_64-rhel9.so',
                     'modsec_sha256': '19deb2ffbaf1334cf4ce4d46d53f747a75b29e835bf5a01f91ebcc0c78e98629'
                 },
                 'ubuntu': {
                     'url': 'https://cyberpanel.net/openlitespeed-2.4.4-x86_64-ubuntu',
-                    'sha256': '004b69dcc7daf21412ddbdfff5fd4e191293035a8f7c5e7cffd7be7ada070445',
+                    'sha256': '60edf815379c32705540ad4525ea6d07c0390cabca232b6be12376ee538f4b1b',
                     'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.4.4-x86_64-ubuntu.so',
-                    'module_sha256': 'bd47069d13bb098201f3e72d4d56876193c898ebfa0ac2eb26796abebc991a88',
+                    'module_sha256': '0d7dd17c6e64ac46d4abd5ccb67cc2da51809e24692774e4df76d8f3a6c67e9d',
                     'modsec_url': 'https://cyberpanel.net/mod_security-2.4.4-x86_64-ubuntu.so',
                     'modsec_sha256': 'ed02c813136720bd4b9de5925f6e41bdc8392e494d7740d035479aaca6d1e0cd'
                 }
@@ -1672,6 +1673,54 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                         `last_request_at` datetime(6) NOT NULL,
                         UNIQUE KEY `scanner_api_rate_limits_scan_endpoint_unique` (`scan_id`, `endpoint`),
                         KEY `scanner_api_rate_limits_scan_endpoint_idx` (`scan_id`, `endpoint`)
+                    )
+                ''')
+            except:
+                pass
+
+            # CyberMail Email Delivery Tables
+            try:
+                cursor.execute('''
+                    CREATE TABLE `cybermail_accounts` (
+                        `id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY,
+                        `admin_id` integer NOT NULL UNIQUE,
+                        `platform_account_id` integer DEFAULT NULL,
+                        `api_key` varchar(255) NOT NULL DEFAULT '',
+                        `email` varchar(255) NOT NULL DEFAULT '',
+                        `plan_name` varchar(100) NOT NULL DEFAULT 'Free',
+                        `plan_slug` varchar(50) NOT NULL DEFAULT 'free',
+                        `emails_per_month` integer NOT NULL DEFAULT 15000,
+                        `is_connected` bool NOT NULL DEFAULT 0,
+                        `relay_enabled` bool NOT NULL DEFAULT 0,
+                        `smtp_credential_id` integer DEFAULT NULL,
+                        `smtp_username` varchar(255) NOT NULL DEFAULT '',
+                        `smtp_host` varchar(255) NOT NULL DEFAULT 'mail.cyberpersons.com',
+                        `smtp_port` integer NOT NULL DEFAULT 587,
+                        `created_at` datetime(6) NOT NULL,
+                        `updated_at` datetime(6) NOT NULL,
+                        CONSTRAINT `cybermail_accounts_admin_id_fk` FOREIGN KEY (`admin_id`)
+                        REFERENCES `loginSystem_administrator` (`id`) ON DELETE CASCADE
+                    )
+                ''')
+            except:
+                pass
+
+            try:
+                cursor.execute('''
+                    CREATE TABLE `cybermail_domains` (
+                        `id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY,
+                        `account_id` integer NOT NULL,
+                        `domain` varchar(255) NOT NULL DEFAULT '',
+                        `platform_domain_id` integer DEFAULT NULL,
+                        `status` varchar(50) NOT NULL DEFAULT 'pending',
+                        `spf_verified` bool NOT NULL DEFAULT 0,
+                        `dkim_verified` bool NOT NULL DEFAULT 0,
+                        `dmarc_verified` bool NOT NULL DEFAULT 0,
+                        `dns_configured` bool NOT NULL DEFAULT 0,
+                        `created_at` datetime(6) NOT NULL,
+                        KEY `cybermail_domains_account_id_idx` (`account_id`),
+                        CONSTRAINT `cybermail_domains_account_id_fk` FOREIGN KEY (`account_id`)
+                        REFERENCES `cybermail_accounts` (`id`) ON DELETE CASCADE
                     )
                 ''')
             except:
@@ -2799,6 +2848,273 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
                 pass
         except:
             pass
+
+    @staticmethod
+    def setupSieve():
+        """Enable Sieve plugin and ManageSieve for email filtering (idempotent)"""
+        try:
+            if not os.path.exists('/etc/dovecot/dovecot.conf'):
+                Upgrade.stdOut("Dovecot not installed, skipping Sieve setup.", 0)
+                return
+
+            ## Ensure cyrus-sasl-plain is installed (needed for SMTP relay on RHEL/Alma/CentOS)
+            if os.path.exists('/etc/redhat-release'):
+                command = 'dnf install -y cyrus-sasl-plain'
+                ProcessUtilities.executioner(command)
+
+            import re
+
+            dovecot_conf = '/etc/dovecot/dovecot.conf'
+            with open(dovecot_conf, 'r') as f:
+                content = f.read()
+
+            changed = False
+
+            # Add sieve to protocols if missing
+            protocols_match = re.search(r'^protocols\s*=\s*(.+)$', content, re.MULTILINE)
+            if protocols_match and 'sieve' not in protocols_match.group(1):
+                content = content.replace(protocols_match.group(0),
+                    protocols_match.group(0) + ' sieve')
+                changed = True
+
+            # Add sieve plugin to protocol lda mail_plugins if missing
+            lda_match = re.search(r'(protocol lda\s*\{[^}]*mail_plugins\s*=\s*)([^\n]+)', content)
+            if lda_match and 'sieve' not in lda_match.group(2):
+                content = content.replace(lda_match.group(0),
+                    lda_match.group(1) + lda_match.group(2).rstrip() + ' sieve')
+                changed = True
+
+            # Add lda_mailbox_autocreate/autosubscribe for sieve fileinto
+            if 'lda_mailbox_autocreate' not in content:
+                lda_plugins = re.search(r'(protocol lda\s*\{[^}]*mail_plugins\s*=[^\n]+\n)', content)
+                if lda_plugins:
+                    content = content.replace(lda_plugins.group(0),
+                        lda_plugins.group(0) +
+                        '    lda_mailbox_autocreate = yes\n    lda_mailbox_autosubscribe = yes\n')
+                    changed = True
+
+            # Add sieve storage settings to plugin section
+            if 'sieve_dir' not in content:
+                plugin_match = re.search(r'(plugin\s*\{[^}]*)(})', content)
+                if plugin_match:
+                    content = content.replace(plugin_match.group(0),
+                        plugin_match.group(1) +
+                        '\n  sieve = ~/sieve/.dovecot.sieve\n  sieve_dir = ~/sieve\n\n' +
+                        plugin_match.group(2))
+                    changed = True
+
+            if changed:
+                with open(dovecot_conf, 'w') as f:
+                    f.write(content)
+
+            # Fix dovecot-sql.conf.ext to include home directory for sieve storage
+            sql_conf = '/etc/dovecot/dovecot-sql.conf.ext'
+            if os.path.exists(sql_conf):
+                with open(sql_conf, 'r') as f:
+                    sql_content = f.read()
+                if 'as home' not in sql_content and 'user_query' in sql_content:
+                    sql_content = re.sub(
+                        r"(user_query\s*=\s*SELECT\s+'5000'\s+as\s+uid,\s+'5000'\s+as\s+gid,\s+mail)\s+(FROM\s+e_users\s+WHERE\s+email='%u';)",
+                        r"\1, CONCAT('/home/vmail/', SUBSTRING_INDEX(email, '@', -1), '/', SUBSTRING_INDEX(email, '@', 1)) as home \2",
+                        sql_content)
+                    with open(sql_conf, 'w') as f:
+                        f.write(sql_content)
+
+            # Write ManageSieve config if not properly configured
+            managesieve_conf = '/etc/dovecot/conf.d/20-managesieve.conf'
+            write_managesieve = True
+            if os.path.exists(managesieve_conf):
+                with open(managesieve_conf, 'r') as f:
+                    existing = f.read()
+                if 'inet_listener sieve' in existing and 'service managesieve' in existing:
+                    write_managesieve = False
+
+            if write_managesieve:
+                os.makedirs('/etc/dovecot/conf.d', exist_ok=True)
+                with open(managesieve_conf, 'w') as f:
+                    f.write("""protocols = $protocols sieve
+
+service managesieve-login {
+  inet_listener sieve {
+    port = 4190
+  }
+}
+
+service managesieve {
+  process_limit = 256
+}
+
+protocol sieve {
+  managesieve_notify_capability = mailto
+  managesieve_sieve_capability = fileinto reject envelope encoded-character vacation subaddress comparator-i;ascii-numeric relational regex imap4flags copy include variables body enotify environment mailbox date index ihave duplicate mime foreverypart extracttext
+}
+""")
+
+            # Install sieve packages if missing
+            if os.path.exists('/etc/lsb-release') or os.path.exists('/etc/debian_version'):
+                Upgrade.executioner('apt-get install -y dovecot-sieve dovecot-managesieved', 'Install Sieve packages', 0)
+            else:
+                Upgrade.executioner('yum install -y dovecot-pigeonhole', 'Install Sieve packages', 0)
+
+            # Open firewall port
+            try:
+                from plogical.firewallUtilities import FirewallUtilities
+                FirewallUtilities.addSieveFirewallRule()
+            except:
+                pass
+
+            subprocess.call(['systemctl', 'restart', 'dovecot'])
+            Upgrade.stdOut("Sieve setup complete!", 0)
+
+        except BaseException as msg:
+            Upgrade.stdOut("setupSieve error: " + str(msg), 0)
+
+    @staticmethod
+    def setupWebmail():
+        """Set up Dovecot master user and webmail config for SSO (idempotent)"""
+        try:
+            # Skip if no mail server installed
+            if not os.path.exists('/etc/dovecot/dovecot.conf'):
+                Upgrade.stdOut("Dovecot not installed, skipping webmail setup.", 0)
+                return
+
+            # Always run migrations and dovecot.conf patching even if conf exists
+            already_configured = os.path.exists('/etc/cyberpanel/webmail.conf') and \
+                                 os.path.exists('/etc/dovecot/master-users')
+
+            if not already_configured:
+                Upgrade.stdOut("Setting up webmail master user for SSO...", 0)
+
+                from plogical.randomPassword import generate_pass
+
+                master_password = generate_pass(32)
+
+                # Hash the password using doveadm
+                result = subprocess.run(
+                    ['doveadm', 'pw', '-s', 'SHA512-CRYPT', '-p', master_password],
+                    capture_output=True, text=True
+                )
+                if result.returncode != 0:
+                    Upgrade.stdOut("doveadm pw failed: " + result.stderr, 0)
+                    return
+
+                password_hash = result.stdout.strip()
+
+                # Write /etc/dovecot/master-users
+                with open('/etc/dovecot/master-users', 'w') as f:
+                    f.write('cyberpanel_master:' + password_hash + '\n')
+                os.chmod('/etc/dovecot/master-users', 0o600)
+                subprocess.call(['chown', 'dovecot:dovecot', '/etc/dovecot/master-users'])
+
+                # Write /etc/cyberpanel/webmail.conf
+                webmail_conf = {
+                    'master_user': 'cyberpanel_master',
+                    'master_password': master_password
+                }
+                with open('/etc/cyberpanel/webmail.conf', 'w') as f:
+                    json.dump(webmail_conf, f)
+                os.chmod('/etc/cyberpanel/webmail.conf', 0o600)
+                subprocess.call(['chown', 'cyberpanel:cyberpanel', '/etc/cyberpanel/webmail.conf'])
+
+            # Patch dovecot.conf if master user config not present
+            dovecot_conf_path = '/etc/dovecot/dovecot.conf'
+            with open(dovecot_conf_path, 'r') as f:
+                dovecot_content = f.read()
+
+            if 'auth_master_user_separator' not in dovecot_content:
+                master_block = """auth_master_user_separator = *
+
+passdb {
+    driver = passwd-file
+    master = yes
+    args = /etc/dovecot/master-users
+    result_success = continue
+}
+
+"""
+                dovecot_content = dovecot_content.replace(
+                    'passdb {',
+                    master_block + 'passdb {',
+                    1  # Only replace the first occurrence
+                )
+                with open(dovecot_conf_path, 'w') as f:
+                    f.write(dovecot_content)
+
+            # Run webmail migrations
+            Upgrade.executioner(
+                'python /usr/local/CyberCP/manage.py makemigrations webmail',
+                'Webmail makemigrations', shell=True
+            )
+            Upgrade.executioner(
+                'python /usr/local/CyberCP/manage.py migrate',
+                'Webmail migrate', shell=True
+            )
+
+            # Fix webmail.conf ownership for lscpd (may be wrong on existing installs)
+            if os.path.exists('/etc/cyberpanel/webmail.conf'):
+                subprocess.call(['chown', 'cyberpanel:cyberpanel', '/etc/cyberpanel/webmail.conf'])
+                os.chmod('/etc/cyberpanel/webmail.conf', 0o600)
+
+            # Restart Dovecot
+            subprocess.call(['systemctl', 'restart', 'dovecot'])
+
+            Upgrade.stdOut("Webmail master user setup complete!", 0)
+
+        except BaseException as msg:
+            Upgrade.stdOut("setupWebmail error: " + str(msg), 0)
+
+    @staticmethod
+    def fixMailTLS():
+        """Ensure Postfix/Dovecot TLS cert files exist at expected paths.
+
+        On Ubuntu, the install creates dirs at /etc/pki/dovecot/ but never
+        copies the self-signed certs there. This breaks STARTTLS and prevents
+        external mail servers (Gmail, etc.) from delivering inbound mail.
+        """
+        try:
+            cert_path = '/etc/pki/dovecot/certs/dovecot.pem'
+            key_path = '/etc/pki/dovecot/private/dovecot.pem'
+
+            # Skip if certs already exist
+            if os.path.exists(cert_path) and os.path.exists(key_path):
+                return
+
+            # Skip if no mail server
+            if not os.path.exists('/etc/dovecot/dovecot.conf'):
+                return
+
+            Upgrade.stdOut("Fixing mail TLS certificates...", 0)
+
+            os.makedirs('/etc/pki/dovecot/certs', exist_ok=True)
+            os.makedirs('/etc/pki/dovecot/private', exist_ok=True)
+
+            # Prefer existing Dovecot self-signed certs
+            if os.path.exists('/etc/dovecot/cert.pem') and os.path.exists('/etc/dovecot/key.pem'):
+                import shutil
+                shutil.copy2('/etc/dovecot/cert.pem', cert_path)
+                shutil.copy2('/etc/dovecot/key.pem', key_path)
+            else:
+                # Generate a new self-signed cert
+                hostname = ProcessUtilities.outputExecutioner(
+                    'hostname').strip() or 'localhost'
+                subprocess.call([
+                    'openssl', 'req', '-x509', '-nodes', '-days', '3650',
+                    '-newkey', 'rsa:2048',
+                    '-subj', '/CN=%s' % hostname,
+                    '-keyout', key_path,
+                    '-out', cert_path
+                ])
+
+            os.chmod(cert_path, 0o644)
+            os.chmod(key_path, 0o600)
+
+            # Restart Postfix to pick up the certs
+            subprocess.call(['systemctl', 'restart', 'postfix'])
+
+            Upgrade.stdOut("Mail TLS certificates fixed.", 0)
+
+        except BaseException as msg:
+            Upgrade.stdOut("fixMailTLS error: " + str(msg), 0)
 
     @staticmethod
     def manageServiceMigrations():
@@ -4595,6 +4911,25 @@ pm.max_spare_servers = 3
                 # Configure the custom module
                 Upgrade.configureCustomModule()
 
+                # Enable Auto-SSL if not already configured
+                conf_path = '/usr/local/lsws/conf/httpd_config.conf'
+                try:
+                    import re
+                    with open(conf_path, 'r') as f:
+                        content = f.read()
+                    if 'autoSSL' not in content:
+                        content = re.sub(
+                            r'(adminEmails\s+\S+)',
+                            r'\1\nautoSSL                   1\nacmeEmail                 admin@cyberpanel.net',
+                            content,
+                            count=1
+                        )
+                        with open(conf_path, 'w') as f:
+                            f.write(content)
+                        Upgrade.stdOut("Auto-SSL enabled in httpd_config.conf", 0)
+                except Exception as e:
+                    Upgrade.stdOut(f"WARNING: Could not enable Auto-SSL: {e}", 0)
+
                 # Restart OpenLiteSpeed to apply changes and verify it started
                 Upgrade.stdOut("Restarting OpenLiteSpeed...", 0)
                 command = '/usr/local/lsws/bin/lswsctrl restart'
@@ -4705,6 +5040,9 @@ pm.max_spare_servers = 3
         Upgrade.s3BackupMigrations()
         Upgrade.containerMigrations()
         Upgrade.manageServiceMigrations()
+        Upgrade.fixMailTLS()
+        Upgrade.setupWebmail()
+        Upgrade.setupSieve()
         Upgrade.enableServices()
 
         Upgrade.installPHP73()

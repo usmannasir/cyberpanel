@@ -75,6 +75,8 @@ INSTALLED_APPS = [
     'CLManager',
     'IncBackups',
     'aiScanner',
+    'webmail',
+    'emailDelivery',
     #    'WebTerminal'
 ]
 

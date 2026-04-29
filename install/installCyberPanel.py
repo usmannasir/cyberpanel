@@ -328,24 +328,25 @@ class InstallCyberPanel:
 
             # Platform-specific URLs and checksums (OpenLiteSpeed v2.4.4 — all features config-driven, static linking)
             # Includes: PHPConfig API, Origin Header Forwarding, ReadApacheConf (with Portmap), Auto-SSL (ACME v2), ModSecurity ABI Compatibility
+            # Module rebuilt 2026-03-04: fix SIGSEGV crash in apply_headers() on error responses (4xx/5xx)
             BINARY_CONFIGS = {
                 'rhel8': {
                     'url': 'https://cyberpanel.net/openlitespeed-2.4.4-x86_64-rhel8',
-                    'sha256': '70002c488309c9ed650f3de2959bcf4db847b8204f6fe242e523523b621fd316',
+                    'sha256': 'd08512da7a77468c09d6161de858db60bcc29aed7ce0abf76dca1c72104dc485',
                     'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.4.4-x86_64-rhel8.so',
-                    'module_sha256': '27f7fbbb74e83c217708960d4b18e2732b0798beecba8ed6eac01509165cb432'
+                    'module_sha256': '3fd3bf6e2d50fe2e94e67fcf9f8ee24c4cc31b9edb641bee8c129cb316c3454a'
                 },
                 'rhel9': {
                     'url': 'https://cyberpanel.net/openlitespeed-2.4.4-x86_64-rhel9',
-                    'sha256': '4fed6d0c70b23ebb73efc6f17f2f2bb2afc84b23b36c02308b8b2fefc56a291c',
+                    'sha256': '418d2ea06e29c0f847a2e6cf01f7641d5fb72b65a04e27a8f6b3b54d673cc2df',
                     'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.4.4-x86_64-rhel9.so',
-                    'module_sha256': '50cb00fa2b8269ec9b0bf300f1b26d3b76d3791c1b022343e1290a0d25e7fda8'
+                    'module_sha256': '4863fc4c227e50e2d6ec5827aed3e1ad92e9be03a548b7aa1a8a4640853db399'
                 },
                 'ubuntu': {
                     'url': 'https://cyberpanel.net/openlitespeed-2.4.4-x86_64-ubuntu',
-                    'sha256': '004b69dcc7daf21412ddbdfff5fd4e191293035a8f7c5e7cffd7be7ada070445',
+                    'sha256': '60edf815379c32705540ad4525ea6d07c0390cabca232b6be12376ee538f4b1b',
                     'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.4.4-x86_64-ubuntu.so',
-                    'module_sha256': 'bd47069d13bb098201f3e72d4d56876193c898ebfa0ac2eb26796abebc991a88'
+                    'module_sha256': '0d7dd17c6e64ac46d4abd5ccb67cc2da51809e24692774e4df76d8f3a6c67e9d'
                 }
             }
 
@@ -498,6 +499,26 @@ module cyberpanel_ols {
 
             # Configure the custom module
             self.configureCustomModule()
+
+            # Enable Auto-SSL in httpd_config.conf
+            try:
+                import re
+                conf_path = '/usr/local/lsws/conf/httpd_config.conf'
+                if os.path.exists(conf_path):
+                    with open(conf_path, 'r') as f:
+                        content = f.read()
+                    if 'autoSSL' not in content:
+                        content = re.sub(
+                            r'(adminEmails\s+\S+)',
+                            r'\1\nautoSSL                   1\nacmeEmail                 admin@cyberpanel.net',
+                            content,
+                            count=1
+                        )
+                        with open(conf_path, 'w') as f:
+                            f.write(content)
+                        InstallCyberPanel.stdOut("Auto-SSL enabled in httpd_config.conf", 1)
+            except Exception as e:
+                InstallCyberPanel.stdOut(f"WARNING: Could not enable Auto-SSL: {e}", 1)
 
         else:
             try:
@@ -665,23 +686,135 @@ module cyberpanel_ols {
         """Install Sieve (Dovecot Sieve) for email filtering on all OS variants"""
         try:
             InstallCyberPanel.stdOut("Installing Sieve (Dovecot Sieve) for email filtering...", 1)
-            
+
             if self.distro == ubuntu:
                 # Install dovecot-sieve and dovecot-managesieved
                 self.install_package('dovecot-sieve dovecot-managesieved')
             else:
                 # For CentOS/AlmaLinux/OpenEuler
                 self.install_package('dovecot-pigeonhole')
-            
+
+            # Write ManageSieve config
+            managesieve_conf = '/etc/dovecot/conf.d/20-managesieve.conf'
+            os.makedirs('/etc/dovecot/conf.d', exist_ok=True)
+            with open(managesieve_conf, 'w') as f:
+                f.write("""protocols = $protocols sieve
+
+service managesieve-login {
+  inet_listener sieve {
+    port = 4190
+  }
+}
+
+service managesieve {
+  process_limit = 256
+}
+
+protocol sieve {
+  managesieve_notify_capability = mailto
+  managesieve_sieve_capability = fileinto reject envelope encoded-character vacation subaddress comparator-i;ascii-numeric relational regex imap4flags copy include variables body enotify environment mailbox date index ihave duplicate mime foreverypart extracttext
+}
+""")
+
             # Add Sieve port 4190 to firewall
-            from plogical.firewallUtilities import FirewallUtilities
-            FirewallUtilities.addSieveFirewallRule()
-            
+            try:
+                import firewall.core.fw as fw
+                subprocess.call(['firewall-cmd', '--permanent', '--add-port=4190/tcp'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                subprocess.call(['firewall-cmd', '--reload'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            except Exception:
+                # firewalld may not be available, try ufw
+                subprocess.call(['ufw', 'allow', '4190/tcp'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
             InstallCyberPanel.stdOut("Sieve successfully installed and configured!", 1)
             return 1
-            
+
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [installSieve]")
+            return 0
+
+    @staticmethod
+    def setupWebmail():
+        """Set up Dovecot master user and webmail config for SSO"""
+        try:
+            # Skip if dovecot not installed
+            if not os.path.exists('/etc/dovecot/dovecot.conf'):
+                InstallCyberPanel.stdOut("Dovecot not installed, skipping webmail setup.", 1)
+                return 1
+
+            # Skip if already configured
+            if os.path.exists('/etc/cyberpanel/webmail.conf') and os.path.exists('/etc/dovecot/master-users'):
+                InstallCyberPanel.stdOut("Webmail master user already configured.", 1)
+                return 1
+
+            InstallCyberPanel.stdOut("Setting up webmail master user for SSO...", 1)
+
+            import secrets, string
+            chars = string.ascii_letters + string.digits
+            master_password = ''.join(secrets.choice(chars) for _ in range(32))
+
+            # Hash the password using doveadm
+            result = subprocess.run(
+                ['doveadm', 'pw', '-s', 'SHA512-CRYPT', '-p', master_password],
+                capture_output=True, text=True
+            )
+            if result.returncode != 0:
+                logging.InstallLog.writeToFile('[ERROR] doveadm pw failed: ' + result.stderr + " [setupWebmail]")
+                return 0
+
+            password_hash = result.stdout.strip()
+
+            # Write /etc/dovecot/master-users
+            with open('/etc/dovecot/master-users', 'w') as f:
+                f.write('cyberpanel_master:' + password_hash + '\n')
+            os.chmod('/etc/dovecot/master-users', 0o600)
+            subprocess.call(['chown', 'dovecot:dovecot', '/etc/dovecot/master-users'])
+
+            # Ensure /etc/cyberpanel/ exists
+            os.makedirs('/etc/cyberpanel', exist_ok=True)
+
+            # Write /etc/cyberpanel/webmail.conf
+            import json as json_module
+            webmail_conf = {
+                'master_user': 'cyberpanel_master',
+                'master_password': master_password
+            }
+            with open('/etc/cyberpanel/webmail.conf', 'w') as f:
+                json_module.dump(webmail_conf, f)
+            os.chmod('/etc/cyberpanel/webmail.conf', 0o600)
+            subprocess.call(['chown', 'cyberpanel:cyberpanel', '/etc/cyberpanel/webmail.conf'])
+
+            # Patch dovecot.conf if master passdb block missing
+            dovecot_conf_path = '/etc/dovecot/dovecot.conf'
+            with open(dovecot_conf_path, 'r') as f:
+                dovecot_content = f.read()
+
+            if 'auth_master_user_separator' not in dovecot_content:
+                master_block = """auth_master_user_separator = *
+
+passdb {
+    driver = passwd-file
+    master = yes
+    args = /etc/dovecot/master-users
+    result_success = continue
+}
+
+"""
+                dovecot_content = dovecot_content.replace(
+                    'passdb {',
+                    master_block + 'passdb {',
+                    1
+                )
+                with open(dovecot_conf_path, 'w') as f:
+                    f.write(dovecot_content)
+
+            # Restart Dovecot to pick up changes
+            subprocess.call(['systemctl', 'restart', 'dovecot'])
+
+            InstallCyberPanel.stdOut("Webmail master user setup complete!", 1)
+            return 1
+
+        except BaseException as msg:
+            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [setupWebmail]")
             return 0
 
     def installMySQL(self, mysql):
@@ -1298,6 +1431,8 @@ def Main(cwd, mysql, distro, ent, serial=None, port="8090", ftp=None, dns=None, 
 
     logging.InstallLog.writeToFile('Installing Sieve for email filtering..,55')
     installer.installSieve()
+
+    ## setupWebmail is called later, after Dovecot is installed (see install.py)
 
     logging.InstallLog.writeToFile('Installing MySQL,60')
     installer.installMySQL(mysql)

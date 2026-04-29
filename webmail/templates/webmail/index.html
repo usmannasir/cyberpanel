@@ -1,0 +1,471 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% load static %}
+{% block title %}{% trans "Webmail - CyberPanel" %}{% endblock %}
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'webmail/webmail.css' %}">
+
+<div class="webmail-container" ng-controller="webmailCtrl" ng-init="init()">
+
+    <div id="cybermailBanner" style="display:none;flex-shrink:0;">
+      <div style="padding:10px 20px;display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 50%,#9333ea 100%);">
+        <div style="flex-shrink:0;font-size:22px;">&#9993;</div>
+        <div style="flex:1;min-width:0;font-size:12.5px;color:rgba(255,255,255,0.85);">
+          <span style="color:#fff;font-weight:800;font-size:13.5px;">Stop Landing in Spam</span> &mdash; Route emails through CyberMail. <strong style="color:#fff;">15,000 emails/month free.</strong> <a href="https://cyberpanel.net/KnowledgeBase/cybermail-user-guide/" target="_blank" style="color:rgba(255,255,255,0.9);text-decoration:underline;">Learn more</a>
+        </div>
+        <a href="/emailDelivery/" style="background:#fff;color:#4f46e5;padding:6px 18px;border-radius:5px;font-weight:700;font-size:11.5px;text-decoration:none;white-space:nowrap;flex-shrink:0;">Get Started Free &rarr;</a>
+        <button onclick="dismissCyberMailBanner()" style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:18px;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0;" title="Dismiss">&times;</button>
+      </div>
+    </div>
+    <script>
+    (function(){if(!document.cookie.includes('cybermail_dismiss=1')){document.getElementById('cybermailBanner').style.display='';}})();
+    function dismissCyberMailBanner(){document.getElementById('cybermailBanner').style.display='none';document.cookie='cybermail_dismiss=1; path=/; max-age='+7*86400;}
+    </script>
+
+    <!-- Account Switcher Bar -->
+    <div class="wm-account-bar" ng-show="managedAccounts.length > 1">
+        <div class="wm-account-current">
+            <i class="fa fa-envelope"></i>
+            <span>{$ currentEmail $}</span>
+        </div>
+        <div class="wm-account-switch">
+            <select ng-model="currentEmail" ng-change="switchAccount()"
+                    ng-options="a for a in managedAccounts" class="wm-account-select">
+            </select>
+        </div>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="wm-layout">
+
+        <!-- Column 1: Sidebar -->
+        <div class="wm-sidebar">
+            <button class="btn btn-primary wm-compose-btn" ng-click="composeNew()">
+                <i class="fa fa-pen-to-square"></i> {% trans "Compose" %}
+            </button>
+
+            <div class="wm-folder-list">
+                <div class="wm-folder-item" ng-repeat="folder in folders"
+                     ng-class="{'active': currentFolder === folder.name}"
+                     ng-click="selectFolder(folder.name)">
+                    <i class="fa" ng-class="getFolderIcon(folder)"></i>
+                    <span class="wm-folder-name">{$ folder.display_name || folder.name $}</span>
+                    <span class="wm-badge" ng-if="folder.unread_count > 0">{$ folder.unread_count $}</span>
+                </div>
+            </div>
+
+            <div class="wm-sidebar-divider"></div>
+
+            <div class="wm-sidebar-nav">
+                <a ng-click="setView('contacts')" class="wm-nav-link" ng-class="{'active': viewMode === 'contacts'}">
+                    <i class="fa fa-address-book"></i> {% trans "Contacts" %}
+                </a>
+                <a ng-click="setView('rules')" class="wm-nav-link" ng-class="{'active': viewMode === 'rules'}">
+                    <i class="fa fa-filter"></i> {% trans "Rules" %}
+                </a>
+                <a ng-click="setView('settings')" class="wm-nav-link" ng-class="{'active': viewMode === 'settings'}">
+                    <i class="fa fa-gear"></i> {% trans "Settings" %}
+                </a>
+            </div>
+
+            <div class="wm-sidebar-divider"></div>
+            <div class="wm-sidebar-nav">
+                <a ng-click="createFolder()" class="wm-nav-link">
+                    <i class="fa fa-folder-plus"></i> {% trans "New Folder" %}
+                </a>
+            </div>
+        </div>
+
+        <!-- Column 2: Message List -->
+        <div class="wm-message-list" ng-show="viewMode === 'list' || viewMode === 'read'">
+            <!-- Search Bar -->
+            <div class="wm-search-bar">
+                <input type="text" ng-model="searchQuery" placeholder="{% trans 'Search messages...' %}"
+                       ng-keyup="$event.keyCode === 13 && searchMessages()" class="wm-search-input">
+                <button class="wm-search-btn" ng-click="searchMessages()">
+                    <i class="fa fa-search"></i>
+                </button>
+            </div>
+
+            <!-- Bulk Actions -->
+            <div class="wm-bulk-actions">
+                <label class="wm-checkbox-label">
+                    <input type="checkbox" ng-model="selectAll" ng-change="toggleSelectAll()">
+                </label>
+                <button class="wm-action-btn" ng-click="bulkDelete()" title="{% trans 'Delete' %}">
+                    <i class="fa fa-trash"></i>
+                </button>
+                <button class="wm-action-btn" ng-click="bulkMarkRead()" title="{% trans 'Mark read' %}">
+                    <i class="fa fa-envelope-open"></i>
+                </button>
+                <button class="wm-action-btn" ng-click="bulkMarkUnread()" title="{% trans 'Mark unread' %}">
+                    <i class="fa fa-envelope"></i>
+                </button>
+                <div class="wm-move-dropdown" ng-if="showMoveDropdown">
+                    <select ng-model="moveTarget" ng-change="bulkMove()"
+                            ng-options="f.name for f in folders">
+                        <option value="">{% trans "Move to..." %}</option>
+                    </select>
+                </div>
+                <button class="wm-action-btn" ng-click="showMoveDropdown = !showMoveDropdown" title="{% trans 'Move' %}">
+                    <i class="fa fa-folder-open"></i>
+                </button>
+                <span class="wm-page-info">{$ currentPage $} / {$ totalPages $}</span>
+                <button class="wm-action-btn" ng-click="prevPage()" ng-disabled="currentPage <= 1">
+                    <i class="fa fa-chevron-left"></i>
+                </button>
+                <button class="wm-action-btn" ng-click="nextPage()" ng-disabled="currentPage >= totalPages">
+                    <i class="fa fa-chevron-right"></i>
+                </button>
+            </div>
+
+            <!-- Message Rows -->
+            <div class="wm-messages">
+                <div class="wm-msg-row" ng-repeat="msg in messages"
+                     ng-class="{'unread': !msg.is_read, 'flagged': msg.is_flagged, 'selected': msg.selected}"
+                     ng-click="openMessage(msg)">
+                    <label class="wm-checkbox-label" ng-click="$event.stopPropagation()">
+                        <input type="checkbox" ng-model="msg.selected">
+                    </label>
+                    <button class="wm-star-btn" ng-click="toggleFlag(msg); $event.stopPropagation()">
+                        <i class="fa" ng-class="msg.is_flagged ? 'fa-star wm-starred' : 'fa-star wm-unstarred'"></i>
+                    </button>
+                    <div class="wm-msg-from">{$ msg.from | limitTo:30 $}</div>
+                    <div class="wm-msg-subject">{$ msg.subject | limitTo:60 $}</div>
+                    <div class="wm-msg-date">{$ msg.date | wmDate $}</div>
+                </div>
+                <div class="wm-empty" ng-if="messages.length === 0 && !loading">
+                    <i class="fa fa-inbox"></i>
+                    <p>{% trans "No messages" %}</p>
+                </div>
+                <div class="wm-loading" ng-if="loading">
+                    <i class="fa fa-spinner fa-spin"></i> {% trans "Loading..." %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Column 3: Detail Pane -->
+        <div class="wm-detail-pane">
+
+            <!-- Message Read View -->
+            <div ng-if="viewMode === 'read' && openMsg" class="wm-read-view">
+                <div class="wm-read-toolbar">
+                    <button class="btn btn-sm btn-default" ng-click="replyTo()">
+                        <i class="fa fa-reply"></i> {% trans "Reply" %}
+                    </button>
+                    <button class="btn btn-sm btn-default" ng-click="replyAll()">
+                        <i class="fa fa-reply-all"></i> {% trans "Reply All" %}
+                    </button>
+                    <button class="btn btn-sm btn-default" ng-click="forwardMsg()">
+                        <i class="fa fa-share"></i> {% trans "Forward" %}
+                    </button>
+                    <button class="btn btn-sm btn-danger" ng-click="deleteMsg(openMsg)">
+                        <i class="fa fa-trash"></i> {% trans "Delete" %}
+                    </button>
+                </div>
+                <div class="wm-read-header">
+                    <h3 class="wm-read-subject">{$ openMsg.subject $}</h3>
+                    <div class="wm-read-meta">
+                        <div><strong>{% trans "From" %}:</strong> {$ openMsg.from $}</div>
+                        <div><strong>{% trans "To" %}:</strong> {$ openMsg.to $}</div>
+                        <div ng-if="openMsg.cc"><strong>{% trans "Cc" %}:</strong> {$ openMsg.cc $}</div>
+                        <div><strong>{% trans "Date" %}:</strong> {$ openMsg.date $}</div>
+                    </div>
+                </div>
+                <div class="wm-attachments" ng-if="openMsg.attachments.length > 0">
+                    <div class="wm-attachment" ng-repeat="att in openMsg.attachments">
+                        <a ng-click="downloadAttachment(att)">
+                            <i class="fa fa-paperclip"></i> {$ att.filename $}
+                            <span class="wm-att-size">({$ att.size | fileSize $})</span>
+                        </a>
+                    </div>
+                </div>
+                <div class="wm-read-body" ng-bind-html="trustedBody"></div>
+            </div>
+
+            <!-- Compose View -->
+            <div ng-if="viewMode === 'compose'" class="wm-compose-view">
+                <div class="wm-compose-header">
+                    <h3>{% trans "Compose" %}</h3>
+                </div>
+                <form name="composeForm" ng-submit="sendMessage()" class="wm-compose-form">
+                    <div class="wm-field">
+                        <label>{% trans "From" %}</label>
+                        <select ng-model="$parent.currentEmail"
+                                ng-options="a for a in managedAccounts"
+                                ng-change="switchAccount()"
+                                ng-show="managedAccounts.length > 1" class="form-control"></select>
+                        <input type="text" value="{$ currentEmail $}" class="form-control" readonly
+                               ng-show="managedAccounts.length <= 1">
+                    </div>
+                    <div class="wm-field">
+                        <label>{% trans "To" %}</label>
+                        <input type="text" ng-model="compose.to" class="form-control"
+                               wm-autocomplete required>
+                    </div>
+                    <div class="wm-field">
+                        <label>{% trans "Cc" %}</label>
+                        <input type="text" ng-model="compose.cc" class="form-control"
+                               wm-autocomplete>
+                    </div>
+                    <div class="wm-field" ng-show="showBcc">
+                        <label>{% trans "Bcc" %}</label>
+                        <input type="text" ng-model="compose.bcc" class="form-control"
+                               wm-autocomplete>
+                    </div>
+                    <div class="wm-field">
+                        <label>{% trans "Subject" %}</label>
+                        <input type="text" ng-model="compose.subject" class="form-control">
+                    </div>
+                    <div class="wm-field">
+                        <a ng-click="showBcc = !showBcc" class="wm-toggle-link">
+                            {$ showBcc ? '{% trans "Hide Bcc" %}' : '{% trans "Show Bcc" %}' $}
+                        </a>
+                    </div>
+                    <!-- Rich Text Toolbar -->
+                    <div class="wm-editor-toolbar">
+                        <button type="button" ng-click="execCmd('bold')" title="Bold"><i class="fa fa-bold"></i></button>
+                        <button type="button" ng-click="execCmd('italic')" title="Italic"><i class="fa fa-italic"></i></button>
+                        <button type="button" ng-click="execCmd('underline')" title="Underline"><i class="fa fa-underline"></i></button>
+                        <button type="button" ng-click="execCmd('insertUnorderedList')" title="List"><i class="fa fa-list-ul"></i></button>
+                        <button type="button" ng-click="execCmd('insertOrderedList')" title="Numbered List"><i class="fa fa-list-ol"></i></button>
+                        <button type="button" ng-click="insertLink()" title="Link"><i class="fa fa-link"></i></button>
+                    </div>
+                    <div class="wm-editor" contenteditable="true" id="wm-compose-body"
+                         ng-blur="updateComposeBody()"></div>
+                    <div class="wm-compose-attachments">
+                        <input type="file" id="wm-file-input" multiple
+                               onchange="angular.element(this).scope().addFiles(this.files)">
+                        <label for="wm-file-input" class="wm-attach-btn">
+                            <i class="fa fa-paperclip"></i> {% trans "Attach files" %}
+                        </label>
+                        <div class="wm-file-list">
+                            <span ng-repeat="f in compose.files" class="wm-file-tag">
+                                {$ f.name $} ({$ f.size | fileSize $})
+                                <i class="fa fa-times" ng-click="removeFile($index)"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="wm-compose-actions">
+                        <button type="submit" class="btn btn-primary" ng-disabled="sending">
+                            <i class="fa fa-paper-plane"></i> {% trans "Send" %}
+                        </button>
+                        <button type="button" class="btn btn-default" ng-click="saveDraft()">
+                            <i class="fa fa-floppy-disk"></i> {% trans "Save Draft" %}
+                        </button>
+                        <button type="button" class="btn btn-default" ng-click="discardDraft()">
+                            <i class="fa fa-xmark"></i> {% trans "Discard" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Contacts View -->
+            <div ng-if="viewMode === 'contacts'" class="wm-contacts-view">
+                <div class="wm-section-header">
+                    <h3>{% trans "Contacts" %}</h3>
+                    <button class="btn btn-sm btn-primary" ng-click="newContact()">
+                        <i class="fa fa-plus"></i> {% trans "Add" %}
+                    </button>
+                </div>
+                <div class="wm-contacts-search">
+                    <input type="text" ng-model="contactSearch" placeholder="{% trans 'Search contacts...' %}"
+                           class="form-control" ng-change="filterContacts()">
+                </div>
+                <div class="wm-contact-list">
+                    <div class="wm-contact-item" ng-repeat="c in filteredContacts">
+                        <div class="wm-contact-info">
+                            <div class="wm-contact-name">{$ c.display_name || c.email_address $}</div>
+                            <div class="wm-contact-email">{$ c.email_address $}</div>
+                        </div>
+                        <div class="wm-contact-actions">
+                            <button class="wm-action-btn" ng-click="composeToContact(c)" title="{% trans 'Email' %}">
+                                <i class="fa fa-envelope"></i>
+                            </button>
+                            <button class="wm-action-btn" ng-click="editContact(c)" title="{% trans 'Edit' %}">
+                                <i class="fa fa-pencil"></i>
+                            </button>
+                            <button class="wm-action-btn" ng-click="removeContact(c)" title="{% trans 'Delete' %}">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Edit/New Contact Form -->
+                <div ng-if="editingContact" class="wm-contact-form">
+                    <h4>{$ editingContact.id ? '{% trans "Edit Contact" %}' : '{% trans "New Contact" %}' $}</h4>
+                    <div class="wm-field">
+                        <label>{% trans "Name" %}</label>
+                        <input type="text" ng-model="editingContact.display_name" class="form-control">
+                    </div>
+                    <div class="wm-field">
+                        <label>{% trans "Email" %}</label>
+                        <input type="email" ng-model="editingContact.email_address" class="form-control" required>
+                    </div>
+                    <div class="wm-field">
+                        <label>{% trans "Phone" %}</label>
+                        <input type="text" ng-model="editingContact.phone" class="form-control">
+                    </div>
+                    <div class="wm-field">
+                        <label>{% trans "Organization" %}</label>
+                        <input type="text" ng-model="editingContact.organization" class="form-control">
+                    </div>
+                    <div class="wm-field">
+                        <label>{% trans "Notes" %}</label>
+                        <textarea ng-model="editingContact.notes" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="wm-form-actions">
+                        <button class="btn btn-primary" ng-click="saveContact()">{% trans "Save" %}</button>
+                        <button class="btn btn-default" ng-click="editingContact = null">{% trans "Cancel" %}</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rules View -->
+            <div ng-if="viewMode === 'rules'" class="wm-rules-view">
+                <div class="wm-section-header">
+                    <h3>{% trans "Mail Filter Rules" %}</h3>
+                    <button class="btn btn-sm btn-primary" ng-click="newRule()">
+                        <i class="fa fa-plus"></i> {% trans "Add Rule" %}
+                    </button>
+                </div>
+                <div class="wm-rule-list">
+                    <div class="wm-rule-item" ng-repeat="rule in sieveRules">
+                        <div class="wm-rule-info">
+                            <strong>{$ rule.name $}</strong>
+                            <span class="wm-rule-desc">
+                                If <em>{$ rule.condition_field $}</em> {$ rule.condition_type $} "{$ rule.condition_value $}"
+                                &rarr; {$ rule.action_type $} {$ rule.action_value $}
+                            </span>
+                        </div>
+                        <div class="wm-rule-actions">
+                            <button class="wm-action-btn" ng-click="editRule(rule)"><i class="fa fa-pencil"></i></button>
+                            <button class="wm-action-btn" ng-click="removeRule(rule)"><i class="fa fa-trash"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Edit/New Rule Form -->
+                <div ng-if="editingRule" class="wm-rule-form">
+                    <h4>{$ editingRule.id ? '{% trans "Edit Rule" %}' : '{% trans "New Rule" %}' $}</h4>
+                    <div class="wm-field">
+                        <label>{% trans "Name" %}</label>
+                        <input type="text" ng-model="editingRule.name" class="form-control">
+                    </div>
+                    <div class="wm-field">
+                        <label>{% trans "Priority" %}</label>
+                        <input type="number" ng-model="editingRule.priority" class="form-control">
+                    </div>
+                    <div class="wm-field-row">
+                        <div class="wm-field">
+                            <label>{% trans "If" %}</label>
+                            <select ng-model="editingRule.conditionField" class="form-control">
+                                <option value="from">From</option>
+                                <option value="to">To</option>
+                                <option value="subject">Subject</option>
+                                <option value="size">Size</option>
+                            </select>
+                        </div>
+                        <div class="wm-field">
+                            <label>{% trans "Condition" %}</label>
+                            <select ng-model="editingRule.conditionType" class="form-control">
+                                <option value="contains">contains</option>
+                                <option value="is">is</option>
+                                <option value="matches">matches</option>
+                                <option value="greater_than">greater than</option>
+                            </select>
+                        </div>
+                        <div class="wm-field">
+                            <label>{% trans "Value" %}</label>
+                            <input type="text" ng-model="editingRule.conditionValue" class="form-control">
+                        </div>
+                    </div>
+                    <div class="wm-field-row">
+                        <div class="wm-field">
+                            <label>{% trans "Action" %}</label>
+                            <select ng-model="editingRule.actionType" class="form-control">
+                                <option value="move">Move to folder</option>
+                                <option value="forward">Forward to</option>
+                                <option value="discard">Discard</option>
+                                <option value="flag">Flag</option>
+                            </select>
+                        </div>
+                        <div class="wm-field" ng-if="editingRule.actionType === 'move'">
+                            <label>{% trans "Target Folder" %}</label>
+                            <select ng-model="editingRule.actionValue" class="form-control">
+                                <option value="">-- {% trans "Select Folder" %} --</option>
+                                <option ng-repeat="f in folders" value="{$ f.display_name || f.name $}">{$ f.display_name || f.name $}</option>
+                            </select>
+                        </div>
+                        <div class="wm-field" ng-if="editingRule.actionType === 'forward'">
+                            <label>{% trans "Forward To" %}</label>
+                            <input type="text" ng-model="editingRule.actionValue" class="form-control"
+                                   placeholder="Email address">
+                        </div>
+                    </div>
+                    <div class="wm-form-actions">
+                        <button class="btn btn-primary" ng-click="saveRule()">{% trans "Save" %}</button>
+                        <button class="btn btn-default" ng-click="editingRule = null">{% trans "Cancel" %}</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings View -->
+            <div ng-if="viewMode === 'settings'" class="wm-settings-view">
+                <div class="wm-section-header">
+                    <h3>{% trans "Settings" %}</h3>
+                </div>
+                <div class="wm-settings-form">
+                    <div class="wm-field">
+                        <label>{% trans "Display Name" %}</label>
+                        <input type="text" ng-model="wmSettings.displayName" class="form-control">
+                    </div>
+                    <div class="wm-field">
+                        <label>{% trans "Signature" %}</label>
+                        <textarea ng-model="wmSettings.signatureHtml" class="form-control" rows="4"></textarea>
+                    </div>
+                    <div class="wm-field">
+                        <label>{% trans "Messages per page" %}</label>
+                        <select ng-model="wmSettings.messagesPerPage" class="form-control">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                    <div class="wm-field">
+                        <label>{% trans "Default reply behavior" %}</label>
+                        <select ng-model="wmSettings.defaultReplyBehavior" class="form-control">
+                            <option value="reply">Reply</option>
+                            <option value="reply_all">Reply All</option>
+                        </select>
+                    </div>
+                    <div class="wm-field">
+                        <label class="wm-checkbox-label">
+                            <input type="checkbox" ng-model="wmSettings.autoCollectContacts">
+                            {% trans "Auto-collect contacts from sent messages" %}
+                        </label>
+                    </div>
+                    <div class="wm-form-actions">
+                        <button class="btn btn-primary" ng-click="saveSettings()">
+                            <i class="fa fa-floppy-disk"></i> {% trans "Save Settings" %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div ng-if="viewMode === 'list' && !openMsg" class="wm-empty-detail">
+                <i class="fa fa-envelope-open fa-3x"></i>
+                <p>{% trans "Select a message to read" %}</p>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'webmail/webmail.js' %}?v=6"></script>
+
+{% endblock %}

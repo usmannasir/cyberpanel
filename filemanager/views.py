@@ -307,13 +307,19 @@ def downloadFile(request):
     try:
         userID = request.session['userID']
         admin = Administrator.objects.get(pk=userID)
-        from urllib.parse import quote
-        from django.utils.encoding import iri_to_uri
+        from urllib.parse import unquote
 
-        fileToDownload = request.build_absolute_uri().split('fileToDownload')[1][1:]
-        fileToDownload = iri_to_uri(fileToDownload)
+        # Properly get fileToDownload from query parameters
+        fileToDownload = request.GET.get('fileToDownload')
+        if not fileToDownload:
+            return HttpResponse("Unauthorized access: Not a valid file.")
+
+        # URL decode the file path
+        fileToDownload = unquote(fileToDownload)
 
         domainName = request.GET.get('domainName')
+        if not domainName:
+            return HttpResponse("Unauthorized access: Domain not specified.")
 
         currentACL = ACLManager.loadedACL(userID)
 
@@ -324,8 +330,14 @@ def downloadFile(request):
 
         homePath = '/home/%s' % (domainName)
 
-        if fileToDownload.find('..') > -1 or fileToDownload.find(homePath) == -1:
-            return HttpResponse("Unauthorized access.")
+        # Security checks: prevent directory traversal and ensure file is within domain's home path
+        if '..' in fileToDownload or not fileToDownload.startswith(homePath):
+            return HttpResponse("Unauthorized access: Not a valid file.")
+
+        # Normalize path to prevent any path traversal attempts
+        fileToDownload = os.path.normpath(fileToDownload)
+        if not fileToDownload.startswith(homePath):
+            return HttpResponse("Unauthorized access: Not a valid file.")
 
         # SECURITY: Check for symlink attacks - resolve the real path and verify it stays within homePath
         try:
@@ -356,11 +368,15 @@ def downloadFile(request):
 def RootDownloadFile(request):
     try:
         userID = request.session['userID']
-        from urllib.parse import quote
-        from django.utils.encoding import iri_to_uri
+        from urllib.parse import unquote
 
-        fileToDownload = request.build_absolute_uri().split('fileToDownload')[1][1:]
-        fileToDownload = iri_to_uri(fileToDownload)
+        # Properly get fileToDownload from query parameters
+        fileToDownload = request.GET.get('fileToDownload')
+        if not fileToDownload:
+            return HttpResponse("Unauthorized access: Not a valid file.")
+
+        # URL decode the file path
+        fileToDownload = unquote(fileToDownload)
 
         currentACL = ACLManager.loadedACL(userID)
 
@@ -370,8 +386,11 @@ def RootDownloadFile(request):
             return ACLManager.loadError()
 
         # SECURITY: Prevent path traversal attacks
-        if fileToDownload.find('..') > -1:
+        if '..' in fileToDownload:
             return HttpResponse("Unauthorized access: Path traversal detected.")
+
+        # Normalize path to prevent any path traversal attempts
+        fileToDownload = os.path.normpath(fileToDownload)
 
         # SECURITY: Check for symlink attacks - resolve the real path and verify it's safe
         try:
