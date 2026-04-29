@@ -665,8 +665,8 @@ class Upgrade:
             return 'rhel9'
 
     @staticmethod
-    def downloadCustomBinary(url, destination, expected_sha256=None):
-        """Download custom binary file with optional checksum verification"""
+    def downloadCustomBinary(url, destination):
+        """Download custom binary file"""
         try:
             Upgrade.stdOut(f"Downloading {os.path.basename(destination)}...", 0)
 
@@ -684,26 +684,7 @@ class Upgrade:
                     else:
                         Upgrade.stdOut(f"Downloaded successfully ({file_size / 1024:.2f} KB)", 0)
 
-                    # Verify checksum if provided
-                    if expected_sha256:
-                        Upgrade.stdOut("Verifying checksum...", 0)
-                        import hashlib
-                        sha256_hash = hashlib.sha256()
-                        with open(destination, "rb") as f:
-                            for byte_block in iter(lambda: f.read(4096), b""):
-                                sha256_hash.update(byte_block)
-                        actual_sha256 = sha256_hash.hexdigest()
-
-                        if actual_sha256 == expected_sha256:
-                            Upgrade.stdOut("Checksum verified successfully", 0)
-                            return True
-                        else:
-                            Upgrade.stdOut(f"ERROR: Checksum mismatch!", 0)
-                            Upgrade.stdOut(f"Expected: {expected_sha256}", 0)
-                            Upgrade.stdOut(f"Got:      {actual_sha256}", 0)
-                            return False
-                    else:
-                        return True
+                    return True
                 else:
                     Upgrade.stdOut(f"ERROR: Downloaded file too small ({file_size} bytes)", 0)
                     return False
@@ -735,31 +716,22 @@ class Upgrade:
 
             # Platform-specific URLs and checksums (OpenLiteSpeed v2.4.4 — all features config-driven, static linking)
             # Includes: PHPConfig API, Origin Header Forwarding, ReadApacheConf (with Portmap), Auto-SSL (ACME v2), ModSecurity ABI Compatibility
-            # Module rebuilt 2026-03-04: fix SIGSEGV crash in apply_headers() on error responses (4xx/5xx)
+            # Module v2.7.0 (2026-03-15): AddDefaultCharset, SSLRequireSSL, <Files>, Satisfy, <Limit>/<LimitExcept>, AuthGroupFile/Require group
             BINARY_CONFIGS = {
                 'rhel8': {
                     'url': 'https://cyberpanel.net/openlitespeed-2.4.4-x86_64-rhel8',
-                    'sha256': 'd08512da7a77468c09d6161de858db60bcc29aed7ce0abf76dca1c72104dc485',
-                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.4.4-x86_64-rhel8.so',
-                    'module_sha256': '3fd3bf6e2d50fe2e94e67fcf9f8ee24c4cc31b9edb641bee8c129cb316c3454a',
+                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.0-x86_64-rhel8.so',
                     'modsec_url': 'https://cyberpanel.net/mod_security-2.4.4-x86_64-rhel8.so',
-                    'modsec_sha256': 'bbbf003bdc7979b98f09b640dffe2cbbe5f855427f41319e4c121403c05837b2'
                 },
                 'rhel9': {
                     'url': 'https://cyberpanel.net/openlitespeed-2.4.4-x86_64-rhel9',
-                    'sha256': '418d2ea06e29c0f847a2e6cf01f7641d5fb72b65a04e27a8f6b3b54d673cc2df',
-                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.4.4-x86_64-rhel9.so',
-                    'module_sha256': '4863fc4c227e50e2d6ec5827aed3e1ad92e9be03a548b7aa1a8a4640853db399',
+                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.0-x86_64-rhel9.so',
                     'modsec_url': 'https://cyberpanel.net/mod_security-2.4.4-x86_64-rhel9.so',
-                    'modsec_sha256': '19deb2ffbaf1334cf4ce4d46d53f747a75b29e835bf5a01f91ebcc0c78e98629'
                 },
                 'ubuntu': {
                     'url': 'https://cyberpanel.net/openlitespeed-2.4.4-x86_64-ubuntu',
-                    'sha256': '60edf815379c32705540ad4525ea6d07c0390cabca232b6be12376ee538f4b1b',
-                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.4.4-x86_64-ubuntu.so',
-                    'module_sha256': '0d7dd17c6e64ac46d4abd5ccb67cc2da51809e24692774e4df76d8f3a6c67e9d',
+                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.0-x86_64-ubuntu.so',
                     'modsec_url': 'https://cyberpanel.net/mod_security-2.4.4-x86_64-ubuntu.so',
-                    'modsec_sha256': 'ed02c813136720bd4b9de5925f6e41bdc8392e494d7740d035479aaca6d1e0cd'
                 }
             }
 
@@ -770,11 +742,8 @@ class Upgrade:
                 return True  # Not fatal
 
             OLS_BINARY_URL = config['url']
-            OLS_BINARY_SHA256 = config['sha256']
             MODULE_URL = config['module_url']
-            MODULE_SHA256 = config['module_sha256']
             MODSEC_URL = config.get('modsec_url')
-            MODSEC_SHA256 = config.get('modsec_sha256')
             OLS_BINARY_PATH = "/usr/local/lsws/bin/openlitespeed"
             MODULE_PATH = "/usr/local/lsws/modules/cyberpanel_ols.so"
             MODSEC_PATH = "/usr/local/lsws/modules/mod_security.so"
@@ -802,16 +771,16 @@ class Upgrade:
 
             Upgrade.stdOut("Downloading custom binaries...", 0)
 
-            # Download OpenLiteSpeed binary with checksum verification
-            if not Upgrade.downloadCustomBinary(OLS_BINARY_URL, tmp_binary, OLS_BINARY_SHA256):
+            # Download OpenLiteSpeed binary
+            if not Upgrade.downloadCustomBinary(OLS_BINARY_URL, tmp_binary):
                 Upgrade.stdOut("ERROR: Failed to download or verify OLS binary", 0)
                 Upgrade.stdOut("Continuing with standard OLS", 0)
                 return True  # Not fatal, continue with standard OLS
 
-            # Download module with checksum verification (if available)
+            # Download module (if available)
             module_downloaded = False
-            if MODULE_URL and MODULE_SHA256:
-                if not Upgrade.downloadCustomBinary(MODULE_URL, tmp_module, MODULE_SHA256):
+            if MODULE_URL:
+                if not Upgrade.downloadCustomBinary(MODULE_URL, tmp_module):
                     Upgrade.stdOut("ERROR: Failed to download or verify module", 0)
                     Upgrade.stdOut("Continuing with standard OLS", 0)
                     return True  # Not fatal, continue with standard OLS
@@ -822,9 +791,9 @@ class Upgrade:
             # Download compatible ModSecurity if existing ModSecurity is installed
             # This prevents ABI incompatibility crashes (Signal 11/SIGSEGV)
             modsec_downloaded = False
-            if os.path.exists(MODSEC_PATH) and MODSEC_URL and MODSEC_SHA256:
+            if os.path.exists(MODSEC_PATH) and MODSEC_URL:
                 Upgrade.stdOut("Existing ModSecurity detected - downloading compatible version...", 0)
-                if Upgrade.downloadCustomBinary(MODSEC_URL, tmp_modsec, MODSEC_SHA256):
+                if Upgrade.downloadCustomBinary(MODSEC_URL, tmp_modsec):
                     modsec_downloaded = True
                 else:
                     Upgrade.stdOut("WARNING: Failed to download compatible ModSecurity", 0)

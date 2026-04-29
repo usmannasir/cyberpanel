@@ -690,7 +690,7 @@ milter_default_action = accept
             command = 'systemctl restart postfix'
             subprocess.call(shlex.split(command))
 
-            command = 'systemctl restart dovecot'
+            command = 'doveadm reload'
             subprocess.call(shlex.split(command))
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [restartServices]")
@@ -2368,7 +2368,7 @@ class MailServerManagerUtils(multi.Thread):
                             writeToFile.writelines(items)
                     writeToFile.close()
 
-                command = "systemctl restart dovecot"
+                command = "doveadm reload"
                 ProcessUtilities.executioner(command)
 
             ## For ubuntu 20
@@ -2720,7 +2720,7 @@ class MailServerManagerUtils(multi.Thread):
                 command = 'systemctl restart postfix'
                 ProcessUtilities.executioner(command)
 
-                command = 'systemctl restart dovecot'
+                command = 'doveadm reload'
                 ProcessUtilities.executioner(command)
 
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Completed [200].')

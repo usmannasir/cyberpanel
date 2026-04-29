@@ -1425,6 +1425,10 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         $('#wordpresshomeloading').show();
         $scope.wordpresshomeloading = false;
 
+        $('#databaseLoading').show();
+        $('#databaseInfoTable').hide();
+        $('#databaseError').hide().text('');
+
         var url = "/websites/fetchDatabase";
 
         var data = {
@@ -1444,21 +1448,23 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         function ListInitialDatas(response) {
             wordpresshomeloading = true;
             $('#wordpresshomeloading').hide();
+            $('#databaseLoading').hide();
 
             if (response.data.status === 1) {
                 $('#DB_Name').html(response.data.DataBaseName);
                 $('#DB_User').html(response.data.DataBaseUser);
                 $('#tableprefix').html(response.data.tableprefix);
+                $('#databaseInfoTable').show();
             } else {
-                alert("Error data.error_message:" + response.data.error_message)
-
+                $('#databaseError').text('Unable to load database information: ' + response.data.error_message).show();
             }
         }
 
         function cantLoadInitialDatas(response) {
             $('#wordpresshomeloading').hide();
-            alert("Error" + response)
-
+            $('#databaseLoading').hide();
+            var status = (response && response.status) ? response.status : 'network';
+            $('#databaseError').text('Unable to load database information (request failed, status: ' + status + ').').show();
         }
 
     };
@@ -4789,6 +4795,10 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         $('#wordpresshomeloading').show();
         $scope.wordpresshomeloading = false;
 
+        $('#databaseLoading').show();
+        $('#databaseInfoTable').hide();
+        $('#databaseError').hide().text('');
+
         var url = "/websites/fetchDatabase";
 
         var data = {
@@ -4808,21 +4818,23 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         function ListInitialDatas(response) {
             wordpresshomeloading = true;
             $('#wordpresshomeloading').hide();
+            $('#databaseLoading').hide();
 
             if (response.data.status === 1) {
                 $('#DB_Name').html(response.data.DataBaseName);
                 $('#DB_User').html(response.data.DataBaseUser);
                 $('#tableprefix').html(response.data.tableprefix);
+                $('#databaseInfoTable').show();
             } else {
-                alert("Error data.error_message:" + response.data.error_message)
-
+                $('#databaseError').text('Unable to load database information: ' + response.data.error_message).show();
             }
         }
 
         function cantLoadInitialDatas(response) {
             $('#wordpresshomeloading').hide();
-            alert("Error" + response)
-
+            $('#databaseLoading').hide();
+            var status = (response && response.status) ? response.status : 'network';
+            $('#databaseError').text('Unable to load database information (request failed, status: ' + status + ').').show();
         }
 
     };
@@ -8558,6 +8570,10 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         $('#wordpresshomeloading').show();
         $scope.wordpresshomeloading = false;
 
+        $('#databaseLoading').show();
+        $('#databaseInfoTable').hide();
+        $('#databaseError').hide().text('');
+
         var url = "/websites/fetchDatabase";
 
         var data = {
@@ -8577,21 +8593,23 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         function ListInitialDatas(response) {
             wordpresshomeloading = true;
             $('#wordpresshomeloading').hide();
+            $('#databaseLoading').hide();
 
             if (response.data.status === 1) {
                 $('#DB_Name').html(response.data.DataBaseName);
                 $('#DB_User').html(response.data.DataBaseUser);
                 $('#tableprefix').html(response.data.tableprefix);
+                $('#databaseInfoTable').show();
             } else {
-                alert("Error data.error_message:" + response.data.error_message)
-
+                $('#databaseError').text('Unable to load database information: ' + response.data.error_message).show();
             }
         }
 
         function cantLoadInitialDatas(response) {
             $('#wordpresshomeloading').hide();
-            alert("Error" + response)
-
+            $('#databaseLoading').hide();
+            var status = (response && response.status) ? response.status : 'network';
+            $('#databaseError').text('Unable to load database information (request failed, status: ' + status + ').').show();
         }
 
     };

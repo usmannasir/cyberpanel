@@ -248,7 +248,7 @@ class virtualHostUtilities:
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, message)
                 logging.CyberCPLogFileWriter.writeToFile(message)
 
-            command = 'postmap -F hash:/etc/postfix/vmail_ssl.map && systemctl restart postfix && systemctl restart dovecot'
+            command = 'postmap -F hash:/etc/postfix/vmail_ssl.map && systemctl restart postfix && doveadm reload'
             ProcessUtilities.executioner(command, 'root', True)
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Completed. [200]')
         else:
@@ -444,7 +444,7 @@ class virtualHostUtilities:
                     admin.config = json.dumps(config)
                     admin.save()
                     # First update the postfix hash database, then restart services
-                    command = 'postmap -F hash:/etc/postfix/vmail_ssl.map && systemctl restart postfix && systemctl restart dovecot'
+                    command = 'postmap -F hash:/etc/postfix/vmail_ssl.map && systemctl restart postfix && doveadm reload'
                     ProcessUtilities.executioner(command, 'root', True)
                     logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Completed. [200]')
             else:
@@ -500,7 +500,7 @@ local_name %s {
                     writeToFile.close()
 
 
-                command = 'systemctl restart dovecot'
+                command = 'doveadm reload'
                 ProcessUtilities.executioner(command)
 
                 ### Update postfix configurations
@@ -559,7 +559,7 @@ local_name %s {
                 writeToFile.write(content)
                 writeToFile.close()
 
-            command = 'systemctl restart dovecot'
+            command = 'doveadm reload'
             ProcessUtilities.executioner(command)
 
             ### Update postfix configurations
@@ -860,7 +860,7 @@ local_name %s {
             command = 'systemctl restart postfix'
             ProcessUtilities.executioner(command)
 
-            command = 'systemctl restart dovecot'
+            command = 'doveadm reload'
             ProcessUtilities.executioner(command)
 
             print("1,None")
@@ -891,7 +891,7 @@ local_name %s {
             command = 'systemctl restart postfix'
             ProcessUtilities.executioner(command)
 
-            command = 'systemctl restart dovecot'
+            command = 'doveadm reload'
             ProcessUtilities.executioner(command)
 
             print(f"1,{str(retValues[1])}")
