@@ -145,7 +145,34 @@ class preFlightsChecks:
             return None
         except Exception:
             return None
-    
+
+    def upgrade_openlitespeed_to_latest(self):
+        """Try to upgrade OpenLiteSpeed from configured repos; failures are non-fatal."""
+        try:
+            if self.distro == ubuntu or self.distro == debian12:
+                cmd = (
+                    'apt-get -y update && DEBIAN_FRONTEND=noninteractive apt-get -y '
+                    'install --only-upgrade openlitespeed 2>/dev/null || true'
+                )
+                subprocess.run(cmd, shell=True, timeout=600, capture_output=True, universal_newlines=True)
+            else:
+                subprocess.run(
+                    'dnf -y upgrade openlitespeed || true',
+                    shell=True,
+                    timeout=600,
+                    capture_output=True,
+                    universal_newlines=True,
+                )
+                subprocess.run(
+                    'yum -y upgrade openlitespeed 2>/dev/null || true',
+                    shell=True,
+                    timeout=600,
+                    capture_output=True,
+                    universal_newlines=True,
+                )
+        except Exception:
+            pass
+
     def detect_os_info(self):
         """Detect OS information for all supported platforms"""
         os_info = {
@@ -1461,6 +1488,7 @@ module cyberpanel_ols {
                     self.install_package('openlitespeed')
                 else:
                     self.install_package('openlitespeed')
+                self.upgrade_openlitespeed_to_latest()
                 # Use official OLS 1.8.5+ when available; only overlay custom binary if older
                 ols_ver = self.get_installed_ols_version()
                 if ols_ver and ols_ver >= (1, 8, 5):

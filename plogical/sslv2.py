@@ -345,10 +345,10 @@ class sslUtilities:
                 extractDomain = no_cache_extract(virtualHostName)
                 topLevelDomain = extractDomain.domain + '.' + extractDomain.suffix
                 logging.CyberCPLogFileWriter.writeToFile(f'top level domain in cf: {topLevelDomain}')
-                import CloudFlare
+                from plogical.cloudflareClient import get_cloudflare_client
 
                 params = {'name': topLevelDomain, 'per_page': 50}
-                cf = CloudFlare.CloudFlare(email=SAVED_CF_Email, token=SAVED_CF_Key)
+                cf = get_cloudflare_client(SAVED_CF_Email, SAVED_CF_Key)
 
                 try:
                     zones = cf.zones.get(params=params)

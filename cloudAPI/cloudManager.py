@@ -2869,8 +2869,8 @@ class CloudManager:
 
             ##
 
-            import CloudFlare
-            cf = CloudFlare.CloudFlare(email=self.data['cfemail'], token=self.data['apikey'])
+            from plogical.cloudflareClient import get_cloudflare_client
+            cf = get_cloudflare_client(self.data['cfemail'], self.data['apikey'])
 
             zones = cf.zones.get(params={'per_page': 100})
 

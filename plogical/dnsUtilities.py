@@ -20,6 +20,7 @@ except:
     pass
 
 import CloudFlare
+from plogical.cloudflareClient import get_cloudflare_client
 from plogical.processUtilities import ProcessUtilities
 
 
@@ -37,9 +38,9 @@ class DNS:
 
         if os.path.exists(cfFile):
             data = open(cfFile, 'r').readlines()
-            self.email = data[0].rstrip('\n')
-            self.key = data[1].rstrip('\n')
-            self.status = data[2].rstrip('\n')
+            self.email = data[0].strip() if len(data) > 0 else ''
+            self.key = data[1].strip() if len(data) > 1 else ''
+            self.status = data[2].strip() if len(data) > 2 else ''
             return 1
         else:
             #logging.CyberCPLogFileWriter.writeToFile('User %s does not have CloudFlare configured.' % (self.admin.userName))
@@ -60,7 +61,7 @@ class DNS:
                     else:
                         return 0, 'Sync not enabled.'
 
-                cf = CloudFlare.CloudFlare(email=self.email, token=self.key)
+                cf = get_cloudflare_client(self.email, self.key)
 
                 try:
                     params = {'name': zoneDomain, 'per_page': 50}
@@ -683,7 +684,7 @@ class DNS:
             dns = DNS()
             dns.admin = zone.admin
             if dns.loadCFKeys():
-                cf = CloudFlare.CloudFlare(email=dns.email, token=dns.key)
+                cf = get_cloudflare_client(dns.email, dns.key)
 
                 if dns.status == 'Enable':
                     try:
@@ -885,7 +886,7 @@ class DNS:
                 dns.admin = zone.admin
                 dns.loadCFKeys()
 
-                cf = CloudFlare.CloudFlare(email=dns.email, token=dns.key)
+                cf = get_cloudflare_client(dns.email, dns.key)
 
                 if dns.status == 'Enable':
                     try:
@@ -954,7 +955,7 @@ class DNS:
             token = data[1].rstrip('\n')
 
             # Initialize CloudFlare API
-            cf = CloudFlare.CloudFlare(email=email, token=token)
+            cf = get_cloudflare_client(email, token)
 
             try:
                 # Find the zone: for subdomains (e.g. status.newstargeted.com) the zone is the parent (newstargeted.com)

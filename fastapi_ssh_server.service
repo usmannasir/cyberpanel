@@ -9,8 +9,8 @@ EnvironmentFile=-/etc/cyberpanel/fastapi_ssh_server.conf
 # JWT and optional tuning live in the EnvironmentFile. The browser still connects to port 8888
 # (see websiteFunctions templates). Hardening the shared JWT and avoiding a default public
 # firewalld 8888 rule is the primary exposure fix. For a stricter setup, add a WebSocket
-# reverse proxy to 127.0.0.1:8888 and set --host 127.0.0.1 here.
-ExecStart=/usr/local/CyberCP/bin/python3 -m uvicorn fastapi_ssh_server:app --host 0.0.0.0 --port 8888 --ssl-keyfile=/usr/local/lscp/conf/key.pem --ssl-certfile=/usr/local/lscp/conf/cert.pem
+# Service binds to 127.0.0.1:8888; proxy WebSocket from the panel host.
+ExecStart=/usr/local/CyberCP/bin/python3 -m uvicorn fastapi_ssh_server:app --host 127.0.0.1 --port 8888 --ssl-keyfile=/usr/local/lscp/conf/key.pem --ssl-certfile=/usr/local/lscp/conf/cert.pem
 Restart=on-failure
 User=root
 Group=root
