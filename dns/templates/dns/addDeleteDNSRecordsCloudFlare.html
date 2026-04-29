@@ -6,6 +6,7 @@
     {% load static %}
     {% get_current_language as LANGUAGE_CODE %}
     <!-- Current language: {{ LANGUAGE_CODE }} -->
+    <!-- CyberPanel v2.5.5-dev: CloudFlare DNS page (orphan modal viewport-safe + scroll) -->
 
     <style>
         .modern-container {
@@ -204,6 +205,7 @@
             border-color: #5b5fcf;
         }
 
+        /* v2.5.5-dev: modals stay inside viewport; overlay scrolls; orphan list has inner scrollbar */
         .edit-record-overlay {
             position: fixed;
             top: 0;
@@ -212,17 +214,73 @@
             bottom: 0;
             background: rgba(0, 0, 0, 0.5);
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
             z-index: 9999;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            padding: max(12px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+            box-sizing: border-box;
         }
         .edit-record-modal {
             background: var(--bg-primary, white);
             border-radius: 12px;
             padding: 2rem;
             max-width: 480px;
-            width: 90%;
+            width: min(100% - 24px, 480px);
+            max-height: min(calc(100vh - 32px), 92vh);
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            margin: 12px auto 24px;
+            box-sizing: border-box;
+        }
+        /* Orphan / stale DNS modal: fixed chrome, scrollable table body */
+        .stale-dns-modal {
+            display: flex;
+            flex-direction: column;
+            width: min(calc(100vw - 24px), 720px);
+            max-width: min(calc(100vw - 24px), 720px);
+            max-height: min(calc(100vh - 32px), 92vh);
+            padding: 1.25rem 1.5rem;
+            overflow: hidden;
+        }
+        .stale-dns-modal-top {
+            flex-shrink: 0;
+        }
+        .stale-dns-modal-scroll {
+            flex: 1 1 auto;
+            min-height: 0;
+            max-height: min(60vh, 520px);
+            overflow-y: auto;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 0 0 1rem;
+            border: 1px solid var(--border-primary, #e2e8f0);
+            border-radius: 8px;
+            background: var(--bg-secondary, #f8fafc);
+        }
+        .stale-dns-modal-scroll .records-table {
+            margin: 0;
+        }
+        .stale-dns-modal-actions {
+            flex-shrink: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: flex-end;
+            align-items: center;
+            padding-top: 0.25rem;
+            border-top: 1px solid var(--border-primary, #e8e9ff);
+            margin: 0 -0.25rem;
+            padding-left: 0.25rem;
+            padding-right: 0.25rem;
+        }
+        .stale-dns-modal-actions .btn-primary,
+        .stale-dns-modal-actions .btn-secondary {
+            min-height: 44px;
         }
         
         .alert {
@@ -612,7 +670,12 @@
             .inline-number { width: 56px; max-width: 64px; }
             .sortable-th { padding: 10px 8px; min-height: 44px; }
             .btn-primary { min-height: 44px; padding: 0.75rem 1.25rem; }
-            .edit-record-modal { margin: 1rem; padding: 1.25rem; width: 95%; max-width: none; }
+            .edit-record-modal { margin: 8px auto 16px; padding: 1.25rem; width: min(100% - 16px, 95vw); max-width: none; max-height: min(calc(100vh - 16px), 94vh); }
+            .stale-dns-modal { width: min(100% - 12px, 100vw - 12px); padding: 1rem; max-height: min(calc(100vh - 12px), 94vh); }
+            .stale-dns-modal-scroll { max-height: min(48vh, 400px); }
+            .stale-dns-modal-actions { justify-content: stretch; }
+            .stale-dns-modal-actions .btn-primary,
+            .stale-dns-modal-actions .btn-secondary { flex: 1 1 auto; min-width: 0; justify-content: center; }
             .disabled-notice { padding: 1.5rem; }
         }
         
@@ -1046,7 +1109,7 @@
                                                         </select>
                                                     </td>
                                                     <td class="editable-cell value-cell">
-                                                        <span ng-hide="isEditing(record, 'content')" ng-click="startEdit(record, 'content')" class="cell-click" title="{% trans 'Click to edit' %}"><span class="cell-value" ng-bind="record.content" title="{{ record.content }}"></span></span>
+                                                        <span ng-hide="isEditing(record, 'content')" ng-click="startEdit(record, 'content')" class="cell-click" title="{% trans 'Click to edit' %}"><span class="cell-value" ng-bind="record.content"></span></span>
                                                         <input ng-show="isEditing(record, 'content')" type="text" class="inline-input" ng-model="record.content" ng-blur="saveInlineField(record, 'content')" ng-keypress="$event.keyCode === 13 && saveInlineField(record, 'content')">
                                                     </td>
                                                     <td class="editable-cell">
@@ -1150,42 +1213,43 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Stale / Orphan DNS Records Modal -->
+                                <!-- Stale / Orphan DNS Records Modal (v2.5.5-dev: scrollable, viewport-safe) -->
                                 <div class="edit-record-overlay" ng-show="staleModalVisible" ng-click="closeStaleModal()">
-                                    <div class="edit-record-modal" ng-click="$event.stopPropagation()" style="max-width: 600px;">
-                                        <h4 class="mb-4" style="color: var(--text-primary, #1e293b); font-weight: 600;">
-                                            <i class="fas fa-broom"></i> {% trans "Orphan / Stale DNS Records" %}
-                                        </h4>
-                                        <p class="text-muted small mb-3">{% trans "Records below point to subdomains or hostnames that no longer exist in the panel. You can remove them to clean up CloudFlare." %}</p>
-                                        <div ng-if="staleRecords.length === 0" class="alert alert-success">
-                                            <i class="fas fa-check-circle"></i> {% trans "No orphan records found." %}
+                                    <div class="edit-record-modal stale-dns-modal" ng-click="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="stale-dns-modal-title">
+                                        <div class="stale-dns-modal-top">
+                                            <h4 id="stale-dns-modal-title" class="mb-2" style="color: var(--text-primary, #1e293b); font-weight: 600;">
+                                                <i class="fas fa-broom"></i> {% trans "Orphan / Stale DNS Records" %}
+                                            </h4>
+                                            <p class="text-muted small mb-0">{% trans "Records below point to subdomains or hostnames that no longer exist in the panel. You can remove them to clean up CloudFlare." %}</p>
                                         </div>
-                                        <div ng-if="staleRecords.length > 0">
-                                            <table class="records-table activity-table" style="margin-bottom: 1rem;">
-                                                <thead>
-                                                    <tr>
-                                                        <th>{% trans "Name" %}</th>
-                                                        <th>{% trans "Type" %}</th>
-                                                        <th>{% trans "Value" %}</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr ng-repeat="r in staleRecords">
-                                                        <td><strong ng-bind="r.name"></strong></td>
-                                                        <td ng-bind="r.type"></td>
-                                                        <td class="cell-value" ng-bind="r.content" title="{{ r.content }}"></td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 1rem;">
-                                                <button type="button" class="btn-secondary" ng-click="closeStaleModal()">{% trans "Close" %}</button>
-                                                <button type="button" class="btn-primary" style="border-color: #ef4444; color: #ef4444;" ng-click="removeStaleRecords()">
-                                                    <i class="fas fa-trash-alt"></i> {% trans "Remove all orphan records" %}
-                                                </button>
+                                        <div class="stale-dns-modal-scroll">
+                                            <div ng-if="staleRecords.length === 0" class="alert alert-success" style="margin: 0.75rem;">
+                                                <i class="fas fa-check-circle"></i> {% trans "No orphan records found." %}
+                                            </div>
+                                            <div ng-if="staleRecords.length > 0" style="padding: 0.5rem;">
+                                                <table class="records-table activity-table" style="margin: 0;">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>{% trans "Name" %}</th>
+                                                            <th>{% trans "Type" %}</th>
+                                                            <th>{% trans "Value" %}</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr ng-repeat="r in staleRecords">
+                                                            <td><strong ng-bind="r.name"></strong></td>
+                                                            <td ng-bind="r.type"></td>
+                                                            <td class="cell-value" ng-bind="r.content"></td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
                                             </div>
                                         </div>
-                                        <div ng-if="staleRecords.length === 0" style="margin-top: 1rem;">
+                                        <div class="stale-dns-modal-actions">
                                             <button type="button" class="btn-secondary" ng-click="closeStaleModal()">{% trans "Close" %}</button>
+                                            <button type="button" class="btn-primary" style="border-color: #ef4444; color: #ef4444;" ng-click="removeStaleRecords()" ng-if="staleRecords.length > 0">
+                                                <i class="fas fa-trash-alt"></i> {% trans "Remove all orphan records" %}
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -1325,3 +1389,4 @@
 
 
 {% endblock %}
+

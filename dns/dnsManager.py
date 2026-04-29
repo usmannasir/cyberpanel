@@ -23,6 +23,7 @@ import os
 from re import match,I,M
 from plogical.acl import ACLManager
 import CloudFlare
+from plogical.cloudflareClient import get_cloudflare_client
 import re
 import plogical.CyberCPLogFileWriter as logging
 from plogical.processUtilities import ProcessUtilities
@@ -42,9 +43,9 @@ class DNSManager:
             with open(cfFile, 'r') as f:
                 data = f.readlines()
             if len(data) >= 1:
-                self.email = (data[0] or '').rstrip('\n')
+                self.email = (data[0] or '').strip()
             if len(data) >= 2:
-                self.key = (data[1] or '').rstrip('\n')
+                self.key = (data[1] or '').strip()
         except (IOError, OSError, IndexError) as e:
             logging.CyberCPLogFileWriter.writeToFile('loadCFKeys: %s' % str(e))
 
@@ -654,7 +655,7 @@ class DNSManager:
                 status = 1
             admin = Administrator.objects.get(pk=userID)
 
-            CloudFlare = 0
+            cloudflare_configured = 0
             domainsList = []
             cfEmail = ''
             cfToken = ''
@@ -666,7 +667,7 @@ class DNSManager:
                 cfEmail = getattr(self, 'email', '') or ''
                 cfToken = getattr(self, 'key', '') or ''
                 if cfEmail or cfToken:
-                    CloudFlare = 1
+                    cloudflare_configured = 1
                     try:
                         allDomains = ACLManager.findAllDomains(currentACL, userID)
                         domainsList = [domain for domain in allDomains if domain.count('.') == 1]
@@ -677,7 +678,7 @@ class DNSManager:
             data = {
                 "domainsList": domainsList,
                 "status": status,
-                'CloudFlare': CloudFlare,
+                'CloudFlare': cloudflare_configured,
                 'cfEmail': cfEmail,
                 'cfToken': cfToken,
             }
@@ -740,7 +741,7 @@ class DNSManager:
             self.loadCFKeys()
 
             params = {'name': zoneDomain, 'per_page':50}
-            cf = CloudFlare.CloudFlare(email=self.email,token=self.key)
+            cf = get_cloudflare_client(self.email, self.key)
 
             try:
                 zones = cf.zones.get(params=params)
@@ -849,7 +850,7 @@ class DNSManager:
             self.loadCFKeys()
 
             params = {'name': zoneDomain, 'per_page': 50}
-            cf = CloudFlare.CloudFlare(email=self.email, token=self.key)
+            cf = get_cloudflare_client(self.email, self.key)
 
             try:
                 zones = cf.zones.get(params=params)
@@ -887,7 +888,7 @@ class DNSManager:
                 return ACLManager.loadErrorJson()
             self.loadCFKeys()
             params = {'name': zone_domain, 'per_page': 50}
-            cf = CloudFlare.CloudFlare(email=self.email, token=self.key)
+            cf = get_cloudflare_client(self.email, self.key)
             zones = cf.zones.get(params=params)
             if not zones:
                 final_json = json.dumps({'status': 0, 'fetchStatus': 0, 'error_message': 'Zone not found.', 'data': '[]'})
@@ -947,7 +948,7 @@ class DNSManager:
                 return ACLManager.loadErrorJson()
             self.loadCFKeys()
             params = {'name': zone_domain, 'per_page': 50}
-            cf = CloudFlare.CloudFlare(email=self.email, token=self.key)
+            cf = get_cloudflare_client(self.email, self.key)
             zones = cf.zones.get(params=params)
             if not zones:
                 final_json = json.dumps({'status': 0, 'delete_status': 0, 'error_message': 'Zone not found.', 'deleted_records': []})
@@ -1015,7 +1016,7 @@ class DNSManager:
                 return ACLManager.loadErrorJson()
             self.loadCFKeys()
             params = {'name': zone_domain, 'per_page': 50}
-            cf = CloudFlare.CloudFlare(email=self.email, token=self.key)
+            cf = get_cloudflare_client(self.email, self.key)
             zones = cf.zones.get(params=params)
             if not zones:
                 final_json = json.dumps({'status': 0, 'import_status': 0, 'error_message': 'Zone not found.', 'imported': 0, 'failed': []})
@@ -1097,7 +1098,7 @@ class DNSManager:
             valid_hostnames = self._get_valid_hostnames_for_zone(zone_domain)
             self.loadCFKeys()
             params = {'name': zone_domain, 'per_page': 50}
-            cf = CloudFlare.CloudFlare(email=self.email, token=self.key)
+            cf = get_cloudflare_client(self.email, self.key)
             zones = cf.zones.get(params=params)
             if not zones:
                 final_json = json.dumps({'status': 0, 'fetchStatus': 0, 'error_message': 'Zone not found.', 'stale_records': []})
@@ -1168,7 +1169,7 @@ class DNSManager:
                 return ACLManager.loadErrorJson()
             self.loadCFKeys()
             params = {'name': zone_domain, 'per_page': 50}
-            cf = CloudFlare.CloudFlare(email=self.email, token=self.key)
+            cf = get_cloudflare_client(self.email, self.key)
             zones = cf.zones.get(params=params)
             if not zones:
                 final_json = json.dumps({'status': 0, 'delete_status': 0, 'error_message': 'Zone not found.', 'deleted_records': []})
@@ -1241,7 +1242,7 @@ class DNSManager:
                 return HttpResponse(final_json)
             self.loadCFKeys()
             params = {'name': zone_domain, 'per_page': 50}
-            cf = CloudFlare.CloudFlare(email=self.email, token=self.key)
+            cf = get_cloudflare_client(self.email, self.key)
             zones = cf.zones.get(params=params)
             if not zones:
                 final_json = json.dumps({'status': 0, 'fix_status': 0, 'error_message': 'Zone not found.', 'added': 0, 'skipped': 0})
@@ -1361,7 +1362,7 @@ class DNSManager:
 
             self.loadCFKeys()
             params = {'name': zone_domain, 'per_page': 50}
-            cf = CloudFlare.CloudFlare(email=self.email, token=self.key)
+            cf = get_cloudflare_client(self.email, self.key)
             zones = cf.zones.get(params=params)
             zone_list = sorted(zones, key=lambda v: v['name'])
             if not zone_list:
@@ -1411,7 +1412,7 @@ class DNSManager:
             self.loadCFKeys()
 
             params = {'name': zoneDomain, 'per_page': 50}
-            cf = CloudFlare.CloudFlare(email=self.email, token=self.key)
+            cf = get_cloudflare_client(self.email, self.key)
 
             try:
                 zones = cf.zones.get(params=params)
@@ -1634,7 +1635,7 @@ class DNSManager:
             self.loadCFKeys()
 
             params = {'name': zoneDomain, 'per_page': 50}
-            cf = CloudFlare.CloudFlare(email=self.email, token=self.key)
+            cf = get_cloudflare_client(self.email, self.key)
 
             zones = cf.zones.get(params=params)
             if not zones:

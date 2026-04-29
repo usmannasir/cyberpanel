@@ -6745,9 +6745,11 @@ slowlog = /var/log/php{version}-fpm-slow.log
         if os.path.exists('/usr/local/lsws/bin/openlitespeed'):
             Upgrade.add_litespeed_repo()
             if os.path.exists(Upgrade.CentOSPath) or os.path.exists(Upgrade.openEulerPath):
+                Upgrade.executioner('dnf -y upgrade openlitespeed || true', 'dnf upgrade openlitespeed (non-fatal)', 0)
+                Upgrade.executioner('yum -y upgrade openlitespeed || true', 'yum upgrade openlitespeed (non-fatal)', 0)
                 Upgrade.executioner('dnf install -y openlitespeed || yum install -y openlitespeed', 'Upgrade OpenLiteSpeed package', 0)
             else:
-                Upgrade.executioner('DEBIAN_FRONTEND=noninteractive apt-get -y install --only-upgrade openlitespeed 2>/dev/null || DEBIAN_FRONTEND=noninteractive apt-get -y install openlitespeed', 'Upgrade OpenLiteSpeed package', 0, shell=True)
+                Upgrade.executioner('apt-get -y update && DEBIAN_FRONTEND=noninteractive apt-get -y install --only-upgrade openlitespeed 2>/dev/null || DEBIAN_FRONTEND=noninteractive apt-get -y install openlitespeed', 'Upgrade OpenLiteSpeed package', 0, shell=True)
             ols_ver = Upgrade.get_installed_ols_version()
             if ols_ver and ols_ver >= (1, 8, 5):
                 Upgrade.stdOut("OpenLiteSpeed 1.8.5+ detected; keeping official binary (no custom overlay).")
