@@ -5329,6 +5329,13 @@ pm.max_spare_servers = 3
 
         Upgrade.installDNS_CyberPanelACMEFile()
 
+        try:
+            from plogical.fastapi_ssh_config import apply_security_migration
+            apply_security_migration()
+            Upgrade.stdOut("Applied Web Terminal (fastapi_ssh_server) security migration.", 1)
+        except Exception as exc:
+            Upgrade.stdOut("Warning: fastapi_ssh_server security migration skipped: %s" % str(exc), 0)
+
         command = 'systemctl restart fastapi_ssh_server'
         Upgrade.executioner(command, command, 0)
 

@@ -1706,7 +1706,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             FirewallUtilities.addRule("tcp", "995")
             FirewallUtilities.addRule("udp", "53")
             FirewallUtilities.addRule("tcp", "53")
-            FirewallUtilities.addRule("tcp", "8888")
+            # Security: Web Terminal listens on 127.0.0.1:8888; do not open 8888 on public zone.
             FirewallUtilities.addRule("udp", "443")
             FirewallUtilities.addRule("tcp", "40110-40210")
 
@@ -2790,21 +2790,16 @@ vmail
                     preFlightsChecks.stdOut("[WARNING] Could not verify Pure-FTPd service status")
 
 def configure_jwt_secret():
+    """Write Web Terminal secrets to /etc/cyberpanel/fastapi_ssh_server.conf (not in .py)."""
     try:
-        import secrets
-        secret = secrets.token_urlsafe(32)
-        fastapi_file = '/usr/local/CyberCP/fastapi_ssh_server.py'
-        with open(fastapi_file, 'r') as f:
-            lines = f.readlines()
-        with open(fastapi_file, 'w') as f:
-            for line in lines:
-                if line.strip().startswith('JWT_SECRET'):
-                    f.write(f'JWT_SECRET = "{secret}"\n')
-                else:
-                    f.write(line)
-            print(f"Configured JWT_SECRET in fastapi_ssh_server.py")
-    except:
-        pass
+        from plogical.fastapi_ssh_config import ensure_runtime_files_on_install
+        ensure_runtime_files_on_install()
+        print("Configured Web Terminal JWT in /etc/cyberpanel/fastapi_ssh_server.conf")
+    except Exception as exc:
+        try:
+            logging.InstallLog.writeToFile('[WARNING] configure_jwt_secret failed: %s' % str(exc))
+        except Exception:
+            pass
 
 def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')

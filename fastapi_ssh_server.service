@@ -5,10 +5,19 @@ After=network.target
 [Service]
 Type=simple
 WorkingDirectory=/usr/local/CyberCP
-ExecStart=/usr/local/CyberCP/bin/python3 -m uvicorn fastapi_ssh_server:app --host 0.0.0.0 --port 8888 --ssl-keyfile=/usr/local/lscp/conf/key.pem --ssl-certfile=/usr/local/lscp/conf/cert.pem
+EnvironmentFile=-/etc/cyberpanel/fastapi_ssh_server.conf
+# JWT and optional tuning live in the EnvironmentFile. Bind to localhost only.
+# Panel or OLS must proxy WebSocket to 127.0.0.1:8888 (see websiteFunctions templates).
+ExecStart=/usr/local/CyberCP/bin/python3 -m uvicorn fastapi_ssh_server:app --host 127.0.0.1 --port 8888 --ssl-keyfile=/usr/local/lscp/conf/key.pem --ssl-certfile=/usr/local/lscp/conf/cert.pem
 Restart=on-failure
 User=root
 Group=root
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ReadWritePaths=/home
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
 
 [Install]
-WantedBy=multi-user.target 
+WantedBy=multi-user.target
