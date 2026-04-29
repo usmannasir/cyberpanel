@@ -23,6 +23,47 @@ from plogical.processUtilities import ProcessUtilities
 class FTPUtilities:
 
     @staticmethod
+    def get_domain_home_directory(domain_name):
+        try:
+            child = ChildDomains.objects.select_related('master').get(domain=domain_name)
+            master_dom = child.master.domain
+            rel = (child.path or '').strip().strip('/')
+            if rel:
+                return os.path.abspath('/home/%s/%s' % (master_dom, rel))
+        except ChildDomains.DoesNotExist:
+            pass
+        return os.path.abspath('/home/' + domain_name)
+
+    @staticmethod
+    def assert_ftp_raw_path_safe(raw):
+        if raw is None or not str(raw).strip():
+            return
+        s = str(raw)
+        dangerous_chars = [';', '|', '&', '$', '`', '\'', '"', '<', '>', '*', '?']
+        if any(char in s for char in dangerous_chars):
+            raise BaseException("Invalid path: Path contains dangerous characters")
+        if '..' in s or '~' in s:
+            raise BaseException("Invalid path: Path cannot contain '..' or '~'")
+
+    @staticmethod
+    def resolve_ftp_home_path(domain_name, raw_path):
+        domain_home = FTPUtilities.get_domain_home_directory(domain_name)
+        if raw_path is None:
+            return domain_home
+        raw = str(raw_path).strip()
+        if raw == '' or raw == 'None':
+            return domain_home
+        FTPUtilities.assert_ftp_raw_path_safe(raw)
+        if raw.startswith('/'):
+            candidate = os.path.abspath(raw)
+        else:
+            candidate = os.path.abspath(os.path.join(domain_home, raw))
+        dh = domain_home
+        if candidate != dh and not candidate.startswith(dh + os.sep):
+            raise BaseException("Security violation: Path must be within domain home directory")
+        return candidate
+
+    @staticmethod
     def createNewFTPAccount(udb,upass,username,password,path):
         try:
 
@@ -89,12 +130,21 @@ class FTPUtilities:
     @staticmethod
     def ftpFunctions(path,externalApp):
         try:
-
-            command = 'mkdir %s' % (path)
-            ProcessUtilities.executioner(command, externalApp)
-
-            return 1,'None'
-
+            if os.path.exists(path):
+                if not os.path.isdir(path):
+                    return 0, "Specified path exists but is not a directory"
+                command = 'chown -R %s:%s %s' % (externalApp, externalApp, path)
+                ProcessUtilities.executioner(command, externalApp)
+                return 1, 'None'
+            command = 'mkdir -p %s' % (path)
+            result = ProcessUtilities.executioner(command, externalApp)
+            if result == 0:
+                command = 'chown -R %s:%s %s' % (externalApp, externalApp, path)
+                ProcessUtilities.executioner(command, externalApp)
+                command = 'chmod 755 %s' % (path)
+                ProcessUtilities.executioner(command, externalApp)
+                return 1, 'None'
+            return 0, "Failed to create directory: %s" % path
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [ftpFunctions]")
@@ -107,9 +157,10 @@ class FTPUtilities:
             ## need to get gid and uid
 
             try:
-                website = ChildDomains.objects.get(domain=domainName)
-                externalApp = website.master.externalApp
-            except:
+                child = ChildDomains.objects.get(domain=domainName)
+                website = child.master
+                externalApp = child.master.externalApp
+            except ChildDomains.DoesNotExist:
                 website = Websites.objects.get(domain=domainName)
                 externalApp = website.externalApp
 
@@ -118,26 +169,13 @@ class FTPUtilities:
 
             ## gid , uid ends
 
-            path = path.lstrip("/")
-
-            if path != 'None':
-                path = "/home/" + domainName + "/" + path
-
-                ## Security Check
-
-                if path.find("..") > -1:
-                    raise BaseException("Specified path must be inside virtual host home!")
-
-
+            if path and str(path).strip() and str(path).strip() != 'None':
+                path = FTPUtilities.resolve_ftp_home_path(domainName, path)
                 result = FTPUtilities.ftpFunctions(path, externalApp)
-
-                if result[0] == 1:
-                    pass
-                else:
+                if result[0] != 1:
                     raise BaseException(result[1])
-
             else:
-                path = "/home/" + domainName
+                path = FTPUtilities.get_domain_home_directory(domainName)
 
             if os.path.islink(path):
                 print("0, %s file is symlinked." % (path))
@@ -198,6 +236,33 @@ class FTPUtilities:
             ftp.delete()
             return 1,'None'
         except BaseException as msg:
+            return 0, str(msg)
+
+    @staticmethod
+    def changeFTPDirectory(userName, raw_path, selected_domain):
+        try:
+            website = Websites.objects.get(domain=selected_domain)
+            ftp = Users.objects.get(user=userName)
+            if ftp.domain_id != website.id:
+                raise BaseException("FTP user does not belong to the selected domain")
+            externalApp = website.externalApp
+            resolved = FTPUtilities.resolve_ftp_home_path(selected_domain, raw_path)
+            if os.path.islink(resolved):
+                logging.CyberCPLogFileWriter.writeToFile(
+                    "FTP path is symlinked: %s" % resolved)
+                raise BaseException("Cannot set FTP directory: Path is a symbolic link")
+            result = FTPUtilities.ftpFunctions(resolved, externalApp)
+            if result[0] != 1:
+                raise BaseException("Path validation failed: " + result[1])
+            ftp.dir = resolved
+            ftp.save()
+            return 1, None
+        except Users.DoesNotExist:
+            return 0, "FTP user not found"
+        except Websites.DoesNotExist:
+            return 0, "Domain not found"
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [changeFTPDirectory]")
             return 0, str(msg)
 
     @staticmethod

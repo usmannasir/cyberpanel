@@ -216,3 +216,21 @@ def changePassword(request):
 
     except KeyError:
         return redirect(loadLoginPage)
+
+def changeFTPDirectory(request):
+    try:
+        result = pluginManager.preChangeFTPDirectory(request)
+        if result != 200:
+            return result
+
+        fm = FTPManager(request)
+        coreResult = fm.changeFTPDirectory()
+
+        result = pluginManager.postChangeFTPDirectory(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)

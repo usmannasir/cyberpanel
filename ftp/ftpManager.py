@@ -284,6 +284,39 @@ class FTPManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
+    def changeFTPDirectory(self):
+        try:
+            userID = self.request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'listFTPAccounts') == 0:
+                return ACLManager.loadErrorJson('changeDirectoryStatus', 0)
+
+            data = json.loads(self.request.body)
+            userName = data['ftpUserName']
+            selectedDomain = data['selectedDomain']
+            newPath = data.get('path', '')
+            if newPath is None:
+                newPath = ''
+
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(selectedDomain, admin, currentACL) != 1:
+                return ACLManager.loadErrorJson()
+
+            ftp = Users.objects.get(user=userName)
+            if currentACL['admin'] != 1 and ftp.domain.admin != admin:
+                return ACLManager.loadErrorJson()
+
+            result = FTPUtilities.changeFTPDirectory(userName, newPath, selectedDomain)
+            if result[0] == 1:
+                data_ret = {'status': 1, 'changeDirectoryStatus': 1, 'error_message': 'None'}
+            else:
+                data_ret = {'status': 0, 'changeDirectoryStatus': 0, 'error_message': result[1]}
+            return HttpResponse(json.dumps(data_ret), content_type='application/json')
+        except BaseException as msg:
+            data_ret = {'status': 0, 'changeDirectoryStatus': 0, 'error_message': str(msg)}
+            return HttpResponse(json.dumps(data_ret), content_type='application/json')
+
     def installPureFTPD(self):
 
         def pureFTPDServiceName():
