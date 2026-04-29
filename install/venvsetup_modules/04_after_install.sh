@@ -10,7 +10,9 @@ _restart_lscpd_safe() {
 		systemctl daemon-reload
 		systemctl restart lscpd
 	fi
-	systemctl restart fastapi_ssh_server 2>/dev/null || true
+	if [ -f /etc/cyberpanel/fastapi_ssh_server.conf ]; then
+		systemctl restart fastapi_ssh_server 2>/dev/null || true
+	fi
 }
 
 if [ ! -d "/var/lib/php" ]; then

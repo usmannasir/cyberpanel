@@ -2125,18 +2125,17 @@ def get_terminal_jwt(request):
     import logging
     logger = logging.getLogger("cyberpanel.ssh.jwt")
     try:
-        logger.error("get_terminal_jwt called")
-        logger.error(f"Request body: {request.body}")
+        logger.debug("get_terminal_jwt called")
         data = json.loads(request.body)
         domain = data.get('domain')
-        logger.error(f"Domain: {domain}")
+        logger.debug("Domain: %s", domain)
         if not domain:
-            logger.error("No domain provided")
+            logger.warning("No domain provided for Web Terminal JWT")
             return JsonResponse({'status': 0, 'error_message': 'Domain required'})
         user_id = request.session.get('userID')
-        logger.error(f"User ID from session: {user_id}")
+        logger.debug("User ID from session: %s", user_id)
         if not user_id:
-            logger.error("User not authenticated")
+            logger.warning("Web Terminal JWT request without session")
             return JsonResponse({'status': 0, 'error_message': 'Not authenticated'})
         from websiteFunctions.models import Websites
         from plogical.acl import ACLManager
@@ -2144,44 +2143,45 @@ def get_terminal_jwt(request):
         admin = Administrator.objects.get(pk=user_id)
         currentACL = ACLManager.loadedACL(user_id)
         if ACLManager.checkOwnership(domain, admin, currentACL) != 1:
-            logger.error("User not authorized for domain")
+            logger.warning("User not authorized for domain")
             return JsonResponse({'status': 0, 'error_message': 'Not authorized'})
         try:
             website = Websites.objects.get(domain=domain)
         except Websites.DoesNotExist:
-            logger.error("Website not found")
+            logger.warning("Website not found")
             return JsonResponse({'status': 0, 'error_message': 'Website not found'})
         ssh_user = website.externalApp
-        logger.error(f"SSH user: {ssh_user}")
+        logger.debug("SSH user resolved for Web Terminal")
         if not ssh_user:
-            logger.error("SSH user is empty or not set for this website.")
+            logger.warning("SSH user is empty or not set for this website.")
             return JsonResponse({'status': 0, 'error_message': 'SSH user not configured for this website.'})
-        from datetime import datetime, timedelta
+        from datetime import datetime, timedelta, timezone
         import jwt as pyjwt
-        # Read JWT_SECRET from fastapi_ssh_server.py using ProcessUtilities
-        jwt_secret = None
+        from plogical import fastapi_ssh_config
+
         try:
-            content = ProcessUtilities.outputExecutioner('cat /usr/local/CyberCP/fastapi_ssh_server.py')
-            for line in content.splitlines():
-                m = re.match(r'\s*JWT_SECRET\s*=\s*[\'"](.+)[\'"]', line)
-                if m and m.group(1) != 'REPLACE_ME_WITH_INSTALLER':
-                    jwt_secret = m.group(1)
-                    if os.path.exists(ProcessUtilities.debugPath):
-                        from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter
-                        CyberCPLogFileWriter.writeLog(f"JWT_SECRET: {jwt_secret}")
-                    break
-        except Exception as e:
-            logger.error(f"Could not read JWT_SECRET: {e}")
-        if not jwt_secret:
-            jwt_secret = 'YOUR_SECRET_KEY'  # fallback, should not be used in production
+            jwt_secret, jwt_iss, jwt_aud = fastapi_ssh_config.get_jwt_encode_settings()
+        except Exception as exc:
+            logger.error("Web Terminal JWT settings unavailable: %s", exc)
+            return JsonResponse(
+                {
+                    "status": 0,
+                    "error_message": "Web Terminal is not configured. Run CyberPanel upgrade or reinstall.",
+                }
+            )
+        now = datetime.now(timezone.utc)
         payload = {
-            'user_id': user_id,
-            'ssh_user': ssh_user,
-            'exp': datetime.utcnow() + timedelta(minutes=10)
+            "iss": jwt_iss,
+            "aud": jwt_aud,
+            "iat": now,
+            "nbf": now,
+            "sub": str(user_id),
+            "ssh_user": ssh_user,
+            "exp": now + timedelta(minutes=10),
         }
-        token = pyjwt.encode(payload, jwt_secret, algorithm='HS256')
-        logger.error(f"JWT generated: {token}")
-        return JsonResponse({'status': 1, 'token': token, 'ssh_user': ssh_user})
+        token = pyjwt.encode(payload, jwt_secret, algorithm="HS256")
+        logger.debug("Issued Web Terminal JWT for domain=%s", domain)
+        return JsonResponse({"status": 1, "token": token, "ssh_user": ssh_user})
     except Exception as e:
         logger.error(f"Exception in get_terminal_jwt: {str(e)}")
         return JsonResponse({'status': 0, 'error_message': str(e)})
