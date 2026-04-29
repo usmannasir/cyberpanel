@@ -7222,6 +7222,19 @@ slowlog = /var/log/php{version}-fpm-slow.log
 
         Upgrade.installDNS_CyberPanelACMEFile()
 
+        try:
+            from plogical import fastapi_ssh_config
+
+            fastapi_ssh_config.apply_security_migration()
+            Upgrade.stdOut(
+                "Applied Web Terminal (fastapi_ssh_server) security migration.", 1
+            )
+        except Exception as exc:
+            Upgrade.stdOut(
+                "Warning: fastapi_ssh_server security migration skipped: %s" % str(exc),
+                0,
+            )
+
         command = 'systemctl restart fastapi_ssh_server'
         Upgrade.executioner(command, command, 0)
 

@@ -468,7 +468,7 @@ class preFlightsChecks:
                 "8090/tcp", "7080/tcp", "80/tcp", "443/tcp",
                 "21/tcp", "25/tcp", "587/tcp", "465/tcp",
                 "110/tcp", "143/tcp", "993/tcp", "995/tcp",
-                "53/tcp", "53/udp", "8888/tcp", "40110-40210/tcp"
+                "53/tcp", "53/udp", "40110-40210/tcp"
             ]
             
             for port in ports:
@@ -4947,7 +4947,6 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
             FirewallUtilities.addRule("tcp", "995")
             FirewallUtilities.addRule("udp", "53")
             FirewallUtilities.addRule("tcp", "53")
-            FirewallUtilities.addRule("tcp", "8888")
             FirewallUtilities.addRule("udp", "443")
             FirewallUtilities.addRule("tcp", "40110-40210")
 
@@ -6783,21 +6782,21 @@ vmail
             preFlightsChecks.stdOut("Please check the logs and consider running: systemctl restart lsws lscpd")
 
 def configure_jwt_secret():
+    """
+    Web Terminal: write JWT and claims to /etc/cyberpanel/fastapi_ssh_server.conf (never embed in .py).
+    """
     try:
-        import secrets
-        secret = secrets.token_urlsafe(32)
-        fastapi_file = '/usr/local/CyberCP/fastapi_ssh_server.py'
-        with open(fastapi_file, 'r') as f:
-            lines = f.readlines()
-        with open(fastapi_file, 'w') as f:
-            for line in lines:
-                if line.strip().startswith('JWT_SECRET'):
-                    f.write(f'JWT_SECRET = "{secret}"\n')
-                else:
-                    f.write(line)
-            print(f"Configured JWT_SECRET in fastapi_ssh_server.py")
-    except:
-        pass
+        sys.path.insert(0, "/usr/local/CyberCP")
+        from plogical import fastapi_ssh_config
+
+        fastapi_ssh_config.ensure_runtime_files_on_install()
+    except Exception as exc:
+        try:
+            logging.InstallLog.writeToFile(
+                "[configure_jwt_secret] Web Terminal runtime config failed: %s" % str(exc)
+            )
+        except Exception:
+            pass
 
 def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
