@@ -23,7 +23,8 @@ class BandwidthReset:
             # Reset main websites
             websites = Websites.objects.all()
             reset_count = 0
-            
+            total_reset_mb = 0
+
             for website in websites:
                 try:
                     # Load current config

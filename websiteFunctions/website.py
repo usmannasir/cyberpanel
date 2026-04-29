@@ -9245,28 +9245,36 @@ StrictHostKeyChecking no
             hour = int(data.get('hour', 2))  # 0-23
             minute = int(data.get('minute', 0))  # 0-59
             
-            # Create cron job for bandwidth reset
-            from plogical.cronUtil import CronUtil
-            
             if schedule_type == 'monthly':
                 cron_expression = f"{minute} {hour} {day_of_month} * *"
-                job_name = "cyberpanel_bandwidth_reset_monthly"
             elif schedule_type == 'weekly':
-                cron_expression = f"{minute} {hour} * * 0"  # Sunday
-                job_name = "cyberpanel_bandwidth_reset_weekly"
-            else:  # daily
+                cron_expression = f"{minute} {hour} * * 0"
+            else:
                 cron_expression = f"{minute} {hour} * * *"
-                job_name = "cyberpanel_bandwidth_reset_daily"
-            
-            # Create the cron job
-            command = f"/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/bandwidthReset.py --reset-all"
-            
-            # Remove existing bandwidth reset cron jobs
-            CronUtil.removeCronByCommand(command)
-            
-            # Add new cron job
-            CronUtil.addCronByCommand(command, cron_expression, job_name)
-            
+
+            command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/bandwidthReset.py --reset-all"
+            mailUtilities.checkHome()
+            tmp_path = "/home/cyberpanel/cron_bw_%s.txt" % randint(10000, 99999)
+            existing = ProcessUtilities.outputExecutioner('crontab -l 2>/dev/null || true', 'root', True) or ''
+            lines_out = []
+            for line in existing.splitlines():
+                if 'bandwidthReset.py' in line and '--reset-all' in line:
+                    continue
+                if line.strip().startswith('# cyberpanel_bandwidth_reset'):
+                    continue
+                lines_out.append(line)
+            lines_out.append('# cyberpanel_bandwidth_reset %s' % schedule_type)
+            lines_out.append('%s %s' % (cron_expression, command))
+            body = '\n'.join(lines_out).strip() + '\n'
+            cf = open(tmp_path, 'w')
+            cf.write(body)
+            cf.close()
+            ProcessUtilities.executioner('crontab %s' % tmp_path, 'root', True)
+            try:
+                os.remove(tmp_path)
+            except Exception:
+                pass
+
             data_ret = {
                 'status': 1,
                 'message': f'Bandwidth reset scheduled for {schedule_type} at {hour:02d}:{minute:02d}'
