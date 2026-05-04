@@ -876,6 +876,16 @@ AI Security Scanner - CyberPanel
 </div>
 
 <script>
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 function setupPayment() {
     // Show loading
     const button = event.target;
@@ -980,16 +990,17 @@ function updateScanHistoryTable(scans) {
     
     scans.forEach(scan => {
         const statusBadge = getStatusBadge(scan.status);
+        const safeScanId = encodeURIComponent(scan.scan_id || '');
         const issuesText = scan.issues_found > 0 ? 
-            `<span style="color: #ef4444; font-weight: 700;">${scan.issues_found}</span>` :
-            `<span style="color: #10b981;">${scan.issues_found}</span>`;
+            `<span style="color: #ef4444; font-weight: 700;">${escapeHtml(scan.issues_found)}</span>` :
+            `<span style="color: #10b981;">${escapeHtml(scan.issues_found)}</span>`;
         
         const actionsHtml = `<div style="display: flex; gap: 5px;">
-                <button class="btn-default btn-xs" onclick="viewScanDetails('${scan.scan_id}')">
+                <button class="btn-default btn-xs" onclick="viewScanDetails('${safeScanId}')">
                     <i class="fas fa-eye"></i> View
                 </button>
                 ${scan.status === 'completed' ? `
-                <button class="btn-primary btn-xs" onclick="viewOnPlatform('${scan.scan_id}')" title="View detailed AI analysis on platform">
+                <button class="btn-primary btn-xs" onclick="viewOnPlatform('${safeScanId}')" title="View detailed AI analysis on platform">
                     <i class="fas fa-external-link-alt"></i> AI Analysis
                 </button>
                 ` : ''}
@@ -1004,13 +1015,13 @@ function updateScanHistoryTable(scans) {
             </div>` : '<span style="color: #10b981; font-weight: 600;">100%</span>';
         
         const row = `
-            <tr data-scan-id="${scan.scan_id}">
+            <tr data-scan-id="${escapeHtml(scan.scan_id)}">
                 <td>${new Date(scan.started_at).toLocaleDateString()}</td>
-                <td>${scan.domain}</td>
-                <td><span class="status-label info">${scan.scan_type}</span></td>
+                <td>${escapeHtml(scan.domain)}</td>
+                <td><span class="status-label info">${escapeHtml(scan.scan_type)}</span></td>
                 <td class="scan-status">${statusBadge}</td>
                 <td class="scan-progress">${progressHtml}</td>
-                <td class="scan-files">${scan.files_scanned || '-'}</td>
+                <td class="scan-files">${escapeHtml(scan.files_scanned || '-')}</td>
                 <td class="scan-issues">${issuesText}</td>
                 <td>${scan.cost_usd ? '$' + scan.cost_usd.toFixed(4) : '-'}</td>
                 <td>${actionsHtml}</td>
@@ -1051,7 +1062,7 @@ function viewScanDetails(scanId) {
 
 function viewOnPlatform(scanId) {
     // Fetch the platform monitor URL
-    fetch(`/aiscanner/platform-monitor-url/${scanId}/`)
+    fetch(`/aiscanner/platform-monitor-url/${encodeURIComponent(scanId)}/`)
     .then(response => response.json())
     .then(data => {
         if (data.success && data.monitor_url) {
@@ -1069,7 +1080,7 @@ function viewOnPlatform(scanId) {
 
 function fetchLiveProgress(scanId) {
     console.log(`[AI Scanner] Fetching live progress for scan: ${scanId}`);
-    fetch(`/api/ai-scanner/scan/${scanId}/live-progress`)
+    fetch(`/api/ai-scanner/scan/${encodeURIComponent(scanId)}/live-progress`)
     .then(response => response.json())
     .then(data => {
         console.log(`[AI Scanner] Live progress response:`, data);
@@ -1127,7 +1138,7 @@ function updateProgressUI(data) {
     phaseElement.className = `status-label ${getPhaseColor(data.phase)}`;
     
     // Update activity and file info
-    document.getElementById('currentActivity').textContent = data.activity_description || 'Processing...';
+    document.getElementById('currentActivity').textContent = escapeHtml(data.activity_description || 'Processing...');
     document.getElementById('currentFile').textContent = data.current_file || 'N/A';
     
     // Update counters
@@ -1151,7 +1162,7 @@ function startProgressMonitoring(scanId) {
     
     // Poll every 3 seconds
     scanMonitorInterval = setInterval(() => {
-        fetch(`/api/ai-scanner/scan/${scanId}/live-progress`)
+        fetch(`/api/ai-scanner/scan/${encodeURIComponent(scanId)}/live-progress`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -1205,7 +1216,7 @@ function fetchCompletedScanDetails(scanId) {
                 `<div class="scanner-alert scanner-alert-danger">
                     <i class="fas fa-exclamation-triangle"></i>
                     <div class="scanner-alert-content">
-                        <p>Error: ${data.error}</p>
+                        <p>Error: ${escapeHtml(data.error)}</p>
                     </div>
                 </div>`;
         }
@@ -1241,15 +1252,16 @@ function displayCompletedScanDetails(scan) {
         scan.findings.forEach(finding => {
             const severityClass = finding.severity === 'high' ? 'danger' : 
                                 finding.severity === 'medium' ? 'warning' : 'info';
+            const filePath = finding.file_path || finding.file || '';
             
             findingsHtml += `
                 <div style="background: var(--bg-primary, white); border: 1px solid var(--border-primary, #e8e9ff); border-radius: 8px; padding: 15px;">
                     <h6 style="margin: 0 0 10px 0; display: flex; align-items: center; gap: 10px; color: var(--text-primary, #2f3640);">
-                        <span class="status-label ${severityClass}" style="text-transform: uppercase;">${finding.severity}</span>
-                        ${finding.title}
+                        <span class="status-label ${severityClass}" style="text-transform: uppercase;">${escapeHtml(finding.severity)}</span>
+                        ${escapeHtml(finding.title)}
                     </h6>
-                    <p style="margin: 0 0 10px 0; color: var(--text-secondary, #64748b);">${finding.description}</p>
-                    ${finding.file ? `<small style="color: var(--text-muted, #94a3b8);">File: ${finding.file}</small>` : ''}
+                    <p style="margin: 0 0 10px 0; color: var(--text-secondary, #64748b);">${escapeHtml(finding.description)}</p>
+                    ${filePath ? `<small style="color: var(--text-muted, #94a3b8);">File: ${escapeHtml(filePath)}</small>` : ''}
                 </div>
             `;
         });
@@ -1269,6 +1281,7 @@ function displayCompletedScanDetails(scan) {
     const threatsFound = scan.threats_found !== undefined ? scan.threats_found : (scan.issues_found || 0);
     const criticalThreats = scan.critical_threats || 0;
     const highThreats = scan.high_threats || 0;
+    const safeScanId = encodeURIComponent(scan.scan_id || '');
     
     document.getElementById('completedSection').innerHTML = `
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px;">
@@ -1304,7 +1317,7 @@ function displayCompletedScanDetails(scan) {
         </div>
         ${findingsHtml}
         <div style="margin-top: 20px; text-align: center;">
-            <button class="btn-primary" onclick="viewOnPlatform('${scan.scan_id}')" style="padding: 0.75rem 2rem;">
+            <button class="btn-primary" onclick="viewOnPlatform('${safeScanId}')" style="padding: 0.75rem 2rem;">
                 <i class="fas fa-external-link-alt"></i> View Full AI Analysis on Platform
             </button>
         </div>
@@ -1377,7 +1390,7 @@ function updateActiveScansInTable() {
         // Only update running/pending scans
         if (statusCell && (statusCell.textContent.includes('Running') || statusCell.textContent.includes('Pending'))) {
             // Fetch live progress for this scan
-            fetch(`/api/ai-scanner/scan/${scanId}/live-progress`)
+            fetch(`/api/ai-scanner/scan/${encodeURIComponent(scanId)}/live-progress`)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {

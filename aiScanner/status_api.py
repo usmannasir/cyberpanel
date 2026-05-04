@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.utils import timezone
+from .models import AIScannerSettings, ScanHistory
 from .status_models import ScanStatusUpdate
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 
@@ -37,6 +38,22 @@ def receive_status_update(request):
         if not scan_id:
             logging.writeToFile('[Status API] Missing scan_id in status update')
             return JsonResponse({'error': 'scan_id required'}, status=400)
+
+        provided_key = request.META.get('HTTP_X_API_KEY', '').strip()
+        if not provided_key:
+            logging.writeToFile('[Status API] Status update rejected: missing X-API-Key header')
+            return JsonResponse({'error': 'Authentication required'}, status=401)
+
+        try:
+            scan_record = ScanHistory.objects.get(scan_id=scan_id)
+            scanner_settings = AIScannerSettings.objects.get(admin=scan_record.admin)
+        except (ScanHistory.DoesNotExist, AIScannerSettings.DoesNotExist):
+            logging.writeToFile(f'[Status API] Status update rejected: scan not found or missing scanner settings for {scan_id}')
+            return JsonResponse({'error': 'Scan not found'}, status=404)
+
+        if provided_key != scanner_settings.api_key:
+            logging.writeToFile(f'[Status API] Status update rejected: invalid key for scan {scan_id}')
+            return JsonResponse({'error': 'Invalid API key'}, status=403)
 
         # Update or create status record
         status_update, created = ScanStatusUpdate.objects.update_or_create(
