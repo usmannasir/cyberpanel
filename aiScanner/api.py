@@ -1199,12 +1199,12 @@ def scanner_get_file(request):
         # Calculate hashes
         try:
             content_bytes = content.encode('utf-8')
-            md5_hash = hashlib.md5(content_bytes).hexdigest()
+            md5_hash = hashlib.md5(content_bytes, usedforsecurity=False).hexdigest()
             sha256_hash = hashlib.sha256(content_bytes).hexdigest()
         except UnicodeEncodeError:
             try:
                 content_bytes = content.encode('latin-1')
-                md5_hash = hashlib.md5(content_bytes).hexdigest()
+                md5_hash = hashlib.md5(content_bytes, usedforsecurity=False).hexdigest()
                 sha256_hash = hashlib.sha256(content_bytes).hexdigest()
             except:
                 md5_hash = ''
@@ -1444,7 +1444,7 @@ def scanner_replace_file(request):
         if result[1]:
             try:
                 content_bytes = result[1].encode('utf-8')
-                new_md5 = hashlib.md5(content_bytes).hexdigest()
+                new_md5 = hashlib.md5(content_bytes, usedforsecurity=False).hexdigest()
                 new_sha256 = hashlib.sha256(content_bytes).hexdigest()
             except:
                 pass
