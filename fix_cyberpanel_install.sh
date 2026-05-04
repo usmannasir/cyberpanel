@@ -72,6 +72,59 @@ else
     pip install --default-timeout=3600 --ignore-installed -r /tmp/requirements.txt
 fi
 
+# lswsgi uses system Python when pythonenv.conf sets PYTHONHOME=/usr (PEP 668 may require --break-system-packages).
+if [[ -f /usr/local/lscp/conf/pythonenv.conf ]] && grep -q '^PYTHONHOME=/usr' /usr/local/lscp/conf/pythonenv.conf 2>/dev/null; then
+    print_status "PYTHONHOME=/usr: mirroring requirements into system Python for lswsgi..."
+    py_cmd=""
+    command -v python3 >/dev/null 2>&1 && py_cmd="$(command -v python3)"
+    [[ -z "$py_cmd" && -x /usr/bin/python3 ]] && py_cmd=/usr/bin/python3
+    RUNTIME_REQ=""
+    if [[ -f /etc/cyberpanel/cyberpanel-requirments-runtime.txt ]] && grep -q 'Django==' /etc/cyberpanel/cyberpanel-requirments-runtime.txt 2>/dev/null; then
+        RUNTIME_REQ="/etc/cyberpanel/cyberpanel-requirments-runtime.txt"
+    elif [[ -f /tmp/requirements.txt ]] && grep -q 'Django==' /tmp/requirements.txt 2>/dev/null; then
+        RUNTIME_REQ="/tmp/requirements.txt"
+    elif [[ -f /usr/local/requirments.txt ]] && grep -q 'Django==' /usr/local/requirments.txt 2>/dev/null; then
+        RUNTIME_REQ="/usr/local/requirments.txt"
+    else
+        mkdir -p /etc/cyberpanel
+        if wget -q -O /etc/cyberpanel/cyberpanel-requirments-runtime.txt "https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/requirments.txt" 2>/dev/null \
+          && grep -q 'Django==' /etc/cyberpanel/cyberpanel-requirments-runtime.txt 2>/dev/null; then
+            RUNTIME_REQ="/etc/cyberpanel/cyberpanel-requirments-runtime.txt"
+        fi
+    fi
+    if [[ -z "$py_cmd" ]]; then
+        print_error "python3 not found; cannot install system packages for lswsgi."
+    elif [[ -z "$RUNTIME_REQ" ]]; then
+        print_error "No requirements file for system Python; wget requirments.txt from GitHub stable failed or network down."
+    else
+        PIP_EXTRA=()
+        if compgen -G "/usr/lib/python3.*/EXTERNALLY-MANAGED" >/dev/null 2>&1 \
+          || compgen -G "/usr/lib64/python3.*/EXTERNALLY-MANAGED" >/dev/null 2>&1; then
+            PIP_EXTRA+=(--break-system-packages)
+        fi
+        if ! "$py_cmd" -m pip --version >/dev/null 2>&1; then
+            "$py_cmd" -m ensurepip --upgrade >/dev/null 2>&1 || true
+        fi
+        set +e
+        env PIP_DISABLE_PIP_VERSION_CHECK=1 "$py_cmd" -m pip install --upgrade pip setuptools wheel packaging "${PIP_EXTRA[@]}"
+        env PIP_DISABLE_PIP_VERSION_CHECK=1 "$py_cmd" -m pip install --default-timeout=3600 --ignore-installed "${PIP_EXTRA[@]}" -r "$RUNTIME_REQ"
+        rt=$?
+        if [[ $rt -ne 0 ]]; then
+            print_status "Retrying system pip with PIP_BREAK_SYSTEM_PACKAGES=1..."
+            env PIP_DISABLE_PIP_VERSION_CHECK=1 PIP_BREAK_SYSTEM_PACKAGES=1 "$py_cmd" -m pip install --default-timeout=3600 --ignore-installed --break-system-packages -r "$RUNTIME_REQ"
+            rt=$?
+        fi
+        set -e
+        if [[ $rt -ne 0 ]]; then
+            print_error "System pip failed ($rt). Manual: $py_cmd -m pip install -r $RUNTIME_REQ --break-system-packages"
+        elif env PYTHONHOME=/usr PYTHONPATH= "$py_cmd" -c "import django" 2>/dev/null; then
+            print_status "System Python OK for lswsgi (django imports with PYTHONHOME=/usr)."
+        else
+            print_error "django still not importable under PYTHONHOME=/usr after system pip."
+        fi
+    fi
+fi
+
 # Install WSGI-LSAPI if not present
 if [[ ! -f /usr/local/CyberCP/bin/lswsgi ]]; then
     print_status "Installing WSGI-LSAPI..."
