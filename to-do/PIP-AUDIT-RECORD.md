@@ -2,6 +2,11 @@
 
 Date note: run on server used for CI or operator workstation; re-run after `requirments.txt` changes.
 
+## 2026-05-04 (python-dotenv)
+
+- **`python-dotenv`** raised from **1.0.0** to **1.2.2** in `requirments.txt` (security release; requires Python **>=3.10**).
+- Aligns with **v2.5.5-dev** CyberCP venv bootstrap (**3.11** on new EL9-class installs). Re-run **`pip-audit -r requirments.txt`** on a **3.11** venv after deploy.
+
 ## 2026-05-04 run (after bumping Django, sqlparse, cryptography, pyOpenSSL)
 
 Resolved on install set (see `requirments.txt` at same commit):
@@ -15,7 +20,7 @@ Remaining findings from `pip-audit -r requirments.txt` on Python 3.9 venv (trans
 
 | Package       | Note |
 | ------------- | ---- |
-| python-dotenv | GHSA fix in 1.2.2 requires Python **>=3.10**; pin stays **1.0.0** on 3.9 installs. Upgrade dotenv when panel runtime is 3.10+. |
+| python-dotenv | Pinned to **1.2.2** (GHSA fix); requires Python **>=3.10**. Matches CyberCP venv bootstrap on **v2.5.5-dev**. If `pip install -r` fails on an old **3.9** venv, recreate `/usr/local/CyberCP` with **python3.11** or use a branch that still pins **1.0.0**. |
 | requests      | Advisory suggests **2.33.0**; not published for this index at audit time; kept **>=2.32.4**. Re-audit when 2.33.x is available. |
 | pyasn1        | Transitive; fix **0.6.3** may need explicit pin if tooling allows. |
 | starlette     | Via **fastapi**; newer starlette may need **fastapi** bump (watch Python version support). |

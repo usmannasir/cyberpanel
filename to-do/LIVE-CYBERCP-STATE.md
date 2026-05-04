@@ -34,4 +34,4 @@ Fresh installs using `cyberpanel.sh` now:
 - Run **`install/install.py`** with that interpreter and pass the same value into **`install.py`** so **`python -m venv /usr/local/CyberCP`** uses 3.11 even when the bootstrap `python3` is 3.9.
 - Recreate venv paths in **`upgrade_modules/08_main_upgrade.sh`** and **`fix_cyberpanel_install.sh`** with the same bootstrap selection.
 
-`requirments.txt` still pins **`python-dotenv==1.0.0`** so older interpreters do not break `pip install -r`; once the panel venv is 3.10+, you may bump dotenv in a controlled change after `pip-audit`.
+`requirments.txt` pins **`python-dotenv==1.2.2`** (needs Python **>=3.10**). That matches the **v2.5.5-dev** installer, which prefers **3.11** for `/usr/local/CyberCP`. If a host still has a **3.9**-only venv, recreate the venv with **python3.11** (or run `ensure_cybercp_system_python` / full upgrade path) before `pip install -r requirments.txt`.
