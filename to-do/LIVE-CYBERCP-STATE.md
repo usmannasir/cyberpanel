@@ -24,6 +24,14 @@ git -C /usr/local/CyberCP rev-parse HEAD 2>/dev/null || echo "not a git checkout
 ## `manage.py check --deploy` note
 
 Expect **warnings** for HSTS, `SECURE_SSL_REDIRECT`, cookie secure flags when TLS is terminated on a reverse proxy. Tune `settings.py` or vhost headers to match your edge TLS setup rather than blindly setting `SECURE_SSL_REDIRECT=True` behind HTTP to the app.
-## Snapshot from this workspace run
-2026-05-04T21:29:16Z
-6f6f1dcd530ccb8ad451145c894e0da32573e31d
+
+## Python 3.11 for new installs (`v2.5.5-dev`)
+
+Fresh installs using `cyberpanel.sh` now:
+
+- Install **python3.11**, **python3.11-pip**, and **python3.11-devel** on EL9-class distros (and modular `modules/deps/rhel_deps.sh` does the same).
+- Export **`CYBERCP_VENV_PYTHON`** via **`ensure_cybercp_system_python`** in `install_modules/00_common.sh` (also invoked after modular `install_dependencies` in `modules/deps/manager.sh`).
+- Run **`install/install.py`** with that interpreter and pass the same value into **`install.py`** so **`python -m venv /usr/local/CyberCP`** uses 3.11 even when the bootstrap `python3` is 3.9.
+- Recreate venv paths in **`upgrade_modules/08_main_upgrade.sh`** and **`fix_cyberpanel_install.sh`** with the same bootstrap selection.
+
+`requirments.txt` still pins **`python-dotenv==1.0.0`** so older interpreters do not break `pip install -r`; once the panel venv is 3.10+, you may bump dotenv in a controlled change after `pip-audit`.

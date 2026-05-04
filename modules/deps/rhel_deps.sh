@@ -110,6 +110,7 @@ install_core_deps() {
                 print_status "$YELLOW" "Some packages not available, trying alternatives..."
                 $package_manager install -y ImageMagick gd libicu oniguruma python3 python3-pip python3-devel 2>/dev/null || true
             }
+            $package_manager install -y python3.11 python3.11-pip python3.11-devel 2>/dev/null || print_status "$YELLOW" "python3.11 packages not available, skipping..."
             # Try to install aspell and libc-client separately
             $package_manager install -y aspell 2>/dev/null || print_status "$YELLOW" "aspell not available, skipping..."
             $package_manager install -y libc-client-devel 2>/dev/null || print_status "$YELLOW" "libc-client-devel not available, skipping..."
@@ -120,6 +121,7 @@ install_core_deps() {
                 print_status "$YELLOW" "Some packages not available, trying alternatives..."
                 $package_manager install -y ImageMagick gd libicu oniguruma python3 python3-pip python3-devel 2>/dev/null || true
             }
+            $package_manager install -y python3.11 python3.11-pip python3.11-devel 2>/dev/null || print_status "$YELLOW" "python3.11 packages not available, skipping..."
             ;;
     esac
     

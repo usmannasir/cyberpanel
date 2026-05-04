@@ -25,17 +25,35 @@ print_error() {
     echo -e "\033[1;31m[$(date +"%Y-%m-%d %H:%M:%S")] ERROR:\033[0m $1"
 }
 
+CyberCP_Fix_Select_VenvPython() {
+    local p
+    for p in "${CYBERCP_VENV_PYTHON:-}" /usr/bin/python3.11 /usr/local/bin/python3.11 /usr/bin/python3.12 /usr/bin/python3.10; do
+        [[ -z "$p" ]] && continue
+        [[ -x "$p" ]] || continue
+        "$p" -c 'import sys; sys.exit(0 if sys.version_info[:2] >= (3, 10) else 1)' 2>/dev/null || continue
+        echo "$p"
+        return 0
+    done
+    if command -v python3 >/dev/null 2>&1; then
+        command -v python3
+        return 0
+    fi
+    echo /usr/bin/python3
+}
+
 # Check if virtual environment exists
 if [[ ! -f /usr/local/CyberCP/bin/activate ]]; then
     print_error "CyberPanel virtual environment not found!"
     print_status "Creating virtual environment..."
+    VENV_PY="$(CyberCP_Fix_Select_VenvPython)"
+    print_status "Using interpreter for venv: $VENV_PY"
     
-    # Try python3 -m venv first
-    if python3 -m venv --system-site-packages /usr/local/CyberCP 2>/dev/null; then
-        print_status "Virtual environment created successfully with python3 -m venv"
+    # Try python -m venv first
+    if "$VENV_PY" -m venv --system-site-packages /usr/local/CyberCP 2>/dev/null; then
+        print_status "Virtual environment created successfully with $VENV_PY -m venv"
     else
         # Fallback to virtualenv
-        virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberCP
+        virtualenv -p "$VENV_PY" --system-site-packages /usr/local/CyberCP
     fi
 fi
 
@@ -77,7 +95,12 @@ fi
 if [[ -f /usr/local/lscp/conf/pythonenv.conf ]] && grep -q '^PYTHONHOME=/usr' /usr/local/lscp/conf/pythonenv.conf 2>/dev/null; then
     print_status "PYTHONHOME=/usr: mirroring requirements into system Python for lswsgi..."
     py_cmd=""
-    command -v python3 >/dev/null 2>&1 && py_cmd="$(command -v python3)"
+    for p in /usr/bin/python3.11 /usr/local/bin/python3.11 /usr/bin/python3.12; do
+        [[ -x "$p" ]] && py_cmd="$p" && break
+    done
+    if [[ -z "$py_cmd" ]] && command -v python3 >/dev/null 2>&1; then
+        py_cmd="$(command -v python3)"
+    fi
     [[ -z "$py_cmd" && -x /usr/bin/python3 ]] && py_cmd=/usr/bin/python3
     RUNTIME_REQ=""
     if [[ -f /etc/cyberpanel/cyberpanel-requirments-runtime.txt ]] && grep -q 'Django==' /etc/cyberpanel/cyberpanel-requirments-runtime.txt 2>/dev/null; then

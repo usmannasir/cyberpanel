@@ -63,6 +63,13 @@ install_dev_tools() {
     apt install -y -qq $dev_packages 2>/dev/null || {
         print_status "$YELLOW" "Some development tools failed to install, continuing..."
     }
+
+    # Optional Python 3.11 for CyberCP venv when default python3 is below 3.10 (e.g. Ubuntu 20.04, Debian 11)
+    case $os_version in
+        "Ubuntu2004"|"Ubuntu2204"|"Debian11"|"Debian12")
+            apt install -y -qq python3.11 python3.11-venv python3.11-dev 2>/dev/null || print_status "$YELLOW" "python3.11 not available from apt, skipping..."
+            ;;
+    esac
     
     print_status "$GREEN" "✅ Development tools installed"
 }

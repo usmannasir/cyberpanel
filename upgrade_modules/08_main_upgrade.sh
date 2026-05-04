@@ -1,6 +1,23 @@
 #!/usr/bin/env bash
 # CyberPanel upgrade – main upgrade (Python, upgrade.py, venv, WSGI). Sourced by cyberpanel_upgrade.sh.
 
+# Prefer Python 3.11+ for (re)creating /usr/local/CyberCP venv (v2.5.5-dev new-install alignment).
+CYBERCP_UPGRADE_VENV_PY="/usr/bin/python3"
+CyberCP_Upgrade_Select_VenvBootstrapPython() {
+  CYBERCP_UPGRADE_VENV_PY="/usr/bin/python3"
+  local p
+  for p in /usr/bin/python3.11 /usr/local/bin/python3.11 /usr/bin/python3.12 /usr/bin/python3.13 /usr/bin/python3.10; do
+    if [[ -x "$p" ]] && "$p" -c 'import sys; sys.exit(0 if sys.version_info[:2] >= (3, 10) else 1)' 2>/dev/null; then
+      CYBERCP_UPGRADE_VENV_PY="$p"
+      return 0
+    fi
+  done
+  if command -v python3 >/dev/null 2>&1 && python3 -c 'import sys; sys.exit(0 if sys.version_info[:2] >= (3, 10) else 1)' 2>/dev/null; then
+    CYBERCP_UPGRADE_VENV_PY="$(command -v python3)"
+    return 0
+  fi
+}
+
 # lswsgi/lscpd loads Django with PYTHONHOME=/usr on several OS versions. Packages installed only into
 # /usr/local/CyberCP (venv) are invisible to that runtime; mirror the requirements into system Python.
 # Ported from upstream usmannasir/cyberpanel 883054ec into modular upgrade_modules.
@@ -10,12 +27,15 @@ Install_CyberCP_Runtime_Python_Requirements() {
   _rt_log() { echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] $*" | tee -a "$log"; }
 
   local py_cmd=""
-  if command -v python3 >/dev/null 2>&1; then
+  for p in /usr/bin/python3.11 /usr/local/bin/python3.11 /usr/bin/python3.12 /usr/bin/python3; do
+    [[ -x "$p" ]] && py_cmd="$p" && break
+  done
+  if [[ -z "$py_cmd" ]] && command -v python3 >/dev/null 2>&1; then
     py_cmd="$(command -v python3)"
-  elif [[ -x /usr/bin/python3 ]]; then
+  elif [[ -z "$py_cmd" && -x /usr/bin/python3 ]]; then
     py_cmd=/usr/bin/python3
   else
-    for p in /usr/bin/python3.12 /usr/bin/python3.11 /usr/bin/python3.10 /usr/local/bin/python3; do
+    for p in /usr/bin/python3.10 /usr/local/bin/python3; do
       [[ -x "$p" ]] && py_cmd="$p" && break
     done
   fi
@@ -173,14 +193,17 @@ else
   rm -rf /usr/local/CyberPanelTemp
   
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Creating temporary virtual environment for fallback upgrade..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+
+  CyberCP_Upgrade_Select_VenvBootstrapPython
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Temporary venv bootstrap Python: $CYBERCP_UPGRADE_VENV_PY" | tee -a /var/log/cyberpanel_upgrade_debug.log
   
-  # Try python3 -m venv first (more reliable on Ubuntu 22.04)
-  if python3 -m venv --system-site-packages /usr/local/CyberPanelTemp 2>/dev/null; then
-    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Temporary virtualenv created with python3 -m venv" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  # Try python -m venv first (more reliable on Ubuntu 22.04)
+  if "$CYBERCP_UPGRADE_VENV_PY" -m venv --system-site-packages /usr/local/CyberPanelTemp 2>/dev/null; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Temporary virtualenv created with $CYBERCP_UPGRADE_VENV_PY -m venv" | tee -a /var/log/cyberpanel_upgrade_debug.log
   else
     # Fallback to virtualenv command
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Trying virtualenv command for temporary environment..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-    virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanelTemp 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+    virtualenv -p "$CYBERCP_UPGRADE_VENV_PY" --system-site-packages /usr/local/CyberPanelTemp 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
   fi
 
 # shellcheck disable=SC1091
@@ -243,9 +266,12 @@ if [[ $NEEDS_RECREATE -eq 1 ]] || [[ ! -d /usr/local/CyberCP/bin ]]; then
   # For Ubuntu 22.04+, we need to handle virtualenv differently
   VENV_SUCCESS=0
   
-  # First try using python3 -m venv (more reliable on Ubuntu 22.04)
-  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Attempting to create virtual environment using python3 -m venv..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-  virtualenv_output=$(python3 -m venv --system-site-packages /usr/local/CyberCP 2>&1)
+  CyberCP_Upgrade_Select_VenvBootstrapPython
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] CyberCP venv bootstrap Python: $CYBERCP_UPGRADE_VENV_PY" | tee -a /var/log/cyberpanel_upgrade_debug.log
+
+  # First try using python -m venv (more reliable on Ubuntu 22.04)
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Attempting to create virtual environment using $CYBERCP_UPGRADE_VENV_PY -m venv..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  virtualenv_output=$("$CYBERCP_UPGRADE_VENV_PY" -m venv --system-site-packages /usr/local/CyberCP 2>&1)
   VENV_CODE=$?
   echo "$virtualenv_output" | tee -a /var/log/cyberpanel_upgrade_debug.log
   
@@ -268,17 +294,17 @@ if [[ $NEEDS_RECREATE -eq 1 ]] || [[ ! -d /usr/local/CyberCP/bin ]]; then
     pip3 install --upgrade virtualenv 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
     fi
     
-    # Find the correct python3 path
+    # Find the correct python path (prefer 3.11+ from CyberCP_Upgrade_Select_VenvBootstrapPython)
     if [[ "$Server_OS" = "CentOS" ]] && ([[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]); then
-      PYTHON_PATH=$(which python3 2>/dev/null || which python3.9 2>/dev/null || echo "/usr/bin/python3")
+      PYTHON_PATH=$(command -v python3.11 2>/dev/null || command -v python3 2>/dev/null || command -v python3.9 2>/dev/null || echo "/usr/bin/python3")
       echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Using Python path: $PYTHON_PATH" | tee -a /var/log/cyberpanel_upgrade_debug.log
       virtualenv_output=$(virtualenv -p "$PYTHON_PATH" /usr/local/CyberCP 2>&1)
     elif [[ "$Server_OS" = "AlmaLinux9" ]]; then
-      PYTHON_PATH=$(which python3 2>/dev/null || which python3.9 2>/dev/null || echo "/usr/bin/python3")
+      PYTHON_PATH=$(command -v python3.11 2>/dev/null || command -v python3 2>/dev/null || command -v python3.9 2>/dev/null || echo "/usr/bin/python3")
       echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] AlmaLinux 9 - Using Python path: $PYTHON_PATH" | tee -a /var/log/cyberpanel_upgrade_debug.log
       virtualenv_output=$(virtualenv -p "$PYTHON_PATH" /usr/local/CyberCP 2>&1)
     else
-      virtualenv_output=$(virtualenv -p /usr/bin/python3 /usr/local/CyberCP 2>&1)
+      virtualenv_output=$(virtualenv -p "$CYBERCP_UPGRADE_VENV_PY" /usr/local/CyberCP 2>&1)
     fi
     VENV_CODE=$?
     echo "$virtualenv_output" | tee -a /var/log/cyberpanel_upgrade_debug.log
@@ -288,7 +314,7 @@ if [[ $NEEDS_RECREATE -eq 1 ]] || [[ ! -d /usr/local/CyberCP/bin ]]; then
       echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: TypeError detected, attempting workaround..." | tee -a /var/log/cyberpanel_upgrade_debug.log
       
       # Try alternative method using explicit system-site-packages
-      virtualenv_output=$(virtualenv --python=/usr/bin/python3 --system-site-packages /usr/local/CyberCP 2>&1)
+      virtualenv_output=$(virtualenv --python="$CYBERCP_UPGRADE_VENV_PY" --system-site-packages /usr/local/CyberCP 2>&1)
       VENV_CODE=$?
       echo "$virtualenv_output" | tee -a /var/log/cyberpanel_upgrade_debug.log
     fi

@@ -52,7 +52,11 @@ install_dependencies() {
             if [ -f "$MODULES_DIR/deps/rhel_deps.sh" ]; then
                 source "$MODULES_DIR/deps/rhel_deps.sh"
                 install_rhel_dependencies "$server_os" "$package_manager"
-                return $?
+                local _mgr=$?
+                if type ensure_cybercp_system_python >/dev/null 2>&1; then
+                    ensure_cybercp_system_python
+                fi
+                return $_mgr
             else
                 print_status "$RED" "❌ RHEL dependencies module not found"
                 return 1
@@ -62,7 +66,11 @@ install_dependencies() {
             if [ -f "$MODULES_DIR/deps/debian_deps.sh" ]; then
                 source "$MODULES_DIR/deps/debian_deps.sh"
                 install_debian_dependencies "$server_os"
-                return $?
+                local _mgr=$?
+                if type ensure_cybercp_system_python >/dev/null 2>&1; then
+                    ensure_cybercp_system_python
+                fi
+                return $_mgr
             else
                 print_status "$RED" "❌ Debian dependencies module not found"
                 return 1

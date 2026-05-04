@@ -21,6 +21,62 @@ INSTALLATION_TYPE=""
 # Prefer mariadb CLI (mysql is deprecated)
 MDB_CLI="mariadb"; command -v mariadb >/dev/null 2>&1 || MDB_CLI="mysql"
 
+# Target interpreter for /usr/local/CyberCP venv (install.py reads CYBERCP_VENV_PYTHON). v2.5.5-dev prefers 3.11 on EL9+.
+CYBERCP_VENV_PYTHON=""
+
+# Resolve and export CYBERCP_VENV_PYTHON after OS packages are installed (call from install_dependencies).
+ensure_cybercp_system_python() {
+    CYBERCP_VENV_PYTHON=""
+    local p=""
+    for p in /usr/bin/python3.11 /usr/local/bin/python3.11 /usr/bin/python3.12 /usr/bin/python3.13 /usr/bin/python3.10; do
+        if [[ -x "$p" ]] && "$p" -c 'import sys; sys.exit(0 if sys.version_info[:2] >= (3, 10) else 1)' 2>/dev/null; then
+            CYBERCP_VENV_PYTHON="$p"
+            export CYBERCP_VENV_PYTHON
+            print_status "CyberCP venv will use Python: $CYBERCP_VENV_PYTHON"
+            return 0
+        fi
+    done
+    if command -v python3 >/dev/null 2>&1 && python3 -c 'import sys; sys.exit(0 if sys.version_info[:2] >= (3, 10) else 1)' 2>/dev/null; then
+        CYBERCP_VENV_PYTHON="$(command -v python3)"
+        export CYBERCP_VENV_PYTHON
+        print_status "CyberCP venv will use Python: $CYBERCP_VENV_PYTHON (default python3 is 3.10+)"
+        return 0
+    fi
+
+    case "${SERVER_OS:-}" in
+        AlmaLinux9|AlmaLinux10|CentOS9|RockyLinux9)
+            if command -v dnf >/dev/null 2>&1; then
+                print_status "Installing Python 3.11 packages for CyberCP venv (dnf)..."
+                dnf install -y python3.11 python3.11-pip python3.11-devel 2>/dev/null || true
+            fi
+            ;;
+        AlmaLinux8|RockyLinux8|CentOS8)
+            if [[ -n "${PACKAGE_MANAGER:-}" ]] && command -v "${PACKAGE_MANAGER}" >/dev/null 2>&1; then
+                print_status "Installing Python 3.11 for CyberCP venv if available (${PACKAGE_MANAGER})..."
+                "${PACKAGE_MANAGER}" install -y python3.11 python3.11-pip python3.11-devel 2>/dev/null || true
+            fi
+            ;;
+    esac
+
+    if [[ "${OS_FAMILY:-}" = "debian" ]]; then
+        print_status "Attempting apt install python3.11 for CyberCP venv..."
+        DEBIAN_FRONTEND=noninteractive apt-get install -y -qq python3.11 python3.11-venv python3.11-dev 2>/dev/null || true
+    fi
+
+    for p in /usr/bin/python3.11 /usr/local/bin/python3.11 /usr/bin/python3.10; do
+        if [[ -x "$p" ]] && "$p" -c 'import sys; sys.exit(0 if sys.version_info[:2] >= (3, 10) else 1)' 2>/dev/null; then
+            CYBERCP_VENV_PYTHON="$p"
+            export CYBERCP_VENV_PYTHON
+            print_status "CyberCP venv will use Python: $CYBERCP_VENV_PYTHON"
+            return 0
+        fi
+    done
+
+    CYBERCP_VENV_PYTHON="$(command -v python3 2>/dev/null || echo /usr/bin/python3)"
+    export CYBERCP_VENV_PYTHON
+    print_status "WARNING: Python 3.10+ not found for CyberCP venv; using $CYBERCP_VENV_PYTHON (install may still work)"
+}
+
 # Logging function
 log_message() {
     # Ensure log directory exists

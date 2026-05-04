@@ -95,6 +95,17 @@ install_cyberpanel_direct_cont() {
         fi
         
         print_status "Detected server IP: $server_ip"
+
+        # Python for mysqlclient bootstrap and install.py (CYBERCP_VENV_PYTHON from ensure_cybercp_system_python)
+        if [[ -z "${CYBERCP_VENV_PYTHON:-}" ]] && type ensure_cybercp_system_python >/dev/null 2>&1; then
+            ensure_cybercp_system_python
+        fi
+        local CP_INSTALL_PY="${CYBERCP_VENV_PYTHON:-}"
+        if [[ -z "$CP_INSTALL_PY" || ! -x "$CP_INSTALL_PY" ]]; then
+            CP_INSTALL_PY="$(command -v python3 2>/dev/null || echo /usr/bin/python3)"
+        fi
+        export CYBERCP_VENV_PYTHON="$CP_INSTALL_PY"
+        print_status "Running installer with Python: $CP_INSTALL_PY (CyberCP venv will match when created by install.py)"
         
         # CRITICAL: Install Python MySQL dependencies before running install.py
         # installCyberPanel.py requires MySQLdb (mysqlclient) which needs development headers
@@ -150,15 +161,21 @@ install_cyberpanel_direct_cont() {
                         sed -i 's/exclude=\(.*\)MariaDB\*\(.*\)/exclude=\1MariaDB-server*\2/' /etc/dnf/dnf.conf 2>/dev/null || true
                     fi
                 fi
+
+                local _pydev="python3-devel"
+                local _pypip="python3-pip"
+                case "$CP_INSTALL_PY" in
+                    *python3.11*) _pydev="python3.11-devel"; _pypip="python3.11-pip" ;;
+                esac
                 
                 if dnf install -y --allowerasing --skip-broken --nobest \
-                    mariadb-devel pkgconfig gcc python3-devel python3-pip; then
+                    mariadb-devel pkgconfig gcc "${_pydev}" "${_pypip}"; then
                     print_status "✓ Successfully installed mariadb-devel"
                 elif dnf install -y --allowerasing --skip-broken --nobest \
-                    mysql-devel pkgconfig gcc python3-devel python3-pip; then
+                    mysql-devel pkgconfig gcc "${_pydev}" "${_pypip}"; then
                     print_status "✓ Successfully installed mysql-devel"
                 elif dnf install -y --allowerasing --skip-broken --nobest \
-                    mariadb-connector-c-devel pkgconfig gcc python3-devel python3-pip; then
+                    mariadb-connector-c-devel pkgconfig gcc "${_pydev}" "${_pypip}"; then
                     print_status "✓ Successfully installed mariadb-connector-c-devel"
                 else
                     print_status "⚠️  WARNING: Failed to install MariaDB development headers"
@@ -167,9 +184,14 @@ install_cyberpanel_direct_cont() {
             else
                 # For older systems with yum
                 print_status "Using yum to install mariadb-devel..."
-                if yum install -y mariadb-devel pkgconfig gcc python3-devel python3-pip; then
+                local _pydevy="python3-devel"
+                local _pypipy="python3-pip"
+                case "$CP_INSTALL_PY" in
+                    *python3.11*) _pydevy="python3.11-devel"; _pypipy="python3.11-pip" ;;
+                esac
+                if yum install -y mariadb-devel pkgconfig gcc "${_pydevy}" "${_pypipy}"; then
                     print_status "✓ Successfully installed mariadb-devel"
-                elif yum install -y mysql-devel pkgconfig gcc python3-devel python3-pip; then
+                elif yum install -y mysql-devel pkgconfig gcc "${_pydevy}" "${_pypipy}"; then
                     print_status "✓ Successfully installed mysql-devel"
                 else
                     print_status "⚠️  WARNING: Failed to install MariaDB development headers"
@@ -178,16 +200,16 @@ install_cyberpanel_direct_cont() {
             
             # Install mysqlclient Python package
             print_status "Installing mysqlclient Python package..."
-            python3 -m pip install --upgrade pip setuptools wheel 2>&1 | grep -v "already satisfied" || true
-            if python3 -m pip install mysqlclient 2>&1; then
+            "$CP_INSTALL_PY" -m pip install --upgrade pip setuptools wheel 2>&1 | grep -v "already satisfied" || true
+            if "$CP_INSTALL_PY" -m pip install mysqlclient 2>&1; then
                 print_status "✓ Successfully installed mysqlclient"
             else
                 # If pip install fails, try with build dependencies
                 print_status "Retrying mysqlclient installation with build dependencies..."
-                python3 -m pip install --no-cache-dir mysqlclient 2>&1 || {
+                "$CP_INSTALL_PY" -m pip install --no-cache-dir mysqlclient 2>&1 || {
                     print_status "⚠️  WARNING: Failed to install mysqlclient, trying alternative method..."
                     # Try installing from source
-                    python3 -m pip install --no-binary mysqlclient mysqlclient 2>&1 || true
+                    "$CP_INSTALL_PY" -m pip install --no-binary mysqlclient mysqlclient 2>&1 || true
                 }
             fi
             
@@ -195,9 +217,17 @@ install_cyberpanel_direct_cont() {
             # Debian-based (Ubuntu, Debian)
             print_status "Installing MariaDB development headers for Debian-based system..."
             apt-get update -y
-            if apt-get install -y libmariadb-dev libmariadb-dev-compat pkg-config build-essential python3-dev python3-pip; then
+            local _aptpydev="python3-dev"
+            local _aptpyextras=""
+            case "$CP_INSTALL_PY" in
+                *python3.11*)
+                    _aptpydev="python3.11-dev"
+                    _aptpyextras="python3.11-venv"
+                    ;;
+            esac
+            if apt-get install -y libmariadb-dev libmariadb-dev-compat pkg-config build-essential ${_aptpyextras} "${_aptpydev}" python3-pip; then
                 print_status "✓ Successfully installed MariaDB development headers"
-            elif apt-get install -y default-libmysqlclient-dev pkg-config build-essential python3-dev python3-pip; then
+            elif apt-get install -y default-libmysqlclient-dev pkg-config build-essential ${_aptpyextras} "${_aptpydev}" python3-pip; then
                 print_status "✓ Successfully installed MySQL development headers"
             else
                 print_status "⚠️  WARNING: Failed to install MariaDB/MySQL development headers"
@@ -205,25 +235,26 @@ install_cyberpanel_direct_cont() {
             
             # Install mysqlclient Python package
             print_status "Installing mysqlclient Python package..."
-            python3 -m pip install --upgrade pip setuptools wheel 2>&1 | grep -v "already satisfied" || true
-            if python3 -m pip install mysqlclient 2>&1; then
+            "$CP_INSTALL_PY" -m ensurepip --upgrade >/dev/null 2>&1 || true
+            "$CP_INSTALL_PY" -m pip install --upgrade pip setuptools wheel 2>&1 | grep -v "already satisfied" || true
+            if "$CP_INSTALL_PY" -m pip install mysqlclient 2>&1; then
                 print_status "✓ Successfully installed mysqlclient"
             else
                 print_status "Retrying mysqlclient installation with build dependencies..."
-                python3 -m pip install --no-cache-dir mysqlclient 2>&1 || true
+                "$CP_INSTALL_PY" -m pip install --no-cache-dir mysqlclient 2>&1 || true
             fi
         fi
         
         # Verify MySQLdb is available (mysqlclient; some builds lack __version__)
         print_status "Verifying MySQLdb module availability..."
-        if python3 -c "import MySQLdb; getattr(MySQLdb, '__version__', 'ok'); print('MySQLdb OK')" 2>/dev/null || \
-           python3 -c "import MySQLdb; MySQLdb; print('MySQLdb OK')" 2>/dev/null; then
+        if "$CP_INSTALL_PY" -c "import MySQLdb; getattr(MySQLdb, '__version__', 'ok'); print('MySQLdb OK')" 2>/dev/null || \
+           "$CP_INSTALL_PY" -c "import MySQLdb; MySQLdb; print('MySQLdb OK')" 2>/dev/null; then
             print_status "✓ MySQLdb module is available and working"
         else
             print_status "⚠️  WARNING: MySQLdb module not available"
             print_status "Attempting to diagnose the issue..."
-            python3 -c "import sys; print('Python path:', sys.path)" 2>&1 || true
-            python3 -m pip list | grep -i mysql || print_status "No MySQL-related packages found in pip list"
+            "$CP_INSTALL_PY" -c "import sys; print('Python path:', sys.path)" 2>&1 || true
+            "$CP_INSTALL_PY" -m pip list | grep -i mysql || print_status "No MySQL-related packages found in pip list"
             print_status "Attempting to continue anyway, but installation may fail..."
         fi
         echo ""
@@ -254,7 +285,8 @@ install_cyberpanel_direct_cont() {
         # CRITICAL: If CyberPanel Python does not exist yet, patch installer to use system Python.
         # Fixes FileNotFoundError when archive is cached/old and still references /usr/local/CyberPanel/bin/python.
         if [ ! -f /usr/local/CyberPanel/bin/python ]; then
-            sys_python="/usr/bin/python3"
+            sys_python="$CP_INSTALL_PY"
+            [ -x "$sys_python" ] || sys_python="/usr/bin/python3"
             [ -x "$sys_python" ] || sys_python="/usr/local/bin/python3"
             if [ -x "$sys_python" ]; then
                 for f in install/install_utils.py install/install.py; do
@@ -268,9 +300,9 @@ install_cyberpanel_direct_cont() {
         
         # Run the Python installer directly
         if [ "$DEBUG_MODE" = true ]; then
-            python3 "$installer_py" "${install_args[@]}" 2>&1 | tee /var/log/CyberPanel/install_output.log
+            "$CP_INSTALL_PY" "$installer_py" "${install_args[@]}" 2>&1 | tee /var/log/CyberPanel/install_output.log
         else
-            python3 "$installer_py" "${install_args[@]}" 2>&1 | tee /var/log/CyberPanel/install_output.log
+            "$CP_INSTALL_PY" "$installer_py" "${install_args[@]}" 2>&1 | tee /var/log/CyberPanel/install_output.log
         fi
     else
         # Fallback to cyberpanel_installer.sh if install.py not found
