@@ -977,23 +977,3 @@ def scannerDeleteFile(request):
         data_ret = {'error': 'Delete file service unavailable'}
         return HttpResponse(json.dumps(data_ret), status=500)
 
-
-# Debug endpoints for testing API authentication (remove in production)
-def testAuthDebug(request):
-    """Test endpoint to debug API authentication"""
-    try:
-        from aiScanner.test_api_endpoint import test_auth
-        return test_auth(request)
-    except Exception as e:
-        logging.writeToFile(f'[API] Test auth debug error: {str(e)}')
-        return HttpResponse(json.dumps({'error': str(e)}), status=500)
-
-
-def listApiKeysDebug(request):
-    """Debug endpoint to list API keys in system"""
-    try:
-        from aiScanner.test_api_endpoint import list_api_keys
-        return list_api_keys(request)
-    except Exception as e:
-        logging.writeToFile(f'[API] List API keys debug error: {str(e)}')
-        return HttpResponse(json.dumps({'error': str(e)}), status=500)

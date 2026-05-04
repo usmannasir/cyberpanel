@@ -8,7 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from websiteFunctions.models import Websites
 from loginSystem.models import Administrator
-from .models import FileAccessToken, ScanHistory
+from .models import AIScannerSettings, FileAccessToken, ScanHistory
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 
 
@@ -692,6 +692,26 @@ def scan_callback(request):
         data = json.loads(request.body)
 
         scan_id = data.get('scan_id')
+        if not scan_id:
+            logging.writeToFile("[API] Callback rejected: missing scan_id")
+            return JsonResponse({'error': 'scan_id required'}, status=400)
+
+        provided_key = request.META.get('HTTP_X_API_KEY', '').strip()
+        if not provided_key:
+            logging.writeToFile('[API] Callback rejected: missing X-API-Key header')
+            return JsonResponse({'error': 'Authentication required'}, status=401)
+
+        try:
+            scan_record = ScanHistory.objects.get(scan_id=scan_id)
+            scanner_settings = AIScannerSettings.objects.get(admin=scan_record.admin)
+        except (ScanHistory.DoesNotExist, AIScannerSettings.DoesNotExist):
+            logging.writeToFile(f"[API] Callback rejected: scan not found or missing scanner settings for {scan_id}")
+            return JsonResponse({'error': 'Scan not found'}, status=404)
+
+        if provided_key != scanner_settings.api_key:
+            logging.writeToFile(f'[API] Callback rejected: invalid key for scan {scan_id}')
+            return JsonResponse({'error': 'Invalid API key'}, status=403)
+
         status = data.get('status')
         summary = data.get('summary', {})
         findings = data.get('findings', [])
@@ -702,12 +722,8 @@ def scan_callback(request):
 
         # Update scan status in CyberPanel database
         try:
-            from .models import ScanHistory
             from django.utils import timezone
             import datetime
-
-            # Find the scan record
-            scan_record = ScanHistory.objects.get(scan_id=scan_id)
 
             # Update scan record
             scan_record.status = status

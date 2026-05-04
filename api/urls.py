@@ -48,7 +48,4 @@ urlpatterns = [
     re_path(r'^scanner/rename-file$', views.scannerRenameFile, name='scannerRenameFileAPI'),
     re_path(r'^scanner/delete-file$', views.scannerDeleteFile, name='scannerDeleteFileAPI'),
 
-    # Debug endpoints for testing API authentication (remove in production)
-    re_path(r'^ai-scanner/test-auth$', views.testAuthDebug, name='testAuthDebugAPI'),
-    re_path(r'^ai-scanner/list-api-keys$', views.listApiKeysDebug, name='listApiKeysDebugAPI'),
 ]
