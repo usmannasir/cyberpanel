@@ -1,6 +1,104 @@
 #!/usr/bin/env bash
 # CyberPanel upgrade – main upgrade (Python, upgrade.py, venv, WSGI). Sourced by cyberpanel_upgrade.sh.
 
+# lswsgi/lscpd loads Django with PYTHONHOME=/usr on several OS versions. Packages installed only into
+# /usr/local/CyberCP (venv) are invisible to that runtime; mirror the requirements into system Python.
+# Ported from upstream usmannasir/cyberpanel 883054ec into modular upgrade_modules.
+Install_CyberCP_Runtime_Python_Requirements() {
+  local req_hint="${1:-}"
+  local log=/var/log/cyberpanel_upgrade_debug.log
+  _rt_log() { echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] $*" | tee -a "$log"; }
+
+  local py_cmd=""
+  if command -v python3 >/dev/null 2>&1; then
+    py_cmd="$(command -v python3)"
+  elif [[ -x /usr/bin/python3 ]]; then
+    py_cmd=/usr/bin/python3
+  else
+    for p in /usr/bin/python3.12 /usr/bin/python3.11 /usr/bin/python3.10 /usr/local/bin/python3; do
+      [[ -x "$p" ]] && py_cmd="$p" && break
+    done
+  fi
+  if [[ -z "$py_cmd" ]]; then
+    _rt_log "Runtime pip: no python3 found; skipping system-site copy (install python3)."
+    return 0
+  fi
+  _rt_log "Runtime pip: selected interpreter: $py_cmd"
+
+  if ! "$py_cmd" -m pip --version >/dev/null 2>&1; then
+    _rt_log "Runtime pip: pip module missing; trying ensurepip (stdlib)..."
+    "$py_cmd" -m ensurepip --upgrade >/dev/null 2>&1 || true
+  fi
+  if ! "$py_cmd" -m pip --version >/dev/null 2>&1; then
+    _rt_log "Runtime pip: WARNING: pip still not available after ensurepip. On Debian/Ubuntu install python3-pip; on RHEL use python3-pip."
+  fi
+
+  local req_file=""
+  if [[ -n "$req_hint" && -f "$req_hint" ]] && grep -q "Django==" "$req_hint" 2>/dev/null; then
+    req_file="$req_hint"
+  elif [[ -f /etc/cyberpanel/cyberpanel-requirments-runtime.txt ]] && grep -q "Django==" /etc/cyberpanel/cyberpanel-requirments-runtime.txt 2>/dev/null; then
+    req_file="/etc/cyberpanel/cyberpanel-requirments-runtime.txt"
+  elif [[ -f /usr/local/requirments.txt ]] && grep -q "Django==" /usr/local/requirments.txt 2>/dev/null; then
+    req_file="/usr/local/requirments.txt"
+  else
+    local tdir="/tmp/cyberpanel-req-runtime.$$"
+    mkdir -p "$tdir" || tdir="/tmp"
+    if [[ -n "${Git_Content_URL:-}" && -n "${Branch_Name:-}" ]]; then
+      if wget -q -O "$tdir/req-dl.txt" "${Git_Content_URL}/${Branch_Name}/requirments.txt" 2>/dev/null && grep -q "Django==" "$tdir/req-dl.txt" 2>/dev/null; then
+        req_file="$tdir/req-dl.txt"
+      elif wget -q -O "$tdir/req-dl.txt" "${Git_Content_URL}/${Branch_Name}/requirments-old.txt" 2>/dev/null && grep -q "Django==" "$tdir/req-dl.txt" 2>/dev/null; then
+        req_file="$tdir/req-dl.txt"
+      fi
+    fi
+    if [[ -z "$req_file" ]] && wget -q -O "$tdir/req-dev.txt" "https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/requirments.txt" 2>/dev/null \
+      && grep -q "Django==" "$tdir/req-dev.txt" 2>/dev/null; then
+      req_file="$tdir/req-dev.txt"
+    fi
+  fi
+
+  if [[ -z "$req_file" || ! -f "$req_file" ]]; then
+    _rt_log "Runtime pip: could not locate a valid requirements file (hint: ${req_hint:-none}); skipping system install."
+    return 0
+  fi
+  _rt_log "Runtime pip: using requirements file: $req_file"
+
+  local -a PIP_EXTRA=()
+  if compgen -G "/usr/lib/python3.*/EXTERNALLY-MANAGED" >/dev/null 2>&1 \
+    || compgen -G "/usr/lib64/python3.*/EXTERNALLY-MANAGED" >/dev/null 2>&1; then
+    PIP_EXTRA+=(--break-system-packages)
+  fi
+
+  local pepmsg="none"
+  ((${#PIP_EXTRA[@]})) && pepmsg="${PIP_EXTRA[*]}"
+  _rt_log "Runtime pip: installing for lswsgi (PYTHONHOME=/usr). PEP 668 overrides: $pepmsg"
+
+  env PIP_DISABLE_PIP_VERSION_CHECK=1 "$py_cmd" -m pip install --upgrade pip setuptools wheel packaging "${PIP_EXTRA[@]}" 2>&1 | tee -a "$log" || true
+
+  env PIP_DISABLE_PIP_VERSION_CHECK=1 "$py_cmd" -m pip install --default-timeout=3600 --ignore-installed "${PIP_EXTRA[@]}" -r "$req_file" 2>&1 | tee -a "$log"
+  local rt=${PIPESTATUS[0]}
+
+  if [[ $rt -ne 0 ]]; then
+    _rt_log "Runtime pip: first attempt exit $rt (often PEP 668); retrying with PIP_BREAK_SYSTEM_PACKAGES=1 ..."
+    PIP_EXTRA=(--break-system-packages)
+    env PIP_DISABLE_PIP_VERSION_CHECK=1 PIP_BREAK_SYSTEM_PACKAGES=1 "$py_cmd" -m pip install --default-timeout=3600 --ignore-installed "${PIP_EXTRA[@]}" -r "$req_file" 2>&1 | tee -a "$log"
+    rt=${PIPESTATUS[0]}
+  fi
+
+  if [[ $rt -ne 0 ]]; then
+    _rt_log "Runtime pip: ERROR: system pip install failed with exit $rt — lscpd may not start until: $py_cmd -m pip install -r $req_file --break-system-packages"
+    return 0
+  fi
+
+  if env PYTHONHOME=/usr PYTHONPATH= "$py_cmd" -c "import django, docker" 2>/dev/null; then
+    _rt_log "Runtime pip: verify OK (django, docker) with PYTHONHOME=/usr."
+  else
+    _rt_log "Runtime pip: WARNING: django/docker not importable under PYTHONHOME=/usr with $py_cmd."
+  fi
+  if ! env PYTHONHOME=/usr PYTHONPATH= "$py_cmd" -c "import CloudFlare" 2>/dev/null; then
+    _rt_log "Runtime pip: WARNING: CloudFlare SDK not importable (expect cloudflare 2.x / import CloudFlare)."
+  fi
+}
+
 Main_Upgrade() {
 echo -e "\n[$(date +"%Y-%m-%d %H:%M:%S")] Starting Main_Upgrade function..." | tee -a /var/log/cyberpanel_upgrade_debug.log
 
@@ -251,6 +349,11 @@ else
   PIP_CODE=$?
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Pip install returned code: $PIP_CODE" | tee -a /var/log/cyberpanel_upgrade_debug.log
   Check_Return
+fi
+
+if [[ -f /usr/local/lscp/conf/pythonenv.conf ]] && grep -q '^PYTHONHOME=/usr' /usr/local/lscp/conf/pythonenv.conf 2>/dev/null; then
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] PYTHONHOME=/usr: mirroring requirements to system Python for lswsgi..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  Install_CyberCP_Runtime_Python_Requirements "/usr/local/requirments.txt" || true
 fi
 
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Verifying Django installation..." | tee -a /var/log/cyberpanel_upgrade_debug.log
