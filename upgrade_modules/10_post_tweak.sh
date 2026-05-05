@@ -375,6 +375,25 @@ if [ -f /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php ]; then
   grep -q "127.0.0.1" /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php && echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] phpMyAdmin signon default host set to 127.0.0.1" | tee -a /var/log/cyberpanel_upgrade_debug.log
 fi
 
+# Validate phpMyAdmin web entrypoint after upgrade and self-heal if missing.
+if [ ! -f /usr/local/CyberCP/public/phpmyadmin/index.php ]; then
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: phpMyAdmin index.php missing after upgrade, attempting repair..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  if [ -x /usr/local/CyberCP/fix-phpmyadmin.sh ]; then
+    bash /usr/local/CyberCP/fix-phpmyadmin.sh 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log || true
+  elif [ -x /usr/local/CyberCP/bin/python ]; then
+    export DJANGO_SETTINGS_MODULE=CyberCP.settings
+    /usr/local/CyberCP/bin/python -c "import sys; sys.path.insert(0, '/usr/local/CyberCP'); from plogical.upgrade import Upgrade; Upgrade.download_install_phpmyadmin()" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log || true
+  else
+    python3 -c "import sys; sys.path.insert(0, '/usr/local/CyberCP'); from plogical.upgrade import Upgrade; Upgrade.download_install_phpmyadmin()" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log || true
+  fi
+
+  if [ -f /usr/local/CyberCP/public/phpmyadmin/index.php ]; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] phpMyAdmin repair completed successfully (index.php restored)." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  else
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: phpMyAdmin repair did not restore index.php. Run /usr/local/CyberCP/fix-phpmyadmin.sh manually." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  fi
+fi
+
 # FTP users table: custom quota columns (fixes 1054 on Create FTP Account if schema predates model fields)
 if [[ -f /usr/local/CyberCP/CPScripts/ensure_ftp_users_quota_columns.py ]]; then
   if [[ -x /usr/local/CyberCP/bin/python ]]; then
