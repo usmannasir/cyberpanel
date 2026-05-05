@@ -2,6 +2,16 @@
 # CyberPanel upgrade – post-upgrade system tweaks (PHP, LSWS, SnappyMail, etc.). Sourced by cyberpanel_upgrade.sh.
 
 Post_Upgrade_System_Tweak() {
+  # Cron and upgrade helpers expect /usr/local/CyberCP/bin/python (legacy CyberPanel venv path may be missing).
+  if [[ ! -x /usr/local/CyberCP/bin/python ]]; then
+    mkdir -p /usr/local/CyberCP/bin
+    _py="$(command -v python3 2>/dev/null || command -v python 2>/dev/null || true)"
+    if [[ -n "$_py" && -x "$_py" ]]; then
+      ln -sfn "$_py" /usr/local/CyberCP/bin/python
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Restored /usr/local/CyberCP/bin/python -> $_py" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    fi
+  fi
+
   if [[ "$Server_OS" = "CentOS" ]] ; then
 
   #for cenots 7/8
@@ -391,6 +401,26 @@ if [ ! -f /usr/local/CyberCP/public/phpmyadmin/index.php ]; then
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] phpMyAdmin repair completed successfully (index.php restored)." | tee -a /var/log/cyberpanel_upgrade_debug.log
   else
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: phpMyAdmin repair did not restore index.php. Run /usr/local/CyberCP/fix-phpmyadmin.sh manually." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  fi
+fi
+
+# Validate SnappyMail web app after upgrade and self-heal if missing (Django serves /snappymail/ from PUBLIC_ROOT/snappymail).
+if [ ! -f /usr/local/CyberCP/public/snappymail/index.php ]; then
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: SnappyMail index.php missing after upgrade, attempting repair..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  if [ -x /usr/local/CyberCP/fix-snappymail.sh ]; then
+    bash /usr/local/CyberCP/fix-snappymail.sh 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log || true
+  elif [ -x /usr/local/CyberCP/bin/python ]; then
+    export DJANGO_SETTINGS_MODULE=CyberCP.settings
+    /usr/local/CyberCP/bin/python -c "import sys; sys.path.insert(0, '/usr/local/CyberCP'); from plogical.upgrade import Upgrade; Upgrade.downoad_and_install_raindloop()" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log || true
+  else
+    python3 -c "import sys; sys.path.insert(0, '/usr/local/CyberCP'); from plogical.upgrade import Upgrade; Upgrade.downoad_and_install_raindloop()" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log || true
+  fi
+
+  if [ -f /usr/local/CyberCP/public/snappymail/index.php ]; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] SnappyMail repair completed successfully (index.php restored)." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    chown -R lscpd:lscpd /usr/local/CyberCP/public/snappymail 2>/dev/null || true
+  else
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: SnappyMail repair did not restore index.php. Run /usr/local/CyberCP/fix-snappymail.sh manually." | tee -a /var/log/cyberpanel_upgrade_debug.log
   fi
 fi
 

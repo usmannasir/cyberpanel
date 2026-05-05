@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Syntax check shell scripts
         run: |
-          for f in cyberpanel_upgrade.sh preUpgrade.sh fix-phpmyadmin.sh cyberpanel.sh cyberpanel_utility.sh; do
+          for f in cyberpanel_upgrade.sh preUpgrade.sh fix-phpmyadmin.sh fix-snappymail.sh cyberpanel.sh cyberpanel_utility.sh; do
             [ ! -f "$f" ] && continue
             bash -n "$f" || { echo "FAIL (syntax): $f"; exit 1; }
             echo "OK $f"
