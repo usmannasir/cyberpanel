@@ -87,6 +87,7 @@ install_dependencies() {
             if [ "$SERVER_OS" = "AlmaLinux9" ] || [ "$SERVER_OS" = "AlmaLinux10" ] || [ "$SERVER_OS" = "CentOS9" ] || [ "$SERVER_OS" = "RockyLinux9" ]; then
                 # AlmaLinux 9/10 / CentOS 9 / Rocky Linux 9
                 $PACKAGE_MANAGER install -y ImageMagick gd libicu oniguruma python3 python3-pip python3-devel 2>/dev/null || true
+                $PACKAGE_MANAGER install -y python3.11 python3.11-pip python3.11-devel 2>/dev/null || print_status "WARNING: python3.11 packages not available, continuing..."
                 $PACKAGE_MANAGER install -y aspell 2>/dev/null || print_status "WARNING: aspell not available, skipping..."
                 $PACKAGE_MANAGER install -y libc-client-devel 2>/dev/null || print_status "WARNING: libc-client-devel not available, skipping..."
             else
@@ -124,6 +125,10 @@ install_dependencies() {
             echo "  ✓ Core packages installed"
             ;;
     esac
+    
+    if type ensure_cybercp_system_python >/dev/null 2>&1; then
+        ensure_cybercp_system_python
+    fi
     
     echo ""
     print_status "SUCCESS: Dependencies installed successfully"

@@ -12,6 +12,8 @@ import os
 _CANDIDATES = (
     "/usr/local/CyberPanel/bin/python",
     "/usr/local/CyberCP/bin/python",
+    "/usr/bin/python3.11",
+    "/usr/local/bin/python3.11",
     "/usr/bin/python3",
     "/usr/local/bin/python3",
 )

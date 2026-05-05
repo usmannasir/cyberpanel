@@ -2,10 +2,11 @@ bcrypt==4.2.0
 beautifulsoup4==4.12.3
 boto3==1.34.153
 botocore==1.34.153
+# v2 API: use import CloudFlare. cloudflare 5.x removes it; keep major 2.x pinned.
 cloudflare==2.20.0
-cryptography>=43.0.1
+cryptography>=44.0.1
 cffi
-Django==4.2.14
+Django==4.2.30
 docker==7.1.0
 google-api-core==2.19.1
 google-api-python-client==2.139.0
@@ -20,12 +21,12 @@ paramiko==3.4.1
 pexpect==4.9.0
 psutil>=7.2.0
 py3dns==4.0.2
-pyOpenSSL==24.2.1
+pyOpenSSL>=25.0.0
 pyotp
 PyYAML==6.0.1
 requests>=2.32.4
 s3transfer==0.10.2
-sqlparse==0.5.1
+sqlparse==0.5.4
 tldextract==5.1.2
 tornado>=6.4.2
 validators==0.33.0
@@ -37,5 +38,6 @@ asyncssh==2.21.0
 python-jose==3.4.0
 websockets==15.0.1
 PyJWT>=2.10.1
-python-dotenv==1.0.0
+# Requires Python >=3.10 (CyberCP venv uses 3.11+ on new installs per v2.5.5-dev installer).
+python-dotenv==1.2.2
 webauthn>=2.0.0

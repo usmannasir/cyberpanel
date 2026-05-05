@@ -73,6 +73,37 @@ def _normalize_mariadb_version(ver):
     return '11.8'
 
 
+def cybercp_venv_python_executable():
+    """
+    Interpreter for creating /usr/local/CyberCP venv.
+    Prefer CYBERCP_VENV_PYTHON from the shell installer, then Python 3.11+ on disk, else sys.executable.
+    """
+    env_p = (os.environ.get('CYBERCP_VENV_PYTHON') or '').strip()
+    if env_p and os.path.isfile(env_p) and os.access(env_p, os.X_OK):
+        return env_p
+    for cand in (
+            '/usr/bin/python3.11',
+            '/usr/local/bin/python3.11',
+            '/usr/bin/python3.12',
+            '/usr/bin/python3.13',
+            '/usr/bin/python3.10',
+    ):
+        if not (os.path.isfile(cand) and os.access(cand, os.X_OK)):
+            continue
+        try:
+            r = subprocess.run(
+                [cand, '-c', 'import sys; sys.exit(0 if sys.version_info[:2] >= (3, 10) else 1)'],
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            if r.returncode == 0:
+                return cand
+        except (OSError, subprocess.SubprocessError):
+            continue
+    return sys.executable or shutil.which('python3') or 'python3'
+
+
 def get_Ubuntu_release():
     release = install_utils.get_Ubuntu_release(use_print=False, exit_on_error=True)
     if release == -1:
@@ -3408,8 +3439,10 @@ skip-ssl
             logging.InstallLog.writeToFile("Creating Python virtual environment at /usr/local/CyberCP...")
             preFlightsChecks.stdOut("Creating Python virtual environment...")
             try:
+                vpy = cybercp_venv_python_executable()
+                logging.InstallLog.writeToFile("venv create using interpreter: " + str(vpy))
                 r = subprocess.run(
-                    [sys.executable or "python3", "-m", "venv", "/usr/local/CyberCP"],
+                    [vpy, "-m", "venv", "/usr/local/CyberCP"],
                     timeout=120, capture_output=True, text=True, cwd="/usr/local/CyberCP"
                 )
                 if r.returncode != 0:
