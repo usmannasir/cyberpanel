@@ -4833,6 +4833,14 @@ class Migration(migrations.Migration):
             # FINAL STEP: Ensure Imunify360 execute permissions are set
             Upgrade.finalImunifyPermissions()
 
+            # Fresh clone ships bin/lswsgi but cron and scripts expect /usr/local/CyberCP/bin/python (venv path removed on many installs).
+            try:
+                from plogical.cyberpanel_python import ensure_cyberpanel_bin_python_shim
+                ensure_cyberpanel_bin_python_shim()
+                Upgrade.stdOut("Ensured /usr/local/CyberCP/bin/python shim after clone.", 0)
+            except BaseException as shim_err:
+                Upgrade.stdOut("Warning: could not ensure CyberCP bin/python shim: %s" % str(shim_err), 0)
+
             return 1, None
 
         except Exception as e:
