@@ -424,6 +424,29 @@ if [ ! -f /usr/local/CyberCP/public/snappymail/index.php ]; then
   fi
 fi
 
+# Panel /webmail/ needs /static/webmail/webmail.js and webmail.css. If they are missing, Django serves HTML 404 as text/html and the Angular UI shows raw {$ ... $} placeholders.
+if [ ! -f /usr/local/CyberCP/static/webmail/webmail.js ] || [ ! -f /usr/local/CyberCP/public/static/webmail/webmail.js ]; then
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: Webmail static assets missing; running collectstatic and panel_static_sync..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  if [ -x /usr/local/CyberCP/bin/python ]; then
+    (
+      cd /usr/local/CyberCP && export DJANGO_SETTINGS_MODULE=CyberCP.settings
+      /usr/local/CyberCP/bin/python manage.py collectstatic --noinput 2>&1
+      /usr/local/CyberCP/bin/python -c "import sys; sys.path.insert(0, '/usr/local/CyberCP'); from plogical.panel_static_sync import ensure_litespeed_panel_static_complete; ensure_litespeed_panel_static_complete()" 2>&1
+    ) | tee -a /var/log/cyberpanel_upgrade_debug.log || true
+  else
+    (
+      cd /usr/local/CyberCP && export DJANGO_SETTINGS_MODULE=CyberCP.settings
+      python3 manage.py collectstatic --noinput 2>&1
+      python3 -c "import sys; sys.path.insert(0, '/usr/local/CyberCP'); from plogical.panel_static_sync import ensure_litespeed_panel_static_complete; ensure_litespeed_panel_static_complete()" 2>&1
+    ) | tee -a /var/log/cyberpanel_upgrade_debug.log || true
+  fi
+  if [ -f /usr/local/CyberCP/static/webmail/webmail.js ]; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Webmail static repair finished (STATIC_ROOT and public/static webmail present)." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  else
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: Webmail static repair failed. Run: cd /usr/local/CyberCP && DJANGO_SETTINGS_MODULE=CyberCP.settings python3 manage.py collectstatic --noinput" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  fi
+fi
+
 # FTP users table: custom quota columns (fixes 1054 on Create FTP Account if schema predates model fields)
 if [[ -f /usr/local/CyberCP/CPScripts/ensure_ftp_users_quota_columns.py ]]; then
   if [[ -x /usr/local/CyberCP/bin/python ]]; then
