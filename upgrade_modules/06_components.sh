@@ -130,6 +130,12 @@ if [ "$Server_OS" = "Ubuntu" ]; then
     pip3 install --upgrade virtualenv
   fi
 else
+  # EL8–10: Python.h + mysql.h before any python3 -m venv under /usr/local/CyberPanel (see v2.5.5-dev hardening).
+  if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "AlmaLinux9" ]] || [[ "$Server_OS" = "AlmaLinux" ]] || [[ "$Server_OS" = "RockyLinux" ]]; then
+    if [[ "$Server_OS_Version" = "8" ]] || [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]]; then
+      CyberCP_Upgrade_Ensure_Rhel_Venv_Build_Deps
+    fi
+  fi
   rm -rf /usr/local/CyberPanel
   # AlmaLinux 9/10, Rocky 9: use python3 -m venv (no virtualenv pkg needed)
   if [[ "$Server_OS" = "AlmaLinux" ]] || [[ "$Server_OS" = "AlmaLinux9" ]] || [[ "$Server_OS" = "RockyLinux" ]]; then

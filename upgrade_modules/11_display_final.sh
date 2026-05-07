@@ -22,11 +22,16 @@ _b "  ▒▒▒▒▒▒▒▒▒    ▒▒▒▒▒███ ▒▒▒▒▒▒
 _b "              ███ ▒███"
 _b "             ▒▒██████"
 _b "              ▒▒▒▒▒▒"
-if [[ "${CYBERPANEL_GIT_SYNC_OK:-1}" -eq 1 ]]; then
+if [[ "${CYBERPANEL_GIT_SYNC_OK:-1}" -eq 1 ]] && [[ "${CYBERPANEL_UPGRADE_VERIFY_OK:-0}" -eq 1 ]]; then
   _b "                    *** UPGRADE COMPLETED SUCCESSFULLY! ***"
 else
-  _b "     *** UPGRADE FINISHED BUT GIT SYNC FAILED - /usr/local/CyberCP MAY BE OUTDATED ***"
-  _b "     See /var/log/cyberpanel_upgrade_debug.log  (exit code will be non-zero)"
+  if [[ "${CYBERPANEL_GIT_SYNC_OK:-1}" -ne 1 ]]; then
+    _b "     *** UPGRADE FINISHED BUT GIT SYNC FAILED - /usr/local/CyberCP MAY BE OUTDATED ***"
+    _b "     See /var/log/cyberpanel_upgrade_debug.log  (exit code will be non-zero)"
+  else
+    _b "     *** UPGRADE FINISHED BUT POST-CHECKS FAILED (SERVICES OR VENV) ***"
+    _b "     See /var/log/cyberpanel_upgrade_debug.log  (exit code will be non-zero)"
+  fi
 fi
 _b ""
 _bl
@@ -63,7 +68,7 @@ fi
 echo -e "\n🔍 Testing CyberPanel accessibility..."
 
 # Check if lscpd service is running
-if systemctl is-active --quiet lscpd 2>/dev/null; then
+if [[ "${CYBERPANEL_GIT_SYNC_OK:-1}" -eq 1 ]] && [[ "${CYBERPANEL_UPGRADE_VERIFY_OK:-0}" -eq 1 ]] && systemctl is-active --quiet lscpd 2>/dev/null; then
   _br
   _b ""
   _b "  ACCESS YOUR CYBERPANEL:"
