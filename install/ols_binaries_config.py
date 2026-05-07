@@ -1,6 +1,11 @@
 """
 OpenLiteSpeed binary configuration - single source of truth for OLS/ModSec URLs and SHA256 hashes.
 Used by install/install.py, plogical/upgrade.py, and plogical/modSec.py.
+
+Filename tokens like openlitespeed-2.4.4-x86_64-rhel9 are CyberPanel bundle IDs, not upstream
+OpenLiteSpeed semver (see openlitespeed -v). Minimum upstream version before skipping this
+overlay is defined in ols_version_policy.MIN_OFFICIAL_OLS.
+
 Update this file when new OLS binaries are released (e.g. v2.4.5).
 """
 # OpenLiteSpeed v2.4.4 - Universal binaries with PHPConfig API, Origin Header Forwarding,

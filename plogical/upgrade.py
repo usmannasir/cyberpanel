@@ -12,6 +12,7 @@ _install_dir = '/usr/local/CyberCP/install'
 if _install_dir not in sys.path:
     sys.path.insert(0, _install_dir)
 import ols_binaries_config
+import ols_version_policy
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 from plogical.errorSanitizer import ErrorSanitizer
 from plogical.installUtilities import installUtilities
@@ -551,7 +552,7 @@ class Upgrade:
 
     @staticmethod
     def add_litespeed_repo():
-        """Add LiteSpeed repository so OpenLiteSpeed 1.8.5+ is available (repo.litespeed.sh)."""
+        """Add LiteSpeed repository (repo.litespeed.sh) for openlitespeed packages."""
         return Upgrade.executioner_silent('wget -q -O - https://repo.litespeed.sh | bash', 'LiteSpeed repo', 0, shell=True)
 
     @staticmethod
@@ -748,6 +749,11 @@ class Upgrade:
 
                     # Check for version 9.x
                     if 'version="9.' in content or 'version_id="9.' in content:
+                        if any(distro in content for distro in ['red hat', 'almalinux', 'rocky', 'cloudlinux', 'centos']):
+                            return 'rhel9'
+
+                    # AlmaLinux/RHEL/Rocky 10.x (use rhel9 CyberPanel bundle until a dedicated EL10 build ships)
+                    if 'version="10.' in content or 'version_id="10.' in content:
                         if any(distro in content for distro in ['red hat', 'almalinux', 'rocky', 'cloudlinux', 'centos']):
                             return 'rhel9'
 
@@ -1300,6 +1306,98 @@ module cyberpanel_ols {
             Upgrade.stdOut(f"WARNING: Module configuration failed: {msg}", 0)
             Upgrade.stdOut("Module may still work via auto-load", 0)
             return True  # Non-fatal
+
+    @staticmethod
+    def enable_autossl_httpd_defaults():
+        """Ensure autoSSL/acmeEmail appear once in httpd_config.conf (same logic as custom OLS path)."""
+        conf_path = '/usr/local/lsws/conf/httpd_config.conf'
+        try:
+            import re
+            with open(conf_path, 'r') as f:
+                content = f.read()
+            if 'autoSSL' not in content:
+                content = re.sub(
+                    r'(adminEmails\s+\S+)',
+                    r'\1\nautoSSL                   1\nacmeEmail                 admin@cyberpanel.net',
+                    content,
+                    count=1
+                )
+                with open(conf_path, 'w') as f:
+                    f.write(content)
+                Upgrade.stdOut("Auto-SSL enabled in httpd_config.conf", 0)
+        except Exception as e:
+            Upgrade.stdOut(f"WARNING: Could not enable Auto-SSL: {e}", 0)
+
+    @staticmethod
+    def restart_openlitespeed_verify_optional_rollback():
+        """Restart OLS after binary/module changes; rollback custom binary if worker missing."""
+        Upgrade.stdOut("Restarting OpenLiteSpeed...", 0)
+        Upgrade.executioner('/usr/local/lsws/bin/lswsctrl restart', 'Restart OpenLiteSpeed', 0)
+        import time
+        time.sleep(5)
+        result = subprocess.run(['pgrep', '-f', 'openlitespeed'],
+                                capture_output=True)
+        if result.returncode != 0:
+            Upgrade.stdOut("WARNING: OpenLiteSpeed may not have started after upgrade!", 0)
+            Upgrade.stdOut("Attempting auto-rollback...", 0)
+            backup_base = '/usr/local/lsws'
+            try:
+                backups = [d for d in os.listdir(backup_base) if d.startswith('backup-')]
+                if backups:
+                    backups.sort(reverse=True)
+                    latest_backup = os.path.join(backup_base, backups[0])
+                    if Upgrade.rollbackOLSBinary(latest_backup, '/usr/local/lsws/bin/openlitespeed'):
+                        Upgrade.stdOut("Auto-rollback completed successfully", 0)
+                    else:
+                        Upgrade.stdOut("ERROR: Auto-rollback failed! Manual intervention may be required.", 0)
+                else:
+                    Upgrade.stdOut("ERROR: No backup found for rollback!", 0)
+            except Exception as e:
+                Upgrade.stdOut(f"ERROR during rollback probe: {e}", 0)
+        else:
+            Upgrade.stdOut("OpenLiteSpeed restarted successfully", 0)
+
+    @staticmethod
+    def upgrade_openlitespeed_repo_first_then_optional_overlay():
+        """
+        Match install.py: add LiteSpeed repo, upgrade openlitespeed package, then overlay
+        CyberPanel binaries only if upstream version is below MIN_OFFICIAL_OLS.
+        """
+        if not os.path.exists('/usr/local/lsws/bin/openlitespeed'):
+            return
+        min_t = ols_version_policy.MIN_OFFICIAL_OLS
+        min_label = '%d.%d.%d' % (min_t[0], min_t[1], min_t[2])
+        Upgrade.add_litespeed_repo()
+        if os.path.exists(Upgrade.CentOSPath) or os.path.exists(Upgrade.openEulerPath):
+            Upgrade.executioner('dnf -y upgrade openlitespeed || true', 'dnf upgrade openlitespeed (non-fatal)', 0)
+            Upgrade.executioner('yum -y upgrade openlitespeed || true', 'yum upgrade openlitespeed (non-fatal)', 0)
+            Upgrade.executioner('dnf install -y openlitespeed || yum install -y openlitespeed', 'Upgrade OpenLiteSpeed package', 0)
+        else:
+            Upgrade.executioner(
+                'apt-get -y update && DEBIAN_FRONTEND=noninteractive apt-get -y install --only-upgrade openlitespeed 2>/dev/null || DEBIAN_FRONTEND=noninteractive apt-get -y install openlitespeed',
+                'Upgrade OpenLiteSpeed package',
+                0,
+                shell=True
+            )
+        ols_ver = Upgrade.get_installed_ols_version()
+        if ols_ver and ols_ver >= min_t:
+            Upgrade.stdOut(
+                "OpenLiteSpeed %s meets minimum official version %s; keeping official binary (no CyberPanel overlay)."
+                % ('%d.%d.%d' % ols_ver, min_label),
+                0
+            )
+            return
+        Upgrade.stdOut(
+            "OpenLiteSpeed below official minimum %s or version unknown; attempting CyberPanel binary overlay..."
+            % min_label,
+            0
+        )
+        if not Upgrade.installCustomOLSBinaries():
+            Upgrade.stdOut("CyberPanel OpenLiteSpeed overlay skipped or failed; continuing upgrade.", 0)
+            return
+        Upgrade.configureCustomModule()
+        Upgrade.enable_autossl_httpd_defaults()
+        Upgrade.restart_openlitespeed_verify_optional_rollback()
 
     @staticmethod
     def download_install_phpmyadmin():
@@ -6713,65 +6811,10 @@ slowlog = /var/log/php{version}-fpm-slow.log
             # os.remove('/usr/local/lsws/conf/httpd_config.xml')
             # shutil.copy('httpd_config.xml', '/usr/local/lsws/conf/httpd_config.xml')
         else:
-            # This is OpenLiteSpeed - install/upgrade custom binaries
-            Upgrade.stdOut("Detected OpenLiteSpeed installation", 0)
-            Upgrade.stdOut("Installing/upgrading custom binaries with .htaccess PHP config support...", 0)
-
-            # Install custom binaries
-            if Upgrade.installCustomOLSBinaries():
-                # Configure the custom module
-                Upgrade.configureCustomModule()
-
-                # Enable Auto-SSL if not already configured
-                conf_path = '/usr/local/lsws/conf/httpd_config.conf'
-                try:
-                    import re
-                    with open(conf_path, 'r') as f:
-                        content = f.read()
-                    if 'autoSSL' not in content:
-                        content = re.sub(
-                            r'(adminEmails\s+\S+)',
-                            r'\1\nautoSSL                   1\nacmeEmail                 admin@cyberpanel.net',
-                            content,
-                            count=1
-                        )
-                        with open(conf_path, 'w') as f:
-                            f.write(content)
-                        Upgrade.stdOut("Auto-SSL enabled in httpd_config.conf", 0)
-                except Exception as e:
-                    Upgrade.stdOut(f"WARNING: Could not enable Auto-SSL: {e}", 0)
-
-                # Restart OpenLiteSpeed to apply changes and verify it started
-                Upgrade.stdOut("Restarting OpenLiteSpeed...", 0)
-                command = '/usr/local/lsws/bin/lswsctrl restart'
-                Upgrade.executioner(command, 'Restart OpenLiteSpeed', 0)
-
-                # Verify OLS started successfully after restart
-                import time
-                time.sleep(5)  # Give OLS time to start
-
-                result = subprocess.run(['pgrep', '-f', 'openlitespeed'],
-                                        capture_output=True)
-                if result.returncode != 0:
-                    Upgrade.stdOut("WARNING: OpenLiteSpeed may not have started after upgrade!", 0)
-                    Upgrade.stdOut("Attempting auto-rollback...", 0)
-
-                    # Find the most recent backup directory
-                    backup_base = '/usr/local/lsws'
-                    backups = [d for d in os.listdir(backup_base) if d.startswith('backup-')]
-                    if backups:
-                        backups.sort(reverse=True)  # Most recent first
-                        latest_backup = os.path.join(backup_base, backups[0])
-                        if Upgrade.rollbackOLSBinary(latest_backup, '/usr/local/lsws/bin/openlitespeed'):
-                            Upgrade.stdOut("Auto-rollback completed successfully", 0)
-                        else:
-                            Upgrade.stdOut("ERROR: Auto-rollback failed! Manual intervention may be required.", 0)
-                    else:
-                        Upgrade.stdOut("ERROR: No backup found for rollback!", 0)
-                else:
-                    Upgrade.stdOut("OpenLiteSpeed restarted successfully", 0)
-            else:
-                Upgrade.stdOut("Custom binary installation failed, continuing with upgrade...", 0)
+            Upgrade.stdOut(
+                "Detected OpenLiteSpeed; package upgrade and optional binary overlay run in a later step (repo first).",
+                0
+            )
 
         Upgrade.updateRepoURL()
 
@@ -6806,21 +6849,9 @@ slowlog = /var/log/php{version}-fpm-slow.log
         Upgrade.dockerUsers()
         Upgrade.setupPHPSymlink()
         Upgrade.setupComposer()
-        
-        # OpenLiteSpeed: ensure 1.8.5+ (add LiteSpeed repo, upgrade package); only overlay custom binary if still < 1.8.5
-        if os.path.exists('/usr/local/lsws/bin/openlitespeed'):
-            Upgrade.add_litespeed_repo()
-            if os.path.exists(Upgrade.CentOSPath) or os.path.exists(Upgrade.openEulerPath):
-                Upgrade.executioner('dnf -y upgrade openlitespeed || true', 'dnf upgrade openlitespeed (non-fatal)', 0)
-                Upgrade.executioner('yum -y upgrade openlitespeed || true', 'yum upgrade openlitespeed (non-fatal)', 0)
-                Upgrade.executioner('dnf install -y openlitespeed || yum install -y openlitespeed', 'Upgrade OpenLiteSpeed package', 0)
-            else:
-                Upgrade.executioner('apt-get -y update && DEBIAN_FRONTEND=noninteractive apt-get -y install --only-upgrade openlitespeed 2>/dev/null || DEBIAN_FRONTEND=noninteractive apt-get -y install openlitespeed', 'Upgrade OpenLiteSpeed package', 0, shell=True)
-            ols_ver = Upgrade.get_installed_ols_version()
-            if ols_ver and ols_ver >= (1, 8, 5):
-                Upgrade.stdOut("OpenLiteSpeed 1.8.5+ detected; keeping official binary (no custom overlay).")
-            else:
-                Upgrade.installCustomOLSBinaries()
+
+        # OpenLiteSpeed: LiteSpeed repo and package upgrade first; CyberPanel overlay only if below MIN_OFFICIAL_OLS
+        Upgrade.upgrade_openlitespeed_repo_first_then_optional_overlay()
 
         ##
 

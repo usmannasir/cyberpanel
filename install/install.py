@@ -7,6 +7,7 @@ _install_dir = os.path.dirname(os.path.abspath(__file__))
 if _install_dir not in sys.path:
     sys.path.insert(0, _install_dir)
 import ols_binaries_config
+import ols_version_policy
 
 import subprocess
 import shutil
@@ -137,9 +138,9 @@ class preFlightsChecks:
         return self.distro in [ubuntu, debian12]
 
     def add_litespeed_repo(self):
-        """Add LiteSpeed repository so OpenLiteSpeed 1.8.5+ is available (repo.litespeed.sh)"""
+        """Add LiteSpeed repository (repo.litespeed.sh) for current openlitespeed packages."""
         try:
-            self.stdOut("Adding LiteSpeed repository for OpenLiteSpeed 1.8.5+...", 1)
+            self.stdOut("Adding LiteSpeed repository for OpenLiteSpeed (see ols_version_policy.py)...", 1)
             cmd = 'wget -q -O - https://repo.litespeed.sh | bash'
             ret = subprocess.run(cmd, shell=True, timeout=120, capture_output=True, universal_newlines=True)
             if ret.returncode != 0 and ret.stderr:
@@ -1512,20 +1513,24 @@ module cyberpanel_ols {
             self.stdOut("Installing LiteSpeed Web Server...", 1)
             
             if ent == 0:
-                # Install OpenLiteSpeed 1.8.5+ from LiteSpeed repo when possible
-                self.stdOut("Installing OpenLiteSpeed (target 1.8.5+)...", 1)
+                # Install OpenLiteSpeed from LiteSpeed repo when possible (min official: ols_version_policy)
+                self.stdOut("Installing OpenLiteSpeed (see install/ols_version_policy.py for minimum version)...", 1)
                 self.add_litespeed_repo()
                 if self.distro == ubuntu or self.distro == debian12:
                     self.install_package('openlitespeed')
                 else:
                     self.install_package('openlitespeed')
                 self.upgrade_openlitespeed_to_latest()
-                # Use official OLS 1.8.5+ when available; only overlay custom binary if older
+                # Use official OLS at or above MIN_OFFICIAL_OLS when available; only overlay custom binary if older
                 ols_ver = self.get_installed_ols_version()
-                if ols_ver and ols_ver >= (1, 8, 5):
-                    self.stdOut("Using official OpenLiteSpeed 1.8.5+ (no custom binary overlay)", 1)
+                if ols_ver and ols_ver >= ols_version_policy.MIN_OFFICIAL_OLS:
+                    self.stdOut(
+                        "Using official OpenLiteSpeed %s+ (no custom binary overlay)"
+                        % ("%d.%d.%d" % ols_version_policy.MIN_OFFICIAL_OLS),
+                        1
+                    )
                 else:
-                    # Install custom binaries with PHP config support (for pre-1.8.5 or when repo not used)
+                    # Install custom binaries with PHP config support (below MIN_OFFICIAL_OLS or when repo not used)
                     self.installCustomOLSBinaries()
                 
                 # Configure OpenLiteSpeed
