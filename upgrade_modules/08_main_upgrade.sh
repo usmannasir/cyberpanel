@@ -1,20 +1,12 @@
 #!/usr/bin/env bash
 # CyberPanel upgrade – main upgrade (Python, upgrade.py, venv, WSGI). Sourced by cyberpanel_upgrade.sh.
+# CyberCP_Upgrade_Select_VenvBootstrapPython / CyberCP_Upgrade_Ensure_Rhel_Venv_Build_Deps live in 00_common.sh (used from 06_components.sh).
 
-# Prefer Python 3.11+ for (re)creating /usr/local/CyberCP venv (v2.5.5-dev new-install alignment).
-CYBERCP_UPGRADE_VENV_PY="/usr/bin/python3"
-CyberCP_Upgrade_Select_VenvBootstrapPython() {
-  CYBERCP_UPGRADE_VENV_PY="/usr/bin/python3"
-  local p
-  for p in /usr/bin/python3.11 /usr/local/bin/python3.11 /usr/bin/python3.12 /usr/bin/python3.13 /usr/bin/python3.10; do
-    if [[ -x "$p" ]] && "$p" -c 'import sys; sys.exit(0 if sys.version_info[:2] >= (3, 10) else 1)' 2>/dev/null; then
-      CYBERCP_UPGRADE_VENV_PY="$p"
-      return 0
-    fi
-  done
-  if command -v python3 >/dev/null 2>&1 && python3 -c 'import sys; sys.exit(0 if sys.version_info[:2] >= (3, 10) else 1)' 2>/dev/null; then
-    CYBERCP_UPGRADE_VENV_PY="$(command -v python3)"
-    return 0
+CyberCP_Verify_Cybercp_Venv_Or_Exit() {
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Verifying CyberCP venv imports (django, MySQLdb, gunicorn)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  if ! /usr/local/CyberCP/bin/python -c "import django, MySQLdb, gunicorn; assert django.VERSION[0] >= 4" 2>/dev/null; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] ERROR: CyberCP venv is incomplete. Fix build deps and run: /usr/local/CyberCP/bin/pip install -r /usr/local/requirments.txt" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    exit 1
   fi
 }
 
@@ -194,6 +186,7 @@ else
   
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Creating temporary virtual environment for fallback upgrade..." | tee -a /var/log/cyberpanel_upgrade_debug.log
 
+  CyberCP_Upgrade_Ensure_Rhel_Venv_Build_Deps
   CyberCP_Upgrade_Select_VenvBootstrapPython
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Temporary venv bootstrap Python: $CYBERCP_UPGRADE_VENV_PY" | tee -a /var/log/cyberpanel_upgrade_debug.log
   
@@ -262,7 +255,14 @@ if [[ $NEEDS_RECREATE -eq 1 ]] || [[ ! -d /usr/local/CyberCP/bin ]]; then
   
   # First ensure the directory exists
   mkdir -p /usr/local/CyberCP
-  
+
+  if [[ "$Server_OS" = "Ubuntu" ]] || [[ "$Server_OS" = "Debian" ]]; then
+    DEBIAN_FRONTEND=noninteractive apt-get update -y 2>/dev/null || true
+    DEBIAN_FRONTEND=noninteractive apt-get install -y python3-dev python3-venv pkg-config build-essential \
+      libmariadb-dev libmariadb-dev-compat 2>/dev/null || true
+  fi
+
+  CyberCP_Upgrade_Ensure_Rhel_Venv_Build_Deps
   # For Ubuntu 22.04+, we need to handle virtualenv differently
   VENV_SUCCESS=0
   
@@ -342,8 +342,10 @@ else
   echo -e "\nNo need to re-setup virtualenv at /usr/local/CyberCP...\n"
 fi
 
-echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Removing old requirements file..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-rm -f /usr/local/requirments.txt
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Preserving previous requirements file if present..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+if [[ -f /usr/local/requirments.txt ]]; then
+  cp -f /usr/local/requirments.txt "/usr/local/requirments.txt.last_upgrade.$(date +%Y%m%d-%H%M%S)" 2>/dev/null || true
+fi
 
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Downloading new requirements..." | tee -a /var/log/cyberpanel_upgrade_debug.log
 Download_Requirement
@@ -396,17 +398,10 @@ if ! /usr/local/CyberCP/bin/python -c "import django" 2>/dev/null; then
     # Ubuntu/Debian
     apt-get update -y
     apt-get install -y libmariadb-dev libmariadb-dev-compat pkg-config build-essential
-  elif [[ "$Server_OS" =~ ^(CentOS|RHEL|AlmaLinux|RockyLinux|CloudLinux) ]]; then
+  elif [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "AlmaLinux9" ]] || [[ "$Server_OS" = "RockyLinux" ]] || [[ "$Server_OS" = "RedHat" ]] || [[ "$Server_OS" = "CloudLinux" ]]; then
     # RHEL-based systems
     if command -v dnf >/dev/null 2>&1; then
-      # Remove conflicting packages first
-      dnf remove -y mariadb mariadb-client-utils mariadb-server || true
-      dnf remove -y MariaDB-server MariaDB-client MariaDB-devel || true
-      
-      # Install development packages with conflict resolution
-      dnf install -y --allowerasing --skip-broken --nobest mariadb-devel pkgconfig gcc python3-devel || \
-      dnf install -y --allowerasing --skip-broken --nobest mysql-devel pkgconfig gcc python3-devel || \
-      dnf install -y --allowerasing --skip-broken --nobest mariadb-devel mariadb-connector-c-devel pkgconfig gcc python3-devel
+      dnf install -y MariaDB-devel pkgconfig gcc gcc-c++ openssl-devel libffi-devel zlib-devel make python3-devel 2>/dev/null || true
     else
       yum install -y mariadb-devel pkgconfig gcc python3-devel
     fi
@@ -422,9 +417,14 @@ if ! /usr/local/CyberCP/bin/python -c "import django" 2>/dev/null; then
   # Re-install requirements
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Re-installing Python requirements..." | tee -a /var/log/cyberpanel_upgrade_debug.log
   pip install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+  /usr/local/CyberCP/bin/pip3 install --no-cache-dir 'gunicorn>=21,<24' 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
 else
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Django is properly installed" | tee -a /var/log/cyberpanel_upgrade_debug.log
 fi
+
+echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Ensuring gunicorn in CyberCP venv..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+/usr/local/CyberCP/bin/pip3 install --no-cache-dir 'gunicorn>=21,<24' 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
+CyberCP_Verify_Cybercp_Venv_Or_Exit
 
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Installing WSGI-LSAPI with optimized compilation..." | tee -a /var/log/cyberpanel_upgrade_debug.log
 
@@ -448,11 +448,15 @@ echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Optimizing Makefile for proper compilati
 if [[ -f Makefile ]]; then
     # Replace -O0 -g3 with -O2 -g to satisfy _FORTIFY_SOURCE
     sed -i 's/-O0 -g3/-O2 -g/g' Makefile
+    sed -i 's/-O0\b/-O2/g' Makefile
     # Ensure we have proper optimization flags
     if grep -q "CFLAGS" Makefile && ! grep -qF '-O2' Makefile; then
         sed -i 's/CFLAGS =/CFLAGS = -O2/' Makefile
     fi
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Makefile optimized for proper compilation" | tee -a /var/log/cyberpanel_upgrade_debug.log
+fi
+if [[ -f Makefile.in ]]; then
+    sed -i 's/-O0\b/-O2/g' Makefile.in
 fi
 
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Compiling WSGI with optimized flags..." | tee -a /var/log/cyberpanel_upgrade_debug.log

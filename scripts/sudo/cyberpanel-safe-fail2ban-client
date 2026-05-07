@@ -1,62 +1,23 @@
-#!/usr/bin/env python3
-
-import argparse
-import ipaddress
-import re
-import subprocess
-import sys
-
-
-F2B_BIN = "/usr/bin/fail2ban-client"
-SAFE_JAIL_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
-
-
-def _jail(value: str) -> str:
-    if not SAFE_JAIL_RE.fullmatch(value):
-        raise argparse.ArgumentTypeError("Invalid jail.")
-    return value
-
-
-def _ip(value: str) -> str:
-    try:
-        return str(ipaddress.ip_address(value))
-    except ValueError as e:
-        raise argparse.ArgumentTypeError("Invalid IP.") from e
-
-
-def main() -> int:
-    parser = argparse.ArgumentParser(
-        prog="cyberpanel-safe-fail2ban-client",
-        description="Allowlisted fail2ban-client operations for sudo usage.",
-    )
-    sub = parser.add_subparsers(dest="cmd", required=True)
-
-    p_status = sub.add_parser("status")
-    p_status.add_argument("jail", nargs="?", type=_jail)
-
-    p_ban = sub.add_parser("banip")
-    p_ban.add_argument("jail", type=_jail)
-    p_ban.add_argument("ip", type=_ip)
-
-    p_unban = sub.add_parser("unbanip")
-    p_unban.add_argument("jail", type=_jail)
-    p_unban.add_argument("ip", type=_ip)
-
-    args = parser.parse_args()
-
-    if args.cmd == "status":
-        cmd = [F2B_BIN, "status"]
-        if args.jail:
-            cmd.append(args.jail)
-    elif args.cmd == "banip":
-        cmd = [F2B_BIN, "set", args.jail, "banip", args.ip]
-    else:
-        cmd = [F2B_BIN, "set", args.jail, "unbanip", args.ip]
-
-    proc = subprocess.run(cmd, stdout=sys.stdout, stderr=sys.stderr)
-    return proc.returncode
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
-
+#!/usr/bin/env bash
+# Allowlisted wrapper for lscpd: fail2ban-client read-only commands.
+set -euo pipefail
+FB=""
+FB=$(command -v fail2ban-client || true)
+if [[ -z "$FB" ]]; then
+  echo "cyberpanel-safe-fail2ban-client: fail2ban-client not found" >&2
+  exit 1
+fi
+if [[ $# -lt 1 ]]; then
+  echo "cyberpanel-safe-fail2ban-client: missing arguments" >&2
+  exit 1
+fi
+sub="$1"
+case "$sub" in
+  status|ping|get)
+    exec "$FB" "$@"
+    ;;
+  *)
+    echo "cyberpanel-safe-fail2ban-client: subcommand not allowed: $sub" >&2
+    exit 1
+    ;;
+esac

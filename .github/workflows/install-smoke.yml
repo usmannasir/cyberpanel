@@ -1,0 +1,44 @@
+# Validates upgrade/install scripts on every push. Full panel bootstrap needs a dedicated host (root, MariaDB, LSWS).
+name: install-smoke
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  syntax-and-static-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bash syntax (upgrade loader + modules)
+        run: |
+          set -euo pipefail
+          bash -n cyberpanel_upgrade.sh
+          if [[ -f preUpgrade.sh ]]; then bash -n preUpgrade.sh; fi
+          shopt -s nullglob
+          for f in upgrade_modules/*.sh; do
+            bash -n "$f"
+          done
+
+      - name: Python compile (critical paths)
+        run: |
+          set -euo pipefail
+          python3 -m py_compile plogical/upgrade.py install/install.py CPScripts/ensure_ftp_users_quota_columns.py
+
+  almalinux9-loader-check:
+    runs-on: ubuntu-latest
+    container:
+      image: almalinux:9
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Minimal deps + bash syntax on EL9
+        run: |
+          set -euo pipefail
+          dnf install -y -q bash python3 git-core ca-certificates
+          bash -n cyberpanel_upgrade.sh
+          shopt -s nullglob
+          for f in upgrade_modules/*.sh; do bash -n "$f"; done

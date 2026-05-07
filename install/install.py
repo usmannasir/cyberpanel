@@ -737,7 +737,7 @@ class preFlightsChecks:
             self.call(cmd, self.distro, cmd, cmd, 1, 0, os.EX_OSERR)
             self.call("dnf config-manager --disable mariadb-maxscale 2>/dev/null || true", self.distro, "disable maxscale after setup", "disable maxscale after setup", 1, 0, os.EX_OSERR)
             self.stdOut("Installing MariaDB packages from MariaDB.org repo...", 1)
-            pkgs = "MariaDB-server MariaDB-client MariaDB-backup MariaDB-devel"
+            pkgs = "MariaDB-server MariaDB-client MariaDB-shared MariaDB-backup MariaDB-common MariaDB-devel"
             self.call(f"dnf install -y --nobest {pkgs}", self.distro, "MariaDB packages", "MariaDB packages", 1, 0, os.EX_OSERR)
             self.stdOut("AlmaLinux 10 MariaDB fixes applied successfully", 1)
         except Exception as e:
@@ -1842,6 +1842,19 @@ module cyberpanel_ols {
                 return True
             else:
                 # RHEL-based MariaDB upgrade
+                subprocess.run("dnf module reset -y mariadb", shell=True, capture_output=True, text=True, timeout=180)
+                dis = subprocess.run(
+                    "dnf module disable -y mariadb",
+                    shell=True,
+                    capture_output=True,
+                    text=True,
+                    timeout=180,
+                )
+                if dis.returncode != 0:
+                    logging.InstallLog.writeToFile(
+                        "dnf module disable mariadb non-zero (ignored on non-modular images): "
+                        + (dis.stderr or "")[:500]
+                    )
                 # Setup MariaDB 11.8 LTS repository
                 command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=11.8'
                 result = subprocess.run(command, shell=True, capture_output=True, universal_newlines=True)
@@ -1849,8 +1862,11 @@ module cyberpanel_ols {
                     logging.InstallLog.writeToFile(f"Failed to setup MariaDB repository: {result.stderr}")
                     return False
                 
-                # Attempt to install MariaDB 11.8 LTS (repo already set above)
-                command = 'dnf install mariadb-server mariadb-devel mariadb-client-utils -y --allowerasing'
+                # Canonical MariaDB.org package names (AppStream module must stay disabled).
+                command = (
+                    'dnf install -y MariaDB-server MariaDB-client MariaDB-shared MariaDB-backup '
+                    'MariaDB-common MariaDB-devel --allowerasing'
+                )
                 result = subprocess.run(command, shell=True, capture_output=True, universal_newlines=True)
                 if result.returncode != 0:
                     # Check if error is due to upgrade restrictions

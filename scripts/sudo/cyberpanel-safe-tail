@@ -1,89 +1,36 @@
-#!/usr/bin/env python3
-
-import argparse
-import os
-import sys
-from pathlib import Path
-
-
-ALLOWED_PATHS = {
-    "/usr/local/lscp/logs/access.log",
-    "/usr/local/lscp/logs/error.log",
-    "/usr/local/lsws/logs/auditmodsec.log",
-    "/var/log/maillog",
-    "/var/log/mail.log",
-    "/var/log/messages",
-    "/var/log/syslog",
-    "/var/log/rspamd/rspamd.log",
-    "/home/cyberpanel/error-logs.txt",
-}
-
-
-def _resolve(p: str) -> Path:
-    return Path(p).expanduser().resolve()
-
-
-_ALLOWED_REALPATHS = {_resolve(p) for p in ALLOWED_PATHS}
-
-
-def _tail_bytes(path: Path, lines: int) -> bytes:
-    if lines <= 0:
-        return b""
-
-    chunk_size = 64 * 1024
-    data = bytearray()
-    with path.open("rb") as f:
-        f.seek(0, os.SEEK_END)
-        pos = f.tell()
-        needed_newlines = lines
-
-        while pos > 0 and needed_newlines > 0:
-            read_size = chunk_size if pos >= chunk_size else pos
-            pos -= read_size
-            f.seek(pos, os.SEEK_SET)
-            chunk = f.read(read_size)
-            data[:0] = chunk
-            needed_newlines -= chunk.count(b"\n")
-
-    if needed_newlines <= 0:
-        idx = 0
-        for _ in range(lines):
-            idx = data.find(b"\n", idx)
-            if idx == -1:
-                break
-            idx += 1
-        return bytes(data[idx:])
-
-    return bytes(data)
-
-
-def main() -> int:
-    parser = argparse.ArgumentParser(
-        prog="cyberpanel-safe-tail",
-        description="Safely print last N lines of an allowlisted file (for sudo usage).",
-    )
-    parser.add_argument("--lines", type=int, required=True)
-    parser.add_argument("--file", required=True)
-    args = parser.parse_args()
-
-    lines = args.lines
-    if lines < 1:
-        return 0
-    if lines > 1000:
-        lines = 1000
-
-    requested = _resolve(args.file)
-    if requested not in _ALLOWED_REALPATHS:
-        sys.stderr.write("Denied.\n")
-        return 3
-
-    if not requested.exists() or not requested.is_file():
-        return 0
-
-    sys.stdout.buffer.write(_tail_bytes(requested, lines))
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
-
+#!/usr/bin/env bash
+# Allowlisted wrapper for lscpd: tail log files only (--lines / --file).
+set -euo pipefail
+lines="50"
+file=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --lines)
+      lines="${2:-50}"
+      shift 2
+      ;;
+    --file)
+      file="${2:-}"
+      shift 2
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
+if [[ -z "$file" ]]; then
+  echo "cyberpanel-safe-tail: missing --file" >&2
+  exit 1
+fi
+case "$file" in
+  /*) ;;
+  *)
+    echo "cyberpanel-safe-tail: file must be absolute path" >&2
+    exit 1
+    ;;
+esac
+if [[ ! -f "$file" ]]; then
+  echo "cyberpanel-safe-tail: not a file" >&2
+  exit 1
+fi
+exec /usr/bin/tail -n "$lines" "$file"

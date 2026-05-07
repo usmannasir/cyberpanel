@@ -81,14 +81,12 @@ if [[ "$Server_Country" = "CN" ]] ; then
   sed -i 's|http://license.litespeedtech.com/|https://cyberpanel.sh/license.litespeedtech.com/|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
 fi
 
-sed -i 's|python2|python|g' /usr/bin/adminPass
-if [[ -f /usr/bin/adminPass ]]; then
-  cat >/usr/bin/adminPass <<'EOF'
+# Admin CLI wrapper (password stored under /etc/cyberpanel/adminPass; do not sed a missing file).
+cat >/usr/bin/adminPass <<'EOF'
 /usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py --password "$@"
 systemctl restart lscpd
 echo "$@" > /etc/cyberpanel/adminPass
 EOF
-fi
 chmod 700 /usr/bin/adminPass
 
 rm -f /usr/bin/php
@@ -134,7 +132,9 @@ fi
 
 
 rm -f /usr/local/composer.sh
-rm -f /usr/local/requirments.txt
+if [[ -f /usr/local/requirments.txt ]]; then
+  cp -f /usr/local/requirments.txt "/usr/local/requirments.txt.last_post_tweak.$(date +%Y%m%d-%H%M%S)" 2>/dev/null || true
+fi
 
 chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib
 chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib64
@@ -426,19 +426,22 @@ fi
 
 # Panel /webmail/ needs /static/webmail/webmail.js and webmail.css. If they are missing, Django serves HTML 404 as text/html and the Angular UI shows raw {$ ... $} placeholders.
 if [ ! -f /usr/local/CyberCP/static/webmail/webmail.js ] || [ ! -f /usr/local/CyberCP/public/static/webmail/webmail.js ]; then
-  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: Webmail static assets missing; running collectstatic and panel_static_sync..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-  if [ -x /usr/local/CyberCP/bin/python ]; then
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: Webmail static assets missing; checking Django before collectstatic..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+  if [ -x /usr/local/CyberCP/bin/python ] && /usr/local/CyberCP/bin/python -c "import django" 2>/dev/null; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Running collectstatic and panel_static_sync..." | tee -a /var/log/cyberpanel_upgrade_debug.log
     (
       cd /usr/local/CyberCP && export DJANGO_SETTINGS_MODULE=CyberCP.settings
       /usr/local/CyberCP/bin/python manage.py collectstatic --noinput 2>&1
       /usr/local/CyberCP/bin/python -c "import sys; sys.path.insert(0, '/usr/local/CyberCP'); from plogical.panel_static_sync import ensure_litespeed_panel_static_complete; ensure_litespeed_panel_static_complete()" 2>&1
     ) | tee -a /var/log/cyberpanel_upgrade_debug.log || true
-  else
+  elif command -v python3 >/dev/null 2>&1 && python3 -c "import django" 2>/dev/null; then
     (
       cd /usr/local/CyberCP && export DJANGO_SETTINGS_MODULE=CyberCP.settings
       python3 manage.py collectstatic --noinput 2>&1
       python3 -c "import sys; sys.path.insert(0, '/usr/local/CyberCP'); from plogical.panel_static_sync import ensure_litespeed_panel_static_complete; ensure_litespeed_panel_static_complete()" 2>&1
     ) | tee -a /var/log/cyberpanel_upgrade_debug.log || true
+  else
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Skipping collectstatic: Django not importable yet. Run pip install -r /usr/local/requirments.txt then collectstatic." | tee -a /var/log/cyberpanel_upgrade_debug.log
   fi
   if [ -f /usr/local/CyberCP/static/webmail/webmail.js ]; then
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Webmail static repair finished (STATIC_ROOT and public/static webmail present)." | tee -a /var/log/cyberpanel_upgrade_debug.log
@@ -459,9 +462,45 @@ else
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] INFO: ensure_ftp_users_quota_columns.py not in CyberCP yet; run deploy-ftp-users-custom-quota-columns.sh after sync" | tee -a /var/log/cyberpanel_upgrade_debug.log
 fi
 
+# Gunicorn timeout drop-in and backend restart so workers use the new venv (after pip in Main_Upgrade).
+CyberPanel_Write_Cyberpanel_Gunicorn_Dropin() {
+  local DROPIN_DIR=/etc/systemd/system/cyberpanel.service.d
+  mkdir -p "$DROPIN_DIR"
+  cat > "$DROPIN_DIR/timeout.conf" <<'EOF'
+# Managed by CyberPanel upgrade (upgrade_modules/10_post_tweak.sh). Sane gunicorn timeouts.
+[Service]
+ExecStart=
+ExecStart=/usr/local/CyberCP/bin/gunicorn \
+          --pid /run/gunicorn/gucpid \
+          --timeout 120 \
+          --graceful-timeout 30 \
+          --workers 2 \
+          --bind 127.0.0.1:5003 \
+          --access-logfile /var/log/gunicorn-access.log \
+          --error-logfile  /var/log/gunicorn-error.log \
+          CyberCP.wsgi
+EOF
+  systemctl daemon-reload 2>/dev/null || true
+}
+
+CyberPanel_Restart_Backend_And_Openlitespeed() {
+  CyberPanel_Write_Cyberpanel_Gunicorn_Dropin
+  systemctl daemon-reload 2>/dev/null || true
+  if systemctl cat cyberpanel.service >/dev/null 2>&1; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Restarting cyberpanel.service (gunicorn)..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    systemctl restart cyberpanel.service 2>/dev/null || echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARN: cyberpanel.service restart failed" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  fi
+  if [[ -x /usr/local/lsws/bin/lswsctrl ]]; then
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Restarting OpenLiteSpeed..." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    /usr/local/lsws/bin/lswsctrl restart 2>/dev/null || echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARN: lswsctrl restart returned non-zero" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  fi
+}
+
+CyberPanel_Restart_Backend_And_Openlitespeed
+
 # Harden lscpd sudo privileges (replace broad sudo access with allowlisted wrappers)
 if declare -f Post_Upgrade_LSCPD_Sudo_Hardening >/dev/null 2>&1; then
-  Post_Upgrade_LSCPD_Sudo_Hardening || true
+  Post_Upgrade_LSCPD_Sudo_Hardening || return 1
 fi
 
 systemctl restart lscpd

@@ -1876,7 +1876,65 @@ $cfg['Servers'][$i]['port'] = '3306';
             Upgrade.stdOut(f"Warning: Error downloading CDN libraries: {str(msg)}, continuing anyway", 0)
 
     @staticmethod
+    def ensure_gunicorn_in_cybercp_venv():
+        """gunicorn is required by cyberpanel.service but may be missing after partial pip runs."""
+        vpy = '/usr/local/CyberCP/bin/python'
+        if not os.path.isfile(vpy):
+            return
+        rc = subprocess.call(
+            [vpy, '-m', 'pip', 'install', '--no-cache-dir', 'gunicorn>=21,<24'],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        if rc != 0:
+            Upgrade.stdOut('ERROR: Could not pip install gunicorn into CyberCP venv.', 0)
+            raise SystemExit(1)
+
+    @staticmethod
+    def verify_cybercp_venv_core_modules():
+        """Abort upgrade if the CyberCP venv cannot import runtime modules (matches shell verify)."""
+        vpy = '/usr/local/CyberCP/bin/python'
+        if not os.path.isfile(vpy):
+            return
+        mods = (
+            'django',
+            'MySQLdb',
+            'OpenSSL',
+            'paramiko',
+            'requests',
+            'fastapi',
+            'cryptography',
+            'gunicorn',
+        )
+        code = ';'.join('import %s' % m for m in mods)
+        rc = subprocess.call([vpy, '-c', code], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if rc != 0:
+            Upgrade.stdOut(
+                'ERROR: CyberCP venv is missing required modules. '
+                'Install build deps, then: /usr/local/CyberCP/bin/pip install -r /usr/local/requirments.txt',
+                0,
+            )
+            raise SystemExit(1)
+
+    @staticmethod
     def staticContent():
+
+        py_chk = Upgrade._python_for_manage()
+        if py_chk:
+            chk = subprocess.run(
+                [py_chk, '-c', 'import django'],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            if chk.returncode != 0:
+                Upgrade.stdOut(
+                    'Skipping collectstatic: Django is not importable yet. '
+                    'After pip install completes, run: '
+                    'cd /usr/local/CyberCP && DJANGO_SETTINGS_MODULE=CyberCP.settings '
+                    f'{py_chk} manage.py collectstatic --noinput',
+                    0,
+                )
+                return
 
         command = "rm -rf /usr/local/CyberCP/public/static"
         Upgrade.executioner(command, 'Remove old static content', 0)
@@ -6880,6 +6938,9 @@ slowlog = /var/log/php{version}-fpm-slow.log
         ## Upgrade version
 
         Upgrade.fixPermissions()
+
+        Upgrade.ensure_gunicorn_in_cybercp_venv()
+        Upgrade.verify_cybercp_venv_core_modules()
 
         ##
 
