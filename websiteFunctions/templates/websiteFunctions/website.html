@@ -1871,7 +1871,7 @@
                                     </div>
                                 </div>
 
-                                <div ng-hide="installationDetailsForm" ng-hide="installationDetailsForm"
+                                <div ng-hide="installationDetailsForm"
                                      class="form-group">
                                     <label class="col-sm-3 control-label">{% trans "Additional Features" %}</label>
                                     <div class="col-sm-9">
@@ -2029,15 +2029,15 @@
                                                     </td>
                                                     <td ng-bind="record.path"></td>
                                                     <td>
-                                                        <select ng-change="changeChildBaseDir(record.childDomain,childBaseDir)"
-                                                                ng-model="childBaseDir" class="form-control">
+                                                        <select ng-change="changeChildBaseDir(record.childDomain, record.childBaseDir)"
+                                                                ng-model="record.childBaseDir" class="form-control">
                                                             <option>Enable</option>
                                                             <option>Disable</option>
                                                         </select>
                                                     </td>
                                                     <td>
-                                                        <select ng-change="changePHP(record.childDomain,phpSelection)"
-                                                                ng-model="phpSelection" class="form-control">
+                                                        <select ng-change="changePHP(record.childDomain, record.phpSelection)"
+                                                                ng-model="record.phpSelection" class="form-control">
                                                             {% for php in phps %}
                                                                 <option>{{ php }}</option>
                                                             {% endfor %}
