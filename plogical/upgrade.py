@@ -716,21 +716,21 @@ class Upgrade:
 
             # Platform-specific URLs and checksums (OpenLiteSpeed v2.4.4 — all features config-driven, static linking)
             # Includes: PHPConfig API, Origin Header Forwarding, ReadApacheConf (with Portmap), Auto-SSL (ACME v2), ModSecurity ABI Compatibility
-            # Module v2.7.0 (2026-03-15): AddDefaultCharset, SSLRequireSSL, <Files>, Satisfy, <Limit>/<LimitExcept>, AuthGroupFile/Require group
+            # Module v2.7.1: v2.7.0 directives + perf (.htaccess negative-cache, hook short-circuit); OLS binary stays 2.4.4
             BINARY_CONFIGS = {
                 'rhel8': {
                     'url': 'https://cyberpanel.net/openlitespeed-2.4.4-x86_64-rhel8',
-                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.0-x86_64-rhel8.so',
+                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.1-x86_64-rhel8.so',
                     'modsec_url': 'https://cyberpanel.net/mod_security-2.4.4-x86_64-rhel8.so',
                 },
                 'rhel9': {
                     'url': 'https://cyberpanel.net/openlitespeed-2.4.4-x86_64-rhel9',
-                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.0-x86_64-rhel9.so',
+                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.1-x86_64-rhel9.so',
                     'modsec_url': 'https://cyberpanel.net/mod_security-2.4.4-x86_64-rhel9.so',
                 },
                 'ubuntu': {
                     'url': 'https://cyberpanel.net/openlitespeed-2.4.4-x86_64-ubuntu',
-                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.0-x86_64-ubuntu.so',
+                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.1-x86_64-ubuntu.so',
                     'modsec_url': 'https://cyberpanel.net/mod_security-2.4.4-x86_64-ubuntu.so',
                 }
             }
