@@ -17,7 +17,7 @@ from django.utils import translation
 # Create your views here.
 
 VERSION = '2.4'
-BUILD = 4
+BUILD = 6
 
 
 def verifyLogin(request):
@@ -34,20 +34,13 @@ def verifyLogin(request):
             if request.method == "POST":
                 try:
                     data = json.loads(request.body)
-                except json.JSONDecodeError as e:
-                    print(f"JSON decode error: {e}")
-                    print(f"Raw request body: {request.body}")
+                except json.JSONDecodeError:
                     data = {'userID': 0, 'loginStatus': 0, 'error_message': 'Invalid request format'}
                     json_data = json.dumps(data)
                     return HttpResponse(json_data)
 
                 username = data.get('username', '')
                 password = data.get('password', '')
-
-                # Debug logging
-                print(f"Login attempt - Username: {username}, Password length: {len(password) if password else 0}")
-                print(f"Password contains '$': {'$' in password if password else False}")
-                print(f"Raw password: {repr(password)}")
 
                 try:
                     language_selection = data.get('languageSelection', 'english')
@@ -98,7 +91,6 @@ def verifyLogin(request):
                     response.set_cookie(settings.LANGUAGE_COOKIE_NAME, user_Language)
 
             admin = Administrator.objects.get(userName=username)
-            print(f"Found admin user: {admin.userName}, password hash length: {len(admin.password) if admin.password else 0}")
 
             if admin.state == 'SUSPENDED':
                 data = {'userID': 0, 'loginStatus': 0, 'error_message': 'Account currently suspended.'}
@@ -116,7 +108,6 @@ def verifyLogin(request):
                     return response
 
             password_check_result = hashPassword.check_password(admin.password, password)
-            print(f"Password check result: {password_check_result}")
 
             if password_check_result:
                 if admin.twoFA:
