@@ -20,6 +20,7 @@ from loginSystem.models import Administrator
 import plogical.randomPassword as randomPassword
 from plogical.httpProc import httpProc
 from backup.models import DBUsers
+from plogical.securityUtils import is_safe_sql_identifier
 
 class DatabaseManager:
 
@@ -69,6 +70,12 @@ class DatabaseManager:
             if rAPI == None:
                 dbName = webUsername + "_" + dbName
                 dbUsername = webUsername + "_" + dbUsername
+
+            if not is_safe_sql_identifier(dbName) or not is_safe_sql_identifier(dbUsername):
+                data_ret = {'status': 0, 'createDBStatus': 0,
+                            'error_message': 'Database name and username may only contain letters, numbers, and underscores.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
             result = mysqlUtilities.submitDBCreation(dbName, dbUsername, dbPassword, databaseWebsite)
 
@@ -195,6 +202,12 @@ class DatabaseManager:
                 return ACLManager.loadErrorJson('deleteStatus', 0)
 
             dbName = data['dbName']
+            if not is_safe_sql_identifier(dbName):
+                data_ret = {'status': 0, 'deleteStatus': 0,
+                            'error_message': 'Invalid database name.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
             db = Databases.objects.get(dbName=dbName)
 
             if ACLManager.checkOwnership(db.website.domain, admin, currentACL) == 1:
@@ -234,6 +247,12 @@ class DatabaseManager:
 
             userName = data['dbUserName']
             dbPassword = str(data['dbPassword']) if data['dbPassword'] is not None else ''
+
+            if not is_safe_sql_identifier(userName):
+                data_ret = {'status': 0, 'changePasswordStatus': 0,
+                            'error_message': 'Invalid database username.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
             db_queryset = Databases.objects.filter(Q(dbUser=userName) | Q(dbName=userName))
             if not db_queryset.exists():

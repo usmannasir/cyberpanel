@@ -9,9 +9,16 @@ class Domains(models.Model):
     name = models.CharField(unique=True, max_length=255)
     master = models.CharField(max_length=128, blank=True, null=True)
     last_check = models.IntegerField(blank=True, null=True)
-    type = models.CharField(max_length=6)
+    # PDNS 4.7+ widened `type` from VARCHAR(6) to VARCHAR(8). The schema
+    # migration in plogical/pdnsSchemaMigration.py applies the SQL change;
+    # this model field tracks the new width.
+    type = models.CharField(max_length=8)
     notified_serial = models.IntegerField(blank=True, null=True)
     account = models.CharField(max_length=40, blank=True, null=True)
+    # PDNS 4.7+ catalog-zone columns. plogical/pdnsSchemaMigration.py adds
+    # them as `latin1` so VARCHAR(64000) fits on legacy MariaDB charsets.
+    catalog = models.CharField(max_length=255, blank=True, null=True)
+    options = models.TextField(blank=True, null=True)
 
     class Meta:
         db_table = 'domains'
@@ -51,6 +58,9 @@ class Cryptokeys(models.Model):
     domain_id = models.IntegerField()
     flags = models.IntegerField()
     active = models.IntegerField(blank=True, null=True)
+    # PDNS 4.3+ requires `published`. plogical/pdnsSchemaMigration.py
+    # backfills this column on legacy installs.
+    published = models.BooleanField(default=True, blank=True, null=True)
     content = models.TextField(blank=True, null=True)
 
     class Meta:

@@ -22,6 +22,13 @@ from plogical.errorSanitizer import secure_error_response, secure_log_error
 from django.views.decorators.csrf import csrf_exempt
 from userManagment.views import submitUserCreation as suc
 from userManagment.views import submitUserDeletion as duc
+from plogical.securityUtils import (
+    api_token_matches,
+    is_safe_numeric_id,
+    is_safe_port,
+    is_safe_remote_host,
+)
+from plogical.acl import ACLManager
 # Create your views here.
 
 def validate_api_input(input_value, field_name="field"):
@@ -45,6 +52,80 @@ def validate_api_input(input_value, field_name="field"):
             return False, f"{field_name} contains invalid characters or patterns."
     
     return True, None
+
+
+def api_error(status_key, message, http_status=200):
+    return HttpResponse(json.dumps({status_key: 0, 'error_message': message}), status=http_status)
+
+
+def get_api_admin(request, data, username_key='adminUser', password_key='adminPass', allow_token=True):
+    """
+    Resolve and authenticate the admin behind an API call.
+
+    Accepts either a (token via HTTP_AUTHORIZATION) or username/password pair.
+    Returns (admin, None) on success, or (None, HttpResponse) on failure.
+    """
+    admin_user = data.get(username_key)
+    if not admin_user:
+        return None, api_error('status', 'Missing API username.', 400)
+
+    try:
+        admin = Administrator.objects.get(userName=admin_user)
+    except Administrator.DoesNotExist:
+        return None, api_error('status', 'Could not authorize access to API.', 401)
+
+    if admin.api == 0:
+        return None, api_error('status', 'API Access Disabled.', 403)
+
+    authorization = request.META.get('HTTP_AUTHORIZATION')
+    if allow_token and authorization and api_token_matches(authorization, admin.token):
+        return admin, None
+
+    admin_pass = data.get(password_key)
+    if admin_pass and hashPassword.check_password(admin.password, admin_pass):
+        return admin, None
+
+    return None, api_error('status', 'Could not authorize access to API.', 401)
+
+
+def api_auth_response(auth_error, status_key='status', extra=None):
+    error_message = json.loads(auth_error.content.decode()).get('error_message')
+    data = {status_key: 0, 'error_message': error_message}
+    if extra:
+        data.update(extra)
+    return HttpResponse(json.dumps(data))
+
+
+def can_change_api_account_password(admin, target_user):
+    """
+    True when `admin` is allowed to set the password of `target_user` over the
+    API. Super admin can change anyone. Otherwise, the admin can only change
+    accounts they own (created themselves) or their own account.
+    """
+    if admin.userName == target_user.userName:
+        return True
+    if getattr(admin, 'admin_id', None) is None:
+        # Top-level admin: allow ownership-restricted changes.
+        try:
+            return target_user.owner_id == admin.pk
+        except Exception:
+            return False
+    # Reseller/sub-admin: only their own account.
+    return False
+
+
+def can_change_api_website_package(admin, website):
+    """
+    True when `admin` may change the package of `website` via the API.
+    """
+    if admin.userName == website.admin.userName:
+        return True
+    if getattr(admin, 'admin_id', None) is None:
+        try:
+            return website.admin.owner_id == admin.pk
+        except Exception:
+            return False
+    return False
 
 
 @csrf_exempt
@@ -307,7 +388,18 @@ def changeUserPassAPI(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            websiteOwn = Administrator.objects.get(userName=websiteOwner)
+            try:
+                websiteOwn = Administrator.objects.get(userName=websiteOwner)
+            except Administrator.DoesNotExist:
+                data_ret = {"changeStatus": 0,
+                            'error_message': "Target account not found."}
+                return HttpResponse(json.dumps(data_ret))
+
+            if not can_change_api_account_password(admin, websiteOwn):
+                data_ret = {"changeStatus": 0,
+                            'error_message': "Not authorized to modify this account."}
+                return HttpResponse(json.dumps(data_ret))
+
             websiteOwn.password = hashPassword.hash_password(ownerPassword)
             websiteOwn.save()
 
@@ -382,8 +474,24 @@ def changePackageAPI(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            website = Websites.objects.get(domain=websiteName)
-            pack = Package.objects.get(packageName=packageName)
+            try:
+                website = Websites.objects.get(domain=websiteName)
+            except Websites.DoesNotExist:
+                data_ret = {"changePackage": 0,
+                            'error_message': "Website not found."}
+                return HttpResponse(json.dumps(data_ret))
+
+            if not can_change_api_website_package(admin, website):
+                data_ret = {"changePackage": 0,
+                            'error_message': "Not authorized to modify this website."}
+                return HttpResponse(json.dumps(data_ret))
+
+            try:
+                pack = Package.objects.get(packageName=packageName)
+            except Package.DoesNotExist:
+                data_ret = {"changePackage": 0,
+                            'error_message': "Package not found."}
+                return HttpResponse(json.dumps(data_ret))
 
             website.package = pack
             website.save()
@@ -568,14 +676,20 @@ def remoteTransfer(request):
             ipAddress = data['ipAddress']
             accountsToTransfer = data['accountsToTransfer']
             port = data['port']
-            logging.writeToFile('port on server B-------------- %s' % str(port))
+
+            if not is_safe_remote_host(ipAddress) or not is_safe_port(port):
+                return HttpResponse(json.dumps({
+                    'transferStatus': 0,
+                    'error_message': 'Invalid remote host or port.'
+                }))
+
             if hashPassword.check_password(admin.password, password):
                 dir = str(randint(1000, 9999))
 
                 ##save this port into file
                 portpath = "/home/cyberpanel/remote_port"
                 writeToFile = open(portpath, 'w')
-                writeToFile.writelines(port)
+                writeToFile.writelines(str(port))
                 writeToFile.close()
 
 
@@ -679,13 +793,22 @@ def FetchRemoteTransferStatus(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            dir = "/home/backup/transfer-"+str(data['dir'])+"/backup_log"
+            if not is_safe_numeric_id(data.get('dir', '')):
+                return HttpResponse(json.dumps({
+                    'fetchStatus': 0,
+                    'error_message': 'Invalid transfer directory.'
+                }))
+
+            log_path = "/home/backup/transfer-" + str(data['dir']) + "/backup_log"
 
             try:
 
                 if hashPassword.check_password(admin.password, password):
-                    command = f"cat {dir}"
-                    status = ProcessUtilities.outputExecutioner(command)
+                    try:
+                        with open(log_path, 'r') as fh:
+                            status = fh.read()
+                    except (OSError, IOError):
+                        status = "Just started.."
 
                     final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "status": status})
                     return HttpResponse(final_json)
@@ -719,20 +842,37 @@ def cancelRemoteTransfer(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            dir = "/home/backup/transfer-"+str(data['dir'])
+            if not is_safe_numeric_id(data.get('dir', '')):
+                return HttpResponse(json.dumps({
+                    'cancelStatus': 0,
+                    'error_message': 'Invalid transfer directory.'
+                }))
+
+            transfer_dir = "/home/backup/transfer-" + str(data['dir'])
 
             if hashPassword.check_password(admin.password, password):
 
-                path = dir + "/pid"
+                pid_path = transfer_dir + "/pid"
 
-                command = "cat " + path
-                pid = ProcessUtilities.outputExecutioner(command)
+                pid_value = None
+                try:
+                    with open(pid_path, 'r') as fh:
+                        pid_value = fh.read().strip()
+                except (OSError, IOError):
+                    pid_value = None
 
-                command = "kill -KILL " + pid
-                ProcessUtilities.executioner(command)
+                if pid_value and is_safe_numeric_id(pid_value):
+                    try:
+                        import signal as _signal
+                        os.kill(int(pid_value), _signal.SIGKILL)
+                    except (ProcessLookupError, PermissionError, OSError):
+                        pass
 
-                command = "rm -rf " + dir
-                ProcessUtilities.executioner(command)
+                try:
+                    import shutil as _shutil
+                    _shutil.rmtree(transfer_dir, ignore_errors=True)
+                except Exception:
+                    pass
 
                 data = {'cancelStatus': 1, 'error_message': "None"}
                 json_data = json.dumps(data)

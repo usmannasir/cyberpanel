@@ -298,7 +298,7 @@ except ImportError:
     print("Recovery complete. Continuing with upgrade...")
 
 VERSION = '2.5.5'
-BUILD = 5
+BUILD = 'dev'
 
 CENTOS7 = 0
 CENTOS8 = 1
@@ -4331,6 +4331,28 @@ class Migration(migrations.Migration):
             Upgrade.stdOut(f"Error during rainloop to snappymail migration: {str(e)}", 0)
             return 0
 
+    @staticmethod
+    def pdnsSchemaMigrations():
+        """
+        Bring the PowerDNS gmysql schema up to PDNS 4.7+/5.x expectations.
+        Customers can otherwise hit a total DNS outage when an unrelated
+        `dnf update` pulls in PDNS 5.x and the new binary fails with
+        `Unknown column 'domains.catalog' in 'SELECT'`. Idempotent.
+        """
+        try:
+            from plogical.pdnsSchemaMigration import migrate_pdns_schema
+            results = migrate_pdns_schema(restart_service=True)
+            if results.get('applied'):
+                Upgrade.stdOut(
+                    'PDNS schema migration applied: ' +
+                    ', '.join(results['applied']), 0)
+            if results.get('errors'):
+                Upgrade.stdOut(
+                    'PDNS schema migration errors: ' + str(results['errors']),
+                    0)
+        except BaseException as msg:
+            Upgrade.stdOut('pdnsSchemaMigrations error: ' + str(msg), 0)
+
     def IncBackupMigrations():
         try:
             connection, cursor = Upgrade.setupConnection('cyberpanel')
@@ -6456,6 +6478,16 @@ vmail
                 writeToFile.write(content)
                 writeToFile.close()
 
+            # PDNS service watchdog (catalog-zone schema bug + general
+            # restart-loop detector). See plogical/pdnsHealthCheck.py.
+            if data.find('pdnsHealthCheck.py') == -1:
+                content = """
+*/5 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/pdnsHealthCheck.py >/dev/null 2>&1
+"""
+                writeToFile = open(cronPath, 'a')
+                writeToFile.write(content)
+                writeToFile.close()
+
 
         else:
             try:
@@ -6482,6 +6514,7 @@ vmail
 0 0 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Daily
 0 0 * * 0 /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Weekly
 * * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/manage.py run_scheduled_scans >/usr/local/lscp/logs/scheduled_scans.log 2>&1
+*/5 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/pdnsHealthCheck.py >/dev/null 2>&1
 """ % (renew_minute, renew_hour, renew_weekday, acme_minute, acme_hour)
             writeToFile = open(cronPath, 'w')
             writeToFile.write(content)
@@ -6922,6 +6955,7 @@ slowlog = /var/log/php{version}-fpm-slow.log
         Upgrade.s3BackupMigrations()
         Upgrade.containerMigrations()
         Upgrade.manageServiceMigrations()
+        Upgrade.pdnsSchemaMigrations()
         Upgrade.firewallMigrations()
         Upgrade.fixMailTLS()
         Upgrade.setupWebmail()

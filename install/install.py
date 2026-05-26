@@ -26,8 +26,8 @@ import stat
 import secrets
 import install_utils
 
-VERSION = '2.4'
-BUILD = 4
+VERSION = '2.5.5'
+BUILD = 'dev'
 
 # Using shared char_set from install_utils
 char_set = install_utils.char_set
@@ -6422,6 +6422,19 @@ vmail
         
         # Start PowerDNS if it was installed
         if os.path.exists('/home/cyberpanel/powerdns'):
+            # Bring the PDNS gmysql schema up to PDNS 4.7+/5.x expectations
+            # before first start. The AlmaLinux/RHEL mirrors may already serve
+            # PDNS 5.x, whose binary requires `domains.catalog` and
+            # `domains.options`. Running this migration here keeps fresh
+            # installs from hitting the same crash-loop that bites upgrades.
+            try:
+                sys.path.append('/usr/local/CyberCP')
+                from plogical.pdnsSchemaMigration import migrate_pdns_schema
+                migrate_pdns_schema(restart_service=False)
+            except BaseException as msg:
+                preFlightsChecks.stdOut(
+                    "[WARNING] PDNS schema pre-flight migration failed: " + str(msg))
+
             self.fixAndStartPowerDNS()
         
         # Start Pure-FTPd if it was installed
