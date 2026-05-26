@@ -288,10 +288,17 @@
                 </div>
 
                 <div ng-hide="issueSSLBtn" class="form-group">
-                    <button type="button" ng-click="issueSSL()" class="btn-primary">
-                        <i class="fas fa-lock"></i>
-                        {% trans "Issue SSL" %}
+                    <button type="button" ng-click="issueSSL()" ng-disabled="sslIssuing" class="btn-primary">
+                        <i class="fas fa-lock" ng-hide="sslIssuing"></i>
+                        <i class="fas fa-circle-notch fa-spin" ng-show="sslIssuing"></i>
+                        <span ng-hide="sslIssuing">{% trans "Issue SSL" %}</span>
+                        <span ng-show="sslIssuing">{% trans "Issuing SSL..." %}</span>
                     </button>
+                </div>
+
+                <div ng-show="sslIssuing" class="alert alert-info">
+                    <i class="fas fa-info-circle" style="margin-right: 8px;"></i>
+                    <strong>{% trans "Issuing SSL..." %}</strong> {% trans "This can take a few minutes. Please keep this page open." %}
                 </div>
 
                 <!-- Success/Error Messages -->

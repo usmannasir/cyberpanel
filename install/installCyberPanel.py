@@ -447,18 +447,22 @@ class InstallCyberPanel:
             platform = self.detectPlatform()
             InstallCyberPanel.stdOut(f"Detected platform: {platform}", 1)
 
+            # Platform-specific URLs (OpenLiteSpeed v2.4.4 bundle, config-driven features).
+            # Module v2.7.1: v2.7.0 directives (AddDefaultCharset, SSLRequireSSL, Satisfy, /,
+            # AuthGroupFile / Require group) plus perf (.htaccess negative-cache, hook
+            # short-circuit). OLS binary stays at 2.4.4.
             BINARY_CONFIGS = {
                 'rhel8': {
                     'url': 'https://cyberpanel.net/openlitespeed-2.4.4-x86_64-rhel8',
-                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.0-x86_64-rhel8.so',
+                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.1-x86_64-rhel8.so',
                 },
                 'rhel9': {
                     'url': 'https://cyberpanel.net/openlitespeed-2.4.4-x86_64-rhel9',
-                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.0-x86_64-rhel9.so',
+                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.1-x86_64-rhel9.so',
                 },
                 'ubuntu': {
                     'url': 'https://cyberpanel.net/openlitespeed-2.4.4-x86_64-ubuntu',
-                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.0-x86_64-ubuntu.so',
+                    'module_url': 'https://cyberpanel.net/cyberpanel_ols-2.7.1-x86_64-ubuntu.so',
                 }
             }
 

@@ -756,8 +756,11 @@
                                         <a href="http://{$ web.domain $}" target="_blank" rel="noopener" class="btn btn-outline btn-sm">
                                             Visit Site
                                         </a>
-                                        <a ng-click="issueSSL(web.domain)" href="javascript:void(0);" class="btn btn-primary btn-sm">
-                                            Issue SSL
+                                        <a ng-click="issueSSL(web.domain)" href="javascript:void(0);"
+                                           ng-class="{'disabled': issuingSSL[web.domain]}"
+                                           class="btn btn-primary btn-sm">
+                                            <span ng-hide="issuingSSL[web.domain]">Issue SSL</span>
+                                            <span ng-show="issuingSSL[web.domain]"><i class="fas fa-circle-notch fa-spin"></i> Issuing SSL...</span>
                                         </a>
                                         <button ng-click="showWPSites(web.domain); $event.stopPropagation();" 
                                                 class="btn btn-outline btn-sm" 
