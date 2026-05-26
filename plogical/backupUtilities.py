@@ -53,8 +53,8 @@ try:
 except:
     pass
 
-VERSION = '2.4'
-BUILD = 4
+VERSION = '2.5.5'
+BUILD = 'dev'
 
 
 ## I am not the monster that you think I am..

@@ -265,6 +265,16 @@ fi
 
 if [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]] || [[ "$Server_OS_Version" = "18" ]] || [[ "$Server_OS_Version" = "8" ]] || [[ "$Server_OS_Version" = "20" ]] || [[ "$Server_OS_Version" = "24" ]]; then
     echo "PYTHONHOME=/usr" > /usr/local/lscp/conf/pythonenv.conf
+    # Mirror requirements into system Python for lswsgi (PEP 668 aware). The helper is defined in
+    # upgrade_modules/08_main_upgrade.sh and is idempotent; pip --ignore-installed re-resolves
+    # already-installed packages without harm. Backported from upstream cyberpanel 13c0697.
+    if declare -F Install_CyberCP_Runtime_Python_Requirements >/dev/null 2>&1; then
+        mkdir -p /etc/cyberpanel
+        if [[ -f /usr/local/requirments.txt ]]; then
+            cp -f /usr/local/requirments.txt /etc/cyberpanel/cyberpanel-requirments-runtime.txt 2>/dev/null || true
+        fi
+        Install_CyberCP_Runtime_Python_Requirements "/etc/cyberpanel/cyberpanel-requirments-runtime.txt" || true
+    fi
   else
     # Uncomment and use the following lines if necessary for other OS versions
     # rsync -av --ignore-existing /usr/lib64/python3.9/ /usr/local/CyberCP/lib64/python3.9/

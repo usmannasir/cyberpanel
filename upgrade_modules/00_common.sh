@@ -187,8 +187,10 @@ CyberPanel_Final_Upgrade_Verification() {
   systemctl is-active --quiet lsws 2>/dev/null || { echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] VERIFY WARN: lsws not active" | tee -a /var/log/cyberpanel_upgrade_debug.log; errors=$((errors + 1)); }
 
   local code="000"
-  code=$(curl -k -sS --max-time 30 -o /dev/null -w '%{http_code}' "https://127.0.0.1:${panel_port}/" 2>/dev/null || echo "000")
-  [[ "$code" =~ ^(200|302)$ ]] || { echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] VERIFY WARN: panel HTTPS returned ${code}" | tee -a /var/log/cyberpanel_upgrade_debug.log; errors=$((errors + 1)); }
+  code=$(curl -k -L -sS --max-time 30 -o /dev/null -w '%{http_code}' "https://127.0.0.1:${panel_port}/" 2>/dev/null || echo "000")
+  # Accept any of 200/302/401/403: the panel is up and answering; 401/403 just means an auth gate
+  # (commit e7635b0 upstream). Treating those as failures produced false "Seems something wrong" reports.
+  [[ "$code" =~ ^(200|302|401|403)$ ]] || { echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] VERIFY WARN: panel HTTPS returned ${code}" | tee -a /var/log/cyberpanel_upgrade_debug.log; errors=$((errors + 1)); }
 
   if [[ -x /usr/local/CyberCP/bin/python ]]; then
     /usr/local/CyberCP/bin/python -c 'import django, MySQLdb, gunicorn; assert django.VERSION[0] >= 4' 2>/dev/null || { echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] VERIFY WARN: CyberCP venv imports failed" | tee -a /var/log/cyberpanel_upgrade_debug.log; errors=$((errors + 1)); }

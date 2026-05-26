@@ -159,7 +159,22 @@ class FileManager:
         return HttpResponse(final_json)
 
     def returnPathEnclosed(self, path):
-        return "'" + path + "'"
+        return "'" + str(path).replace("'", "'\"'\"'") + "'"
+
+    def validPermissions(self, permissions):
+        try:
+            permissions = str(permissions)
+            return len(permissions) in (3, 4) and all(ch in '01234567' for ch in permissions)
+        except:
+            return False
+
+    def pathInside(self, path, root):
+        try:
+            real_path = os.path.realpath(path)
+            real_root = os.path.realpath(root)
+            return os.path.commonpath([real_path, real_root]) == real_root
+        except:
+            return False
 
     def _moveViaPythonBase64(self, src_path, dest_path, user):
         """Fallback: use helper script or Python to move when mv fails (handles special chars)."""
@@ -373,7 +388,7 @@ class FileManager:
 
                 command = "touch " + self.returnPathEnclosed(self.data['fileName'])
                 ProcessUtilities.executioner(command, website.externalApp)
-                self.changeOwner(self.returnPathEnclosed(self.data['fileName']))
+                self.changeOwner(self.data['fileName'])
 
                 ## Update disk usage in background
                 command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
@@ -386,7 +401,7 @@ class FileManager:
 
                 command = "touch " + self.returnPathEnclosed(self.data['fileName'])
                 ProcessUtilities.executioner(command)
-                self.changeOwner(self.returnPathEnclosed(self.data['fileName']))
+                self.changeOwner(self.data['fileName'])
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
@@ -409,7 +424,7 @@ class FileManager:
                 command = "mkdir " + self.returnPathEnclosed(self.data['folderName'])
                 ProcessUtilities.executioner(command, website.externalApp)
 
-                self.changeOwner(self.returnPathEnclosed(self.data['folderName']))
+                self.changeOwner(self.data['folderName'])
 
                 ## Update disk usage in background
                 command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
@@ -423,7 +438,7 @@ class FileManager:
                 command = "mkdir " + self.returnPathEnclosed(self.data['folderName'])
                 ProcessUtilities.executioner(command)
 
-                self.changeOwner(self.returnPathEnclosed(self.data['folderName']))
+                self.changeOwner(self.data['folderName'])
 
 
             json_data = json.dumps(finalData)
@@ -695,7 +710,7 @@ class FileManager:
 
                     command = 'yes| cp -Rf %s %s' % (
                         self.returnPathEnclosed(self.data['basePath'] + '/' + self.data['fileAndFolders'][0]),
-                        self.data['newPath'])
+                        self.returnPathEnclosed(self.data['newPath']))
                     ProcessUtilities.executioner(command, website.externalApp)
                     self.changeOwner(self.data['newPath'])
 
@@ -737,7 +752,7 @@ class FileManager:
 
                     command = 'yes| cp -Rf %s %s' % (
                         self.returnPathEnclosed(self.data['basePath'] + '/' + self.data['fileAndFolders'][0]),
-                        self.data['newPath'])
+                        self.returnPathEnclosed(self.data['newPath']))
                     ProcessUtilities.executioner(command,)
                     self.changeOwner(self.data['newPath'])
 
@@ -929,6 +944,9 @@ class FileManager:
             try:
                 self.data['home'] = '/home/%s' % (self.data['domainName'])
 
+                if not self.pathInside(self.data['fileName'], self.data['home']):
+                    return self.ajaxPre(0, 'Not allowed.')
+
                 ACLManager.CreateSecureDir()
                 tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', str(randint(1000, 9999)))
 
@@ -947,7 +965,13 @@ class FileManager:
 
                 os.remove(tempPath)
             except:
+                if self.data.get('domainName', '') != '':
+                    return self.ajaxPre(0, 'Not allowed.')
+
                 self.data['home'] = '/'
+
+                if self.data['fileName'].find('..') > -1 or not self.data['fileName'].startswith('/'):
+                    return self.ajaxPre(0, 'Not allowed.')
 
                 ACLManager.CreateSecureDir()
                 tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', str(randint(1000, 9999)))
@@ -997,7 +1021,7 @@ class FileManager:
                 pathCheck = '/home/%s' % (self.data['domainName'])
                 website = Websites.objects.get(domain=domainName)
 
-                command = 'ls -la %s' % (self.data['completePath'])
+                command = 'ls -la %s' % (self.returnPathEnclosed(self.data['completePath']))
                 result = ProcessUtilities.outputExecutioner(command, website.externalApp)
                 #
                 if result.find('->') > -1:
@@ -1015,7 +1039,7 @@ class FileManager:
                     self.data['completePath'] + '/' + myfile.name)
                 ProcessUtilities.executioner(command, website.externalApp)
 
-                self.changeOwner(self.returnPathEnclosed(self.data['completePath'] + '/' + myfile.name))
+                self.changeOwner(self.data['completePath'] + '/' + myfile.name)
 
                 ## Update disk usage in background
                 command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
@@ -1027,7 +1051,7 @@ class FileManager:
                     pass
             except:
                 pathCheck = '/'
-                command = 'ls -la %s' % (self.data['completePath'])
+                command = 'ls -la %s' % (self.returnPathEnclosed(self.data['completePath']))
                 result = ProcessUtilities.outputExecutioner(command)
                 logging.writeToFile("upload file res %s" % result)
                 uploadPathFull = self.data['completePath'] + '/' + myfile.name
@@ -1042,7 +1066,7 @@ class FileManager:
                     self.data['completePath'] + '/' + myfile.name)
                 ProcessUtilities.executioner(command)
 
-                self.changeOwner(self.returnPathEnclosed(self.data['completePath'] + '/' + myfile.name))
+                self.changeOwner(self.data['completePath'] + '/' + myfile.name)
 
                 ## Update disk usage in background
                 command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForceDomain --domainName %s" % (domainName)
@@ -1179,7 +1203,7 @@ class FileManager:
 
                     command = '%s%s ' % (command, self.returnPathEnclosed(item))
 
-                finalCommand = 'cd %s && %s' % (self.data['basePath'], command)
+                finalCommand = 'cd %s && %s' % (self.returnPathEnclosed(self.data['basePath']), command)
 
                 ProcessUtilities.executioner(finalCommand, website.externalApp)
 
@@ -1215,7 +1239,7 @@ class FileManager:
                         return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
                     command = '%s%s ' % (command, self.returnPathEnclosed(item))
 
-                finalCommand = 'cd %s && %s' % (self.data['basePath'], command)
+                finalCommand = 'cd %s && %s' % (self.returnPathEnclosed(self.data['basePath']), command)
 
                 res = ProcessUtilities.outputExecutioner(finalCommand, "root")
                 logging.writeToFile("compress file res %s"%res)
@@ -1239,6 +1263,9 @@ class FileManager:
             finalData['status'] = 1
             domainName = self.data['domainName']
             website = Websites.objects.get(domain=domainName)
+
+            if not self.validPermissions(self.data['newPermissions']):
+                return self.ajaxPre(0, 'Invalid permissions.')
 
             if self.data['recursive'] == 1:
                 command = 'chmod -R ' + self.data['newPermissions'] + ' ' + self.returnPathEnclosed(
