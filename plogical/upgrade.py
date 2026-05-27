@@ -5624,9 +5624,11 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             try:
                 with open('/etc/almalinux-release', 'r') as f:
                     content = f.read()
-                    if 'release 9' in content or 'release 10' in content:
-                        Upgrade.stdOut("AlmaLinux 9+ detected - checking available PHP versions", 1)
-                        # AlmaLinux 9+ doesn't have PHP 7.1, 7.2, 7.3
+                    if 'release 10' in content:
+                        Upgrade.stdOut("AlmaLinux 10 detected - checking available PHP versions", 1)
+                        php_versions = ['81', '82', '83', '84', '85']
+                    elif 'release 9' in content:
+                        Upgrade.stdOut("AlmaLinux 9 detected - checking available PHP versions", 1)
                         php_versions = ['74', '80', '81', '82', '83', '84', '85']
                     else:
                         php_versions = ['71', '72', '73', '74', '80', '81', '82', '83', '84', '85']
