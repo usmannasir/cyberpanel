@@ -15,6 +15,12 @@ see `to-do/LIVE-CYBERCP-STATE.md`.
 
 ## 2.5.5-dev - 27/05/2026
 
+### Fixed: install directory not found after GitHub archive extract
+
+- `install_modules/02_install_core.sh` detects the extracted top-level folder dynamically
+  (`cyberpanel-2.5.5-dev`, `cyberpanel-v2.5.5-dev`, `cyberpanel-stable`, etc.) instead of only
+  `cyberpanel-v2.5.5-dev`.
+
 ### Fixed: installer requires root (WSL / non-root users)
 
 - `install.sh` re-runs via `sudo` with `curl | sh` when started as a normal user (fixes

@@ -396,19 +396,33 @@ except:
         return 1
     fi
     
-    # Copy install directory to current location
-    if [ "$installer_url" = "https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel.sh" ]; then
-        if [ -d "cyberpanel-stable" ]; then
-            cp -r cyberpanel-stable/install . 2>/dev/null || true
-            cp -r cyberpanel-stable/install.sh . 2>/dev/null || true
+    # Copy install/ from extracted archive (GitHub top-level dir varies by branch URL)
+    # e.g. v2.5.5-dev -> cyberpanel-2.5.5-dev or cyberpanel-v2.5.5-dev; stable -> cyberpanel-stable
+    local _extracted_dir=""
+    local _try _d
+    for _try in \
+        "cyberpanel-${_cp_branch}" \
+        "cyberpanel-v${_cp_branch}" \
+        "cyberpanel-${_cp_branch#v}" \
+        "cyberpanel-stable"; do
+        if [ -d "${_try}/install" ]; then
+            _extracted_dir="${_try}"
+            break
         fi
-    else
-        if [ -d "cyberpanel-v2.5.5-dev" ]; then
-            cp -r cyberpanel-v2.5.5-dev/install . 2>/dev/null || true
-            cp -r cyberpanel-v2.5.5-dev/install.sh . 2>/dev/null || true
-        fi
+    done
+    if [ -z "$_extracted_dir" ]; then
+        for _d in cyberpanel-*/; do
+            [ -d "${_d}install" ] || continue
+            _extracted_dir="${_d%/}"
+            break
+        done
     fi
-    
+    if [ -n "$_extracted_dir" ]; then
+        echo "    Using extracted directory: ${_extracted_dir}"
+        cp -r "${_extracted_dir}/install" . 2>/dev/null || true
+        [ -f "${_extracted_dir}/install.sh" ] && cp "${_extracted_dir}/install.sh" . 2>/dev/null || true
+    fi
+
     # Verify install directory was copied
     if [ ! -d "install" ]; then
         print_status "ERROR: install directory not found after extraction"
