@@ -46,7 +46,7 @@
                                 <label class="col-sm-3 control-label">{% trans "Domain Name" %}</label>
                                 <div class="col-sm-6">
                                     <input name="dom" type="text" class="form-control"
-                                           ng-model="domainNameCreate" required>
+                                           ng-model="aliasDomain" required>
                                 </div>
                                 <div style="margin-bottom: 1%;" class=" col-sm-1">
                                     <a title="{% trans 'Cancel' %}" ng-click="hideDomainCreationForm()" href="">
@@ -55,7 +55,7 @@
                                 </div>
                             </div>
 
-                            <div ng-hide="installationDetailsForm" ng-hide="installationDetailsForm"
+                            <div ng-hide="installationDetailsForm"
                                  class="form-group">
                                 <label class="col-sm-3 control-label">{% trans "Additional Features" %}</label>
                                 <div class="col-sm-9">
@@ -72,7 +72,7 @@
                             <div ng-hide="installationDetailsForm" class="form-group">
                                 <label class="col-sm-3 control-label"></label>
                                 <div class="col-sm-4">
-                                    <button type="button" ng-click="createDomain()"
+                                    <button type="button" ng-click="addAliasFunc()"
                                             class="btn btn-primary btn-lg">{% trans "Create Alias" %}</button>
 
                                 </div>
@@ -99,7 +99,7 @@
                                     </div>
 
                                     <div ng-hide="success" class="alert alert-success">
-                                        <p>{% trans "Website succesfully created." %}</p>
+                                        <p>{% trans "Alias succesfully created." %}</p>
                                     </div>
 
 
@@ -163,7 +163,7 @@
 
                                 <div class="col-sm-11">
                                     <input placeholder="Search Domain..." ng-model="logSearch" name="dom"
-                                           type="text" class="form-control" ng-model="domainNameCreate"
+                                           type="text" class="form-control"
                                            required>
                                 </div>
 
@@ -205,7 +205,7 @@
                                                 </td>
                                                 <td>
                                                     <button type="button"
-                                                            ng-click="issueAliasSSL('{{ masterDomain }}', '{{ alias }}')"
+                                                            ng-click="issueSSL('{{ masterDomain }}', '{{ alias }}')"
                                                             class="btn ra-50 btn-primary">{% trans "Issue SSL" %}</button>
                                                 </td>
                                                 <td>
