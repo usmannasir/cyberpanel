@@ -15,6 +15,12 @@ see `to-do/LIVE-CYBERCP-STATE.md`.
 
 ## 2.5.5-dev - 27/05/2026
 
+### Fixed: cyberpanel.sh one-liner default branch
+
+- Default module branch is `v2.5.5-dev` (not `stable`) when downloading `install_modules/`
+  from GitHub; `BRANCH_NAME` is exported after `-b` parsing.
+- If the chosen branch 404s, installer retries `v2.5.5-dev` automatically.
+
 ### Fixed: AlmaLinux 10 install (PHP matrix, MariaDB CLI, fork archive)
 
 - `install_modules/02_install_core.sh`: GitHub branch archive probe accepts HTTP 200/302

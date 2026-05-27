@@ -5,9 +5,9 @@
 set -e
 
 # Parse -b/--branch for module download (when not running from repo)
-BRANCH_FOR_MODULES="${CYBERPANEL_BRANCH:-stable}"
-export BRANCH_NAME="${BRANCH_FOR_MODULES}"
-export CYBERPANEL_GITHUB_OWNER="${CYBERPANEL_GITHUB_OWNER:-master3395}"
+# master3395 fork: modular install_modules/ live on v2.5.5-dev, not stable
+BRANCH_FOR_MODULES="${CYBERPANEL_BRANCH:-v2.5.5-dev}"
+CYBERPANEL_GITHUB_OWNER="${CYBERPANEL_GITHUB_OWNER:-master3395}"
 next=""
 for arg in "$@"; do
   if [[ "$arg" = "-b" ]] || [[ "$arg" = "--branch" ]]; then
@@ -16,13 +16,34 @@ for arg in "$@"; do
   fi
   if [[ "$next" = "1" ]] && [[ -n "$arg" ]]; then
     BRANCH_FOR_MODULES="$arg"
-    break
+    next=""
+    continue
+  fi
+  if [[ "$arg" == -b=* ]] || [[ "$arg" == --branch=* ]]; then
+    BRANCH_FOR_MODULES="${arg#*=}"
   fi
 done
+export BRANCH_NAME="${BRANCH_FOR_MODULES}"
+export CYBERPANEL_GITHUB_OWNER
 
 # Resolve script directory
 INSTALL_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd)"
 [[ -z "$INSTALL_SCRIPT_DIR" ]] && INSTALL_SCRIPT_DIR="."
+
+_download_install_module() {
+  local name="$1"
+  local branch="$2"
+  local dest="$3"
+  local owner="${CYBERPANEL_GITHUB_OWNER:-master3395}"
+  local url="https://raw.githubusercontent.com/${owner}/cyberpanel/${branch}/install_modules/${name}.sh"
+  local http_code
+  http_code=$(curl -sL -H 'Cache-Control: no-cache' -w "%{http_code}" -o "$dest" "$url" 2>/dev/null) || http_code="000"
+  if [[ "$http_code" = "200" ]] && [[ -s "$dest" ]] && head -n 1 "$dest" | grep -q '^#!'; then
+    return 0
+  fi
+  rm -f "$dest"
+  return 1
+}
 
 MOD_DIR=""
 if [[ -d "$INSTALL_SCRIPT_DIR/install_modules" ]]; then
@@ -30,15 +51,32 @@ if [[ -d "$INSTALL_SCRIPT_DIR/install_modules" ]]; then
 else
   MOD_DIR="/tmp/cyberpanel_install_modules_$$"
   mkdir -p "$MOD_DIR"
-  BASE_URL="https://raw.githubusercontent.com/master3395/cyberpanel/${BRANCH_FOR_MODULES}/install_modules"
-  for name in 00_common 01_verify_deps 02_install_core 03_install_direct 04_fixes_status 05_menus_main 06_menus_update 07_menus_advanced 08_actions 09_parse_main; do
+  _module_names=(00_common 01_verify_deps 02_install_core 03_install_direct 04_fixes_status 05_menus_main 06_menus_update 07_menus_advanced 08_actions 09_parse_main)
+  _branches_to_try=("$BRANCH_FOR_MODULES")
+  if [[ "$BRANCH_FOR_MODULES" != "v2.5.5-dev" ]]; then
+    _branches_to_try+=("v2.5.5-dev")
+  fi
+  if [[ "$BRANCH_FOR_MODULES" != "stable" ]] && [[ "${CYBERPANEL_GITHUB_OWNER:-master3395}" = "usmannasir" ]]; then
+    _branches_to_try+=("stable")
+  fi
+  for name in "${_module_names[@]}"; do
     dest="$MOD_DIR/${name}.sh"
-    http_code=$(curl -sL -H 'Cache-Control: no-cache' -w "%{http_code}" -o "$dest" "$BASE_URL/${name}.sh" 2>/dev/null) || http_code="000"
-    if [[ "$http_code" != "200" ]] || [[ ! -s "$dest" ]] || ! head -n 1 "$dest" | grep -q '^#!'; then
-      echo "Failed to download install_modules/${name}.sh (HTTP ${http_code}) from branch ${BRANCH_FOR_MODULES}."
-      echo "Modular install_modules/ are on master3395/cyberpanel v2.5.5-dev, not stable."
-      echo "Retry: bash cyberpanel.sh -b v2.5.5-dev"
-      rm -f "$dest"
+    _ok=0
+    for try_branch in "${_branches_to_try[@]}"; do
+      if _download_install_module "$name" "$try_branch" "$dest"; then
+        if [[ "$try_branch" != "$BRANCH_FOR_MODULES" ]]; then
+          echo "Note: install_modules/${name}.sh loaded from branch ${try_branch} (${BRANCH_FOR_MODULES} unavailable)."
+          BRANCH_FOR_MODULES="$try_branch"
+          export BRANCH_NAME="${BRANCH_FOR_MODULES}"
+        fi
+        _ok=1
+        break
+      fi
+    done
+    if [[ "$_ok" -eq 0 ]]; then
+      echo "Failed to download install_modules/${name}.sh from ${CYBERPANEL_GITHUB_OWNER}/cyberpanel (tried: ${_branches_to_try[*]})."
+      echo "Set branch explicitly: CYBERPANEL_BRANCH=v2.5.5-dev bash cyberpanel.sh"
+      echo "Or: bash cyberpanel.sh -b v2.5.5-dev"
       exit 1
     fi
   done
@@ -46,6 +84,7 @@ fi
 
 for f in "$MOD_DIR"/00_common.sh "$MOD_DIR"/01_verify_deps.sh "$MOD_DIR"/02_install_core.sh "$MOD_DIR"/03_install_direct.sh "$MOD_DIR"/04_fixes_status.sh "$MOD_DIR"/05_menus_main.sh "$MOD_DIR"/06_menus_update.sh "$MOD_DIR"/07_menus_advanced.sh "$MOD_DIR"/08_actions.sh "$MOD_DIR"/09_parse_main.sh; do
   if [[ -f "$f" ]]; then
+    # shellcheck source=/dev/null
     source "$f"
   fi
 done
