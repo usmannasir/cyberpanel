@@ -55,7 +55,7 @@ elif echo "$OUTPUT" | grep -q "AlmaLinux 9" ; then
     yum update curl wget ca-certificates -y 1> /dev/null 2>&1 || dnf update curl wget ca-certificates -y 1> /dev/null 2>&1 || true
 elif echo "$OUTPUT" | grep -q "AlmaLinux 10" ; then
     echo -e "\nDetecting AlmaLinux 10...\n"
-    SERVER_OS="CentOS8"
+    SERVER_OS="AlmaLinux10"
     yum install curl wget -y 1> /dev/null 2>&1 || dnf install curl wget -y 1> /dev/null 2>&1 || true
     yum update curl wget ca-certificates -y 1> /dev/null 2>&1 || dnf update curl wget ca-certificates -y 1> /dev/null 2>&1 || true
 elif echo "$OUTPUT" | grep -q "CloudLinux 7" ; then
@@ -131,12 +131,14 @@ if [ "$BRANCH_NAME" = "v2.5.5-dev" ] || [ "$BRANCH_NAME" = "stable" ] || [ "$BRA
                 # Change to temp directory and execute with bash
                 # Use absolute path to avoid any relative path issues
                 cd "$TEMP_DIR" || cd /tmp || cd /
-                bash "$SCRIPT_PATH" "$@"
+                export CYBERPANEL_BRANCH="${BRANCH_NAME}"
+                bash "$SCRIPT_PATH" -b "${BRANCH_NAME}" "$@"
                 exit $?
             else
                 echo "⚠️  Warning: Could not make script executable, trying alternative method..."
                 cd "$TEMP_DIR" || cd /tmp || cd /
-                bash -c "bash '$SCRIPT_PATH' $*"
+                export CYBERPANEL_BRANCH="${BRANCH_NAME}"
+                bash -c "bash '$SCRIPT_PATH' -b '${BRANCH_NAME}' $(printf '%q ' "$@")"
                 exit $?
             fi
         fi
@@ -155,12 +157,14 @@ if curl --silent -o "$SCRIPT_PATH" "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev
             # Change to temp directory and execute with bash
             # Use absolute path to avoid any relative path issues
             cd "$TEMP_DIR" || cd /tmp || cd /
-            bash "$SCRIPT_PATH" "$@"
+            export CYBERPANEL_BRANCH="${BRANCH_NAME}"
+            bash "$SCRIPT_PATH" -b "${BRANCH_NAME}" "$@"
             exit $?
         else
             echo "⚠️  Warning: Could not make script executable, trying alternative method..."
             cd "$TEMP_DIR" || cd /tmp || cd /
-            bash -c "bash '$SCRIPT_PATH' $*"
+            export CYBERPANEL_BRANCH="${BRANCH_NAME}"
+            bash -c "bash '$SCRIPT_PATH' -b '${BRANCH_NAME}' $(printf '%q ' "$@")"
             exit $?
         fi
     fi

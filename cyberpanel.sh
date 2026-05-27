@@ -30,7 +30,15 @@ else
   mkdir -p "$MOD_DIR"
   BASE_URL="https://raw.githubusercontent.com/master3395/cyberpanel/${BRANCH_FOR_MODULES}/install_modules"
   for name in 00_common 01_verify_deps 02_install_core 03_install_direct 04_fixes_status 05_menus_main 06_menus_update 07_menus_advanced 08_actions 09_parse_main; do
-    curl -sL -H 'Cache-Control: no-cache' "$BASE_URL/${name}.sh" -o "$MOD_DIR/${name}.sh" 2>/dev/null || true
+    dest="$MOD_DIR/${name}.sh"
+    http_code=$(curl -sL -H 'Cache-Control: no-cache' -w "%{http_code}" -o "$dest" "$BASE_URL/${name}.sh" 2>/dev/null) || http_code="000"
+    if [[ "$http_code" != "200" ]] || [[ ! -s "$dest" ]] || ! head -n 1 "$dest" | grep -q '^#!'; then
+      echo "Failed to download install_modules/${name}.sh (HTTP ${http_code}) from branch ${BRANCH_FOR_MODULES}."
+      echo "Modular install_modules/ are on master3395/cyberpanel v2.5.5-dev, not stable."
+      echo "Retry: bash cyberpanel.sh -b v2.5.5-dev"
+      rm -f "$dest"
+      exit 1
+    fi
   done
 fi
 

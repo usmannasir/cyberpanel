@@ -88,6 +88,20 @@ see `to-do/LIVE-CYBERCP-STATE.md`.
   staging snapshot before applying. Not deployed on this host. Operator
   may revisit on a staging copy.
 
+## 2.5.5-dev (installer one-liner) - 27/05/2026
+
+### install.sh / cyberpanel.sh module download
+
+- `install.sh`: after downloading `cyberpanel.sh` from a branch (e.g.
+  `v2.5.5-dev`), now runs `bash cyberpanel.sh -b "${BRANCH_NAME}"` and
+  exports `CYBERPANEL_BRANCH` so modular `install_modules/` are fetched
+  from the same branch (was defaulting to `stable`, which returned HTTP
+  404 and produced `404:: command not found` when sourcing `00_common.sh`).
+- `install.sh`: AlmaLinux 10 detection now sets `SERVER_OS=AlmaLinux10`
+  (was `CentOS8`).
+- `cyberpanel.sh`: remote module download validates HTTP 200 and a `#!`
+  shebang before `source`; exits with a clear message on failure.
+
 ## 2.5.5-dev (open upstream PR adoption) - 26/05/2026
 
 Three small, open upstream PRs adopted in advance of upstream merge.
