@@ -301,13 +301,17 @@ def get_lsphp_install_suffixes():
     """
     long_list = ['71', '72', '73', '74', '80', '81', '82', '83', '84', '85']
     short_list = ['74', '80', '81', '82', '83', '84', '85']
+    # EL10 LiteSpeed repo: no lsphp71–80; 8.1+ only (imap needs libc-client from gf-plus or build deps)
+    el10_list = ['81', '82', '83', '84', '85']
 
     # AlmaLinux: explicit release file (matches upgrade.get_available_php_versions)
     if exists('/etc/almalinux-release'):
         try:
             with open('/etc/almalinux-release', 'r') as f:
                 content = f.read().lower()
-            if 'release 9' in content or 'release 10' in content:
+            if 'release 10' in content:
+                return list(el10_list)
+            if 'release 9' in content:
                 return list(short_list)
         except (OSError, IOError, UnicodeError):
             pass
@@ -318,12 +322,9 @@ def get_lsphp_install_suffixes():
         try:
             with open('/etc/redhat-release', 'r') as f:
                 data = f.read().lower()
-            if (
-                'release 9' in data
-                or 'release 10' in data
-                or 'stream 9' in data
-                or 'stream 10' in data
-            ):
+            if 'release 10' in data or 'stream 10' in data:
+                return list(el10_list)
+            if 'release 9' in data or 'stream 9' in data:
                 return list(short_list)
         except (OSError, IOError, UnicodeError):
             pass
@@ -369,6 +370,79 @@ def get_lsphp_install_suffixes():
             pass
 
     return list(long_list)
+
+
+def resolve_mysql_cli():
+    """Return first usable mysql/mariadb client binary path, or None."""
+    for path in (
+        '/usr/bin/mariadb',
+        '/usr/bin/mysql',
+        '/usr/local/bin/mariadb',
+        '/usr/local/bin/mysql',
+    ):
+        if os.path.isfile(path) and os.access(path, os.X_OK):
+            return path
+    return None
+
+
+def ensure_mariadb_client_cli(distro, log=1):
+    """
+    Ensure MariaDB/MySQL CLI exists (EL10 often ships only mariadb after server install).
+    Installs MariaDB-client if missing and adds /usr/bin/mysql -> mariadb when needed.
+    """
+    cli = resolve_mysql_cli()
+    if cli:
+        if cli.endswith('mariadb') and not os.path.isfile('/usr/bin/mysql'):
+            try:
+                if not os.path.lexists('/usr/bin/mysql'):
+                    os.symlink(cli, '/usr/bin/mysql')
+            except OSError:
+                pass
+        return cli
+
+    for pkg_cmd in (
+        'dnf install -y --nobest MariaDB-client 2>/dev/null || true',
+        'yum install -y MariaDB-client 2>/dev/null || true',
+    ):
+        call(pkg_cmd, distro, pkg_cmd, pkg_cmd, log, 0, os.EX_OSERR, True)
+
+    cli = resolve_mysql_cli()
+    if cli and cli.endswith('mariadb') and not os.path.isfile('/usr/bin/mysql'):
+        try:
+            if not os.path.lexists('/usr/bin/mysql'):
+                os.symlink(cli, '/usr/bin/mysql')
+        except OSError:
+            pass
+    return cli
+
+
+def ensure_lsphp_runtime_deps(distro, log=1):
+    """Install oniguruma/libc-client where available so lsphp imap/mbstring can resolve on EL10."""
+    if not exists('/etc/redhat-release') and not exists('/etc/almalinux-release'):
+        return
+
+    is_el10 = False
+    for path in ('/etc/almalinux-release', '/etc/redhat-release'):
+        if not exists(path):
+            continue
+        try:
+            with open(path, 'r') as f:
+                data = f.read().lower()
+            if 'release 10' in data or 'stream 10' in data:
+                is_el10 = True
+                break
+        except (OSError, IOError, UnicodeError):
+            pass
+
+    if not is_el10:
+        return
+
+    for cmd in (
+        'dnf install -y --nobest oniguruma oniguruma-devel 2>/dev/null || true',
+        'dnf install -y --nobest libc-client libc-client-devel 2>/dev/null || true',
+        'dnf install -y --nobest cyrus-imap-devel 2>/dev/null || true',
+    ):
+        call(cmd, distro, cmd, cmd, log, 0, os.EX_OSERR, True)
 
 
 def get_distro():
@@ -668,9 +742,19 @@ def call(command, distro, bracket, message, log=0, do_exit=0, code=os.EX_OK, she
     # This fixes "No such file or directory: 'mysql'" when run via shlex.split
     if not shell and ('mysql' in command or 'mariadb' in command):
         import re
-        mysql_bin = '/usr/bin/mariadb' if os.path.exists('/usr/bin/mariadb') else '/usr/bin/mysql'
-        if not os.path.exists(mysql_bin):
-            mysql_bin = '/usr/bin/mysql'
+        mysql_bin = None
+        for _mp in ('/usr/bin/mariadb', '/usr/bin/mysql'):
+            if os.path.isfile(_mp) and os.access(_mp, os.X_OK):
+                mysql_bin = _mp
+                break
+        if not mysql_bin:
+            call('dnf install -y --nobest MariaDB-client 2>/dev/null || true', distro, '', '', log, 0, os.EX_OSERR, True)
+            for _mp in ('/usr/bin/mariadb', '/usr/bin/mysql'):
+                if os.path.isfile(_mp) and os.access(_mp, os.X_OK):
+                    mysql_bin = _mp
+                    break
+        if not mysql_bin:
+            mysql_bin = '/usr/bin/mariadb' if os.path.exists('/usr/bin/mariadb') else '/usr/bin/mysql'
         # Replace only leading "mysql" or "mariadb" (executable), not "mysql" in SQL like "use mysql;"
         if re.match(r'^\s*(sudo\s+)?(mysql|mariadb)\s', command):
             command = re.sub(r'^(\s*)(?:sudo\s+)?(mysql|mariadb)(\s)', r'\g<1>' + mysql_bin + r'\g<3>', command, count=1)

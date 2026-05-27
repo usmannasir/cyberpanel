@@ -15,6 +15,15 @@ see `to-do/LIVE-CYBERCP-STATE.md`.
 
 ## 2.5.5-dev - 27/05/2026
 
+### Fixed: AlmaLinux 10 install (PHP matrix, MariaDB CLI, fork archive)
+
+- `install_modules/02_install_core.sh`: GitHub branch archive probe accepts HTTP 200/302
+  (fixes false "falling back to stable" when `master3395/v2.5.5-dev` tarball exists).
+- `install/install_utils.py`: EL10 installs only `lsphp81` through `lsphp85` (no 71–80
+  "No match" noise); `ensure_lsphp_runtime_deps()` and `ensure_mariadb_client_cli()`.
+- `install/installCyberPanel.py`: cent8 PHP install skips imap/mbstring when deps missing;
+  root password uses `ALTER USER` and socket auth; MariaDB client ensured after server install.
+
 ### Fixed: AlmaLinux 10 install bootstrap (`requests` missing)
 
 - `install_modules/03_install_direct.sh` now `pip install requests` (with OS package

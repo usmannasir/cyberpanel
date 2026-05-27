@@ -318,9 +318,16 @@ except:
         "https://github.com/${_cp_owner}/cyberpanel/archive/refs/heads/${_cp_branch}.tar.gz"
         "https://github.com/${_cp_owner}/cyberpanel/archive/${_cp_branch}.tar.gz"
     )
+    _github_archive_ok() {
+        local url="$1"
+        local code
+        code=$(curl -sL -o /dev/null -w "%{http_code}" "$url" 2>/dev/null || echo "000")
+        [[ "$code" == "200" || "$code" == "302" ]]
+    }
+
     local _cand _found=0
     for _cand in "${_archive_candidates[@]}"; do
-        if curl -s -L --head "$_cand" | grep -q "200 OK"; then
+        if _github_archive_ok "$_cand"; then
             archive_url="$_cand"
             echo "    Using branch ${_cp_branch} from ${_cp_owner}/cyberpanel"
             _found=1
@@ -334,7 +341,7 @@ except:
         for _cand in \
             "https://github.com/usmannasir/cyberpanel/archive/refs/heads/${_cp_branch}.tar.gz" \
             "https://github.com/usmannasir/cyberpanel/archive/${_cp_branch}.tar.gz"; do
-            if curl -s -L --head "$_cand" | grep -q "200 OK"; then
+            if _github_archive_ok "$_cand"; then
                 archive_url="$_cand"
                 echo "    Using branch ${_cp_branch} from usmannasir/cyberpanel"
                 _found=1
@@ -344,7 +351,7 @@ except:
     fi
     if [[ "$_found" -eq 0 ]]; then
         echo "    Development branch archive not available, trying installer script directly..."
-        if ! curl -s -L --head "$installer_url" | grep -q "200 OK"; then
+        if ! _github_archive_ok "$installer_url"; then
             echo "    Development branch not available, falling back to stable"
             installer_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel.sh"
             archive_url="https://github.com/usmannasir/cyberpanel/archive/stable.tar.gz"
