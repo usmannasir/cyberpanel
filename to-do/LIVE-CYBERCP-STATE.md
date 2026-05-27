@@ -394,3 +394,47 @@ If the host itself is unrecoverable:
    upgrade script's `CyberPanel_Final_Upgrade_Verification` now
    treats `401` / `403` as healthy answers, so an auth-gated probe
    is no longer flagged as a failure.
+
+## Upstream PR adoption deploy (PRs #1787, #1782, #1777) - 26/05/2026
+
+Open upstream PRs adopted on top of the v2.4.7 backport.
+
+- **Pre-deploy targeted backup of live files:**
+  `/root/cybercp-prefix1782-1787-1777-20260526T181308Z/` (4 files,
+  ~130 KB; covers `domainAlias.html`, `website.html`,
+  `sieve_client.py`). The full Phase-0 tarball at
+  `/root/cybercp-backup-20260526T150128Z/` remains the catastrophic
+  rollback baseline.
+- **Files deployed to `/usr/local/CyberCP` (chmod 644, root:root):**
+  - `websiteFunctions/templates/websiteFunctions/domainAlias.html`
+  - `websiteFunctions/templates/websiteFunctions/website.html`
+  - `webmail/services/sieve_client.py`
+  - `websiteFunctions/test_domain_alias_template.py` (new file)
+- **Regression test:**
+  `/usr/local/CyberCP/bin/python manage.py test
+  websiteFunctions.test_domain_alias_template` -> `Ran 1 test ... OK`.
+- **Sieve generator sanity check (eval):**
+  - Forward-only rule -> no `require [...]` line.
+  - Mixed forward + move rule -> `require ["fileinto"];` only.
+  Matches PR #1777 test plan.
+- **Repo / live sha256 match:** verified for all four files via
+  `sha256sum`.
+- **Automated smoke (27/05/2026):** `systemctl is-active lscpd` ->
+  `active`; `curl -k -L https://127.0.0.1:2087/` -> HTTP 200;
+  `manage.py test websiteFunctions.test_domain_alias_template` ->
+  `Ran 1 test ... OK`.
+- **Outstanding manual smoke (operator):** click through Create Alias
+  -> Issue SSL -> Delete on a real alias, change PHP / open_basedir
+  for one row in the child-domain table (verify no row bleed), add a
+  Forward filter rule in webmail and send a test email matching it.
+- **Rollback (4-file):**
+  ```bash
+  B=/root/cybercp-prefix1782-1787-1777-20260526T181308Z
+  for f in websiteFunctions/templates/websiteFunctions/domainAlias.html \
+           websiteFunctions/templates/websiteFunctions/website.html \
+           webmail/services/sieve_client.py; do
+    install -o root -g root -m 644 "$B/$f" "/usr/local/CyberCP/$f"
+  done
+  rm -f /usr/local/CyberCP/websiteFunctions/test_domain_alias_template.py
+  systemctl restart lscpd
+  ```
