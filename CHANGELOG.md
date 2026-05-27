@@ -15,6 +15,13 @@ see `to-do/LIVE-CYBERCP-STATE.md`.
 
 ## 2.5.5-dev - 27/05/2026
 
+### Fixed: installer requires root (WSL / non-root users)
+
+- `install.sh` re-runs via `sudo` with `curl | sh` when started as a normal user (fixes
+  `sh <(curl ...)` where `$0` is not the script path).
+- `install_modules/09_parse_main.sh` calls `require_root` before creating `/var/log/CyberPanel`.
+- `log_message` no longer fails fatally when `/var/log` is not writable.
+
 ### Fixed: cyberpanel.sh one-liner default branch
 
 - Default module branch is `v2.5.5-dev` (not `stable`) when downloading `install_modules/`

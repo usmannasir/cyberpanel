@@ -26,6 +26,26 @@ done
 export BRANCH_NAME="${BRANCH_FOR_MODULES}"
 export CYBERPANEL_GITHUB_OWNER
 
+# Must be root before any logging or package installs
+if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
+  if command -v sudo >/dev/null 2>&1; then
+    echo "CyberPanel install requires root. Re-running with sudo..."
+  _cp_script="${BASH_SOURCE[0]:-$0}"
+  if [[ "$_cp_script" = "bash" ]] || [[ "$_cp_script" = "sh" ]]; then
+    _cp_script="$(readlink -f "${BASH_SOURCE[1]:-$0}" 2>/dev/null || echo "")"
+  fi
+  if [[ -n "$_cp_script" ]] && [[ -f "$_cp_script" ]]; then
+    exec sudo -E env CYBERPANEL_BRANCH="${BRANCH_FOR_MODULES}" CYBERPANEL_GITHUB_OWNER="${CYBERPANEL_GITHUB_OWNER}" bash "$_cp_script" "$@"
+  fi
+    exec sudo -E env CYBERPANEL_BRANCH="${BRANCH_FOR_MODULES}" CYBERPANEL_GITHUB_OWNER="${CYBERPANEL_GITHUB_OWNER}" bash -c "$(curl -sL "https://raw.githubusercontent.com/${CYBERPANEL_GITHUB_OWNER}/cyberpanel/${BRANCH_FOR_MODULES}/cyberpanel.sh")" bash "$@"
+  fi
+  echo "ERROR: Run as root, for example: sudo bash cyberpanel.sh -b ${BRANCH_FOR_MODULES}"
+  if grep -qi microsoft /proc/version 2>/dev/null; then
+    echo "WSL: curl -sL .../install.sh | sudo sh"
+  fi
+  exit 1
+fi
+
 # Resolve script directory
 INSTALL_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd)"
 [[ -z "$INSTALL_SCRIPT_DIR" ]] && INSTALL_SCRIPT_DIR="."
@@ -88,5 +108,20 @@ for f in "$MOD_DIR"/00_common.sh "$MOD_DIR"/01_verify_deps.sh "$MOD_DIR"/02_inst
     source "$f"
   fi
 done
+
+if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
+  if command -v sudo >/dev/null 2>&1; then
+    echo "CyberPanel install requires root. Re-running with sudo..."
+    _self="${BASH_SOURCE[0]:-$0}"
+    if [[ -f "$_self" ]]; then
+      exec sudo -E env CYBERPANEL_BRANCH="${BRANCH_FOR_MODULES}" CYBERPANEL_GITHUB_OWNER="${CYBERPANEL_GITHUB_OWNER}" bash "$_self" "$@"
+    fi
+  fi
+  echo "ERROR: Run as root: sudo bash cyberpanel.sh -b ${BRANCH_FOR_MODULES}"
+  if grep -qi microsoft /proc/version 2>/dev/null; then
+    echo "WSL: curl -sL https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/install.sh | sudo sh"
+  fi
+  exit 1
+fi
 
 main "$@"

@@ -168,12 +168,18 @@ create_standard_aliases() {
 
 # Main installation function
 main() {
-    # Initialize log directory and file
-    mkdir -p "/var/log/CyberPanel"
-    touch "/var/log/CyberPanel/install.log"
-    
+    require_root
+
+    local log_dir="${CYBERPANEL_LOG_DIR:-/var/log/CyberPanel}"
+    if ! mkdir -p "${log_dir}" 2>/dev/null; then
+        log_dir="${HOME:-/tmp}/.cyberpanel-install/logs"
+        mkdir -p "${log_dir}" 2>/dev/null || log_dir="/tmp"
+        CYBERPANEL_LOG_DIR="${log_dir}"
+    fi
+    touch "${log_dir}/install.log" 2>/dev/null || true
+
     print_status "CyberPanel Enhanced Installer Starting..."
-    print_status "Log file: /var/log/CyberPanel/install.log"
+    print_status "Log file: ${log_dir}/install.log"
     
     # Detect installation mode
     detect_installation_mode

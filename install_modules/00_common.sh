@@ -8,7 +8,27 @@
 
 set -e
 
+# CyberPanel must run as root (installs system packages, /usr/local, /var/log).
+require_root() {
+    if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
+        return 0
+    fi
+    if grep -qi microsoft /proc/version 2>/dev/null; then
+        echo "WSL/Linux: CyberPanel must be installed as root (use sudo)."
+    else
+        echo "CyberPanel must be installed as root."
+    fi
+    if command -v sudo >/dev/null 2>&1; then
+        echo "Re-run with: sudo bash cyberpanel.sh"
+        echo "Or one-liner: curl -sL .../install.sh | sudo sh"
+    else
+        echo "Log in as root, then run the installer again."
+    fi
+    exit 1
+}
+
 # Global variables
+CYBERPANEL_LOG_DIR="${CYBERPANEL_LOG_DIR:-/var/log/CyberPanel}"
 SERVER_OS=""
 OS_FAMILY=""
 PACKAGE_MANAGER=""
@@ -79,9 +99,13 @@ ensure_cybercp_system_python() {
 
 # Logging function
 log_message() {
-    # Ensure log directory exists
-    mkdir -p "/var/log/CyberPanel"
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [CYBERPANEL] $1" | tee -a "/var/log/CyberPanel/install.log" 2>/dev/null || echo "[$(date '+%Y-%m-%d %H:%M:%S')] [CYBERPANEL] $1"
+    local log_dir="${CYBERPANEL_LOG_DIR:-/var/log/CyberPanel}"
+    if ! mkdir -p "${log_dir}" 2>/dev/null; then
+        log_dir="${HOME:-/tmp}/.cyberpanel-install/logs"
+        mkdir -p "${log_dir}" 2>/dev/null || log_dir="/tmp"
+        CYBERPANEL_LOG_DIR="${log_dir}"
+    fi
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [CYBERPANEL] $1" | tee -a "${log_dir}/install.log" 2>/dev/null || echo "[$(date '+%Y-%m-%d %H:%M:%S')] [CYBERPANEL] $1"
 }
 
 # Print status

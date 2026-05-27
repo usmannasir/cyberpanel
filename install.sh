@@ -3,13 +3,28 @@
 # CyberPanel v2.5.5-dev Installer
 # Simplified approach similar to stable branch
 
+# Full install requires root (packages, /usr/local, services)
+if [ "$(id -u)" -ne 0 ]; then
+    _branch="${CYBERPANEL_BRANCH:-v2.5.5-dev}"
+    if command -v sudo >/dev/null 2>&1; then
+        echo "CyberPanel install requires root. Re-running with sudo..."
+        _install_url="https://raw.githubusercontent.com/master3395/cyberpanel/${_branch}/install.sh"
+        exec sudo -E env CYBERPANEL_BRANCH="${_branch}" sh -c "curl -sL '${_install_url}' | sh -s"
+    fi
+    echo "ERROR: Run the installer as root."
+    echo "  curl -sL https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/install.sh | sudo sh"
+    if grep -qi microsoft /proc/version 2>/dev/null; then
+        echo "WSL: the same command from your AlmaLinux shell (sudo will prompt for your Linux password)."
+    fi
+    exit 1
+fi
+
 # Determine branch from arguments or use default
-BRANCH_NAME="v2.5.5-dev"
+BRANCH_NAME="${CYBERPANEL_BRANCH:-v2.5.5-dev}"
 for arg in "$@"; do
     case "$arg" in
         -b|--branch)
             BRANCH_NAME="$2"
-            shift 2
             ;;
     esac
 done
