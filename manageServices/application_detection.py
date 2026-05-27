@@ -92,7 +92,8 @@ def rhel_major_from_os_release():
     return None
 
 
-def is_centos7():
+def is_el7_eol():
+    """True on CentOS 7 or CloudLinux 7 (EOL; install/upgrade blocked on this fork)."""
     release_paths = ['/etc/centos-release', '/etc/redhat-release', '/etc/os-release']
     text_blob = ''
     for path in release_paths:
@@ -102,14 +103,23 @@ def is_centos7():
                     text_blob += fh.read().lower() + '\n'
         except Exception:
             continue
-    return ('centos' in text_blob and ('release 7' in text_blob or 'version_id="7' in text_blob))
+    if 'cloudlinux' in text_blob and ('release 7' in text_blob or 'version_id="7' in text_blob):
+        return True
+    if 'centos' in text_blob and ('release 7' in text_blob or 'version_id="7' in text_blob):
+        return True
+    return False
+
+
+def is_centos7():
+    """Deprecated alias for is_el7_eol()."""
+    return is_el7_eol()
 
 
 def managed_apps_os_support():
-    if is_centos7():
+    if is_el7_eol():
         return {
             'supported': False,
-            'reason': 'CentOS 7 is EOL and not supported for managed applications.'
+            'reason': 'CentOS 7 and CloudLinux 7 are EOL and not supported for managed applications.'
         }
     return {
         'supported': True,

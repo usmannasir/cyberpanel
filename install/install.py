@@ -330,8 +330,6 @@ class preFlightsChecks:
             fixes.extend(['mariadb', 'services'])
         elif os_info['name'] == 'cloudlinux' and os_info['major_version'] >= 8:
             fixes.extend(['mariadb', 'services'])
-        elif os_info['name'] == 'centos' and os_info['major_version'] == 7:
-            fixes.extend(['legacy_centos'])
         elif os_info['family'] == 'ubuntu':
             fixes.extend(['ubuntu_specific'])
         elif os_info['family'] == 'debian':
@@ -3088,10 +3086,7 @@ module cyberpanel_ols {
                 preFlightsChecks.stdOut("[ERROR] Exception during CyberPanel install - Debian 12 repository setup")
                 os._exit(os.EX_SOFTWARE)
 
-        elif self.distro == centos:
-            command = 'rpm -ivh http://rpms.litespeedtech.com/centos/litespeed-repo-1.2-1.el7.noarch.rpm'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-        elif self.distro == cent8:
+        elif self.distro in (centos, cent8):
             # Use compatible repository version for RHEL-based systems
             # AlmaLinux 9 is compatible with el8 repositories
             os_info = self.detect_os_info()
@@ -4161,12 +4156,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             # Remove conflicting dovecot packages first
             try:
-                if self.distro == centos:
-                    # CentOS 7 (Legacy - EOL) - use yum
-                    preFlightsChecks.call('yum remove -y dovecot dovecot-*', self.distro, 
-                                        'Remove conflicting dovecot packages', 
-                                        'Remove conflicting dovecot packages', 1, 0, os.EX_OSERR)
-                elif self.distro in [cent8, openeuler]:
+                if self.distro in [centos, cent8, openeuler]:
                     # CentOS 8, AlmaLinux 8/9/10, RockyLinux 8/9, RHEL 8/9, CloudLinux 8/9 - use dnf
                     preFlightsChecks.call('dnf remove -y dovecot dovecot-*', self.distro, 
                                         'Remove conflicting dovecot packages', 
@@ -4179,10 +4169,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             except:
                 pass  # Continue if removal fails
 
-            if self.distro == centos:
-                # CentOS 7 (Legacy - EOL)
-                command = 'yum --enablerepo=gf-plus -y install dovecot23 dovecot23-mysql --allowerasing'
-            elif self.distro == cent8:
+            if self.distro in (centos, cent8):
                 clAPVersion = FetchCloudLinuxAlmaVersionVersion()
                 type = clAPVersion.split('-')[0]
                 version = int(clAPVersion.split('-')[1])

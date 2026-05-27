@@ -49,16 +49,22 @@ if [[ ! -f /etc/os-release ]] ; then
   exit
 fi
 
+if grep -qE 'CentOS Linux 7|CloudLinux 7|VERSION_ID="7\.|VERSION_ID=7' /etc/os-release 2>/dev/null; then
+  echo -e "CentOS 7 and CloudLinux 7 are no longer supported (EOL)."
+  echo -e "Migrate to AlmaLinux 8, 9, or 10, then run the upgrade."
+  exit 1
+fi
+
 if ! uname -m | grep -qE 'x86_64|aarch64' ; then
   echo -e "x86_64 or ARM system is required...\n"
   exit
 fi
 
-if grep -q -E "CentOS Linux 7|CentOS Linux 8|CentOS Linux 9|CentOS Stream 9" /etc/os-release ; then
+if grep -q -E "CentOS Linux 8|CentOS Linux 9|CentOS Stream 9" /etc/os-release ; then
   Server_OS="CentOS"
 elif grep -q "Red Hat Enterprise Linux" /etc/os-release ; then
   Server_OS="RedHat"
-elif grep -q -E "CloudLinux 7|CloudLinux 8|CloudLinux 9" /etc/os-release ; then
+elif grep -q -E "CloudLinux 8|CloudLinux 9" /etc/os-release ; then
   Server_OS="CloudLinux"
 elif grep -q -E "Rocky Linux" /etc/os-release ; then
   Server_OS="RockyLinux"
@@ -76,8 +82,8 @@ elif grep -q -E "openEuler 20.03|openEuler 22.03" /etc/os-release ; then
   Server_OS="openEuler"
 else
   echo -e "Unable to detect your system..."
-  echo -e "\nCyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, Debian 11, Debian 12, Debian 13, CentOS 7, CentOS 8, CentOS 9, CentOS Stream 9, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, RockyLinux 9, RHEL 8, RHEL 9, CloudLinux 7, CloudLinux 8, CloudLinux 9, openEuler 20.03, openEuler 22.03...\n"
-  Debug_Log2 "CyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, Debian 11, Debian 12, Debian 13, CentOS 7, CentOS 8, CentOS 9, CentOS Stream 9, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, RockyLinux 9, RHEL 8, RHEL 9, CloudLinux 7, CloudLinux 8, CloudLinux 9, openEuler 20.03, openEuler 22.03... [404]"
+  echo -e "\nCyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, Debian 11, Debian 12, Debian 13, CentOS 8, CentOS 9, CentOS Stream 9, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, RockyLinux 9, RHEL 8, RHEL 9, CloudLinux 8, CloudLinux 9, openEuler 20.03, openEuler 22.03...\n"
+  Debug_Log2 "CyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, Debian 11, Debian 12, Debian 13, CentOS 8, CentOS 9, CentOS Stream 9, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, RockyLinux 9, RHEL 8, RHEL 9, CloudLinux 8, CloudLinux 9, openEuler 20.03, openEuler 22.03... [404]"
   exit
 fi
 
@@ -85,6 +91,12 @@ Server_OS_Version=$(grep VERSION_ID /etc/os-release | awk -F[=,] '{print $2}' | 
 #to make 20.04 display as 20, etc.
 
 echo -e "System: $Server_OS $Server_OS_Version detected...\n"
+
+if [[ "$Server_OS_Version" = "7" ]]; then
+  echo -e "CentOS 7 and CloudLinux 7 are no longer supported (EOL)."
+  echo -e "Migrate to AlmaLinux 8, 9, or 10, then run the upgrade."
+  exit 1
+fi
 
 if [[ $Server_OS = "CloudLinux" ]] || [[ "$Server_OS" = "AlmaLinux" ]] || [[ "$Server_OS" = "RockyLinux" ]] || [[ "$Server_OS" = "RedHat" ]]; then
   # Keep AlmaLinux9 separate for dnf package management

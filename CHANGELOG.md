@@ -13,6 +13,21 @@ release.
 For per-host operator state (backups, deployment runs, restore drill results),
 see `to-do/LIVE-CYBERCP-STATE.md`.
 
+## 2.5.5-dev - 27/05/2026
+
+### Removed: CentOS 7 and CloudLinux 7 (EOL)
+
+- Fresh install and upgrade now exit immediately on EL7 with a migrate-to-AlmaLinux
+  message (`reject_el7_if_present` in install/upgrade entry points).
+- Removed EL7-only upgrade paths (MariaDB prep, repository IUS/python36u, libzip
+  psychotic RPMs, `Pre_Upgrade_CentOS7_MySQL`).
+- `plogical/upgrade.py::FindOperatingSytem()` no longer defaults non-8 RHEL to
+  `CENTOS7`; EL8+ and AlmaLinux/Rocky/RHEL use `CENTOS8` paths.
+- Docs and support strings no longer list CentOS 7 or CloudLinux 7.
+
+**Operator action:** migrate existing EL7 hosts to AlmaLinux 8, 9, or 10 before
+installing or upgrading this fork.
+
 ## 2.5.5-dev (based on v2.4.7) - 26/05/2026
 
 ### Security and stability (Phase 1)

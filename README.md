@@ -71,7 +71,7 @@ Fast • Secure • Scalable — Simplify hosting management with style.
 | OS family                  | Recommended / Supported |
 | -------------------------- | ----------------------: |
 | AlmaLinux 10, 9, 8         |          ✅ Recommended |
-| CentOS 7                   |      ⚠️ Legacy — EOL |
+| CentOS 9, 8                |            ✅ Supported |
 | CloudLinux 9, 8            |            ✅ Supported |
 | Debian 13, 12, 11          |            ✅ Supported |
 | RHEL 9, 8                  |            ✅ Supported |

@@ -847,26 +847,7 @@ return custom_keywords
                 lf.write('Redis step finished. Adding Rspamd repository and installing packages...\n')
                 lf.flush()
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
-
-                writeToFile = open(mailUtilities.RspamdInstallLogPath, 'a')
-                writeToFile.writelines("Configuring RSPAMD repo..\n")
-                writeToFile.close()
-
-
-                command = 'curl https://rspamd.com/rpm-stable/centos-7/rspamd.repo > /etc/yum.repos.d/rspamd.repo'
-                ProcessUtilities.normalExecutioner(command, True)
-
-                command = 'rpm --import https://rspamd.com/rpm-stable/gpg.key'
-                ProcessUtilities.normalExecutioner(command, True)
-
-                command = 'yum update'
-                ProcessUtilities.normalExecutioner(command, True)
-
-
-                command = 'sudo yum install rspamd clamav-server clamav-data clamav-update clamav-filesystem clamav clamav-scanner-systemd clamav-devel clamav-lib clamav-server-systemd -y'
-
-            elif ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            if ProcessUtilities.decideDistro() in (ProcessUtilities.centos, ProcessUtilities.cent8):
 
                 writeToFile = open(mailUtilities.RspamdInstallLogPath, 'a')
                 writeToFile.writelines("Configuring RSPAMD repo..\n")
@@ -2110,13 +2091,7 @@ class MailServerManagerUtils(multi.Thread):
 
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Re-installing postfix..,10')
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
-
-                command = 'yum --nogpg install https://mirror.ghettoforge.net/distributions/gf/gf-release-latest.gf.el7.noarch.rpm -y'
-                ProcessUtilities.executioner(command)
-
-                command = 'yum install --enablerepo=gf-plus -y postfix3 postfix3-ldap postfix3-mysql postfix3-pcre'
-            elif ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            if ProcessUtilities.decideDistro() in (ProcessUtilities.centos, ProcessUtilities.cent8):
 
                 clAPVersion = self.FetchCloudLinuxAlmaVersionVersion()
                 type = clAPVersion.split('-')[0]

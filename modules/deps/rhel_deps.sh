@@ -32,10 +32,10 @@ install_epel() {
     print_status "$BLUE" "Installing EPEL repository..."
     
     case $os_version in
-        "CentOS7"|"AlmaLinux8"|"RockyLinux8"|"RHEL8"|"CloudLinux7"|"CloudLinux8"|"openEuler2003")
+        "AlmaLinux8"|"RockyLinux8"|"RHEL8"|"CloudLinux8"|"openEuler2003")
             $package_manager install -y epel-release 2>/dev/null || {
                 print_status "$YELLOW" "EPEL not available via $package_manager, trying alternative method..."
-                yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm 2>/dev/null || true
+                dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm 2>/dev/null || true
             }
             ;;
         "CentOS8"|"CentOSStream8"|"AlmaLinux9"|"RockyLinux9"|"RHEL9"|"CloudLinux9"|"openEuler2203"|"openEuler2403")
@@ -91,12 +91,6 @@ install_core_deps() {
     
     # OS-specific packages
     case $os_version in
-        "CentOS7"|"CloudLinux7")
-            # CentOS 7 specific packages
-            $package_manager install -y $common_packages aspell libc-client 2>/dev/null || {
-                print_status "$YELLOW" "Some packages not available on CentOS 7, continuing..."
-            }
-            ;;
         "CentOS8"|"CentOSStream8"|"AlmaLinux8"|"RockyLinux8"|"RHEL8"|"CloudLinux8"|"openEuler2003")
             # CentOS 8 / RHEL 8 family
             $package_manager install -y $common_packages aspell libc-client-devel 2>/dev/null || {
@@ -144,10 +138,6 @@ install_additional_packages() {
     
     # OS-specific additional packages
     case $os_version in
-        "CentOS7"|"CloudLinux7")
-            # CentOS 7 specific
-            $package_manager install -y openssl-devel zlib-devel 2>/dev/null || true
-            ;;
         "CentOS8"|"CentOSStream8"|"AlmaLinux8"|"RockyLinux8"|"RHEL8"|"CloudLinux8"|"openEuler2003")
             # CentOS 8 / RHEL 8 family
             $package_manager install -y openssl-devel zlib-devel 2>/dev/null || true

@@ -1,26 +1,6 @@
 #!/usr/bin/env bash
-# CyberPanel upgrade – MariaDB backup, optional UTF-8 migration, CentOS 7 MySQL upgrade.
+# CyberPanel upgrade – MariaDB backup, optional UTF-8 migration.
 # Sourced by cyberpanel_upgrade.sh.
-
-Pre_Upgrade_CentOS7_MySQL() {
-  if [[ "$MySQL_Version" = "10.1" ]]; then
-    cp /etc/my.cnf /etc/my.cnf.bak
-    mkdir /etc/cnfbackup
-    cp -R /etc/my.cnf.d/ /etc/cnfbackup/
-    yum remove MariaDB-server MariaDB-client galera -y
-    yum --enablerepo=mariadb -y install MariaDB-server MariaDB-client galera
-    cp -f /etc/my.cnf.bak /etc/my.cnf
-    rm -rf /etc/my.cnf.d/
-    mv /etc/cnfbackup/my.cnf.d /etc/
-    systemctl enable mariadb 2>/dev/null || systemctl enable mysql
-    systemctl start mariadb 2>/dev/null || systemctl start mysql
-    mariadb-upgrade --force -uroot -p"$MySQL_Password" 2>/dev/null || mysql_upgrade --force -uroot -p"$MySQL_Password" 2>/dev/null || true
-  fi
-  # Do not use IDENTIFIED BY here - it re-hashes the root password and can break apps that still use the old hash.
-  # Privileges only; leave the existing MariaDB root password unchanged.
-  mariadb -uroot -p"$MySQL_Password" -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION; FLUSH PRIVILEGES" 2>/dev/null || mysql -uroot -p"$MySQL_Password" -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION; FLUSH PRIVILEGES"
-  Ensure_MariaDB_Client_No_SSL
-}
 
 Maybe_Backup_MariaDB_Before_Upgrade() {
   if [[ "$Backup_DB_Before_Upgrade" = "no" ]]; then

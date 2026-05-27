@@ -14,37 +14,8 @@ Post_Upgrade_System_Tweak() {
 
   if [[ "$Server_OS" = "CentOS" ]] ; then
 
-  #for cenots 7/8
-    if [[ "$Server_OS_Version" = "7" ]] ; then
-      sed -i 's|error_reporting = E_ALL \&amp; ~E_DEPRECATED \&amp; ~E_STRICT|error_reporting = E_ALL \& ~E_DEPRECATED \& ~E_STRICT|g' /usr/local/lsws/{lsphp72,lsphp73}/etc/php.ini
-    #fix php.ini &amp; issue
-        if ! yum list installed lsphp74-devel ; then
-          yum install -y lsphp74-devel
-        fi
-        if [[ ! -f /usr/local/lsws/lsphp74/lib64/php/modules/zip.so ]] ; then
-        if yum list installed libzip-devel >/dev/null 2>&1 ; then
-          yum remove -y libzip-devel
-        fi
-        yum install -y https://cyberpanel.sh/misc/libzip-0.11.2-6.el7.psychotic.x86_64.rpm
-        yum install -y https://cyberpanel.sh/misc/libzip-devel-0.11.2-6.el7.psychotic.x86_64.rpm
-        yum install lsphp74-devel
-        if [[ ! -d /usr/local/lsws/lsphp74/tmp ]]; then
-          mkdir /usr/local/lsws/lsphp74/tmp
-        fi
-        /usr/local/lsws/lsphp74/bin/pecl channel-update pecl.php.net
-        /usr/local/lsws/lsphp74/bin/pear config-set temp_dir /usr/local/lsws/lsphp74/tmp
-        if /usr/local/lsws/lsphp74/bin/pecl install zip ; then
-          echo "extension=zip.so" >/usr/local/lsws/lsphp74/etc/php.d/20-zip.ini
-          chmod 755 /usr/local/lsws/lsphp74/lib64/php/modules/zip.so
-        else
-          echo -e "\nlsphp74-zip compilation failed..."
-        fi
-        #fix old legacy lsphp74-zip issue on centos 7
-      fi
-
-
-    #for centos 7
-    elif [[ "$Server_OS_Version" = "8" ]] ; then
+  #for CentOS 8+
+    if [[ "$Server_OS_Version" = "8" ]] ; then
     :
     #for centos 8
     fi

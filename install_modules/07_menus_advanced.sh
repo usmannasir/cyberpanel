@@ -89,7 +89,7 @@ show_error_help() {
     echo "4. SYSTEM REQUIREMENTS:"
     echo "   • Minimum 1GB RAM: free -h"
     echo "   • Minimum 10GB disk space: df -h"
-    echo "   • Supported OS: AlmaLinux 8/9, CentOS 7/8, Ubuntu 18.04+"
+    echo "   • Supported OS: AlmaLinux 8/9/10, CentOS 8/9, Ubuntu 18.04+"
     echo ""
     echo "5. SERVICE CONFLICTS:"
     echo "   • Check running services: systemctl list-units --state=running"

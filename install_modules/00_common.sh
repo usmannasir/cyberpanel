@@ -91,6 +91,18 @@ print_status() {
     log_message "$message"
 }
 
+# CentOS 7 and CloudLinux 7 reached EOL; fresh install and upgrade are unsupported.
+reject_el7_if_present() {
+    if [[ ! -f /etc/os-release ]]; then
+        return 0
+    fi
+    if grep -qE 'CentOS Linux 7|CloudLinux 7|VERSION_ID="7\.|VERSION_ID=7' /etc/os-release 2>/dev/null; then
+        echo "CentOS 7 and CloudLinux 7 are no longer supported (EOL)."
+        echo "Migrate to AlmaLinux 8, 9, or 10, then run the installer."
+        exit 1
+    fi
+}
+
 # Function to show banner
 show_banner() {
     clear
@@ -119,7 +131,8 @@ detect_os() {
     fi
     
     print_status "Detecting operating system..."
-    
+    reject_el7_if_present
+
     # Detect architecture
     ARCHITECTURE=$(uname -m)
     case $ARCHITECTURE in

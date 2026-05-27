@@ -88,7 +88,6 @@ curl -s https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgrad
 ### **Other Distributions**
 - **CloudLinux 8**: ✅ Supported
 - **CentOS 9**: ✅ Supported
-- **CentOS 7**: ✅ Supported (until June 2024)
 - **CentOS Stream 9**: ✅ Supported
 
 ## 🔧 Installation Process Verification

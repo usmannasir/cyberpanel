@@ -110,84 +110,9 @@ EOF
   rm -f /etc/yum.repos.d/epel.repo
   rm -f /etc/yum.repos.d/epel.repo.rpmsave
   yum autoremove epel-release -y
-#all pre-upgrade operation for CentOS both 7/8
+#all pre-upgrade operation for CentOS 8+
 
-  if [[ "$Server_OS_Version" = "7" ]] ; then
-    yum install epel-release -y
-    yum -y install yum-utils
-    yum -y groupinstall development
-    rm -f /etc/yum.repos.d/dovecot.repo
-    rm -f /etc/yum.repos.d/frank.repo
-    rm -f /etc/yum.repos.d/ius-archive.repo
-    rm -f /etc/yum.repos.d/ius.repo
-    rm -f /etc/yum.repos.d/ius-testing.repo
-    #rm -f /etc/yum.repos.d/lux.repo
-    rm -f /etc/yum.repos.d/powerdns-auth-*
-
-    rm -f /etc/yum.repos.d/MariaDB.repo
-    rm -f /etc/yum.repos.d/MariaDB.repo.rpmsave
-
-    yum erase gf-* -y
-
-    rm -f /etc/yum.repos.d/gf.repo
-    rm -f /etc/yum.repos.d/gf.repo.rpmsave
-
-    rm -f /etc/yum.repos.d/copart-restic-epel-7.repo.repo
-    rm -f /etc/yum.repos.d/copart-restic-epel-7.repo.rpmsave
-
-    rm -f /etc/yum.repos.d/ius-archive.repo
-    rm -f /etc/yum.repos.d/ius.repo
-    rm -f /etc/yum.repos.d/ius-testing.repo
-
-    yum clean all
-
-    curl -o /etc/yum.repos.d/powerdns-auth-43.repo https://cyberpanel.sh/repo.powerdns.com/repo-files/centos-auth-43.repo
-      Check_Return "yum repo" "no_exit"
-
-    # Determine appropriate MariaDB repository based on OS version
-    if [[ "$Server_OS_Version" = "9" ]] || [[ "$Server_OS_Version" = "10" ]] ; then
-        MARIADB_REPO="rhel9-amd64"
-    else
-        MARIADB_REPO="centos7-amd64"
-    fi
-    
-    cat << EOF > /etc/yum.repos.d/MariaDB.repo
-# MariaDB $MARIADB_VER_REPO repository list - updated 2026-02
-# https://downloads.mariadb.org/mariadb/repositories/
-[mariadb]
-name = MariaDB $MARIADB_VER_REPO
-baseurl = https://mirror.mariadb.org/yum/$MARIADB_VER_REPO/$MARIADB_REPO
-gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
-gpgcheck=1
-EOF
-
-    yum install yum-plugin-copr -y
-    yum copr enable copart/restic -y
-    rpm -ivh https://cyberpanel.sh/repo.ius.io/ius-release-el7.rpm
-
-    if [[ "$Server_Country" = "CN" ]] ; then
-      sed -i 's|http://yum.mariadb.org|https://cyberpanel.sh/yum.mariadb.org|g' /etc/yum.repos.d/MariaDB.repo
-      sed -i 's|https://yum.mariadb.org/RPM-GPG-KEY-MariaDB|https://cyberpanel.sh/yum.mariadb.org/RPM-GPG-KEY-MariaDB|g' /etc/yum.repos.d/MariaDB.repo
-      # use MariaDB Mirror
-      sed -i 's|https://download.copr.fedorainfracloud.org|https://cyberpanel.sh/download.copr.fedorainfracloud.org|g' /etc/yum.repos.d/_copr_copart-restic.repo
-      sed -i 's|http://repo.iotti.biz|https://cyberpanel.sh/repo.iotti.biz|g' /etc/yum.repos.d/frank.repo
-      sed -i "s|mirrorlist=https://mirrorlist.ghettoforge.net/el/7/gf/\$basearch/mirrorlist|baseurl=https://cyberpanel.sh/mirror.ghettoforge.net/distributions/gf/el/7/gf/x86_64/|g" /etc/yum.repos.d/gf.repo
-      sed -i "s|mirrorlist=https://mirrorlist.ghettoforge.net/el/7/plus/\$basearch/mirrorlist|baseurl=https://cyberpanel.sh/mirror.ghettoforge.net/distributions/gf/el/7/plus/x86_64/|g" /etc/yum.repos.d/gf.repo
-      sed -i 's|https://repo.ius.io|https://cyberpanel.sh/repo.ius.io|g' /etc/yum.repos.d/ius.repo
-      sed -i 's|http://repo.iotti.biz|https://cyberpanel.sh/repo.iotti.biz|g' /etc/yum.repos.d/lux.repo
-      sed -i 's|http://repo.powerdns.com|https://cyberpanel.sh/repo.powerdns.com|g' /etc/yum.repos.d/powerdns-auth-43.repo
-      sed -i 's|https://repo.powerdns.com|https://cyberpanel.sh/repo.powerdns.com|g' /etc/yum.repos.d/powerdns-auth-43.repo
-    fi
-    yum install yum-plugin-priorities -y
-
-    yum update -y
-
-    yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel gpgme-devel curl-devel git socat openssl-devel MariaDB-shared mariadb-devel python36u python36u-pip python36u-devel bind-utils
-
-    Pre_Upgrade_CentOS7_MySQL
-
-    #all pre-upgrade operation for CentOS 7
-  elif [[ "$Server_OS_Version" = "8" ]] ; then
+  if [[ "$Server_OS_Version" = "8" ]] ; then
 #    cat <<EOF >/etc/yum.repos.d/CentOS-PowerTools-CyberPanel.repo
 #[powertools-for-cyberpanel]
 #name=CentOS Linux \$releasever - PowerTools

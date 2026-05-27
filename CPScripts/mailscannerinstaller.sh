@@ -47,7 +47,12 @@ fi
 ### OS Detection
 Server_OS=""
 Server_OS_Version=""
-if grep -q -E "CentOS Linux 7|CentOS Linux 8|CentOS Stream" /etc/os-release ; then
+if grep -qE 'CentOS Linux 7|CloudLinux 7|VERSION_ID="7\.|VERSION_ID=7' /etc/os-release 2>/dev/null; then
+  echo -e "CentOS 7 and CloudLinux 7 are no longer supported (EOL)."
+  echo -e "Migrate to AlmaLinux 8, 9, or 10, then run this installer."
+  exit 1
+fi
+if grep -q -E "CentOS Linux 8|CentOS Stream" /etc/os-release ; then
   Server_OS="CentOS"
 elif grep -q "Red Hat Enterprise Linux" /etc/os-release ; then
   Server_OS="RedHat"
@@ -57,7 +62,7 @@ elif grep -q "AlmaLinux-9" /etc/os-release ; then
   Server_OS="AlmaLinux"
 elif grep -q "AlmaLinux-10" /etc/os-release ; then
   Server_OS="AlmaLinux"
-elif grep -q -E "CloudLinux 7|CloudLinux 8" /etc/os-release ; then
+elif grep -q -E "CloudLinux 8" /etc/os-release ; then
   Server_OS="CloudLinux"
 elif grep -q -E "Rocky Linux" /etc/os-release ; then
   Server_OS="RockyLinux"
@@ -69,7 +74,7 @@ elif grep -q -E "openEuler 20.03|openEuler 22.03" /etc/os-release ; then
   Server_OS="openEuler"
 else
   echo -e "Unable to detect your system..."
-  echo -e "\nCyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, Debian 11, Debian 12, Debian 13, CentOS 7, CentOS 8, CentOS 9, RHEL 8, RHEL 9, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, RockyLinux 9, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03...\n"
+  echo -e "\nCyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, Debian 11, Debian 12, Debian 13, CentOS 8, CentOS 9, RHEL 8, RHEL 9, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, RockyLinux 9, CloudLinux 8, openEuler 20.03, openEuler 22.03...\n"
   exit
 fi
 
@@ -86,24 +91,12 @@ elif [[ "$Server_OS" = "Debian" ]] ; then
   #Treat Debian as Ubuntu for package management (both use apt-get)
 fi
 
-if [[ $Server_OS = "CentOS" ]] && [[ "$Server_OS_Version" = "7" ]] ; then
+if [[ "$Server_OS_Version" = "7" ]]; then
+  echo -e "CentOS 7 and CloudLinux 7 are no longer supported (EOL)."
+  exit 1
+fi
 
-  setenforce 0
-  yum install -y perl yum-utils perl-CPAN
-  yum install -y gcc cpp perl bzip2 zip make patch automake rpm-build perl-Archive-Zip perl-Filesys-Df perl-OLE-Storage_Lite perl-Sys-Hostname-Long perl-Sys-SigAction perl-Net-CIDR perl-DBI perl-MIME-tools perl-DBD-SQLite binutils glibc-devel perl-Filesys-Df zlib unzip zlib-devel wget mlocate clamav "perl(DBD::mysql)"
-
-  rpm -Uvh https://forensics.cert.org/centos/cert/7/x86_64/unrar-5.4.0-1.el7.x86_64.rpm
-  export PERL_MM_USE_DEFAULT=1
-  curl -L https://cpanmin.us | perl - App::cpanminus
-  perl -MCPAN -e 'install Encoding::FixLatin'
-  perl -MCPAN -e 'install Digest::SHA1'
-  perl -MCPAN -e 'install Geo::IP'
-  perl -MCPAN -e 'install Razor2::Client::Agent'
-  perl -MCPAN -e 'install Net::Patricia'
-
-  freshclam -v
-
-elif [[ $Server_OS = "CentOS" ]] && [[ "$Server_OS_Version" = "8" ]] ; then
+if [[ $Server_OS = "CentOS" ]] && [[ "$Server_OS_Version" = "8" ]] ; then
 
   setenforce 0
   yum install -y perl yum-utils perl-CPAN
@@ -154,7 +147,7 @@ elif [ "$CLNVERSION" = "ID=\"cloudlinux\"" ]; then
   yum install -y perl yum-utils perl-CPAN
   yum install -y gcc cpp perl bzip2 zip make patch automake rpm-build perl-Archive-Zip perl-Filesys-Df perl-OLE-Storage_Lite perl-Sys-Hostname-Long perl-Sys-SigAction perl-Net-CIDR perl-DBI perl-MIME-tools perl-DBD-SQLite binutils glibc-devel perl-Filesys-Df zlib unzip zlib-devel wget mlocate clamav "perl(DBD::mysql)"
 
-  rpm -Uvh https://forensics.cert.org/centos/cert/7/x86_64/unrar-5.4.0-1.el7.x86_64.rpm
+  rpm -Uvh https://forensics.cert.org/centos/cert/8/x86_64/unrar-5.4.0-1.el8.x86_64.rpm
   export PERL_MM_USE_DEFAULT=1
   curl -L https://cpanmin.us | perl - App::cpanminus
   perl -MCPAN -e 'install Encoding::FixLatin'
