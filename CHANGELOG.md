@@ -15,6 +15,16 @@ see `to-do/LIVE-CYBERCP-STATE.md`.
 
 ## 2.5.5-dev - 27/05/2026
 
+### Fixed: AlmaLinux 10 install bootstrap (`requests` missing)
+
+- `install_modules/03_install_direct.sh` now `pip install requests` (with OS package
+  fallback) before running `install/install.py`, because `installLog.py` imports
+  `requests` before the CyberCP venv exists.
+- AlmaLinux 10 / Python 3.12: install `python3.12-devel` when the bootstrap
+  interpreter is `/usr/bin/python3.12`.
+- `install_modules/02_install_core.sh` prefers `master3395/cyberpanel` for archive
+  download, with fallback to `usmannasir/cyberpanel`.
+
 ### Removed: CentOS 7 and CloudLinux 7 (EOL)
 
 - Fresh install and upgrade now exit immediately on EL7 with a migrate-to-AlmaLinux

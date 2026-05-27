@@ -129,6 +129,7 @@ if [ "$BRANCH_NAME" = "v2.5.5-dev" ] || [ "$BRANCH_NAME" = "stable" ] || [ "$BRA
                 # Use absolute path to avoid any relative path issues
                 cd "$TEMP_DIR" || cd /tmp || cd /
                 export CYBERPANEL_BRANCH="${BRANCH_NAME}"
+                export CYBERPANEL_GITHUB_OWNER="${CYBERPANEL_GITHUB_OWNER:-master3395}"
                 bash "$SCRIPT_PATH" -b "${BRANCH_NAME}" "$@"
                 exit $?
             else

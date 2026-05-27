@@ -6,6 +6,8 @@ set -e
 
 # Parse -b/--branch for module download (when not running from repo)
 BRANCH_FOR_MODULES="${CYBERPANEL_BRANCH:-stable}"
+export BRANCH_NAME="${BRANCH_FOR_MODULES}"
+export CYBERPANEL_GITHUB_OWNER="${CYBERPANEL_GITHUB_OWNER:-master3395}"
 next=""
 for arg in "$@"; do
   if [[ "$arg" = "-b" ]] || [[ "$arg" = "--branch" ]]; then

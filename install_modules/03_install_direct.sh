@@ -165,6 +165,7 @@ install_cyberpanel_direct_cont() {
                 local _pydev="python3-devel"
                 local _pypip="python3-pip"
                 case "$CP_INSTALL_PY" in
+                    *python3.12*) _pydev="python3.12-devel"; _pypip="python3.12-pip" ;;
                     *python3.11*) _pydev="python3.11-devel"; _pypip="python3.11-pip" ;;
                 esac
                 
@@ -187,6 +188,7 @@ install_cyberpanel_direct_cont() {
                 local _pydevy="python3-devel"
                 local _pypipy="python3-pip"
                 case "$CP_INSTALL_PY" in
+                    *python3.12*) _pydevy="python3.12-devel"; _pypipy="python3.12-pip" ;;
                     *python3.11*) _pydevy="python3.11-devel"; _pypipy="python3.11-pip" ;;
                 esac
                 if yum install -y mariadb-devel pkgconfig gcc "${_pydevy}" "${_pypipy}"; then
@@ -257,6 +259,26 @@ install_cyberpanel_direct_cont() {
             "$CP_INSTALL_PY" -m pip list | grep -i mysql || print_status "No MySQL-related packages found in pip list"
             print_status "Attempting to continue anyway, but installation may fail..."
         fi
+
+        # installLog.py imports requests before CyberCP venv exists (AlmaLinux 10 uses python3.12)
+        print_status "Installing requests (required by installLog.py)..."
+        if ! "$CP_INSTALL_PY" -m pip install requests 2>&1; then
+            print_status "⚠️  pip install requests failed, trying OS package..."
+            if [ "$os_family" = "rhel" ] && command -v dnf >/dev/null 2>&1; then
+                case "$CP_INSTALL_PY" in
+                    *python3.12*) dnf install -y python3.12-requests 2>/dev/null || true ;;
+                    *python3.11*) dnf install -y python3.11-requests 2>/dev/null || true ;;
+                esac
+                dnf install -y python3-requests 2>/dev/null || true
+            elif [ "$os_family" = "debian" ]; then
+                apt-get install -y python3-requests 2>/dev/null || true
+            fi
+        fi
+        if ! "$CP_INSTALL_PY" -c "import requests; print('requests OK')" 2>/dev/null; then
+            print_status "ERROR: requests is required for install.py but is not available for $CP_INSTALL_PY"
+            return 1
+        fi
+        print_status "✓ requests module is available and working"
         echo ""
         
         # Build installer arguments based on user preferences

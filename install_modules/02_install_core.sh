@@ -306,27 +306,50 @@ except:
         fi
     fi
     
-    # Download the working CyberPanel installation files from upstream (usmannasir/cyberpanel)
-    echo "Downloading from: https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/cyberpanel.sh"
+    # Download CyberPanel install tree (fork first, then upstream)
+    local _cp_owner="${CYBERPANEL_GITHUB_OWNER:-master3395}"
+    local _cp_branch="${BRANCH_NAME:-v2.5.5-dev}"
+    echo "Downloading from: https://raw.githubusercontent.com/${_cp_owner}/cyberpanel/${_cp_branch}/cyberpanel.sh"
     
-    # First, try to download the repository archive to get the correct installer
     # GitHub: branch archives use refs/heads/BRANCH; GitHub returns 302 redirect to codeload, so we must use -L
     local archive_url=""
-    local installer_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/cyberpanel.sh"
-    if curl -s -L --head "https://github.com/usmannasir/cyberpanel/archive/refs/heads/v2.5.5-dev.tar.gz" | grep -q "200 OK"; then
-        archive_url="https://github.com/usmannasir/cyberpanel/archive/refs/heads/v2.5.5-dev.tar.gz"
-        echo "    Using development branch (v2.5.5-dev) from usmannasir/cyberpanel"
-    elif curl -s -L --head "https://github.com/usmannasir/cyberpanel/archive/v2.5.5-dev.tar.gz" | grep -q "200 OK"; then
-        archive_url="https://github.com/usmannasir/cyberpanel/archive/v2.5.5-dev.tar.gz"
-        echo "    Using development branch (v2.5.5-dev) from usmannasir/cyberpanel"
-    else
+    local installer_url="https://raw.githubusercontent.com/${_cp_owner}/cyberpanel/${_cp_branch}/cyberpanel.sh"
+    local _archive_candidates=(
+        "https://github.com/${_cp_owner}/cyberpanel/archive/refs/heads/${_cp_branch}.tar.gz"
+        "https://github.com/${_cp_owner}/cyberpanel/archive/${_cp_branch}.tar.gz"
+    )
+    local _cand _found=0
+    for _cand in "${_archive_candidates[@]}"; do
+        if curl -s -L --head "$_cand" | grep -q "200 OK"; then
+            archive_url="$_cand"
+            echo "    Using branch ${_cp_branch} from ${_cp_owner}/cyberpanel"
+            _found=1
+            break
+        fi
+    done
+    if [[ "$_found" -eq 0 ]] && [[ "$_cp_owner" != "usmannasir" ]]; then
+        echo "    Fork archive not found, trying usmannasir/cyberpanel..."
+        _cp_owner="usmannasir"
+        installer_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/${_cp_branch}/cyberpanel.sh"
+        for _cand in \
+            "https://github.com/usmannasir/cyberpanel/archive/refs/heads/${_cp_branch}.tar.gz" \
+            "https://github.com/usmannasir/cyberpanel/archive/${_cp_branch}.tar.gz"; do
+            if curl -s -L --head "$_cand" | grep -q "200 OK"; then
+                archive_url="$_cand"
+                echo "    Using branch ${_cp_branch} from usmannasir/cyberpanel"
+                _found=1
+                break
+            fi
+        done
+    fi
+    if [[ "$_found" -eq 0 ]]; then
         echo "    Development branch archive not available, trying installer script directly..."
         if ! curl -s -L --head "$installer_url" | grep -q "200 OK"; then
             echo "    Development branch not available, falling back to stable"
             installer_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel.sh"
             archive_url="https://github.com/usmannasir/cyberpanel/archive/stable.tar.gz"
         else
-            archive_url="https://github.com/usmannasir/cyberpanel/archive/refs/heads/v2.5.5-dev.tar.gz"
+            archive_url="https://github.com/${_cp_owner}/cyberpanel/archive/refs/heads/${_cp_branch}.tar.gz"
         fi
     fi
     
