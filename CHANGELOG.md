@@ -87,3 +87,45 @@ see `to-do/LIVE-CYBERCP-STATE.md`.
   static assets. The backport plan flags this as optional and requires a
   staging snapshot before applying. Not deployed on this host. Operator
   may revisit on a staging copy.
+
+## 2.5.5-dev (open upstream PR adoption) - 26/05/2026
+
+Three small, open upstream PRs adopted in advance of upstream merge.
+File-only changes; no DB, no API contract change.
+
+### Domain Alias UI wiring (PRs #1787, #1782)
+
+- `websiteFunctions/templates/websiteFunctions/domainAlias.html`: the
+  alias input now binds to `ng-model="aliasDomain"` (was
+  `domainNameCreate`), the **Create Alias** button now calls
+  `addAliasFunc()` (was `createDomain()` which posted to the
+  child-domain endpoint), the success banner now reads "Alias
+  succesfully created.", the **Issue SSL** button now calls the
+  controller's defined `issueSSL(masterDomain, alias)` (was the
+  undefined `issueAliasSSL(...)`). Dropped one duplicate `ng-hide` and
+  one duplicate `ng-model="domainNameCreate"` on the search field.
+  (Upstream PR #1782 and PR #1787, both still open.)
+- `websiteFunctions/templates/websiteFunctions/website.html`: child-domain
+  table dropdowns inside `ng-repeat` now bind to `record.childBaseDir`
+  and `record.phpSelection` (were shared scope variables that bled
+  across all rows). Dropped one duplicate `ng-hide` directive.
+  (Upstream PR #1782.)
+- `websiteFunctions/test_domain_alias_template.py`: new regression test
+  (5 assertions) keeping the alias template pointed at alias actions.
+  (Upstream PR #1787.)
+
+User-visible effects: alias creation now posts cleanly to
+`/websites/submitAliasCreation` (not the website-creation path with
+`alias=1`), per-row PHP and open_basedir selectors no longer flip every
+row, and the alias SSL button keeps working after the next
+`collectstatic` (was relying on drift in `public/static/...`).
+
+### Webmail Sieve forward rules (PR #1777)
+
+- `webmail/services/sieve_client.py::rules_to_sieve`: removed the
+  spurious `requires.add('redirect')` in the `forward` action branch.
+  `redirect` is a built-in Sieve command per RFC 5228, not an extension;
+  including it in `require[...]` made pigeonhole-sieve refuse to compile
+  the script. Other extensions (`fileinto`, `imap4flags`) are
+  unaffected. Forward filter rules added in the webmail UI now reach
+  Dovecot. (Upstream PR #1777, still open.)
