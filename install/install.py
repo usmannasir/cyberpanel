@@ -3040,12 +3040,13 @@ module cyberpanel_ols {
             ### Docker User/group
 
             if self.distro == ubuntu or self.distro == debian12:
-                command = 'adduser --disabled-login --gecos "" docker'
+                if subprocess.run('id -u docker >/dev/null 2>&1', shell=True).returncode != 0:
+                    command = 'adduser --disabled-login --gecos "" docker'
+                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             else:
-                # For CentOS/RHEL, use useradd which is non-interactive
-                command = "useradd -r -s /bin/false docker"
-
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                if subprocess.run('id -u docker >/dev/null 2>&1', shell=True).returncode != 0:
+                    command = "useradd -r -s /bin/false docker"
+                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             command = 'getent group docker >/dev/null || groupadd docker'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR, True)
@@ -5033,7 +5034,18 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
 
             logging.InstallLog.writeToFile("Starting LSCPD installation..")
 
-            os.chdir(self.cwd)
+            install_dir = os.path.dirname(os.path.abspath(__file__))
+            lscp_archive = os.path.join(install_dir, "lscp.tar.gz")
+            if not os.path.isfile(lscp_archive):
+                alt = os.path.join(self.cwd or "", "install", "lscp.tar.gz")
+                if os.path.isfile(alt):
+                    lscp_archive = alt
+                else:
+                    logging.InstallLog.writeToFile(
+                        "[ERROR] lscp.tar.gz not found under %s" % install_dir
+                    )
+                    preFlightsChecks.stdOut("ERROR: lscp.tar.gz missing from install directory", 0)
+                    return 0
 
             if self.distro == ubuntu:
                 self.install_package("gcc g++ make autoconf rcs")
@@ -5048,7 +5060,8 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
             else:
                 self.install_package("pcre-devel openssl-devel expat-devel geoip-devel zlib-devel udns-devel")
 
-            command = 'tar zxf lscp.tar.gz -C /usr/local/'
+            import shlex
+            command = 'tar zxf %s -C /usr/local/' % shlex.quote(lscp_archive)
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             ###
