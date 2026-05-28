@@ -451,7 +451,38 @@ class UniversalOSFixes:
                 subprocess.run(cmd, check=True)
                 cmd = ['apt', 'install', '-y'] + packages
             elif package_manager == 'dnf':
-                cmd = ['dnf', 'install', '-y'] + packages
+                try:
+                    major = int(str(self.os_info.get('version', '0')).split('.')[0])
+                except (ValueError, TypeError):
+                    major = 0
+                if major >= 10:
+                    failed = []
+                    chunk_size = 12
+                    for i in range(0, len(packages), chunk_size):
+                        chunk = packages[i:i + chunk_size]
+                        r = subprocess.run(
+                            ['dnf', 'install', '-y', '--skip-broken'] + chunk,
+                            capture_output=True,
+                            text=True,
+                            timeout=1200,
+                        )
+                        if r.returncode != 0:
+                            for pkg in chunk:
+                                pr = subprocess.run(
+                                    ['dnf', 'install', '-y', pkg],
+                                    capture_output=True,
+                                    text=True,
+                                    timeout=300,
+                                )
+                                if pr.returncode != 0:
+                                    failed.append(pkg)
+                    if failed:
+                        self.logger.warning(
+                            'Some optional packages were not installed: %s', failed
+                        )
+                    self.logger.info('dnf package install finished (EL10, per-package fallback)')
+                    return True
+                cmd = ['dnf', 'install', '-y', '--skip-unavailable'] + packages
             elif package_manager == 'yum':
                 cmd = ['yum', 'install', '-y'] + packages
             else:
@@ -470,22 +501,36 @@ class UniversalOSFixes:
         """Setup MariaDB repository for current OS"""
         try:
             os_id = self.os_info['id']
-            
+            mariadb_ver = os.environ.get('MARIADB_VER', '11.8').strip() or '11.8'
+
             if os_id in ['ubuntu', 'debian']:
                 # Ubuntu/Debian MariaDB setup
                 cmd = [
-                    'curl', '-LsS', 
+                    'curl', '-fsSL',
                     'https://downloads.mariadb.com/MariaDB/mariadb_repo_setup',
-                    '|', 'sudo', 'bash', '-s', '--', '--mariadb-server-version=11.8'
+                    '|', 'bash', '-s', '--', '--skip-check-installed',
+                    '--mariadb-server-version=%s' % mariadb_ver,
                 ]
+                if os.geteuid() != 0:
+                    cmd = [
+                        'curl', '-fsSL',
+                        'https://downloads.mariadb.com/MariaDB/mariadb_repo_setup',
+                        '|', 'sudo', 'bash', '-s', '--', '--skip-check-installed',
+                        '--mariadb-server-version=%s' % mariadb_ver,
+                    ]
             else:
-                # RHEL family MariaDB setup
-                cmd = [
-                    'curl', '-LsS',
-                    'https://downloads.mariadb.com/MariaDB/mariadb_repo_setup',
-                    '|', 'sudo', 'bash', '-s', '--', '--mariadb-server-version=11.8'
-                ]
-            
+                import install_utils
+                subprocess.run(
+                    'dnf install -y curl ca-certificates',
+                    shell=True,
+                    check=False,
+                )
+                return install_utils.install_mariadb_server_rhel(
+                    install_utils.cent8,
+                    mariadb_ver,
+                    0,
+                )
+
             subprocess.run(' '.join(cmd), shell=True, check=True)
             if os_id in ['ubuntu', 'debian']:
                 try:
@@ -518,13 +563,9 @@ class UniversalOSFixes:
             else:
                 # RHEL family LiteSpeed setup
                 # Use el8 repository for AlmaLinux 9/10 compatibility
-                if os_id in ['almalinux', 'rocky', 'rhel'] and int(os_version.split('.')[0]) >= 9:
-                    repo_url = 'http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
-                else:
-                    repo_url = f'http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el{os_version.split(".")[0]}.noarch.rpm'
-                
-                cmd = ['rpm', '-Uvh', repo_url]
-                subprocess.run(cmd, check=True)
+                import install_utils
+                if not install_utils.install_litespeed_repo_rhel(install_utils.cent8, log=0):
+                    raise subprocess.CalledProcessError(1, 'install_litespeed_repo_rhel')
             
             self.logger.info("LiteSpeed repository setup completed")
             return True
@@ -574,6 +615,15 @@ class UniversalOSFixes:
                     'krb5-devel', 'openldap-devel', 'cyrus-sasl-devel',
                     'libgssapi-krb5', 'expat-devel'
                 ]
+                try:
+                    major = int(str(self.os_info.get('version', '0')).split('.')[0])
+                except (ValueError, TypeError):
+                    major = 0
+                if major >= 10:
+                    packages = [
+                        p for p in packages
+                        if p not in ('db4-devel', 'libgssapi-krb5')
+                    ]
             
             return self.install_packages(packages)
             
@@ -674,24 +724,33 @@ WantedBy=multi-user.target
             os_version = self.os_info['version']
             
             if os_id == 'almalinux' and int(os_version.split('.')[0]) >= 9:
-                # AlmaLinux 9+ specific fixes
-                self.logger.info("Applying AlmaLinux 9+ specific fixes...")
-                
-                # Enable PowerTools repository
-                try:
-                    subprocess.run(['dnf', 'config-manager', '--set-enabled', 'powertools'], check=True)
-                except subprocess.CalledProcessError:
+                major = int(os_version.split('.')[0])
+                self.logger.info("Applying AlmaLinux %s+ specific fixes...", major)
+                if major >= 10:
+                    for crb_cmd in (
+                        ['crb', 'enable'],
+                        ['dnf', 'config-manager', '--set-enabled', 'crb'],
+                    ):
+                        try:
+                            subprocess.run(crb_cmd, check=True, capture_output=True, timeout=120)
+                            break
+                        except (subprocess.CalledProcessError, OSError):
+                            continue
+                    else:
+                        self.logger.warning("Could not enable CRB repository on AlmaLinux 10")
+                    compatibility_packages = ['libxcrypt-compat', 'libnsl']
+                else:
                     try:
-                        subprocess.run(['dnf', 'config-manager', '--set-enabled', 'PowerTools'], check=True)
+                        subprocess.run(['dnf', 'config-manager', '--set-enabled', 'powertools'], check=True)
                     except subprocess.CalledProcessError:
-                        self.logger.warning("Could not enable PowerTools repository")
-                
-                # Install compatibility packages
-                compatibility_packages = [
-                    'compat-openssl11', 'compat-openssl11-devel',
-                    'libxcrypt-compat', 'libnsl'
-                ]
-                
+                        try:
+                            subprocess.run(['dnf', 'config-manager', '--set-enabled', 'PowerTools'], check=True)
+                        except subprocess.CalledProcessError:
+                            self.logger.warning("Could not enable PowerTools repository")
+                    compatibility_packages = [
+                        'compat-openssl11', 'compat-openssl11-devel',
+                        'libxcrypt-compat', 'libnsl',
+                    ]
                 for package in compatibility_packages:
                     try:
                         subprocess.run(['dnf', 'install', '-y', package], check=True)
@@ -746,6 +805,10 @@ WantedBy=multi-user.target
             if not self.apply_os_specific_fixes():
                 self.logger.error("Failed to apply OS-specific fixes")
                 return False
+
+            # curl/ca-certificates required by mariadb_repo_setup (must run before that script)
+            if not self.install_packages(['curl', 'ca-certificates']):
+                self.logger.warning("Could not install curl/ca-certificates; MariaDB repo setup may fail")
             
             # Setup repositories
             if not self.setup_mariadb_repository():

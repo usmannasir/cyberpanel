@@ -416,23 +416,67 @@ class Upgrade:
         return None
 
     @staticmethod
-    def decideCentosVersion():
+    def _read_os_release_id_and_major():
+        id_name = None
+        major = None
+        try:
+            if not os.path.exists('/etc/os-release'):
+                return id_name, major
+            for line in open('/etc/os-release', 'r'):
+                line = line.strip()
+                if line.startswith('ID='):
+                    id_name = line.split('=', 1)[1].strip().strip('"').lower()
+                elif line.startswith('VERSION_ID='):
+                    v = line.split('=', 1)[1].strip().strip('"')
+                    major = int(v.split('.')[0])
+        except (OSError, ValueError, TypeError):
+            pass
+        return id_name, major
 
-        if open(Upgrade.CentOSPath, 'r').read().find('CentOS Linux release 8') > -1:
+    @staticmethod
+    def _reject_el7_runtime():
+        id_name, major = Upgrade._read_os_release_id_and_major()
+        if major == 7 and id_name in ('centos', 'cloudlinux'):
+            raise RuntimeError(
+                'CentOS 7 and CloudLinux 7 are no longer supported (EOL). '
+                'Migrate to AlmaLinux 8, 9, or 10.'
+            )
+
+    @staticmethod
+    def decideCentosVersion():
+        Upgrade._reject_el7_runtime()
+        id_name, major = Upgrade._read_os_release_id_and_major()
+        if major is not None and major >= 8:
             return CENTOS8
-        else:
-            return CENTOS7
+        if os.path.exists(Upgrade.CentOSPath):
+            result = open(Upgrade.CentOSPath, 'r').read()
+            if 'release 8' in result or 'release 9' in result or 'release 10' in result:
+                return CENTOS8
+        if id_name in ('almalinux', 'rocky', 'rhel', 'centos', 'cloudlinux'):
+            return CENTOS8
+        return CENTOS8
 
     @staticmethod
     def FindOperatingSytem():
+        Upgrade._reject_el7_runtime()
+        id_name, major = Upgrade._read_os_release_id_and_major()
+        if id_name in ('almalinux', 'rocky', 'rhel', 'centos', 'cloudlinux'):
+            if major is not None and major >= 8:
+                return CENTOS8
 
         if os.path.exists(Upgrade.CentOSPath):
             result = open(Upgrade.CentOSPath, 'r').read()
 
             if result.find('CentOS Linux release 8') > -1 or result.find('CloudLinux release 8') > -1:
                 return CENTOS8
-            else:
-                return CENTOS7
+            if 'release 9' in result or 'release 10' in result:
+                return CENTOS8
+            id_name, major = Upgrade._read_os_release_id_and_major()
+            if major is not None and major >= 8:
+                return CENTOS8
+            if id_name in ('almalinux', 'rocky', 'rhel'):
+                return CENTOS8
+            Upgrade._reject_el7_runtime()
 
         elif os.path.exists(Upgrade.openEulerPath):
             result = open(Upgrade.openEulerPath, 'r').read()
@@ -5580,9 +5624,11 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             try:
                 with open('/etc/almalinux-release', 'r') as f:
                     content = f.read()
-                    if 'release 9' in content or 'release 10' in content:
-                        Upgrade.stdOut("AlmaLinux 9+ detected - checking available PHP versions", 1)
-                        # AlmaLinux 9+ doesn't have PHP 7.1, 7.2, 7.3
+                    if 'release 10' in content:
+                        Upgrade.stdOut("AlmaLinux 10 detected - checking available PHP versions", 1)
+                        php_versions = ['81', '82', '83', '84', '85']
+                    elif 'release 9' in content:
+                        Upgrade.stdOut("AlmaLinux 9 detected - checking available PHP versions", 1)
                         php_versions = ['74', '80', '81', '82', '83', '84', '85']
                     else:
                         php_versions = ['71', '72', '73', '74', '80', '81', '82', '83', '84', '85']
@@ -6135,7 +6181,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = 'cp -pR %s %s' % (postfixConfPath, configbackups)
             Upgrade.executioner(command, 0)
 
-            if Upgrade.FindOperatingSytem() == CENTOS8 or Upgrade.FindOperatingSytem() == CENTOS7 or Upgrade.FindOperatingSytem() == openEuler22 or Upgrade.FindOperatingSytem() == openEuler20:
+            if Upgrade.FindOperatingSytem() == CENTOS8 or Upgrade.FindOperatingSytem() == openEuler22 or Upgrade.FindOperatingSytem() == openEuler20:
 
                 command = "yum makecache -y"
                 Upgrade.executioner(command, 0)
@@ -6178,17 +6224,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                 command = 'yum clean all'
                 Upgrade.executioner(command, 0)
 
-                if Upgrade.FindOperatingSytem() == CENTOS7:
-                    command = 'yum makecache fast'
-                else:
-                    command = 'yum makecache -y'
-
+                command = 'yum makecache -y'
                 Upgrade.executioner(command, 0)
-
-                if Upgrade.FindOperatingSytem() == CENTOS7:
-                    command = 'yum install --enablerepo=gf-plus -y postfix3 postfix3-ldap postfix3-mysql postfix3-pcre'
-                else:
-                    command = 'dnf install --enablerepo=gf-plus postfix3 postfix3-mysql -y'
+                command = 'dnf install --enablerepo=gf-plus postfix3 postfix3-mysql -y'
 
                 Upgrade.executioner(command, 0)
 
@@ -7393,7 +7431,7 @@ slowlog = /var/log/php{version}-fpm-slow.log
         """OLD VERSION - DO NOT USE - Fix Apache configuration issues after upgrade"""
         try:
             # Check if Apache is installed
-            if Upgrade.FindOperatingSytem() == CENTOS7 or Upgrade.FindOperatingSytem() == CENTOS8 \
+            if Upgrade.FindOperatingSytem() == CENTOS8 \
                     or Upgrade.FindOperatingSytem() == openEuler20 or Upgrade.FindOperatingSytem() == openEuler22:
                 apache_service = 'httpd'
                 apache_config_dir = '/etc/httpd'
@@ -7443,7 +7481,7 @@ extprocessor proxyApacheBackendSSL {
                 Upgrade.executioner(command, 'Ensure Apache proxy backends exist', 1)
                 
                 # 3. Ensure Apache is configured to listen on correct ports
-                if Upgrade.FindOperatingSytem() in [CENTOS7, CENTOS8, openEuler20, openEuler22]:
+                if Upgrade.FindOperatingSytem() in [CENTOS8, openEuler20, openEuler22]:
                     apache_port_conf = '/etc/httpd/conf.d/00-port.conf'
                 else:
                     apache_port_conf = '/etc/apache2/ports.conf'
@@ -7460,7 +7498,7 @@ extprocessor proxyApacheBackendSSL {
                 
                 # 5. Fix PHP-FPM socket permissions and restart services
                 for version in ['5.4', '5.5', '5.6', '7.0', '7.1', '7.2', '7.3', '7.4', '8.0', '8.1', '8.2', '8.3']:
-                    if Upgrade.FindOperatingSytem() in [CENTOS7, CENTOS8, openEuler20, openEuler22]:
+                    if Upgrade.FindOperatingSytem() in [CENTOS8, openEuler20, openEuler22]:
                         php_service = f'php{version.replace(".", "")}-php-fpm'
                         socket_dir = '/var/run/php-fpm'
                     else:
@@ -7493,7 +7531,7 @@ extprocessor proxyApacheBackendSSL {
     def installQuota():
         try:
 
-            if Upgrade.FindOperatingSytem() == CENTOS7 or Upgrade.FindOperatingSytem() == CENTOS8\
+            if Upgrade.FindOperatingSytem() == CENTOS8\
                     or Upgrade.FindOperatingSytem() == openEuler20 or Upgrade.FindOperatingSytem() == openEuler22:
                 command = "yum install quota -y"
                 Upgrade.executioner(command, command, 0, True)
@@ -7794,7 +7832,7 @@ extprocessor proxyApacheBackendSSL {
             
             # Check if Apache is installed
             osType = Upgrade.FindOperatingSytem()
-            if osType in [CENTOS7, CENTOS8, CloudLinux7, CloudLinux8]:
+            if osType in [CENTOS8, CloudLinux8]:
                 configBasePath = '/etc/httpd/conf.d/'
                 serviceName = 'httpd'
             else:
@@ -8074,7 +8112,7 @@ RewriteRule ^(.*)$ https://proxyApacheBackendSSL/$1 [P,L]
                 print(f"Fixed {ols_fixed} OpenLiteSpeed vhost configurations.")
             
             # Fix 4: Ensure Apache is listening on correct ports
-            if osType in [CENTOS7, CENTOS8, CloudLinux7, CloudLinux8]:
+            if osType in [CENTOS8, CloudLinux8]:
                 apache_conf = '/etc/httpd/conf/httpd.conf'
             else:
                 ports_conf = '/etc/apache2/ports.conf'
@@ -8089,7 +8127,7 @@ RewriteRule ^(.*)$ https://proxyApacheBackendSSL/$1 [P,L]
                     print("Fixing Apache listen ports...")
                     
                     # For Ubuntu/Debian, update ports.conf
-                    if osType not in [CENTOS7, CENTOS8, CloudLinux7, CloudLinux8]:
+                    if osType not in [CENTOS8, CloudLinux8]:
                         if os.path.exists('/etc/apache2/ports.conf'):
                             with open('/etc/apache2/ports.conf', 'w') as f:
                                 f.write('Listen 8082\nListen 8083\n')
@@ -8114,7 +8152,7 @@ RewriteRule ^(.*)$ https://proxyApacheBackendSSL/$1 [P,L]
             
             # Fix 5: Fix PHP-FPM socket permissions
             print("Fixing PHP-FPM socket permissions...")
-            if osType in [CENTOS7, CENTOS8, CloudLinux7, CloudLinux8]:
+            if osType in [CENTOS8, CloudLinux8]:
                 sock_path = '/var/run/php-fpm/'
             else:
                 sock_path = '/var/run/php/'
@@ -8125,7 +8163,7 @@ RewriteRule ^(.*)$ https://proxyApacheBackendSSL/$1 [P,L]
                 Upgrade.executioner(command, command, 0, True)
                 
                 # Fix ownership
-                command = f'chown apache:apache {sock_path}' if osType in [CENTOS7, CENTOS8, CloudLinux7, CloudLinux8] else f'chown www-data:www-data {sock_path}'
+                command = f'chown apache:apache {sock_path}' if osType in [CENTOS8, CloudLinux8] else f'chown www-data:www-data {sock_path}'
                 Upgrade.executioner(command, command, 0, True)
             
             # Restart services
@@ -8140,7 +8178,7 @@ RewriteRule ^(.*)$ https://proxyApacheBackendSSL/$1 [P,L]
             Upgrade.executioner(command, command, 0, True)
             
             # Restart PHP-FPM services
-            if osType in [CENTOS7, CENTOS8, CloudLinux7, CloudLinux8]:
+            if osType in [CENTOS8, CloudLinux8]:
                 for version in ['54', '55', '56', '70', '71', '72', '73', '74', '80', '81', '82', '83', '84']:
                     command = f'systemctl restart php{version}-php-fpm'
                     Upgrade.executioner(command, command, 0, True)

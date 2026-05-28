@@ -71,7 +71,7 @@ Fast • Secure • Scalable — Simplify hosting management with style.
 | OS family                  | Recommended / Supported |
 | -------------------------- | ----------------------: |
 | AlmaLinux 10, 9, 8         |          ✅ Recommended |
-| CentOS 7                   |      ⚠️ Legacy — EOL |
+| CentOS 9, 8                |            ✅ Supported |
 | CloudLinux 9, 8            |            ✅ Supported |
 | Debian 13, 12, 11          |            ✅ Supported |
 | RHEL 9, 8                  |            ✅ Supported |
@@ -188,22 +188,6 @@ journalctl -u lscpd -f
 
 * **02.02.2026** — Plugin updates: premiumPlugin & paypalPremiumPlugin unified verification (Plugin Grants, activation key, Patreon, PayPal, AES-256-CBC encryption). Installed Plugins UI: bulk activate/deactivate, freshness badges, removed Patreon messaging from front.
 * **15.11.2025** — Hardened MySQL password rotation: `mysqlUtilities.changePassword` now auto-resolves the backing MySQL account (user + host) even when `DBUsers` metadata is missing, preventing the historical `[mysqlUtilities.changePassword] can only concatenate str (not "int")` error. Regression tests live under `Test/mysqlUtilities/`, and you should restart `lscpd` after deploying the patch so the helper reloads.
-
----
-
-## Testing
-
-### OLS Feature Test Suite
-
-The OpenLiteSpeed feature test suite (128 tests) validates binary integrity, CyberPanel module, Auto-SSL config, SSL listener auto-mapping, .htaccess processing, ReadApacheConf directives, and more.
-
-```bash
-# Run from CyberPanel repo root
-./tests/ols_test_setup.sh   # One-time setup
-./tests/ols_feature_tests.sh
-```
-
-Requires a live CyberPanel + OLS installation.
 
 ---
 

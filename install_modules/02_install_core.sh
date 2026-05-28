@@ -84,20 +84,12 @@ install_cyberpanel_direct() {
         fi
     fi
 
-    # Ask MariaDB version (after web server choice) if not set via --mariadb-version
+    # Ask MariaDB version if not set in Installation Preferences or --mariadb-version
     if [ -z "$MARIADB_VER" ]; then
-        echo ""
-        echo "  MariaDB version: 10.11, 11.8 (LTS, default), 12.1, 12.2, 12.3 or other X.Y?"
-        read -r -t 60 -p "  Enter version [11.8]: " MARIADB_VER || true
-        MARIADB_VER="${MARIADB_VER:-11.8}"
-        MARIADB_VER="${MARIADB_VER// /}"
-        # Normalize to major.minor (e.g. 12.3.1 -> 12.3)
-        if [[ "$MARIADB_VER" =~ ^([0-9]+)\.([0-9]+) ]]; then
-            MARIADB_VER="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"
-        else
-            MARIADB_VER="11.8"
-        fi
-        echo "  Using MariaDB $MARIADB_VER"
+        prompt_mariadb_version_preference
+    else
+        MARIADB_VER="$(normalize_mariadb_version "$MARIADB_VER")"
+        echo "  Using MariaDB $MARIADB_VER (from earlier choice)"
         echo ""
     fi
 
@@ -306,27 +298,57 @@ except:
         fi
     fi
     
-    # Download the working CyberPanel installation files from upstream (usmannasir/cyberpanel)
-    echo "Downloading from: https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/cyberpanel.sh"
+    # Download CyberPanel install tree (fork first, then upstream)
+    local _cp_owner="${CYBERPANEL_GITHUB_OWNER:-master3395}"
+    local _cp_branch="${BRANCH_NAME:-v2.5.5-dev}"
+    echo "Downloading from: https://raw.githubusercontent.com/${_cp_owner}/cyberpanel/${_cp_branch}/cyberpanel.sh"
     
-    # First, try to download the repository archive to get the correct installer
     # GitHub: branch archives use refs/heads/BRANCH; GitHub returns 302 redirect to codeload, so we must use -L
     local archive_url=""
-    local installer_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.5.5-dev/cyberpanel.sh"
-    if curl -s -L --head "https://github.com/usmannasir/cyberpanel/archive/refs/heads/v2.5.5-dev.tar.gz" | grep -q "200 OK"; then
-        archive_url="https://github.com/usmannasir/cyberpanel/archive/refs/heads/v2.5.5-dev.tar.gz"
-        echo "    Using development branch (v2.5.5-dev) from usmannasir/cyberpanel"
-    elif curl -s -L --head "https://github.com/usmannasir/cyberpanel/archive/v2.5.5-dev.tar.gz" | grep -q "200 OK"; then
-        archive_url="https://github.com/usmannasir/cyberpanel/archive/v2.5.5-dev.tar.gz"
-        echo "    Using development branch (v2.5.5-dev) from usmannasir/cyberpanel"
-    else
+    local installer_url="https://raw.githubusercontent.com/${_cp_owner}/cyberpanel/${_cp_branch}/cyberpanel.sh"
+    local _archive_candidates=(
+        "https://github.com/${_cp_owner}/cyberpanel/archive/refs/heads/${_cp_branch}.tar.gz"
+        "https://github.com/${_cp_owner}/cyberpanel/archive/${_cp_branch}.tar.gz"
+    )
+    _github_archive_ok() {
+        local url="$1"
+        local code
+        code=$(curl -sL -o /dev/null -w "%{http_code}" "$url" 2>/dev/null || echo "000")
+        [[ "$code" == "200" || "$code" == "302" ]]
+    }
+
+    local _cand _found=0
+    for _cand in "${_archive_candidates[@]}"; do
+        if _github_archive_ok "$_cand"; then
+            archive_url="$_cand"
+            echo "    Using branch ${_cp_branch} from ${_cp_owner}/cyberpanel"
+            _found=1
+            break
+        fi
+    done
+    if [[ "$_found" -eq 0 ]] && [[ "$_cp_owner" != "usmannasir" ]]; then
+        echo "    Fork archive not found, trying usmannasir/cyberpanel..."
+        _cp_owner="usmannasir"
+        installer_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/${_cp_branch}/cyberpanel.sh"
+        for _cand in \
+            "https://github.com/usmannasir/cyberpanel/archive/refs/heads/${_cp_branch}.tar.gz" \
+            "https://github.com/usmannasir/cyberpanel/archive/${_cp_branch}.tar.gz"; do
+            if _github_archive_ok "$_cand"; then
+                archive_url="$_cand"
+                echo "    Using branch ${_cp_branch} from usmannasir/cyberpanel"
+                _found=1
+                break
+            fi
+        done
+    fi
+    if [[ "$_found" -eq 0 ]]; then
         echo "    Development branch archive not available, trying installer script directly..."
-        if ! curl -s -L --head "$installer_url" | grep -q "200 OK"; then
+        if ! _github_archive_ok "$installer_url"; then
             echo "    Development branch not available, falling back to stable"
             installer_url="https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel.sh"
             archive_url="https://github.com/usmannasir/cyberpanel/archive/stable.tar.gz"
         else
-            archive_url="https://github.com/usmannasir/cyberpanel/archive/refs/heads/v2.5.5-dev.tar.gz"
+            archive_url="https://github.com/${_cp_owner}/cyberpanel/archive/refs/heads/${_cp_branch}.tar.gz"
         fi
     fi
     
@@ -366,19 +388,33 @@ except:
         return 1
     fi
     
-    # Copy install directory to current location
-    if [ "$installer_url" = "https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/cyberpanel.sh" ]; then
-        if [ -d "cyberpanel-stable" ]; then
-            cp -r cyberpanel-stable/install . 2>/dev/null || true
-            cp -r cyberpanel-stable/install.sh . 2>/dev/null || true
+    # Copy install/ from extracted archive (GitHub top-level dir varies by branch URL)
+    # e.g. v2.5.5-dev -> cyberpanel-2.5.5-dev or cyberpanel-v2.5.5-dev; stable -> cyberpanel-stable
+    local _extracted_dir=""
+    local _try _d
+    for _try in \
+        "cyberpanel-${_cp_branch}" \
+        "cyberpanel-v${_cp_branch}" \
+        "cyberpanel-${_cp_branch#v}" \
+        "cyberpanel-stable"; do
+        if [ -d "${_try}/install" ]; then
+            _extracted_dir="${_try}"
+            break
         fi
-    else
-        if [ -d "cyberpanel-v2.5.5-dev" ]; then
-            cp -r cyberpanel-v2.5.5-dev/install . 2>/dev/null || true
-            cp -r cyberpanel-v2.5.5-dev/install.sh . 2>/dev/null || true
-        fi
+    done
+    if [ -z "$_extracted_dir" ]; then
+        for _d in cyberpanel-*/; do
+            [ -d "${_d}install" ] || continue
+            _extracted_dir="${_d%/}"
+            break
+        done
     fi
-    
+    if [ -n "$_extracted_dir" ]; then
+        echo "    Using extracted directory: ${_extracted_dir}"
+        cp -r "${_extracted_dir}/install" . 2>/dev/null || true
+        [ -f "${_extracted_dir}/install.sh" ] && cp "${_extracted_dir}/install.sh" . 2>/dev/null || true
+    fi
+
     # Verify install directory was copied
     if [ ! -d "install" ]; then
         print_status "ERROR: install directory not found after extraction"

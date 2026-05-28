@@ -14,37 +14,8 @@ Post_Upgrade_System_Tweak() {
 
   if [[ "$Server_OS" = "CentOS" ]] ; then
 
-  #for cenots 7/8
-    if [[ "$Server_OS_Version" = "7" ]] ; then
-      sed -i 's|error_reporting = E_ALL \&amp; ~E_DEPRECATED \&amp; ~E_STRICT|error_reporting = E_ALL \& ~E_DEPRECATED \& ~E_STRICT|g' /usr/local/lsws/{lsphp72,lsphp73}/etc/php.ini
-    #fix php.ini &amp; issue
-        if ! yum list installed lsphp74-devel ; then
-          yum install -y lsphp74-devel
-        fi
-        if [[ ! -f /usr/local/lsws/lsphp74/lib64/php/modules/zip.so ]] ; then
-        if yum list installed libzip-devel >/dev/null 2>&1 ; then
-          yum remove -y libzip-devel
-        fi
-        yum install -y https://cyberpanel.sh/misc/libzip-0.11.2-6.el7.psychotic.x86_64.rpm
-        yum install -y https://cyberpanel.sh/misc/libzip-devel-0.11.2-6.el7.psychotic.x86_64.rpm
-        yum install lsphp74-devel
-        if [[ ! -d /usr/local/lsws/lsphp74/tmp ]]; then
-          mkdir /usr/local/lsws/lsphp74/tmp
-        fi
-        /usr/local/lsws/lsphp74/bin/pecl channel-update pecl.php.net
-        /usr/local/lsws/lsphp74/bin/pear config-set temp_dir /usr/local/lsws/lsphp74/tmp
-        if /usr/local/lsws/lsphp74/bin/pecl install zip ; then
-          echo "extension=zip.so" >/usr/local/lsws/lsphp74/etc/php.d/20-zip.ini
-          chmod 755 /usr/local/lsws/lsphp74/lib64/php/modules/zip.so
-        else
-          echo -e "\nlsphp74-zip compilation failed..."
-        fi
-        #fix old legacy lsphp74-zip issue on centos 7
-      fi
-
-
-    #for centos 7
-    elif [[ "$Server_OS_Version" = "8" ]] ; then
+  #for CentOS 8+
+    if [[ "$Server_OS_Version" = "8" ]] ; then
     :
     #for centos 8
     fi
@@ -118,6 +89,11 @@ fi
 if [[ ! -f /usr/bin/cyberpanel_utility ]]; then
   wget -q -O /usr/bin/cyberpanel_utility https://cyberpanel.sh/misc/cyberpanel_utility.sh
   chmod 700 /usr/bin/cyberpanel_utility
+fi
+
+if [[ -f /usr/local/CyberCP/scripts/utils/cyberpanel-utils.sh ]]; then
+  chmod 755 /usr/local/CyberCP/scripts/utils/cyberpanel-utils.sh 2>/dev/null || true
+  ln -sf /usr/local/CyberCP/scripts/utils/cyberpanel-utils.sh /usr/local/bin/cyberpanel-utils 2>/dev/null || true
 fi
 
 if [[ -f /etc/cyberpanel/watchdog.sh ]] ; then
@@ -398,8 +374,10 @@ fi
 # Validate phpMyAdmin web entrypoint after upgrade and self-heal if missing.
 if [ ! -f /usr/local/CyberCP/public/phpmyadmin/index.php ]; then
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: phpMyAdmin index.php missing after upgrade, attempting repair..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-  if [ -x /usr/local/CyberCP/fix-phpmyadmin.sh ]; then
-    bash /usr/local/CyberCP/fix-phpmyadmin.sh 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log || true
+  PMA_FIX="/usr/local/CyberCP/scripts/utils/fix-phpmyadmin.sh"
+  [[ -x "$PMA_FIX" ]] || PMA_FIX="/usr/local/CyberCP/fix-phpmyadmin.sh"
+  if [ -x "$PMA_FIX" ]; then
+    bash "$PMA_FIX" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log || true
   elif [ -x /usr/local/CyberCP/bin/python ]; then
     export DJANGO_SETTINGS_MODULE=CyberCP.settings
     /usr/local/CyberCP/bin/python -c "import sys; sys.path.insert(0, '/usr/local/CyberCP'); from plogical.upgrade import Upgrade; Upgrade.download_install_phpmyadmin()" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log || true
@@ -410,15 +388,17 @@ if [ ! -f /usr/local/CyberCP/public/phpmyadmin/index.php ]; then
   if [ -f /usr/local/CyberCP/public/phpmyadmin/index.php ]; then
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] phpMyAdmin repair completed successfully (index.php restored)." | tee -a /var/log/cyberpanel_upgrade_debug.log
   else
-    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: phpMyAdmin repair did not restore index.php. Run /usr/local/CyberCP/fix-phpmyadmin.sh manually." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: phpMyAdmin repair did not restore index.php. Run: cyberpanel-utils.sh run fix-phpmyadmin (or /usr/local/CyberCP/scripts/utils/fix-phpmyadmin.sh)" | tee -a /var/log/cyberpanel_upgrade_debug.log
   fi
 fi
 
 # Validate SnappyMail web app after upgrade and self-heal if missing (Django serves /snappymail/ from PUBLIC_ROOT/snappymail).
 if [ ! -f /usr/local/CyberCP/public/snappymail/index.php ]; then
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: SnappyMail index.php missing after upgrade, attempting repair..." | tee -a /var/log/cyberpanel_upgrade_debug.log
-  if [ -x /usr/local/CyberCP/fix-snappymail.sh ]; then
-    bash /usr/local/CyberCP/fix-snappymail.sh 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log || true
+  SNAP_FIX="/usr/local/CyberCP/scripts/utils/fix-snappymail.sh"
+  [[ -x "$SNAP_FIX" ]] || SNAP_FIX="/usr/local/CyberCP/fix-snappymail.sh"
+  if [ -x "$SNAP_FIX" ]; then
+    bash "$SNAP_FIX" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log || true
   elif [ -x /usr/local/CyberCP/bin/python ]; then
     export DJANGO_SETTINGS_MODULE=CyberCP.settings
     /usr/local/CyberCP/bin/python -c "import sys; sys.path.insert(0, '/usr/local/CyberCP'); from plogical.upgrade import Upgrade; Upgrade.downoad_and_install_raindloop()" 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log || true
@@ -430,7 +410,7 @@ if [ ! -f /usr/local/CyberCP/public/snappymail/index.php ]; then
     echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] SnappyMail repair completed successfully (index.php restored)." | tee -a /var/log/cyberpanel_upgrade_debug.log
     chown -R lscpd:lscpd /usr/local/CyberCP/public/snappymail 2>/dev/null || true
   else
-    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: SnappyMail repair did not restore index.php. Run /usr/local/CyberCP/fix-snappymail.sh manually." | tee -a /var/log/cyberpanel_upgrade_debug.log
+    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: SnappyMail repair did not restore index.php. Run: cyberpanel-utils.sh run fix-snappymail (or /usr/local/CyberCP/scripts/utils/fix-snappymail.sh)" | tee -a /var/log/cyberpanel_upgrade_debug.log
   fi
 fi
 
@@ -469,7 +449,7 @@ if [[ -f /usr/local/CyberCP/CPScripts/ensure_ftp_users_quota_columns.py ]]; then
   fi
   echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Ran ensure_ftp_users_quota_columns (FTP users table custom quota columns)" | tee -a /var/log/cyberpanel_upgrade_debug.log
 else
-  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] INFO: ensure_ftp_users_quota_columns.py not in CyberCP yet; run deploy-ftp-users-custom-quota-columns.sh after sync" | tee -a /var/log/cyberpanel_upgrade_debug.log
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] INFO: ensure_ftp_users_quota_columns.py not in CyberCP yet; run: cyberpanel-utils.sh run deploy-ftp-users-custom-quota-columns" | tee -a /var/log/cyberpanel_upgrade_debug.log
 fi
 
 # Gunicorn timeout drop-in and backend restart so workers use the new venv (after pip in Main_Upgrade).

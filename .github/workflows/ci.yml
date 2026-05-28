@@ -1,7 +1,7 @@
 # Lightweight CI for v2.5.5-dev (free for public repos).
 # Validates shell syntax, Python version fetcher, key files, and upgrade script.
 # Pinned to ubuntu-22.04. Multi-OS validation: run locally with
-#   for img in almalinux:8 centos:7 debian:12 ubuntu:24.04; do docker run --rm -v "$PWD:/repo:ro" -w /repo $img bash /repo/.github/scripts/ci-validate-upgrade.sh; done
+#   for img in almalinux:8 almalinux:10 debian:12 ubuntu:24.04; do docker run --rm -v "$PWD:/repo:ro" -w /repo $img bash /repo/.github/scripts/ci-validate-upgrade.sh; done
 name: CI
 
 on:
@@ -23,6 +23,16 @@ jobs:
             bash -n "$f" || { echo "FAIL (syntax): $f"; exit 1; }
             echo "OK $f"
           done
+          if [ -f scripts/utils/cyberpanel-utils.sh ]; then
+            bash -n scripts/utils/cyberpanel-utils.sh || { echo "FAIL (syntax): scripts/utils/cyberpanel-utils.sh"; exit 1; }
+            echo "OK scripts/utils/cyberpanel-utils.sh"
+            for f in scripts/utils/*.sh; do
+              [ -f "$f" ] || continue
+              case "$f" in *cyberpanel-utils.sh) continue ;; esac
+              bash -n "$f" || { echo "FAIL (syntax): $f"; exit 1; }
+              echo "OK $f"
+            done
+          fi
           test -f preUpgrade.sh && test -f cyberpanel_upgrade.sh || { echo "Missing required scripts"; exit 1; }
           if [ -d upgrade_modules ]; then
             echo "=== Upgrade modules syntax ==="

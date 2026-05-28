@@ -3,11 +3,21 @@
 set -e
 
 echo "=== Shell syntax check ==="
-for f in cyberpanel_upgrade.sh preUpgrade.sh fix-phpmyadmin.sh cyberpanel.sh cyberpanel_utility.sh; do
+for f in cyberpanel_upgrade.sh preUpgrade.sh fix-phpmyadmin.sh fix-snappymail.sh cyberpanel.sh cyberpanel_utility.sh; do
   [ ! -f "$f" ] && continue
   bash -n "$f" || { echo "FAIL (syntax): $f"; exit 1; }
   echo "OK $f"
 done
+if [ -f scripts/utils/cyberpanel-utils.sh ]; then
+  bash -n scripts/utils/cyberpanel-utils.sh || { echo "FAIL (syntax): scripts/utils/cyberpanel-utils.sh"; exit 1; }
+  echo "OK scripts/utils/cyberpanel-utils.sh"
+  for f in scripts/utils/*.sh; do
+    [ -f "$f" ] || continue
+    case "$f" in *cyberpanel-utils.sh) continue ;; esac
+    bash -n "$f" || { echo "FAIL (syntax): $f"; exit 1; }
+    echo "OK $f"
+  done
+fi
 test -f preUpgrade.sh && test -f cyberpanel_upgrade.sh || { echo "Missing required scripts"; exit 1; }
 
 echo "=== Key files ==="

@@ -3,16 +3,53 @@
 # CyberPanel v2.5.5-dev Installer
 # Simplified approach similar to stable branch
 
-# Determine branch from arguments or use default
-BRANCH_NAME="v2.5.5-dev"
-for arg in "$@"; do
-    case "$arg" in
+# Full install requires root (packages, /usr/local, services)
+if [ "$(id -u)" -ne 0 ]; then
+    _branch="${CYBERPANEL_BRANCH:-v2.5.5-dev}"
+    if command -v sudo >/dev/null 2>&1; then
+        echo "CyberPanel install requires root. Re-running with sudo..."
+        _install_url="https://raw.githubusercontent.com/master3395/cyberpanel/${_branch}/install.sh"
+        exec sudo -E env CYBERPANEL_BRANCH="${_branch}" sh -c "curl -sL '${_install_url}' | sh -s"
+    fi
+    echo "ERROR: Run the installer as root."
+    echo "  curl -sL https://raw.githubusercontent.com/master3395/cyberpanel/v2.5.5-dev/install.sh | sudo sh"
+    if grep -qi microsoft /proc/version 2>/dev/null; then
+        echo "WSL: the same command from your AlmaLinux shell (sudo will prompt for your Linux password)."
+    fi
+    exit 1
+fi
+
+# Determine branch from arguments or use default (preserve "$@" for cyberpanel.sh)
+BRANCH_NAME="${CYBERPANEL_BRANCH:-v2.5.5-dev}"
+_arg_i=1
+while [ "$_arg_i" -le "$#" ]; do
+    eval "_arg=\${$_arg_i}"
+    case "$_arg" in
         -b|--branch)
-            BRANCH_NAME="$2"
-            shift 2
+            _next=$((_arg_i + 1))
+            eval "_branch_val=\${$_next}"
+            if [ -n "${_branch_val:-}" ]; then
+                BRANCH_NAME="$_branch_val"
+            else
+                echo "ERROR: -b/--branch requires a branch name"
+                exit 1
+            fi
             ;;
     esac
+    _arg_i=$((_arg_i + 1))
 done
+
+# When install is piped (curl | sh), default to non-interactive unless --auto already set
+if [ ! -t 0 ]; then
+    _has_auto=0
+    for _a in "$@"; do
+        case "$_a" in --auto) _has_auto=1 ;; esac
+    done
+    if [ "$_has_auto" -eq 0 ]; then
+        echo "Piped install detected: enabling --auto --mariadb-version 11.8 (override with explicit flags)"
+        set -- "$@" --auto --mariadb-version 11.8
+    fi
+fi
 
 # Check disk space (10GB minimum)
 check_disk_space() {
@@ -30,15 +67,17 @@ check_disk_space() {
     fi
 }
 
+# Reject EOL EL7 before any install work
+if [ -f /etc/os-release ] && grep -qE 'CentOS Linux 7|CloudLinux 7|VERSION_ID="7\.|VERSION_ID=7' /etc/os-release 2>/dev/null; then
+    echo "CentOS 7 and CloudLinux 7 are no longer supported (EOL)."
+    echo "Migrate to AlmaLinux 8, 9, or 10, then run the installer."
+    exit 1
+fi
+
 # Detect OS and set SERVER_OS (similar to stable branch)
 OUTPUT=$(cat /etc/*release 2>/dev/null || echo "")
 
-if echo "$OUTPUT" | grep -q "CentOS Linux 7" ; then
-    echo "Checking and installing curl and wget"
-    yum install curl wget -y 1> /dev/null 2>&1 || dnf install curl wget -y 1> /dev/null 2>&1 || true
-    yum update curl wget ca-certificates -y 1> /dev/null 2>&1 || dnf update curl wget ca-certificates -y 1> /dev/null 2>&1 || true
-    SERVER_OS="CentOS"
-elif echo "$OUTPUT" | grep -q "CentOS Linux 8" ; then
+if echo "$OUTPUT" | grep -q "CentOS Linux 8" ; then
     echo -e "\nDetecting CentOS 8...\n"
     SERVER_OS="CentOS8"
     yum install curl wget -y 1> /dev/null 2>&1 || dnf install curl wget -y 1> /dev/null 2>&1 || true
@@ -55,14 +94,9 @@ elif echo "$OUTPUT" | grep -q "AlmaLinux 9" ; then
     yum update curl wget ca-certificates -y 1> /dev/null 2>&1 || dnf update curl wget ca-certificates -y 1> /dev/null 2>&1 || true
 elif echo "$OUTPUT" | grep -q "AlmaLinux 10" ; then
     echo -e "\nDetecting AlmaLinux 10...\n"
-    SERVER_OS="CentOS8"
+    SERVER_OS="AlmaLinux10"
     yum install curl wget -y 1> /dev/null 2>&1 || dnf install curl wget -y 1> /dev/null 2>&1 || true
     yum update curl wget ca-certificates -y 1> /dev/null 2>&1 || dnf update curl wget ca-certificates -y 1> /dev/null 2>&1 || true
-elif echo "$OUTPUT" | grep -q "CloudLinux 7" ; then
-    echo "Checking and installing curl and wget"
-    yum install curl wget -y 1> /dev/null 2>&1 || dnf install curl wget -y 1> /dev/null 2>&1 || true
-    yum update curl wget ca-certificates -y 1> /dev/null 2>&1 || dnf update curl wget ca-certificates -y 1> /dev/null 2>&1 || true
-    SERVER_OS="CloudLinux"
 elif echo "$OUTPUT" | grep -q "CloudLinux 8" ; then
     echo "Checking and installing curl and wget"
     yum install curl wget -y 1> /dev/null 2>&1 || dnf install curl wget -y 1> /dev/null 2>&1 || true
@@ -92,7 +126,7 @@ elif echo "$OUTPUT" | grep -q "openEuler 22.03" ; then
     yum update curl wget ca-certificates -y 1> /dev/null 2>&1 || dnf update curl wget ca-certificates -y 1> /dev/null 2>&1 || true
 else
     echo -e "\nUnable to detect your OS...\n"
-    echo -e "\nCyberPanel is supported on Ubuntu 18.04, Ubuntu 20.04, Ubuntu 22.04, Ubuntu 24.04, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10 and CloudLinux 7.x...\n"
+    echo -e "\nCyberPanel is supported on Ubuntu 18.04, Ubuntu 20.04, Ubuntu 22.04, Ubuntu 24.04, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, CloudLinux 8/9, CentOS 8/9, Rocky Linux 8/9, RHEL 8/9...\n"
     exit 1
 fi
 
@@ -131,12 +165,15 @@ if [ "$BRANCH_NAME" = "v2.5.5-dev" ] || [ "$BRANCH_NAME" = "stable" ] || [ "$BRA
                 # Change to temp directory and execute with bash
                 # Use absolute path to avoid any relative path issues
                 cd "$TEMP_DIR" || cd /tmp || cd /
-                bash "$SCRIPT_PATH" "$@"
+                export CYBERPANEL_BRANCH="${BRANCH_NAME}"
+                export CYBERPANEL_GITHUB_OWNER="${CYBERPANEL_GITHUB_OWNER:-master3395}"
+                bash "$SCRIPT_PATH" -b "${BRANCH_NAME}" "$@"
                 exit $?
             else
                 echo "⚠️  Warning: Could not make script executable, trying alternative method..."
                 cd "$TEMP_DIR" || cd /tmp || cd /
-                bash -c "bash '$SCRIPT_PATH' $*"
+                export CYBERPANEL_BRANCH="${BRANCH_NAME}"
+                bash -c "bash '$SCRIPT_PATH' -b '${BRANCH_NAME}' $(printf '%q ' "$@")"
                 exit $?
             fi
         fi
@@ -155,12 +192,14 @@ if curl --silent -o "$SCRIPT_PATH" "https://cyberpanel.sh/?dl&$SERVER_OS" 2>/dev
             # Change to temp directory and execute with bash
             # Use absolute path to avoid any relative path issues
             cd "$TEMP_DIR" || cd /tmp || cd /
-            bash "$SCRIPT_PATH" "$@"
+            export CYBERPANEL_BRANCH="${BRANCH_NAME}"
+            bash "$SCRIPT_PATH" -b "${BRANCH_NAME}" "$@"
             exit $?
         else
             echo "⚠️  Warning: Could not make script executable, trying alternative method..."
             cd "$TEMP_DIR" || cd /tmp || cd /
-            bash -c "bash '$SCRIPT_PATH' $*"
+            export CYBERPANEL_BRANCH="${BRANCH_NAME}"
+            bash -c "bash '$SCRIPT_PATH' -b '${BRANCH_NAME}' $(printf '%q ' "$@")"
             exit $?
         fi
     fi

@@ -557,10 +557,15 @@ class FTPManager:
 
         ###### FTP Groups and user settings settings
 
-        command = 'groupadd -g 2001 ftpgroup'
+        command = (
+            'getent group ftpgroup >/dev/null || groupadd -g 2001 ftpgroup'
+        )
         ProcessUtilities.executioner(command, 'root', True)
 
-        command = 'useradd -u 2001 -s /bin/false -d /bin/null -c "pureftpd user" -g ftpgroup ftpuser'
+        command = (
+            'getent passwd ftpuser >/dev/null || useradd -u 2001 -s /bin/false '
+            '-d /bin/null -c "pureftpd user" -g ftpgroup ftpuser'
+        )
         ProcessUtilities.executioner(command, 'root', True)
 
         return 1

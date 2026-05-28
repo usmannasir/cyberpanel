@@ -13,13 +13,19 @@ check_OS() {
 	  exit
 	fi
 
-	if grep -q -E "CentOS Linux 7|CentOS Linux 8|CentOS Stream" /etc/os-release ; then
+	if grep -qE 'CentOS Linux 7|CloudLinux 7|VERSION_ID="7\.|VERSION_ID=7' /etc/os-release 2>/dev/null; then
+	  echo -e "CentOS 7 and CloudLinux 7 are no longer supported (EOL)."
+	  echo -e "Migrate to AlmaLinux 8, 9, or 10, then run this utility."
+	  exit 1
+	fi
+
+	if grep -q -E "CentOS Linux 8|CentOS Stream" /etc/os-release ; then
           Server_OS="CentOS"
         elif grep -q "Red Hat Enterprise Linux" /etc/os-release ; then
           Server_OS="RedHat"
 	elif grep -q -E "AlmaLinux-8|AlmaLinux-9|AlmaLinux-10" /etc/os-release ; then
 	  Server_OS="AlmaLinux"
-	elif grep -q -E "CloudLinux 7|CloudLinux 8" /etc/os-release ; then
+	elif grep -q -E "CloudLinux 8" /etc/os-release ; then
 	  Server_OS="CloudLinux"
 	elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04|Ubuntu 20.10|Ubuntu 22.04|Ubuntu 24.04" /etc/os-release ; then
 	  Server_OS="Ubuntu"
@@ -29,7 +35,7 @@ check_OS() {
 	  Server_OS="openEuler"
 	else
 	  echo -e "Unable to detect your system..."
-	  echo -e "\nCyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, CentOS 7, CentOS 8, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03...\n"
+	  echo -e "\nCyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, CentOS 8, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, CloudLinux 8, openEuler 20.03, openEuler 22.03...\n"
   	  exit
 	fi
 

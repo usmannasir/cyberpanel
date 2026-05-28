@@ -615,13 +615,17 @@ module cyberpanel_ols {
         if self.ent == 0:
             # Install standard OpenLiteSpeed package
             self.install_package('openlitespeed')
+            install_utils.ensure_openlitespeed_rpm_layout(self.distro, log=1)
 
-            # Install custom binaries with PHP config support
-            # This replaces the standard binary with enhanced version
-            self.installCustomOLSBinaries()
-
-            # Configure the custom module
-            self.configureCustomModule()
+            if install_utils.should_skip_custom_ols_overlay():
+                InstallCyberPanel.stdOut(
+                    'Using official OpenLiteSpeed from repo (no custom binary overlay)',
+                    1,
+                )
+            else:
+                self.installCustomOLSBinaries()
+                install_utils.ensure_openlitespeed_rpm_layout(self.distro, log=1)
+                self.configureCustomModule()
 
             try:
                 import re
@@ -785,16 +789,16 @@ module cyberpanel_ols {
                 self.install_package(f'lsphp{version}*', '--skip-broken')
                 
         elif self.distro == cent8:
-            # Install PHP versions in batches with exclusions
-            exclude_flags = "--exclude lsphp73-pecl-zip --exclude *imagick*"
-            
-            # First batch: PHP 7.x and 8.0
-            versions_batch1 = ' '.join([f'lsphp{v}*' for v in php_versions[:5]])
-            self.install_package(versions_batch1, f'{exclude_flags} --skip-broken')
-            
-            # Second batch: PHP 8.1+
-            versions_batch2 = ' '.join([f'lsphp{v}*' for v in php_versions[5:]])
-            self.install_package(versions_batch2, f'{exclude_flags} --skip-broken')
+            install_utils.ensure_lsphp_runtime_deps(self.distro)
+            exclude_flags = (
+                "--exclude lsphp73-pecl-zip --exclude *imagick* "
+                "--exclude 'lsphp*-imap' --exclude 'lsphp*-mbstring'"
+            )
+            all_versions = ' '.join([f'lsphp{v}*' for v in php_versions])
+            self.install_package(
+                all_versions,
+                f'{exclude_flags} --skip-broken --nobest',
+            )
             
         elif self.distro == openeuler:
             # Install all PHP versions at once
@@ -858,8 +862,15 @@ protocol sieve {
     def setupWebmail():
         """Set up Dovecot master user and webmail config for SSO"""
         try:
-            # Skip if dovecot not installed
-            if not os.path.exists('/etc/dovecot/dovecot.conf'):
+            # Skip if dovecot not installed (EL10 may use dovecot.d layout before first start)
+            dovecot_ready = (
+                os.path.exists('/etc/dovecot/dovecot.conf')
+                or (
+                    os.path.isdir('/etc/dovecot')
+                    and os.path.isfile('/usr/sbin/doveadm')
+                )
+            )
+            if not dovecot_ready:
                 InstallCyberPanel.stdOut("Dovecot not installed, skipping webmail setup.", 1)
                 return 1
 
@@ -1092,30 +1103,66 @@ gpgcheck=1
 
         install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
+        install_utils.ensure_mariadb_client_cli(self.distro)
+
         ############## Start mariadb ######################
 
         self.startMariaDB()
 
     def changeMYSQLRootPassword(self):
-        if self.remotemysql == 'OFF':
-            if self.distro == ubuntu:
-                passwordCMD = "use mysql;DROP DATABASE IF EXISTS test;DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%%';GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '%s';UPDATE user SET plugin='' WHERE User='root';flush privileges;" % (
-                    InstallCyberPanel.mysql_Root_password)
-            else:
-                passwordCMD = "use mysql;DROP DATABASE IF EXISTS test;DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%%';GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '%s';flush privileges;" % (
-                    InstallCyberPanel.mysql_Root_password)
+        if self.remotemysql != 'OFF':
+            return
 
-            # For AlmaLinux 9, try mysql command first, then mariadb
-            if self.distro == cent8 or self.distro == openeuler:
-                command = 'mysql -u root -e "' + passwordCMD + '"'
-                result = install_utils.call(command, self.distro, command, command, 0, 0, os.EX_OSERR)
-                if result != 0:
-                    # If mysql command fails, try mariadb
-                    command = 'mariadb -u root -e "' + passwordCMD + '"'
-                    install_utils.call(command, self.distro, command, command, 0, 0, os.EX_OSERR)
-            else:
-                command = 'mariadb -u root -e "' + passwordCMD + '"'
-                install_utils.call(command, self.distro, command, command, 0, 0, os.EX_OSERR)
+        install_utils.ensure_mariadb_client_cli(self.distro)
+        cli = install_utils.resolve_mysql_cli()
+        if not cli:
+            self.stdOut(
+                "Error: mysql/mariadb client not found after MariaDB install.",
+                0,
+            )
+            return
+
+        passwordCMD = (
+            "use mysql;DROP DATABASE IF EXISTS test;"
+            "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%%';"
+            "ALTER USER 'root'@'localhost' IDENTIFIED BY '%s';"
+            "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION;"
+            "flush privileges;"
+        ) % (InstallCyberPanel.mysql_Root_password)
+
+        if self.distro == ubuntu:
+            passwordCMD = (
+                "use mysql;DROP DATABASE IF EXISTS test;"
+                "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%%';"
+                "ALTER USER 'root'@'localhost' IDENTIFIED BY '%s';"
+                "UPDATE user SET plugin='' WHERE User='root';"
+                "flush privileges;"
+            ) % (InstallCyberPanel.mysql_Root_password)
+
+        socket_cmds = [
+            'sudo %s' % cli,
+            'sudo /usr/bin/mariadb',
+            'sudo /usr/bin/mysql',
+        ]
+        password_cmds = [
+            '%s -u root' % cli,
+            'mariadb -u root',
+            'mysql -u root',
+        ]
+
+        for cmd in socket_cmds + password_cmds:
+            command = '%s -e "%s"' % (cmd, passwordCMD)
+            result = install_utils.call(
+                command, self.distro, command, command, 0, 0, os.EX_OSERR,
+            )
+            if result == 0:
+                self.stdOut("MySQL root password set using: %s" % cmd, 1)
+                return
+
+        self.stdOut(
+            "Failed to set MySQL root password; configure manually if needed.",
+            0,
+        )
 
     def startMariaDB(self):
 
@@ -1199,11 +1246,7 @@ gpgcheck=1
 
         ###### FTP Groups and user settings settings
 
-        command = 'groupadd -g 2001 ftpgroup'
-        install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-        command = 'useradd -u 2001 -s /bin/false -d /bin/null -c "pureftpd user" -g ftpgroup ftpuser'
-        install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+        install_utils.ensure_pureftpd_system_user(self.distro, log=1)
 
     def startPureFTPD(self):
         ############## Start pureftpd ######################

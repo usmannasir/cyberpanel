@@ -52,13 +52,7 @@ detect_architecture() {
 detect_centos() {
     local OUTPUT=$1
     
-    if echo $OUTPUT | grep -q "CentOS Linux 7" ; then
-        SERVER_OS="CentOS7"
-        OS_FAMILY="rhel"
-        PACKAGE_MANAGER="yum"
-        print_status "$GREEN" "Detected: CentOS Linux 7"
-        return 0
-    elif echo $OUTPUT | grep -q "CentOS Linux 8" ; then
+    if echo $OUTPUT | grep -q "CentOS Linux 8" ; then
         SERVER_OS="CentOS8"
         OS_FAMILY="rhel"
         PACKAGE_MANAGER="yum"
@@ -156,13 +150,7 @@ detect_rhel() {
 detect_cloudlinux() {
     local OUTPUT=$1
     
-    if echo $OUTPUT | grep -q "CloudLinux 7" ; then
-        SERVER_OS="CloudLinux7"
-        OS_FAMILY="rhel"
-        PACKAGE_MANAGER="yum"
-        print_status "$GREEN" "Detected: CloudLinux 7"
-        return 0
-    elif echo $OUTPUT | grep -q "CloudLinux 8" ; then
+    if echo $OUTPUT | grep -q "CloudLinux 8" ; then
         SERVER_OS="CloudLinux8"
         OS_FAMILY="rhel"
         PACKAGE_MANAGER="yum"
@@ -275,9 +263,18 @@ detect_openeuler() {
 }
 
 # Main OS detection function
+reject_el7_if_present() {
+    if [[ -f /etc/os-release ]] && grep -qE 'CentOS Linux 7|CloudLinux 7|VERSION_ID="7\.|VERSION_ID=7' /etc/os-release 2>/dev/null; then
+        print_status "$RED" "CentOS 7 and CloudLinux 7 are no longer supported (EOL)."
+        print_status "$YELLOW" "Migrate to AlmaLinux 8, 9, or 10, then run the installer."
+        exit 1
+    fi
+}
+
 detect_os() {
     print_status "$BLUE" "🔍 Detecting operating system..."
-    
+    reject_el7_if_present
+
     # Detect architecture first
     if ! detect_architecture; then
         print_status "$RED" "❌ Unsupported architecture: $ARCHITECTURE"
@@ -316,8 +313,8 @@ detect_os() {
         echo -e "• AlmaLinux: 8, 9, 10"
         echo -e "• RockyLinux: 8, 9"
         echo -e "• RHEL: 8, 9"
-        echo -e "• CentOS: 7, 8, 9, Stream 8, Stream 9"
-        echo -e "• CloudLinux: 7, 8, 9"
+        echo -e "• CentOS: 8, 9, Stream 8, Stream 9"
+        echo -e "• CloudLinux: 8, 9"
         echo -e "• openEuler: 20.03, 22.03, 24.03"
         return 1
     fi

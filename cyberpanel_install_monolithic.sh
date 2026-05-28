@@ -32,6 +32,64 @@ print_status() {
     log_message "$message"
 }
 
+normalize_mariadb_version() {
+    local raw="${1:-11.8}"
+    raw="${raw// /}"
+    if [[ "$raw" =~ ^([0-9]+)\.([0-9]+) ]]; then
+        echo "${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"
+    else
+        echo "11.8"
+    fi
+}
+
+prompt_mariadb_version_preference() {
+    if [ -n "$MARIADB_VER" ]; then
+        MARIADB_VER="$(normalize_mariadb_version "$MARIADB_VER")"
+        echo "  MariaDB version (already set): $MARIADB_VER"
+        echo ""
+        return 0
+    fi
+
+    echo ""
+    echo "  Database: MariaDB version for websites and CyberPanel"
+    echo "    1) 10.11  (legacy LTS)"
+    echo "    2) 11.8   (recommended LTS, default)"
+    echo "    3) 12.1"
+    echo "    4) 12.2"
+    echo "    5) 12.3"
+    echo "    6) Other  (enter major.minor, e.g. 12.4)"
+    echo ""
+    echo -n "  Select MariaDB version [2]: "
+    read -r mariadb_choice
+    mariadb_choice="${mariadb_choice:-2}"
+    mariadb_choice="${mariadb_choice// /}"
+
+    case "$mariadb_choice" in
+        1) MARIADB_VER="10.11" ;;
+        2) MARIADB_VER="11.8" ;;
+        3) MARIADB_VER="12.1" ;;
+        4) MARIADB_VER="12.2" ;;
+        5) MARIADB_VER="12.3" ;;
+        6)
+            echo -n "  Enter MariaDB version (X.Y) [11.8]: "
+            read -r mariadb_custom
+            MARIADB_VER="$(normalize_mariadb_version "${mariadb_custom:-11.8}")"
+            ;;
+        *)
+            if [[ "$mariadb_choice" =~ ^[0-9]+\.[0-9]+ ]]; then
+                MARIADB_VER="$(normalize_mariadb_version "$mariadb_choice")"
+            else
+                echo "  Invalid choice, using 11.8 (recommended LTS)."
+                MARIADB_VER="11.8"
+            fi
+            ;;
+    esac
+
+    echo "  Using MariaDB $MARIADB_VER"
+    echo ""
+    export MARIADB_VER
+}
+
 # Function to show banner
 show_banner() {
     clear
@@ -623,20 +681,12 @@ install_cyberpanel_direct() {
         fi
     fi
 
-    # Ask MariaDB version (after web server choice) if not set via --mariadb-version
+    # Ask MariaDB version if not set in Installation Preferences or --mariadb-version
     if [ -z "$MARIADB_VER" ]; then
-        echo ""
-        echo "  MariaDB version: 10.11, 11.8 (LTS, default), 12.1, 12.2, 12.3 or other X.Y?"
-        read -r -t 60 -p "  Enter version [11.8]: " MARIADB_VER || true
-        MARIADB_VER="${MARIADB_VER:-11.8}"
-        MARIADB_VER="${MARIADB_VER// /}"
-        # Normalize to major.minor (e.g. 12.3.1 -> 12.3)
-        if [[ "$MARIADB_VER" =~ ^([0-9]+)\.([0-9]+) ]]; then
-            MARIADB_VER="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"
-        else
-            MARIADB_VER="11.8"
-        fi
-        echo "  Using MariaDB $MARIADB_VER"
+        prompt_mariadb_version_preference
+    else
+        MARIADB_VER="$(normalize_mariadb_version "$MARIADB_VER")"
+        echo "  Using MariaDB $MARIADB_VER (from earlier choice)"
         echo ""
     fi
 
@@ -1734,6 +1784,7 @@ show_fresh_install_menu() {
             5)
                 BRANCH_NAME=""
                 AUTO_INSTALL=true
+                prompt_mariadb_version_preference
                 start_installation
                 return
                 ;;
@@ -1887,6 +1938,8 @@ show_installation_preferences() {
             DEBUG_MODE=false
             ;;
     esac
+
+    prompt_mariadb_version_preference
     
     # Auto-install
     echo -n "Auto-install without further prompts? (y/n) [y]: "
@@ -1908,6 +1961,7 @@ show_installation_preferences() {
     echo ""
     echo "   Type: $INSTALLATION_TYPE"
     echo "   Version: ${BRANCH_NAME:-'Latest Stable'}"
+    echo "   MariaDB: ${MARIADB_VER:-11.8}"
     echo "   Debug Mode: $DEBUG_MODE"
     echo "   Auto Install: $AUTO_INSTALL"
     echo ""
@@ -2259,7 +2313,7 @@ show_error_help() {
     echo "4. SYSTEM REQUIREMENTS:"
     echo "   • Minimum 1GB RAM: free -h"
     echo "   • Minimum 10GB disk space: df -h"
-    echo "   • Supported OS: AlmaLinux 8/9, CentOS 7/8, Ubuntu 18.04+"
+    echo "   • Supported OS: AlmaLinux 8/9/10, CentOS 8/9, Ubuntu 18.04+ (legacy monolith; use cyberpanel.sh)"
     echo ""
     echo "5. SERVICE CONFLICTS:"
     echo "   • Check running services: systemctl list-units --state=running"

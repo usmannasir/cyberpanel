@@ -1,0 +1,9 @@
+# Shell/install scripts must use LF (WSL and Linux installers break on CRLF)
+*.sh text eol=lf
+install.sh text eol=lf
+cyberpanel.sh text eol=lf
+cyberpanel_*.sh text eol=lf
+preUpgrade.sh text eol=lf
+install_modules/** text eol=lf
+upgrade_modules/** text eol=lf
+scripts/** text eol=lf

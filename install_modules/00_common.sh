@@ -8,7 +8,27 @@
 
 set -e
 
+# CyberPanel must run as root (installs system packages, /usr/local, /var/log).
+require_root() {
+    if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
+        return 0
+    fi
+    if grep -qi microsoft /proc/version 2>/dev/null; then
+        echo "WSL/Linux: CyberPanel must be installed as root (use sudo)."
+    else
+        echo "CyberPanel must be installed as root."
+    fi
+    if command -v sudo >/dev/null 2>&1; then
+        echo "Re-run with: sudo bash cyberpanel.sh"
+        echo "Or one-liner: curl -sL .../install.sh | sudo sh"
+    else
+        echo "Log in as root, then run the installer again."
+    fi
+    exit 1
+}
+
 # Global variables
+CYBERPANEL_LOG_DIR="${CYBERPANEL_LOG_DIR:-/var/log/CyberPanel}"
 SERVER_OS=""
 OS_FAMILY=""
 PACKAGE_MANAGER=""
@@ -79,9 +99,13 @@ ensure_cybercp_system_python() {
 
 # Logging function
 log_message() {
-    # Ensure log directory exists
-    mkdir -p "/var/log/CyberPanel"
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [CYBERPANEL] $1" | tee -a "/var/log/CyberPanel/install.log" 2>/dev/null || echo "[$(date '+%Y-%m-%d %H:%M:%S')] [CYBERPANEL] $1"
+    local log_dir="${CYBERPANEL_LOG_DIR:-/var/log/CyberPanel}"
+    if ! mkdir -p "${log_dir}" 2>/dev/null; then
+        log_dir="${HOME:-/tmp}/.cyberpanel-install/logs"
+        mkdir -p "${log_dir}" 2>/dev/null || log_dir="/tmp"
+        CYBERPANEL_LOG_DIR="${log_dir}"
+    fi
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [CYBERPANEL] $1" | tee -a "${log_dir}/install.log" 2>/dev/null || echo "[$(date '+%Y-%m-%d %H:%M:%S')] [CYBERPANEL] $1"
 }
 
 # Print status
@@ -89,6 +113,78 @@ print_status() {
     local message="$1"
     echo "$message"
     log_message "$message"
+}
+
+# Normalize user input to MariaDB major.minor (e.g. 12.3.1 -> 12.3)
+normalize_mariadb_version() {
+    local raw="${1:-11.8}"
+    raw="${raw// /}"
+    if [[ "$raw" =~ ^([0-9]+)\.([0-9]+) ]]; then
+        echo "${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"
+    else
+        echo "11.8"
+    fi
+}
+
+# Ask MariaDB version (skipped if MARIADB_VER already set via --mariadb-version)
+prompt_mariadb_version_preference() {
+    if [ -n "$MARIADB_VER" ]; then
+        MARIADB_VER="$(normalize_mariadb_version "$MARIADB_VER")"
+        echo "  MariaDB version (already set): $MARIADB_VER"
+        echo ""
+        return 0
+    fi
+
+    echo ""
+    echo "  Database: MariaDB version for websites and CyberPanel"
+    echo "    1) 10.11  (legacy LTS)"
+    echo "    2) 11.8   (recommended LTS, default)"
+    echo "    3) 12.1"
+    echo "    4) 12.2"
+    echo "    5) 12.3"
+    echo "    6) Other  (enter major.minor, e.g. 12.4)"
+    echo ""
+    echo -n "  Select MariaDB version [2]: "
+    read -r mariadb_choice
+    mariadb_choice="${mariadb_choice:-2}"
+    mariadb_choice="${mariadb_choice// /}"
+
+    case "$mariadb_choice" in
+        1) MARIADB_VER="10.11" ;;
+        2) MARIADB_VER="11.8" ;;
+        3) MARIADB_VER="12.1" ;;
+        4) MARIADB_VER="12.2" ;;
+        5) MARIADB_VER="12.3" ;;
+        6)
+            echo -n "  Enter MariaDB version (X.Y) [11.8]: "
+            read -r mariadb_custom
+            MARIADB_VER="$(normalize_mariadb_version "${mariadb_custom:-11.8}")"
+            ;;
+        *)
+            if [[ "$mariadb_choice" =~ ^[0-9]+\.[0-9]+ ]]; then
+                MARIADB_VER="$(normalize_mariadb_version "$mariadb_choice")"
+            else
+                echo "  Invalid choice, using 11.8 (recommended LTS)."
+                MARIADB_VER="11.8"
+            fi
+            ;;
+    esac
+
+    echo "  Using MariaDB $MARIADB_VER"
+    echo ""
+    export MARIADB_VER
+}
+
+# CentOS 7 and CloudLinux 7 reached EOL; fresh install and upgrade are unsupported.
+reject_el7_if_present() {
+    if [[ ! -f /etc/os-release ]]; then
+        return 0
+    fi
+    if grep -qE 'CentOS Linux 7|CloudLinux 7|VERSION_ID="7\.|VERSION_ID=7' /etc/os-release 2>/dev/null; then
+        echo "CentOS 7 and CloudLinux 7 are no longer supported (EOL)."
+        echo "Migrate to AlmaLinux 8, 9, or 10, then run the installer."
+        exit 1
+    fi
 }
 
 # Function to show banner
@@ -119,7 +215,8 @@ detect_os() {
     fi
     
     print_status "Detecting operating system..."
-    
+    reject_el7_if_present
+
     # Detect architecture
     ARCHITECTURE=$(uname -m)
     case $ARCHITECTURE in

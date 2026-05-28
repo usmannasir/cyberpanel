@@ -13,6 +13,150 @@ release.
 For per-host operator state (backups, deployment runs, restore drill results),
 see `to-do/LIVE-CYBERCP-STATE.md`.
 
+## 2.5.5-dev - 28/05/2026
+
+### Fixed: AlmaLinux 10 re-install exit 71 (ftpgroup already exists)
+
+- `ensure_pureftpd_system_user()`: use `getent` before `groupadd` / `useradd` so Pure-FTPd setup does not fail with exit code 9 when `ftpgroup` or `ftpuser` already exists from a prior install.
+- `restart_litespeed()`: try `lswsctrl` paths then `systemctl restart` (`lsws`, `openlitespeed`, `lshttpd`) when `/usr/local/lsws/bin/lswsctrl` is missing on re-install.
+
+### Fixed: AlmaLinux 10 re-install OpenLiteSpeed (custom binary without lswsctrl)
+
+- `ensure_openlitespeed_rpm_layout()`: `dnf reinstall openlitespeed` when the RPM is installed but `lswsctrl` or `httpd_config.conf` is missing.
+- `should_skip_custom_ols_overlay()`: on EL10 with intact repo layout, skip CyberPanel custom OLS binary (2.4.4 rhel9) so re-install does not leave a broken `/usr/local/lsws`.
+- `changePortTo80()`: port change no longer aborts when restart fails; logs a note instead of `[Errno 2] lswsctrl`.
+
+### Fixed: AlmaLinux 10 install exit 71 (Django migration graph / emailDelivery)
+
+- `discover_cybercp_migration_apps()`: before `makemigrations`, remove stale migration modules for **every** app with a `migrations/` package (including `emailDelivery` and `webmail`), not only the hardcoded list. Fixes `NodeNotFoundError: emailDelivery.0001_initial` depends on missing `loginSystem.0001_initial` after cleanup deleted `loginSystem` migrations only.
+- `build_cyberpanel_clone_commands()` / `build_cyberpanel_archive_download()`: clone and zip fallback use `CYBERPANEL_GITHUB_OWNER` (default `master3395`), then `usmannasir` if needed, so installs from the fork pick up EL10 fixes.
+
+### Fixed: AlmaLinux 10 install exit 71 (Django missing in CyberCP venv)
+
+- `install_utils.ensure_cybercp_venv()`: after `git clone` into `/usr/local/CyberCP`, create or repair
+  the venv with `virtualenv --system-site-packages` (or `python -m venv`), run `pip install -r requirments.txt`,
+  and verify `import django` before migrations.
+- `download_install_CyberPanel()`: fail fast if venv/Django setup fails instead of running
+  `makemigrations` against a bare interpreter.
+- Migration Python selection: only use interpreters that can `import django`; retry venv repair if needed.
+- `universal_os_fixes.install_packages()`: on EL10, stop using `dnf --skip-unavailable` (removed in
+  AlmaLinux 10); use batched `--skip-broken` installs and per-package fallback for optional deps.
+- AlmaLinux 10: `universal_os_fixes` enables **CRB** instead of PowerTools; skips `compat-openssl11` on EL10.
+- `fix_almalinux10_mariadb()`: install `openssh-server` so firewall/SSH port detection does not fail on
+  minimal images missing `/etc/ssh/sshd_config`.
+- `findSSHPort()`: install `openssh-server` when `sshd_config` is missing.
+- `setupWebmail()`: detect Dovecot via `/etc/dovecot` + `doveadm` on EL10 (not only `dovecot.conf`).
+
+### Fixed: AlmaLinux 10 clean install (LiteSpeed repo exit 71 + MariaDB conflicts)
+
+- `install_utils.install_litespeed_repo_rhel()`: idempotent LiteSpeed RPM repo (`rpm -q` or `rpm -Uvh`);
+  `resFailed()` treats `rpm` exit code 2 (already installed) as success.
+- `installCyberPanelRepo()` / `universal_os_fixes` / `setupPHPSymlink`: use shared helper so install no longer
+  aborts after OS fixes already installed `litespeed-repo`.
+- `install_mariadb_server_rhel()`: on RHEL/Alma 10+, install **AppStream** `mariadb-server` first (avoids
+  `mariadb-connector-c` vs `MariaDB-shared` conflicts); logs when MariaDB.org 11.8 was requested but not used.
+- `installMySQL()`: skip automatic 10.x to 11.8 upgrade attempt on EL10.
+- `setupAccounts()`: `getent group docker || groupadd docker` (no false error when group exists).
+- `universal_os_fixes`: `dnf install --skip-unavailable`; drop `db4-devel` / `libgssapi-krb5` on EL10.
+
+### Fixed: AlmaLinux 10 MariaDB install (false success + missing packages)
+
+- `install_utils.resFailed()`: treat non-zero exit codes as failures on `cent8` and
+  `openeuler` (AlmaLinux 10 was always reported as success, so failed `dnf install` continued).
+- `install_utils.install_mariadb_server_rhel()`: MariaDB.org repo with `curl -fsSL` and
+  `--skip-check-installed`, then AppStream fallback (`mariadb-server`, lowercase) when
+  `MariaDB-*` RPMs are unavailable on EL10.
+- `fix_almalinux10_mariadb()` / `installMySQL()` / `universal_os_fixes`: use shared helper and
+  `--mariadb-version` / `MARIADB_VER` instead of hardcoded 11.8.
+
+### Added: MariaDB version in Installation Preferences (before auto-install)
+
+- `install_modules/00_common.sh`: `prompt_mariadb_version_preference()` menu (10.11, 11.8,
+  12.1–12.3, or custom X.Y).
+- `install_modules/05_menus_main.sh`: asks database version after debug mode and before
+  "Auto-install without further prompts?"; summary shows MariaDB choice.
+- Quick Install (option 5) also prompts for MariaDB before starting.
+- `install_modules/02_install_core.sh`: skips duplicate MariaDB prompt when already chosen.
+- `--mariadb-version` accepts any X.Y (not only 10.11 / 11.8 / 12.1).
+
+### Fixed: AlmaLinux 10 install aborts after webmail (CDN / MariaDB / Django)
+
+- `downloadCDNLibraries()`: `install_utils.call()` returns bool, not exit code; use `if result`
+  instead of `if result == 0` so successful wget is recognized.
+- `InstallLog.writeToFile()`: removed invalid second argument on several log lines (was causing
+  `TypeError` and exit code 1 after CDN download).
+- `installMySQL()`: use `ensure_mariadb_client_cli()` / `resolve_mysql_cli()` (includes
+  `/usr/sbin/mariadb` on EL10); abort install if MySQL install fails; abort if cyberpanel DB
+  creation fails (no longer continues with a broken database).
+- Django migrations: prefer `/usr/local/CyberCP/bin/python` over system `/usr/bin/python3`.
+- AlmaLinux 10 / universal fixes: install `curl` and `ca-certificates` before
+  `mariadb_repo_setup` (script prerequisite check).
+
+### Fixed: fresh install NameError on setupWebmail (AlmaLinux 10 and all EL targets)
+
+- `install/install.py` called `installCyberPanel.InstallCyberPanel.setupWebmail()` without
+  importing `installCyberPanel`, causing `NameError: name 'installCyberPanel' is not defined`
+  after Dovecot/Postfix setup. Added `setup_webmail_master_user()` with a lazy import to avoid
+  circular import with `installCyberPanel.py`.
+
+## 2.5.5-dev - 27/05/2026
+
+### Fixed: install directory not found after GitHub archive extract
+
+- `install_modules/02_install_core.sh` detects the extracted top-level folder dynamically
+  (`cyberpanel-2.5.5-dev`, `cyberpanel-v2.5.5-dev`, `cyberpanel-stable`, etc.) instead of only
+  `cyberpanel-v2.5.5-dev`.
+
+### Fixed: AlmaLinux 10 upgrade PHP matrix
+
+- `plogical/upgrade.py::get_available_php_versions()` uses PHP 81–85 only on AlmaLinux 10
+  (aligned with `install_utils.get_lsphp_install_suffixes()`).
+
+### Fixed: installer requires root (WSL / non-root users)
+
+- `install.sh` re-runs via `sudo` with `curl | sh` when started as a normal user (fixes
+  `sh <(curl ...)` where `$0` is not the script path).
+- `install_modules/09_parse_main.sh` calls `require_root` before creating `/var/log/CyberPanel`.
+- `log_message` no longer fails fatally when `/var/log` is not writable.
+
+### Fixed: cyberpanel.sh one-liner default branch
+
+- Default module branch is `v2.5.5-dev` (not `stable`) when downloading `install_modules/`
+  from GitHub; `BRANCH_NAME` is exported after `-b` parsing.
+- If the chosen branch 404s, installer retries `v2.5.5-dev` automatically.
+
+### Fixed: AlmaLinux 10 install (PHP matrix, MariaDB CLI, fork archive)
+
+- `install_modules/02_install_core.sh`: GitHub branch archive probe accepts HTTP 200/302
+  (fixes false "falling back to stable" when `master3395/v2.5.5-dev` tarball exists).
+- `install/install_utils.py`: EL10 installs only `lsphp81` through `lsphp85` (no 71–80
+  "No match" noise); `ensure_lsphp_runtime_deps()` and `ensure_mariadb_client_cli()`.
+- `install/installCyberPanel.py`: cent8 PHP install skips imap/mbstring when deps missing;
+  root password uses `ALTER USER` and socket auth; MariaDB client ensured after server install.
+
+### Fixed: AlmaLinux 10 install bootstrap (`requests` missing)
+
+- `install_modules/03_install_direct.sh` now `pip install requests` (with OS package
+  fallback) before running `install/install.py`, because `installLog.py` imports
+  `requests` before the CyberCP venv exists.
+- AlmaLinux 10 / Python 3.12: install `python3.12-devel` when the bootstrap
+  interpreter is `/usr/bin/python3.12`.
+- `install_modules/02_install_core.sh` prefers `master3395/cyberpanel` for archive
+  download, with fallback to `usmannasir/cyberpanel`.
+
+### Removed: CentOS 7 and CloudLinux 7 (EOL)
+
+- Fresh install and upgrade now exit immediately on EL7 with a migrate-to-AlmaLinux
+  message (`reject_el7_if_present` in install/upgrade entry points).
+- Removed EL7-only upgrade paths (MariaDB prep, repository IUS/python36u, libzip
+  psychotic RPMs, `Pre_Upgrade_CentOS7_MySQL`).
+- `plogical/upgrade.py::FindOperatingSytem()` no longer defaults non-8 RHEL to
+  `CENTOS7`; EL8+ and AlmaLinux/Rocky/RHEL use `CENTOS8` paths.
+- Docs and support strings no longer list CentOS 7 or CloudLinux 7.
+
+**Operator action:** migrate existing EL7 hosts to AlmaLinux 8, 9, or 10 before
+installing or upgrading this fork.
+
 ## 2.5.5-dev (based on v2.4.7) - 26/05/2026
 
 ### Security and stability (Phase 1)
@@ -87,6 +231,20 @@ see `to-do/LIVE-CYBERCP-STATE.md`.
   static assets. The backport plan flags this as optional and requires a
   staging snapshot before applying. Not deployed on this host. Operator
   may revisit on a staging copy.
+
+## 2.5.5-dev (installer one-liner) - 27/05/2026
+
+### install.sh / cyberpanel.sh module download
+
+- `install.sh`: after downloading `cyberpanel.sh` from a branch (e.g.
+  `v2.5.5-dev`), now runs `bash cyberpanel.sh -b "${BRANCH_NAME}"` and
+  exports `CYBERPANEL_BRANCH` so modular `install_modules/` are fetched
+  from the same branch (was defaulting to `stable`, which returned HTTP
+  404 and produced `404:: command not found` when sourcing `00_common.sh`).
+- `install.sh`: AlmaLinux 10 detection now sets `SERVER_OS=AlmaLinux10`
+  (was `CentOS8`).
+- `cyberpanel.sh`: remote module download validates HTTP 200 and a `#!`
+  shebang before `source`; exits with a clear message on failure.
 
 ## 2.5.5-dev (open upstream PR adoption) - 26/05/2026
 

@@ -36,6 +36,23 @@ def get_cyberpanel_version():
     return f"{version['version']}.{version['build']}"
 
 
+def resolve_cyberpanel_utils_dispatcher():
+    """Locate scripts/utils/cyberpanel-utils.sh on server or dev checkout."""
+    candidates = [
+        '/usr/local/CyberCP/scripts/utils/cyberpanel-utils.sh',
+        '/usr/local/bin/cyberpanel-utils',
+    ]
+    try:
+        repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        candidates.append(os.path.join(repo_root, 'scripts', 'utils', 'cyberpanel-utils.sh'))
+    except BaseException:
+        pass
+    for path in candidates:
+        if path and os.path.isfile(path):
+            return path
+    return None
+
+
 class cyberPanel:
 
     def printStatus(self, operationStatus, errorMessage):
@@ -1354,6 +1371,31 @@ def main():
             return
 
         cyberpanel.issueSelfSignedSSL(args.domainName)
+
+    elif args.function == 'util':
+        util_action = args.utilAction or 'list'
+        if util_action == 'run' and not args.utilName:
+            print("\nUsage: cyberpanel util run --utilName <id>\n")
+            print("Example: cyberpanel util run --utilName fix-phpmyadmin\n")
+            print("List utilities: cyberpanel util list\n")
+            return
+        dispatch = resolve_cyberpanel_utils_dispatcher()
+        if not dispatch:
+            print("ERROR: cyberpanel-utils.sh not found. Upgrade/sync CyberCP (scripts/utils/).")
+            return
+        if util_action == 'run':
+            command = 'bash "%s" run %s' % (dispatch, args.utilName)
+        elif util_action == 'help':
+            if args.utilName:
+                command = 'bash "%s" help %s' % (dispatch, args.utilName)
+            else:
+                command = 'bash "%s" help' % (dispatch,)
+        elif util_action == 'list':
+            command = 'bash "%s" list' % (dispatch,)
+        else:
+            print("Unknown util action: %s (use list, run, or help)" % util_action)
+            return
+        ProcessUtilities.executioner(command)
 
     elif args.function == 'utility':
         if not os.path.exists('/usr/bin/cyberpanel_utility'):
