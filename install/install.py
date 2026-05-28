@@ -3537,9 +3537,44 @@ skip-ssl
         command = f"{python_path} {manage_py} collectstatic --noinput --clear"
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
-        ## Moving static content to lscpd location
-        command = 'mv static /usr/local/CyberCP/public/'
-        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+        ## Merge static content into public/static for LiteSpeed (mv fails if public/static exists)
+        static_root = "/usr/local/CyberCP/static"
+        public_static = "/usr/local/CyberCP/public/static"
+        static_sync_ok = False
+        if os.path.isdir(static_root):
+            try:
+                if '/usr/local/CyberCP' not in sys.path:
+                    sys.path.insert(0, '/usr/local/CyberCP')
+                from plogical import panel_static_sync
+
+                panel_static_sync.sync_static_root_to_public()
+                static_sync_ok = True
+                logging.InstallLog.writeToFile(
+                    "Merged %s into %s via panel_static_sync" % (static_root, public_static)
+                )
+            except BaseException as sync_merge_err:
+                logging.InstallLog.writeToFile(
+                    "[WARNING] panel_static_sync merge failed, trying shell merge: %s" % sync_merge_err
+                )
+                os.chdir("/usr/local/CyberCP")
+                if os.path.isdir(public_static):
+                    command = "cp -a static/. public/static/ && rm -rf static"
+                else:
+                    command = "mv static /usr/local/CyberCP/public/"
+                preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+                static_sync_ok = os.path.isdir(public_static)
+        else:
+            logging.InstallLog.writeToFile(
+                "No %s after collectstatic; using existing public/static if present" % static_root
+            )
+            static_sync_ok = os.path.isdir(public_static)
+
+        if not static_sync_ok:
+            logging.InstallLog.writeToFile(
+                "[ERROR] public/static was not created after collectstatic/sync"
+            )
+            preFlightsChecks.stdOut("ERROR: Failed to sync panel static files to public/static", 0)
+            return False
 
         try:
             if '/usr/local/CyberCP' not in sys.path:

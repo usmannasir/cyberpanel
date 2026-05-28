@@ -180,6 +180,15 @@ main() {
     
     # Parse command line arguments
     parse_arguments "$@"
+
+    # Piped one-liner (curl | bash): default to auto install when no TTY and --auto not set
+    if [ "$INSTALLATION_TYPE" = "install" ] && [ "$AUTO_INSTALL" != true ] && [ ! -t 0 ]; then
+        AUTO_INSTALL=true
+        if [ -z "$MARIADB_VER" ]; then
+            MARIADB_VER="11.8"
+        fi
+        print_status "Non-interactive stdin detected: enabling --auto (MariaDB ${MARIADB_VER})"
+    fi
     
     # Handle different installation modes
     case "$INSTALLATION_TYPE" in
@@ -211,17 +220,27 @@ main() {
                 # Install CyberPanel
                 if ! install_cyberpanel; then
                     print_status "ERROR: CyberPanel installation failed"
+                    local _log_dir="${CYBERPANEL_LOG_DIR:-/var/log/CyberPanel}"
                     echo ""
-                    echo "Would you like to see troubleshooting help? (y/n) [y]: "
-                    read -r show_help
-                    case $show_help in
-                        [nN]|[nN][oO])
-                            echo "Installation failed. Check logs at /var/log/CyberPanel/"
-                            ;;
-                        *)
-                            show_error_help
-                            ;;
-                    esac
+                    echo "Installation failed. Check logs:"
+                    echo "  ${_log_dir}/install.log"
+                    echo "  /var/log/installLogs.txt"
+                    if [ -t 0 ]; then
+                        echo ""
+                        echo "Would you like to see troubleshooting help? (y/n) [y]: "
+                        read -r show_help
+                        case $show_help in
+                            [nN]|[nN][oO])
+                                ;;
+                            *)
+                                show_error_help
+                                ;;
+                        esac
+                    else
+                        echo ""
+                        echo "Non-interactive install (piped curl): use --auto --mariadb-version 11.8"
+                        echo "Example: curl -sL .../install.sh | sudo sh -s -- -b v2.5.5-dev --auto --mariadb-version 11.8"
+                    fi
                     exit 1
                 fi
                 

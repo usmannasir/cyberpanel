@@ -19,15 +19,37 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
-# Determine branch from arguments or use default
+# Determine branch from arguments or use default (preserve "$@" for cyberpanel.sh)
 BRANCH_NAME="${CYBERPANEL_BRANCH:-v2.5.5-dev}"
-for arg in "$@"; do
-    case "$arg" in
+_arg_i=1
+while [ "$_arg_i" -le "$#" ]; do
+    eval "_arg=\${$_arg_i}"
+    case "$_arg" in
         -b|--branch)
-            BRANCH_NAME="$2"
+            _next=$((_arg_i + 1))
+            eval "_branch_val=\${$_next}"
+            if [ -n "${_branch_val:-}" ]; then
+                BRANCH_NAME="$_branch_val"
+            else
+                echo "ERROR: -b/--branch requires a branch name"
+                exit 1
+            fi
             ;;
     esac
+    _arg_i=$((_arg_i + 1))
 done
+
+# When install is piped (curl | sh), default to non-interactive unless --auto already set
+if [ ! -t 0 ]; then
+    _has_auto=0
+    for _a in "$@"; do
+        case "$_a" in --auto) _has_auto=1 ;; esac
+    done
+    if [ "$_has_auto" -eq 0 ]; then
+        echo "Piped install detected: enabling --auto --mariadb-version 11.8 (override with explicit flags)"
+        set -- "$@" --auto --mariadb-version 11.8
+    fi
+fi
 
 # Check disk space (10GB minimum)
 check_disk_space() {
