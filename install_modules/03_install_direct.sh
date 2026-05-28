@@ -203,12 +203,16 @@ install_cyberpanel_direct_cont() {
             # Install mysqlclient Python package
             print_status "Installing mysqlclient Python package..."
             "$CP_INSTALL_PY" -m pip install --upgrade pip setuptools wheel 2>&1 | grep -v "already satisfied" || true
-            if "$CP_INSTALL_PY" -m pip install mysqlclient 2>&1; then
+            _pip_flags=""
+            if [ "$os_family" = "debian" ]; then
+                _pip_flags="--break-system-packages"
+            fi
+            if "$CP_INSTALL_PY" -m pip install $_pip_flags mysqlclient 2>&1; then
                 print_status "✓ Successfully installed mysqlclient"
             else
                 # If pip install fails, try with build dependencies
                 print_status "Retrying mysqlclient installation with build dependencies..."
-                "$CP_INSTALL_PY" -m pip install --no-cache-dir mysqlclient 2>&1 || {
+                "$CP_INSTALL_PY" -m pip install $_pip_flags --no-cache-dir mysqlclient 2>&1 || {
                     print_status "⚠️  WARNING: Failed to install mysqlclient, trying alternative method..."
                     # Try installing from source
                     "$CP_INSTALL_PY" -m pip install --no-binary mysqlclient mysqlclient 2>&1 || true
@@ -237,13 +241,17 @@ install_cyberpanel_direct_cont() {
             
             # Install mysqlclient Python package
             print_status "Installing mysqlclient Python package..."
+            _pip_flags=""
+            if [ "$os_family" = "debian" ]; then
+                _pip_flags="--break-system-packages"
+            fi
             "$CP_INSTALL_PY" -m ensurepip --upgrade >/dev/null 2>&1 || true
-            "$CP_INSTALL_PY" -m pip install --upgrade pip setuptools wheel 2>&1 | grep -v "already satisfied" || true
-            if "$CP_INSTALL_PY" -m pip install mysqlclient 2>&1; then
+            "$CP_INSTALL_PY" -m pip install $_pip_flags --upgrade pip setuptools wheel 2>&1 | grep -v "already satisfied" || true
+            if "$CP_INSTALL_PY" -m pip install $_pip_flags mysqlclient 2>&1; then
                 print_status "✓ Successfully installed mysqlclient"
             else
                 print_status "Retrying mysqlclient installation with build dependencies..."
-                "$CP_INSTALL_PY" -m pip install --no-cache-dir mysqlclient 2>&1 || true
+                "$CP_INSTALL_PY" -m pip install $_pip_flags --no-cache-dir mysqlclient 2>&1 || true
             fi
         fi
         

@@ -1563,9 +1563,10 @@ def ensure_mysqlclient_for_python(python_exe=None, log=1):
     ):
       subprocess.run(pkg_cmd, shell=True, capture_output=True, timeout=600)
 
+  pip_extra = ['--break-system-packages'] if _is_debian_family_os() else []
   for pip_cmd in (
-      [python_exe, '-m', 'pip', 'install', '--upgrade', 'pip', 'wheel', 'setuptools'],
-      [python_exe, '-m', 'pip', 'install', 'mysqlclient'],
+      [python_exe, '-m', 'pip', 'install', '--upgrade', 'pip', 'wheel', 'setuptools'] + pip_extra,
+      [python_exe, '-m', 'pip', 'install', 'mysqlclient'] + pip_extra,
   ):
     try:
       subprocess.run(pip_cmd, capture_output=True, text=True, timeout=600)
