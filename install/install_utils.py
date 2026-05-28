@@ -1507,3 +1507,72 @@ def ensure_cybercp_venv(log=1):
 
   writeToFile('FATAL: django still not importable after venv setup')
   return False
+
+
+def _is_debian_family_os():
+  if not os.path.isfile('/etc/os-release'):
+    return False
+  try:
+    with open('/etc/os-release', 'r') as f:
+      content = f.read().lower()
+    return 'id=ubuntu' in content or 'id=debian' in content or 'id_like=debian' in content
+  except (OSError, IOError):
+    return False
+
+
+def ensure_mysqlclient_for_python(python_exe=None, log=1):
+  """
+  Ensure the given Python can ``import MySQLdb`` (mysqlclient package).
+  Used before installCyberPanel is imported during install.py.
+  Returns True if import works after optional pip install.
+  """
+  python_exe = python_exe or sys.executable
+  if not python_exe or not os.path.isfile(python_exe):
+    writeToFile('ensure_mysqlclient: invalid python path')
+    return False
+
+  def _can_import():
+    try:
+      r = subprocess.run(
+          [python_exe, '-c', 'import MySQLdb'],
+          capture_output=True,
+          text=True,
+          timeout=90,
+      )
+      return r.returncode == 0
+    except (OSError, subprocess.SubprocessError):
+      return False
+
+  if _can_import():
+    return True
+
+  writeToFile('Installing mysqlclient for %s' % python_exe)
+
+  if _is_debian_family_os():
+    subprocess.run(
+        'DEBIAN_FRONTEND=noninteractive apt-get install -y -qq '
+        'libmariadb-dev-compat libmariadb-dev python3-dev pkg-config gcc build-essential',
+        shell=True,
+        capture_output=True,
+        timeout=600,
+    )
+  else:
+    for pkg_cmd in (
+        'dnf install -y mariadb-devel python3-devel gcc pkgconfig',
+        'yum install -y mariadb-devel python3-devel gcc pkgconfig',
+    ):
+      subprocess.run(pkg_cmd, shell=True, capture_output=True, timeout=600)
+
+  for pip_cmd in (
+      [python_exe, '-m', 'pip', 'install', '--upgrade', 'pip', 'wheel', 'setuptools'],
+      [python_exe, '-m', 'pip', 'install', 'mysqlclient'],
+  ):
+    try:
+      subprocess.run(pip_cmd, capture_output=True, text=True, timeout=600)
+    except (OSError, subprocess.SubprocessError) as exc:
+      writeToFile('mysqlclient pip install error: %s' % exc)
+
+  ok = _can_import()
+  if not ok:
+    writeToFile('WARNING: mysqlclient still not importable for %s' % python_exe)
+  return ok

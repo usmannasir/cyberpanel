@@ -108,10 +108,32 @@ def cybercp_venv_python_executable():
 def setup_webmail_master_user():
     """
     Configure Dovecot master user and /etc/cyberpanel/webmail.conf for SSO.
-    Lazy-import installCyberPanel to avoid circular import (installCyberPanel imports install).
+    Uses webmail_master_setup (no MySQLdb) so install can finish even if mysqlclient
+    is missing from the bootstrap interpreter (common on WSL Ubuntu).
     """
-    import installCyberPanel
-    return installCyberPanel.InstallCyberPanel.setupWebmail()
+    try:
+        import install_utils
+        install_utils.ensure_mysqlclient_for_python(sys.executable, log=1)
+    except Exception as exc:
+        logging.InstallLog.writeToFile(
+            '[WARNING] mysqlclient bootstrap check failed (webmail may still run): %s' % exc
+        )
+
+    try:
+        from webmail_master_setup import configure_webmail_master_user
+        return configure_webmail_master_user()
+    except ImportError:
+        try:
+            import installCyberPanel
+            return installCyberPanel.InstallCyberPanel.setupWebmail()
+        except ImportError as exc:
+            logging.InstallLog.writeToFile(
+                '[WARNING] webmail setup skipped (MySQLdb/installCyberPanel): %s' % exc
+            )
+            preFlightsChecks.stdOut(
+                'Warning: webmail master user setup skipped (panel install continues).', 1
+            )
+            return 0
 
 
 def get_Ubuntu_release():
