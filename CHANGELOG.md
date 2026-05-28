@@ -15,6 +15,16 @@ see `to-do/LIVE-CYBERCP-STATE.md`.
 
 ## 2.5.5-dev - 28/05/2026
 
+### Fixed: AlmaLinux 10 MariaDB install (false success + missing packages)
+
+- `install_utils.resFailed()`: treat non-zero exit codes as failures on `cent8` and
+  `openeuler` (AlmaLinux 10 was always reported as success, so failed `dnf install` continued).
+- `install_utils.install_mariadb_server_rhel()`: MariaDB.org repo with `curl -fsSL` and
+  `--skip-check-installed`, then AppStream fallback (`mariadb-server`, lowercase) when
+  `MariaDB-*` RPMs are unavailable on EL10.
+- `fix_almalinux10_mariadb()` / `installMySQL()` / `universal_os_fixes`: use shared helper and
+  `--mariadb-version` / `MARIADB_VER` instead of hardcoded 11.8.
+
 ### Added: MariaDB version in Installation Preferences (before auto-install)
 
 - `install_modules/00_common.sh`: `prompt_mariadb_version_preference()` menu (10.11, 11.8,

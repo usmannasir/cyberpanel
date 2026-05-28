@@ -741,14 +741,23 @@ class preFlightsChecks:
                 ("rm -f /etc/yum.repos.d/mariadb-maxscale.repo /etc/yum.repos.d/mariadb-maxscale.repo.rpmnew 2>/dev/null || true", "remove maxscale repo files"),
             ):
                 self.call(cmd, self.distro, desc, desc, 1, 0, os.EX_OSERR)
-            self.stdOut("Setting up MariaDB official repository (11.8 LTS, EL10)...", 1)
-            cmd = "curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version='11.8'"
-            self.call(cmd, self.distro, cmd, cmd, 1, 0, os.EX_OSERR)
-            self.call("dnf config-manager --disable mariadb-maxscale 2>/dev/null || true", self.distro, "disable maxscale after setup", "disable maxscale after setup", 1, 0, os.EX_OSERR)
-            self.stdOut("Installing MariaDB packages from MariaDB.org repo...", 1)
-            pkgs = "MariaDB-server MariaDB-client MariaDB-shared MariaDB-backup MariaDB-common MariaDB-devel"
-            self.call(f"dnf install -y --nobest {pkgs}", self.distro, "MariaDB packages", "MariaDB packages", 1, 0, os.EX_OSERR)
-            self.stdOut("AlmaLinux 10 MariaDB fixes applied successfully", 1)
+            mariadb_ver = getattr(preFlightsChecks, 'mariadb_version', '11.8')
+            self.call(
+                "dnf config-manager --disable mariadb-maxscale 2>/dev/null || true",
+                self.distro,
+                "disable maxscale after setup",
+                "disable maxscale after setup",
+                1,
+                0,
+                os.EX_OSERR,
+            )
+            if install_utils.install_mariadb_server_rhel(self.distro, mariadb_ver, 1):
+                self.stdOut("AlmaLinux 10 MariaDB fixes applied successfully", 1)
+            else:
+                self.stdOut(
+                    "Warning: AlmaLinux 10 MariaDB preflight incomplete (install.py will retry)",
+                    1,
+                )
         except Exception as e:
             self.stdOut(f"Error applying AlmaLinux 10 MariaDB fixes: {str(e)}", 0)
 
@@ -2027,10 +2036,8 @@ module cyberpanel_ols {
                         except (ValueError, TypeError):
                             pass
                 
-                # Set up MariaDB repository only if not already installed (version from --mariadb-version: 10.3-10.11, 11.0-11.8, 12.0-12.x)
+                # Set up MariaDB repository only if not already installed (version from --mariadb-version)
                 mariadb_ver = getattr(preFlightsChecks, 'mariadb_version', '11.8')
-                command = f'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash -s -- --mariadb-server-version={mariadb_ver}'
-                self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
                 # Allow MariaDB-server to be installed: remove from dnf exclude if present (e.g. from previous run or cyberpanel.sh)
                 dnf_conf = '/etc/dnf/dnf.conf'
                 if os.path.exists(dnf_conf) and ('MariaDB-server' in open(dnf_conf).read()):
@@ -2060,18 +2067,12 @@ module cyberpanel_ols {
                             shell=True, timeout=5, capture_output=True
                         )
                         self.stdOut("Temporarily removed MariaDB-server from dnf exclude for installation (fallback)", 1)
-                # Install from official MariaDB repo (capitalized package names); --nobest for 10.x and 11.0-11.8 on el9
-                mariadb_packages = 'MariaDB-server MariaDB-client MariaDB-backup MariaDB-devel'
-                try:
-                    maj_min = tuple(int(x) for x in mariadb_ver.split('.')[:2])
-                    use_nobest = (maj_min[0] == 10) or (maj_min[0] == 11 and maj_min[1] <= 8)
-                except (ValueError, IndexError):
-                    use_nobest = True
-                if use_nobest:
-                    command = f'dnf install -y --nobest {mariadb_packages}'
-                else:
-                    command = f'dnf install -y {mariadb_packages}'
-                self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+                if not install_utils.install_mariadb_server_rhel(self.distro, mariadb_ver, 1):
+                    self.stdOut(
+                        "Error: Failed to install MariaDB server packages (MariaDB.org and AppStream)",
+                        0,
+                    )
+                    return False
             
             # Verify MariaDB client exists (EL10 may only expose /usr/sbin/mariadb until symlinked)
             install_utils.ensure_mariadb_client_cli(self.distro, 1)

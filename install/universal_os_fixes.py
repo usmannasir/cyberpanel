@@ -470,22 +470,36 @@ class UniversalOSFixes:
         """Setup MariaDB repository for current OS"""
         try:
             os_id = self.os_info['id']
-            
+            mariadb_ver = os.environ.get('MARIADB_VER', '11.8').strip() or '11.8'
+
             if os_id in ['ubuntu', 'debian']:
                 # Ubuntu/Debian MariaDB setup
                 cmd = [
-                    'curl', '-LsS', 
+                    'curl', '-fsSL',
                     'https://downloads.mariadb.com/MariaDB/mariadb_repo_setup',
-                    '|', 'sudo', 'bash', '-s', '--', '--mariadb-server-version=11.8'
+                    '|', 'bash', '-s', '--', '--skip-check-installed',
+                    '--mariadb-server-version=%s' % mariadb_ver,
                 ]
+                if os.geteuid() != 0:
+                    cmd = [
+                        'curl', '-fsSL',
+                        'https://downloads.mariadb.com/MariaDB/mariadb_repo_setup',
+                        '|', 'sudo', 'bash', '-s', '--', '--skip-check-installed',
+                        '--mariadb-server-version=%s' % mariadb_ver,
+                    ]
             else:
-                # RHEL family MariaDB setup
-                cmd = [
-                    'curl', '-LsS',
-                    'https://downloads.mariadb.com/MariaDB/mariadb_repo_setup',
-                    '|', 'sudo', 'bash', '-s', '--', '--mariadb-server-version=11.8'
-                ]
-            
+                import install_utils
+                subprocess.run(
+                    'dnf install -y curl ca-certificates',
+                    shell=True,
+                    check=False,
+                )
+                return install_utils.install_mariadb_server_rhel(
+                    install_utils.cent8,
+                    mariadb_ver,
+                    0,
+                )
+
             subprocess.run(' '.join(cmd), shell=True, check=True)
             if os_id in ['ubuntu', 'debian']:
                 try:

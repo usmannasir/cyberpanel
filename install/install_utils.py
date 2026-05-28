@@ -404,6 +404,7 @@ def ensure_mariadb_client_cli(distro, log=1):
 
     for pkg_cmd in (
         'dnf install -y --nobest MariaDB-client 2>/dev/null || true',
+        'dnf install -y mariadb 2>/dev/null || true',
         'yum install -y MariaDB-client 2>/dev/null || true',
     ):
         call(pkg_cmd, distro, pkg_cmd, pkg_cmd, log, 0, os.EX_OSERR, True)
@@ -416,6 +417,104 @@ def ensure_mariadb_client_cli(distro, log=1):
         except OSError:
             pass
     return cli
+
+
+def mariadb_repo_setup_shell_cmd(mariadb_version='11.8'):
+    """Shell pipeline for MariaDB.org repo setup (root, follow redirects, skip broken prereq check)."""
+    ver = str(mariadb_version or '11.8').strip().strip("'\"")
+    try:
+        parts = ver.split('.')[:2]
+        if len(parts) < 2 or not all(p.isdigit() for p in parts):
+            ver = '11.8'
+    except (ValueError, TypeError):
+        ver = '11.8'
+    return (
+        'curl -fsSL https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | '
+        'bash -s -- --skip-check-installed --mariadb-server-version=%s' % ver
+    )
+
+
+def _mariadb_server_rpm_installed():
+    """True if MariaDB.org or distro mariadb-server RPM is installed."""
+    try:
+        for pkg in ('MariaDB-server', 'mariadb-server'):
+            result = subprocess.run(
+                ['rpm', '-q', pkg],
+                capture_output=True,
+                timeout=15,
+            )
+            if result.returncode == 0:
+                return True
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return False
+
+
+def install_mariadb_server_rhel(distro, mariadb_version='11.8', log=1):
+    """
+    Install MariaDB on RHEL family: MariaDB.org packages first, then AppStream fallback (EL10).
+    Returns True when server RPM is present and a client binary resolves.
+    """
+    if _mariadb_server_rpm_installed() and resolve_mysql_cli():
+        return True
+
+    mariadb_ver = str(mariadb_version or '11.8').strip().strip("'\"")
+    setup_msg = 'MariaDB repository setup (%s)' % mariadb_ver
+    call(
+        mariadb_repo_setup_shell_cmd(mariadb_ver),
+        distro,
+        setup_msg,
+        setup_msg,
+        log,
+        0,
+        os.EX_OSERR,
+        True,
+    )
+
+    mariadb_packages = 'MariaDB-server MariaDB-client MariaDB-backup MariaDB-devel'
+    use_nobest = True
+    try:
+        maj_min = tuple(int(x) for x in mariadb_ver.split('.')[:2])
+        use_nobest = (maj_min[0] == 10) or (maj_min[0] == 11 and maj_min[1] <= 8)
+    except (ValueError, IndexError):
+        pass
+    nobest = ' --nobest' if use_nobest else ''
+    official_cmd = 'dnf install -y%s %s' % (nobest, mariadb_packages)
+    call(
+        official_cmd,
+        distro,
+        'MariaDB.org packages',
+        'MariaDB.org packages',
+        log,
+        0,
+        os.EX_OSERR,
+        True,
+    )
+
+    if _mariadb_server_rpm_installed():
+        ensure_mariadb_client_cli(distro, log)
+        return bool(resolve_mysql_cli())
+
+    stdOut(
+        'MariaDB.org packages unavailable; trying distro AppStream mariadb-server...',
+        log,
+    )
+    appstream_cmd = (
+        'dnf install -y mariadb-server mariadb mariadb-backup mariadb-devel '
+        '|| dnf install -y --nobest mariadb-server mariadb mariadb-backup mariadb-devel'
+    )
+    call(
+        appstream_cmd,
+        distro,
+        'AppStream MariaDB packages',
+        'AppStream MariaDB packages',
+        log,
+        0,
+        os.EX_OSERR,
+        True,
+    )
+    ensure_mariadb_client_cli(distro, log)
+    return _mariadb_server_rpm_installed() and bool(resolve_mysql_cli())
 
 
 def ensure_lsphp_runtime_deps(distro, log=1):
@@ -618,9 +717,9 @@ def resFailed(distro, res):
     Returns:
         bool: True if failed, False if successful
     """
-    if (distro == ubuntu or distro == debian12) and res != 0:
-        return True
-    elif distro == centos and res != 0:
+    if res == 0:
+        return False
+    if distro in (ubuntu, debian12, centos, cent8, openeuler):
         return True
     return False
 
