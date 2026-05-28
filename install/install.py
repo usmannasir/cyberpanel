@@ -6363,11 +6363,19 @@ vmail
 
 
     def installDNS_CyberPanelACMEFile(self):
-
-        os.chdir(self.cwd)
-
+        install_dir = os.path.dirname(os.path.abspath(__file__))
+        src = os.path.join(install_dir, 'dns_cyberpanel.sh')
         filePath = '/root/.acme.sh/dns_cyberpanel.sh'
-        shutil.copy('dns_cyberpanel.sh', filePath)
+
+        if not os.path.isfile(src):
+            logging.InstallLog.writeToFile(
+                "[ERROR] dns_cyberpanel.sh not found at %s" % src
+            )
+            preFlightsChecks.stdOut("ERROR: dns_cyberpanel.sh missing from install directory", 0)
+            return
+
+        os.makedirs(os.path.dirname(filePath), exist_ok=True)
+        shutil.copy(src, filePath)
 
         command = f'chmod +x {filePath}'
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
