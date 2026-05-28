@@ -1970,9 +1970,20 @@ module cyberpanel_ols {
                 command = "curl -o /etc/apt/keyrings/mariadb-keyring.pgp 'https://mariadb.org/mariadb_release_signing_key.pgp'"
                 self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
                 
-                # Setup MariaDB repository
-                command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=12.1'
+                # Setup MariaDB repository (respect --mariadb-version / installer preference)
+                mariadb_ver = getattr(preFlightsChecks, 'mariadb_version', None) or '11.8'
+                mariadb_ver = _normalize_mariadb_version(mariadb_ver)
+                self.stdOut(f"Configuring MariaDB.org repository for version {mariadb_ver}...", 1)
+                command = (
+                    'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | '
+                    'sudo bash -s -- --mariadb-server-version=%s'
+                ) % mariadb_ver
                 self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+                try:
+                    import install_utils
+                    install_utils.strip_mariadb_maxscale_apt_repos()
+                except Exception:
+                    pass
                 
                 command = 'DEBIAN_FRONTEND=noninteractive apt-get update -y'
                 self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
@@ -2070,7 +2081,16 @@ module cyberpanel_ols {
             
             # Verify MariaDB client exists (EL10 may only expose /usr/sbin/mariadb until symlinked)
             install_utils.ensure_mariadb_client_cli(self.distro, 1)
-            if not install_utils.resolve_mysql_cli():
+            mysql_cli = install_utils.resolve_mysql_cli()
+            if not mysql_cli:
+                import time
+                for _wait in range(5):
+                    time.sleep(2)
+                    install_utils.ensure_mariadb_client_cli(self.distro, 1)
+                    mysql_cli = install_utils.resolve_mysql_cli()
+                    if mysql_cli:
+                        break
+            if not mysql_cli:
                 self.stdOut("Error: MariaDB binaries not found after installation. Installation may have failed.", 0)
                 return False
             
@@ -2118,6 +2138,21 @@ module cyberpanel_ols {
             
             for service_name in service_names:
                 try:
+                    try:
+                        chk = subprocess.run(
+                            f"systemctl is-active {service_name}",
+                            shell=True,
+                            capture_output=True,
+                            text=True,
+                            timeout=5,
+                        )
+                        if chk.returncode == 0 and 'active' in (chk.stdout or '').lower():
+                            self.manage_service(service_name, 'enable')
+                            self.stdOut(f"{service_name} already active", 1)
+                            started = True
+                            break
+                    except Exception:
+                        pass
                     self.manage_service(service_name, 'start')
                     self.manage_service(service_name, 'enable')
                     self.stdOut(f"Successfully started {service_name} service", 1)
