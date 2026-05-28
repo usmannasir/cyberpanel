@@ -4392,7 +4392,11 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
         try:
             logging.InstallLog.writeToFile("Configuring postfix and dovecot...")
 
-            os.chdir(self.cwd)
+            install_dir = os.path.dirname(os.path.abspath(__file__))
+            email_cfg_dir = os.path.join(install_dir, "email-configs-one")
+
+            def _email_cfg(name):
+                return os.path.join(email_cfg_dir, name)
 
             mysql_virtual_domains = "/etc/postfix/mysql-virtual_domains.cf"
             mysql_virtual_forwardings = "/etc/postfix/mysql-virtual_forwardings.cf"
@@ -4452,24 +4456,24 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             if self.distro == ubuntu:
                 preFlightsChecks.stdOut("Cleanup postfix/dovecot config files", 1)
 
-                self.centos_lib_dir_to_ubuntu("email-configs-one/master.cf", "/usr/libexec/", "/usr/lib/")
-                self.centos_lib_dir_to_ubuntu("email-configs-one/main.cf", "/usr/libexec/postfix",
+                self.centos_lib_dir_to_ubuntu(_email_cfg("master.cf"), "/usr/libexec/", "/usr/lib/")
+                self.centos_lib_dir_to_ubuntu(_email_cfg("main.cf"), "/usr/libexec/postfix",
                                               "/usr/lib/postfix/sbin")
 
             ########### Copy config files
 
-            shutil.copy("email-configs-one/mysql-virtual_domains.cf", "/etc/postfix/mysql-virtual_domains.cf")
-            shutil.copy("email-configs-one/mysql-virtual_forwardings.cf",
+            shutil.copy(_email_cfg("mysql-virtual_domains.cf"), "/etc/postfix/mysql-virtual_domains.cf")
+            shutil.copy(_email_cfg("mysql-virtual_forwardings.cf"),
                         "/etc/postfix/mysql-virtual_forwardings.cf")
-            shutil.copy("email-configs-one/mysql-virtual_mailboxes.cf", "/etc/postfix/mysql-virtual_mailboxes.cf")
-            shutil.copy("email-configs-one/mysql-virtual_email2email.cf",
+            shutil.copy(_email_cfg("mysql-virtual_mailboxes.cf"), "/etc/postfix/mysql-virtual_mailboxes.cf")
+            shutil.copy(_email_cfg("mysql-virtual_email2email.cf"),
                         "/etc/postfix/mysql-virtual_email2email.cf")
-            shutil.copy("email-configs-one/main.cf", main)
-            shutil.copy("email-configs-one/master.cf", master)
+            shutil.copy(_email_cfg("main.cf"), main)
+            shutil.copy(_email_cfg("master.cf"), master)
             # Copy Dovecot configuration files with fallback
             try:
-                shutil.copy("email-configs-one/dovecot.conf", dovecot)
-                shutil.copy("email-configs-one/dovecot-sql.conf.ext", dovecotmysql)
+                shutil.copy(_email_cfg("dovecot.conf"), dovecot)
+                shutil.copy(_email_cfg("dovecot-sql.conf.ext"), dovecotmysql)
             except FileNotFoundError:
                 # Fallback: create basic dovecot.conf if template not found
                 logging.InstallLog.writeToFile("[WARNING] Dovecot config templates not found, creating basic configuration")
