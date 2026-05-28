@@ -1242,11 +1242,7 @@ gpgcheck=1
 
         ###### FTP Groups and user settings settings
 
-        command = 'groupadd -g 2001 ftpgroup'
-        install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-        command = 'useradd -u 2001 -s /bin/false -d /bin/null -c "pureftpd user" -g ftpgroup ftpuser'
-        install_utils.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+        install_utils.ensure_pureftpd_system_user(self.distro, log=1)
 
     def startPureFTPD(self):
         ############## Start pureftpd ######################

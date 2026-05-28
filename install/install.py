@@ -2532,12 +2532,8 @@ module cyberpanel_ols {
             command = f"systemctl enable {service_name}"
             self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
             
-            # Create FTP groups and users
-            command = 'groupadd -g 2001 ftpgroup'
-            self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-            
-            command = 'useradd -u 2001 -s /bin/false -d /bin/null -c "pureftpd user" -g ftpgroup ftpuser'
-            self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            # Create FTP groups and users (idempotent for re-install)
+            install_utils.ensure_pureftpd_system_user(self.distro, log=1)
             
             self.stdOut("Pure-FTPd installed successfully", 1)
             return True
@@ -2635,26 +2631,13 @@ module cyberpanel_ols {
     def reStartLiteSpeed(self):
         """Restart LiteSpeed"""
         try:
-            # Try multiple possible paths for lswsctrl
-            possible_paths = [
-                f"{self.server_root_path}bin/lswsctrl",
-                "/usr/local/lsws/bin/lswsctrl",
-                "/usr/local/lsws/bin/lswsctrl",
-                "/opt/lsws/bin/lswsctrl"
-            ]
-            
-            command = None
-            for path in possible_paths:
-                if os.path.exists(path):
-                    command = f"{path} restart"
-                    break
-            
-            if not command:
-                self.stdOut("Warning: lswsctrl not found, trying systemctl instead...", 1)
-                command = "systemctl restart lsws"
-            
-            self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-            return True
+            if install_utils.restart_litespeed(self.server_root_path):
+                return True
+            self.stdOut(
+                "Warning: LiteSpeed restart skipped (lswsctrl missing; install may continue)",
+                1,
+            )
+            return False
         except Exception as e:
             self.stdOut(f"Error restarting LiteSpeed: {str(e)}", 0)
             return False

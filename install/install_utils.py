@@ -282,6 +282,66 @@ def format_restart_litespeed_command(server_root_path):
     return '%sbin/lswsctrl restart' % (server_root_path)
 
 
+PURE_FTPD_GROUPADD_CMD = (
+    'getent group ftpgroup >/dev/null || groupadd -g 2001 ftpgroup'
+)
+PURE_FTPD_USERADD_CMD = (
+    'getent passwd ftpuser >/dev/null || useradd -u 2001 -s /bin/false -d /bin/null '
+    '-c "pureftpd user" -g ftpgroup ftpuser'
+)
+
+
+def ensure_pureftpd_system_user(distro, log=1):
+    """
+    Create Pure-FTPd system group/user if missing (safe on re-install).
+    groupadd exit 9 (group exists) must not abort the installer.
+    """
+    ok = True
+    ok = call(
+        PURE_FTPD_GROUPADD_CMD, distro, '', 'ensure ftpgroup (gid 2001)',
+        log, 0, os.EX_OSERR, True,
+    ) and ok
+    ok = call(
+        PURE_FTPD_USERADD_CMD, distro, '', 'ensure ftpuser (uid 2001)',
+        log, 0, os.EX_OSERR, True,
+    ) and ok
+    return ok
+
+
+def restart_litespeed(server_root_path='/usr/local/lsws/'):
+    """
+    Restart OpenLiteSpeed via lswsctrl or systemd when binaries are missing (re-install).
+    Returns True if a restart was attempted successfully.
+    """
+    if not server_root_path.endswith('/'):
+        server_root_path = server_root_path + '/'
+
+    for ctrl in (
+        server_root_path + 'bin/lswsctrl',
+        '/usr/local/lsws/bin/lswsctrl',
+        '/opt/lsws/bin/lswsctrl',
+    ):
+        if os.path.isfile(ctrl) and os.access(ctrl, os.X_OK):
+            try:
+                res = subprocess.call([ctrl, 'restart'])
+                if res == 0:
+                    return True
+            except OSError:
+                pass
+
+    for unit in ('lsws', 'openlitespeed', 'lshttpd'):
+        try:
+            res = subprocess.call(['systemctl', 'restart', unit])
+            if res == 0:
+                writeToFile('LiteSpeed restarted via systemctl %s' % unit)
+                return True
+        except OSError:
+            pass
+
+    writeToFile('WARNING: could not restart LiteSpeed (lswsctrl and systemctl units unavailable)')
+    return False
+
+
 # Distribution constants
 ubuntu = 0
 centos = 1

@@ -15,6 +15,11 @@ see `to-do/LIVE-CYBERCP-STATE.md`.
 
 ## 2.5.5-dev - 28/05/2026
 
+### Fixed: AlmaLinux 10 re-install exit 71 (ftpgroup already exists)
+
+- `ensure_pureftpd_system_user()`: use `getent` before `groupadd` / `useradd` so Pure-FTPd setup does not fail with exit code 9 when `ftpgroup` or `ftpuser` already exists from a prior install.
+- `restart_litespeed()`: try `lswsctrl` paths then `systemctl restart` (`lsws`, `openlitespeed`, `lshttpd`) when `/usr/local/lsws/bin/lswsctrl` is missing on re-install.
+
 ### Fixed: AlmaLinux 10 install exit 71 (Django migration graph / emailDelivery)
 
 - `discover_cybercp_migration_apps()`: before `makemigrations`, remove stale migration modules for **every** app with a `migrations/` package (including `emailDelivery` and `webmail`), not only the hardcoded list. Fixes `NodeNotFoundError: emailDelivery.0001_initial` depends on missing `loginSystem.0001_initial` after cleanup deleted `loginSystem` migrations only.
