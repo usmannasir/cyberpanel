@@ -1919,10 +1919,17 @@ module cyberpanel_ols {
                 if major_minor and major_minor != "unknown":
                     try:
                         major_ver = float(major_minor)
-                        if major_ver < 11.0:
+                        import install_utils
+                        if major_ver < 11.0 and not install_utils.is_rhel_el10():
                             should_try_upgrade = True
                             self.stdOut(f"Existing MariaDB {major_minor} detected. Attempting to upgrade to MariaDB 11.8 LTS...", 1)
                             self.stdOut("If upgrade fails, we will use the existing MariaDB installation.", 1)
+                        elif major_ver < 11.0 and install_utils.is_rhel_el10():
+                            self.stdOut(
+                                f"MariaDB {major_minor} from AppStream on AlmaLinux/RHEL 10 "
+                                "(MariaDB.org 11.8 is not installed due to package conflicts).",
+                                1,
+                            )
                     except (ValueError, TypeError):
                         pass
                 
@@ -2987,8 +2994,8 @@ module cyberpanel_ols {
 
     # Using shared function from install_utils
     @staticmethod
-    def resFailed(distro, res):
-        return install_utils.resFailed(distro, res)
+    def resFailed(distro, res, command=None):
+        return install_utils.resFailed(distro, res, command)
 
     # Using shared function from install_utils
     @staticmethod
@@ -3059,8 +3066,8 @@ module cyberpanel_ols {
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            command = 'groupadd docker'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            command = 'getent group docker >/dev/null || groupadd docker'
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR, True)
 
             command = 'usermod -aG docker docker'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -3099,14 +3106,13 @@ module cyberpanel_ols {
                 os._exit(os.EX_SOFTWARE)
 
         elif self.distro in (centos, cent8):
-            # Use compatible repository version for RHEL-based systems
-            # AlmaLinux 9 is compatible with el8 repositories
-            os_info = self.detect_os_info()
-            if os_info['name'] in ['almalinux', 'rocky', 'rhel'] and os_info['major_version'] in ['8', '9']:
-                command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
-            else:
-                command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            import install_utils
+            if not install_utils.install_litespeed_repo_rhel(self.distro, log=1):
+                logging.InstallLog.writeToFile(
+                    "[ERROR] LiteSpeed repository setup failed during installCyberPanelRepo"
+                )
+                preFlightsChecks.stdOut("[ERROR] LiteSpeed repository setup failed")
+                os._exit(os.EX_SOFTWARE)
 
     def fix_selinux_issue(self):
         try:
@@ -5867,12 +5873,8 @@ milter_default_action = accept
                     # Add LiteSpeed repository
                     # Use compatible repository version for RHEL-based systems
                     # AlmaLinux 9 is compatible with el8 repositories
-                    os_info = self.detect_os_info()
-                    if os_info['name'] in ['almalinux', 'rocky', 'rhel'] and os_info['major_version'] in ['8', '9']:
-                        repo_command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
-                    else:
-                        repo_command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
-                    preFlightsChecks.call(repo_command, self.distro, repo_command, repo_command, 1, 0, os.EX_OSERR)
+                    import install_utils
+                    install_utils.install_litespeed_repo_rhel(self.distro, log=1)
             
             # Check if PHP 8.2 exists
             if not os.path.exists('/usr/local/lsws/lsphp82/bin/php'):

@@ -451,7 +451,7 @@ class UniversalOSFixes:
                 subprocess.run(cmd, check=True)
                 cmd = ['apt', 'install', '-y'] + packages
             elif package_manager == 'dnf':
-                cmd = ['dnf', 'install', '-y'] + packages
+                cmd = ['dnf', 'install', '-y', '--skip-unavailable'] + packages
             elif package_manager == 'yum':
                 cmd = ['yum', 'install', '-y'] + packages
             else:
@@ -532,13 +532,9 @@ class UniversalOSFixes:
             else:
                 # RHEL family LiteSpeed setup
                 # Use el8 repository for AlmaLinux 9/10 compatibility
-                if os_id in ['almalinux', 'rocky', 'rhel'] and int(os_version.split('.')[0]) >= 9:
-                    repo_url = 'http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
-                else:
-                    repo_url = f'http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el{os_version.split(".")[0]}.noarch.rpm'
-                
-                cmd = ['rpm', '-Uvh', repo_url]
-                subprocess.run(cmd, check=True)
+                import install_utils
+                if not install_utils.install_litespeed_repo_rhel(install_utils.cent8, log=0):
+                    raise subprocess.CalledProcessError(1, 'install_litespeed_repo_rhel')
             
             self.logger.info("LiteSpeed repository setup completed")
             return True
@@ -588,6 +584,15 @@ class UniversalOSFixes:
                     'krb5-devel', 'openldap-devel', 'cyrus-sasl-devel',
                     'libgssapi-krb5', 'expat-devel'
                 ]
+                try:
+                    major = int(str(self.os_info.get('version', '0')).split('.')[0])
+                except (ValueError, TypeError):
+                    major = 0
+                if major >= 10:
+                    packages = [
+                        p for p in packages
+                        if p not in ('db4-devel', 'libgssapi-krb5')
+                    ]
             
             return self.install_packages(packages)
             

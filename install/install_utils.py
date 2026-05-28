@@ -453,12 +453,46 @@ def _mariadb_server_rpm_installed():
 def install_mariadb_server_rhel(distro, mariadb_version='11.8', log=1):
     """
     Install MariaDB on RHEL family: MariaDB.org packages first, then AppStream fallback (EL10).
+    On RHEL/Alma 10+, AppStream is tried first (MariaDB.org conflicts with bootstrap connector-c).
     Returns True when server RPM is present and a client binary resolves.
     """
     if _mariadb_server_rpm_installed() and resolve_mysql_cli():
         return True
 
     mariadb_ver = str(mariadb_version or '11.8').strip().strip("'\"")
+
+    def _install_appstream():
+        stdOut(
+            'Installing MariaDB from distro AppStream (mariadb-server)...',
+            log,
+        )
+        appstream_cmd = (
+            'dnf install -y mariadb-server mariadb mariadb-backup mariadb-devel '
+            '|| dnf install -y --nobest mariadb-server mariadb mariadb-backup mariadb-devel'
+        )
+        call(
+            appstream_cmd,
+            distro,
+            'AppStream MariaDB packages',
+            'AppStream MariaDB packages',
+            log,
+            0,
+            os.EX_OSERR,
+            True,
+        )
+        ensure_mariadb_client_cli(distro, log)
+        return _mariadb_server_rpm_installed() and bool(resolve_mysql_cli())
+
+    if is_rhel_el10():
+        if mariadb_ver not in ('10.11', '10.11.15', '10'):
+            stdOut(
+                'AlmaLinux/RHEL 10: MariaDB.org %s is not used (package conflicts). '
+                'Installing AppStream mariadb-server (10.11.x).' % mariadb_ver,
+                log,
+            )
+        if _install_appstream():
+            return True
+
     setup_msg = 'MariaDB repository setup (%s)' % mariadb_ver
     call(
         mariadb_repo_setup_shell_cmd(mariadb_ver),
@@ -499,22 +533,7 @@ def install_mariadb_server_rhel(distro, mariadb_version='11.8', log=1):
         'MariaDB.org packages unavailable; trying distro AppStream mariadb-server...',
         log,
     )
-    appstream_cmd = (
-        'dnf install -y mariadb-server mariadb mariadb-backup mariadb-devel '
-        '|| dnf install -y --nobest mariadb-server mariadb mariadb-backup mariadb-devel'
-    )
-    call(
-        appstream_cmd,
-        distro,
-        'AppStream MariaDB packages',
-        'AppStream MariaDB packages',
-        log,
-        0,
-        os.EX_OSERR,
-        True,
-    )
-    ensure_mariadb_client_cli(distro, log)
-    return _mariadb_server_rpm_installed() and bool(resolve_mysql_cli())
+    return _install_appstream()
 
 
 def ensure_lsphp_runtime_deps(distro, log=1):
@@ -706,18 +725,66 @@ def get_package_remove_command(distro, package_name):
     return command, shell
 
 
-def resFailed(distro, res):
+def rhel_major_version():
+    """Major version from /etc/os-release VERSION_ID (e.g. 10 for AlmaLinux 10), or 0."""
+    try:
+        with open('/etc/os-release', 'r') as f:
+            for line in f:
+                if line.startswith('VERSION_ID='):
+                    vid = line.split('=', 1)[1].strip().strip('"').strip("'")
+                    return int(vid.split('.')[0])
+    except (OSError, ValueError, IndexError):
+        pass
+    return 0
+
+
+def is_rhel_el10():
+    """True on AlmaLinux/RHEL/Rocky/CentOS Stream 10+ (dnf-only, AppStream MariaDB)."""
+    return rhel_major_version() >= 10
+
+
+LITESPEED_REPO_RPM_URL = (
+    'http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
+)
+
+
+def install_litespeed_repo_rhel(distro, log=1):
+    """
+    Install LiteSpeed RPM repo if missing. Idempotent (rpm exit 2 = already installed).
+    Returns True on success.
+    """
+    cmd = (
+        'rpm -q litespeed-repo >/dev/null 2>&1 || '
+        'rpm -Uvh ' + LITESPEED_REPO_RPM_URL
+    )
+    return call(
+        cmd,
+        distro,
+        'LiteSpeed repository',
+        'LiteSpeed repository',
+        log,
+        0,
+        os.EX_OSERR,
+        True,
+    )
+
+
+def resFailed(distro, res, command=None):
     """
     Check if a command execution result indicates failure
     
     Args:
         distro: Distribution constant
         res: Return code from subprocess
+        command: Optional command string (rpm exit 2 = already installed)
     
     Returns:
         bool: True if failed, False if successful
     """
     if res == 0:
+        return False
+    cmd = command or ''
+    if res == 2 and 'rpm' in cmd and ('-Uvh' in cmd or '-ivh' in cmd or '-U ' in cmd):
         return False
     if distro in (ubuntu, debian12, centos, cent8, openeuler):
         return True
@@ -886,7 +953,7 @@ def call(command, distro, bracket, message, log=0, do_exit=0, code=os.EX_OK, she
             else:
                 raise
 
-        if resFailed(distro, res):
+        if resFailed(distro, res, command):
             count = count + 1
             finalMessage = 'Running %s failed. Running again, try number %s' % (message, str(count))
             stdOut(finalMessage)

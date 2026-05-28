@@ -15,6 +15,18 @@ see `to-do/LIVE-CYBERCP-STATE.md`.
 
 ## 2.5.5-dev - 28/05/2026
 
+### Fixed: AlmaLinux 10 clean install (LiteSpeed repo exit 71 + MariaDB conflicts)
+
+- `install_utils.install_litespeed_repo_rhel()`: idempotent LiteSpeed RPM repo (`rpm -q` or `rpm -Uvh`);
+  `resFailed()` treats `rpm` exit code 2 (already installed) as success.
+- `installCyberPanelRepo()` / `universal_os_fixes` / `setupPHPSymlink`: use shared helper so install no longer
+  aborts after OS fixes already installed `litespeed-repo`.
+- `install_mariadb_server_rhel()`: on RHEL/Alma 10+, install **AppStream** `mariadb-server` first (avoids
+  `mariadb-connector-c` vs `MariaDB-shared` conflicts); logs when MariaDB.org 11.8 was requested but not used.
+- `installMySQL()`: skip automatic 10.x to 11.8 upgrade attempt on EL10.
+- `setupAccounts()`: `getent group docker || groupadd docker` (no false error when group exists).
+- `universal_os_fixes`: `dnf install --skip-unavailable`; drop `db4-devel` / `libgssapi-krb5` on EL10.
+
 ### Fixed: AlmaLinux 10 MariaDB install (false success + missing packages)
 
 - `install_utils.resFailed()`: treat non-zero exit codes as failures on `cent8` and
