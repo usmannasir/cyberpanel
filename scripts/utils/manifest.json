@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "utils": [
+    {
+      "id": "fix-phpmyadmin",
+      "file": "fix-phpmyadmin.sh",
+      "description": "Repair phpMyAdmin via panel upgrade module (post-upgrade 404)",
+      "needs_root": true
+    },
+    {
+      "id": "fix-snappymail",
+      "file": "fix-snappymail.sh",
+      "description": "Repair SnappyMail webmail (post-upgrade missing index)",
+      "needs_root": true
+    },
+    {
+      "id": "fix-phpmyadmin-install",
+      "file": "fix-phpmyadmin-install.sh",
+      "description": "Standalone phpMyAdmin tarball install under public/phpmyadmin",
+      "needs_root": true
+    },
+    {
+      "id": "fix-cyberpanel-500",
+      "file": "fix-cyberpanel-500.sh",
+      "description": "Common fixes for CyberPanel HTTP 500 on login",
+      "needs_root": true
+    },
+    {
+      "id": "fix-pureftpd-quota-once",
+      "file": "fix-pureftpd-quota-once.sh",
+      "description": "One-time Pure-FTPd Quota line correction",
+      "needs_root": true
+    },
+    {
+      "id": "fix-cyberpanel-install",
+      "file": "fix_cyberpanel_install.sh",
+      "description": "Legacy: complete install after failed upgrade (venv, lswsgi, lscpd)",
+      "needs_root": true
+    },
+    {
+      "id": "deploy-templates",
+      "file": "deploy-templates.sh",
+      "description": "Deploy template/static changes from repo to live CyberCP",
+      "needs_root": true
+    },
+    {
+      "id": "deploy-createuser-fix",
+      "file": "deploy-createuser-fix.sh",
+      "description": "Deploy Create User page JS fix to live CyberCP",
+      "needs_root": true
+    },
+    {
+      "id": "deploy-docker-containers-fix",
+      "file": "deploy-docker-containers-fix.sh",
+      "description": "Deploy Docker containers view fix (clone repo or local REPO_ROOT)",
+      "needs_root": true
+    },
+    {
+      "id": "deploy-email-limits-fix",
+      "file": "deploy-email-limits-fix.sh",
+      "description": "Deploy email limits mailServer files to live CyberCP",
+      "needs_root": true
+    },
+    {
+      "id": "deploy-ftp-create-account-fix",
+      "file": "deploy-ftp-create-account-fix.sh",
+      "description": "Deploy FTP Create Account template fix",
+      "needs_root": true
+    },
+    {
+      "id": "deploy-ftp-quotas-table",
+      "file": "deploy-ftp-quotas-table.sh",
+      "description": "Create missing ftp_quotas table in cyberpanel DB",
+      "needs_root": true
+    },
+    {
+      "id": "deploy-ftp-users-custom-quota-columns",
+      "file": "deploy-ftp-users-custom-quota-columns.sh",
+      "description": "Add custom_quota columns to FTP users table",
+      "needs_root": true
+    }
+  ]
+}

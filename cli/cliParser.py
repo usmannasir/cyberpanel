@@ -9,6 +9,13 @@ class cliParser:
         parser = argparse.ArgumentParser(description='CyberPanel Command Line Interface!')
         parser.add_argument('function', help='Specific a operation to perform!')
 
+        parser.add_argument(
+            'utilAction',
+            nargs='?',
+            default=None,
+            help='For util: list, run, or help (e.g. cyberpanel util list)',
+        )
+
         parser.add_argument('--package', help='Select a package for website.')
         parser.add_argument('--owner', help='Select a website owner.')
         parser.add_argument('--masterDomain',
@@ -74,5 +81,9 @@ class cliParser:
 
         parser.add_argument('--licenseKey', help='LiteSpeed Enterprise License key')
 
+        parser.add_argument(
+            '--utilName',
+            help='Utility script id (cyberpanel util run --utilName fix-phpmyadmin)',
+        )
 
         return parser.parse_args()
