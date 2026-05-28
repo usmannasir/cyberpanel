@@ -308,6 +308,94 @@ def ensure_pureftpd_system_user(distro, log=1):
     return ok
 
 
+def get_installed_ols_version():
+    """Return installed OpenLiteSpeed version as (major, minor, patch) or None."""
+    import re
+    for binary in ('/usr/local/lsws/bin/lshttpd', '/usr/local/lsws/bin/openlitespeed'):
+        if not os.path.isfile(binary) or not os.access(binary, os.X_OK):
+            continue
+        try:
+            result = subprocess.run(
+                [binary, '-v'],
+                capture_output=True,
+                timeout=5,
+                universal_newlines=True,
+                env=dict(os.environ, PATH=os.environ.get('PATH', '/usr/bin:/bin')),
+            )
+            out = (result.stdout or '') + (result.stderr or '')
+            m = re.search(r'(\d+)\.(\d+)\.(\d+)', out)
+            if m:
+                return (int(m.group(1)), int(m.group(2)), int(m.group(3)))
+        except (OSError, subprocess.SubprocessError):
+            continue
+    return None
+
+
+def openlitespeed_rpm_layout_ok():
+    """True when RPM layout includes control binary and main config."""
+    return (
+        os.path.isfile('/usr/local/lsws/bin/lswsctrl')
+        and os.access('/usr/local/lsws/bin/lswsctrl', os.X_OK)
+        and os.path.isfile('/usr/local/lsws/conf/httpd_config.conf')
+    )
+
+
+def ensure_openlitespeed_rpm_layout(distro, log=1):
+    """
+    Reinstall openlitespeed RPM when the package is registered but bin/conf are missing
+    (common after partial cleanup or custom-binary-only overlay on re-install).
+    """
+    if openlitespeed_rpm_layout_ok():
+        return True
+    try:
+        chk = subprocess.run(
+            ['rpm', '-q', 'openlitespeed'],
+            capture_output=True,
+            timeout=30,
+        )
+        if chk.returncode != 0:
+            return False
+    except (OSError, subprocess.SubprocessError):
+        return False
+
+    writeToFile('OpenLiteSpeed RPM incomplete; reinstalling openlitespeed package...')
+    call(
+        'dnf reinstall -y openlitespeed 2>/dev/null || yum reinstall -y openlitespeed 2>/dev/null || true',
+        distro,
+        'reinstall openlitespeed',
+        'reinstall openlitespeed',
+        log,
+        0,
+        os.EX_OSERR,
+        True,
+    )
+    ok = openlitespeed_rpm_layout_ok()
+    if ok:
+        writeToFile('OpenLiteSpeed RPM layout restored (lswsctrl and httpd_config.conf present)')
+    else:
+        writeToFile('WARNING: openlitespeed reinstall did not restore full layout')
+    return ok
+
+
+def should_skip_custom_ols_overlay():
+    """
+    Use official LiteSpeed repo OLS when version is new enough or EL10 layout is intact.
+    Avoids replacing only openlitespeed binary and leaving lswsctrl missing.
+    """
+    try:
+        import ols_version_policy
+        min_ols = ols_version_policy.MIN_OFFICIAL_OLS
+    except ImportError:
+        min_ols = (1, 9, 0)
+
+    ols_ver = get_installed_ols_version()
+    if ols_ver and ols_ver >= min_ols:
+        return True
+    if is_rhel_el10() and openlitespeed_rpm_layout_ok():
+        return True
+    return False
+
+
 def restart_litespeed(server_root_path='/usr/local/lsws/'):
     """
     Restart OpenLiteSpeed via lswsctrl or systemd when binaries are missing (re-install).

@@ -615,13 +615,17 @@ module cyberpanel_ols {
         if self.ent == 0:
             # Install standard OpenLiteSpeed package
             self.install_package('openlitespeed')
+            install_utils.ensure_openlitespeed_rpm_layout(self.distro, log=1)
 
-            # Install custom binaries with PHP config support
-            # This replaces the standard binary with enhanced version
-            self.installCustomOLSBinaries()
-
-            # Configure the custom module
-            self.configureCustomModule()
+            if install_utils.should_skip_custom_ols_overlay():
+                InstallCyberPanel.stdOut(
+                    'Using official OpenLiteSpeed from repo (no custom binary overlay)',
+                    1,
+                )
+            else:
+                self.installCustomOLSBinaries()
+                install_utils.ensure_openlitespeed_rpm_layout(self.distro, log=1)
+                self.configureCustomModule()
 
             try:
                 import re

@@ -166,26 +166,7 @@ class preFlightsChecks:
 
     def get_installed_ols_version(self):
         """Return installed OpenLiteSpeed version as (major, minor, patch) or None"""
-        try:
-            for binary in ('/usr/local/lsws/bin/lshttpd', '/usr/local/lsws/bin/openlitespeed'):
-                if not os.path.exists(binary):
-                    continue
-                result = subprocess.run(
-                    [binary, '-v'],
-                    capture_output=True,
-                    timeout=5,
-                    universal_newlines=True,
-                    env=dict(os.environ, PATH=os.environ.get('PATH', '/usr/bin:/bin'))
-                )
-                out = (result.stdout or '') + (result.stderr or '')
-                # e.g. "OpenLiteSpeed/1.8.5" or "1.8.5"
-                import re
-                m = re.search(r'(\d+)\.(\d+)\.(\d+)', out)
-                if m:
-                    return (int(m.group(1)), int(m.group(2)), int(m.group(3)))
-            return None
-        except Exception:
-            return None
+        return install_utils.get_installed_ols_version()
 
     def upgrade_openlitespeed_to_latest(self):
         """Try to upgrade OpenLiteSpeed from configured repos; failures are non-fatal."""
@@ -1538,18 +1519,23 @@ module cyberpanel_ols {
                     self.install_package('openlitespeed')
                 else:
                     self.install_package('openlitespeed')
+                install_utils.ensure_openlitespeed_rpm_layout(self.distro, log=1)
                 self.upgrade_openlitespeed_to_latest()
-                # Use official OLS at or above MIN_OFFICIAL_OLS when available; only overlay custom binary if older
-                ols_ver = self.get_installed_ols_version()
-                if ols_ver and ols_ver >= ols_version_policy.MIN_OFFICIAL_OLS:
+                install_utils.ensure_openlitespeed_rpm_layout(self.distro, log=1)
+                # Official repo OLS when version/layout OK; custom overlay breaks re-install on EL10
+                if install_utils.should_skip_custom_ols_overlay():
+                    ols_ver = self.get_installed_ols_version()
+                    ver_txt = (
+                        '%d.%d.%d' % ols_ver if ols_ver
+                        else '%d.%d.%d' % ols_version_policy.MIN_OFFICIAL_OLS
+                    )
                     self.stdOut(
-                        "Using official OpenLiteSpeed %s+ (no custom binary overlay)"
-                        % ("%d.%d.%d" % ols_version_policy.MIN_OFFICIAL_OLS),
-                        1
+                        'Using official OpenLiteSpeed %s+ (no custom binary overlay)' % ver_txt,
+                        1,
                     )
                 else:
-                    # Install custom binaries with PHP config support (below MIN_OFFICIAL_OLS or when repo not used)
                     self.installCustomOLSBinaries()
+                    install_utils.ensure_openlitespeed_rpm_layout(self.distro, log=1)
                 
                 # Configure OpenLiteSpeed
                 self.fix_ols_configs()
@@ -2597,14 +2583,17 @@ module cyberpanel_ols {
             if os.path.exists(file_path):
                 if self.modify_file_content(file_path, {"*:8088": "*:80"}):
                     self.stdOut("OpenLiteSpeed port changed to 80", 1)
-                    self.reStartLiteSpeed()
+                    if not install_utils.restart_litespeed(self.server_root_path):
+                        self.stdOut(
+                            "Note: port set to 80; LiteSpeed restart deferred (run systemctl restart lsws)",
+                            1,
+                        )
                     return True
-                else:
-                    return False
-            else:
-                self.stdOut("OpenLiteSpeed configuration file not found, skipping port change", 1)
                 return False
-                
+            self.stdOut("OpenLiteSpeed configuration file not found, skipping port change", 1)
+            install_utils.ensure_openlitespeed_rpm_layout(self.distro, log=1)
+            return False
+
         except Exception as e:
             self.stdOut(f"Error changing port to 80: {str(e)}", 0)
             return False
