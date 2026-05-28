@@ -105,6 +105,15 @@ def cybercp_venv_python_executable():
     return sys.executable or shutil.which('python3') or 'python3'
 
 
+def setup_webmail_master_user():
+    """
+    Configure Dovecot master user and /etc/cyberpanel/webmail.conf for SSO.
+    Lazy-import installCyberPanel to avoid circular import (installCyberPanel imports install).
+    """
+    import installCyberPanel
+    return installCyberPanel.InstallCyberPanel.setupWebmail()
+
+
 def get_Ubuntu_release():
     release = install_utils.get_Ubuntu_release(use_print=False, exit_on_error=True)
     if release == -1:
@@ -7107,7 +7116,7 @@ def main():
         checks.setup_email_Passwords(checks.cyberpanel_db_password, mysql)
         checks.setup_postfix_dovecot_config(mysql)
         checks.enableDisableEmail('on')
-        installCyberPanel.InstallCyberPanel.setupWebmail()
+        setup_webmail_master_user()
     elif args.postfix == 'ON':
         checks.install_postfix_dovecot()
         if not hasattr(checks, 'cyberpanel_db_password') or checks.cyberpanel_db_password is None:
@@ -7115,7 +7124,7 @@ def main():
         checks.setup_email_Passwords(checks.cyberpanel_db_password, mysql)
         checks.setup_postfix_dovecot_config(mysql)
         checks.enableDisableEmail('on')
-        installCyberPanel.InstallCyberPanel.setupWebmail()
+        setup_webmail_master_user()
     else:
         preFlightsChecks.stdOut("Skipping Postfix/Mail services installation as requested.")
         checks.enableDisableEmail('off')

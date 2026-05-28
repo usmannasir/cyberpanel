@@ -13,6 +13,15 @@ release.
 For per-host operator state (backups, deployment runs, restore drill results),
 see `to-do/LIVE-CYBERCP-STATE.md`.
 
+## 2.5.5-dev - 28/05/2026
+
+### Fixed: fresh install NameError on setupWebmail (AlmaLinux 10 and all EL targets)
+
+- `install/install.py` called `installCyberPanel.InstallCyberPanel.setupWebmail()` without
+  importing `installCyberPanel`, causing `NameError: name 'installCyberPanel' is not defined`
+  after Dovecot/Postfix setup. Added `setup_webmail_master_user()` with a lazy import to avoid
+  circular import with `installCyberPanel.py`.
+
 ## 2.5.5-dev - 27/05/2026
 
 ### Fixed: install directory not found after GitHub archive extract
