@@ -5060,7 +5060,6 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
             else:
                 self.install_package("pcre-devel openssl-devel expat-devel geoip-devel zlib-devel udns-devel")
 
-            import shlex
             command = 'tar zxf %s -C /usr/local/' % shlex.quote(lscp_archive)
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
