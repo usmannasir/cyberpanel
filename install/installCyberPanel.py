@@ -858,8 +858,15 @@ protocol sieve {
     def setupWebmail():
         """Set up Dovecot master user and webmail config for SSO"""
         try:
-            # Skip if dovecot not installed
-            if not os.path.exists('/etc/dovecot/dovecot.conf'):
+            # Skip if dovecot not installed (EL10 may use dovecot.d layout before first start)
+            dovecot_ready = (
+                os.path.exists('/etc/dovecot/dovecot.conf')
+                or (
+                    os.path.isdir('/etc/dovecot')
+                    and os.path.isfile('/usr/sbin/doveadm')
+                )
+            )
+            if not dovecot_ready:
                 InstallCyberPanel.stdOut("Dovecot not installed, skipping webmail setup.", 1)
                 return 1
 

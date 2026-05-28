@@ -7,6 +7,7 @@ This module contains shared functions used by both install.py and installCyberPa
 import os
 import glob
 import sys
+import shutil
 import time
 import logging
 import subprocess
@@ -1081,3 +1082,157 @@ def writeToFile(message):
     except ImportError:
         # If installLog module is not available, just print the message
         print(f"[LOG] {message}")
+
+
+CYBERCP_ROOT = '/usr/local/CyberCP'
+
+
+def pick_cybercp_venv_bootstrap_python():
+  """
+  Interpreter used to create or repair /usr/local/CyberCP venv.
+  Prefer CYBERCP_VENV_PYTHON from the shell installer, then Python 3.10+ on disk.
+  """
+  env_p = (os.environ.get('CYBERCP_VENV_PYTHON') or '').strip()
+  if env_p and os.path.isfile(env_p) and os.access(env_p, os.X_OK):
+    return env_p
+  for cand in (
+      '/usr/bin/python3.12',
+      '/usr/bin/python3.13',
+      '/usr/bin/python3.11',
+      '/usr/local/bin/python3.11',
+      '/usr/bin/python3.10',
+  ):
+    if not (os.path.isfile(cand) and os.access(cand, os.X_OK)):
+      continue
+    try:
+      r = subprocess.run(
+          [cand, '-c', 'import sys; sys.exit(0 if sys.version_info[:2] >= (3, 10) else 1)'],
+          capture_output=True,
+          text=True,
+          timeout=10,
+      )
+      if r.returncode == 0:
+        return cand
+    except (OSError, subprocess.SubprocessError):
+      continue
+  return sys.executable or shutil.which('python3') or 'python3'
+
+
+def cybercp_venv_has_django(python_path):
+  """Return True if the given interpreter can import django."""
+  if not python_path or not os.path.isfile(python_path):
+    return False
+  try:
+    r = subprocess.run(
+        [python_path, '-c', 'import django'],
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    return r.returncode == 0
+  except (OSError, subprocess.SubprocessError):
+    return False
+
+
+def _cybercp_pip_install_requirements(pip_path, cybercp_root=CYBERCP_ROOT, log=1):
+  """Install CyberCP requirements into the venv. Returns True on success."""
+  req_file = os.path.join(cybercp_root, 'requirments.txt')
+  if not os.path.isfile(req_file):
+    req_file = os.path.join(cybercp_root, 'requirements.txt')
+  if os.path.isfile(req_file):
+    cmd = [pip_path, 'install', '-r', req_file]
+  else:
+    cmd = [
+        pip_path, 'install',
+        'Django>=4.2', 'PyMySQL', 'mysqlclient', 'requests', 'cryptography',
+        'psutil', 'gunicorn', 'python-dotenv',
+    ]
+  try:
+    subprocess.run(
+        [pip_path, 'install', '--upgrade', 'pip', 'setuptools', 'wheel'],
+        capture_output=True,
+        text=True,
+        timeout=180,
+        cwd=cybercp_root,
+    )
+    r = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        timeout=900,
+        cwd=cybercp_root,
+    )
+    if r.returncode != 0:
+      writeToFile('CyberCP pip install failed (exit %s): %s' % (
+          r.returncode, (r.stderr or r.stdout or '')[:800]))
+      return False
+    return True
+  except (OSError, subprocess.SubprocessError) as exc:
+    writeToFile('CyberCP pip install error: %s' % exc)
+    return False
+
+
+def ensure_cybercp_venv(log=1):
+  """
+  After git clone into /usr/local/CyberCP, ensure bin/python exists and can import django.
+  Uses virtualenv --system-site-packages (same as upgrade path) so the clone is not wiped.
+  """
+  cybercp_root = CYBERCP_ROOT
+  venv_py = os.path.join(cybercp_root, 'bin', 'python')
+  venv_pip = os.path.join(cybercp_root, 'bin', 'pip')
+
+  if cybercp_venv_has_django(venv_py):
+    writeToFile('CyberCP venv OK (django importable)')
+    return True
+
+  vpy = pick_cybercp_venv_bootstrap_python()
+  writeToFile('CyberCP venv bootstrap interpreter: %s' % vpy)
+
+  if os.path.isfile(venv_py) and os.path.isfile(venv_pip):
+    writeToFile('CyberCP venv present without Django; installing requirements...')
+    if _cybercp_pip_install_requirements(venv_pip, cybercp_root, log):
+      return cybercp_venv_has_django(venv_py)
+    writeToFile('pip install into existing venv did not provide django')
+
+  writeToFile('Creating CyberCP virtualenv at %s' % cybercp_root)
+  try:
+    subprocess.run(
+        [vpy, '-m', 'pip', 'install', '--upgrade', 'pip', 'virtualenv'],
+        capture_output=True,
+        text=True,
+        timeout=180,
+    )
+    r = subprocess.run(
+        [vpy, '-m', 'virtualenv', '--system-site-packages', cybercp_root],
+        capture_output=True,
+        text=True,
+        timeout=300,
+    )
+    if r.returncode != 0:
+      writeToFile('virtualenv failed: %s' % (r.stderr or r.stdout or '')[:500])
+      r = subprocess.run(
+          [vpy, '-m', 'venv', '--system-site-packages', cybercp_root],
+          capture_output=True,
+          text=True,
+          timeout=300,
+      )
+      if r.returncode != 0:
+        writeToFile('python -m venv failed: %s' % (r.stderr or r.stdout or '')[:500])
+        return False
+  except (OSError, subprocess.SubprocessError) as exc:
+    writeToFile('CyberCP venv creation error: %s' % exc)
+    return False
+
+  if not os.path.isfile(venv_pip):
+    writeToFile('CyberCP venv missing bin/pip after creation')
+    return False
+
+  if not _cybercp_pip_install_requirements(venv_pip, cybercp_root, log):
+    return False
+
+  if cybercp_venv_has_django(venv_py):
+    writeToFile('CyberCP venv created and django is importable')
+    return True
+
+  writeToFile('FATAL: django still not importable after venv setup')
+  return False

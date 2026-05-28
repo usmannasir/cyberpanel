@@ -15,6 +15,22 @@ see `to-do/LIVE-CYBERCP-STATE.md`.
 
 ## 2.5.5-dev - 28/05/2026
 
+### Fixed: AlmaLinux 10 install exit 71 (Django missing in CyberCP venv)
+
+- `install_utils.ensure_cybercp_venv()`: after `git clone` into `/usr/local/CyberCP`, create or repair
+  the venv with `virtualenv --system-site-packages` (or `python -m venv`), run `pip install -r requirments.txt`,
+  and verify `import django` before migrations.
+- `download_install_CyberPanel()`: fail fast if venv/Django setup fails instead of running
+  `makemigrations` against a bare interpreter.
+- Migration Python selection: only use interpreters that can `import django`; retry venv repair if needed.
+- `universal_os_fixes.install_packages()`: on EL10, stop using `dnf --skip-unavailable` (removed in
+  AlmaLinux 10); use batched `--skip-broken` installs and per-package fallback for optional deps.
+- AlmaLinux 10: `universal_os_fixes` enables **CRB** instead of PowerTools; skips `compat-openssl11` on EL10.
+- `fix_almalinux10_mariadb()`: install `openssh-server` so firewall/SSH port detection does not fail on
+  minimal images missing `/etc/ssh/sshd_config`.
+- `findSSHPort()`: install `openssh-server` when `sshd_config` is missing.
+- `setupWebmail()`: detect Dovecot via `/etc/dovecot` + `doveadm` on EL10 (not only `dovecot.conf`).
+
 ### Fixed: AlmaLinux 10 clean install (LiteSpeed repo exit 71 + MariaDB conflicts)
 
 - `install_utils.install_litespeed_repo_rhel()`: idempotent LiteSpeed RPM repo (`rpm -q` or `rpm -Uvh`);

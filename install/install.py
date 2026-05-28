@@ -734,6 +734,7 @@ class preFlightsChecks:
                 ("dnf config-manager --set-enabled crb 2>/dev/null || dnf config-manager --set-enabled powertools 2>/dev/null || true", "CRB/PowerTools"),
                 ("dnf install -y htop 2>/dev/null || true", "htop"),
                 ("dnf install -y libxcrypt-compat 2>/dev/null || true", "libxcrypt-compat for lscpd"),
+                ("dnf install -y openssh-server 2>/dev/null || true", "openssh-server for sshd_config"),
             ):
                 self.call(cmd, self.distro, desc, desc, 1, 0, os.EX_OSERR)
             for cmd, desc in (
@@ -3468,38 +3469,18 @@ skip-ssl
 
         logging.InstallLog.writeToFile("settings.py updated!")
 
-        # Create Python venv at /usr/local/CyberCP if missing (install.py run from temp dir does not run venvsetup.sh)
-        if not os.path.exists("/usr/local/CyberCP/bin/python"):
-            logging.InstallLog.writeToFile("Creating Python virtual environment at /usr/local/CyberCP...")
-            preFlightsChecks.stdOut("Creating Python virtual environment...")
-            try:
-                vpy = cybercp_venv_python_executable()
-                logging.InstallLog.writeToFile("venv create using interpreter: " + str(vpy))
-                r = subprocess.run(
-                    [vpy, "-m", "venv", "/usr/local/CyberCP"],
-                    timeout=120, capture_output=True, text=True, cwd="/usr/local/CyberCP"
-                )
-                if r.returncode != 0:
-                    logging.InstallLog.writeToFile("venv create stderr: " + (r.stderr or "")[:500])
-                if r.returncode == 0 and os.path.exists("/usr/local/CyberCP/bin/pip"):
-                    req_file = "/usr/local/CyberCP/requirments.txt"
-                    if not os.path.exists(req_file):
-                        req_file = "/usr/local/CyberCP/requirements.txt"
-                    if os.path.exists(req_file):
-                        subprocess.run(
-                            ["/usr/local/CyberCP/bin/pip", "install", "-r", req_file, "--quiet"],
-                            timeout=600, cwd="/usr/local/CyberCP", capture_output=True
-                        )
-                    else:
-                        subprocess.run(
-                            ["/usr/local/CyberCP/bin/pip", "install", "Django", "PyMySQL", "requests", "cryptography", "psutil", "--quiet"],
-                            timeout=180, cwd="/usr/local/CyberCP", capture_output=True
-                        )
-                if os.path.exists("/usr/local/CyberCP/bin/python"):
-                    logging.InstallLog.writeToFile("Virtual environment created successfully")
-                    preFlightsChecks.stdOut("Virtual environment created", 1)
-            except Exception as e:
-                logging.InstallLog.writeToFile("Venv create warning: " + str(e))
+        # CyberCP venv + Django must exist before migrations (git clone leaves tree without deps)
+        logging.InstallLog.writeToFile("Ensuring CyberCP virtualenv and Django dependencies...")
+        preFlightsChecks.stdOut("Ensuring CyberCP Python virtual environment...")
+        if not install_utils.ensure_cybercp_venv(log=1):
+            logging.InstallLog.writeToFile(
+                "FATAL: CyberCP venv/Django setup failed; cannot run migrations"
+            )
+            preFlightsChecks.stdOut(
+                "FATAL: Could not install Django in /usr/local/CyberCP venv", 0
+            )
+            return False
+        preFlightsChecks.stdOut("CyberCP virtual environment ready", 1)
 
         # Now run Django migrations since we're in /usr/local/CyberCP and database exists
         os.chdir("/usr/local/CyberCP")
@@ -3567,12 +3548,21 @@ skip-ssl
                 continue
             try:
                 r = subprocess.run([path, "--version"], capture_output=True, text=True, timeout=5)
-                if r.returncode == 0:
+                if r.returncode == 0 and install_utils.cybercp_venv_has_django(path):
                     python_path = path
                     logging.InstallLog.writeToFile(f"Using Python at: {path}")
                     break
             except (FileNotFoundError, OSError, subprocess.SubprocessError):
                 continue
+
+        if not python_path:
+            if install_utils.ensure_cybercp_venv(log=1):
+                candidate = "/usr/local/CyberCP/bin/python"
+                if install_utils.cybercp_venv_has_django(candidate):
+                    python_path = candidate
+                    logging.InstallLog.writeToFile(
+                        "Using Python at: %s (after venv repair)" % candidate
+                    )
 
         if not python_path:
             logging.InstallLog.writeToFile("ERROR: No working Python found for migrations!")
@@ -4982,7 +4972,12 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
 
     def findSSHPort(self):
         try:
-            sshData = subprocess.check_output(shlex.split('cat /etc/ssh/sshd_config')).decode("utf-8").split('\n')
+            ssh_config = '/etc/ssh/sshd_config'
+            if not os.path.isfile(ssh_config):
+                self.install_package('openssh-server')
+            if not os.path.isfile(ssh_config):
+                return '22'
+            sshData = subprocess.check_output(shlex.split('cat ' + ssh_config)).decode("utf-8").split('\n')
 
             for items in sshData:
                 if items.find('Port') > -1:

@@ -451,6 +451,37 @@ class UniversalOSFixes:
                 subprocess.run(cmd, check=True)
                 cmd = ['apt', 'install', '-y'] + packages
             elif package_manager == 'dnf':
+                try:
+                    major = int(str(self.os_info.get('version', '0')).split('.')[0])
+                except (ValueError, TypeError):
+                    major = 0
+                if major >= 10:
+                    failed = []
+                    chunk_size = 12
+                    for i in range(0, len(packages), chunk_size):
+                        chunk = packages[i:i + chunk_size]
+                        r = subprocess.run(
+                            ['dnf', 'install', '-y', '--skip-broken'] + chunk,
+                            capture_output=True,
+                            text=True,
+                            timeout=1200,
+                        )
+                        if r.returncode != 0:
+                            for pkg in chunk:
+                                pr = subprocess.run(
+                                    ['dnf', 'install', '-y', pkg],
+                                    capture_output=True,
+                                    text=True,
+                                    timeout=300,
+                                )
+                                if pr.returncode != 0:
+                                    failed.append(pkg)
+                    if failed:
+                        self.logger.warning(
+                            'Some optional packages were not installed: %s', failed
+                        )
+                    self.logger.info('dnf package install finished (EL10, per-package fallback)')
+                    return True
                 cmd = ['dnf', 'install', '-y', '--skip-unavailable'] + packages
             elif package_manager == 'yum':
                 cmd = ['yum', 'install', '-y'] + packages
@@ -693,24 +724,33 @@ WantedBy=multi-user.target
             os_version = self.os_info['version']
             
             if os_id == 'almalinux' and int(os_version.split('.')[0]) >= 9:
-                # AlmaLinux 9+ specific fixes
-                self.logger.info("Applying AlmaLinux 9+ specific fixes...")
-                
-                # Enable PowerTools repository
-                try:
-                    subprocess.run(['dnf', 'config-manager', '--set-enabled', 'powertools'], check=True)
-                except subprocess.CalledProcessError:
+                major = int(os_version.split('.')[0])
+                self.logger.info("Applying AlmaLinux %s+ specific fixes...", major)
+                if major >= 10:
+                    for crb_cmd in (
+                        ['crb', 'enable'],
+                        ['dnf', 'config-manager', '--set-enabled', 'crb'],
+                    ):
+                        try:
+                            subprocess.run(crb_cmd, check=True, capture_output=True, timeout=120)
+                            break
+                        except (subprocess.CalledProcessError, OSError):
+                            continue
+                    else:
+                        self.logger.warning("Could not enable CRB repository on AlmaLinux 10")
+                    compatibility_packages = ['libxcrypt-compat', 'libnsl']
+                else:
                     try:
-                        subprocess.run(['dnf', 'config-manager', '--set-enabled', 'PowerTools'], check=True)
+                        subprocess.run(['dnf', 'config-manager', '--set-enabled', 'powertools'], check=True)
                     except subprocess.CalledProcessError:
-                        self.logger.warning("Could not enable PowerTools repository")
-                
-                # Install compatibility packages
-                compatibility_packages = [
-                    'compat-openssl11', 'compat-openssl11-devel',
-                    'libxcrypt-compat', 'libnsl'
-                ]
-                
+                        try:
+                            subprocess.run(['dnf', 'config-manager', '--set-enabled', 'PowerTools'], check=True)
+                        except subprocess.CalledProcessError:
+                            self.logger.warning("Could not enable PowerTools repository")
+                    compatibility_packages = [
+                        'compat-openssl11', 'compat-openssl11-devel',
+                        'libxcrypt-compat', 'libnsl',
+                    ]
                 for package in compatibility_packages:
                     try:
                         subprocess.run(['dnf', 'install', '-y', package], check=True)
