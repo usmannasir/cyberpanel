@@ -3024,8 +3024,16 @@ module cyberpanel_ols {
                 preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             else:
-                command = "useradd -s /bin/false cyberpanel"
-                preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+                if subprocess.run(
+                    'id -u cyberpanel >/dev/null 2>&1',
+                    shell=True,
+                ).returncode != 0:
+                    command = "useradd -s /bin/false cyberpanel"
+                    preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+                else:
+                    logging.InstallLog.writeToFile(
+                        "cyberpanel system user already exists; skipping useradd"
+                    )
 
             ###############################
 
@@ -5034,6 +5042,9 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
 
             if self.distro == ubuntu:
                 self.install_package("libpcre3 libpcre3-dev openssl libexpat1 libexpat1-dev libgeoip-dev zlib1g zlib1g-dev libudns-dev whichman curl")
+            elif self.is_almalinux10():
+                # AlmaLinux 10 / EL10: pcre-devel was removed; use pcre2-devel
+                self.install_package("pcre2-devel openssl-devel expat-devel geoip-devel zlib-devel udns-devel")
             else:
                 self.install_package("pcre-devel openssl-devel expat-devel geoip-devel zlib-devel udns-devel")
 
@@ -5120,16 +5131,18 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
             # Create lsphp symlink for fcgi-bin with better error handling
             self.setup_lsphp_symlink()
 
-            if self.is_centos_family():
-                command = 'adduser lscpd -M -d /usr/local/lscp'
-            else:
-                command = 'useradd lscpd -M -d /usr/local/lscp'
-
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            if self.is_centos_family():
-                command = 'groupadd lscpd'
+            if subprocess.run('id -u lscpd >/dev/null 2>&1', shell=True).returncode != 0:
+                if self.is_centos_family():
+                    command = 'adduser lscpd -M -d /usr/local/lscp'
+                else:
+                    command = 'useradd lscpd -M -d /usr/local/lscp'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            else:
+                logging.InstallLog.writeToFile("lscpd system user already exists; skipping useradd")
+
+            if self.is_centos_family():
+                command = 'getent group lscpd >/dev/null || groupadd lscpd'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR, True)
                 # Added group in useradd for Ubuntu
 
             command = 'usermod -a -G lscpd lscpd'
@@ -5452,10 +5465,13 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
             preFlightsChecks.stdOut("Trying to setup LSCPD Daemon!")
             logging.InstallLog.writeToFile("Trying to setup LSCPD Daemon!")
 
-            os.chdir(self.cwd)
+            install_dir = os.path.dirname(os.path.abspath(__file__))
+            lscpd_service = os.path.join(install_dir, "lscpd", "lscpd.service")
+            lscpd_ctrl = os.path.join(install_dir, "lscpd", "lscpdctrl")
+            os.makedirs("/usr/local/lscp/bin", exist_ok=True)
 
-            shutil.copy("lscpd/lscpd.service", "/etc/systemd/system/lscpd.service")
-            shutil.copy("lscpd/lscpdctrl", "/usr/local/lscp/bin/lscpdctrl")
+            shutil.copy(lscpd_service, "/etc/systemd/system/lscpd.service")
+            shutil.copy(lscpd_ctrl, "/usr/local/lscp/bin/lscpdctrl")
 
             ##
 
