@@ -133,6 +133,7 @@ show_fresh_install_menu() {
             5)
                 BRANCH_NAME=""
                 AUTO_INSTALL=true
+                prompt_mariadb_version_preference
                 start_installation
                 return
                 ;;
@@ -286,6 +287,9 @@ show_installation_preferences() {
             DEBUG_MODE=false
             ;;
     esac
+
+    # MariaDB version (before auto-install so it is chosen even in auto mode)
+    prompt_mariadb_version_preference
     
     # Auto-install
     echo -n "Auto-install without further prompts? (y/n) [y]: "
@@ -307,6 +311,7 @@ show_installation_preferences() {
     echo ""
     echo "   Type: $INSTALLATION_TYPE"
     echo "   Version: ${BRANCH_NAME:-'Latest Stable'}"
+    echo "   MariaDB: ${MARIADB_VER:-11.8}"
     echo "   Debug Mode: $DEBUG_MODE"
     echo "   Auto Install: $AUTO_INSTALL"
     echo ""

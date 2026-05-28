@@ -60,17 +60,11 @@ parse_arguments() {
                 shift
                 ;;
             --mariadb-version)
-                if [ -n "$2" ] && [ "$2" = "10.11" ]; then
-                    MARIADB_VER="10.11"
-                    shift 2
-                elif [ -n "$2" ] && [ "$2" = "11.8" ]; then
-                    MARIADB_VER="11.8"
-                    shift 2
-                elif [ -n "$2" ] && [ "$2" = "12.1" ]; then
-                    MARIADB_VER="12.1"
+                if [ -n "$2" ]; then
+                    MARIADB_VER="$(normalize_mariadb_version "$2")"
                     shift 2
                 else
-                    echo "ERROR: --mariadb-version requires 10.11, 11.8 or 12.1"
+                    echo "ERROR: --mariadb-version requires a version (e.g. 10.11, 11.8, 12.1, 12.3)"
                     exit 1
                 fi
                 ;;
@@ -83,7 +77,7 @@ parse_arguments() {
                 echo "Options:"
                 echo "  -b, --branch BRANCH    Install from specific branch/commit"
                 echo "  -v, --version VER      Install specific version (auto-adds v prefix)"
-                echo "  --mariadb-version VER  MariaDB version: 10.11, 11.8 or 12.1 (asked after web server)"
+                echo "  --mariadb-version VER  MariaDB version X.Y (e.g. 10.11, 11.8, 12.3); else asked in preferences"
                 echo "  --debug               Enable debug mode"
                 echo "  --auto                Auto mode: OpenLiteSpeed + MariaDB 11.8 unless --mariadb-version set"
                 echo "  -h, --help            Show this help message"

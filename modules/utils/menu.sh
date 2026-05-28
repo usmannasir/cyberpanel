@@ -150,6 +150,10 @@ show_installation_preferences() {
     if get_yes_no "Enable debug mode for detailed logging?" "n"; then
         DEBUG_MODE=true
     fi
+
+    if type prompt_mariadb_version_preference >/dev/null 2>&1; then
+        prompt_mariadb_version_preference
+    fi
     
     # Auto-install
     if get_yes_no "Auto-install without further prompts?" "n"; then
@@ -157,7 +161,7 @@ show_installation_preferences() {
     fi
     
     # Show summary
-    print_info_box "Installation Summary" "Type: $INSTALLATION_TYPE\nVersion: ${BRANCH_NAME:-'Latest Stable'}\nDebug Mode: $DEBUG_MODE\nAuto Install: $AUTO_INSTALL" "$BLUE"
+    print_info_box "Installation Summary" "Type: $INSTALLATION_TYPE\nVersion: ${BRANCH_NAME:-'Latest Stable'}\nMariaDB: ${MARIADB_VER:-11.8}\nDebug Mode: $DEBUG_MODE\nAuto Install: $AUTO_INSTALL" "$BLUE"
     
     if get_yes_no "Proceed with installation?" "y"; then
         start_installation

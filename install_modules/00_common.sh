@@ -115,6 +115,66 @@ print_status() {
     log_message "$message"
 }
 
+# Normalize user input to MariaDB major.minor (e.g. 12.3.1 -> 12.3)
+normalize_mariadb_version() {
+    local raw="${1:-11.8}"
+    raw="${raw// /}"
+    if [[ "$raw" =~ ^([0-9]+)\.([0-9]+) ]]; then
+        echo "${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"
+    else
+        echo "11.8"
+    fi
+}
+
+# Ask MariaDB version (skipped if MARIADB_VER already set via --mariadb-version)
+prompt_mariadb_version_preference() {
+    if [ -n "$MARIADB_VER" ]; then
+        MARIADB_VER="$(normalize_mariadb_version "$MARIADB_VER")"
+        echo "  MariaDB version (already set): $MARIADB_VER"
+        echo ""
+        return 0
+    fi
+
+    echo ""
+    echo "  Database: MariaDB version for websites and CyberPanel"
+    echo "    1) 10.11  (legacy LTS)"
+    echo "    2) 11.8   (recommended LTS, default)"
+    echo "    3) 12.1"
+    echo "    4) 12.2"
+    echo "    5) 12.3"
+    echo "    6) Other  (enter major.minor, e.g. 12.4)"
+    echo ""
+    echo -n "  Select MariaDB version [2]: "
+    read -r mariadb_choice
+    mariadb_choice="${mariadb_choice:-2}"
+    mariadb_choice="${mariadb_choice// /}"
+
+    case "$mariadb_choice" in
+        1) MARIADB_VER="10.11" ;;
+        2) MARIADB_VER="11.8" ;;
+        3) MARIADB_VER="12.1" ;;
+        4) MARIADB_VER="12.2" ;;
+        5) MARIADB_VER="12.3" ;;
+        6)
+            echo -n "  Enter MariaDB version (X.Y) [11.8]: "
+            read -r mariadb_custom
+            MARIADB_VER="$(normalize_mariadb_version "${mariadb_custom:-11.8}")"
+            ;;
+        *)
+            if [[ "$mariadb_choice" =~ ^[0-9]+\.[0-9]+ ]]; then
+                MARIADB_VER="$(normalize_mariadb_version "$mariadb_choice")"
+            else
+                echo "  Invalid choice, using 11.8 (recommended LTS)."
+                MARIADB_VER="11.8"
+            fi
+            ;;
+    esac
+
+    echo "  Using MariaDB $MARIADB_VER"
+    echo ""
+    export MARIADB_VER
+}
+
 # CentOS 7 and CloudLinux 7 reached EOL; fresh install and upgrade are unsupported.
 reject_el7_if_present() {
     if [[ ! -f /etc/os-release ]]; then

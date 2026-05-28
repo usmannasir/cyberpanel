@@ -15,6 +15,16 @@ see `to-do/LIVE-CYBERCP-STATE.md`.
 
 ## 2.5.5-dev - 28/05/2026
 
+### Added: MariaDB version in Installation Preferences (before auto-install)
+
+- `install_modules/00_common.sh`: `prompt_mariadb_version_preference()` menu (10.11, 11.8,
+  12.1–12.3, or custom X.Y).
+- `install_modules/05_menus_main.sh`: asks database version after debug mode and before
+  "Auto-install without further prompts?"; summary shows MariaDB choice.
+- Quick Install (option 5) also prompts for MariaDB before starting.
+- `install_modules/02_install_core.sh`: skips duplicate MariaDB prompt when already chosen.
+- `--mariadb-version` accepts any X.Y (not only 10.11 / 11.8 / 12.1).
+
 ### Fixed: AlmaLinux 10 install aborts after webmail (CDN / MariaDB / Django)
 
 - `downloadCDNLibraries()`: `install_utils.call()` returns bool, not exit code; use `if result`
