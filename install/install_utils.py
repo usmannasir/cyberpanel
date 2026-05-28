@@ -1086,6 +1086,129 @@ def writeToFile(message):
 
 CYBERCP_ROOT = '/usr/local/CyberCP'
 
+CYBERCP_MIGRATION_APPS_FALLBACK = [
+    'loginSystem', 'packages', 'websiteFunctions', 'baseTemplate', 'userManagment',
+    'dns', 'databases', 'ftp', 'filemanager', 'mailServer', 'emailPremium',
+    'emailDelivery', 'webmail',
+    'cloudAPI', 'containerization', 'IncBackups', 'CLManager',
+    's3Backups', 'dockerManager', 'aiScanner', 'firewall', 'tuning', 'serverStatus',
+    'serverLogs', 'backup', 'managePHP', 'manageSSL', 'api', 'manageServices',
+    'pluginHolder', 'highAvailability', 'WebTerminal',
+]
+
+
+def cyberpanel_github_owner():
+    """GitHub org/user for CyberPanel source (installer exports CYBERPANEL_GITHUB_OWNER)."""
+    owner = (os.environ.get('CYBERPANEL_GITHUB_OWNER') or 'master3395').strip()
+    if not owner or '/' in owner or ' ' in owner:
+        return 'master3395'
+    return owner
+
+
+def cyberpanel_github_owners_to_try():
+    """Fork first, then upstream usmannasir if different."""
+    primary = cyberpanel_github_owner()
+    owners = [primary]
+    if primary != 'usmannasir':
+        owners.append('usmannasir')
+    return owners
+
+
+def cyberpanel_github_repo_base(owner=None):
+    o = owner or cyberpanel_github_owner()
+    return 'https://github.com/%s/cyberpanel' % o
+
+
+def discover_cybercp_migration_apps(cybercp_root=None):
+    """
+    Django app labels under CyberCP that ship a migrations package.
+    Used before makemigrations so stale files (e.g. emailDelivery -> loginSystem) are removed.
+    """
+    root = cybercp_root or CYBERCP_ROOT
+    if not os.path.isdir(root):
+        return list(CYBERCP_MIGRATION_APPS_FALLBACK)
+
+    skip_dirs = {
+        'CyberCP', 'lib', 'bin', 'public', 'static', 'locale',
+        'install', 'test', 'tests', 'Test', 'docs', 'pkg', 'modules',
+    }
+    apps = []
+    for name in os.listdir(root):
+        if name in skip_dirs or name.startswith('.'):
+            continue
+        app_path = os.path.join(root, name)
+        if not os.path.isdir(app_path):
+            continue
+        mig = os.path.join(app_path, 'migrations')
+        if os.path.isdir(mig) and os.path.isfile(os.path.join(mig, '__init__.py')):
+            apps.append(name)
+
+    if not apps:
+        return list(CYBERCP_MIGRATION_APPS_FALLBACK)
+    return sorted(set(apps))
+
+
+def build_cyberpanel_clone_commands(branch_name):
+    """Ordered git clone commands: primary fork, then upstream fallback."""
+    commands = []
+    seen = set()
+
+    def add(cmd):
+        if cmd not in seen:
+            seen.add(cmd)
+            commands.append(cmd)
+
+    for owner in cyberpanel_github_owners_to_try():
+        base = cyberpanel_github_repo_base(owner)
+        if branch_name and branch_name != 'stable':
+            if branch_name.startswith('commit:'):
+                commit_hash = branch_name[7:]
+                add('git clone %s /usr/local/CyberCP' % base)
+                add('cd /usr/local/CyberCP && git checkout %s' % commit_hash)
+            elif branch_name.startswith('v'):
+                add('git clone --depth 1 --branch %s %s /usr/local/CyberCP' % (branch_name, base))
+            elif branch_name.endswith('-dev'):
+                add('git clone --depth 1 --branch %s %s /usr/local/CyberCP' % (branch_name, base))
+            elif len(branch_name) >= 7 and all(c in '0123456789abcdef' for c in branch_name.lower()):
+                add('git clone %s /usr/local/CyberCP' % base)
+                add('cd /usr/local/CyberCP && git checkout %s' % branch_name)
+            else:
+                add('git clone --depth 1 --branch v%s %s /usr/local/CyberCP' % (branch_name, base))
+                add('git clone --depth 1 --branch %s %s /usr/local/CyberCP' % (branch_name, base))
+        add('git clone %s /usr/local/CyberCP' % base)
+        add('git clone --depth 1 %s /usr/local/CyberCP' % base)
+        add('git clone --single-branch --branch stable %s /usr/local/CyberCP' % base)
+
+    return commands
+
+
+def build_cyberpanel_archive_download(branch_name, owner=None):
+    """
+    Return (download_url, extract_dir) for wget/unzip fallback when git clone fails.
+  """
+    base = cyberpanel_github_repo_base(owner)
+    if branch_name and branch_name != 'stable':
+        if branch_name.startswith('commit:'):
+            commit_hash = branch_name[7:]
+            return ('%s/archive/%s.zip' % (base, commit_hash), 'cyberpanel-%s' % commit_hash)
+        if len(branch_name) >= 7 and all(c in '0123456789abcdef' for c in branch_name.lower()):
+            return ('%s/archive/%s.zip' % (base, branch_name), 'cyberpanel-%s' % branch_name)
+        if branch_name.startswith('v'):
+            return (
+                '%s/archive/refs/tags/%s.zip' % (base, branch_name),
+                'cyberpanel-%s' % branch_name[1:],
+            )
+        if branch_name.endswith('-dev'):
+            return (
+                '%s/archive/refs/heads/%s.zip' % (base, branch_name),
+                'cyberpanel-%s' % branch_name,
+            )
+        return (
+            '%s/archive/refs/tags/v%s.zip' % (base, branch_name),
+            'cyberpanel-%s' % branch_name,
+        )
+    return ('%s/archive/refs/heads/stable.zip' % base, 'cyberpanel-stable')
+
 
 def pick_cybercp_venv_bootstrap_python():
   """

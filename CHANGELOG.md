@@ -15,6 +15,11 @@ see `to-do/LIVE-CYBERCP-STATE.md`.
 
 ## 2.5.5-dev - 28/05/2026
 
+### Fixed: AlmaLinux 10 install exit 71 (Django migration graph / emailDelivery)
+
+- `discover_cybercp_migration_apps()`: before `makemigrations`, remove stale migration modules for **every** app with a `migrations/` package (including `emailDelivery` and `webmail`), not only the hardcoded list. Fixes `NodeNotFoundError: emailDelivery.0001_initial` depends on missing `loginSystem.0001_initial` after cleanup deleted `loginSystem` migrations only.
+- `build_cyberpanel_clone_commands()` / `build_cyberpanel_archive_download()`: clone and zip fallback use `CYBERPANEL_GITHUB_OWNER` (default `master3395`), then `usmannasir` if needed, so installs from the fork pick up EL10 fixes.
+
 ### Fixed: AlmaLinux 10 install exit 71 (Django missing in CyberCP venv)
 
 - `install_utils.ensure_cybercp_venv()`: after `git clone` into `/usr/local/CyberCP`, create or repair
