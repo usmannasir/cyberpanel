@@ -729,6 +729,7 @@ class preFlightsChecks:
         try:
             self.stdOut("Applying AlmaLinux 10 MariaDB / repo fixes...", 1)
             for cmd, desc in (
+                ("dnf install -y curl ca-certificates", "curl and ca-certificates for mariadb_repo_setup"),
                 ("dnf install -y epel-release", "EPEL"),
                 ("dnf config-manager --set-enabled crb 2>/dev/null || dnf config-manager --set-enabled powertools 2>/dev/null || true", "CRB/PowerTools"),
                 ("dnf install -y htop 2>/dev/null || true", "htop"),
@@ -1264,14 +1265,14 @@ class preFlightsChecks:
             for qrious_url in qrious_urls:
                 command = f'wget -q --timeout=30 {qrious_url} -O {qrious_path}'
                 result = self.call(command, self.distro, command, command, 0, 0, os.EX_OSERR)
-                if result == 0 and os.path.exists(qrious_path) and os.path.getsize(qrious_path) > 1000:  # At least 1KB
+                if result and os.path.exists(qrious_path) and os.path.getsize(qrious_path) > 1000:  # At least 1KB
                     os.chmod(qrious_path, 0o644)
                     version_info = "latest" if "latest" in qrious_url else "4.0.2"
-                    logging.InstallLog.writeToFile(f"Downloaded qrious.min.js ({version_info})", 0)
+                    logging.InstallLog.writeToFile(f"Downloaded qrious.min.js ({version_info})")
                     qrious_downloaded = True
                     break
             if not qrious_downloaded:
-                logging.InstallLog.writeToFile("Warning: Failed to download qrious.min.js, continuing anyway", 0)
+                logging.InstallLog.writeToFile("Warning: Failed to download qrious.min.js, continuing anyway")
             
             # Download chart.js - try latest first, fallback to known working version
             chartjs_path = os.path.join(custom_js_dir, 'chart.umd.min.js')
@@ -1283,10 +1284,10 @@ class preFlightsChecks:
             for chartjs_url in chartjs_urls:
                 command = f'wget -q --timeout=30 {chartjs_url} -O {chartjs_path}'
                 result = self.call(command, self.distro, command, command, 0, 0, os.EX_OSERR)
-                if result == 0 and os.path.exists(chartjs_path) and os.path.getsize(chartjs_path) > 100000:  # At least 100KB
+                if result and os.path.exists(chartjs_path) and os.path.getsize(chartjs_path) > 100000:  # At least 100KB
                     os.chmod(chartjs_path, 0o644)
                     version_info = "latest" if "latest" in chartjs_url else "4.4.1"
-                    logging.InstallLog.writeToFile(f"Downloaded chart.umd.min.js ({version_info})", 0)
+                    logging.InstallLog.writeToFile(f"Downloaded chart.umd.min.js ({version_info})")
                     chartjs_downloaded = True
                     # Create copy for chart.js compatibility (some code may expect chart.js name)
                     chartjs_compat_path = os.path.join(custom_js_dir, 'chart.js')
@@ -1294,10 +1295,10 @@ class preFlightsChecks:
                         shutil.copy2(chartjs_path, chartjs_compat_path)
                     break
             if not chartjs_downloaded:
-                logging.InstallLog.writeToFile("Warning: Failed to download chart.umd.min.js, continuing anyway", 0)
+                logging.InstallLog.writeToFile("Warning: Failed to download chart.umd.min.js, continuing anyway")
                 
         except Exception as msg:
-            logging.InstallLog.writeToFile(f"Warning: Error downloading CDN libraries: {str(msg)}, continuing anyway", 0)
+            logging.InstallLog.writeToFile(f"Warning: Error downloading CDN libraries: {str(msg)}, continuing anyway")
 
     def installCustomOLSBinaries(self):
         """Install custom OpenLiteSpeed binaries with PHP config support"""
@@ -2072,8 +2073,9 @@ module cyberpanel_ols {
                     command = f'dnf install -y {mariadb_packages}'
                 self.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
             
-            # Verify MariaDB was installed successfully before proceeding
-            if not os.path.exists('/usr/bin/mysql') and not os.path.exists('/usr/bin/mariadb'):
+            # Verify MariaDB client exists (EL10 may only expose /usr/sbin/mariadb until symlinked)
+            install_utils.ensure_mariadb_client_cli(self.distro, 1)
+            if not install_utils.resolve_mysql_cli():
                 self.stdOut("Error: MariaDB binaries not found after installation. Installation may have failed.", 0)
                 return False
             
@@ -3529,18 +3531,18 @@ skip-ssl
         # Ensure virtual environment or system Python is available
         logging.InstallLog.writeToFile("Ensuring Python is available for migrations...")
         if not self.ensureVirtualEnvironmentSetup():
-            logging.InstallLog.writeToFile("WARNING: No venv found; will try system Python", 1)
+            logging.InstallLog.writeToFile("WARNING: No venv found; will try system Python")
 
-        # Find Python: use only system Python or CyberCP venv (never /usr/local/CyberPanel - often missing on fresh install)
-        python_paths = [
-            "/usr/bin/python3",
-            "/usr/local/bin/python3",
-        ]
-        if sys.executable and sys.executable not in python_paths:
-            python_paths.append(sys.executable)
-        # Only add venv if it exists (avoid FileNotFoundError)
+        # Prefer CyberCP venv (Django lives there); fall back to system Python
+        python_paths = []
         if os.path.isfile("/usr/local/CyberCP/bin/python"):
             python_paths.append("/usr/local/CyberCP/bin/python")
+        python_paths.extend([
+            "/usr/bin/python3",
+            "/usr/local/bin/python3",
+        ])
+        if sys.executable and sys.executable not in python_paths:
+            python_paths.append(sys.executable)
 
         python_path = None
         for path in python_paths:
@@ -3566,13 +3568,13 @@ skip-ssl
                 continue
 
         if not python_path:
-            logging.InstallLog.writeToFile("ERROR: No working Python found for migrations!", 0)
+            logging.InstallLog.writeToFile("ERROR: No working Python found for migrations!")
             preFlightsChecks.stdOut("ERROR: No working Python found!", 0)
             return False
 
         manage_py = "/usr/local/CyberCP/manage.py"
         if not os.path.isfile(manage_py):
-            logging.InstallLog.writeToFile("ERROR: %s not found" % manage_py, 0)
+            logging.InstallLog.writeToFile("ERROR: %s not found" % manage_py)
             preFlightsChecks.stdOut("ERROR: manage.py not found at %s" % manage_py, 0)
             return False
 
@@ -4938,7 +4940,7 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
             try:
                 from plogical.snappymail_plugin_utilities import install_and_enable_list_unsubscribe_header_plugin
                 if install_and_enable_list_unsubscribe_header_plugin():
-                    logging.InstallLog.writeToFile("SnappyMail list-unsubscribe-header plugin installed and enabled", 0)
+                    logging.InstallLog.writeToFile("SnappyMail list-unsubscribe-header plugin installed and enabled")
             except BaseException as plug_msg:
                 logging.InstallLog.writeToFile("Warning: list-unsubscribe SnappyMail plugin: " + str(plug_msg), 0)
 
@@ -6083,7 +6085,7 @@ milter_default_action = accept
                 command = "bash " + composer_sh
                 preFlightsChecks.call(command, self.distro, "composer.sh", command, 1, 0, os.EX_OSERR, True)
             else:
-                logging.InstallLog.writeToFile("composer.sh download failed, skipping [setupPHPAndComposer]", 0)
+                logging.InstallLog.writeToFile("composer.sh download failed, skipping [setupPHPAndComposer]")
 
         except OSError as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [setupPHPAndComposer]")
@@ -7045,7 +7047,10 @@ def main():
 
     # Install core services in the correct order
     checks.installLiteSpeed(ent, serial)
-    checks.installMySQL(mysql)
+    if not checks.installMySQL(mysql):
+        logging.InstallLog.writeToFile("FATAL: MySQL/MariaDB installation failed")
+        preFlightsChecks.stdOut("MySQL/MariaDB installation failed. Installation cannot continue.", 1)
+        os._exit(1)
 
     # Create cyberpanel database and user immediately after MySQL installation
     logging.InstallLog.writeToFile("Creating cyberpanel database and user...")
@@ -7098,6 +7103,7 @@ def main():
     except Exception as e:
         logging.InstallLog.writeToFile(f"Error creating cyberpanel database: {str(e)}")
         preFlightsChecks.stdOut(f"Error: Database creation failed: {str(e)}", 1)
+        os._exit(1)
 
     checks.installPowerDNS()
     checks.installPureFTPD()

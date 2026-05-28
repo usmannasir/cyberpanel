@@ -377,6 +377,8 @@ def resolve_mysql_cli():
     for path in (
         '/usr/bin/mariadb',
         '/usr/bin/mysql',
+        '/usr/sbin/mariadb',
+        '/usr/sbin/mysql',
         '/usr/local/bin/mariadb',
         '/usr/local/bin/mysql',
     ):

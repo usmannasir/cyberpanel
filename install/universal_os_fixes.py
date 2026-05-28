@@ -746,6 +746,10 @@ WantedBy=multi-user.target
             if not self.apply_os_specific_fixes():
                 self.logger.error("Failed to apply OS-specific fixes")
                 return False
+
+            # curl/ca-certificates required by mariadb_repo_setup (must run before that script)
+            if not self.install_packages(['curl', 'ca-certificates']):
+                self.logger.warning("Could not install curl/ca-certificates; MariaDB repo setup may fail")
             
             # Setup repositories
             if not self.setup_mariadb_repository():

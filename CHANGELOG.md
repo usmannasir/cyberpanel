@@ -15,6 +15,19 @@ see `to-do/LIVE-CYBERCP-STATE.md`.
 
 ## 2.5.5-dev - 28/05/2026
 
+### Fixed: AlmaLinux 10 install aborts after webmail (CDN / MariaDB / Django)
+
+- `downloadCDNLibraries()`: `install_utils.call()` returns bool, not exit code; use `if result`
+  instead of `if result == 0` so successful wget is recognized.
+- `InstallLog.writeToFile()`: removed invalid second argument on several log lines (was causing
+  `TypeError` and exit code 1 after CDN download).
+- `installMySQL()`: use `ensure_mariadb_client_cli()` / `resolve_mysql_cli()` (includes
+  `/usr/sbin/mariadb` on EL10); abort install if MySQL install fails; abort if cyberpanel DB
+  creation fails (no longer continues with a broken database).
+- Django migrations: prefer `/usr/local/CyberCP/bin/python` over system `/usr/bin/python3`.
+- AlmaLinux 10 / universal fixes: install `curl` and `ca-certificates` before
+  `mariadb_repo_setup` (script prerequisite check).
+
 ### Fixed: fresh install NameError on setupWebmail (AlmaLinux 10 and all EL targets)
 
 - `install/install.py` called `installCyberPanel.InstallCyberPanel.setupWebmail()` without
