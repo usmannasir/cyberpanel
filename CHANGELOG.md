@@ -21,6 +21,11 @@ see `to-do/LIVE-CYBERCP-STATE.md`.
   (`cyberpanel-2.5.5-dev`, `cyberpanel-v2.5.5-dev`, `cyberpanel-stable`, etc.) instead of only
   `cyberpanel-v2.5.5-dev`.
 
+### Fixed: AlmaLinux 10 upgrade PHP matrix
+
+- `plogical/upgrade.py::get_available_php_versions()` uses PHP 81–85 only on AlmaLinux 10
+  (aligned with `install_utils.get_lsphp_install_suffixes()`).
+
 ### Fixed: installer requires root (WSL / non-root users)
 
 - `install.sh` re-runs via `sudo` with `curl | sh` when started as a normal user (fixes
