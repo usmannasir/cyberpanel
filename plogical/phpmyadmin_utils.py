@@ -13,6 +13,8 @@ from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 PMA_DIR = '/usr/local/CyberCP/public/phpmyadmin'
 SIGNIN_SRC = '/usr/local/CyberCP/plogical/phpmyadminsignin.php'
 SIGNIN_NAME = 'phpmyadminsignin.php'
+LPMA_SRC = '/usr/local/CyberCP/plogical/lpma_policy_read.inc.php'
+LPMA_NAME = 'lpma_policy_read.inc.php'
 
 
 def ensure_phpmyadmin_signin_bridge() -> bool:
@@ -31,6 +33,11 @@ def ensure_phpmyadmin_signin_bridge() -> bool:
         need_copy = (not os.path.isfile(dst)) or os.path.getsize(dst) < 32
         if need_copy:
             shutil.copy2(SIGNIN_SRC, dst)
+        lpma_dst = os.path.join(PMA_DIR, LPMA_NAME)
+        if os.path.isfile(LPMA_SRC) and (
+            (not os.path.isfile(lpma_dst)) or os.path.getsize(lpma_dst) < 32
+        ):
+            shutil.copy2(LPMA_SRC, lpma_dst)
         tmp_dir = os.path.join(PMA_DIR, 'tmp')
         os.makedirs(tmp_dir, exist_ok=True)
         try:

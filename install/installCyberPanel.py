@@ -1122,22 +1122,22 @@ gpgcheck=1
             )
             return
 
+        root_pw = InstallCyberPanel.mysql_Root_password.replace("'", "''")
         passwordCMD = (
             "use mysql;DROP DATABASE IF EXISTS test;"
             "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%%';"
-            "ALTER USER 'root'@'localhost' IDENTIFIED BY '%s';"
+            "ALTER USER 'root'@'localhost' IDENTIFIED VIA mysql_native_password USING PASSWORD('%s');"
             "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION;"
             "flush privileges;"
-        ) % (InstallCyberPanel.mysql_Root_password)
+        ) % (root_pw)
 
         if self.distro == ubuntu:
             passwordCMD = (
                 "use mysql;DROP DATABASE IF EXISTS test;"
                 "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%%';"
-                "ALTER USER 'root'@'localhost' IDENTIFIED BY '%s';"
-                "UPDATE user SET plugin='' WHERE User='root';"
+                "ALTER USER 'root'@'localhost' IDENTIFIED VIA mysql_native_password USING PASSWORD('%s');"
                 "flush privileges;"
-            ) % (InstallCyberPanel.mysql_Root_password)
+            ) % (root_pw)
 
         socket_cmds = [
             'sudo %s' % cli,

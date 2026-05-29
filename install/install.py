@@ -2209,9 +2209,17 @@ module cyberpanel_ols {
                     self.ensure_mysql_password_file()  # Still save password for manual fix
                     return False
                 
-                # Use ALTER USER syntax (compatible with MariaDB 10.4+ and MySQL 5.7+)
-                # GRANT ... IDENTIFIED BY is deprecated in MariaDB 10.4+ and removed in 10.11+
-                passwordCMD = "use mysql;DROP DATABASE IF EXISTS test;DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%%';ALTER USER 'root'@'localhost' IDENTIFIED BY '%s';GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION;flush privileges;" % (self.mysql_Root_password)
+                # MariaDB 11+ ships root@localhost with unix_socket OR mysql_native_password USING 'invalid'.
+                # Plain IDENTIFIED BY leaves password auth broken for non-root OS users (CyberPanel runs as cyberpanel).
+                root_pw = self.mysql_Root_password.replace("'", "''")
+                passwordCMD = (
+                    "use mysql;"
+                    "DROP DATABASE IF EXISTS test;"
+                    "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%%';"
+                    "ALTER USER 'root'@'localhost' IDENTIFIED VIA mysql_native_password USING PASSWORD('%s');"
+                    "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION;"
+                    "flush privileges;"
+                ) % (root_pw)
 
                 # Try socket authentication first (for fresh MariaDB installations)
                 socket_commands = ['sudo mysql', 'sudo mariadb', 'sudo /usr/bin/mysql', 'sudo /usr/bin/mariadb']
@@ -2262,6 +2270,35 @@ module cyberpanel_ols {
 
                 # Save MySQL password to file for later use
                 self.ensure_mysql_password_file()
+
+                # Verify password auth works without unix_socket (required for CyberPanel web UI)
+                verified = False
+                cli = install_utils.resolve_mysql_cli() or 'mariadb'
+                for verify_cmd in [
+                    f"{cli} -h127.0.0.1 -uroot -p{self.mysql_Root_password} -e 'SELECT 1;'",
+                    f"{cli} -uroot -p{self.mysql_Root_password} -e 'SELECT 1;'",
+                ]:
+                    try:
+                        vr = subprocess.run(
+                            verify_cmd, shell=True, capture_output=True, text=True, timeout=15,
+                        )
+                        if vr.returncode == 0:
+                            verified = True
+                            break
+                    except Exception:
+                        continue
+                if verified:
+                    self.stdOut("MySQL root password verified for application access", 1)
+                else:
+                    self.stdOut(
+                        "Warning: MySQL root password set but password auth verification failed; "
+                        "database creation in the panel may not work until fixed.",
+                        0,
+                    )
+                    logging.InstallLog.writeToFile(
+                        "MySQL root password verification failed after changeMYSQLRootPassword"
+                    )
+
                 self.stdOut("MySQL root password set successfully", 1)
                 return True
 
@@ -4130,6 +4167,11 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             command = 'cp /usr/local/CyberCP/plogical/phpmyadminsignin.php /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+            lpma_src = '/usr/local/CyberCP/plogical/lpma_policy_read.inc.php'
+            lpma_dst = '/usr/local/CyberCP/public/phpmyadmin/lpma_policy_read.inc.php'
+            if os.path.isfile(lpma_src):
+                shutil.copy2(lpma_src, lpma_dst)
 
             if self.remotemysql == 'ON':
                 command = "sed -i 's|localhost|%s|g' /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php" % (
