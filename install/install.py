@@ -5031,8 +5031,31 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
 #             command = f'chmod 600 {PluginsFilePath}'
 #             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            command = f'wget -O /usr/local/CyberCP/snappymail_cyberpanel.php  https://raw.githubusercontent.com/the-djmaze/snappymail/master/integrations/cyberpanel/install.php'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            bundled_sm_src = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                'snappymail_cyberpanel.php'
+            )
+            bundled_sm_dst = '/usr/local/CyberCP/snappymail_cyberpanel.php'
+            if os.path.isfile(bundled_sm_src):
+                shutil.copy2(bundled_sm_src, bundled_sm_dst)
+            else:
+                command = (
+                    'wget -O %s https://raw.githubusercontent.com/the-djmaze/snappymail/master/integrations/cyberpanel/install.php'
+                    % bundled_sm_dst
+                )
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                if os.path.isfile(bundled_sm_dst):
+                    try:
+                        with open(bundled_sm_dst, 'r', encoding='utf-8', errors='replace') as smf:
+                            sm_helper = smf.read()
+                        sm_helper = sm_helper.replace(
+                            '/usr/local/lscp/cyberpanel/rainloop/data/',
+                            '/usr/local/lscp/cyberpanel/snappymail/data/'
+                        )
+                        with open(bundled_sm_dst, 'w', encoding='utf-8') as smf:
+                            smf.write(sm_helper)
+                    except BaseException:
+                        pass
 
             snappy_php = install_utils.resolve_lsphp_binary('php')
             if not snappy_php:
@@ -5041,6 +5064,20 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
                 )
             command = '%s /usr/local/CyberCP/snappymail_cyberpanel.php' % snappy_php
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+            include_sm = '/usr/local/CyberCP/public/snappymail/include.php'
+            if os.path.isfile(include_sm):
+                try:
+                    with open(include_sm, 'r', encoding='utf-8', errors='replace') as incf:
+                        inc_body = incf.read()
+                    inc_body = inc_body.replace(
+                        '/usr/local/lscp/cyberpanel/rainloop/data',
+                        '/usr/local/lscp/cyberpanel/snappymail/data'
+                    )
+                    with open(include_sm, 'w', encoding='utf-8') as incf:
+                        incf.write(inc_body)
+                except BaseException:
+                    pass
 
             try:
                 from plogical.snappymail_plugin_utilities import install_and_enable_list_unsubscribe_header_plugin
