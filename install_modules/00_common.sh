@@ -38,6 +38,9 @@ MARIADB_VER=""
 DEBUG_MODE=false
 AUTO_INSTALL=false
 INSTALLATION_TYPE=""
+INSTALL_POWERDNS="${INSTALL_POWERDNS:-ON}"
+INSTALL_POSTFIX="${INSTALL_POSTFIX:-ON}"
+INSTALL_FTP="${INSTALL_FTP:-ON}"
 # Prefer mariadb CLI (mysql is deprecated)
 MDB_CLI="mariadb"; command -v mariadb >/dev/null 2>&1 || MDB_CLI="mysql"
 

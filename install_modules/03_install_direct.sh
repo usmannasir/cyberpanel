@@ -297,10 +297,10 @@ install_cyberpanel_direct_cont() {
         if [ -n "$LS_ENT" ] && [ -n "$LS_SERIAL" ]; then
             install_args+=("--ent" "$LS_ENT" "--serial" "$LS_SERIAL")
         fi
-        # Default: OpenLiteSpeed, Full installation (postfix, powerdns, ftp), Local MySQL
-        install_args+=("--postfix" "ON")
-        install_args+=("--powerdns" "ON")
-        install_args+=("--ftp" "ON")
+        # Default: OpenLiteSpeed, component flags from preferences / env
+        install_args+=("--postfix" "${INSTALL_POSTFIX:-ON}")
+        install_args+=("--powerdns" "${INSTALL_POWERDNS:-ON}")
+        install_args+=("--ftp" "${INSTALL_FTP:-ON}")
         install_args+=("--remotemysql" "OFF")
         # Only pass --mariadb-version if this install.py supports it (avoids "unrecognized arguments" on older archives)
         if grep -q "mariadb-version\|mariadb_version" "$installer_py" 2>/dev/null; then

@@ -290,6 +290,40 @@ show_installation_preferences() {
 
     # MariaDB version (before auto-install so it is chosen even in auto mode)
     prompt_mariadb_version_preference
+
+    # Optional components (ask before auto-install so choices apply to unattended run)
+    echo -n "Install PowerDNS (DNS management)? (y/n) [y]: "
+    read -r response
+    case $response in
+        [nN]|[nN][oO])
+            INSTALL_POWERDNS="OFF"
+            ;;
+        *)
+            INSTALL_POWERDNS="ON"
+            ;;
+    esac
+
+    echo -n "Install Postfix/Dovecot (Email)? (y/n) [y]: "
+    read -r response
+    case $response in
+        [nN]|[nN][oO])
+            INSTALL_POSTFIX="OFF"
+            ;;
+        *)
+            INSTALL_POSTFIX="ON"
+            ;;
+    esac
+
+    echo -n "Install Pure-FTPd? (y/n) [y]: "
+    read -r response
+    case $response in
+        [nN]|[nN][oO])
+            INSTALL_FTP="OFF"
+            ;;
+        *)
+            INSTALL_FTP="ON"
+            ;;
+    esac
     
     # Auto-install
     echo -n "Auto-install without further prompts? (y/n) [y]: "
@@ -312,6 +346,9 @@ show_installation_preferences() {
     echo "   Type: $INSTALLATION_TYPE"
     echo "   Version: ${BRANCH_NAME:-'Latest Stable'}"
     echo "   MariaDB: ${MARIADB_VER:-11.8}"
+    echo "   PowerDNS: $INSTALL_POWERDNS"
+    echo "   Email (Postfix/Dovecot): $INSTALL_POSTFIX"
+    echo "   Pure-FTPd: $INSTALL_FTP"
     echo "   Debug Mode: $DEBUG_MODE"
     echo "   Auto Install: $AUTO_INSTALL"
     echo ""

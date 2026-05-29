@@ -2590,6 +2590,7 @@ module cyberpanel_ols {
                     self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
                 self.stdOut("PowerDNS configuration completed", 1)
+                install_utils.restore_selinux_contexts(dnsPath, os.path.dirname(dnsPath))
                 return True
 
         except Exception as e:
@@ -3205,6 +3206,13 @@ module cyberpanel_ols {
                 logging.InstallLog.writeToFile("fix_selinux_issue problem")
             else:
                 pass
+
+            install_utils.restore_selinux_contexts(
+                '/etc/pdns',
+                '/etc/powerdns',
+                '/etc/dovecot',
+                '/etc/postfix',
+            )
         except:
             logging.InstallLog.writeToFile("[ERROR] fix_selinux_issue problem")
 
@@ -4255,9 +4263,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 type = clAPVersion.split('-')[0]
                 version = int(clAPVersion.split('-')[1])
                 if type == 'al' and version >= 90:
-                    command = 'dnf install -y dovecot dovecot-mysql'
+                    command = 'dnf install -y dovecot dovecot-mysql dovecot-pigeonhole'
                 else:
-                    command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql -y --allowerasing'
+                    command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql dovecot23-pigeonhole -y --allowerasing'
             elif self.distro == openeuler:
                 dovecot_commands = [
                     'dnf install dovecot dovecot-mysql -y --skip-broken --nobest',
@@ -4280,7 +4288,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                     preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
             else:
                 # Ubuntu 24.04/22.04/20.04, Debian 13/12/11
-                command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install dovecot-mysql dovecot-imapd dovecot-pop3d'
+                command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install dovecot-mysql dovecot-imapd dovecot-pop3d dovecot-sieve dovecot-managesieved'
 
             if self.distro != openeuler:
                 preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
@@ -4310,13 +4318,30 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             logging.InstallLog.writeToFile("Setting up authentication for Postfix and Dovecot...")
 
-            os.chdir(self.cwd)
+            install_dir = os.path.dirname(os.path.abspath(__file__))
+            email_cfg_dir = os.path.join(install_dir, "email-configs-one")
 
-            mysql_virtual_domains = "email-configs-one/mysql-virtual_domains.cf"
-            mysql_virtual_forwardings = "email-configs-one/mysql-virtual_forwardings.cf"
-            mysql_virtual_mailboxes = "email-configs-one/mysql-virtual_mailboxes.cf"
-            mysql_virtual_email2email = "email-configs-one/mysql-virtual_email2email.cf"
-            dovecotmysql = "email-configs-one/dovecot-sql.conf.ext"
+            def _email_cfg(name):
+                return os.path.join(email_cfg_dir, name)
+
+            mysql_virtual_domains = _email_cfg("mysql-virtual_domains.cf")
+            mysql_virtual_forwardings = _email_cfg("mysql-virtual_forwardings.cf")
+            mysql_virtual_mailboxes = _email_cfg("mysql-virtual_mailboxes.cf")
+            mysql_virtual_email2email = _email_cfg("mysql-virtual_email2email.cf")
+            dovecotmysql = _email_cfg("dovecot-sql.conf.ext")
+
+            for cfg_path in (
+                dovecotmysql,
+                mysql_virtual_domains,
+                mysql_virtual_forwardings,
+                mysql_virtual_mailboxes,
+                mysql_virtual_email2email,
+            ):
+                if not os.path.isfile(cfg_path):
+                    raise FileNotFoundError(
+                        "Missing email template: %s (expected under %s)"
+                        % (cfg_path, email_cfg_dir)
+                    )
 
             ### update password:
 
@@ -4802,6 +4827,7 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
 
                 self.manage_service('dovecot', 'restart')
 
+            install_utils.restore_selinux_contexts('/etc/postfix', '/etc/dovecot')
             logging.InstallLog.writeToFile("Postfix and Dovecot configured")
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [setup_postfix_dovecot_config]")
@@ -5008,7 +5034,12 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
             command = f'wget -O /usr/local/CyberCP/snappymail_cyberpanel.php  https://raw.githubusercontent.com/the-djmaze/snappymail/master/integrations/cyberpanel/install.php'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            command = f'/usr/local/lsws/lsphp80/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php'
+            snappy_php = install_utils.resolve_lsphp_binary('php')
+            if not snappy_php:
+                raise FileNotFoundError(
+                    'No LiteSpeed PHP binary found for SnappyMail integration (expected lsphp82+ under /usr/local/lsws/)'
+                )
+            command = '%s /usr/local/CyberCP/snappymail_cyberpanel.php' % snappy_php
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             try:
@@ -6744,6 +6775,7 @@ vmail
 
             # Ensure proper permissions
             os.chmod(config_file, 0o644)
+            install_utils.restore_selinux_contexts(config_file, os.path.dirname(config_file))
         
         # Ensure PowerDNS can connect to database
         self.ensurePowerDNSDatabaseAccess()
@@ -7207,8 +7239,12 @@ def main():
         preFlightsChecks.stdOut(f"Error: Database creation failed: {str(e)}", 1)
         os._exit(1)
 
-    checks.installPowerDNS()
-    checks.installPureFTPD()
+    checks.installPowerDNS() if (args.powerdns is None or str(args.powerdns).upper() == 'ON') else (
+        preFlightsChecks.stdOut("Skipping PowerDNS installation as requested.")
+    )
+    checks.installPureFTPD() if (args.ftp is None or str(args.ftp).upper() == 'ON') else (
+        preFlightsChecks.stdOut("Skipping Pure-FTPd installation as requested.")
+    )
 
     # Setup PHP and Composer (dependencies already installed by comprehensive fix)
     checks.setupPHPAndComposer()
@@ -7343,7 +7379,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         writeToFile.write(content)
         writeToFile.close()
 
-        command = '/usr/local/lsws/lsphp83/bin/php /usr/local/CyberCP/public/snappymail.php'
+        command = '%s /usr/local/CyberCP/public/snappymail.php' % (
+            install_utils.resolve_lsphp_binary('php') or '/usr/local/lsws/lsphp83/bin/php'
+        )
         subprocess.call(shlex.split(command))
 
         command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
