@@ -28,6 +28,12 @@ see `to-do/LIVE-CYBERCP-STATE.md`.
 
 
 
+
+### Fixed: SOA serial not updated on DNS record edit or delete (31/05/2026)
+
+- Fixes [#1785](https://github.com/usmannasir/cyberpanel/issues/1785): SOA serial now increments on update and delete, not only on add.
+- Added `DNS.bumpSOASerial()` in `plogical/dnsUtilities.py`; `updateRecord` and `deleteDNSRecord` call it for MASTER zones (skips direct SOA record edits).
+
 ### Security: force logout after self username rename (31/05/2026)
 
 - Renaming a user clears all Django sessions for that account (`plogical/session_utils.py`).
