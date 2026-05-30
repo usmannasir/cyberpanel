@@ -1697,7 +1697,7 @@ button[aria-busy="true"] { opacity: 0.75; cursor: progress; }
    Neutralize the purple wash, lighten chrome, tighten type.
    (light theme only; dark palette already reads well)
    ============================================================ */
-:root {
+:root:not([data-theme="dark"]) {
     --bg-primary: #f4f5fa;
     --bg-sidebar: #f6f7fc;
     --bg-hover: #eceefb;
@@ -2221,4 +2221,73 @@ body {
 .cp-service-banner .cp-sb-deco {
     position: absolute; right: -20px; bottom: -34px; font-size: 150px;
     opacity: 0.12; transform: rotate(-12deg); pointer-events: none;
+}
+
+/* ============================================================
+   Dark theme token guard (must be last)
+   Prevents light-only :root refinement from breaking dark mode.
+   ============================================================ */
+html[data-theme="dark"] {
+    --bg-primary: #15161b;
+    --bg-secondary: #1d1f26;
+    --bg-sidebar: #191a20;
+    --bg-sidebar-item: #23252d;
+    --bg-hover: #272a33;
+    --bg-muted: #1d1f26;
+    --bg-code: #23252d;
+    --text-primary: #e4e4e7;
+    --text-secondary: #9aa1ad;
+    --text-heading: #f3f4f6;
+    --border-color: #2c2f39;
+    --border-soft: #2c2f39;
+    --shadow-color: rgba(0,0,0,0.25);
+    --accent-color: #7c7ff3;
+    --accent-hover: #6b6ee8;
+    --accent-soft-bg: rgba(124,127,243,0.16);
+    --table-head-bg: linear-gradient(135deg, #3b3f9e 0%, #2f3387 100%);
+    --table-head-text: #f3f4f6;
+    --text-on-accent: #ffffff;
+    --focus-ring: #a5a3f0;
+}
+
+html[data-theme="dark"] body,
+html[data-theme="dark"] #main-content {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+html[data-theme="dark"] #sidebar {
+    background: var(--bg-sidebar);
+    border-right-color: var(--border-color);
+}
+
+html[data-theme="dark"] #header {
+    background: var(--bg-secondary);
+    border-bottom-color: var(--border-color);
+}
+
+html[data-theme="dark"] .sidebar-logo,
+html[data-theme="dark"] #sidebar .server-info {
+    background: var(--bg-muted);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+html[data-theme="dark"] #sidebar .section-header {
+    background: transparent;
+    color: var(--text-secondary);
+}
+
+html[data-theme="dark"] #sidebar .menu-item {
+    color: var(--text-secondary);
+}
+
+html[data-theme="dark"] #sidebar .menu-item:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+html[data-theme="dark"] #sidebar .menu-item.active {
+    background: var(--accent-soft-bg);
+    color: var(--accent-color);
 }
