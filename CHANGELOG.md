@@ -26,6 +26,12 @@ see `to-do/LIVE-CYBERCP-STATE.md`.
 
 - `cyberpanel-ui.css` had a light-only `:root` refinement block after `[data-theme="dark"]`, which reset `--bg-sidebar` and `--bg-primary` to light colors even when dark mode was on. Scoped refinement to `:root:not([data-theme="dark"])` and added a dark token guard at end of the file.
 
+
+### Fixed: theme toggle sometimes required refresh for sidebar (31/05/2026)
+
+- Dark mode had an `html[data-theme=dark] #sidebar` guard but light mode did not, so leaving dark mode could leave the sidebar on old colors until reload.
+- Theme toggle now sets helper classes (`cp-theme-light` / `cp-theme-dark`), `color-scheme`, and clears stale shell inline styles via `cyberpanel-theme.js`. Early head script applies saved theme before paint.
+
 ### Fixed: SSH login banner (30/05/2026)
 
 - Fresh installs and upgrades again deploy `/etc/profile.d/cyberpanel.sh` from `https://cyberpanel.sh/?banner`.
