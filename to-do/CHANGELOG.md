@@ -3,6 +3,7 @@
 ## [Unreleased] - 31/05/2026
 
 ### Fixed
+- **SSL with Cloudflare:** List badge uses live TLS when origin PEM is expired; Issue SSL tries `acme.sh --dns dns_cf` for active CF zones (`plogical/ssl_cloudflare_dns.py`).
 - **Dashboard `getSystemStatus` 503:** Admin stats cached 45s; non-blocking CPU sampling; home poll 60s.
 - **Manage Applications hang:** Skip cold DNF on HTML load; versions via `applicationMeta` on demand.
 - **Site workspace:** `/websites/<domain>/workspace` uses lightweight `loadSiteWorkspace` + `siteWorkspace.html`.

@@ -2748,6 +2748,34 @@ Require valid-user
             pass
         return None
 
+    @staticmethod
+    def _live_tls_certificate_info(domain):
+        """Days until expiry and issuer from the certificate served on port 443."""
+        import ssl
+        import socket
+        from datetime import datetime
+        try:
+            ctx = ssl.create_default_context()
+            with socket.create_connection((domain, 443), timeout=8) as raw:
+                with ctx.wrap_socket(raw, server_hostname=domain) as sock:
+                    cert = sock.getpeercert()
+            if not cert:
+                return None
+            not_after = cert.get('notAfter')
+            if not not_after:
+                return None
+            final_date = datetime.strptime(not_after, '%b %d %H:%M:%S %Y %Z')
+            days = (final_date - datetime.now()).days
+            issuer_org = 'Unknown'
+            for item in cert.get('issuer') or ():
+                for key, value in item:
+                    if key == 'organizationName':
+                        issuer_org = value
+                        break
+            return {'days': days, 'issuer': issuer_org}
+        except BaseException:
+            return None
+
     def getSSLStatus(self, domain):
         """Get SSL status for a domain"""
         try:
@@ -2846,7 +2874,7 @@ Require valid-user
             if x509.get_issuer() == x509.get_subject():
                 is_self_signed = True
             
-            # Determine status
+            # Determine status (origin PEM on disk)
             if is_self_signed:
                 status = 'self-signed'
             elif days < 0:
@@ -2857,12 +2885,28 @@ Require valid-user
                 status = 'warning'
             else:
                 status = 'valid'
-            
+
+            ssl_source = 'origin'
+            if status == 'expired':
+                live = WebsiteManager._live_tls_certificate_info(domain)
+                if live and live.get('days', -1) >= 0:
+                    days = live['days']
+                    if live.get('issuer'):
+                        issuer_org = live['issuer']
+                    if days > 30:
+                        status = 'valid'
+                    elif days > 7:
+                        status = 'warning'
+                    else:
+                        status = 'expiring'
+                    ssl_source = 'edge'
+
             return {
                 'status': status,
                 'days': days,
                 'issuer': issuer_org,
-                'is_wildcard': is_wildcard
+                'is_wildcard': is_wildcard,
+                'ssl_source': ssl_source
             }
             
         except Exception as e:
