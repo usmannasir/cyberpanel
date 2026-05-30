@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 # CyberPanel upgrade – common helpers (logging, check return, retry, branch check).
+
+# SSH login banner helper
+_CYBERPANEL_UPGRADE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+if [[ -f "${_CYBERPANEL_UPGRADE_ROOT}/install/cyberpanel_ssh_login_banner.sh" ]]; then
+  # shellcheck source=/dev/null
+  source "${_CYBERPANEL_UPGRADE_ROOT}/install/cyberpanel_ssh_login_banner.sh"
+fi
 # Sourced by cyberpanel_upgrade.sh. Do not run standalone.
 
 Debug_Log() {

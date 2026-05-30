@@ -27,6 +27,13 @@ require_root() {
     exit 1
 }
 
+# SSH login banner helper (install/cyberpanel_ssh_login_banner.sh)
+_CYBERPANEL_INSTALL_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+if [[ -f "${_CYBERPANEL_INSTALL_ROOT}/install/cyberpanel_ssh_login_banner.sh" ]]; then
+  # shellcheck source=/dev/null
+  source "${_CYBERPANEL_INSTALL_ROOT}/install/cyberpanel_ssh_login_banner.sh"
+fi
+
 # Global variables
 CYBERPANEL_LOG_DIR="${CYBERPANEL_LOG_DIR:-/var/log/CyberPanel}"
 SERVER_OS=""
@@ -38,6 +45,9 @@ MARIADB_VER=""
 DEBUG_MODE=false
 AUTO_INSTALL=false
 INSTALLATION_TYPE=""
+INSTALL_POWERDNS="${INSTALL_POWERDNS:-ON}"
+INSTALL_POSTFIX="${INSTALL_POSTFIX:-ON}"
+INSTALL_FTP="${INSTALL_FTP:-ON}"
 # Prefer mariadb CLI (mysql is deprecated)
 MDB_CLI="mariadb"; command -v mariadb >/dev/null 2>&1 || MDB_CLI="mysql"
 

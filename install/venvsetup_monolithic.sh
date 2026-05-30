@@ -1145,9 +1145,20 @@ for version in $(ls /usr/local/lsws | grep lsphp);
 	fi
 done
 
-rm -rf /etc/profile.d/cyberpanel*
-curl --silent -o /etc/profile.d/cyberpanel.sh https://cyberpanel.sh/?banner 2>/dev/null
-chmod +x /etc/profile.d/cyberpanel.sh
+_CYBERPANEL_VENV_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+if [[ -f "${_CYBERPANEL_VENV_DIR}/cyberpanel_ssh_login_banner.sh" ]]; then
+  # shellcheck source=/dev/null
+  source "${_CYBERPANEL_VENV_DIR}/cyberpanel_ssh_login_banner.sh"
+  Install_Cyberpanel_Ssh_Login_Banner 2>/dev/null || {
+    rm -rf /etc/profile.d/cyberpanel*
+    curl --silent -o /etc/profile.d/cyberpanel.sh https://cyberpanel.sh/?banner 2>/dev/null
+    chmod +x /etc/profile.d/cyberpanel.sh
+  }
+else
+  rm -rf /etc/profile.d/cyberpanel*
+  curl --silent -o /etc/profile.d/cyberpanel.sh https://cyberpanel.sh/?banner 2>/dev/null
+  chmod +x /etc/profile.d/cyberpanel.sh
+fi
 RAM2=$(free -m | awk 'NR==2{printf "%s/%sMB (%.2f%%)\n", $3,$2,$3*100/$2 }')
 DISK2=$(df -h | awk '$NF=="/"{printf "%d/%dGB (%s)\n", $3,$2,$5}')
 ELAPSED="$(($SECONDS / 3600)) hrs $((($SECONDS / 60) % 60)) min $(($SECONDS % 60)) sec"

@@ -1860,6 +1860,17 @@ if [[ ! -f /usr/bin/cyberpanel_utility ]]; then
   chmod 700 /usr/bin/cyberpanel_utility
 fi
 
+_CYBERPANEL_UPGRADE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+if [[ -f "${_CYBERPANEL_UPGRADE_DIR}/install/cyberpanel_ssh_login_banner.sh" ]]; then
+  # shellcheck source=/dev/null
+  source "${_CYBERPANEL_UPGRADE_DIR}/install/cyberpanel_ssh_login_banner.sh"
+  Install_Cyberpanel_Ssh_Login_Banner 2>/dev/null || true
+else
+  rm -rf /etc/profile.d/cyberpanel* 2>/dev/null || true
+  curl --silent -o /etc/profile.d/cyberpanel.sh https://cyberpanel.sh/?banner 2>/dev/null
+  chmod 644 /etc/profile.d/cyberpanel.sh 2>/dev/null || true
+fi
+
 if [[ -f /etc/cyberpanel/watchdog.sh ]] ; then
 	watchdog kill
 	rm -f /etc/cyberpanel/watchdog.sh

@@ -14,8 +14,22 @@ causes Cloudflare: Invalid request headers.
 Global API Keys from Cloudflare are 37 hexadecimal characters.
 """
 import re
+import socket
 
 import CloudFlare
+
+_CF_API_HOST = 'api.cloudflare.com'
+_orig_getaddrinfo = socket.getaddrinfo
+
+
+def _cloudflare_ipv4_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+    """Prefer IPv4 for Cloudflare API when tokens allow IPv4 but block IPv6."""
+    if isinstance(host, str) and host == _CF_API_HOST:
+        return _orig_getaddrinfo(host, port, socket.AF_INET, type, proto, flags)
+    return _orig_getaddrinfo(host, port, family, type, proto, flags)
+
+
+socket.getaddrinfo = _cloudflare_ipv4_getaddrinfo
 
 
 def _is_global_api_key(secret):

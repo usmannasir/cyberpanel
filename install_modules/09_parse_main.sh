@@ -72,6 +72,33 @@ parse_arguments() {
                 AUTO_INSTALL=true
                 shift
                 ;;
+            --powerdns)
+                if [ -n "$2" ]; then
+                    INSTALL_POWERDNS="$(echo "$2" | tr '[:lower:]' '[:upper:]')"
+                    shift 2
+                else
+                    echo "ERROR: --powerdns requires ON or OFF"
+                    exit 1
+                fi
+                ;;
+            --postfix)
+                if [ -n "$2" ]; then
+                    INSTALL_POSTFIX="$(echo "$2" | tr '[:lower:]' '[:upper:]')"
+                    shift 2
+                else
+                    echo "ERROR: --postfix requires ON or OFF"
+                    exit 1
+                fi
+                ;;
+            --ftp)
+                if [ -n "$2" ]; then
+                    INSTALL_FTP="$(echo "$2" | tr '[:lower:]' '[:upper:]')"
+                    shift 2
+                else
+                    echo "ERROR: --ftp requires ON or OFF"
+                    exit 1
+                fi
+                ;;
             -h|--help)
                 echo "Usage: $0 [OPTIONS]"
                 echo "Options:"
@@ -80,6 +107,9 @@ parse_arguments() {
                 echo "  --mariadb-version VER  MariaDB version X.Y (e.g. 10.11, 11.8, 12.3); else asked in preferences"
                 echo "  --debug               Enable debug mode"
                 echo "  --auto                Auto mode: OpenLiteSpeed + MariaDB 11.8 unless --mariadb-version set"
+                echo "  --powerdns ON|OFF     Install PowerDNS (default ON)"
+                echo "  --postfix ON|OFF      Install Postfix/Dovecot email (default ON)"
+                echo "  --ftp ON|OFF          Install Pure-FTPd (default ON)"
                 echo "  -h, --help            Show this help message"
                 echo ""
                 echo "Examples:"

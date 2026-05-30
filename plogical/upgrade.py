@@ -1776,11 +1776,42 @@ $cfg['Servers'][$i]['port'] = '3306';
             command = "mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/"
             Upgrade.executioner_silent(command, 'mkdir snappymail configs', 0)
 
-            command = f'wget -q -O /usr/local/CyberCP/snappymail_cyberpanel.php  https://raw.githubusercontent.com/the-djmaze/snappymail/master/integrations/cyberpanel/install.php'
-            Upgrade.executioner_silent(command, 'verify certificate', 0)
+            bundled_sm = '/usr/local/CyberCP/snappymail_cyberpanel.php'
+            if not os.path.isfile(bundled_sm):
+                command = (
+                    'wget -q -O %s https://raw.githubusercontent.com/the-djmaze/snappymail/master/integrations/cyberpanel/install.php'
+                    % bundled_sm
+                )
+                Upgrade.executioner_silent(command, 'download snappymail cyberpanel helper', 0)
+                if os.path.isfile(bundled_sm):
+                    try:
+                        with open(bundled_sm, 'r', encoding='utf-8', errors='replace') as f:
+                            sm_helper = f.read()
+                        sm_helper = sm_helper.replace(
+                            '/usr/local/lscp/cyberpanel/rainloop/data/',
+                            '/usr/local/lscp/cyberpanel/snappymail/data/'
+                        )
+                        with open(bundled_sm, 'w', encoding='utf-8') as f:
+                            f.write(sm_helper)
+                    except Exception:
+                        pass
 
-            command = f'/usr/local/lsws/lsphp83/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php'
-            Upgrade.executioner_silent(command, 'verify certificate', 0)
+            snappy_php = None
+            for php_bin in (
+                '/usr/local/lsws/lsphp83/bin/php',
+                '/usr/local/lsws/lsphp82/bin/php',
+                '/usr/local/lsws/lsphp81/bin/php',
+                '/usr/local/lsws/lsphp80/bin/php',
+                'php',
+            ):
+                if php_bin == 'php' or os.path.isfile(php_bin):
+                    snappy_php = php_bin
+                    break
+            if snappy_php and os.path.isfile(bundled_sm):
+                command = '%s %s' % (snappy_php, bundled_sm)
+                Upgrade.executioner_silent(command, 'snappymail cyberpanel configuration', 0)
+
+            Upgrade.fixSnappymailIncludeDataPath()
 
             try:
                 from plogical.snappymail_plugin_utilities import install_and_enable_list_unsubscribe_header_plugin
@@ -1912,7 +1943,8 @@ $cfg['Servers'][$i]['port'] = '3306';
             
             # Migrate data from old rainloop folder to new snappymail folder (2.4.4 -> 2.5.5 upgrade)
             Upgrade.migrateRainloopToSnappymail()
-            
+            Upgrade.fixSnappymailIncludeDataPath()
+
             Upgrade.stdOut("SnappyMail installation completed.", 0)
 
         except Exception as e:
@@ -4197,6 +4229,54 @@ class Migration(migrations.Migration):
 
         except Exception as e:
             Upgrade.stdOut("Error fixing baseTemplate migrations: " + str(e))
+
+    @staticmethod
+    def fixSnappymailIncludeDataPath():
+        """
+        Ensure SnappyMail include.php points at snappymail/data (not removed rainloop/data).
+        Fresh 2.5.5 installs skip rainloop migration but still get a wrong path from upstream install.php.
+        """
+        old_path = '/usr/local/lscp/cyberpanel/rainloop/data'
+        new_path = '/usr/local/lscp/cyberpanel/snappymail/data'
+        include_file = '/usr/local/CyberCP/public/snappymail/include.php'
+        try:
+            if os.path.isfile(include_file):
+                with open(include_file, 'r', encoding='utf-8', errors='replace') as f:
+                    content = f.read()
+                if old_path in content or 'rainloop/data' in content:
+                    content = content.replace(old_path, new_path).replace(
+                        'rainloop/data', 'snappymail/data'
+                    )
+                    with open(include_file, 'w', encoding='utf-8') as f:
+                        f.write(content)
+                    Upgrade.stdOut('Updated include.php to use snappymail data path.', 0)
+            try:
+                version_root = '/usr/local/CyberCP/public/snappymail/snappymail/v/'
+                if os.path.isdir(version_root):
+                    for ver in os.listdir(version_root):
+                        version_include = os.path.join(version_root, ver, 'include.php')
+                        if not os.path.isfile(version_include):
+                            continue
+                        with open(version_include, 'r', encoding='utf-8', errors='replace') as f:
+                            content = f.read()
+                        if "$sCustomDataPath = '';" in content:
+                            content = content.replace(
+                                "$sCustomDataPath = '';",
+                                "$sCustomDataPath = '/usr/local/lscp/cyberpanel/snappymail/data';"
+                            )
+                            with open(version_include, 'w', encoding='utf-8') as f:
+                                f.write(content)
+                            Upgrade.stdOut('Updated version include.php custom data path.', 0)
+                        elif old_path in content:
+                            content = content.replace(old_path, new_path)
+                            with open(version_include, 'w', encoding='utf-8') as f:
+                                f.write(content)
+            except Exception as ver_exc:
+                Upgrade.stdOut('Warning: version include.php path fix: ' + str(ver_exc), 0)
+            os.makedirs(new_path, mode=0o755, exist_ok=True)
+            os.makedirs(os.path.join(new_path, '_data_', '_default_', 'configs'), mode=0o755, exist_ok=True)
+        except Exception as e:
+            Upgrade.stdOut('Warning: fixSnappymailIncludeDataPath: ' + str(e), 0)
 
     @staticmethod
     def migrateRainloopToSnappymail():

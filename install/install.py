@@ -2209,9 +2209,17 @@ module cyberpanel_ols {
                     self.ensure_mysql_password_file()  # Still save password for manual fix
                     return False
                 
-                # Use ALTER USER syntax (compatible with MariaDB 10.4+ and MySQL 5.7+)
-                # GRANT ... IDENTIFIED BY is deprecated in MariaDB 10.4+ and removed in 10.11+
-                passwordCMD = "use mysql;DROP DATABASE IF EXISTS test;DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%%';ALTER USER 'root'@'localhost' IDENTIFIED BY '%s';GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION;flush privileges;" % (self.mysql_Root_password)
+                # MariaDB 11+ ships root@localhost with unix_socket OR mysql_native_password USING 'invalid'.
+                # Plain IDENTIFIED BY leaves password auth broken for non-root OS users (CyberPanel runs as cyberpanel).
+                root_pw = self.mysql_Root_password.replace("'", "''")
+                passwordCMD = (
+                    "use mysql;"
+                    "DROP DATABASE IF EXISTS test;"
+                    "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%%';"
+                    "ALTER USER 'root'@'localhost' IDENTIFIED VIA mysql_native_password USING PASSWORD('%s');"
+                    "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION;"
+                    "flush privileges;"
+                ) % (root_pw)
 
                 # Try socket authentication first (for fresh MariaDB installations)
                 socket_commands = ['sudo mysql', 'sudo mariadb', 'sudo /usr/bin/mysql', 'sudo /usr/bin/mariadb']
@@ -2262,6 +2270,35 @@ module cyberpanel_ols {
 
                 # Save MySQL password to file for later use
                 self.ensure_mysql_password_file()
+
+                # Verify password auth works without unix_socket (required for CyberPanel web UI)
+                verified = False
+                cli = install_utils.resolve_mysql_cli() or 'mariadb'
+                for verify_cmd in [
+                    f"{cli} -h127.0.0.1 -uroot -p{self.mysql_Root_password} -e 'SELECT 1;'",
+                    f"{cli} -uroot -p{self.mysql_Root_password} -e 'SELECT 1;'",
+                ]:
+                    try:
+                        vr = subprocess.run(
+                            verify_cmd, shell=True, capture_output=True, text=True, timeout=15,
+                        )
+                        if vr.returncode == 0:
+                            verified = True
+                            break
+                    except Exception:
+                        continue
+                if verified:
+                    self.stdOut("MySQL root password verified for application access", 1)
+                else:
+                    self.stdOut(
+                        "Warning: MySQL root password set but password auth verification failed; "
+                        "database creation in the panel may not work until fixed.",
+                        0,
+                    )
+                    logging.InstallLog.writeToFile(
+                        "MySQL root password verification failed after changeMYSQLRootPassword"
+                    )
+
                 self.stdOut("MySQL root password set successfully", 1)
                 return True
 
@@ -2553,6 +2590,7 @@ module cyberpanel_ols {
                     self.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
                 self.stdOut("PowerDNS configuration completed", 1)
+                install_utils.restore_selinux_contexts(dnsPath, os.path.dirname(dnsPath))
                 return True
 
         except Exception as e:
@@ -3168,6 +3206,13 @@ module cyberpanel_ols {
                 logging.InstallLog.writeToFile("fix_selinux_issue problem")
             else:
                 pass
+
+            install_utils.restore_selinux_contexts(
+                '/etc/pdns',
+                '/etc/powerdns',
+                '/etc/dovecot',
+                '/etc/postfix',
+            )
         except:
             logging.InstallLog.writeToFile("[ERROR] fix_selinux_issue problem")
 
@@ -4131,6 +4176,11 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             command = 'cp /usr/local/CyberCP/plogical/phpmyadminsignin.php /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
+            lpma_src = '/usr/local/CyberCP/plogical/lpma_policy_read.inc.php'
+            lpma_dst = '/usr/local/CyberCP/public/phpmyadmin/lpma_policy_read.inc.php'
+            if os.path.isfile(lpma_src):
+                shutil.copy2(lpma_src, lpma_dst)
+
             if self.remotemysql == 'ON':
                 command = "sed -i 's|localhost|%s|g' /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php" % (
                     self.mysqlhost)
@@ -4213,9 +4263,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 type = clAPVersion.split('-')[0]
                 version = int(clAPVersion.split('-')[1])
                 if type == 'al' and version >= 90:
-                    command = 'dnf install -y dovecot dovecot-mysql'
+                    command = 'dnf install -y dovecot dovecot-mysql dovecot-pigeonhole'
                 else:
-                    command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql -y --allowerasing'
+                    command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql dovecot23-pigeonhole -y --allowerasing'
             elif self.distro == openeuler:
                 dovecot_commands = [
                     'dnf install dovecot dovecot-mysql -y --skip-broken --nobest',
@@ -4238,7 +4288,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                     preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
             else:
                 # Ubuntu 24.04/22.04/20.04, Debian 13/12/11
-                command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install dovecot-mysql dovecot-imapd dovecot-pop3d'
+                command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install dovecot-mysql dovecot-imapd dovecot-pop3d dovecot-sieve dovecot-managesieved'
 
             if self.distro != openeuler:
                 preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
@@ -4268,13 +4318,30 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             logging.InstallLog.writeToFile("Setting up authentication for Postfix and Dovecot...")
 
-            os.chdir(self.cwd)
+            install_dir = os.path.dirname(os.path.abspath(__file__))
+            email_cfg_dir = os.path.join(install_dir, "email-configs-one")
 
-            mysql_virtual_domains = "email-configs-one/mysql-virtual_domains.cf"
-            mysql_virtual_forwardings = "email-configs-one/mysql-virtual_forwardings.cf"
-            mysql_virtual_mailboxes = "email-configs-one/mysql-virtual_mailboxes.cf"
-            mysql_virtual_email2email = "email-configs-one/mysql-virtual_email2email.cf"
-            dovecotmysql = "email-configs-one/dovecot-sql.conf.ext"
+            def _email_cfg(name):
+                return os.path.join(email_cfg_dir, name)
+
+            mysql_virtual_domains = _email_cfg("mysql-virtual_domains.cf")
+            mysql_virtual_forwardings = _email_cfg("mysql-virtual_forwardings.cf")
+            mysql_virtual_mailboxes = _email_cfg("mysql-virtual_mailboxes.cf")
+            mysql_virtual_email2email = _email_cfg("mysql-virtual_email2email.cf")
+            dovecotmysql = _email_cfg("dovecot-sql.conf.ext")
+
+            for cfg_path in (
+                dovecotmysql,
+                mysql_virtual_domains,
+                mysql_virtual_forwardings,
+                mysql_virtual_mailboxes,
+                mysql_virtual_email2email,
+            ):
+                if not os.path.isfile(cfg_path):
+                    raise FileNotFoundError(
+                        "Missing email template: %s (expected under %s)"
+                        % (cfg_path, email_cfg_dir)
+                    )
 
             ### update password:
 
@@ -4760,6 +4827,7 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
 
                 self.manage_service('dovecot', 'restart')
 
+            install_utils.restore_selinux_contexts('/etc/postfix', '/etc/dovecot')
             logging.InstallLog.writeToFile("Postfix and Dovecot configured")
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [setup_postfix_dovecot_config]")
@@ -4963,11 +5031,53 @@ user_query = SELECT email as user, password, 'vmail' as uid, 'vmail' as gid, '/h
 #             command = f'chmod 600 {PluginsFilePath}'
 #             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            command = f'wget -O /usr/local/CyberCP/snappymail_cyberpanel.php  https://raw.githubusercontent.com/the-djmaze/snappymail/master/integrations/cyberpanel/install.php'
+            bundled_sm_src = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                'snappymail_cyberpanel.php'
+            )
+            bundled_sm_dst = '/usr/local/CyberCP/snappymail_cyberpanel.php'
+            if os.path.isfile(bundled_sm_src):
+                shutil.copy2(bundled_sm_src, bundled_sm_dst)
+            else:
+                command = (
+                    'wget -O %s https://raw.githubusercontent.com/the-djmaze/snappymail/master/integrations/cyberpanel/install.php'
+                    % bundled_sm_dst
+                )
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                if os.path.isfile(bundled_sm_dst):
+                    try:
+                        with open(bundled_sm_dst, 'r', encoding='utf-8', errors='replace') as smf:
+                            sm_helper = smf.read()
+                        sm_helper = sm_helper.replace(
+                            '/usr/local/lscp/cyberpanel/rainloop/data/',
+                            '/usr/local/lscp/cyberpanel/snappymail/data/'
+                        )
+                        with open(bundled_sm_dst, 'w', encoding='utf-8') as smf:
+                            smf.write(sm_helper)
+                    except BaseException:
+                        pass
+
+            snappy_php = install_utils.resolve_lsphp_binary('php')
+            if not snappy_php:
+                raise FileNotFoundError(
+                    'No LiteSpeed PHP binary found for SnappyMail integration (expected lsphp82+ under /usr/local/lsws/)'
+                )
+            command = '%s /usr/local/CyberCP/snappymail_cyberpanel.php' % snappy_php
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            command = f'/usr/local/lsws/lsphp80/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            include_sm = '/usr/local/CyberCP/public/snappymail/include.php'
+            if os.path.isfile(include_sm):
+                try:
+                    with open(include_sm, 'r', encoding='utf-8', errors='replace') as incf:
+                        inc_body = incf.read()
+                    inc_body = inc_body.replace(
+                        '/usr/local/lscp/cyberpanel/rainloop/data',
+                        '/usr/local/lscp/cyberpanel/snappymail/data'
+                    )
+                    with open(include_sm, 'w', encoding='utf-8') as incf:
+                        incf.write(inc_body)
+                except BaseException:
+                    pass
 
             try:
                 from plogical.snappymail_plugin_utilities import install_and_enable_list_unsubscribe_header_plugin
@@ -6702,6 +6812,7 @@ vmail
 
             # Ensure proper permissions
             os.chmod(config_file, 0o644)
+            install_utils.restore_selinux_contexts(config_file, os.path.dirname(config_file))
         
         # Ensure PowerDNS can connect to database
         self.ensurePowerDNSDatabaseAccess()
@@ -7165,8 +7276,12 @@ def main():
         preFlightsChecks.stdOut(f"Error: Database creation failed: {str(e)}", 1)
         os._exit(1)
 
-    checks.installPowerDNS()
-    checks.installPureFTPD()
+    checks.installPowerDNS() if (args.powerdns is None or str(args.powerdns).upper() == 'ON') else (
+        preFlightsChecks.stdOut("Skipping PowerDNS installation as requested.")
+    )
+    checks.installPureFTPD() if (args.ftp is None or str(args.ftp).upper() == 'ON') else (
+        preFlightsChecks.stdOut("Skipping Pure-FTPd installation as requested.")
+    )
 
     # Setup PHP and Composer (dependencies already installed by comprehensive fix)
     checks.setupPHPAndComposer()
@@ -7301,7 +7416,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         writeToFile.write(content)
         writeToFile.close()
 
-        command = '/usr/local/lsws/lsphp83/bin/php /usr/local/CyberCP/public/snappymail.php'
+        command = '%s /usr/local/CyberCP/public/snappymail.php' % (
+            install_utils.resolve_lsphp_binary('php') or '/usr/local/lsws/lsphp83/bin/php'
+        )
         subprocess.call(shlex.split(command))
 
         command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"

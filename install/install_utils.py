@@ -438,6 +438,47 @@ openeuler = 3
 debian12 = 4
 
 
+def resolve_lsphp_binary(kind='php'):
+    """
+    Return path to the newest available LiteSpeed PHP binary.
+    kind: 'php' (CLI) or 'lsphp' (FCGI binary).
+    """
+    sub = 'php' if kind == 'php' else 'lsphp'
+    for ver in ('85', '84', '83', '82', '81', '80', '74'):
+        path = '/usr/local/lsws/lsphp%s/bin/%s' % (ver, sub)
+        if os.path.isfile(path) and os.access(path, os.X_OK):
+            return path
+    if kind == 'php' and os.path.isfile('/usr/bin/php') and os.access('/usr/bin/php', os.X_OK):
+        return '/usr/bin/php'
+    return None
+
+
+def restore_selinux_contexts(*paths):
+    """Apply default SELinux file contexts (fixes pdns.conf labeled user_tmp_t, etc.)."""
+    if not os.path.isfile('/usr/sbin/getenforce'):
+        return False
+    try:
+        ge = subprocess.run(['getenforce'], capture_output=True, text=True, timeout=5)
+        if (ge.stdout or '').strip().lower() == 'disabled':
+            return False
+    except Exception:
+        return False
+    ok = False
+    for path in paths:
+        if path and os.path.exists(path):
+            try:
+                subprocess.run(
+                    ['restorecon', '-Rv', path],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    timeout=120,
+                )
+                ok = True
+            except Exception:
+                pass
+    return ok
+
+
 def get_lsphp_install_suffixes():
     """
     LiteSpeed lsphp* two-digit version suffixes to install for this OS (pre-repo check).

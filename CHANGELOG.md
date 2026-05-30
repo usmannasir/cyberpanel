@@ -13,6 +13,12 @@ release.
 For per-host operator state (backups, deployment runs, restore drill results),
 see `to-do/LIVE-CYBERCP-STATE.md`.
 
+
+### Fixed: SSH login banner (30/05/2026)
+
+- Fresh installs and upgrades again deploy `/etc/profile.d/cyberpanel.sh` from `https://cyberpanel.sh/?banner`.
+- Shared helper: `install/cyberpanel_ssh_login_banner.sh`, called from `apply_fixes`, `Post_Upgrade_System_Tweak`, and venvsetup.
+
 ## 2.5.5-dev - 28/05/2026
 
 ### Fixed: AlmaLinux 10 re-install exit 71 (ftpgroup already exists)

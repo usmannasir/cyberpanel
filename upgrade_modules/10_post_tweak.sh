@@ -96,6 +96,8 @@ if [[ -f /usr/local/CyberCP/scripts/utils/cyberpanel-utils.sh ]]; then
   ln -sf /usr/local/CyberCP/scripts/utils/cyberpanel-utils.sh /usr/local/bin/cyberpanel-utils 2>/dev/null || true
 fi
 
+Install_Cyberpanel_Ssh_Login_Banner 2>/dev/null || true
+
 if [[ -f /etc/cyberpanel/watchdog.sh ]] ; then
 	watchdog kill
 	rm -f /etc/cyberpanel/watchdog.sh

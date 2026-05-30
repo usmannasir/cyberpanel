@@ -33,14 +33,25 @@ elif [ ! -d "/usr/local/CyberCP/public/snappymail" ]; then
     find /usr/local/CyberCP/public/snappymail -type f -exec chmod 644 {} \;
     log "SnappyMail installed"
     # Configure data path and run CyberPanel integration
-    wget -q -O /usr/local/CyberCP/snappymail_cyberpanel.php "https://raw.githubusercontent.com/the-djmaze/snappymail/master/integrations/cyberpanel/install.php" 2>/dev/null || true
+    if [ ! -f /usr/local/CyberCP/snappymail_cyberpanel.php ]; then
+        wget -q -O /usr/local/CyberCP/snappymail_cyberpanel.php "https://raw.githubusercontent.com/the-djmaze/snappymail/master/integrations/cyberpanel/install.php" 2>/dev/null || true
+        [ -f /usr/local/CyberCP/snappymail_cyberpanel.php ] && sed -i 's|/usr/local/lscp/cyberpanel/rainloop/data|/usr/local/lscp/cyberpanel/snappymail/data|g' /usr/local/CyberCP/snappymail_cyberpanel.php
+    fi
     if [ -f /usr/local/CyberCP/snappymail_cyberpanel.php ]; then
         for php in /usr/local/lsws/lsphp83/bin/php /usr/local/lsws/lsphp82/bin/php /usr/local/lsws/lsphp81/bin/php /usr/local/lsws/lsphp80/bin/php; do
             [ -x "$php" ] && $php /usr/local/CyberCP/snappymail_cyberpanel.php 2>/dev/null && break
         done
     fi
+    if [ -f "/usr/local/CyberCP/public/snappymail/include.php" ]; then
+        sed -i 's|/usr/local/lscp/cyberpanel/rainloop/data|/usr/local/lscp/cyberpanel/snappymail/data|g' /usr/local/CyberCP/public/snappymail/include.php
+        log "Updated include.php data path after install"
+    fi
 else
     log "public/snappymail already exists"
+    if [ -f "/usr/local/CyberCP/public/snappymail/include.php" ]; then
+        sed -i 's|/usr/local/lscp/cyberpanel/rainloop/data|/usr/local/lscp/cyberpanel/snappymail/data|g' /usr/local/CyberCP/public/snappymail/include.php
+        log "Ensured include.php uses snappymail data path"
+    fi
 fi
 
 # 2) Data migration: lscp/cyberpanel/rainloop/data -> snappymail/data

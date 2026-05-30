@@ -3,7 +3,18 @@
 
 define("PMA_SIGNON_INDEX", 1);
 
-require_once __DIR__ . '/lpma_policy_read.inc.php';
+// Policy helper lives in plogical/; public/phpmyadmin/ copy may not include it
+$_lpma_policy = dirname(__DIR__) . '/plogical/lpma_policy_read.inc.php';
+if (is_readable($_lpma_policy)) {
+    require_once $_lpma_policy;
+} elseif (is_readable(__DIR__ . '/lpma_policy_read.inc.php')) {
+    require_once __DIR__ . '/lpma_policy_read.inc.php';
+} else {
+    http_response_code(500);
+    header('Content-Type: text/plain; charset=utf-8');
+    echo 'phpMyAdmin sign-on is misconfigured: lpma_policy_read.inc.php is missing.';
+    exit;
+}
 
 try {
     define('PMA_SIGNON_SESSIONNAME', 'SignonSession');
